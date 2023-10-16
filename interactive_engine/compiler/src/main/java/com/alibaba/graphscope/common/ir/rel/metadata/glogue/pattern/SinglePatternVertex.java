@@ -3,7 +3,6 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class SinglePatternVertex extends PatternVertex {
     private Integer vertexTypeId;
     private Integer id;

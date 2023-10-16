@@ -1,8 +1,9 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
-import java.util.Map;
-
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
+
+import java.util.Map;
+import java.util.Objects;
 
 public class GlogueExtendIntersectEdge extends GlogueEdge {
     /// a mapping from src pattern vertex order to target pattern vertex order
@@ -14,7 +15,10 @@ public class GlogueExtendIntersectEdge extends GlogueEdge {
     /// the target pattern
     private Pattern dstPattern;
 
-    public GlogueExtendIntersectEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep,
+    public GlogueExtendIntersectEdge(
+            Pattern srcPattern,
+            Pattern dstPattern,
+            ExtendStep extendStep,
             Map<Integer, Integer> srcToTargetOrderMapping) {
         this.extendStep = extendStep;
         this.srcPattern = srcPattern;
@@ -42,12 +46,31 @@ public class GlogueExtendIntersectEdge extends GlogueEdge {
 
     @Override
     public String toString() {
-        return "ExtendIntersectEdge{" +
-                "srcPattern=" + srcPattern.getPatternId() +
-                ", dstPattern=" + dstPattern.getPatternId() +
-                ", extendStep=" + extendStep +
-                ", srcToTargetIdMapping=" + srcToTargetOrderMapping +
+        return "ExtendIntersectEdge{"
+                + "srcPattern="
+                + srcPattern.getPatternId()
+                + ", dstPattern="
+                + dstPattern.getPatternId()
+                + ", extendStep="
+                + extendStep
+                + ", srcToTargetIdMapping="
+                + srcToTargetOrderMapping
+                + '}';
+    }
 
-                '}';
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GlogueExtendIntersectEdge that = (GlogueExtendIntersectEdge) o;
+        return Objects.equals(srcToTargetOrderMapping, that.srcToTargetOrderMapping)
+                && Objects.equals(extendStep, that.extendStep)
+                && Objects.equals(srcPattern, that.srcPattern)
+                && Objects.equals(dstPattern, that.dstPattern);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(srcToTargetOrderMapping, extendStep, srcPattern, dstPattern);
     }
 }

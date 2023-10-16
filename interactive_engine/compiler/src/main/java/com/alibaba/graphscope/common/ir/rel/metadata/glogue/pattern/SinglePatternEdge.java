@@ -1,9 +1,9 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+
 import java.util.Arrays;
 import java.util.List;
-
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 
 public class SinglePatternEdge extends PatternEdge {
     private int id;

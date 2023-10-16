@@ -72,7 +72,7 @@ public class GraphPlanner {
     private final RelOptPlanner optPlanner;
     private final RexBuilder rexBuilder;
     private final AtomicLong idGenerator;
-    private static final RelBuilderFactory relBuilderFactory =
+    public static final RelBuilderFactory relBuilderFactory =
             (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
                     GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
 

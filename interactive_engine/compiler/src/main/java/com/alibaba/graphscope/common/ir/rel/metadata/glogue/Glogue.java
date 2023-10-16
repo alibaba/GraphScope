@@ -1,25 +1,17 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import org.javatuples.Pair;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DirectedPseudograph;
-
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternProcessor;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternMapping;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
+
+import org.javatuples.Pair;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DirectedPseudograph;
+
+import java.util.*;
 
 public class Glogue {
     // the topology of GLogue graph
@@ -31,7 +23,7 @@ public class Glogue {
     // maxPatternId records the max pattern id in Glogue
     private int maxPatternId;
 
-    protected Glogue() {
+    public Glogue() {
         this.glogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
         this.roots = new ArrayList<>();
         this.maxPatternId = 0;
@@ -69,23 +61,23 @@ public class Glogue {
                 if (!existingPattern.isPresent()) {
                     this.addPattern(newPattern);
                     System.out.println("add new pattern: " + newPattern);
-                    Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
-                            extendStep);
+                    Map<Integer, Integer> srcToDstPatternMapping =
+                            this.computePatternMapping(pattern, newPattern, extendStep);
                     this.addEdge(pattern, newPattern, extendStep, srcToDstPatternMapping);
                     patternQueue.add(newPattern);
                 } else {
-                    System.out.println(
-                            "pattern already exists: " + existingPattern.get());
+                    System.out.println("pattern already exists: " + existingPattern.get());
                     System.out.println("v.s. the new pattern: " + newPattern);
                     if (!this.containsEdge(pattern, existingPattern.get())) {
-                        // notice that the mapping should be computed based on pattern to newPattern,
+                        // notice that the mapping should be computed based on pattern to
+                        // newPattern,
                         // rather than pattern to existingPattern
-                        Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
-                                extendStep);
-                        this.addEdge(pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
+                        Map<Integer, Integer> srcToDstPatternMapping =
+                                this.computePatternMapping(pattern, newPattern, extendStep);
+                        this.addEdge(
+                                pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
                     } else {
-                        System.out
-                                .println("edge already exists as well");
+                        System.out.println("edge already exists as well");
                     }
                 }
             }
@@ -96,14 +88,20 @@ public class Glogue {
         System.out.println();
         System.out.println();
         // compute pattern cardinality
-        this.glogueCardinalityEstimation = new GlogueBasicCardinalityEstimationImpl().create(this, schema);
+        this.glogueCardinalityEstimation =
+                new GlogueBasicCardinalityEstimationImpl().create(this, schema);
 
-        System.out.println("GlogueBasicCardinalityEstimationImpl " + this.glogueCardinalityEstimation.toString());
+        System.out.println(
+                "GlogueBasicCardinalityEstimationImpl "
+                        + this.glogueCardinalityEstimation.toString());
 
         System.out.println("GlogueEdges:");
-        this.glogueGraph.edgeSet().forEach(edge -> {
-            System.out.println(edge);
-        });
+        this.glogueGraph
+                .edgeSet()
+                .forEach(
+                        edge -> {
+                            System.out.println(edge);
+                        });
 
         return this;
     }
@@ -172,10 +170,13 @@ public class Glogue {
         return this.glogueGraph.addVertex(pattern);
     }
 
-    private boolean addEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep edge,
+    private boolean addEdge(
+            Pattern srcPattern,
+            Pattern dstPattern,
+            ExtendStep edge,
             Map<Integer, Integer> srcToDstIdMapping) {
-        GlogueExtendIntersectEdge glogueEdge = new GlogueExtendIntersectEdge(srcPattern, dstPattern, edge,
-                srcToDstIdMapping);
+        GlogueExtendIntersectEdge glogueEdge =
+                new GlogueExtendIntersectEdge(srcPattern, dstPattern, edge, srcToDstIdMapping);
         System.out.println("add glogue edge " + glogueEdge);
         return this.glogueGraph.addEdge(srcPattern, dstPattern, glogueEdge);
     }
@@ -185,7 +186,8 @@ public class Glogue {
     /// Notice that, the dstPattern should be extended from srcPattern.
     /// Besides, during the mapping computation, the target vertex order will be
     /// assigned.
-    private Map<Integer, Integer> computePatternMapping(Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep) {
+    private Map<Integer, Integer> computePatternMapping(
+            Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep) {
         Map<Integer, Integer> srcToDstPatternMapping = new HashMap<>();
         for (PatternVertex dstVertex : dstPattern.getVertexSet()) {
             Integer dstVertexOrder = dstPattern.getVertexOrder(dstVertex);
@@ -209,7 +211,10 @@ public class Glogue {
 
     @Override
     public String toString() {
-        return "GlogueVertices: " + this.glogueGraph.vertexSet() + "\nGlogueEdges: " + this.glogueGraph.edgeSet();
+        return "GlogueVertices: "
+                + this.glogueGraph.vertexSet()
+                + "\nGlogueEdges: "
+                + this.glogueGraph.edgeSet();
     }
 
     public static void main(String[] args) {

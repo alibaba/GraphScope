@@ -43,5 +43,4 @@ public class ExtendEdge {
     public String toString() {
         return srcVertexOrder + edgeTypeId.toString() + ": " + weight;
     }
-
 }
