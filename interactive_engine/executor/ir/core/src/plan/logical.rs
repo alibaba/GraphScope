@@ -1404,13 +1404,11 @@ impl AsLogical for pb::IndexPredicate {
                             }
                             common_pb::property::Item::Label(_) => {
                                 if let Some(val) = pred.value.as_mut() {
-                                    if let Some(item) = val.item.as_mut() {
-                                        match item {
-                                            pb::index_predicate::pk_value::Item::Value(val) => {
-                                                preprocess_label(val, meta, plan_meta)?
-                                            }
-                                            pb::index_predicate::pk_value::Item::DynParam(_) => {}
+                                    match val {
+                                        pb::index_predicate::triplet::Value::Const(val) => {
+                                            preprocess_label(val, meta, plan_meta)?
                                         }
+                                        pb::index_predicate::triplet::Value::Param(_) => {}
                                     }
                                 }
                             }

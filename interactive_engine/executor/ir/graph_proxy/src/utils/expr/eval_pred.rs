@@ -169,8 +169,8 @@ impl TryFrom<pb::index_predicate::Triplet> for Predicates {
 
     fn try_from(triplet: pb::index_predicate::Triplet) -> Result<Self, Self::Error> {
         let value = if let Some(value) = &triplet.value {
-            match &value.item {
-                Some(pb::index_predicate::pk_value::Item::Value(v)) => Some(v.clone()),
+            match &value {
+                pb::index_predicate::triplet::Value::Const(v) => Some(v.clone()),
                 _ => Err(ParsePbError::Unsupported(format!(
                     "unsupported indexed predicate value {:?}",
                     value
