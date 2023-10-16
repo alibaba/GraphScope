@@ -5,12 +5,15 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpandCount;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.*;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.TransformationRule;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -26,46 +29,72 @@ public class DegreeFusionRule<C extends DegreeFusionRule.Config> extends RelRule
     @Override
     public void onMatch(RelOptRuleCall call) {
         GraphLogicalAggregate aggregate = call.rel(0);
-        GraphLogicalGetV getv = call.rel(1);
+        GraphLogicalGetV getV = call.rel(1);
         GraphLogicalExpand expand = call.rel(2);
 
         GraphBuilder graphBuilder = (GraphBuilder) call.builder();
 
         List<GraphAggCall> groupCalls = aggregate.getAggCalls();
-        if (!(groupCalls.size() == 1
-                && aggregate.getGroupKey().groupKeyCount() == 0)) { // only one, and is COUNT
+
+        // aggregate have one aggcall, and none key, which means this is COUNT(*)
+        if (!(groupCalls.size() == 1 && aggregate.getGroupKey().groupKeyCount() == 0)) {
             return;
         }
 
+        // if expand has alias, e.g. g.V().out().as("a"),
+        // or getV has alias, e.g. g.V().as("a").out(),
+        // can't fusion
+        //        if (expand.getAliasName() != null
+        //                || expand.getAliasName() != AliasInference.DEFAULT_NAME
+        //                || getV.getAliasName() != null
+        //                || getV.getAliasName() != AliasInference.DEFAULT_NAME) {
+        //            return;
+        //        }
+
         // Create new expandcount for Degree Fusion
+        // type is RecordType(BIGINT cnt of y)
         RelNode expandCount =
                 GraphLogicalExpandCount.create(
                         (GraphOptCluster) expand.getCluster(),
                         ImmutableList.of(),
                         expand.getInput(0),
                         (GraphLogicalExpand) expand,
-                        expand.getAliasName());
+                        "cnt of " + expand.getAliasName());
+        graphBuilder.push(expandCount);
 
+        //        GroupKey key = graphBuilder.groupKey();
+
+        // create new aggcalls for new aggregate
         List<GraphAggCall> newCalls = new ArrayList<>(aggregate.getAggCallList().size());
+        int i = 1; // for test
         for (GraphAggCall aggregateCall : groupCalls) {
+            System.out.println(i);
+            i++; // for test
+            // get first operand, which is expandCount
+            List<RexNode> expandCountNode = new ArrayList<>();
+            expandCountNode.add(
+                    graphBuilder.variable(((GraphLogicalExpandCount) expandCount).getAliasName()));
             GraphAggCall newCall =
                     new GraphAggCall(
-                                    aggregateCall.getCluster(),
+                                    // aggregateCall.getCluster(),
+                                    (GraphOptCluster) expandCount.getCluster(),
                                     GraphStdOperatorTable.SUM, // change
-                                    aggregateCall.getOperands()) // change?
-                            .as(aggregateCall.getAlias())
+                                    expandCountNode)
+                            .as("sum")
                             .distinct(aggregateCall.isDistinct());
             newCalls.add(newCall);
         }
 
-        // expandcount -> aggregate(sum)
+        // create aggregate(sum)
         GraphLogicalAggregate newAggregate =
                 GraphLogicalAggregate.create(
                         (GraphOptCluster) expandCount.getCluster(),
                         ImmutableList.of(),
                         expandCount,
-                        aggregate.getGroupKey(), // is empty
+                        (GraphGroupKeys) graphBuilder.groupKey(), // SUM, also empty
                         newCalls);
+
+        System.out.println(newAggregate.getRowType().toString());
 
         call.transformTo(newAggregate);
     }
