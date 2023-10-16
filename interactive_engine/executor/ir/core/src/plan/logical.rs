@@ -1050,6 +1050,14 @@ fn preprocess_expression(
                     }
                     count = 0;
                 }
+                common_pb::expr_opr::Item::Map(key_values) => {
+                    for key_val in &mut key_values.key_vals {
+                        if let Some(value) = key_val.value.as_mut() {
+                            preprocess_var(value, meta, plan_meta, false)?;
+                        }
+                    }
+                    count = 0;
+                }
                 _ => count = 0,
             }
         }

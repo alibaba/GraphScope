@@ -181,7 +181,7 @@ mod tests {
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
-        to_expr_var_pb, to_expr_vars_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E,
+        to_expr_map_pb, to_expr_var_pb, to_expr_vars_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E,
     };
     use crate::process::record::Record;
 
@@ -545,9 +545,9 @@ mod tests {
         assert_eq!(collection_result, expected_result);
     }
 
-    // g.V().valueMap("age", "name") // by map
+    // g.V().valueMap("age", "name") // by varmap
     #[test]
-    fn project_map_mapping_test() {
+    fn project_varmap_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(str_to_expr_pb("{@.age,@.name}".to_string()).unwrap()),
@@ -587,9 +587,43 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
+    // g.V().valueMap('age', 'name') with alias of 'age' as 'newAge' and 'name' as 'newName', by map
+    #[test]
+    fn project_map_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_map_pb(vec![
+                    ("newName".to_string(), (None, Some("name".into()))),
+                    ("newAge".to_string(), (None, Some("age".into()))),
+                ])),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let value = res.get(None).unwrap().as_object().unwrap();
+            object_result.push(value.clone());
+        }
+        let expected_result = vec![
+            Object::KV(
+                vec![(object!("newAge"), object!(29)), (object!("newName"), object!("marko"))]
+                    .into_iter()
+                    .collect(),
+            ),
+            Object::KV(
+                vec![(object!("newAge"), object!(27)), (object!("newName"), object!("vadas"))]
+                    .into_iter()
+                    .collect(),
+            ),
+        ];
+        assert_eq!(object_result, expected_result);
+    }
+
     // g.V().as("a").select("a").by(valueMap("age", "name")) // by map
     #[test]
-    fn project_tag_map_mapping_test() {
+    fn project_tag_varmap_mapping_test() {
         let project_opr_pb = pb::Project {
             mappings: vec![pb::project::ExprAlias {
                 expr: Some(to_expr_vars_pb(
@@ -631,6 +665,46 @@ mod tests {
                 ]
                 .into_iter()
                 .collect(),
+            ),
+        ];
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().as("a").select("a").by(valueMap("age", "name")),with alias of 'a.age' as 'newAge' and 'a.tname' as 'newName', by map
+    #[test]
+    fn project_tag_map_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_map_pb(vec![
+                    ("newAge".to_string(), (Some(TAG_A.into()), Some("age".into()))),
+                    ("newName".to_string(), (Some(TAG_A.into()), Some("name".into()))),
+                ])),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            object_result.push(
+                res.get(None)
+                    .unwrap()
+                    .as_object()
+                    .unwrap()
+                    .clone(),
+            );
+        }
+
+        let expected_result = vec![
+            Object::KV(
+                vec![(object!("newAge"), object!(29)), (object!("newName"), object!("marko"))]
+                    .into_iter()
+                    .collect(),
+            ),
+            Object::KV(
+                vec![(object!("newAge"), object!(27)), (object!("newName"), object!("vadas"))]
+                    .into_iter()
+                    .collect(),
             ),
         ];
         assert_eq!(object_result, expected_result);

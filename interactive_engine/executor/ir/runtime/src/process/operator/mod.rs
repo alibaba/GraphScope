@@ -282,6 +282,24 @@ pub(crate) mod tests {
         }
     }
 
+    pub fn to_expr_map_pb(
+        key_values: Vec<(String, (Option<NameOrId>, Option<NameOrId>))>,
+    ) -> common_pb::Expression {
+        let key_vals = key_values
+            .into_iter()
+            .map(|(key, value)| common_pb::VariableKeyValue {
+                key: Some(common_pb::Value::from(key)),
+                value: Some(to_var_pb(value.0, value.1)),
+            })
+            .collect();
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                node_type: None,
+                item: Some(common_pb::expr_opr::Item::Map(common_pb::VariableKeyValues { key_vals })),
+            }],
+        }
+    }
+
     #[test]
     // None tag refers to the last appended entry;
     fn test_get_none_tag_entry() {
