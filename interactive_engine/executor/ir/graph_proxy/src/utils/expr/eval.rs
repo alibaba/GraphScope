@@ -709,6 +709,7 @@ impl InnerOpr {
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
+    use dyn_type::DateTimeFormats;
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
@@ -1086,22 +1087,34 @@ mod tests {
 
     fn prepare_context_with_date() -> Vertices {
         let map1: HashMap<NameOrId, Object> = vec![
-            (NameOrId::from("date1".to_string()), "2020-08-08".into()),
+            (
+                NameOrId::from("date1".to_string()),
+                (DateTimeFormats::from_str("2020-08-08").unwrap()).into(),
+            ),
             (
                 NameOrId::from("date2".to_string()),
                 chrono::NaiveDate::from_ymd_opt(2020, 8, 8)
                     .unwrap()
                     .into(),
             ),
-            (NameOrId::from("time1".to_string()), "10:11:12.100".into()),
+            (
+                NameOrId::from("time1".to_string()),
+                (DateTimeFormats::from_str("10:11:12.100").unwrap()).into(),
+            ),
             (
                 NameOrId::from("time2".to_string()),
                 chrono::NaiveTime::from_hms_milli_opt(10, 11, 12, 100)
                     .unwrap()
                     .into(),
             ),
-            (NameOrId::from("datetime1".to_string()), "2020-08-08T23:11:12.100-11:00".into()),
-            (NameOrId::from("datetime2".to_string()), "2020-08-09 10:11:12.100".into()),
+            (
+                NameOrId::from("datetime1".to_string()),
+                (DateTimeFormats::from_str("2020-08-08T23:11:12.100-11:00").unwrap()).into(),
+            ),
+            (
+                NameOrId::from("datetime2".to_string()),
+                (DateTimeFormats::from_str("2020-08-09 10:11:12.100").unwrap()).into(),
+            ),
             (
                 NameOrId::from("datetime3".to_string()),
                 chrono::NaiveDateTime::from_timestamp_millis(1602324610100)

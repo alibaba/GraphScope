@@ -181,8 +181,8 @@ mod tests {
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
-        to_expr_var_pb, to_expr_vars_pb, to_ir_data_type, to_var_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
-        TAG_D, TAG_E, TAG_F, TAG_G,
+        to_expr_var_pb, to_expr_vars_pb, to_var_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E, TAG_F,
+        TAG_G,
     };
     use crate::process::record::Record;
 
@@ -831,28 +831,28 @@ mod tests {
         r1.append(datetime_obj, Some(TAG_C.into()));
 
         let extract_date_year_opr = common_pb::ExprOpr {
-            node_type: Some(to_ir_data_type(common_pb::DataType::Date32)),
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
                 interval: common_pb::extract::Interval::Year as i32,
             })),
         };
 
         let extract_time_hour_opr = common_pb::ExprOpr {
-            node_type: Some(to_ir_data_type(common_pb::DataType::Time32)),
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
                 interval: common_pb::extract::Interval::Hour as i32,
             })),
         };
 
         let extract_datetime_month_opr = common_pb::ExprOpr {
-            node_type: Some(to_ir_data_type(common_pb::DataType::Timestamp)),
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
                 interval: common_pb::extract::Interval::Month as i32,
             })),
         };
 
         let extract_datetime_minute_opr = common_pb::ExprOpr {
-            node_type: Some(to_ir_data_type(common_pb::DataType::Timestamp)),
+            node_type: None,
             item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
                 interval: common_pb::extract::Interval::Minute as i32,
             })),

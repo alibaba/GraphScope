@@ -891,12 +891,10 @@ impl Object {
     }
 
     #[inline]
-    pub fn as_date_format(&self) -> Result<DateTimeFormats, CastError> {
+    pub fn as_date_format(&self) -> Result<&DateTimeFormats, CastError> {
         match self {
-            Object::Primitive(p) => Err(CastError::new::<DateTimeFormats>(p.raw_type())),
-            Object::String(str) => DateTimeFormats::from_str(str),
-            Object::DateFormat(d) => Ok((*d).clone()),
-            Object::DynOwned(x) => try_downcast_ref!(x, DateTimeFormats).map(|dt| dt.clone()),
+            Object::DateFormat(d) => Ok(d),
+            Object::DynOwned(x) => try_downcast_ref!(x, DateTimeFormats),
             _ => Err(CastError::new::<DateTimeFormats>(self.raw_type())),
         }
     }
@@ -1099,12 +1097,10 @@ impl<'a> BorrowObject<'a> {
     }
 
     #[inline]
-    pub fn as_date_format(&self) -> Result<DateTimeFormats, CastError> {
+    pub fn as_date_format(&self) -> Result<&DateTimeFormats, CastError> {
         match self {
-            BorrowObject::Primitive(p) => Err(CastError::new::<DateTimeFormats>(p.raw_type())),
-            BorrowObject::String(str) => DateTimeFormats::from_str(str),
-            BorrowObject::DateFormat(d) => Ok((*d).clone()),
-            BorrowObject::DynRef(x) => try_downcast_ref!(x, DateTimeFormats).map(|dt| dt.clone()),
+            BorrowObject::DateFormat(d) => Ok(d),
+            BorrowObject::DynRef(x) => try_downcast_ref!(x, DateTimeFormats),
             _ => Err(CastError::new::<DateTimeFormats>(self.raw_type())),
         }
     }

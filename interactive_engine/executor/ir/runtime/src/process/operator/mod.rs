@@ -247,10 +247,6 @@ pub(crate) mod tests {
         vec![r1]
     }
 
-    pub fn to_ir_data_type(data_type: common_pb::DataType) -> common_pb::IrDataType {
-        common_pb::IrDataType { r#type: Some(common_pb::ir_data_type::Type::DataType(data_type as i32)) }
-    }
-
     pub fn to_var_pb(tag: Option<NameOrId>, key: Option<NameOrId>) -> common_pb::Variable {
         common_pb::Variable {
             tag: tag.map(|t| t.into()),
