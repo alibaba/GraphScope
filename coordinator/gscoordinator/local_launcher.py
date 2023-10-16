@@ -59,9 +59,11 @@ class LocalLauncher(AbstractLauncher):
         vineyard_config = config.vineyard
         launcher_config = config.hosts_launcher
 
+        # glog level
+        self._glog_level = parse_as_glog_level(config.log_level)
+
         # Session Config
         self._num_workers = session_config.num_workers
-        self._glog_level = parse_as_glog_level(session_config.log_level)
         self._instance_id = session_config.instance_id
         self._timeout_seconds = session_config.timeout_seconds
         self._retry_time_seconds = session_config.retry_time_seconds

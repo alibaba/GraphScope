@@ -106,7 +106,7 @@ class HostsClusterLauncher(Launcher):
             bufsize=1,
         )
         stdout_watcher = PipeWatcher(process.stdout, sys.stdout)
-        if not self._config.session.show_log:
+        if not self._config.show_log:
             stdout_watcher.add_filter(
                 lambda line: "Loading" in line and "it/s]" in line
             )
