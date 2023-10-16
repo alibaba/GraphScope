@@ -152,6 +152,9 @@ graphscope-manylinux2014-py3:
 
 graphscope-client-manylinux2014-py3-nodocker:
 	set -euxo pipefail && \
+	cd $(WORKING_DIR)/../../python && \
+		python3 -m pip install --no-cache-dir "torch" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
 	cd graphlearn && \
@@ -208,6 +211,9 @@ graphscope-client-manylinux2014-py3-nodocker:
 	done
 
 graphscope-client-darwin-py3:
+	cd $(WORKING_DIR)/../../python && \
+		python3 -m pip install --no-cache-dir "torch" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		(git submodule update --init third_party/pybind11 || true) && \
 		export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \

@@ -20,3 +20,4 @@ sphinxext-opengraph
 tomli
 wheel
 setuptools==65.7.0
+torch
