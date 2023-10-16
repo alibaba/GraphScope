@@ -796,9 +796,9 @@ def generate_graphar_info_from_schema(path, schema, graphar_options):
             )
             with open(output_path, "w") as f:
                 yaml.dump(info, f, Dumper=Dumper, default_flow_style=False)
-        graph_info["edges"].append(
-            r.source + "_" + edge_label + "_" + r.destination + ".edge.yml"
-        )
+            graph_info["edges"].append(
+                r.source + "_" + edge_label + "_" + r.destination + ".edge.yml"
+            )
     graph_info_path = os.path.join(path, graph_name + ".graph.yml")
     with open(graph_info_path, "w") as f:
         yaml.dump(graph_info, f, Dumper=Dumper, default_flow_style=False)
