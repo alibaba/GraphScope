@@ -295,6 +295,8 @@ jobs:
 
           # install tensorflow
           python3 -m pip install pytest "tensorflow" "pandas" --user
+          # install pytorch
+          python3 -m pip install "torch"
           # install java
           sudo apt update -y && sudo apt install openjdk-11-jdk -y
 
