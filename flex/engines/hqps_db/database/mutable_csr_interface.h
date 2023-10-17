@@ -186,7 +186,7 @@ class MutableCSRInterface {
                                   outer_vertex_id_t oid) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     vertex_id_t vid;
-    CHECK(db_session_.graph().get_lid(label_id, oid, vid));
+    CHECK(db_session_.graph().get_lid(label_id, Any::From(oid), vid));
     return vid;
   }
 
@@ -199,7 +199,7 @@ class MutableCSRInterface {
   vertex_id_t ScanVerticesWithOid(const label_id_t& label_id,
                                   outer_vertex_id_t oid) const {
     vertex_id_t vid;
-    CHECK(db_session_.graph().get_lid(label_id, oid, vid));
+    CHECK(db_session_.graph().get_lid(label_id, Any::From(oid), vid));
     return vid;
   }
 
@@ -241,7 +241,7 @@ class MutableCSRInterface {
     std::vector<std::tuple<T...>> props(oids.size());
 
     for (size_t i = 0; i < oids.size(); ++i) {
-      db_session_.graph().get_lid(label_id, oids[i], vids[i]);
+      db_session_.graph().get_lid(label_id, Any::From(oids[i]), vids[i]);
       get_tuple_from_column_tuple(vids[i], props[i], columns);
     }
 

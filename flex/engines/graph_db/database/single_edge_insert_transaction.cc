@@ -37,18 +37,18 @@ SingleEdgeInsertTransaction::SingleEdgeInsertTransaction(
 
 SingleEdgeInsertTransaction::~SingleEdgeInsertTransaction() { Abort(); }
 
-bool SingleEdgeInsertTransaction::AddEdge(label_t src_label, oid_t src,
-                                          label_t dst_label, oid_t dst,
+bool SingleEdgeInsertTransaction::AddEdge(label_t src_label, const Any& src,
+                                          label_t dst_label, const Any& dst,
                                           label_t edge_label, const Any& prop) {
   if (!graph_.get_lid(src_label, src, src_vid_)) {
     std::string label_name = graph_.schema().get_vertex_label_name(src_label);
-    LOG(ERROR) << "Source vertex " << label_name << "[" << src
+    LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
                << "] not found...";
     return false;
   }
   if (!graph_.get_lid(dst_label, dst, dst_vid_)) {
     std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
-    LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
+    LOG(ERROR) << "Destination vertex " << label_name << "[" << dst.to_string()
                << "] not found...";
     return false;
   }
