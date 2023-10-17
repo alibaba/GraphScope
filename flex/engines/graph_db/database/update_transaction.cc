@@ -83,7 +83,7 @@ void UpdateTransaction::Commit() {
 
 void UpdateTransaction::Abort() { release(); }
 
-bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
+bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
                                   const std::vector<Any>& props) {
   vid_t id;
   const std::vector<PropertyType>& types =
@@ -118,9 +118,9 @@ bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
   return true;
 }
 
-bool UpdateTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
-                                oid_t dst, label_t edge_label,
-                                const Any& value) {
+bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
+                                label_t dst_label, const Any& dst,
+                                label_t edge_label, const Any& value) {
   vid_t src_lid, dst_lid;
   if (!oid_to_lid(src_label, src, src_lid)) {
     return false;
@@ -160,7 +160,7 @@ void UpdateTransaction::vertex_iterator::Goto(vid_t target) {
   cur_ = std::min(target, num_);
 }
 
-oid_t UpdateTransaction::vertex_iterator::GetId() const {
+Any UpdateTransaction::vertex_iterator::GetId() const {
   return txn_->lid_to_oid(label_, cur_);
 }
 
@@ -396,7 +396,7 @@ bool UpdateTransaction::GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
 void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
                                   uint32_t timestamp, char* data, size_t length,
                                   ArenaAllocator& alloc) {
-  std::vector<IdIndexer<oid_t, vid_t>> added_vertices;
+  std::vector<IdIndexerBase<vid_t>> added_vertices;
   std::vector<vid_t> added_vertices_base;
   std::vector<vid_t> vertex_nums;
   std::vector<ska::flat_hash_map<vid_t, vid_t>> vertex_offsets;
@@ -434,7 +434,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     arc >> op_type;
     if (op_type == 0) {
       label_t label;
-      oid_t oid;
+      Any oid;
 
       arc >> label >> oid;
       vid_t vid;
@@ -444,7 +444,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       graph.get_vertex_table(label).ingest(vid, arc);
     } else if (op_type == 1) {
       label_t src_label, dst_label, edge_label;
-      oid_t src, dst;
+      Any src, dst;
       vid_t src_vid, dst_vid;
 
       arc >> src_label >> src >> dst_label >> dst >> edge_label;
@@ -454,7 +454,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
                        timestamp, arc, alloc);
     } else if (op_type == 2) {
       label_t label;
-      oid_t oid;
+      Any oid;
       int col_id;
 
       arc >> label >> oid >> col_id;
@@ -464,7 +464,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     } else if (op_type == 3) {
       uint8_t dir;
       label_t label, neighbor_label, edge_label;
-      oid_t v, nbr;
+      Any v, nbr;
       vid_t v_lid, nbr_lid;
 
       arc >> dir >> label >> v >> neighbor_label >> nbr >> edge_label;
@@ -511,7 +511,8 @@ size_t UpdateTransaction::get_out_csr_index(label_t src_label,
          vertex_label_num_ * vertex_label_num_ * edge_label_num_;
 }
 
-bool UpdateTransaction::oid_to_lid(label_t label, oid_t oid, vid_t& lid) const {
+bool UpdateTransaction::oid_to_lid(label_t label, const Any& oid,
+                                   vid_t& lid) const {
   if (graph_.get_lid(label, oid, lid)) {
     return true;
   } else {
@@ -523,11 +524,11 @@ bool UpdateTransaction::oid_to_lid(label_t label, oid_t oid, vid_t& lid) const {
   return false;
 }
 
-oid_t UpdateTransaction::lid_to_oid(label_t label, vid_t lid) const {
+Any UpdateTransaction::lid_to_oid(label_t label, vid_t lid) const {
   if (graph_.vertex_num(label) > lid) {
     return graph_.get_oid(label, lid);
   } else {
-    oid_t ret;
+    Any ret;
     CHECK(
         added_vertices_[label].get_key(lid - added_vertices_base_[label], ret));
     return ret;
@@ -553,19 +554,19 @@ void UpdateTransaction::release() {
 
 void UpdateTransaction::applyVerticesUpdates() {
   for (label_t label = 0; label < vertex_label_num_; ++label) {
-    std::vector<std::pair<vid_t, oid_t>> added_vertices;
+    std::vector<std::pair<vid_t, Any>> added_vertices;
     vid_t added_vertices_num = added_vertices_[label].size();
     for (vid_t v = 0; v < added_vertices_num; ++v) {
       vid_t lid = v + added_vertices_base_[label];
-      oid_t oid;
+      Any oid;
       CHECK(added_vertices_[label].get_key(v, oid));
       added_vertices.emplace_back(lid, oid);
     }
-    std::sort(added_vertices.begin(), added_vertices.end(),
-              [](const std::pair<vid_t, oid_t>& lhs,
-                 const std::pair<vid_t, oid_t>& rhs) {
-                return lhs.first < rhs.first;
-              });
+    std::sort(
+        added_vertices.begin(), added_vertices.end(),
+        [](const std::pair<vid_t, Any>& lhs, const std::pair<vid_t, Any>& rhs) {
+          return lhs.first < rhs.first;
+        });
 
     auto& table = extra_vertex_properties_[label];
     auto& vertex_offset = vertex_offsets_[label];

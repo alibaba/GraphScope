@@ -36,7 +36,7 @@ SingleVertexInsertTransaction::SingleVertexInsertTransaction(
 }
 SingleVertexInsertTransaction::~SingleVertexInsertTransaction() { Abort(); }
 
-bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
+bool SingleVertexInsertTransaction::AddVertex(label_t label, const Any& id,
                                               const std::vector<Any>& props) {
   size_t arc_size = arc_.GetSize();
   arc_ << static_cast<uint8_t>(0) << label << id;
@@ -68,23 +68,23 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, oid_t id,
   return true;
 }
 
-bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
-                                            label_t dst_label, oid_t dst,
+bool SingleVertexInsertTransaction::AddEdge(label_t src_label, const Any& src,
+                                            label_t dst_label, const Any& dst,
                                             label_t edge_label,
                                             const Any& prop) {
   vid_t src_vid, dst_vid;
   if (src == added_vertex_id_ && src_label == added_vertex_label_) {
     if (!graph_.get_lid(dst_label, dst, dst_vid)) {
       std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
-      LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
-                 << "] not found...";
+      LOG(ERROR) << "Destination vertex " << label_name << "["
+                 << dst.to_string() << "] not found...";
       return false;
     }
     src_vid = std::numeric_limits<vid_t>::max();
   } else if (dst == added_vertex_id_ && dst_label == added_vertex_label_) {
     if (!graph_.get_lid(src_label, src, src_vid)) {
       std::string label_name = graph_.schema().get_vertex_label_name(src_label);
-      LOG(ERROR) << "Source vertex " << label_name << "[" << src
+      LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
                  << "] not found...";
       return false;
     }
@@ -92,13 +92,13 @@ bool SingleVertexInsertTransaction::AddEdge(label_t src_label, oid_t src,
   } else {
     if (!graph_.get_lid(dst_label, dst, dst_vid)) {
       std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
-      LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
-                 << "] not found...";
+      LOG(ERROR) << "Destination vertex " << label_name << "["
+                 << dst.to_string() << "] not found...";
       return false;
     }
     if (!graph_.get_lid(src_label, src, src_vid)) {
       std::string label_name = graph_.schema().get_vertex_label_name(src_label);
-      LOG(ERROR) << "Source vertex " << label_name << "[" << src
+      LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
                  << "] not found...";
       return false;
     }
@@ -162,7 +162,7 @@ void SingleVertexInsertTransaction::ingestWal() {
     uint8_t op_type;
     arc >> op_type;
     if (op_type == 0) {
-      arc.GetBytes(sizeof(label_t) + sizeof(oid_t));
+      arc.GetBytes(sizeof(label_t) + sizeof(Any));
       added_vertex_vid_ =
           graph_.add_vertex(added_vertex_label_, added_vertex_id_);
       graph_.get_vertex_table(added_vertex_label_)
@@ -170,9 +170,9 @@ void SingleVertexInsertTransaction::ingestWal() {
     } else if (op_type == 1) {
       label_t src_label, dst_label, edge_label;
       arc >> src_label;
-      arc.GetBytes(sizeof(oid_t));
+      arc.GetBytes(sizeof(Any));
       arc >> dst_label;
-      arc.GetBytes(sizeof(oid_t));
+      arc.GetBytes(sizeof(Any));
       arc >> edge_label;
 
       vid_t src_vid = *(vid_ptr++);
