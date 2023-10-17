@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.planner.GraphFieldTrimmer;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
@@ -125,6 +126,10 @@ public class GraphPlanner {
                             null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
             LogicalPlan logicalPlan =
                     new LogicalPlanVisitor(graphBuilder, this.irMeta).visit(this.parsedQuery);
+
+            RelNode newRootRel= trimUnusedFields(graphBuilder,logicalPlan.getRegularQuery());
+            logicalPlan.setRegularQuery(newRootRel);
+
             // apply optimizations
             if (plannerConfig.isOn()
                     && logicalPlan.getRegularQuery() != null
@@ -145,6 +150,15 @@ public class GraphPlanner {
                 physicalBuilder = new ProcedurePhysicalBuilder(logicalPlan);
             }
             return new Summary(this.id, this.name, logicalPlan, physicalBuilder);
+        }
+
+        protected RelNode trimUnusedFields(  GraphBuilder builder, RelNode root){
+            // TODO(huaiyu): add isTrimUnusedFields property
+            if(plannerConfig.isOn() && root != null){
+                final GraphFieldTrimmer trimmer=new GraphFieldTrimmer(builder);
+                root=trimmer.trim(root);
+            }
+            return root;
         }
     }
 

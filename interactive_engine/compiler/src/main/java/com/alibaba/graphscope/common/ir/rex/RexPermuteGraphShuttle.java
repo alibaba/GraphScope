@@ -40,7 +40,14 @@ public class RexPermuteGraphShuttle extends RexPermuteInputsShuttle {
     public RexNode visitGraphVariable(RexGraphVariable variable) {
         final int index = variable.getIndex();
         int target = mapping.getTarget(index);
-        return RexGraphVariable.of(variable.getAliasId(), variable.getProperty(), target, variable.getName(),
-                variable.getType());
+
+        return variable.getProperty() == null ?
+                RexGraphVariable.of(variable.getAliasId(), target, variable.getName(),
+                        variable.getType()) :
+                RexGraphVariable.of(variable.getAliasId(),
+                        variable.getProperty(),
+                        target,
+                        variable.getName(),
+                        variable.getType());
     }
 }

@@ -19,16 +19,18 @@ import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GetVConfig;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.*;
+import java.util.stream.Collectors;
 import org.apache.calcite.linq4j.Ord;
-import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.logical.LogicalFilter;
-import org.apache.calcite.rel.type.*;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.sql2rel.RelFieldTrimmer;
@@ -39,589 +41,538 @@ import org.apache.calcite.util.mapping.MappingType;
 import org.apache.calcite.util.mapping.Mappings;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 public class GraphFieldTrimmer extends RelFieldTrimmer {
-    private final ReflectUtil.MethodDispatcher<TrimResult> graphTrimFieldsDispatcher;
-    private final GraphBuilder graphBuilder;
+  private final ReflectUtil.MethodDispatcher<TrimResult> graphTrimFieldsDispatcher;
+  private final GraphBuilder graphBuilder;
 
-    public GraphFieldTrimmer(GraphBuilder builder) {
-        super(null, builder);
-        graphBuilder = builder;
-        graphTrimFieldsDispatcher = ReflectUtil.createMethodDispatcher(TrimResult.class, this, "trimFields", RelNode.class,
-                Map.class);
+  public GraphFieldTrimmer(GraphBuilder builder) {
+    super(null, builder);
+    graphBuilder = builder;
+    graphTrimFieldsDispatcher =
+        ReflectUtil.createMethodDispatcher(
+            TrimResult.class, this, "trimFields", RelNode.class, UsedFields.class);
+  }
+
+  public RelNode trim(RelNode root) {
+    UsedFields fieldsUsed = findUsedField(root);
+    return dispatchTrimFields(root, fieldsUsed).left;
+  }
+
+  /**
+   * @param project
+   * @param fieldsUsed
+   * @return
+   */
+  public TrimResult trimFields(GraphLogicalProject project, UsedFields fieldsUsed) {
+    final RelDataType rowType = project.getRowType();
+    final RelDataType inputRowType = project.getInput().getRowType();
+    List<RelDataTypeField> fieldList = rowType.getFieldList();
+    final int fieldCount = rowType.getFieldCount();
+
+    // key: id of field in project RowType, value: id of filed in input RowType
+    final Mapping mapping =
+        Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldsUsed.size());
+
+    ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
+    List<RexNode> newProjects = new ArrayList<>();
+    List<String> aliasList = new ArrayList<>();
+    UsedFields inputFieldsUsed = new UsedFields();
+
+    for (Ord<RexNode> ord : Ord.zip(project.getProjects())) {
+      RelDataTypeField field = fieldList.get(ord.i);
+
+      if (!fieldsUsed.containsKey(field.getIndex())) {
+        continue;
+      }
+
+      RexNode proj = ord.e;
+
+      mapping.set(ord.i, newProjects.size());
+      newProjects.add(proj);
+      aliasList.add(field.getName());
+
+      // find field used by project
+      List<RexGraphVariable> list =
+          ord.e.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+              .collect(Collectors.toUnmodifiableList());
+
+      if (list.size() == 1 && field.getType() instanceof GraphSchemaType) {
+        // if output type is  node/edge, we can simply think this proj just do alias
+        RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
+        RexGraphVariable var = list.get(0);
+
+        // e.g `with v as person`, need to convert person.name back to v.name
+        inputFieldsUsed.add(
+            new RelDataTypeFieldImpl(var.getName(), var.getAliasId(), parentsUsedField.getType()));
+      }
+      varUsedBuilder.addAll(list);
     }
 
-    public RelNode trim(RelNode root) {
-
-        ImmutableSet<RelDataTypeField> fields = findUsedField(root);
-        Map<Integer, RelDataTypeField> fieldsUsed = new HashMap<>();
-        for (RelDataTypeField field : fields) {
-            fieldsUsed.put(field.getIndex(), field);
-        }
-        return dispatchTrimFields(root, fieldsUsed).left;
+    // If project is append, we:
+    // 1. Check whether the field is used by parents
+    // 2. If used, create a new RexGraphVariable as project item, add it in inputFieldUsed and
+    // newFieldList
+    if (project.isAppend()) {
+      // TODO(huaiyu)
     }
 
+    // e.g: with v as person, v.age as age where age>1 and person.name <> "Li"
+    // need concat inputFieldUsed(v.name) and currentFields(v.age)
+    ImmutableSet<RelDataTypeField> currentFields =
+        findUsedFieldsByVars(varUsedBuilder.build(), inputRowType.getFieldList());
+    inputFieldsUsed.concat(currentFields);
 
-    public TrimResult trimFields(GraphLogicalProject project, ImmutableMap<Integer, RelDataTypeField> fieldsUsed) {
-        final RelDataType rowType = project.getRowType();
-        final RelDataType inputRowType = project.getInput()
-                                                .getRowType();
-        List<RelDataTypeField> fieldList = rowType.getFieldList();
-        // key: id of field in project RowType, value: id of filed in input RowType
-        Map<Integer, Integer> aliasMap = new HashMap<>();
-        final int fieldCount = rowType.getFieldCount();
+    // trim child
+    RelNode input = project.getInput();
+    TrimResult trimResult = trimChild(input, inputFieldsUsed);
+    RelNode newInput = trimResult.left;
 
-        Map<Integer, RelDataTypeField> inputFieldUsed = new HashMap<>();
-        final Mapping mapping =
-                Mappings.create(
-                        MappingType.INVERSE_SURJECTION,
-                        fieldCount,
-                        fieldsUsed.size());
+    final Mapping inputMapping = trimResult.right;
 
-        ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
-        List<RexNode> newProjects = new ArrayList<>();
-        List<RelDataTypeField> newFieldList = new ArrayList<>();
-
-
-        for (Ord<RexNode> ord : Ord.zip(project.getProjects())) {
-            RelDataTypeField field = fieldList.get(ord.i);
-            RexNode proj = ord.e;
-
-            // If parents doesn't use current field, just trim it
-            if (!fieldsUsed.keySet()
-                           .contains(field.getIndex())) {
-                continue;
-            }
-
-            mapping.set(ord.i, newProjects.size());
-            newProjects.add(proj);
-
-
-            // find field used by project
-            List<RexGraphVariable> list = ord.e.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                                               .stream()
-                                               .collect(Collectors.toUnmodifiableList());
-
-            // if output type is  node/edge, we can simply think this proj just do alias
-            if (list.size() == 1 && field.getType() instanceof GraphSchemaType) {
-                RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
-                RexGraphVariable var = list.get(0);
-
-                //e.g `with v as person`, need to convert person.name back to v.name
-                inputFieldUsed.put(var.getAliasId(), new RelDataTypeFieldImpl(var.getName(), var.getAliasId(),
-                        parentsUsedField.getType()));
-
-                // add parent used field as new filed to apply property trimming
-                newFieldList.add(parentsUsedField);
-            } else {
-                newFieldList.add(field);
-            }
-            varUsedBuilder.addAll(list);
-        }
-
-        // If project is append, we:
-        // 1. Check whether the field is used by parents
-        // 2. If used, create a new RexGraphVariable as project item, add it in inputFieldUsed and newFieldList
-        int i = project.getProjects()
-                       .size();
-        for (; i < fieldList.size(); ++i) {
-            RelDataTypeField field = fieldList.get(i);
-            if (!fieldsUsed.keySet()
-                           .contains(field.getIndex())) {
-                continue;
-            }
-            RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
-            mapping.set(i, newProjects.size());
-            RexGraphVariable proj = RexGraphVariable.of(field.getIndex(), i, field.getName(), field.getType());
-            newProjects.add(proj);
-            inputFieldUsed.put(parentsUsedField.getIndex(), parentsUsedField);
-            newFieldList.add(parentsUsedField);
-        }
-
-        // e.g: with v as person, v.age as age where age>1 and person.name <> "Li"
-        // need concat inputFieldUsed(v.name) and currentFields(v.age)
-        ImmutableSet<RelDataTypeField> currentFields =
-                compoundFields(varUsedBuilder.build(), inputRowType.getFieldList());
-
-        for (RelDataTypeField field : currentFields) {
-            if (inputFieldUsed.containsKey(field.getIndex())) {
-                RelDataTypeField used = inputFieldUsed.get(field.getIndex());
-                GraphSchemaType newType = concatGraphFields((GraphSchemaType) field.getType(),
-                        (GraphSchemaType) used.getType());
-                inputFieldUsed.put(field.getIndex(), new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType));
-            } else {
-                inputFieldUsed.put(field.getIndex(), field);
-            }
-        }
-
-        //trim child
-        RelNode input = project.getInput();
-        TrimResult trimResult = trimChild(input, inputFieldUsed);
-        RelNode newInput = trimResult.left;
-
-
-        final Mapping inputMapping = trimResult.right;
-
-        if (newFieldList.size() == 0) {
-            return dummyProject(fieldCount, newInput, project);
-        }
-
-        // build new projects
-        final RexVisitor<RexNode> shuttle =
-                new RexPermuteGraphShuttle(
-                        inputMapping, newInput);
-
-        // build new RowType
-
-
-        RelRecordType newRowType = new RelRecordType(StructKind.FULLY_QUALIFIED, newFieldList);
-
-        graphBuilder.push(newInput)
-                    .project(newProjects.stream()
-                                        .map(e -> e.accept(shuttle))
-                                        .collect(Collectors.toList()), newRowType);
-
-        final RelNode newProject = graphBuilder.build();
-        return result(newProject, mapping, project);
+    if (newProjects.size() == 0) {
+      return dummyProject(fieldCount, newInput, project);
     }
 
-    public TrimResult trimFields(GraphLogicalAggregate aggregate, Map<Integer, RelDataTypeField> fieldsUsed) {
+    // build new projects
+    final RexVisitor<RexNode> shuttle = new RexPermuteGraphShuttle(inputMapping, newInput);
+    // TODO(huaiyu): change graphSchema
 
-        ArrayList<GraphAggCall> newCalls = new ArrayList<>();
-        ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
-        Map<Integer, RelDataTypeField> inputFieldUsed = new HashMap<>();
-        int keySize = aggregate.getGroupKey()
-                               .groupKeyCount();
+    final RelNode newProject =
+        graphBuilder
+            .push(newInput)
+            .project(
+                newProjects.stream().map(e -> e.accept(shuttle)).collect(Collectors.toList()),
+                aliasList)
+            .build();
 
-        final RelDataType rowType = aggregate.getRowType();
-        final RelDataType inputRowType = aggregate.getInput()
-                                                  .getRowType();
-        final int fieldCount = rowType.getFieldCount();
-        final Mapping mapping =
-                Mappings.create(
-                        MappingType.INVERSE_SURJECTION,
-                        fieldCount,
-                        fieldsUsed.size());
+    return result(newProject, mapping, project);
+  }
 
+  public TrimResult trimFields(GraphLogicalAggregate aggregate, UsedFields fieldsUsed) {
 
-        // for group by keys, do we need to collect and convert?
-        // e.g:  group().by(values("v").as("a")) where v is a node?
-        GraphGroupKeys keys = aggregate.getGroupKey();
-        for (Ord<RexNode> ord : Ord.zip(keys.getVariables())) {
-            RexNode node = ord.e;
-            List<RexGraphVariable> vars = node.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                                              .stream()
-                                              .collect(Collectors.toUnmodifiableList());
+    List<RelBuilder.AggCall> newCalls = new ArrayList<>();
+    ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
+    UsedFields inputFieldUsed = new UsedFields(fieldsUsed);
+    int keySize = aggregate.getGroupKey().groupKeyCount();
 
-            mapping.set(ord.i, ord.i);
-            RelDataTypeField field = rowType.getFieldList()
-                                            .get(ord.i);
-            // we think it's just an alias
-            if (vars.size() == 1 && field.getType() instanceof GraphSchemaType) {
-                RexGraphVariable var = vars.get(0);
-                if (fieldsUsed.containsKey(field.getIndex())) {
-                    RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
-                    inputFieldUsed.put(var.getAliasId(), new RelDataTypeFieldImpl(var.getName(), var.getAliasId(),
-                            parentsUsedField.getType()));
-                } else {
-                    GraphSchemaType origin = (GraphSchemaType) field.getType();
-                    GraphSchemaType graphSchemaType = new GraphSchemaType(origin.getScanOpt(), origin.getLabelType(),
-                            List.of());
-                    inputFieldUsed.put(var.getAliasId(), new RelDataTypeFieldImpl(var.getName(), var.getAliasId(),
-                            graphSchemaType));
-                }
-            }
-            varUsedBuilder.addAll(vars);
-        }
+    final RelDataType rowType = aggregate.getRowType();
+    final RelDataType inputRowType = aggregate.getInput().getRowType();
+    final int fieldCount = rowType.getFieldCount();
+    final Mapping mapping =
+        Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldsUsed.size());
 
+    // for group by keys, do we need to collect and convert?
+    // e.g:  group().by(values("v").as("a")) where v is a node?
+    GraphGroupKeys keys = aggregate.getGroupKey();
+    for (Ord<RexNode> ord : Ord.zip(keys.getVariables())) {
+      RexNode node = ord.e;
+      List<RexGraphVariable> vars =
+          node.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+              .collect(Collectors.toUnmodifiableList());
 
-        // for aggregate calls, only record the graph variable used by calls
-        for (Ord<GraphAggCall> ord : Ord.zip(aggregate.getAggCalls())) {
-            GraphAggCall call = ord.e;
-            RelDataTypeField field = rowType.getFieldList()
-                                            .get(ord.i);
-            if (fieldsUsed.containsKey(field.getIndex())) {
-                for (RexNode operand : call.getOperands()) {
-                    operand.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                           .stream()
-                           .forEach(varUsedBuilder::add);
-                }
-                mapping.set(ord.i + keySize, newCalls.size() + keySize);
-                newCalls.add(call);
-            }
-        }
-
-        // combine parents used fields and current used fields;
-        ImmutableSet<RelDataTypeField> currentFields = compoundFields(varUsedBuilder.build(), inputRowType.getFieldList());
-        for (RelDataTypeField field : currentFields) {
-            if (inputFieldUsed.containsKey(field.getIndex())) {
-                RelDataTypeField used = inputFieldUsed.get(field.getIndex());
-                GraphSchemaType newType = concatGraphFields((GraphSchemaType) field.getType(),
-                        (GraphSchemaType) used.getType());
-                inputFieldUsed.put(field.getIndex(), new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType));
-            } else {
-                inputFieldUsed.put(field.getIndex(), field);
-            }
-        }
-
-        // trim child
-        RelNode input = aggregate.getInput();
-        TrimResult result = trimChild(input, fieldsUsed);
-        RelNode newInput = result.left;
-        Mapping inputMapping = result.right;
-
-        //TODO(huaiyu): generate new aggregate
-        graphBuilder.push(newInput)
-                    .aggregate(keys, (RelBuilder.AggCall) newCalls);
-        RelNode newAggregate = graphBuilder.build();
-        return result(newAggregate, mapping, aggregate);
-    }
-
-    public TrimResult trimFields(GraphLogicalSort sort, Map<Integer, RelDataTypeField> fieldsUsed) {
-        RexNode offset = sort.offset;
-        RexNode fetch = sort.fetch;
-        RelNode input = sort.getInput();
-        final RelDataType inputRowType = input.getRowType();
-        List<RelFieldCollation> collation = sort.collation.getFieldCollations();
-
-
-        ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
-        offset.accept(new RexVariableAliasCollector<>(true, this::findInput))
-              .stream()
-              .forEach(varUsedBuilder::add);
-
-        fetch.accept(new RexVariableAliasCollector<>(true, this::findInput))
-             .stream()
-             .forEach(varUsedBuilder::add);
-        for (RexNode expr : sort.getSortExps()) {
-            expr.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                .stream()
-                .forEach(varUsedBuilder::add);
-        }
-
-
-        ImmutableSet<RelDataTypeField> current = compoundFields(varUsedBuilder.build(), inputRowType.getFieldList());
-
-        for (RelDataTypeField field : current) {
-            if (field.getType() instanceof GraphSchemaType && fieldsUsed.containsKey(field.getIndex())) {
-                RelDataTypeField used = fieldsUsed.get(field.getIndex());
-                GraphSchemaType newType = concatGraphFields((GraphSchemaType) used.getType(),
-                        (GraphSchemaType) field.getType());
-                fieldsUsed.put(field.getIndex(), new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType));
-            } else {
-                fieldsUsed.put(field.getIndex(), field);
-            }
-        }
-
-
-        TrimResult trimResult = trimChild(input, fieldsUsed);
-        RelNode newInput = trimResult.left;
-        Mapping inputMapping = trimResult.right;
-        final RexVisitor<RexNode> shuttle =
-                new RexPermuteGraphShuttle(
-                        inputMapping, newInput);
-        RexNode newOffset = sort.offset.accept(shuttle);
-        RexNode newFetch = sort.offset.accept(shuttle);
-        List<RexNode> newSortExprs =
-                sort.getSortExps()
-                    .stream()
-                    .map(e -> e.accept(shuttle))
-                    .collect(Collectors.toUnmodifiableList());
-
-        graphBuilder.push(newInput)
-                    .sortLimit(newOffset, newFetch, newSortExprs);
-        RelNode newSort = graphBuilder.build();
-        return result(newSort, inputMapping, sort);
-    }
-
-    public TrimResult trimFields(LogicalFilter filter, Map<Integer, RelDataTypeField> fieldsUsed) {
-        RelDataType inputRowType = filter.getInput()
-                                         .getRowType();
-        Map<Integer, RelDataTypeField> inputFieldsUsed = new HashMap<>(fieldsUsed);
-        // Find columns and PropertyRef used by filter.
-        RexNode condition = filter.getCondition();
-
-        ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
-        condition.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                 .stream()
-                 .forEach(varUsedBuilder::add);
-        ImmutableSet<RelDataTypeField> current = compoundFields(varUsedBuilder.build(), inputRowType.getFieldList());
-
-        for (RelDataTypeField field : current) {
-            if (field.getType() instanceof GraphSchemaType && fieldsUsed.containsKey(field.getIndex())) {
-                RelDataTypeField used = fieldsUsed.get(field.getIndex());
-                GraphSchemaType newType = concatGraphFields((GraphSchemaType) used.getType(),
-                        (GraphSchemaType) field.getType());
-                fieldsUsed.put(field.getIndex(), new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType));
-            } else {
-                fieldsUsed.put(field.getIndex(), field);
-            }
-        }
-
-        // Trim child
-        RelNode input = filter.getInput();
-        TrimResult trimResult = trimChild(input, fieldsUsed);
-        RelNode newInput = trimResult.left;
-        Mapping inputMapping = trimResult.right;
-
-
-        if (Objects.equals(input, newInput)) {
-            return result(filter, inputMapping);
-        }
-
-        // use inputMapping shuttle conditions
-        final RexVisitor<RexNode> shuttle =
-                new RexPermuteGraphShuttle(
-                        inputMapping, newInput);
-        RexNode newCondition = condition.accept(shuttle);
-
-        graphBuilder.push(newInput)
-                    .filter(filter.getVariablesSet(), newCondition);
-        RelNode newFilter = graphBuilder.build();
-        return result(newFilter, inputMapping, filter);
-    }
-
-    public TrimResult trimFields(GraphLogicalSingleMatch singleMatch, Map<Integer, RelDataTypeField> fieldsUsed) {
-        RelNode sentence = singleMatch.getSentence();
-        TrimResult result = trimChild(sentence, fieldsUsed);
-        RelNode newInput = result.left;
-        Mapping inputMapping = result.right;
-
-        if (Objects.equals(sentence, result)) {
-            return result(singleMatch, inputMapping);
-        }
-
-        RelNode newMatch = graphBuilder.match(newInput, singleMatch.getMatchOpt())
-                                       .build();
-        return result(newMatch, inputMapping, singleMatch);
-    }
-
-    public TrimResult trimFields(GraphLogicalMultiMatch multiMatch, Map<Integer, RelDataTypeField> fieldsUsed) {
-        List<RelNode> sentences = multiMatch.getSentences();
-        List<RelNode> newInputs = Collections.emptyList();
-        int fieldCount = multiMatch.getRowType()
-                                   .getFieldCount();
-        boolean changed = false;
-        for (RelNode node : sentences) {
-            TrimResult result = trimChild(node, fieldsUsed);
-            newInputs.add(result.left);
-            if (!changed && Objects.equals(result.left, node)) {
-                changed = true;
-            }
-        }
-        Mapping mapping =
-                Mappings.create(
-                        MappingType.INVERSE_SURJECTION,
-                        fieldCount,
-                        fieldCount);
-        for (int i = 0; i < fieldCount; ++i) {
-            mapping.set(i, i);
-        }
-
-        RelNode newMatch = graphBuilder.match(newInputs.get(0), newInputs.subList(1, sentences.size()))
-                                       .build();
-        return result(newMatch, mapping, multiMatch);
-    }
-
-    public TrimResult trimFields(AbstractBindableTableScan tableScan, Map<Integer, RelDataTypeField> fieldsUsed) {
-        RelDataType rowType = tableScan.getRowType();
-        int aliasId = tableScan.getAliasId();
-        int fieldCount = rowType.getFieldCount();
-        LabelConfig labelConfig = new LabelConfig(false);
-        tableScan.getTableConfig()
-                 .getTables()
-                 .stream()
-                 .map(e -> e.getQualifiedName()
-                            .get(0))
-                 .forEach(labelConfig::addLabel);
-
-        // create new RowType of table scan
-        RelDataTypeField field;
-        if (fieldsUsed.containsKey(aliasId)) {
-            field = fieldsUsed.get(aliasId);
+      mapping.set(ord.i, ord.i);
+      RelDataTypeField field = rowType.getFieldList().get(ord.i);
+      // we think it's just an alias
+      if (vars.size() == 1 && field.getType() instanceof GraphSchemaType) {
+        RexGraphVariable var = vars.get(0);
+        if (fieldsUsed.containsKey(field.getIndex())) {
+          RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
+          inputFieldUsed.add(
+              new RelDataTypeFieldImpl(
+                  var.getName(), var.getAliasId(), parentsUsedField.getType()));
         } else {
-            GraphSchemaType origin = (GraphSchemaType) rowType.getFieldList()
-                                                              .get(0);
-            GraphSchemaType newType = new GraphSchemaType(origin.getScanOpt(), origin.getLabelType(), new ArrayList<>()
-                    , origin.isNullable());
-            field = new RelDataTypeFieldImpl(tableScan.getAliasName(), aliasId, newType);
+          GraphSchemaType origin = (GraphSchemaType) field.getType();
+          GraphSchemaType graphSchemaType =
+              new GraphSchemaType(origin.getScanOpt(), origin.getLabelType(), List.of());
+          inputFieldUsed.add(
+              new RelDataTypeFieldImpl(var.getName(), var.getAliasId(), graphSchemaType));
         }
-        Mapping mapping =
-                Mappings.create(
-                        MappingType.INVERSE_SURJECTION,
-                        fieldCount,
-                        fieldCount);
-        for (int i = 0; i < fieldCount; ++i) {
-            mapping.set(i, i);
+      }
+      varUsedBuilder.addAll(vars);
+    }
+
+    // for aggregate calls, only record the graph variable used by calls
+    for (Ord<GraphAggCall> ord : Ord.zip(aggregate.getAggCalls())) {
+      GraphAggCall call = ord.e;
+      RelDataTypeField field = rowType.getFieldList().get(ord.i);
+
+      if (!fieldsUsed.containsKey(field.getIndex())) {
+        continue;
+      }
+
+      for (RexNode operand : call.getOperands()) {
+        operand.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+            .forEach(varUsedBuilder::add);
+      }
+      mapping.set(ord.i + keySize, newCalls.size() + keySize);
+      newCalls.add(call);
+    }
+
+    // combine parents used fields and current used fields;
+    ImmutableSet<RelDataTypeField> currentFields =
+        findUsedFieldsByVars(varUsedBuilder.build(), inputRowType.getFieldList());
+    inputFieldUsed.concat(currentFields);
+
+    // trim child
+    RelNode input = aggregate.getInput();
+    TrimResult result = trimChild(input, inputFieldUsed);
+    RelNode newInput = result.left;
+    Mapping inputMapping = result.right;
+
+    // TODO(huaiyu): generate new aggregate
+    RelNode newAggregate = graphBuilder.push(newInput).aggregate(keys, newCalls).build();
+    return result(newAggregate, mapping, aggregate);
+  }
+
+  public TrimResult trimFields(GraphLogicalSort sort, UsedFields fieldsUsed) {
+    RexNode offset = sort.offset;
+    RexNode fetch = sort.fetch;
+    RelNode input = sort.getInput();
+    final RelDataType inputRowType = input.getRowType();
+    UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
+
+    ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
+    offset.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+        .forEach(varUsedBuilder::add);
+
+    fetch.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+        .forEach(varUsedBuilder::add);
+
+    for (RexNode expr : sort.getSortExps()) {
+      expr.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+          .forEach(varUsedBuilder::add);
+    }
+
+    ImmutableSet<RelDataTypeField> current =
+        findUsedFieldsByVars(varUsedBuilder.build(), inputRowType.getFieldList());
+
+    inputFieldsUsed.concat(current);
+
+    // trim children
+    TrimResult trimResult = trimChild(input, inputFieldsUsed);
+    RelNode newInput = trimResult.left;
+    Mapping inputMapping = trimResult.right;
+
+    // build new sort
+    final RexVisitor<RexNode> shuttle = new RexPermuteGraphShuttle(inputMapping, newInput);
+    RexNode newOffset = sort.offset.accept(shuttle);
+    RexNode newFetch = sort.fetch.accept(shuttle);
+    List<RexNode> newSortExprs =
+        sort.getSortExps().stream()
+            .map(e -> e.accept(shuttle))
+            .collect(Collectors.toUnmodifiableList());
+
+    RelNode newSort =
+        graphBuilder.push(newInput).sortLimit(newOffset, newFetch, newSortExprs).build();
+    return result(newSort, inputMapping, sort);
+  }
+
+  public TrimResult trimFields(LogicalFilter filter, UsedFields fieldsUsed) {
+    RelDataType inputRowType = filter.getInput().getRowType();
+    UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
+
+    // Find columns and PropertyRef used by filter.
+    RexNode condition = filter.getCondition();
+
+    ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
+    condition.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+        .forEach(varUsedBuilder::add);
+    ImmutableSet<RelDataTypeField> current =
+        findUsedFieldsByVars(varUsedBuilder.build(), inputRowType.getFieldList());
+    inputFieldsUsed.concat(current);
+
+    // Trim child
+    RelNode input = filter.getInput();
+    TrimResult trimResult = trimChild(input, inputFieldsUsed);
+    RelNode newInput = trimResult.left;
+    Mapping inputMapping = trimResult.right;
+
+    if (Objects.equals(input, newInput)) {
+      return result(filter, inputMapping);
+    }
+
+    // use inputMapping shuttle conditions
+    final RexVisitor<RexNode> shuttle = new RexPermuteGraphShuttle(inputMapping, newInput);
+    RexNode newCondition = condition.accept(shuttle);
+
+    RelNode newFilter =
+        graphBuilder.push(newInput).filter(filter.getVariablesSet(), newCondition).build();
+    return result(newFilter, inputMapping, filter);
+  }
+
+  public TrimResult trimFields(GraphLogicalSingleMatch singleMatch, UsedFields fieldsUsed) {
+    RelNode sentence = singleMatch.getSentence();
+    int fieldCount = singleMatch.getRowType().getFieldCount();
+    TrimResult result = trimChild(sentence, fieldsUsed);
+    RelNode newInput = result.left;
+
+    final Mapping mapping = Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldCount);
+    for (int i = 0; i < fieldCount; ++i) {
+      mapping.set(i, i);
+    }
+
+    if (Objects.equals(sentence, result)) {
+      return result(singleMatch, mapping);
+    }
+
+    RelNode newMatch = graphBuilder.match(newInput, singleMatch.getMatchOpt()).build();
+    return result(newMatch, mapping, singleMatch);
+  }
+
+  public TrimResult trimFields(GraphLogicalMultiMatch multiMatch, UsedFields fieldsUsed) {
+    List<RelNode> sentences = multiMatch.getSentences();
+    List<RelNode> newInputs = Collections.emptyList();
+    int fieldCount = multiMatch.getRowType().getFieldCount();
+    boolean changed = false;
+    for (RelNode node : sentences) {
+      TrimResult result = trimChild(node, fieldsUsed);
+      newInputs.add(result.left);
+      if (!changed && Objects.equals(result.left, node)) {
+        changed = true;
+      }
+    }
+    Mapping mapping = Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldCount);
+    for (int i = 0; i < fieldCount; ++i) {
+      mapping.set(i, i);
+    }
+
+    RelNode newMatch =
+        graphBuilder.match(newInputs.get(0), newInputs.subList(1, sentences.size())).build();
+    return result(newMatch, mapping, multiMatch);
+  }
+
+  public TrimResult trimFields(AbstractBindableTableScan tableScan, UsedFields fieldsUsed) {
+    RelDataType rowType = tableScan.getRowType();
+    int aliasId = tableScan.getAliasId();
+    int fieldCount = rowType.getFieldCount();
+    LabelConfig labelConfig = new LabelConfig(false);
+    tableScan.getTableConfig().getTables().stream()
+        .map(e -> e.getQualifiedName().get(0))
+        .forEach(labelConfig::addLabel);
+
+    // create new RowType of table scan
+    RelDataTypeField field;
+    if (fieldsUsed.containsKey(aliasId)) {
+      field = fieldsUsed.get(aliasId);
+    } else {
+      GraphSchemaType origin = (GraphSchemaType) rowType.getFieldList().get(0).getType();
+      GraphSchemaType newType =
+          new GraphSchemaType(
+              origin.getScanOpt(), origin.getLabelType(), new ArrayList<>(), origin.isNullable());
+      field = new RelDataTypeFieldImpl(tableScan.getAliasName(), aliasId, newType);
+    }
+    Mapping mapping = Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldCount);
+    for (int i = 0; i < fieldCount; ++i) {
+      mapping.set(i, i);
+    }
+
+    // create new RelNode
+    if (tableScan instanceof GraphLogicalSource) {
+      GraphLogicalSource source = (GraphLogicalSource) tableScan;
+      SourceConfig config = new SourceConfig(source.getOpt(), labelConfig, source.getAliasName());
+      RelNode newSource = graphBuilder.source(config).build();
+      ((AbstractBindableTableScan) newSource).setRowType(field);
+      return result(newSource, mapping, source);
+
+    } else if (tableScan instanceof GraphLogicalExpand) {
+      GraphLogicalExpand expand = (GraphLogicalExpand) tableScan;
+      RelNode input = expand.getInput(0);
+      TrimResult result = trimChild(input, fieldsUsed);
+      RelNode newInput = result.left;
+      ExpandConfig config =
+          new ExpandConfig(
+              expand.getOpt(), labelConfig, field == null ? null : expand.getAliasName());
+      RelNode newExpand = graphBuilder.push(newInput).expand(config).build();
+      ((AbstractBindableTableScan) newExpand).setRowType(field);
+      return result(newExpand, mapping, expand);
+
+    } else if (tableScan instanceof GraphLogicalGetV) {
+      GraphLogicalGetV getV = (GraphLogicalGetV) tableScan;
+      RelNode input = getV.getInput(0);
+      TrimResult result = trimChild(input, fieldsUsed);
+      RelNode newInput = result.left;
+      GetVConfig config =
+          new GetVConfig(getV.getOpt(), labelConfig, field == null ? null : getV.getAliasName());
+      RelNode newGetV = graphBuilder.push(newInput).getV(config).build();
+      ((AbstractBindableTableScan) newGetV).setRowType(field);
+      return result(newGetV, mapping, getV);
+    }
+
+    return result(tableScan, mapping);
+  }
+
+  protected TrimResult trimChild(RelNode rel, UsedFields fieldsUsed) {
+    return dispatchTrimFields(rel, fieldsUsed);
+  }
+
+  public final RexGraphVariable findInput(RexGraphVariable var) {
+    return var;
+  }
+
+  protected final TrimResult dispatchTrimFields(RelNode rel, UsedFields fieldsUsed) {
+    return graphTrimFieldsDispatcher.invoke(rel, fieldsUsed);
+  }
+
+  /***
+   * Use used {@code RexGraphVariable}s, to compound a new set of fields
+   * e.g:
+   * used vars: [person.name, person.age, friendId, person.age]
+   * return result: [person:[name,age], friendId]
+   * @param vars
+   * @param originalFields
+   * @return newFields
+   */
+  protected final ImmutableSet<RelDataTypeField> findUsedFieldsByVars(
+      ImmutableSet<RexGraphVariable> vars, List<RelDataTypeField> originalFields) {
+    ImmutableSet.Builder builder = ImmutableSet.builder();
+    Map<Integer, Set<@Nullable GraphProperty>> groups =
+        vars.stream()
+            .collect(
+                Collectors.groupingBy(
+                    RexGraphVariable::getAliasId,
+                    Collectors.mapping(RexGraphVariable::getProperty, Collectors.toSet())));
+    for (RelDataTypeField field : originalFields) {
+      if (groups.containsKey(field.getIndex())) {
+        if (field.getType() instanceof GraphSchemaType) {
+          GraphSchemaType original = (GraphSchemaType) field.getType();
+          // find used properties
+          Set<@Nullable GraphProperty> properties = groups.get(field.getIndex());
+          List<RelDataTypeField> fields =
+              original.getFieldList().stream()
+                  .filter(e -> isUsedProperty(properties, e))
+                  .collect(Collectors.toList());
+
+          // create new GraphSchemaType
+          RelDataType graphSchemaType =
+              new GraphSchemaType(original.getScanOpt(), original.getLabelType(), fields);
+          builder.add(new RelDataTypeFieldImpl(field.getName(), field.getIndex(), graphSchemaType));
+
+        } else {
+          builder.add(field);
         }
+      }
+    }
+    return builder.build();
+  }
 
-        // create new RelNode
-        if (tableScan instanceof GraphLogicalSource) {
-            GraphLogicalSource source = (GraphLogicalSource) tableScan;
-            SourceConfig config = new SourceConfig(source.getOpt(), labelConfig, source.getAliasName());
-            RelNode newSource = graphBuilder.source(config)
-                                            .build();
-            ((AbstractBindableTableScan) newSource).setRowType(field);
-            return result(newSource, mapping, source);
-
-        } else if (tableScan instanceof GraphLogicalExpand) {
-            GraphLogicalExpand expand = (GraphLogicalExpand) tableScan;
-            RelNode input = expand.getInput(0);
-            TrimResult result = trimChild(input, fieldsUsed);
-            RelNode newInput = result.left;
-            ExpandConfig config = new ExpandConfig(expand.getOpt(), labelConfig, field == null ? null :
-                    expand.getAliasName());
-            RelNode newExpand = graphBuilder.push(newInput)
-                                            .expand(config)
-                                            .build();
-            ((AbstractBindableTableScan) newExpand).setRowType(field);
-            return result(newExpand, mapping, expand);
-
-        } else if (tableScan instanceof GraphLogicalGetV) {
-            GraphLogicalGetV getV = (GraphLogicalGetV) tableScan;
-            RelNode input = getV.getInput(0);
-            TrimResult result = trimChild(input, fieldsUsed);
-            RelNode newInput = result.left;
-            GetVConfig config = new GetVConfig(getV.getOpt(), labelConfig, field == null ? null : getV.getAliasName());
-            RelNode newGetV = graphBuilder.push(newInput)
-                                          .getV(config)
-                                          .build();
-            ((AbstractBindableTableScan) newGetV).setRowType(field);
-            return result(newGetV, mapping, getV);
+  /**
+   * @param properties
+   * @param field
+   * @return
+   */
+  private final boolean isUsedProperty(
+      Set<@Nullable GraphProperty> properties, RelDataTypeField field) {
+    for (GraphProperty property : properties) {
+      if (property != null) {
+        if (property.getOpt() == GraphProperty.Opt.ALL) {
+          return true;
         }
-
-        return result(tableScan, mapping);
+        boolean isEqual =
+            property.getKey().getOpt() == GraphNameOrId.Opt.NAME
+                ? Objects.equals(property.getKey().getName(), field.getName())
+                : property.getKey().getId() == field.getIndex();
+        if (isEqual) {
+          return true;
+        }
+      }
     }
+    return false;
+  }
 
-    protected TrimResult trimChild(RelNode rel, Map<Integer, RelDataTypeField> fieldsUsed) {
-        return dispatchTrimFields(rel, fieldsUsed);
-
-    }
-
-    final public RexGraphVariable findInput(RexGraphVariable var) {
-        return var;
-    }
-
-    protected final TrimResult dispatchTrimFields(RelNode rel, Map<Integer, RelDataTypeField> fieldsUsed) {
-        return graphTrimFieldsDispatcher.invoke(rel, fieldsUsed);
-    }
-
-    /***
-     * Use used {@code RexGraphVariable}s, to compound a new set of fields
-     * e.g:
-     * used vars: [person.name, person.age, friendId, person.age]
-     * return result: [person:[name,age], friendId]
-     * @param vars
-     * @param originalFields
-     * @return newFields
-     */
-    protected final ImmutableSet<RelDataTypeField> compoundFields(ImmutableSet<RexGraphVariable> vars,
-                                                                  List<RelDataTypeField> originalFields) {
-        ImmutableSet.Builder builder = ImmutableSet.builder();
-        Map<Integer, Set<@Nullable GraphProperty>> groups =
-                vars.stream()
-                    .collect(Collectors.groupingBy(RexGraphVariable::getAliasId, Collectors.mapping(RexGraphVariable::getProperty,
-                            Collectors.toSet()))
-                    );
-        for (RelDataTypeField field : originalFields) {
-            if (groups.containsKey(field.getIndex())) {
-                if (field.getType() instanceof GraphSchemaType) {
+  /**
+   * find usedFields of the root of the RelPlan tree
+   *
+   * @param root
+   * @return
+   */
+  protected UsedFields findUsedField(RelNode root) {
+    RelDataType rowType = root.getRowType();
+    List<RelDataTypeField> fields = rowType.getFieldList();
+    Set<RelDataTypeField> set =
+        fields.stream()
+            .map(
+                field -> {
+                  if (field.getType() instanceof GraphSchemaType) {
                     GraphSchemaType original = (GraphSchemaType) field.getType();
-                    // find used properties
-                    Set<@Nullable GraphProperty> properties = groups.get(field.getIndex());
-                    List<RelDataTypeField> fields =
-                            original.getFieldList()
-                                    .stream()
-                                    .filter(e -> properties.contains(e.getIndex()))
-                                    .collect(Collectors.toList());
+                    GraphSchemaType newType =
+                        new GraphSchemaType(
+                            original.getScanOpt(), original.getLabelType(), new ArrayList<>());
+                    return new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType);
+                  } else {
+                    return field;
+                  }
+                })
+            .collect(Collectors.toSet());
+    return new UsedFields(set);
+  }
 
-                    // create new GraphSchemaType
-                    RelDataType graphSchemaType = new GraphSchemaType(original.getScanOpt(),
-                            original.getLabelType(), fields);
-                    builder.add(new RelDataTypeFieldImpl(field.getName(), field.getIndex(), graphSchemaType));
+  public class UsedFields {
+    private final Map<Integer, RelDataTypeField> fieldMap;
 
-                } else {
-                    builder.add(field);
-                }
-            }
-        }
-        return builder.build();
+    public UsedFields() {
+      fieldMap = new HashMap<>();
+    }
+
+    public UsedFields(Set<RelDataTypeField> fields) {
+      fieldMap = new HashMap<>();
+      for (RelDataTypeField field : fields) {
+        fieldMap.put(field.getIndex(), field);
+      }
+    }
+
+    public UsedFields(UsedFields fields) {
+      fieldMap = new HashMap<>(fields.fieldMap);
+    }
+
+    public void add(RelDataTypeField field) {
+      fieldMap.put(field.getIndex(), field);
     }
 
     /**
-     * Concat properties of two GraphSchemaType and generate a new GraphSchemaType
-     * e.g: used-> [person:[name], friend:[age]], current-> [person:[name, age], cnt]
-     * after concat, the result -> [person:[name,age],friend:[age], cnt]
+     * Concat properties of two RowType and generate a new RowType e.g: current-> [person:[name],
+     * friend:[age]], fields-> [person:[name, age], cnt] after concat, the result ->
+     * [person:[name,age],friend:[age], cnt]
      *
-     * @param used
-     * @param current
+     * @param fields
+     */
+    public void concat(Set<RelDataTypeField> fields) {
+      for (RelDataTypeField field : fields) {
+        if (fieldMap.containsKey(field.getIndex())) {
+          if (field.getType() instanceof GraphSchemaType) {
+            GraphSchemaType lhs = (GraphSchemaType) fieldMap.get(field.getIndex()).getType();
+            GraphSchemaType rhs = (GraphSchemaType) field.getType();
+            List<RelDataTypeField> newFields = new ArrayList<>();
+            newFields.addAll(lhs.getFieldList());
+            newFields.addAll(rhs.getFieldList());
+            newFields = newFields.stream().distinct().collect(Collectors.toList());
+            GraphSchemaType newType =
+                new GraphSchemaType(rhs.getScanOpt(), rhs.getLabelType(), newFields);
+            fieldMap.put(
+                field.getIndex(),
+                new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType));
+          }
+        } else {
+          fieldMap.put(field.getIndex(), field);
+        }
+      }
+    }
+
+    /**
+     * Get {@code RelDataTypeField} by field index
+     *
+     * @param i
      * @return
      */
-    protected final GraphSchemaType concatGraphFields(GraphSchemaType used, GraphSchemaType current) {
-        ArrayList<RelDataTypeField> fields = new ArrayList<>();
-        fields.addAll(used.getFieldList());
-        fields.addAll(current.getFieldList());
-        List<RelDataTypeField> result = fields.stream()
-                                              .distinct()
-                                              .collect(Collectors.toList());
-        return new GraphSchemaType(current.getScanOpt(),
-                current.getLabelType(), fields);
+    public final @Nullable RelDataTypeField get(int i) {
+      return fieldMap.getOrDefault(i, null);
     }
 
-
-    protected ImmutableSet findUsedField(RelNode relNode) {
-        ImmutableSet.Builder builder = ImmutableSet.builder();
-        RelDataType rowType = relNode.getInput(0)
-                                     .getRowType();
-        if (relNode instanceof GraphLogicalProject) {
-            GraphLogicalProject project = (GraphLogicalProject) relNode;
-            for (RexNode proj : project.getProjects()) {
-                proj.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                    .stream()
-                    .forEach(builder::add);
-            }
-        } else if (relNode instanceof Filter) {
-            Filter filter = (Filter) relNode;
-            RexNode condition = filter.getCondition();
-            condition.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                     .stream()
-                     .forEach(builder::add);
-
-        } else if (relNode instanceof GraphLogicalSort) {
-            GraphLogicalSort sort = (GraphLogicalSort) relNode;
-            ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
-            sort.offset.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                       .stream()
-                       .forEach(varUsedBuilder::add);
-
-            sort.fetch.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                      .stream()
-                      .forEach(varUsedBuilder::add);
-            for (RexNode sortNode : sort.getSortExps()) {
-                sortNode.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                        .stream()
-                        .forEach(varUsedBuilder::add);
-            }
-        } else if (relNode instanceof GraphLogicalAggregate) {
-            GraphLogicalAggregate aggregate = (GraphLogicalAggregate) relNode;
-            for (RexNode var : aggregate.getGroupKey()
-                                        .getVariables()) {
-                var.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                   .stream()
-                   .forEach(builder::add);
-            }
-            for (GraphAggCall call : aggregate.getAggCalls()) {
-                for (RexNode operand : call.getOperands()) {
-                    operand.accept(new RexVariableAliasCollector<>(true, this::findInput))
-                           .stream()
-                           .forEach(builder::add);
-                }
-            }
-        }
-
-        return compoundFields(builder.build(), rowType.getFieldList());
+    public final boolean containsKey(int i) {
+      return fieldMap.containsKey(i);
     }
 
+    public final int size() {
+      return fieldMap.size();
+    }
+  }
 }
