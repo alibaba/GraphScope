@@ -45,6 +45,8 @@ pub enum EntryType {
     Path,
     /// Common data type of `Object`, including Primitives, String, etc.
     Object,
+    /// A pair type of two entries
+    Pair,
     /// A specific type used in `ExtendIntersect`, for an optimized implementation of `Intersection`
     Intersection,
     /// Type of collection consisting of entries
@@ -165,6 +167,14 @@ impl Encode for DynEntry {
                     .unwrap()
                     .write_to(writer)?;
             }
+            EntryType::Pair => {
+                writer.write_u8(7)?;
+                self.inner
+                    .as_any_ref()
+                    .downcast_ref::<PairEntry>()
+                    .unwrap()
+                    .write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -197,6 +207,10 @@ impl Decode for DynEntry {
             6 => {
                 let collection = CollectionEntry::read_from(reader)?;
                 Ok(DynEntry::new(collection))
+            }
+            7 => {
+                let pair = PairEntry::read_from(reader)?;
+                Ok(DynEntry::new(pair))
             }
             _ => unreachable!(),
         }
@@ -275,6 +289,10 @@ impl Hash for DynEntry {
                 .as_any_ref()
                 .downcast_ref::<CollectionEntry>()
                 .hash(state),
+            EntryType::Pair => self
+                .as_any_ref()
+                .downcast_ref::<PairEntry>()
+                .hash(state),
         }
     }
 }
@@ -300,6 +318,10 @@ impl PartialEq for DynEntry {
                     .eq(&other
                         .as_any_ref()
                         .downcast_ref::<CollectionEntry>()),
+                EntryType::Pair => self
+                    .as_any_ref()
+                    .downcast_ref::<PairEntry>()
+                    .eq(&other.as_any_ref().downcast_ref::<PairEntry>()),
             }
         } else {
             false
@@ -334,6 +356,10 @@ impl PartialOrd for DynEntry {
                             .as_any_ref()
                             .downcast_ref::<CollectionEntry>(),
                     ),
+                EntryType::Pair => self
+                    .as_any_ref()
+                    .downcast_ref::<PairEntry>()
+                    .partial_cmp(&other.as_any_ref().downcast_ref::<PairEntry>()),
             }
         } else {
             None
@@ -402,6 +428,64 @@ impl Entry for GraphPath {
 
     fn as_graph_path(&self) -> Option<&GraphPath> {
         Some(self)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, PartialOrd, Eq, Hash)]
+pub struct PairEntry {
+    left: DynEntry,
+    right: DynEntry,
+}
+
+impl_as_any!(PairEntry);
+
+impl PairEntry {
+    pub fn new(left: DynEntry, right: DynEntry) -> Self {
+        PairEntry { left, right }
+    }
+
+    pub fn get_left(&self) -> &DynEntry {
+        &self.left
+    }
+
+    pub fn get_right(&self) -> &DynEntry {
+        &self.right
+    }
+}
+
+impl Entry for PairEntry {
+    fn get_type(&self) -> EntryType {
+        EntryType::Pair
+    }
+}
+
+impl Element for PairEntry {
+    fn as_graph_element(&self) -> Option<&dyn GraphElement> {
+        None
+    }
+
+    fn len(&self) -> usize {
+        1
+    }
+
+    fn as_borrow_object(&self) -> BorrowObject {
+        BorrowObject::None
+    }
+}
+
+impl Encode for PairEntry {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
+        self.left.write_to(writer)?;
+        self.right.write_to(writer)?;
+        Ok(())
+    }
+}
+
+impl Decode for PairEntry {
+    fn read_from<R: ReadExt>(reader: &mut R) -> std::io::Result<Self> {
+        let left = DynEntry::read_from(reader)?;
+        let right = DynEntry::read_from(reader)?;
+        Ok(PairEntry::new(left, right))
     }
 }
 
@@ -555,5 +639,11 @@ impl From<Vec<DynEntry>> for DynEntry {
 impl From<CollectionEntry> for DynEntry {
     fn from(c: CollectionEntry) -> Self {
         DynEntry::new(c)
+    }
+}
+
+impl From<PairEntry> for DynEntry {
+    fn from(p: PairEntry) -> Self {
+        DynEntry::new(p)
     }
 }

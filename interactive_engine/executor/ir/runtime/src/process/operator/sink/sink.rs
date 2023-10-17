@@ -28,8 +28,8 @@ use pegasus::api::function::{FnResult, MapFunction};
 use pegasus_common::downcast::AsAny;
 use prost::Message;
 
-use crate::error::FnGenResult;
-use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryType};
+use crate::error::{FnGenResult, FnExecResult, FnExecError};
+use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryType, PairEntry};
 use crate::process::operator::map::IntersectionEntry;
 use crate::process::operator::sink::{SinkGen, Sinker};
 use crate::process::record::Record;
@@ -43,7 +43,7 @@ pub struct RecordSinkEncoder {
 }
 
 impl RecordSinkEncoder {
-    fn entry_to_pb(&self, e: &DynEntry) -> result_pb::Entry {
+    fn entry_to_pb(&self, e: &DynEntry) -> FnExecResult<result_pb::Entry> {
         let inner = match e.get_type() {
             EntryType::Collection => {
                 let collection = e
@@ -51,13 +51,30 @@ impl RecordSinkEncoder {
                     .downcast_ref::<CollectionEntry>()
                     .unwrap();
                 let mut collection_pb = Vec::with_capacity(collection.len());
-                for element in &collection.inner {
-                    let element_pb = self.element_to_pb(element);
-                    collection_pb.push(element_pb);
+                if collection.len() == 0 {
+                    return Ok(result_pb::Entry {
+                        inner: Some(result_pb::entry::Inner::Collection(result_pb::Collection {
+                            collection: vec![],
+                        })),
+                    });
                 }
-                Some(result_pb::entry::Inner::Collection(result_pb::Collection {
-                    collection: collection_pb,
-                }))
+                if collection.inner[0]
+                    .get_type()
+                    .eq(&EntryType::Pair)
+                {
+                    // convert to a map result
+                    let map_pb = self.collection_map_to_pb(collection.clone())?;
+                    Some(result_pb::entry::Inner::Map(map_pb))
+                } else {
+                    // convert to a collection result
+                    for element in &collection.inner {
+                        let element_pb = self.element_to_pb(element);
+                        collection_pb.push(element_pb);
+                    }
+                    Some(result_pb::entry::Inner::Collection(result_pb::Collection {
+                        collection: collection_pb,
+                    }))
+                }
             }
             EntryType::Intersection => {
                 let intersection = e
@@ -84,7 +101,7 @@ impl RecordSinkEncoder {
                 }
             }
         };
-        result_pb::Entry { inner }
+        Ok(result_pb::Entry { inner })
     }
 
     // return if the given entry is a map entry result from Map eval.
@@ -115,6 +132,24 @@ impl RecordSinkEncoder {
         None
     }
 
+    fn collection_map_to_pb(&self, e: CollectionEntry) -> FnExecResult<result_pb::KeyValues> {
+        let mut key_values: Vec<result_pb::key_values::KeyValue> = Vec::with_capacity(e.len());
+        for key_val_entry in e.inner {
+            let pair = key_val_entry
+                .as_any_ref()
+                .downcast_ref::<PairEntry>()
+                .unwrap();
+            if let Some(key_obj) = pair.get_left().as_object() {
+                let key_pb: common_pb::Value = key_obj.clone().into();
+                let val_pb = self.element_to_pb(pair.get_right());
+                key_values.push(result_pb::key_values::KeyValue { key: Some(key_pb), value: Some(val_pb) })
+            } else {
+                Err(FnExecError::unsupported_error(&format!("only support map result with object key, while it is {:?}", pair.get_left())))?
+             }
+        }
+        Ok(result_pb::KeyValues { key_values })
+    }
+
     fn element_to_pb(&self, e: &DynEntry) -> result_pb::Element {
         let inner = match e.get_type() {
             EntryType::Vertex => {
@@ -137,6 +172,9 @@ impl RecordSinkEncoder {
                 unreachable!()
             }
             EntryType::Intersection => {
+                unreachable!()
+            }
+            EntryType::Pair => {
                 unreachable!()
             }
         };
@@ -264,7 +302,7 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
             // the case of sink all **tagged** columns by default.
             let columns = input.get_columns_mut();
             for (sink_key, entry) in columns.into_iter() {
-                let entry_pb = self.entry_to_pb(entry);
+                let entry_pb = self.entry_to_pb(entry)?;
                 let column_pb = result_pb::Column {
                     name_or_id: Some(self.meta_to_pb(NameOrId::Id(sink_key as KeyId), MetaType::Tag)),
                     entry: Some(entry_pb),
@@ -274,7 +312,7 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
         } else {
             for sink_key in self.sink_keys.iter() {
                 if let Some(entry) = input.get(sink_key.clone()) {
-                    let entry_pb = self.entry_to_pb(entry);
+                    let entry_pb = self.entry_to_pb(entry)?;
                     let column_pb = result_pb::Column {
                         name_or_id: sink_key
                             .clone()

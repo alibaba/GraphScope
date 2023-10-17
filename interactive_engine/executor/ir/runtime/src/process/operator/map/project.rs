@@ -15,6 +15,7 @@
 
 use std::convert::TryFrom;
 
+use dyn_type::Object;
 use graph_proxy::utils::expr::eval::{Evaluate, Evaluator};
 use ir_common::error::ParsePbError;
 use ir_common::generated::common as common_pb;
@@ -25,6 +26,7 @@ use pegasus::api::function::{FilterMapFunction, FnResult};
 use crate::error::{FnExecResult, FnGenResult};
 use crate::process::entry::CollectionEntry;
 use crate::process::entry::DynEntry;
+use crate::process::entry::PairEntry;
 use crate::process::operator::map::FilterMapFuncGen;
 use crate::process::operator::TagKey;
 use crate::process::record::Record;
@@ -42,7 +44,10 @@ struct ProjectOperator {
 pub enum Projector {
     ExprProjector(Evaluator),
     GraphElementProjector(TagKey),
-    MultiGraphElementProjector(Vec<TagKey>),
+    /// MultiGraphElementProject will output a collection entry.
+    /// If the key is given, it is a collection of PairEntry with user-given key, and value of projected graph elements (computed via TagKey);
+    /// If the key is None, it is a collection of projected graph elements (computed via TagKey).
+    MultiGraphElementProjector(Vec<(Option<Object>, TagKey)>),
 }
 
 // TODO:
@@ -60,11 +65,15 @@ fn exec_projector(input: &Record, projector: &Projector) -> FnExecResult<DynEntr
             DynEntry::new(projected_result)
         }
         Projector::GraphElementProjector(tag_key) => tag_key.get_arc_entry(input)?,
-        Projector::MultiGraphElementProjector(tag_keys) => {
-            let mut collection = Vec::with_capacity(tag_keys.len());
-            for tag_key in tag_keys.iter() {
+        Projector::MultiGraphElementProjector(key_vals) => {
+            let mut collection = Vec::with_capacity(key_vals.len());
+            for (key, tag_key) in key_vals.iter() {
                 let entry = tag_key.get_arc_entry(input)?;
-                collection.push(entry);
+                if let Some(key) = key {
+                    collection.push(PairEntry::new(key.clone().into(), entry).into());
+                } else {
+                    collection.push(entry);
+                }
             }
             DynEntry::new(CollectionEntry { inner: collection })
         }
@@ -137,13 +146,38 @@ impl FilterMapFuncGen for pb::Project {
                         Projector::GraphElementProjector(tag_key)
                     }
                     common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Vars(vars)), .. } => {
-                        // TODO: for VarMap, we may also implemnt as MultiGraphElementProjector? because there's no need to preserve key in each record.
                         let tag_keys = vars
                             .keys
                             .iter()
-                            .map(|var| TagKey::try_from(var.clone()))
-                            .collect::<Result<Vec<_>, _>>()?;
+                            .map(|var| match TagKey::try_from(var.clone()) {
+                                Ok(tag_key) => Ok((None, tag_key)),
+                                Err(err) => Err(err),
+                            })
+                            .collect::<Result<Vec<(Option<Object>, TagKey)>, _>>()?;
                         Projector::MultiGraphElementProjector(tag_keys)
+                    }
+                    common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Map(key_vals)), .. } => {
+                        let mut key_value_vec = Vec::with_capacity(key_vals.key_vals.len());
+                        for key_val in key_vals.key_vals.iter() {
+                            let key = key_val
+                                .key
+                                .as_ref()
+                                .ok_or(ParsePbError::EmptyFieldError(format!(
+                                    "key in Map Expr {:?}",
+                                    key_val
+                                )))?;
+                            let key_obj = Object::try_from(key.clone())?;
+                            let val = key_val
+                                .value
+                                .as_ref()
+                                .ok_or(ParsePbError::EmptyFieldError(format!(
+                                    "value in Map Expr {:?}",
+                                    key_val
+                                )))?;
+                            let tag_key = TagKey::try_from(val.clone())?;
+                            key_value_vec.push((Some(key_obj), tag_key));
+                        }
+                        Projector::MultiGraphElementProjector(key_value_vec)
                     }
                     _ => {
                         let evaluator = Evaluator::try_from(expr)?;
@@ -170,6 +204,7 @@ mod tests {
     use dyn_type::Object;
     use graph_proxy::apis::{DynDetails, GraphElement, Vertex};
     use ir_common::expr_parse::str_to_expr_pb;
+    use ir_common::generated::common as common_pb;
     use ir_common::generated::physical as pb;
     use ir_common::NameOrId;
     use pegasus::api::{Map, Sink};
@@ -177,7 +212,7 @@ mod tests {
     use pegasus::JobConf;
     use pegasus_common::downcast::AsAny;
 
-    use crate::process::entry::{CollectionEntry, Entry};
+    use crate::process::entry::{CollectionEntry, Entry, PairEntry};
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
@@ -587,17 +622,20 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
-    // g.V().valueMap('age', 'name') with alias of 'age' as 'newAge' and 'name' as 'newName', by map
+    // g.V().valueMap('age', 'name').isNull, with alias of 'age' as 'newAge' and 'name' as 'newName' (by map)
+    // this is projected by ExprProjector
     #[test]
     fn project_map_mapping_test() {
+        let mut expr = to_expr_map_pb(vec![
+            ("newAge".to_string(), (None, Some("age".into()))),
+            ("newName".to_string(), (None, Some("name".into()))),
+        ]);
+        expr.operators.push(common_pb::ExprOpr {
+            item: Some(common_pb::expr_opr::Item::Logical(13)), // isNull
+            node_type: None,
+        });
         let project_opr_pb = pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(to_expr_map_pb(vec![
-                    ("newName".to_string(), (None, Some("name".into()))),
-                    ("newAge".to_string(), (None, Some("age".into()))),
-                ])),
-                alias: None,
-            }],
+            mappings: vec![pb::project::ExprAlias { expr: Some(expr), alias: None }],
             is_append: false,
         };
         let mut result = project_test(init_source(), project_opr_pb);
@@ -606,17 +644,56 @@ mod tests {
             let value = res.get(None).unwrap().as_object().unwrap();
             object_result.push(value.clone());
         }
+        let expected_result = vec![object!(false), object!(false)];
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().valueMap('age', 'name') with alias of 'age' as 'newAge' and 'name' as 'newName', by map
+    // this is projected by MultiGraphElementProjector
+    #[test]
+    fn simple_project_map_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_map_pb(vec![
+                    ("newAge".to_string(), (None, Some("age".into()))),
+                    ("newName".to_string(), (None, Some("name".into()))),
+                ])),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source(), project_opr_pb);
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let collection = res
+                .get(None)
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            let mut result = vec![];
+            for entry in collection.inner.iter() {
+                let pair_entry = entry
+                    .as_any_ref()
+                    .downcast_ref::<PairEntry>()
+                    .unwrap();
+                let key = pair_entry
+                    .get_left()
+                    .as_any_ref()
+                    .downcast_ref::<Object>()
+                    .unwrap();
+                let value = pair_entry
+                    .get_right()
+                    .as_any_ref()
+                    .downcast_ref::<Object>()
+                    .unwrap();
+                result.push((key.clone(), value.clone()));
+            }
+            object_result.push(result);
+        }
         let expected_result = vec![
-            Object::KV(
-                vec![(object!("newAge"), object!(29)), (object!("newName"), object!("marko"))]
-                    .into_iter()
-                    .collect(),
-            ),
-            Object::KV(
-                vec![(object!("newAge"), object!(27)), (object!("newName"), object!("vadas"))]
-                    .into_iter()
-                    .collect(),
-            ),
+            vec![(object!("newAge"), object!(29)), (object!("newName"), object!("marko"))],
+            vec![(object!("newAge"), object!(27)), (object!("newName"), object!("vadas"))],
         ];
         assert_eq!(object_result, expected_result);
     }
@@ -670,17 +747,20 @@ mod tests {
         assert_eq!(object_result, expected_result);
     }
 
-    // g.V().as("a").select("a").by(valueMap("age", "name")),with alias of 'a.age' as 'newAge' and 'a.tname' as 'newName', by map
+    // g.V().as("a").select("a").by(valueMap("age", "name")),with alias of 'a.age' as 'newAge' and 'a.name' as 'newName', by map
+    // this is projected by ExprProjector
     #[test]
     fn project_tag_map_mapping_test() {
+        let mut expr = to_expr_map_pb(vec![
+            ("newAge".to_string(), (Some(TAG_A.into()), Some("age".into()))),
+            ("newName".to_string(), (Some(TAG_A.into()), Some("name".into()))),
+        ]);
+        expr.operators.push(common_pb::ExprOpr {
+            item: Some(common_pb::expr_opr::Item::Logical(13)), // isNull
+            node_type: None,
+        });
         let project_opr_pb = pb::Project {
-            mappings: vec![pb::project::ExprAlias {
-                expr: Some(to_expr_map_pb(vec![
-                    ("newAge".to_string(), (Some(TAG_A.into()), Some("age".into()))),
-                    ("newName".to_string(), (Some(TAG_A.into()), Some("name".into()))),
-                ])),
-                alias: None,
-            }],
+            mappings: vec![pb::project::ExprAlias { expr: Some(expr), alias: None }],
             is_append: false,
         };
         let mut result = project_test(init_source_with_tag(), project_opr_pb);
@@ -695,17 +775,57 @@ mod tests {
             );
         }
 
+        let expected_result = vec![object!(false), object!(false)];
+        assert_eq!(object_result, expected_result);
+    }
+
+    // g.V().as("a").select("a").by(valueMap("age", "name")),with alias of 'a.age' as 'newAge' and 'a.tname' as 'newName', by map
+    // this is projected by MultiGraphElementProjector
+    #[test]
+    fn simple_project_tag_map_mapping_test() {
+        let project_opr_pb = pb::Project {
+            mappings: vec![pb::project::ExprAlias {
+                expr: Some(to_expr_map_pb(vec![
+                    ("newName".to_string(), (Some(TAG_A.into()), Some("name".into()))),
+                    ("newAge".to_string(), (Some(TAG_A.into()), Some("age".into()))),
+                ])),
+                alias: None,
+            }],
+            is_append: false,
+        };
+        let mut result = project_test(init_source_with_tag(), project_opr_pb);
+
+        let mut object_result = vec![];
+        while let Some(Ok(res)) = result.next() {
+            let collection = res
+                .get(None)
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            let mut result = vec![];
+            for entry in collection.inner.iter() {
+                let pair_entry = entry
+                    .as_any_ref()
+                    .downcast_ref::<PairEntry>()
+                    .unwrap();
+                let key = pair_entry
+                    .get_left()
+                    .as_any_ref()
+                    .downcast_ref::<Object>()
+                    .unwrap();
+                let value = pair_entry
+                    .get_right()
+                    .as_any_ref()
+                    .downcast_ref::<Object>()
+                    .unwrap();
+                result.push((key.clone(), value.clone()));
+            }
+            object_result.push(result);
+        }
         let expected_result = vec![
-            Object::KV(
-                vec![(object!("newAge"), object!(29)), (object!("newName"), object!("marko"))]
-                    .into_iter()
-                    .collect(),
-            ),
-            Object::KV(
-                vec![(object!("newAge"), object!(27)), (object!("newName"), object!("vadas"))]
-                    .into_iter()
-                    .collect(),
-            ),
+            vec![(object!("newName"), object!("marko")), (object!("newAge"), object!(29))],
+            vec![(object!("newName"), object!("vadas")), (object!("newAge"), object!(27))],
         ];
         assert_eq!(object_result, expected_result);
     }
