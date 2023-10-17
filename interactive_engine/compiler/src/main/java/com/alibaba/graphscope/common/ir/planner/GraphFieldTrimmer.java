@@ -150,7 +150,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
 
   public TrimResult trimFields(GraphLogicalAggregate aggregate, UsedFields fieldsUsed) {
 
-    List<RelBuilder.AggCall> newCalls = new ArrayList<>();
+    List<GraphAggCall> aggCalls = new ArrayList<>();
+
     ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
     UsedFields inputFieldUsed = new UsedFields(fieldsUsed);
     int keySize = aggregate.getGroupKey().groupKeyCount();
@@ -175,6 +176,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
       // we think it's just an alias
       if (vars.size() == 1 && field.getType() instanceof GraphSchemaType) {
         RexGraphVariable var = vars.get(0);
+
         if (fieldsUsed.containsKey(field.getIndex())) {
           RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
           inputFieldUsed.add(
@@ -204,8 +206,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         operand.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
             .forEach(varUsedBuilder::add);
       }
-      mapping.set(ord.i + keySize, newCalls.size() + keySize);
-      newCalls.add(call);
+      mapping.set(ord.i + keySize, aggCalls.size() + keySize);
+      aggCalls.add(call);
     }
 
     // combine parents used fields and current used fields;
@@ -219,8 +221,24 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     RelNode newInput = result.left;
     Mapping inputMapping = result.right;
 
-    // TODO(huaiyu): generate new aggregate
-    RelNode newAggregate = graphBuilder.push(newInput).aggregate(keys, newCalls).build();
+    // create new aggregate
+    final RexVisitor<RexNode> shuttle = new RexPermuteGraphShuttle(inputMapping, newInput);
+    List<RexNode> vars =
+        keys.getVariables().stream().map(var -> var.accept(shuttle)).collect(Collectors.toList());
+    GraphGroupKeys newKeys = new GraphGroupKeys(vars, keys.getAliases());
+    List<RelBuilder.AggCall> newAggCalls =
+        aggCalls.stream()
+            .map(
+                call -> {
+                  List<RexNode> operands =
+                      call.getOperands().stream()
+                          .map(operand -> operand.accept(shuttle))
+                          .collect(Collectors.toList());
+                  return new GraphAggCall(call.getCluster(), call.getAggFunction(), operands);
+                })
+            .collect(Collectors.toList());
+
+    RelNode newAggregate = graphBuilder.push(newInput).aggregate(newKeys, newAggCalls).build();
     return result(newAggregate, mapping, aggregate);
   }
 
