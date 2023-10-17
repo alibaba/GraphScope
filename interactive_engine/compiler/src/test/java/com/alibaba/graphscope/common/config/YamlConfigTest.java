@@ -91,7 +91,7 @@ public class YamlConfigTest {
                         + " propertyList=[DefaultGraphProperty{id=0, name=id, dataType=LONG},"
                         + " DefaultGraphProperty{id=1, name=name, dataType=STRING},"
                         + " DefaultGraphProperty{id=2, name=lang, dataType=STRING},"
-                        + " DefaultGraphProperty{id=3, name=creationDate, dataType=DATE32}],"
+                        + " DefaultGraphProperty{id=3, name=creationDate, dataType=DATE}],"
                         + " primaryKeyList=[id]}",
                 graphSchema.getElement("software").toString());
     }

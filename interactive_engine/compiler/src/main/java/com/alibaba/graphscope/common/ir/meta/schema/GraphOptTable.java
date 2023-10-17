@@ -124,7 +124,7 @@ public class GraphOptTable implements RelOptTable {
                 return typeFactory.createSqlType(SqlTypeName.FLOAT);
             case DOUBLE:
                 return typeFactory.createSqlType(SqlTypeName.DOUBLE);
-            case DATE32:
+            case DATE:
                 return typeFactory.createSqlType(SqlTypeName.DATE);
             case TIME32:
                 return typeFactory.createSqlType(SqlTypeName.TIME);

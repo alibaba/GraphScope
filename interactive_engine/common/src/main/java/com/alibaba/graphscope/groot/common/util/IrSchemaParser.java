@@ -144,7 +144,7 @@ public class IrSchemaParser {
                 return 8;
             case STRING_LIST:
                 return 9;
-            case DATE32:
+            case DATE:
                 return 12;
             case TIME32:
                 return 13;

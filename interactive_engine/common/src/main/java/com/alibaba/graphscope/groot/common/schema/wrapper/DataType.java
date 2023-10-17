@@ -35,7 +35,7 @@ public enum DataType {
     DOUBLE_LIST(13),
     STRING_LIST(14),
     BYTES_LIST(15),
-    DATE32(16),
+    DATE(16), // represent DATE32
     TIME32(17),
     TIMESTAMP(18);
 

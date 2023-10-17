@@ -160,7 +160,7 @@ public abstract class Utils {
                     case "DT_STRING":
                         return DataType.STRING;
                     case "DT_DATE32":
-                        return DataType.DATE32;
+                        return DataType.DATE;
                     case "DT_TIME32":
                         return DataType.TIME32;
                     case "TIMESTAMP":
@@ -273,7 +273,7 @@ public abstract class Utils {
             case 9:
                 return DataType.STRING_LIST;
             case 12:
-                return DataType.DATE32;
+                return DataType.DATE;
             case 13:
                 return DataType.TIME32;
             case 14:
