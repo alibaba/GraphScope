@@ -76,11 +76,43 @@ impl RecordSinkEncoder {
                 }))
             }
             _ => {
-                let element_pb = self.element_to_pb(e);
-                Some(result_pb::entry::Inner::Element(element_pb))
+                if let Some(map_pb) = self.try_map_to_pb(e) {
+                    Some(result_pb::entry::Inner::Map(map_pb))
+                } else {
+                    let element_pb = self.element_to_pb(e);
+                    Some(result_pb::entry::Inner::Element(element_pb))
+                }
             }
         };
         result_pb::Entry { inner }
+    }
+
+    // return if the given entry is a map entry result from Map eval.
+    fn try_map_to_pb(&self, e: &DynEntry) -> Option<result_pb::KeyValues> {
+        if let EntryType::Object = e.get_type() {
+            if let Object::KV(kv) = e.as_object().unwrap() {
+                let mut key_values: Vec<result_pb::key_values::KeyValue> = Vec::with_capacity(kv.len());
+                if let Some(probe) = kv.iter().next() {
+                    if let Object::Vector(_) = probe.0 {
+                        // the value computed by VarMap.eval(), which will return an Element result. This will be deprecated soon.
+                        return None;
+                    }
+                }
+                for (key, val) in kv {
+                    let key_pb: common_pb::Value = key.clone().into();
+                    let val_pb: common_pb::Value = val.clone().into();
+                    key_values.push(result_pb::key_values::KeyValue {
+                        key: Some(key_pb),
+                        value: Some(result_pb::Element {
+                            inner: Some(result_pb::element::Inner::Object(val_pb)),
+                        }),
+                    })
+                }
+                return Some(result_pb::KeyValues { key_values });
+            }
+        }
+
+        None
     }
 
     fn element_to_pb(&self, e: &DynEntry) -> result_pb::Element {
@@ -116,6 +148,7 @@ impl RecordSinkEncoder {
             let mut pairs: Vec<common_pb::Pair> = Vec::with_capacity(kv.len());
             for (mut key, val) in kv {
                 // a special case to parse key in KV, where the key is vec![tag, prop_name]
+                // TODO: this is the result of VarMap.eval(), which will be deprecated soon.
                 if let Object::Vector(ref mut v) = key {
                     if v.len() == 2 {
                         // map tag_id to tag_name

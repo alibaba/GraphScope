@@ -470,12 +470,12 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                         let key = if let Some(key) = _key {
                             Object::try_from(key)?
                         } else {
-                            return Err(ParsePbError::from("empty key provided in VarMap"));
+                            return Err(ParsePbError::from("empty key provided in Map"));
                         };
                         let value = if let Some(value) = _value {
                             Operand::try_from(value)?
                         } else {
-                            return Err(ParsePbError::from("empty value provided in VarMap"));
+                            return Err(ParsePbError::from("empty value provided in Map"));
                         };
                         vec.push((key, value));
                     }

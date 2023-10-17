@@ -15,6 +15,7 @@
 
 use std::any::Any;
 use std::cmp::Ordering;
+use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::convert::TryInto;
 use std::fmt::Debug;
@@ -488,6 +489,24 @@ impl TryFrom<result_pb::Entry> for DynEntry {
                             .collect::<Result<Vec<_>, Self::Error>>()?,
                     };
                     Ok(DynEntry::new(collection))
+                }
+                result_pb::entry::Inner::Map(kv) => {
+                    let mut map = BTreeMap::new();
+                    for key_val in kv.key_values {
+                        let key = key_val.key.unwrap();
+                        let val_inner = key_val.value.unwrap().inner.unwrap();
+                        // currently, convert kv into Object::KV
+                        let key_obj: Object = Object::try_from(key)?;
+                        let val_obj: Object = match val_inner {
+                            result_pb::element::Inner::Object(obj) => Object::try_from(obj)?,
+                            _ => Err(ParsePbError::Unsupported(format!(
+                                "unsupported kvs value inner {:?}",
+                                val_inner,
+                            )))?,
+                        };
+                        map.insert(key_obj, val_obj);
+                    }
+                    Ok(DynEntry::new(Object::KV(map)))
                 }
             }
         } else {
