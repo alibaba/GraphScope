@@ -1,0 +1,59 @@
+graph: cro_graph
+loading_config:
+  data_source:
+    scheme: odps  # file, oss, s3, hdfs; only file is supported now
+    #location: /home/graphscope/gs_interactive_default_graph/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: arrow 
+    metadata:
+      batch_reader: false
+vertex_mappings:
+  - type_name: MEDIUM  # must align with the schema
+    inputs:
+      - project_name/table_name/ds=date
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+          name: medium_id  # can be omitted if the name is not known
+        property: id
+      - column:
+          index: 1
+          name: medium_type
+        property: type
+      - column:
+          index: 2
+          name: medium_weight
+        property: weight
+  - type_name: CENTER
+    inputs:
+      - project_name/table_name/ds=date
+    column_mappings:
+      - column:
+          index: 0      # can be omitted if the index is the same as the property index
+          name: centerid    # can be omitted if the name is not known or header_row is set to true.
+        property: id  # must align with the schema
+      - column:
+          index: 1
+          name: actlpayfee
+        property: actlpayfee
+edge_mappings:
+  - type_triplet:
+      edge: CONNECT
+      source_vertex: MEDIUM
+      destination_vertex: CENTER
+    inputs:
+      - project_name/table_name/ds=date
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: centerid
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: medium_id
+    column_mappings:
+      - column:
+          index: 2
+          name: medium_weight
+        property: weight
