@@ -36,7 +36,7 @@ public class GlogueQuery {
             Set<GlogueEdge> inEdges = glogue.getGlogueInEdges(patternWithInfo.getValue0());
             return fuzzyPatternProcessor.processGlogueEdgesWithFuzzyInfo(inEdges, patternWithInfo.getValue1(), false);
         } else {
-            return glogue.getGlogueInEdges(pattern);
+            return glogue.getInEdges(pattern);
         }
     }
 
@@ -62,7 +62,7 @@ public class GlogueQuery {
                         "pattern not found in glogue graph. queries pattern " + pattern);
             }
         } else {
-            return glogue.getGlogueOutEdges(pattern);
+            return glogue.getOutEdges(pattern);
         }
     }
 
