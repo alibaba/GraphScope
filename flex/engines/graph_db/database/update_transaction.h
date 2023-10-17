@@ -168,7 +168,11 @@ class UpdateTransaction {
   size_t vertex_label_num_;
   size_t edge_label_num_;
 
+<<<<<<< HEAD
   std::vector<std::shared_ptr<IdIndexerBase<vid_t>>> added_vertices_;
+=======
+  std::vector<IdIndexerBase<vid_t>> added_vertices_;
+>>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
   std::vector<vid_t> added_vertices_base_;
   std::vector<vid_t> vertex_nums_;
   std::vector<ska::flat_hash_map<vid_t, vid_t>> vertex_offsets_;
