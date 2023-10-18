@@ -174,10 +174,8 @@ void SingleVertexInsertTransaction::ingestWal() {
       label_t src_label, dst_label, edge_label;
       arc >> src_label;
       arc >> temp;
-      // arc.GetBytes(sizeof(PropertyType) + sizeof(int64_t));
       arc >> dst_label;
       arc >> temp;
-      // arc.GetBytes(sizeof(PropertyType) + sizeof(int64_t));
       arc >> edge_label;
 
       vid_t src_vid = *(vid_ptr++);

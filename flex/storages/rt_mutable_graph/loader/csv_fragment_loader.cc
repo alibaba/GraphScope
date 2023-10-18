@@ -677,14 +677,10 @@ void CSVFragmentLoader::addVertexBatch(
     std::shared_ptr<arrow::Array>& primary_key_col,
     const std::vector<std::shared_ptr<arrow::Array>>& property_cols) {
   size_t row_num = primary_key_col->length();
-  // CHECK_EQ(primary_key_col->type()->id(), arrow::Type::INT64);
   auto col_num = property_cols.size();
   for (size_t i = 0; i < col_num; ++i) {
     CHECK_EQ(property_cols[i]->length(), row_num);
   }
-  // auto casted_array =
-  //     std::static_pointer_cast<arrow::Int64Array>(primary_key_col);
-  //  std::vector<std::vector<Any>> prop_vec(property_cols.size());
 
   double t = -grape::GetCurrentTime();
   std::vector<vid_t> vids;
@@ -792,13 +788,11 @@ void CSVFragmentLoader::addVertexBatch(
   size_t row_num = primary_key_col->length();
   std::vector<vid_t> vids;
   vids.reserve(row_num);
-  // CHECK_EQ(primary_key_col->type()->id(), arrow::Type::INT64);
   //  check row num
   auto col_num = property_cols.size();
   for (size_t i = 0; i < col_num; ++i) {
     CHECK_EQ(property_cols[i]->length(), row_num);
   }
-  // std::vector<std::vector<Any>> prop_vec(property_cols.size());
 
   double t = -grape::GetCurrentTime();
   _add_vertex_chunk<KEY_T>()(primary_key_col, indexer, vids);
@@ -1021,8 +1015,6 @@ void CSVFragmentLoader::addEdgesImplWithTableReader(
       << "Currently only support at most one property on edge";
   {
     CHECK(src_col->length() == dst_col->length());
-    // CHECK(src_col->type() == arrow::int64());
-    // CHECK(dst_col->type() == arrow::int64());
     t = -grape::GetCurrentTime();
     append_edges(src_col, dst_col, src_indexer, dst_indexer, property_cols,
                  parsed_edges, ie_degree, oe_degree);
@@ -1099,14 +1091,6 @@ void CSVFragmentLoader::addEdgesImplWithStreamReader(
     {
       // add edges to vector
       CHECK(src_col->length() == dst_col->length());
-      // CHECK(src_col->type() == arrow::int64());
-      // CHECK(dst_col->type() == arrow::int64());
-      /**
-      auto src_casted_array =
-          std::static_pointer_cast<arrow::Int64Array>(src_col);
-      auto dst_casted_array =
-          std::static_pointer_cast<arrow::Int64Array>(dst_col);
-      */
       t = -grape::GetCurrentTime();
       append_edges(src_col, dst_col, src_indexer, dst_indexer, property_cols,
                    parsed_edges, ie_degree, oe_degree);
