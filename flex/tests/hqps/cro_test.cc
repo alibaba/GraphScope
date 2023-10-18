@@ -9,6 +9,60 @@
 
 namespace gs {
 
+// Update vertex and edges.
+class Query0 {
+ public:
+  Query0(GraphDBSession& graph)
+      : medium_label_id_(graph.schema().get_vertex_label_id("MEDIUM")),
+        center_label_id_(graph.schema().get_vertex_label_id("CENTER")),
+        connect_label_id_(graph.schema().get_edge_label_id("CONNECT")),
+        graph_(graph) {}
+
+  bool Query(
+      const std::tuple<gs::oid_t, std::string>& center,
+      const std::tuple<gs::oid_t, std::string, double, std::string>& medium,
+      const std::tuple<gs::oid_t, gs::oid_t, double>& connect) {
+    auto txn = graph_.GetUpdateTransaction();
+    auto& center_id = std::get<0>(center);
+    auto& center_act_fee = std::get<1>(center);
+    auto& medium_id = std::get<0>(medium);
+    auto& medium_type = std::get<1>(medium);
+    auto& medium_weight = std::get<2>(medium);
+    auto& medium_src_type = std::get<3>(medium);
+    auto& connect_src = std::get<0>(connect);
+    auto& connect_dst = std::get<1>(connect);
+    auto& connect_weight = std::get<2>(connect);
+
+    // if center_id not exist, insert it
+    if (!txn.AddVertex(center_label_id_, center_id,
+                       {Any::From(center_act_fee)})) {
+      txn.Abort();
+      return false;
+    }
+    if (!txn.AddVertex(medium_label_id_, medium_id,
+                       {Any::From(medium_type), Any::From(medium_weight),
+                        Any::From(medium_src_type)})) {
+      txn.Abort();
+      return false;
+    }
+    if (!txn.AddEdge(center_label_id_, center_id, medium_label_id_, medium_id,
+                     connect_label_id_, Any::From(connect_weight))) {
+      txn.Abort();
+      return false;
+    }
+
+    txn.Commit();
+    return true;
+  }
+
+ private:
+  GraphDBSession& graph_;
+  label_t medium_label_id_;
+  label_t center_label_id_;
+  label_t connect_label_id_;
+};
+
+// Two hop query
 class Query1 {
  public:
   Query1(GraphDBSession& graph)
@@ -87,6 +141,7 @@ class Query1 {
   size_t center_vnum_;
 };
 
+// One hop query
 class Query2 {
  public:
   Query2(GraphDBSession& graph)
@@ -141,58 +196,6 @@ class Query2 {
       output.put_long(std::get<2>(res));
     }
 
-    return true;
-  }
-
- private:
-  GraphDBSession& graph_;
-  label_t medium_label_id_;
-  label_t center_label_id_;
-  label_t connect_label_id_;
-};
-
-class Query0 {
- public:
-  Query0(GraphDBSession& graph)
-      : medium_label_id_(graph.schema().get_vertex_label_id("MEDIUM")),
-        center_label_id_(graph.schema().get_vertex_label_id("CENTER")),
-        connect_label_id_(graph.schema().get_edge_label_id("CONNECT")),
-        graph_(graph) {}
-
-  bool Query(
-      const std::tuple<gs::oid_t, std::string>& center,
-      const std::tuple<gs::oid_t, std::string, double, std::string>& medium,
-      const std::tuple<gs::oid_t, gs::oid_t, double>& connect) {
-    auto txn = graph_.GetUpdateTransaction();
-    auto& center_id = std::get<0>(center);
-    auto& center_act_fee = std::get<1>(center);
-    auto& medium_id = std::get<0>(medium);
-    auto& medium_type = std::get<1>(medium);
-    auto& medium_weight = std::get<2>(medium);
-    auto& medium_src_type = std::get<3>(medium);
-    auto& connect_src = std::get<0>(connect);
-    auto& connect_dst = std::get<1>(connect);
-    auto& connect_weight = std::get<2>(connect);
-
-    // if center_id not exist, insert it
-    if (!txn.AddVertex(center_label_id_, center_id,
-                       {Any::From(center_act_fee)})) {
-      txn.Abort();
-      return false;
-    }
-    if (!txn.AddVertex(medium_label_id_, medium_id,
-                       {Any::From(medium_type), Any::From(medium_weight),
-                        Any::From(medium_src_type)})) {
-      txn.Abort();
-      return false;
-    }
-    if (!txn.AddEdge(center_label_id_, center_id, medium_label_id_, medium_id,
-                     connect_label_id_, Any::From(connect_weight))) {
-      txn.Abort();
-      return false;
-    }
-
-    txn.Commit();
     return true;
   }
 
