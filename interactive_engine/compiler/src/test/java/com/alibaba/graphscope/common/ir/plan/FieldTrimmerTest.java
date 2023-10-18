@@ -12,18 +12,20 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class FieldTrimmerTest {
-  private String rowTypeString(RelNode rel){
-    StringBuilder builder=new StringBuilder();
-    rowTypeStringInternal(rel,builder);
+  private String rowTypeString(RelNode rel) {
+    StringBuilder builder = new StringBuilder();
+    rowTypeStringInternal(rel, builder);
     return builder.toString();
   }
-  private void rowTypeStringInternal(RelNode rel, StringBuilder builder){
+
+  private void rowTypeStringInternal(RelNode rel, StringBuilder builder) {
     builder.append(rel.getRowType()).append("\n");
-    for(RelNode node:rel.getInputs()){
-      rowTypeStringInternal(node,builder);
+    for (RelNode node : rel.getInputs()) {
+      rowTypeStringInternal(node, builder);
     }
   }
-  // Match(x:person)-[y:knows]->( ) where x.name = "Alice" return x.name, x.age
+
+  // Match(x:person)-[y:knows]->( ) where x.name = "Alice" return x.name as name , x.age as age
   @Test
   public void field_trimmer_1_test() {
     GraphBuilder builder = Utils.mockGraphBuilder();
@@ -177,6 +179,51 @@ public class FieldTrimmerTest {
             + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) x, BIGINT cnt)\n"
             + "RecordType(Graph_Schema_Type(INTEGER age) x, Graph_Schema_Type() y, Graph_Schema_Type() friend)\n"
             + "RecordType(Graph_Schema_Type(INTEGER age) x, Graph_Schema_Type() y, Graph_Schema_Type() friend)\n",
+        rowTypeString(after));
+  }
+
+  // Match(x:person)-[y:knows]->( ) witch name=x.name where name = "Alice" return x.id
+  // test append=true
+  @Test
+  public void field_trimmer_4_test() {
+    GraphBuilder builder = Utils.mockGraphBuilder();
+    RelNode sentence =
+        builder
+            .source(
+                new SourceConfig(
+                    GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), "x"))
+            .expand(
+                new ExpandConfig(
+                    GraphOpt.Expand.OUT, new LabelConfig(false).addLabel("knows"), "y"))
+            .build();
+    RelNode project =
+        builder
+            .match(sentence, GraphOpt.Match.INNER)
+            .project(List.of(builder.variable("x", "name")), List.of("name"), true)
+            .filter(
+                builder.call(
+                    GraphStdOperatorTable.EQUALS,
+                    builder.variable("name"),
+                    builder.literal("Alice")))
+            .project(List.of(builder.variable("x", "id")), List.of("id"))
+            .build();
+
+    GraphFieldTrimmer trimmer = new GraphFieldTrimmer(builder);
+    RelNode after = trimmer.trim(project);
+    Assert.assertEquals(
+        "GraphLogicalProject(id=[x.id], isAppend=[false])\n"
+            + "  LogicalFilter(condition=[=(name, _UTF-8'Alice')])\n"
+            + "    GraphLogicalProject(name=[x.name], x=[x], isAppend=[false])\n"
+            + "      GraphLogicalSingleMatch(input=[null], sentence=[GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[y], opt=[OUT])\n"
+            + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x], opt=[VERTEX])\n"
+            + "], matchOpt=[INNER])",
+        after.explain().trim());
+
+    Assert.assertEquals(
+        "RecordType(BIGINT id)\n"
+            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) x)\n"
+            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) x)\n"
+            + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name) x, Graph_Schema_Type() y)\n",
         rowTypeString(after));
   }
 }

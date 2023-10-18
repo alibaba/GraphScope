@@ -1,5 +1,7 @@
 package com.alibaba.graphscope.common.ir.planner;
 
+import static com.alibaba.graphscope.common.ir.tools.Utils.getOutputType;
+
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
@@ -65,13 +67,15 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
    */
   public TrimResult trimFields(GraphLogicalProject project, UsedFields fieldsUsed) {
     final RelDataType rowType = project.getRowType();
-    final RelDataType inputRowType = project.getInput().getRowType();
+    final RelDataType inputRowType = getOutputType(project.getInput());
     List<RelDataTypeField> fieldList = rowType.getFieldList();
     final int fieldCount = rowType.getFieldCount();
+    RelDataType fullRowType = project.isAppend() ? getOutputType(project) : rowType;
 
     // key: id of field in project RowType, value: id of filed in input RowType
     final Mapping mapping =
-        Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldsUsed.size());
+        Mappings.create(
+            MappingType.INVERSE_SURJECTION, fullRowType.getFieldCount(), fieldsUsed.size());
 
     ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
     List<RexNode> newProjects = new ArrayList<>();
@@ -113,7 +117,19 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     // 2. If used, create a new RexGraphVariable as project item, add it in inputFieldUsed and
     // newFieldList
     if (project.isAppend()) {
-      // TODO(huaiyu)
+      List<RelDataTypeField> fullFields = fullRowType.getFieldList();
+      int fullSize = fullFields.size();
+      for (int i = fieldList.size(); i < fullSize; ++i) {
+        RelDataTypeField field = fullFields.get(i);
+        if (fieldsUsed.containsKey(field.getIndex())) {
+          RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
+          mapping.set(i, newProjects.size());
+          newProjects.add(
+              RexGraphVariable.of(field.getIndex(), i, field.getName(), field.getType()));
+          aliasList.add(field.getName());
+          inputFieldsUsed.add(parentsUsedField);
+        }
+      }
     }
 
     // e.g: with v as person, v.age as age where age>1 and person.name <> "Li"
@@ -157,7 +173,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     int keySize = aggregate.getGroupKey().groupKeyCount();
 
     final RelDataType rowType = aggregate.getRowType();
-    final RelDataType inputRowType = aggregate.getInput().getRowType();
+    final RelDataType inputRowType = getOutputType(aggregate.getInput());
     final int fieldCount = rowType.getFieldCount();
     final Mapping mapping =
         Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldsUsed.size());
@@ -226,6 +242,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     List<RexNode> vars =
         keys.getVariables().stream().map(var -> var.accept(shuttle)).collect(Collectors.toList());
     GraphGroupKeys newKeys = new GraphGroupKeys(vars, keys.getAliases());
+
     List<RelBuilder.AggCall> newAggCalls =
         aggCalls.stream()
             .map(
@@ -234,7 +251,9 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                       call.getOperands().stream()
                           .map(operand -> operand.accept(shuttle))
                           .collect(Collectors.toList());
-                  return new GraphAggCall(call.getCluster(), call.getAggFunction(), operands);
+                  GraphAggCall newCall=new GraphAggCall(call.getCluster(), call.getAggFunction(), operands);
+                  newCall.as(call.getAlias());
+                  return newCall;
                 })
             .collect(Collectors.toList());
 
@@ -246,7 +265,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     RexNode offset = sort.offset;
     RexNode fetch = sort.fetch;
     RelNode input = sort.getInput();
-    final RelDataType inputRowType = input.getRowType();
+    final RelDataType inputRowType = getOutputType(input);
     UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
 
     ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
@@ -286,7 +305,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
   }
 
   public TrimResult trimFields(LogicalFilter filter, UsedFields fieldsUsed) {
-    RelDataType inputRowType = filter.getInput().getRowType();
+    RelDataType inputRowType = getOutputType(filter.getInput());
     UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
 
     // Find columns and PropertyRef used by filter.
@@ -379,6 +398,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
               origin.getScanOpt(), origin.getLabelType(), new ArrayList<>(), origin.isNullable());
       field = new RelDataTypeFieldImpl(tableScan.getAliasName(), aliasId, newType);
     }
+
     Mapping mapping = Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldCount);
     for (int i = 0; i < fieldCount; ++i) {
       mapping.set(i, i);
@@ -543,7 +563,23 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     }
 
     public void add(RelDataTypeField field) {
-      fieldMap.put(field.getIndex(), field);
+      if (fieldMap.containsKey(field.getIndex())) {
+        if (field.getType() instanceof GraphSchemaType) {
+          GraphSchemaType lhs = (GraphSchemaType) fieldMap.get(field.getIndex()).getType();
+          GraphSchemaType rhs = (GraphSchemaType) field.getType();
+          List<RelDataTypeField> newFields = new ArrayList<>();
+          newFields.addAll(lhs.getFieldList());
+          newFields.addAll(rhs.getFieldList());
+          newFields = newFields.stream().distinct().collect(Collectors.toList());
+          GraphSchemaType newType =
+              new GraphSchemaType(rhs.getScanOpt(), rhs.getLabelType(), newFields);
+          fieldMap.put(
+              field.getIndex(),
+              new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType));
+        }
+      } else {
+        fieldMap.put(field.getIndex(), field);
+      }
     }
 
     /**
@@ -555,23 +591,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
      */
     public void concat(Set<RelDataTypeField> fields) {
       for (RelDataTypeField field : fields) {
-        if (fieldMap.containsKey(field.getIndex())) {
-          if (field.getType() instanceof GraphSchemaType) {
-            GraphSchemaType lhs = (GraphSchemaType) fieldMap.get(field.getIndex()).getType();
-            GraphSchemaType rhs = (GraphSchemaType) field.getType();
-            List<RelDataTypeField> newFields = new ArrayList<>();
-            newFields.addAll(lhs.getFieldList());
-            newFields.addAll(rhs.getFieldList());
-            newFields = newFields.stream().distinct().collect(Collectors.toList());
-            GraphSchemaType newType =
-                new GraphSchemaType(rhs.getScanOpt(), rhs.getLabelType(), newFields);
-            fieldMap.put(
-                field.getIndex(),
-                new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType));
-          }
-        } else {
-          fieldMap.put(field.getIndex(), field);
-        }
+        add(field);
       }
     }
 

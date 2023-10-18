@@ -523,7 +523,7 @@ public class GraphBuilder extends RelBuilder {
         }
     }
 
-    private int getColumnIndex(RelNode node, RelDataTypeField field) {
+    private int  getColumnIndex(RelNode node, RelDataTypeField field) {
         Set<String> uniqueFieldNames = Sets.newHashSet();
         if (!visitField(node, field, uniqueFieldNames)) {
             throw new IllegalArgumentException("field " + field + " not found in node" + node);
@@ -535,15 +535,7 @@ public class GraphBuilder extends RelBuilder {
     // i.e. (a)-[b]->(c) -> a:0, b:1, c:2
     private boolean visitField(
             RelNode topNode, RelDataTypeField targetField, Set<String> uniqueFieldNames) {
-        if (!(AliasInference.removeAlias(topNode)
-                || topNode instanceof Join
-                || topNode instanceof AbstractLogicalMatch)) {
-            for (RelNode child : topNode.getInputs()) {
-                if (visitField(child, targetField, uniqueFieldNames)) {
-                    return true;
-                }
-            }
-        }
+
         List<RelDataTypeField> fields = topNode.getRowType().getFieldList();
         for (RelDataTypeField field : fields) {
             if (field.getName() != AliasInference.DEFAULT_NAME && field.equals(targetField)) {
@@ -553,6 +545,17 @@ public class GraphBuilder extends RelBuilder {
                 uniqueFieldNames.add(field.getName());
             }
         }
+
+        if (!(AliasInference.removeAlias(topNode)
+                || topNode instanceof Join
+                || topNode instanceof AbstractLogicalMatch)) {
+            for (RelNode child : topNode.getInputs()) {
+                if (visitField(child, targetField, uniqueFieldNames)) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 
