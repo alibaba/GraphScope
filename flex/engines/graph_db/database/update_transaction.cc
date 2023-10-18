@@ -409,11 +409,7 @@ bool UpdateTransaction::GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
 void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
                                   uint32_t timestamp, char* data, size_t length,
                                   ArenaAllocator& alloc) {
-<<<<<<< HEAD
   std::vector<std::shared_ptr<IdIndexerBase<vid_t>>> added_vertices;
-=======
-  std::vector<IdIndexerBase<vid_t>> added_vertices;
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
   std::vector<vid_t> added_vertices_base;
   std::vector<vid_t> vertex_nums;
   std::vector<ska::flat_hash_map<vid_t, vid_t>> vertex_offsets;
@@ -557,13 +553,8 @@ Any UpdateTransaction::lid_to_oid(label_t label, vid_t lid) const {
     return graph_.get_oid(label, lid);
   } else {
     Any ret;
-<<<<<<< HEAD
     CHECK(added_vertices_[label]->get_key(lid - added_vertices_base_[label],
                                           ret));
-=======
-    CHECK(
-        added_vertices_[label].get_key(lid - added_vertices_base_[label], ret));
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
     return ret;
   }
 }
@@ -588,19 +579,11 @@ void UpdateTransaction::release() {
 void UpdateTransaction::applyVerticesUpdates() {
   for (label_t label = 0; label < vertex_label_num_; ++label) {
     std::vector<std::pair<vid_t, Any>> added_vertices;
-<<<<<<< HEAD
     vid_t added_vertices_num = added_vertices_[label]->size();
     for (vid_t v = 0; v < added_vertices_num; ++v) {
       vid_t lid = v + added_vertices_base_[label];
       Any oid;
       CHECK(added_vertices_[label]->get_key(v, oid));
-=======
-    vid_t added_vertices_num = added_vertices_[label].size();
-    for (vid_t v = 0; v < added_vertices_num; ++v) {
-      vid_t lid = v + added_vertices_base_[label];
-      Any oid;
-      CHECK(added_vertices_[label].get_key(v, oid));
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
       added_vertices.emplace_back(lid, oid);
     }
     std::sort(

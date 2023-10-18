@@ -420,11 +420,7 @@ static void append_edges(
           if (is_dst) {
             std::get<1>(parsed_edges[cur_ind++]) = vid;
           } else {
-<<<<<<< HEAD
             std::get<0>(parsed_edges[cur_ind++]) = vid;
-=======
-            std::get<0>(parsed_edges[cur_ind++]) == vid;
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
           }
           is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
         }
@@ -437,11 +433,7 @@ static void append_edges(
           if (is_dst) {
             std::get<1>(parsed_edges[cur_ind++]) = vid;
           } else {
-<<<<<<< HEAD
             std::get<0>(parsed_edges[cur_ind++]) = vid;
-=======
-            std::get<0>(parsed_edges[cur_ind++]) == vid;
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
           }
           is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
         }
@@ -455,11 +447,7 @@ static void append_edges(
           if (is_dst) {
             std::get<1>(parsed_edges[cur_ind++]) = vid;
           } else {
-<<<<<<< HEAD
             std::get<0>(parsed_edges[cur_ind++]) = vid;
-=======
-            std::get<0>(parsed_edges[cur_ind++]) == vid;
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
           }
           is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
         }
@@ -742,10 +730,6 @@ struct _add_vertex_chunk<int64_t> {
     CHECK(col->type() == arrow::int64());
     size_t row_num = col->length();
 
-<<<<<<< HEAD
-=======
-    vid_t vid;
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
     for (auto i = 0; i < col->num_chunks(); ++i) {
       auto chunk = col->chunk(i);
       auto casted_array = std::static_pointer_cast<arrow::Int64Array>(chunk);
@@ -769,10 +753,6 @@ struct _add_vertex_chunk<std::string_view> {
     size_t row_num = col->length();
     CHECK(col->type() == arrow::utf8() || col->type() == arrow::large_utf8());
     if (col->type() == arrow::utf8()) {
-<<<<<<< HEAD
-=======
-      vid_t vid;
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
       for (auto i = 0; i < col->num_chunks(); ++i) {
         auto chunk = col->chunk(i);
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(chunk);

@@ -180,15 +180,11 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
 template <typename INDEX_T>
 class LFIndexer {
  public:
-<<<<<<< HEAD
   LFIndexer()
       : num_elements_(0),
         hasher_(),
         type_(PropertyType::kEmpty),
         keys_(nullptr) {}
-=======
-  LFIndexer() : num_elements_(0), hasher_(), type_(PropertyType::kEmpty) {}
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
   LFIndexer(const LFIndexer& rhs)
       : keys_(rhs.keys_),
         type_(rhs.type_),
@@ -201,10 +197,7 @@ class LFIndexer {
   }
 
   void set_type(const PropertyType& type) { type_ = type; }
-<<<<<<< HEAD
   void set_key(const std::shared_ptr<ColumnBase>& keys) { keys_ = keys; }
-=======
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
   size_t size() const { return num_elements_.load(); }
   PropertyType get_type() const { return type_; }
   INDEX_T insert(const Any& oid) {
@@ -265,11 +258,7 @@ class LFIndexer {
   void Serialize(const std::string& prefix) {
     {
       grape::InArchive arc;
-<<<<<<< HEAD
       arc << type_ << keys_->size() << indices_.size();
-=======
-      arc << keys_->size() << indices_.size();
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
       arc << hash_policy_.get_mod_function_index() << num_elements_.load()
           << num_slots_minus_one_ << indices_size_;
       std::string meta_file_path = prefix + ".meta";
@@ -305,7 +294,6 @@ class LFIndexer {
       arc >> mod_function_index >> num_elements >> num_slots_minus_one_ >>
           indices_size_;
     }
-<<<<<<< HEAD
     if (type_ == PropertyType::kInt64) {
       keys_ = std::make_shared<TypedColumn<int64_t>>(StorageStrategy::kMem);
     } else if (type_ == PropertyType::kString) {
@@ -314,8 +302,6 @@ class LFIndexer {
     } else {
       LOG(FATAL) << "Unknow pk type for " << type_ << "..";
     }
-=======
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
     keys_->Deserialize(prefix + ".keys");
     CHECK_EQ(keys_->size(), keys_size);
     indices_.open_for_read(prefix + ".indices");
@@ -328,11 +314,7 @@ class LFIndexer {
   const ColumnBase& get_keys() const { return *keys_; }
 
  private:
-<<<<<<< HEAD
   std::shared_ptr<ColumnBase> keys_;
-=======
-  ColumnBase* keys_;
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
   PropertyType type_;
   // mmap_array<int64_t> keys_;
   mmap_array<INDEX_T> indices_;
@@ -348,7 +330,6 @@ class LFIndexer {
 };
 template <typename INDEX_T>
 class IdIndexerBase {
-<<<<<<< HEAD
  protected:
   IdIndexerBase(PropertyType type) : type_(type) {}
 
@@ -412,17 +393,6 @@ class IdIndexerBase {
 
  private:
   PropertyType type_;
-=======
- public:
-  void _add(const Any& oid) {}
-  void _add(Any&& oid) {}
-  void add(Any&& oid) {}
-  bool add(const Any& oid, INDEX_T& lid) { return false; }
-  bool add(Any&& oid, INDEX_T& lid) { return false; }
-  bool get_key(const INDEX_T& lid, Any& oid) const { return false; }
-  bool get_index(const Any& oid, INDEX_T& lid) const { return false; }
-  size_t size() const { return 0; }
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
 };
 template <typename KEY_T, typename INDEX_T>
 class IdIndexer : public IdIndexerBase<INDEX_T> {
@@ -832,10 +802,7 @@ template <typename KEY_T, typename INDEX_T>
 void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       LFIndexer<INDEX_T>& lf, double rate) {
   lf.set_type(AnyConverter<KEY_T>::type);
-<<<<<<< HEAD
   lf.set_key(std::make_shared<TypedColumn<KEY_T>>(StorageStrategy::kMem));
-=======
->>>>>>> cf3787e8400fc53385f8000259463c7d2f22e1ca
   double indices_rate = static_cast<double>(input.keys_.size()) /
                         static_cast<double>(input.indices_.size());
   CHECK_LT(indices_rate, rate);
