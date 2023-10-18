@@ -162,17 +162,22 @@ void SingleVertexInsertTransaction::ingestWal() {
     uint8_t op_type;
     arc >> op_type;
     if (op_type == 0) {
-      arc.GetBytes(sizeof(label_t) + sizeof(Any));
+      arc.GetBytes(sizeof(label_t));
+      Any temp;
+      arc >> temp;
       added_vertex_vid_ =
           graph_.add_vertex(added_vertex_label_, added_vertex_id_);
       graph_.get_vertex_table(added_vertex_label_)
           .ingest(added_vertex_vid_, arc);
     } else if (op_type == 1) {
+      Any temp;
       label_t src_label, dst_label, edge_label;
       arc >> src_label;
-      arc.GetBytes(sizeof(Any));
+      arc >> temp;
+      // arc.GetBytes(sizeof(PropertyType) + sizeof(int64_t));
       arc >> dst_label;
-      arc.GetBytes(sizeof(Any));
+      arc >> temp;
+      // arc.GetBytes(sizeof(PropertyType) + sizeof(int64_t));
       arc >> edge_label;
 
       vid_t src_vid = *(vid_ptr++);
