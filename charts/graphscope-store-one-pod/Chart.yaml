@@ -13,7 +13,7 @@ keywords:
   - Groot
   - database
   - cluster
-name: graphscope-store-one-pod
+name: graphscope-store
 sources:
   - https://github.com/alibaba/GraphScope/tree/main/interactive_engine
 maintainers:

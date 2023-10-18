@@ -79,16 +79,48 @@ store:
     annotations: {}
 
 frontend:
-  ## GraphScope store Service parameters
-  ##
   service:
     ## Service type
     ##
-    type: ClusterIP
+    type: NodePort
     ## Service port
     ##
-    gremlin: 12312
-    grpc: 55556
+    servicePort: 55556
+
+    gremlinPort: 12312
+
+    ## Internal port for communication between components.
+    ##
+    port: 55555
+
+    ## Specify the nodePort value for the LoadBalancer and NodePort service types.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#type-nodeport
+    ##
+    nodePorts:
+      service: ""
+      gremlin: ""
+    ## Service clusterIP
+    ##
+    # clusterIP: None
+    clusterIP: ""
+    ## Set the LoadBalancer service type to internal only.
+    ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#internal-load-balancer
+    ##
+    loadBalancerIP: ""
+    ## Enable client source IP preservation
+    ## ref http://kubernetes.io/docs/tasks/access-application-cluster/create-external-load-balancer/#preserving-the-client-source-ip
+    ##
+    externalTrafficPolicy: Cluster
+    ## Load Balancer sources
+    ## https://kubernetes.io/docs/tasks/access-application-cluster/configure-cloud-provider-firewall/#restrict-access-for-loadbalancer-service
+    ## E.g.
+    ## loadBalancerSourceRanges:
+    ##   - 10.10.10.0/24
+    ##
+    loadBalancerSourceRanges: []
+    ## Provide any additional annotations which may be required
+    ##
+    annotations: {}
 
 ingestor:
   replicaCount: 2
