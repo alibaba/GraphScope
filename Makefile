@@ -41,6 +41,9 @@ ARCH := $(shell uname -m)
 
 VERSION := $(shell cat $(WORKING_DIR)/VERSION)
 
+# pip installation arguments
+PIP_ARGS 			= --timeout=1000 --no-cache-dir
+
 ## Common
 .PHONY: all graphscope install clean
 
@@ -75,7 +78,8 @@ clean:
 
 client: learning
 	cd $(CLIENT_DIR) && \
-	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
+	python3 -m pip install ${PIP_ARGS} "torch" --index-url https://download.pytorch.org/whl/cpu --user && \
+	python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	export PATH=$(PATH):$(HOME)/.local/bin && \
 	python3 setup.py build_ext --inplace --user && \
 	if [ $(WITH_GLTORCH) = ON ]; then \
@@ -86,7 +90,8 @@ client: learning
 
 coordinator: client
 	cd $(COORDINATOR_DIR) && \
-	python3 -m pip install -r requirements.txt -r requirements-dev.txt --user && \
+	python3 -m pip install ${PIP_ARGS} "torch" --index-url https://download.pytorch.org/whl/cpu --user && \
+	python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	python3 setup.py build_builtin && \
 	python3 -m pip install --user --editable $(COORDINATOR_DIR) && \
 	rm -rf $(COORDINATOR_DIR)/*.egg-info
@@ -169,8 +174,9 @@ $(LEARNING_DIR)/graphlearn/built/lib/libgraphlearn_shared.$(SUFFIX):
 
 prepare-client:
 	cd $(CLIENT_DIR) && \
-	pip3 install -r requirements.txt --user && \
-	pip3 install -r requirements-dev.txt --user && \
+	pip3 install ${PIP_ARGS} "torch" --index-url https://download.pytorch.org/whl/cpu --user && \
+	pip3 install ${PIP_ARGS} -r requirements.txt --user && \
+	pip3 install ${PIP_ARGS} -r requirements-dev.txt --user && \
 	python3 setup.py build_proto
 
 graphscope-docs: prepare-client

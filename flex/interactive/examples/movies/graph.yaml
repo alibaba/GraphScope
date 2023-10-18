@@ -6,7 +6,7 @@ schema:
         - property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
-        - property_name: release
+        - property_name: released
           property_type:
             primitive_type: DT_SIGNED_INT32
         - property_name: tagline

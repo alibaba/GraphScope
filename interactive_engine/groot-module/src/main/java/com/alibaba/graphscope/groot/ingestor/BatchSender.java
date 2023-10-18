@@ -36,15 +36,14 @@ public class BatchSender implements MetricsAgent {
     public static final String SEND_RECORDS_PER_SECOND = "send.records.per.second";
     public static final String SEND_RECORDS_TOTAL = "send.records.total";
     public static final String SEND_BUFFER_BATCH_COUNT = "send.buffer.batch.count";
-    public static final String SEND_CALLBACK_LATENCY_PER_SECOND_MS =
-            "send.callback.latency.per.second.ms";
+    public static final String SEND_CALLBACK_LATENCY = "send.callback.latency.per.second.ms";
 
-    private MetaService metaService;
-    private StoreWriter storeWriter;
+    private final MetaService metaService;
+    private final StoreWriter storeWriter;
 
-    private int bufferSize;
-    private int storeCount;
-    private int sendOperationLimit;
+    private final int bufferSize;
+    private final int storeCount;
+    private final int sendOperationLimit;
 
     private List<BlockingQueue<StoreDataBatch>> storeSendBuffer;
     private BlockingQueue<SendTask> sendTasks;
@@ -57,7 +56,7 @@ public class BatchSender implements MetricsAgent {
     private AvgMetric sendRecordsMetric;
     private List<AvgMetric> bufferBatchCountMetrics;
     private List<AvgMetric> callbackLatencyMetrics;
-    private int receiverQueueSize;
+    private final int receiverQueueSize;
 
     public BatchSender(
             Configs configs,
@@ -72,7 +71,7 @@ public class BatchSender implements MetricsAgent {
         this.sendOperationLimit = IngestorConfig.INGESTOR_SENDER_OPERATION_MAX_COUNT.get(configs);
         this.receiverQueueSize = StoreConfig.STORE_QUEUE_BUFFER_SIZE.get(configs);
         initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
+        metricsCollector.register(this, this::updateMetrics);
     }
 
     public void start() {
@@ -299,7 +298,7 @@ public class BatchSender implements MetricsAgent {
                                         .map(q -> q.size())
                                         .collect(Collectors.toList())));
                 put(
-                        SEND_CALLBACK_LATENCY_PER_SECOND_MS,
+                        SEND_CALLBACK_LATENCY,
                         String.valueOf(
                                 callbackLatencyMetrics.stream()
                                         .map(m -> (int) (1000 * m.getAvg()))
@@ -316,7 +315,7 @@ public class BatchSender implements MetricsAgent {
             SEND_RECORDS_PER_SECOND,
             SEND_RECORDS_TOTAL,
             SEND_BUFFER_BATCH_COUNT,
-            SEND_CALLBACK_LATENCY_PER_SECOND_MS
+            SEND_CALLBACK_LATENCY
         };
     }
 }

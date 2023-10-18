@@ -7,7 +7,7 @@ GraphScope 目前支持的平台如下:
 - Python 3.7 - 3.9
 - Ubuntu 18.04 or later
 - CentOS 7 or later
-- macOS 11.2.1 (Big Sur) or later, with both Intel chip and Apple M1 chip
+- macOS 12 (Monterey) or later, with both Intel chip and Apple M1 chip
 
 
 单机环境下安装

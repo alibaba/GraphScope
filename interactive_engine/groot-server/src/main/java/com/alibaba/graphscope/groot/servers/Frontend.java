@@ -25,20 +25,7 @@ import com.alibaba.graphscope.groot.discovery.FileDiscovery;
 import com.alibaba.graphscope.groot.discovery.LocalNodeProvider;
 import com.alibaba.graphscope.groot.discovery.NodeDiscovery;
 import com.alibaba.graphscope.groot.discovery.ZkDiscovery;
-import com.alibaba.graphscope.groot.frontend.BackupClient;
-import com.alibaba.graphscope.groot.frontend.BatchDdlClient;
-import com.alibaba.graphscope.groot.frontend.ClientBackupService;
-import com.alibaba.graphscope.groot.frontend.ClientService;
-import com.alibaba.graphscope.groot.frontend.ClientWriteService;
-import com.alibaba.graphscope.groot.frontend.FrontendSnapshotService;
-import com.alibaba.graphscope.groot.frontend.GrootDdlService;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
-import com.alibaba.graphscope.groot.frontend.SchemaClient;
-import com.alibaba.graphscope.groot.frontend.SchemaWriter;
-import com.alibaba.graphscope.groot.frontend.StoreIngestClient;
-import com.alibaba.graphscope.groot.frontend.StoreIngestClients;
-import com.alibaba.graphscope.groot.frontend.StoreIngestor;
-import com.alibaba.graphscope.groot.frontend.WriteSessionGenerator;
+import com.alibaba.graphscope.groot.frontend.*;
 import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
@@ -61,11 +48,14 @@ import io.grpc.NameResolver;
 import io.grpc.netty.NettyServerBuilder;
 
 import org.apache.curator.framework.CuratorFramework;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Collections;
 
 public class Frontend extends NodeBase {
+    private static final Logger logger = LoggerFactory.getLogger(Frontend.class);
 
     private CuratorFramework curator;
     private NodeDiscovery discovery;
@@ -75,6 +65,8 @@ public class Frontend extends NodeBase {
     private RpcServer serviceServer;
     private ClientService clientService;
     private AbstractService graphService;
+
+    private SnapshotCache snapshotCache;
 
     public Frontend(Configs configs) {
         super(configs);
@@ -88,13 +80,9 @@ public class Frontend extends NodeBase {
         }
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
-        SnapshotCache snapshotCache = new SnapshotCache();
-        this.metaService = new DefaultMetaService(configs);
-        MetricsCollector metricsCollector = new MetricsCollector(configs);
-        RoleClients<IngestorWriteClient> ingestorWriteClients =
-                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
-        FrontendSnapshotService frontendSnapshotService =
-                new FrontendSnapshotService(snapshotCache);
+
+        snapshotCache = new SnapshotCache();
+
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients =
                 new RoleClients<>(
                         this.channelManager, RoleType.FRONTEND, MetricsCollectClient::new);
@@ -109,26 +97,44 @@ public class Frontend extends NodeBase {
                         frontendMetricsCollectClients,
                         ingestorMetricsCollectClients,
                         storeMetricsCollectClients);
+
         StoreIngestor storeIngestClients =
                 new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
         SchemaWriter schemaWriter =
                 new SchemaWriter(
                         new RoleClients<>(
                                 this.channelManager, RoleType.COORDINATOR, SchemaClient::new));
-        DdlExecutors ddlExecutors = new DdlExecutors();
+
         BatchDdlClient batchDdlClient =
-                new BatchDdlClient(ddlExecutors, snapshotCache, schemaWriter);
+                new BatchDdlClient(new DdlExecutors(), snapshotCache, schemaWriter);
+        StoreStateFetcher storeStateClients =
+                new StoreStateClients(this.channelManager, RoleType.STORE, StoreStateClient::new);
+
+        this.metaService = new DefaultMetaService(configs);
+
         this.clientService =
                 new ClientService(
                         snapshotCache,
                         metricsAggregator,
                         storeIngestClients,
                         this.metaService,
-                        batchDdlClient);
-        GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
+                        batchDdlClient,
+                        storeStateClients);
+
+        FrontendSnapshotService frontendSnapshotService =
+                new FrontendSnapshotService(snapshotCache);
+
+        MetricsCollector metricsCollector = new MetricsCollector(configs);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
-        WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
+        this.rpcServer =
+                new RpcServer(
+                        configs, localNodeProvider, frontendSnapshotService, metricsCollectService);
+
+        GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
+
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
+        RoleClients<IngestorWriteClient> ingestorWriteClients =
+                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
         GraphWriter graphWriter =
                 new GraphWriter(
                         snapshotCache,
@@ -136,15 +142,13 @@ public class Frontend extends NodeBase {
                         this.metaService,
                         ingestorWriteClients,
                         metricsCollector);
+        WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
         ClientWriteService clientWriteService =
                 new ClientWriteService(writeSessionGenerator, graphWriter);
+
         RoleClients<BackupClient> backupClients =
                 new RoleClients<>(this.channelManager, RoleType.COORDINATOR, BackupClient::new);
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);
-        this.rpcServer =
-                new RpcServer(
-                        configs, localNodeProvider, frontendSnapshotService, metricsCollectService);
-
         this.serviceServer =
                 buildServiceServer(
                         configs,
@@ -191,6 +195,15 @@ public class Frontend extends NodeBase {
         }
         this.discovery.start();
         this.channelManager.start();
+
+        while (snapshotCache.getSnapshotWithSchema().getGraphDef() == null) {
+            try {
+                Thread.sleep(1000);
+                logger.info("Waiting for schema ready...");
+            } catch (InterruptedException e) {
+                throw new GrootException(e);
+            }
+        }
         this.graphService.start();
         try {
             this.serviceServer.start();

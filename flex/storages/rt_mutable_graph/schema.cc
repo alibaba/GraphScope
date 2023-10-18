@@ -782,7 +782,7 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
           schema.EmplacePlugin(f);
         }
       } else {
-        schema.EmplacePlugin(std::filesystem::canonical(f));
+        schema.EmplacePlugin(std::filesystem::canonical(real_file));
       }
     }
   }
