@@ -266,11 +266,17 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
 
     ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
-    offset.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
-        .forEach(varUsedBuilder::add);
 
-    fetch.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
-        .forEach(varUsedBuilder::add);
+    if(offset!=null){
+      offset.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+            .forEach(varUsedBuilder::add);
+    }
+
+    if(fetch!=null){
+      fetch.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+           .forEach(varUsedBuilder::add);
+    }
+
 
     for (RexNode expr : sort.getSortExps()) {
       expr.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
@@ -289,8 +295,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
 
     // build new sort
     final RexVisitor<RexNode> shuttle = new RexPermuteGraphShuttle(inputMapping, newInput);
-    RexNode newOffset = sort.offset.accept(shuttle);
-    RexNode newFetch = sort.fetch.accept(shuttle);
+    RexNode newOffset =offset==null? null:offset.accept(shuttle);
+    RexNode newFetch = fetch==null?null:fetch.accept(shuttle);
     List<RexNode> newSortExprs =
         sort.getSortExps().stream()
             .map(e -> e.accept(shuttle))
