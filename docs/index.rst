@@ -23,6 +23,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    overview/intro
    overview/getting_started
+   loading_graphs
    overview/graph_analytics_workloads
    overview/graph_interactive_workloads
    overview/graph_learning_workloads
@@ -30,7 +31,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    overview/positioning
    overview/glossary
    release_notes
-   loading_graphs
    frequently_asked_questions
 
 .. toctree::
@@ -44,6 +44,12 @@ and the vineyard store that offers efficient in-memory data transfers.
    .. deployment/deploy_graphscope_on_clouds
    deployment/deploy_graphscope_with_helm
    deployment/install_in_offline_env
+
+.. toctree::
+   :maxdepth: 1
+   :caption: GraphScope Flex
+
+   flex/interactive_intro
 
 .. toctree::
    :maxdepth: 1

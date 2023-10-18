@@ -684,7 +684,7 @@ class SyncEngine : public BaseEngine {
   template <
       int... in_col_id, typename CTX_HEAD_T, int cur_alias, int base_tag,
       typename... CTX_PREV, typename EXPR, typename... SELECTOR,
-      typename std::enable_if<((sizeof...(in_col_id) > 1) &&
+      typename std::enable_if<((sizeof...(in_col_id) >= 1) &&
                                (sizeof...(in_col_id) ==
                                 sizeof...(SELECTOR)))>::type* = nullptr,
       typename RES_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>>

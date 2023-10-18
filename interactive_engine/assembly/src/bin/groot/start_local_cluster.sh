@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+SCRIPT_DIR=$(cd "$(dirname "$0")"; pwd)
+
+if [ -z "${GROOT_HOME}" ]; then
+    GROOT_HOME=$(dirname "$SCRIPT_DIR")
+fi
+
 declare -r GROOT_DIR=${GROOT_HOME:-/usr/local/groot}
 declare -r CONFIG_FILE="/tmp/groot.config"
 
