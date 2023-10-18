@@ -28,7 +28,6 @@ enum class EdgeStrategy {
 
 using timestamp_t = uint32_t;
 using vid_t = uint32_t;
-using oid_t = int64_t;
 using label_t = uint8_t;
 
 static constexpr const char* DT_SIGNED_INT32 = "DT_SIGNED_INT32";

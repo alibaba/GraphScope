@@ -161,12 +161,12 @@ class SyncEngine : public BaseEngine {
     return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
 
-  template <AppendOpt append_opt, typename LabelT,
+  template <AppendOpt append_opt, typename LabelT, typename OID_T,
             typename std::enable_if<(append_opt == AppendOpt::Persist)>::type* =
                 nullptr,
             typename COL_T = default_vertex_set_t>
   static Context<COL_T, 0, 0, grape::EmptyType> ScanVertexWithOid(
-      const GRAPH_INTERFACE& graph, LabelT v_label, int64_t oid) {
+      const GRAPH_INTERFACE& graph, LabelT v_label, OID_T oid) {
     auto v_set_tuple =
         Scan<GRAPH_INTERFACE>::ScanVertexWithOid(graph, v_label, oid);
 
@@ -174,11 +174,11 @@ class SyncEngine : public BaseEngine {
   }
 
   template <
-      AppendOpt append_opt, typename LabelT,
+      AppendOpt append_opt, typename LabelT, typename OID_T,
       typename std::enable_if<(append_opt == AppendOpt::Temp)>::type* = nullptr,
       typename COL_T = default_vertex_set_t>
   static Context<COL_T, -1, 0, grape::EmptyType> ScanVertexWithOid(
-      const GRAPH_INTERFACE& graph, LabelT v_label, int64_t oid) {
+      const GRAPH_INTERFACE& graph, LabelT v_label, OID_T oid) {
     auto v_set_tuple =
         Scan<GRAPH_INTERFACE>::ScanVertexWithOid(graph, v_label, oid);
 

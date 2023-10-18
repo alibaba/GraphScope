@@ -50,7 +50,7 @@ GRIN_ROW grin_get_vertex_primary_keys_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto vid = v & (0xffffffff);
   auto label = v >> 32;
   auto oid = _g->g.get_oid(label, vid);
-  auto p = new gs::oid_t(oid);
+  auto p = new gs::Any(oid);
   row->emplace_back(p);
   return row;
 }

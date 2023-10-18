@@ -96,9 +96,10 @@ class Scan {
   /// @param v_label_id
   /// @param oid
   /// @return
+  template <typename OID_T>
   static vertex_set_t ScanVertexWithOid(const GRAPH_INTERFACE& graph,
                                         const label_id_t& v_label_id,
-                                        int64_t oid) {
+                                        OID_T oid) {
     std::vector<vertex_id_t> gids;
     gids.emplace_back(graph.ScanVerticesWithOid(v_label_id, oid));
     return make_default_row_vertex_set(std::move(gids), v_label_id);
