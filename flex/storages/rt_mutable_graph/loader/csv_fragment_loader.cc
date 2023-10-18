@@ -650,8 +650,7 @@ struct _add_vertex<std::string_view> {
         std::string_view str_view(str.data(), str.size());
 
         if (!indexer.add(str_view, vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i)
-                     << "..";
+          LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
         }
         vids.emplace_back(vid);
       }
@@ -664,8 +663,7 @@ struct _add_vertex<std::string_view> {
         std::string_view str_view(str.data(), str.size());
 
         if (!indexer.add(str_view, vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i)
-                     << "..";
+          LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
         }
         vids.emplace_back(vid);
       }
@@ -757,12 +755,11 @@ struct _add_vertex_chunk<std::string_view> {
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(chunk);
         for (auto j = 0; j < casted_array->length(); ++j) {
           vid_t vid;
-          auto str = casted_array->GetView(i);
+          auto str = casted_array->GetView(j);
           std::string_view str_view(str.data(), str.size());
 
           if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
-                       << " .. ";
+            LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
           }
           vids.emplace_back(vid);
         }
@@ -774,12 +771,11 @@ struct _add_vertex_chunk<std::string_view> {
             std::static_pointer_cast<arrow::LargeStringArray>(chunk);
         for (auto j = 0; j < casted_array->length(); ++j) {
           vid_t vid;
-          auto str = casted_array->GetView(i);
+          auto str = casted_array->GetView(j);
           std::string_view str_view(str.data(), str.size());
 
           if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
-                       << " .. ";
+            LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
           }
           vids.emplace_back(vid);
         }

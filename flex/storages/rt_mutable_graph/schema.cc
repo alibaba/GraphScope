@@ -561,8 +561,10 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
                  << " is not found in properties";
       return false;
     }
-    if (property_types[primary_key_inds[i]] != PropertyType::kInt64) {
-      LOG(ERROR) << "Primary key " << primary_key_name << " should be int64";
+    if (property_types[primary_key_inds[i]] != PropertyType::kInt64 &&
+        property_types[primary_key_inds[i]] != PropertyType::kString) {
+      LOG(ERROR) << "Primary key " << primary_key_name
+                 << " should be int64 or string";
       return false;
     }
     primary_keys.emplace_back(property_types[primary_key_inds[i]],
