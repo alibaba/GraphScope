@@ -496,7 +496,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
   /**
    * @param properties
    * @param field
-   * @return
+   * @return whether the properties are used
    */
   private final boolean isUsedProperty(
       Set<@Nullable GraphProperty> properties, RelDataTypeField field) {
@@ -517,9 +517,9 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     return false;
   }
 
+
   /**
-   * find usedFields of the root of the RelPlan tree
-   *
+   * find usedFields of the root of the RelPlan tree with empty properties
    * @param root
    * @return
    */
@@ -562,6 +562,13 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
       fieldMap = new HashMap<>(fields.fieldMap);
     }
 
+    /**
+     * Add single field
+     * if it doesn't contain such field, just add it. Otherwise:
+     * if the type of the field is NOT {@code GraphSchemaType}, do nothing
+     * if the type of the field is {@code GraphSchemaType}, combine current field and the param
+     * @param field
+     */
     public void add(RelDataTypeField field) {
       if (fieldMap.containsKey(field.getIndex())) {
         if (field.getType() instanceof GraphSchemaType) {
@@ -589,7 +596,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
      *
      * @param fields
      */
-    public void concat(Set<RelDataTypeField> fields) {
+    public void concat(Iterable<RelDataTypeField> fields) {
       for (RelDataTypeField field : fields) {
         add(field);
       }
@@ -598,8 +605,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     /**
      * Get {@code RelDataTypeField} by field index
      *
-     * @param i
-     * @return
+     * @param i index of field
+     * @return field, return null if no such field
      */
     public final @Nullable RelDataTypeField get(int i) {
       return fieldMap.getOrDefault(i, null);
