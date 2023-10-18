@@ -114,6 +114,18 @@ impl<'a> PropertyValue<'a> {
     }
 }
 
+impl<'a> From<BorrowObject<'a>> for PropertyValue<'a> {
+    fn from(value: BorrowObject<'a>) -> Self {
+        PropertyValue::Borrowed(value)
+    }
+}
+
+impl<'a> From<Object> for PropertyValue<'a> {
+    fn from(value: Object) -> Self {
+        PropertyValue::Owned(value)
+    }
+}
+
 pub trait Details: std::fmt::Debug + Send + Sync + AsAny {
     /// Get a property with given key
     fn get_property(&self, key: &NameOrId) -> Option<PropertyValue>;
