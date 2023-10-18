@@ -19,36 +19,34 @@ package com.alibaba.graphscope.common.ir.type;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * introduce a new map type to allow different value types in a single map,
+ * introduce a new map type to allow different keys or value types in a single map,
  * to support {@code MapLiteral} in cypher, i.e. [name: a.name, a: a, age: b.age]
  */
 public class ArbitraryMapType extends AbstractSqlType {
-    private final RelDataType keyType;
+    private final List<RelDataType> keyTypes;
     private final List<RelDataType> valueTypes;
 
     protected ArbitraryMapType(
-            RelDataType keyType, List<RelDataType> valueTypes, boolean isNullable) {
+            List<RelDataType> keyTypes, List<RelDataType> valueTypes, boolean isNullable) {
         super(SqlTypeName.MAP, isNullable, null);
-        this.keyType = Objects.requireNonNull(keyType);
-        this.valueTypes = ObjectUtils.requireNonEmpty(valueTypes);
+        this.keyTypes = Objects.requireNonNull(keyTypes);
+        this.valueTypes = Objects.requireNonNull(valueTypes);
         this.computeDigest();
     }
 
     @Override
     protected void generateTypeString(StringBuilder sb, boolean withDetail) {
-        sb.append("(" + keyType.toString() + ", " + valueTypes.toString() + ") MAP");
+        sb.append("(" + keyTypes.toString() + ", " + valueTypes.toString() + ") MAP");
     }
 
-    @Override
-    public RelDataType getKeyType() {
-        return this.keyType;
+    public List<RelDataType> getKeyTypes() {
+        return Collections.unmodifiableList(this.keyTypes);
     }
 
     public List<RelDataType> getValueTypes() {

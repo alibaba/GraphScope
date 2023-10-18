@@ -66,7 +66,7 @@ public class SqlArrayValueConstructor extends SqlMultisetValueConstructor {
             return (componentType == null)
                     ? typeFactory.createSqlType(SqlTypeName.ANY)
                     : componentType;
-        } catch (AssertionError e) {
+        } catch (Throwable e) {
             return typeFactory.createSqlType(SqlTypeName.ANY);
         }
     }

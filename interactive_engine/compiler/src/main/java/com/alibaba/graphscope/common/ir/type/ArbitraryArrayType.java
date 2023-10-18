@@ -19,10 +19,10 @@ package com.alibaba.graphscope.common.ir.type;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * introduce a new array type to allow different component types in a single array,
@@ -33,7 +33,7 @@ public class ArbitraryArrayType extends AbstractSqlType {
 
     public ArbitraryArrayType(List<RelDataType> componentTypes, boolean isNullable) {
         super(SqlTypeName.ARRAY, isNullable, null);
-        this.componentTypes = ObjectUtils.requireNonEmpty(componentTypes);
+        this.componentTypes = Objects.requireNonNull(componentTypes);
         this.computeDigest();
     }
 

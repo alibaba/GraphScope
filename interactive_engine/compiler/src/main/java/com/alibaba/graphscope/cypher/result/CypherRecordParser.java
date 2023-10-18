@@ -98,7 +98,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 } else if (dataType instanceof ArbitraryMapType) {
                     return parseKeyValues(
                             entry.getMap(),
-                            dataType.getKeyType(),
+                            ((ArbitraryMapType) dataType).getKeyTypes(),
                             ((ArbitraryMapType) dataType).getValueTypes());
                 }
             default:
@@ -190,7 +190,9 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseKeyValues(
-            IrResult.KeyValues keyValues, RelDataType keyType, List<RelDataType> valueTypes) {
+            IrResult.KeyValues keyValues,
+            List<RelDataType> keyTypes,
+            List<RelDataType> valueTypes) {
         List<IrResult.KeyValues.KeyValue> entries = keyValues.getKeyValuesList();
         Preconditions.checkArgument(
                 entries.size() == valueTypes.size(),

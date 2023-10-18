@@ -71,7 +71,7 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     }
 
     public RelDataType createArbitraryMapType(
-            RelDataType keyType, List<RelDataType> valueTypes, boolean isNullable) {
-        return new ArbitraryMapType(keyType, valueTypes, isNullable);
+            List<RelDataType> keyTypes, List<RelDataType> valueTypes, boolean isNullable) {
+        return new ArbitraryMapType(keyTypes, valueTypes, isNullable);
     }
 }

@@ -47,13 +47,16 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
         List<RelDataType> argTypes = opBinding.collectOperandTypes();
         List<RelDataType> keyTypes = Util.quotientList(argTypes, 2, 0);
         List<RelDataType> valueTypes = Util.quotientList(argTypes, 2, 1);
-        RelDataType keyType = typeFactory.leastRestrictive(keyTypes);
+        RelDataType keyType = getComponentType(typeFactory, keyTypes);
         RelDataType valueType = getComponentType(typeFactory, valueTypes);
-        if (valueType != null && valueType.getSqlTypeName() != SqlTypeName.ANY) {
+        if (keyType != null
+                && keyType.getSqlTypeName() != SqlTypeName.ANY
+                && valueType != null
+                && valueType.getSqlTypeName() != SqlTypeName.ANY) {
             return SqlTypeUtil.createMapType(opBinding.getTypeFactory(), keyType, valueType, false);
         } else {
             return ((GraphTypeFactoryImpl) typeFactory)
-                    .createArbitraryMapType(keyType, valueTypes, false);
+                    .createArbitraryMapType(keyTypes, valueTypes, false);
         }
     }
 
@@ -74,7 +77,7 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
             return (componentType == null)
                     ? typeFactory.createSqlType(SqlTypeName.ANY)
                     : componentType;
-        } catch (AssertionError e) {
+        } catch (Throwable e) {
             return typeFactory.createSqlType(SqlTypeName.ANY);
         }
     }
