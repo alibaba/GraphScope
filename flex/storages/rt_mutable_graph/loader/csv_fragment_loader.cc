@@ -613,8 +613,7 @@ CSVFragmentLoader::createEdgeTableReader(label_t src_label_id,
 template <typename KEY_T>
 struct _add_vertex {
   void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<int64_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {}
+                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {}
 };
 
 template <>
@@ -718,8 +717,7 @@ void CSVFragmentLoader::addVertexBatch(
 template <typename KEY_T>
 struct _add_vertex_chunk {
   void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
-                  IdIndexer<int64_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {}
+                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {}
 };
 
 template <>
@@ -750,8 +748,9 @@ struct _add_vertex_chunk<std::string_view> {
   void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
                   IdIndexer<std::string_view, vid_t>& indexer,
                   std::vector<vid_t>& vids) {
-    size_t row_num = col->length();
     CHECK(col->type() == arrow::utf8() || col->type() == arrow::large_utf8());
+    size_t row_num = col->length();
+
     if (col->type() == arrow::utf8()) {
       for (auto i = 0; i < col->num_chunks(); ++i) {
         auto chunk = col->chunk(i);
@@ -769,7 +768,6 @@ struct _add_vertex_chunk<std::string_view> {
         }
       }
     } else {
-      vid_t vid;
       for (auto i = 0; i < col->num_chunks(); ++i) {
         auto chunk = col->chunk(i);
         auto casted_array =
