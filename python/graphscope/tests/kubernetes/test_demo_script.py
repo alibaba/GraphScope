@@ -822,6 +822,6 @@ def test_modualize():
         num_workers=1,
         k8s_image_registry=get_gs_registry_on_ci_env(),
         k8s_image_tag=get_gs_tag_on_ci_env(),
-        enabled_engines="interactive",
+        enabled_engines="analytical",
     )
     sess.close()

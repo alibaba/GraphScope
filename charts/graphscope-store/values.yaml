@@ -504,9 +504,9 @@ engineType: "gaia"
 discoveryMode: "file"
 
 ## Ingestor Config
-ingestorQueueBufferSize: 128
+ingestorQueueBufferSize: 1024
 
-ingestorSenderBufferSize: 128
+ingestorSenderBufferSize: 1024
 
 ## Coordinator Config
 snapshotIncreaseIntervalMs: 1000

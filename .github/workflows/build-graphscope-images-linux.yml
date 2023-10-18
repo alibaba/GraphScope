@@ -45,7 +45,7 @@ jobs:
 
     - name: Build GraphScope Image
       run: |
-        curl -sSL https://raw.githubusercontent.com/sighingnow/libclang/master/.github/free-disk-space.sh | bash
+        bash ${GITHUB_WORKSPACE}/.github/free-disk-space.sh || true
 
         cd ${GITHUB_WORKSPACE}/k8s
         df -h

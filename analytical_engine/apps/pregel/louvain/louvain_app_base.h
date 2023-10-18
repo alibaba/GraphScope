@@ -61,7 +61,7 @@ class LouvainAppBase
   using context_t = LouvainContext<FRAG_T, pregel_compute_context_t>;
   using message_manager_t = grape::ParallelMessageManager;
   using worker_t = grape::ParallelWorker<app_t>;
-
+  using edata_t = typename context_t::edata_t;
   virtual ~LouvainAppBase<FRAG_T, VERTEX_PROGRAM_T>() {}
 
   static std::shared_ptr<worker_t> CreateWorker(std::shared_ptr<app_t> app,
@@ -198,7 +198,7 @@ class LouvainAppBase
 
     if (current_minor_step == phase_one_minor_step_1 && current_iteration > 0 &&
         current_iteration % 2 == 0) {
-      // aggreate total change
+      // aggregate total change
       int64_t total_change =
           ctx.compute_context().template get_aggregated_value<int64_t>(
               change_aggregator);
@@ -218,8 +218,8 @@ class LouvainAppBase
               << " total change: " << total_change;
     } else if (ctx.halt()) {
       // after decide_to_halt and aggregate actual quality in previous super
-      // step, here we check terminate computaion or start phase 2.
-      double actual_quality =
+      // step, here we check terminate computation or start phase 2.
+      auto actual_quality =
           ctx.compute_context().template get_aggregated_value<double>(
               actual_quality_aggregator);
       // after one pass if already decided halt, that means the pass yield no
@@ -272,6 +272,13 @@ class LouvainAppBase
             pregel_vertex, ctx.compute_context());
       } else if (ctx.compute_context().superstep() == compress_community_step) {
         ctx.GetVertexState(v).is_alived_community = false;
+      }
+
+      if (!ctx.compute_context().active(v)) {
+        std::vector<std::pair<vid_t, edata_t>> tmp_edges;
+        ctx.GetVertexState(v).fake_edges.swap(tmp_edges);
+        std::vector<vid_t> tmp_nodes;
+        ctx.GetVertexState(v).nodes_in_community.swap(tmp_nodes);
       }
     });
 

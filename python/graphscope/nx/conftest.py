@@ -17,6 +17,8 @@
 #
 
 import os
+import sys
+from unittest.mock import patch
 
 import pytest
 
@@ -45,3 +47,22 @@ def pytest_collection_modifyitems(items):
             timeout_marker = item.get_marker("timeout")
         if timeout_marker is None:
             item.add_marker(pytest.mark.timeout(600))
+
+
+@pytest.fixture(scope="session", autouse=True)
+def patch_print_pytest_xdist():
+    """
+    pytest-xdist disables stdout capturing by default, which means that print()
+    statements are not captured and displayed in the terminal.
+
+    That's because xdist cannot support -s for technical reasons wrt the process
+    execution mechanism.
+
+    See also: https://github.com/pytest-dev/pytest-xdist/issues/354
+    """
+    original_print = print
+    with patch("builtins.print") as mock_print:
+        mock_print.side_effect = lambda *args, **kwargs: original_print(
+            *args, **{"file": sys.stderr, **kwargs}
+        )
+        yield mock_print

@@ -22,6 +22,7 @@ import com.alibaba.graphscope.groot.store.external.ExternalStorage;
 import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.sun.jna.Pointer;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +47,11 @@ public class JnaGraphStore implements GraphPartition {
         if (!Files.isDirectory(partitionPath)) {
             Files.createDirectories(partitionPath);
         }
-        if (!Files.isDirectory(downloadPath)) {
-            Files.createDirectories(downloadPath);
+        // Recreate download directory to clear previous junk files
+        if (Files.isDirectory(downloadPath)) {
+            FileUtils.forceDelete(downloadPath.toFile());
         }
+        Files.createDirectories(downloadPath);
         if (!Files.isDirectory(backupPath)) {
             Files.createDirectories(backupPath);
         }
