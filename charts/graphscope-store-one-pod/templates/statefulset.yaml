@@ -104,6 +104,8 @@ spec:
               value: {{ $kafkaFullname}}-headless.{{ $releaseNamespace }}
             - name: KAFKA_SERVERS
               value: {{ include "graphscope-store.kafka.brokerlist" . }}
+            - name: ZOOKEEPER_CONNECT
+              value: {{ printf "%s-headless" (include "graphscope-store.zookeeper.fullname" .) | quote }}
           ports:
             - name: gremlin
               containerPort: 12312

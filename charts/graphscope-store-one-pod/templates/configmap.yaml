@@ -45,11 +45,6 @@ data:
     store.data.path={{ .Values.storeDataPath }}
     store.write.thread.count={{ .Values.storeWriteThreadCount }}
 
-    ## Kafka Config
-    kafka.servers=KAFKA_SERVERS
-    kafka.topic={{ .Values.kafkaTopic }}
-    kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
-
     ## Frontend Config
     gremlin.server.port=12312
     ## disable neo4j when launching groot server by default
@@ -74,6 +69,14 @@ data:
     pegasus.hosts=localhost:8080
 
     kafka.test.cluster.enable={{ not .Values.kafka.enabled }}
+    ## Kafka Config
+    kafka.servers=KAFKA_SERVERS
+    kafka.topic={{ .Values.kafkaTopic }}
+    kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
+
+    ## Zk Config
+    zk.base.path=/graphscope/groot
+    zk.connect.string=ZK_CONNECT
 
     ## Extra Config
     {{- if .Values.extraConfig }}
@@ -89,7 +92,8 @@ data:
     sudo chown -R graphscope:graphscope /etc/groot || true
 
     sudo sed -e "s/KAFKA_SERVERS/${KAFKA_SERVERS}/g" \
-              -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
+             -e "s/ZK_CONNECT/${ZK_CONNECT}/g" \
+             -e "s@LOG4RS_CONFIG@${GRAPHSCOPE_HOME}/groot/conf/log4rs.yml@g" \
     /etc/groot/groot.config.tpl | sudo tee -a /etc/groot/groot.config
 
     export LOG_NAME=graphscope-store
