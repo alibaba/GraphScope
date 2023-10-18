@@ -93,8 +93,13 @@ void SingleEdgeInsertTransaction::Commit() {
   logger_.append(arc_.GetBuffer(), arc_.GetSize());
 
   grape::OutArchive arc;
-  arc.SetSlice(arc_.GetBuffer() + sizeof(WalHeader) + 20,
-               arc_.GetSize() - sizeof(WalHeader) - 20);
+  {
+    arc.SetSlice(arc_.GetBuffer() + sizeof(WalHeader),
+                 arc_.GetSize() - sizeof(WalHeader));
+    label_t label;
+    Any tmp;
+    arc >> label >> label >> tmp >> label >> tmp >> label;
+  }
   graph_.IngestEdge(src_label_, src_vid_, dst_label_, dst_vid_, edge_label_,
                     timestamp_, arc, alloc_);
   vm_.release_insert_timestamp(timestamp_);
