@@ -89,8 +89,18 @@ bool operator==(const T& lhs, const None& rhs) {
 }
 
 template <typename T>
+bool operator==(const None& lhs, const T& rhs) {
+  return IsNull(rhs);
+}
+
+template <typename T>
 bool operator!=(const T& lhs, const None& rhs) {
   return !IsNull(lhs);
+}
+
+template <typename T>
+bool operator!=(const None& lhs, const T& rhs) {
+  return !IsNull(rhs);
 }
 }  // namespace gs
 
