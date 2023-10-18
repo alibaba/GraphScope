@@ -256,6 +256,7 @@ public abstract class Utils {
                                 + " to IrDataType is unsupported yet");
             case MULTISET:
             case ARRAY:
+            case MAP:
                 logger.warn("multiset or array type can not be converted to any ir core data type");
                 return DataType.IrDataType.newBuilder().build();
             default:

@@ -16,17 +16,18 @@
 
 package com.alibaba.graphscope.cypher.result;
 
-import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.common.ir.type.GraphPathType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.alibaba.graphscope.common.ir.type.*;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.sql.type.ArraySqlType;
+import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -42,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CypherRecordParser implements RecordParser<AnyValue> {
@@ -82,7 +84,23 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         switch (dataType.getSqlTypeName()) {
             case MULTISET:
             case ARRAY:
-                return parseCollection(entry.getCollection(), dataType.getComponentType());
+                if (dataType instanceof ArraySqlType) {
+                    return parseCollection(entry.getCollection(), dataType.getComponentType());
+                } else if (dataType instanceof ArbitraryArrayType) {
+                    return parseCollection(
+                            entry.getCollection(),
+                            ((ArbitraryArrayType) dataType).getComponentTypes());
+                }
+            case MAP:
+                if (dataType instanceof MapSqlType) {
+                    return parseKeyValues(
+                            entry.getMap(), dataType.getKeyType(), dataType.getValueType());
+                } else if (dataType instanceof ArbitraryMapType) {
+                    return parseKeyValues(
+                            entry.getMap(),
+                            dataType.getKeyType(),
+                            ((ArbitraryMapType) dataType).getValueTypes());
+                }
             default:
                 return parseElement(entry.getElement(), dataType);
         }
@@ -102,8 +120,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    protected AnyValue parseCollection(
-            IrResult.Collection collection, @Nullable RelDataType componentType) {
+    protected AnyValue parseCollection(IrResult.Collection collection, RelDataType componentType) {
         switch (componentType.getSqlTypeName()) {
             case BOOLEAN:
                 Boolean[] boolObjs =
@@ -132,7 +149,6 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                                 .map(k -> k.getObject().getStr())
                                 .toArray(String[]::new));
             case ROW:
-            case ANY:
                 return VirtualValues.fromList(
                         collection.getCollectionList().stream()
                                 .map(k -> parseElement(k, componentType))
@@ -141,6 +157,54 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 throw new NotImplementedException(
                         componentType.getSqlTypeName() + " is unsupported yet");
         }
+    }
+
+    protected AnyValue parseCollection(
+            IrResult.Collection collection, List<RelDataType> componentTypes) {
+        List<IrResult.Element> elements = collection.getCollectionList();
+        Preconditions.checkArgument(
+                elements.size() == componentTypes.size(),
+                "Collection element size="
+                        + elements.size()
+                        + " is not consistent with type size="
+                        + componentTypes.size());
+        List<AnyValue> values = Lists.newArrayList();
+        for (int i = 0; i < elements.size(); ++i) {
+            values.add(parseElement(elements.get(i), componentTypes.get(i)));
+        }
+        return VirtualValues.fromList(values);
+    }
+
+    protected AnyValue parseKeyValues(
+            IrResult.KeyValues keyValues, RelDataType keyType, RelDataType valueType) {
+        Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
+        keyValues
+                .getKeyValuesList()
+                .forEach(
+                        entry -> {
+                            valueMap.put(
+                                    entry.getKey().getStr(),
+                                    parseElement(entry.getValue(), valueType));
+                        });
+        return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
+    }
+
+    protected AnyValue parseKeyValues(
+            IrResult.KeyValues keyValues, RelDataType keyType, List<RelDataType> valueTypes) {
+        List<IrResult.KeyValues.KeyValue> entries = keyValues.getKeyValuesList();
+        Preconditions.checkArgument(
+                entries.size() == valueTypes.size(),
+                "KeyValues entry size="
+                        + entries.size()
+                        + " is not consistent with value type size="
+                        + valueTypes.size());
+        Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
+        for (int i = 0; i < entries.size(); ++i) {
+            IrResult.KeyValues.KeyValue entry = entries.get(i);
+            valueMap.put(
+                    entry.getKey().getStr(), parseElement(entry.getValue(), valueTypes.get(i)));
+        }
+        return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
 
     protected NodeValue parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {

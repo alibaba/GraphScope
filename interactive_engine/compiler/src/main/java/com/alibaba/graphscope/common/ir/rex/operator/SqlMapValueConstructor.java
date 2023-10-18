@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.rex.operator;
 
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCallBinding;
@@ -24,7 +26,6 @@ import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
-import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Static;
 import org.apache.calcite.util.Util;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -44,11 +45,16 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> argTypes = opBinding.collectOperandTypes();
-        Pair<RelDataType, RelDataType> type =
-                Pair.of(
-                        getComponentType(typeFactory, Util.quotientList(argTypes, 2, 0)),
-                        getComponentType(typeFactory, Util.quotientList(argTypes, 2, 1)));
-        return SqlTypeUtil.createMapType(opBinding.getTypeFactory(), type.left, type.right, false);
+        List<RelDataType> keyTypes = Util.quotientList(argTypes, 2, 0);
+        List<RelDataType> valueTypes = Util.quotientList(argTypes, 2, 1);
+        RelDataType keyType = typeFactory.leastRestrictive(keyTypes);
+        RelDataType valueType = getComponentType(typeFactory, valueTypes);
+        if (valueType != null && valueType.getSqlTypeName() != SqlTypeName.ANY) {
+            return SqlTypeUtil.createMapType(opBinding.getTypeFactory(), keyType, valueType, false);
+        } else {
+            return ((GraphTypeFactoryImpl) typeFactory)
+                    .createArbitraryMapType(keyType, valueTypes, false);
+        }
     }
 
     @Override

@@ -51,6 +51,8 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitCase(call);
         } else if (operator.getKind() == SqlKind.ARRAY_VALUE_CONSTRUCTOR) {
             return visitArrayValueConstructor(call);
+        } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
+            return visitMapValueConstructor(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
         } else if (call.getOperands().size() == 1) {
@@ -97,6 +99,35 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .addOperators(
                         OuterExpression.ExprOpr.newBuilder()
                                 .setVars(varsBuilder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
+    private OuterExpression.Expression visitMapValueConstructor(RexCall call) {
+        OuterExpression.VariableKeyValues.Builder varMapBuilder =
+                OuterExpression.VariableKeyValues.newBuilder();
+        List<RexNode> operands = call.getOperands();
+        for (int i = 0; i < operands.size() - 1; i += 2) {
+            RexNode key = operands.get(i);
+            RexNode value = operands.get(i + 1);
+            Preconditions.checkArgument(
+                    key instanceof RexLiteral,
+                    "key type of 'MAP_VALUE_CONSTRUCTOR' should be 'literal', but is "
+                            + key.getClass());
+            Preconditions.checkArgument(
+                    value instanceof RexGraphVariable,
+                    "value type of 'MAP_VALUE_CONSTRUCTOR' should be 'variable', but is "
+                            + value.getClass());
+            varMapBuilder.addKeyVals(
+                    OuterExpression.VariableKeyValue.newBuilder()
+                            .setKey(key.accept(this).getOperators(0).getConst())
+                            .setValue(value.accept(this).getOperators(0).getVar())
+                            .build());
+        }
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setMap(varMapBuilder)
                                 .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
                 .build();
     }

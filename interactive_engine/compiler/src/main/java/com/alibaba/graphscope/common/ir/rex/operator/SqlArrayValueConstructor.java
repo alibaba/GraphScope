@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.rex.operator;
 
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCallBinding;
@@ -43,7 +45,11 @@ public class SqlArrayValueConstructor extends SqlMultisetValueConstructor {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> argTypes = opBinding.collectOperandTypes();
         RelDataType componentType = getComponentType(typeFactory, argTypes);
-        return SqlTypeUtil.createArrayType(typeFactory, componentType, false);
+        if (componentType != null && componentType.getSqlTypeName() != SqlTypeName.ANY) {
+            return SqlTypeUtil.createArrayType(typeFactory, componentType, false);
+        } else {
+            return ((GraphTypeFactoryImpl) typeFactory).createArbitraryArrayType(argTypes, false);
+        }
     }
 
     // operands of array value constructor can be any, even if empty, i.e []
