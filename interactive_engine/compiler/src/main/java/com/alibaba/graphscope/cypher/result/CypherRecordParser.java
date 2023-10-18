@@ -27,12 +27,12 @@ import com.google.common.collect.Lists;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.neo4j.values.AnyValue;
-import org.neo4j.values.storable.BooleanValue;
-import org.neo4j.values.storable.Values;
+import org.neo4j.values.storable.*;
 import org.neo4j.values.virtual.MapValue;
 import org.neo4j.values.virtual.NodeValue;
 import org.neo4j.values.virtual.RelationshipValue;
@@ -40,6 +40,7 @@ import org.neo4j.values.virtual.VirtualValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -221,6 +222,22 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 return Values.stringArray(value.getStrArray().getItemList().toArray(String[]::new));
             case NONE:
                 return Values.NO_VALUE;
+            case DATE:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.DATE,
+                        "date32 value should have date type");
+                return DateValue.epochDate(value.getDate().getItem());
+            case TIME:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.TIME,
+                        "time32 value should have time type");
+                return TimeValue.time(value.getTime().getItem() * 1000_000L, ZoneOffset.UTC);
+            case TIMESTAMP:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.TIMESTAMP,
+                        "timestamp value should have timestamp type");
+                return DateTimeValue.ofEpochMillis(
+                        Values.longValue(value.getTimestamp().getItem()));
             default:
                 throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
         }
