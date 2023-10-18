@@ -10,6 +10,7 @@ myst-parser>=0.13.0
 pylint
 pytest
 pytest-cov
+pytest-xdist
 pytest-timeout
 Pygments>=2.4.1
 sphinx>=7.1.2
