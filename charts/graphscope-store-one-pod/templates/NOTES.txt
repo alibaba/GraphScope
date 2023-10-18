@@ -9,14 +9,14 @@
   It may take a few minutes for the LoadBalancer IP to be available.
   You can watch the status by executing 
 
-    kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ include "graphscope-store.store.fullname" . }}
+    kubectl --namespace {{ .Release.Namespace }} get services -o wide -w {{ include "graphscope-store.frontend.fullname" . }}
 
   After the EXTERNAL_IP is available, executing these commands:
 
-  export NODE_IP=$(kubectl -n {{ .Release.Namespace }} get svc {{ include "graphscope-store.store.fullname" . }} -ojsonpath="{.status.loadBalancer.ingress[0].ip}")
+  export NODE_IP=$(kubectl -n {{ .Release.Namespace }} get svc {{ include "graphscope-store.frontend.fullname" . }} -ojsonpath="{.status.loadBalancer.ingress[0].ip}")
 
 {{- end }}
-  export GRPC_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ include "graphscope-store.store.fullname" . }} -o jsonpath="{.spec.ports[0].nodePort}")
-  export GREMLIN_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ include "graphscope-store.store.fullname" . }} -o jsonpath="{.spec.ports[1].nodePort}")
+  export GRPC_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ include "graphscope-store.frontend.fullname" . }} -o jsonpath="{.spec.ports[0].nodePort}")
+  export GREMLIN_PORT=$(kubectl -n {{ .Release.Namespace }} get services {{ include "graphscope-store.frontend.fullname" . }} -o jsonpath="{.spec.ports[1].nodePort}")
   echo "GRPC endpoint is: ${NODE_IP}:${GRPC_PORT}"
   echo "GREMLIN endpoint is: ${NODE_IP}:${GREMLIN_PORT}"

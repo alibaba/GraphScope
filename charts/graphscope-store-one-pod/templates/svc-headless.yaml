@@ -21,4 +21,4 @@ spec:
       port: {{ .Values.frontend.service.servicePort }}
       targetPort: service-port
   selector: {{- include "common.labels.matchLabels" . | nindent 4 }}
-    app.kubernetes.io/component: frontend
+    app.kubernetes.io/component: store
