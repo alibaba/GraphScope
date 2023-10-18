@@ -2,7 +2,7 @@
 # only_if: $CIRRUS_TAG != ''
 
 env:
-  MACOSX_DEPLOYMENT_TARGET: "11"
+  MACOSX_DEPLOYMENT_TARGET: "12"
 
 macosx_arm64_wheel_task:
   macos_instance:

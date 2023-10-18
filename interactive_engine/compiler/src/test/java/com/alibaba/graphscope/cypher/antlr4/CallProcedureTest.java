@@ -18,15 +18,31 @@ package com.alibaba.graphscope.cypher.antlr4;
 
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
+import org.apache.calcite.runtime.CalciteException;
 import org.junit.Assert;
 import org.junit.Test;
 
 public class CallProcedureTest {
     @Test
-    public void match_1_test() {
+    public void procedure_1_test() {
         LogicalPlan logicalPlan = Utils.evalLogicalPlan("Call ldbc_ic2(10l, 20120112l)");
         Assert.assertEquals("ldbc_ic2(10:BIGINT, 20120112:BIGINT)", logicalPlan.explain().trim());
         Assert.assertEquals(
                 "RecordType(CHAR(1) name)", logicalPlan.getProcedureCall().getType().toString());
+    }
+
+    // test procedure with invalid parameter types
+    @Test
+    public void procedure_2_test() {
+        try {
+            Utils.evalLogicalPlan("Call ldbc_ic2(10, 20120112l)");
+        } catch (CalciteException e) {
+            Assert.assertEquals(
+                    "Cannot apply ldbc_ic2 to arguments of type 'ldbc_ic2(<INTEGER>, <BIGINT>)'."
+                            + " Supported form(s): 'ldbc_ic2(<BIGINT>, <BIGINT>)'",
+                    e.getMessage());
+            return;
+        }
+        Assert.fail();
     }
 }

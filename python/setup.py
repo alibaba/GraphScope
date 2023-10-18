@@ -136,9 +136,10 @@ class BuildGLExt(build_ext):
 
 class BuildGLTorchExt(torch.utils.cpp_extension.BuildExtension if torch else build_ext):
     def run(self):
-        assert (
-            torch
-        ), "Building graphlearn-torch extension requires installing pytorch first. Let WITH_GLTORCH=OFF if you don't need it."
+        if torch is None:
+            print("Building graphlearn-torch extension requires pytorch")
+            print("Set WITH_GLTORCH=OFF if you don't need it.")
+            return
         self.extensions = [
             ext
             for ext in self.extensions
@@ -263,8 +264,8 @@ def parsed_package_data():
 def build_learning_engine():
     ext_modules = [graphlearn_ext()]
     if torch and os.path.exists(os.path.join(glt_root_path, "graphlearn_torch")):
-        sys.path.append(
-            os.path.join(glt_root_path, "graphlearn_torch", "python", "utils")
+        sys.path.insert(
+            0, os.path.join(glt_root_path, "graphlearn_torch", "python", "utils")
         )
         from build import glt_ext_module
         from build import glt_v6d_ext_module
@@ -283,6 +284,7 @@ def build_learning_engine():
                 root_path=glt_root_path,
             )
         )
+        sys.path.pop(0)
     return ext_modules
 
 
