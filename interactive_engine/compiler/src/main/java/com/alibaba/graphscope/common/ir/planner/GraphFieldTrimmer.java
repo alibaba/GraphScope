@@ -199,11 +199,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
               new RelDataTypeFieldImpl(
                   var.getName(), var.getAliasId(), parentsUsedField.getType()));
         } else {
-          GraphSchemaType origin = (GraphSchemaType) field.getType();
-          GraphSchemaType graphSchemaType =
-              new GraphSchemaType(origin.getScanOpt(), origin.getLabelType(), List.of());
-          inputFieldUsed.add(
-              new RelDataTypeFieldImpl(var.getName(), var.getAliasId(), graphSchemaType));
+          inputFieldUsed.add(emptyField(field));
         }
       }
       varUsedBuilder.addAll(vars);
@@ -251,7 +247,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                       call.getOperands().stream()
                           .map(operand -> operand.accept(shuttle))
                           .collect(Collectors.toList());
-                  GraphAggCall newCall=new GraphAggCall(call.getCluster(), call.getAggFunction(), operands);
+                  GraphAggCall newCall =
+                      new GraphAggCall(call.getCluster(), call.getAggFunction(), operands);
                   newCall.as(call.getAlias());
                   return newCall;
                 })
@@ -392,11 +389,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     if (fieldsUsed.containsKey(aliasId)) {
       field = fieldsUsed.get(aliasId);
     } else {
-      GraphSchemaType origin = (GraphSchemaType) rowType.getFieldList().get(0).getType();
-      GraphSchemaType newType =
-          new GraphSchemaType(
-              origin.getScanOpt(), origin.getLabelType(), new ArrayList<>(), origin.isNullable());
-      field = new RelDataTypeFieldImpl(tableScan.getAliasName(), aliasId, newType);
+      RelDataTypeField origin = rowType.getFieldList().get(0);
+      field = emptyField(origin);
     }
 
     Mapping mapping = Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldCount);
@@ -498,8 +492,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
    * @param field
    * @return whether the properties are used
    */
-  private final boolean isUsedProperty(
-      Set<@Nullable GraphProperty> properties, RelDataTypeField field) {
+  private boolean isUsedProperty(Set<@Nullable GraphProperty> properties, RelDataTypeField field) {
     for (GraphProperty property : properties) {
       if (property != null) {
         if (property.getOpt() == GraphProperty.Opt.ALL) {
@@ -517,9 +510,9 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     return false;
   }
 
-
   /**
    * find usedFields of the root of the RelPlan tree with empty properties
+   *
    * @param root
    * @return
    */
@@ -527,21 +520,25 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     RelDataType rowType = root.getRowType();
     List<RelDataTypeField> fields = rowType.getFieldList();
     Set<RelDataTypeField> set =
-        fields.stream()
-            .map(
-                field -> {
-                  if (field.getType() instanceof GraphSchemaType) {
-                    GraphSchemaType original = (GraphSchemaType) field.getType();
-                    GraphSchemaType newType =
-                        new GraphSchemaType(
-                            original.getScanOpt(), original.getLabelType(), new ArrayList<>());
-                    return new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType);
-                  } else {
-                    return field;
-                  }
-                })
-            .collect(Collectors.toSet());
+        fields.stream().map(field -> emptyField(field)).collect(Collectors.toSet());
     return new UsedFields(set);
+  }
+
+  /**
+   * Empty properties if the type of field is {@Code GraphSchemaType}.
+   *
+   * @param field
+   * @return field after empty
+   */
+  private RelDataTypeField emptyField(RelDataTypeField field) {
+    if (field.getType() instanceof GraphSchemaType) {
+      GraphSchemaType original = (GraphSchemaType) field.getType();
+      GraphSchemaType newType =
+          new GraphSchemaType(original.getScanOpt(), original.getLabelType(), new ArrayList<>());
+      return new RelDataTypeFieldImpl(field.getName(), field.getIndex(), newType);
+    } else {
+      return field;
+    }
   }
 
   public class UsedFields {
@@ -563,10 +560,10 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     }
 
     /**
-     * Add single field
-     * if it doesn't contain such field, just add it. Otherwise:
-     * if the type of the field is NOT {@code GraphSchemaType}, do nothing
-     * if the type of the field is {@code GraphSchemaType}, combine current field and the param
+     * Add single field if it doesn't contain such field, just add it. Otherwise: if the type of the
+     * field is NOT {@code GraphSchemaType}, do nothing if the type of the field is {@code
+     * GraphSchemaType}, combine current field and the param
+     *
      * @param field
      */
     public void add(RelDataTypeField field) {
