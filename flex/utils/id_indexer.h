@@ -180,28 +180,42 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
 template <typename INDEX_T>
 class LFIndexer {
  public:
-  LFIndexer()
-      : num_elements_(0),
-        hasher_(),
-        type_(PropertyType::kEmpty),
-        keys_(nullptr) {}
-  LFIndexer(const LFIndexer& rhs)
+  LFIndexer() : num_elements_(0), hasher_(), keys_(nullptr) {}
+  LFIndexer(LFIndexer&& rhs)
       : keys_(rhs.keys_),
-        type_(rhs.type_),
         indices_(rhs.indices_),
         num_elements_(rhs.num_elements_.load()),
         num_slots_minus_one_(rhs.num_slots_minus_one_),
         hasher_(rhs.hasher_) {
+    if (keys_ != rhs.keys_) {
+      if (keys_ != nullptr) {
+        delete keys_;
+      }
+      keys_ = rhs.keys_;
+    }
     hash_policy_.set_mod_function_by_index(
         rhs.hash_policy_.get_mod_function_index());
   }
 
-  void set_type(const PropertyType& type) { type_ = type; }
-  void set_key(const std::shared_ptr<ColumnBase>& keys) { keys_ = keys; }
+  void init(const PropertyType& type) {
+    if (keys_ != nullptr) {
+      delete keys_;
+    }
+    keys_ = nullptr;
+    if (type == PropertyType::kInt64) {
+      keys_ = new TypedColumn<int64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kString) {
+      keys_ = new TypedColumn<std::string_view>(StorageStrategy::kMem);
+    } else {
+      LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
+    }
+  }
+
   size_t size() const { return num_elements_.load(); }
-  PropertyType get_type() const { return type_; }
+  PropertyType get_type() const { return keys_->type(); }
+
   INDEX_T insert(const Any& oid) {
-    assert(oid.type == type_);
+    assert(oid.type == get_type());
     INDEX_T ind = static_cast<INDEX_T>(num_elements_.fetch_add(1));
     keys_->set_any(ind, oid);
     size_t index =
@@ -217,7 +231,7 @@ class LFIndexer {
   }
 
   INDEX_T get_index(const Any& oid) const {
-    assert(oid.type == type_);
+    assert(oid.type == get_type());
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
@@ -234,7 +248,7 @@ class LFIndexer {
   }
 
   bool get_index(const Any& oid, INDEX_T& ret) const {
-    assert(oid.type == type_);
+    assert(oid.type == get_type());
 
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
@@ -258,7 +272,7 @@ class LFIndexer {
   void Serialize(const std::string& prefix) {
     {
       grape::InArchive arc;
-      arc << type_ << keys_->size() << indices_.size();
+      arc << get_type() << keys_->size() << indices_.size();
       arc << hash_policy_.get_mod_function_index() << num_elements_.load()
           << num_slots_minus_one_ << indices_size_;
       std::string meta_file_path = prefix + ".meta";
@@ -289,19 +303,13 @@ class LFIndexer {
                meta_file_size);
       grape::OutArchive arc;
       arc.SetSlice(buf.data(), meta_file_size);
-
-      arc >> type_ >> keys_size >> indices_size;
+      PropertyType type;
+      arc >> type >> keys_size >> indices_size;
       arc >> mod_function_index >> num_elements >> num_slots_minus_one_ >>
           indices_size_;
+      init(type);
     }
-    if (type_ == PropertyType::kInt64) {
-      keys_ = std::make_shared<TypedColumn<int64_t>>(StorageStrategy::kMem);
-    } else if (type_ == PropertyType::kString) {
-      keys_ = std::make_shared<TypedColumn<std::string_view>>(
-          StorageStrategy::kMem);
-    } else {
-      LOG(FATAL) << "Unknow pk type for " << type_ << "..";
-    }
+
     keys_->Deserialize(prefix + ".keys");
     CHECK_EQ(keys_->size(), keys_size);
     indices_.open_for_read(prefix + ".indices");
@@ -314,9 +322,8 @@ class LFIndexer {
   const ColumnBase& get_keys() const { return *keys_; }
 
  private:
-  std::shared_ptr<ColumnBase> keys_;
-  PropertyType type_;
-  // mmap_array<int64_t> keys_;
+  ColumnBase* keys_;
+
   mmap_array<INDEX_T> indices_;
   std::atomic<size_t> num_elements_;
   size_t num_slots_minus_one_;
@@ -330,69 +337,14 @@ class LFIndexer {
 };
 template <typename INDEX_T>
 class IdIndexerBase {
- protected:
-  IdIndexerBase(PropertyType type) : type_(type) {}
-
  public:
-  PropertyType get_type() { return type_; }
-  void _add(const Any& oid) {
-    CHECK(oid.type == type_);
-    if (type_ == PropertyType::kInt64) {
-      static_cast<IdIndexer<int64_t, INDEX_T>*>(this)->_add(oid.AsInt64());
-    } else if (type_ == PropertyType::kString) {
-      static_cast<IdIndexer<std::string_view, INDEX_T>*>(this)->_add(
-          oid.AsStringView());
-    }
-  }
-  bool add(const Any& oid, INDEX_T& lid) {
-    CHECK(oid.type == type_);
-    if (type_ == PropertyType::kInt64) {
-      return static_cast<IdIndexer<int64_t, INDEX_T>*>(this)->add(oid.AsInt64(),
-                                                                  lid);
-    } else if (type_ == PropertyType::kString) {
-      return static_cast<IdIndexer<std::string_view, INDEX_T>*>(this)->add(
-          oid.AsStringView(), lid);
-    }
-    return false;
-  }
-  bool get_key(const INDEX_T& lid, Any& oid) const {
-    bool flag = false;
-    if (type_ == PropertyType::kInt64) {
-      int64_t oid_{};
-      flag = static_cast<const IdIndexer<int64_t, INDEX_T>*>(this)->get_key(
-          lid, oid_);
-      oid = Any::From(oid_);
-    } else if (type_ == PropertyType::kString) {
-      std::string_view oid_{};
-      flag = static_cast<const IdIndexer<std::string_view, INDEX_T>*>(this)
-                 ->get_key(lid, oid_);
-      oid = Any::From(oid_);
-    }
-    return flag;
-  }
-  bool get_index(const Any& oid, INDEX_T& lid) const {
-    CHECK(oid.type == type_);
-    if (type_ == PropertyType::kInt64) {
-      return static_cast<const IdIndexer<int64_t, INDEX_T>*>(this)->get_index(
-          oid.AsInt64(), lid);
-    } else if (type_ == PropertyType::kString) {
-      return static_cast<const IdIndexer<std::string_view, INDEX_T>*>(this)
-          ->get_index(oid.AsStringView(), lid);
-    }
-    return false;
-  }
-  size_t size() const {
-    if (type_ == PropertyType::kInt64) {
-      return static_cast<const IdIndexer<int64_t, INDEX_T>*>(this)->size();
-    } else if (type_ == PropertyType::kString) {
-      return static_cast<const IdIndexer<std::string_view, INDEX_T>*>(this)
-          ->size();
-    }
-    return 0;
-  }
-
- private:
-  PropertyType type_;
+  IdIndexerBase() {}
+  virtual PropertyType get_type() const = 0;
+  virtual void _add(const Any& oid) = 0;
+  virtual bool add(const Any& oid, INDEX_T& lid) = 0;
+  virtual bool get_key(const INDEX_T& lid, Any& oid) const = 0;
+  virtual bool get_index(const Any& oid, INDEX_T& lid) const = 0;
+  virtual size_t size() const = 0;
 };
 template <typename KEY_T, typename INDEX_T>
 class IdIndexer : public IdIndexerBase<INDEX_T> {
@@ -401,10 +353,38 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
   using ind_buffer_t = std::vector<INDEX_T>;
   using dist_buffer_t = std::vector<int8_t>;
 
-  IdIndexer() : IdIndexerBase<INDEX_T>(AnyConverter<KEY_T>::type), hasher_() {
-    reset_to_empty_state();
-  }
+  IdIndexer() : hasher_() { reset_to_empty_state(); }
   ~IdIndexer() {}
+
+  PropertyType get_type() const override { return AnyConverter<KEY_T>::type; }
+
+  void _add(const Any& oid) override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    _add(oid_);
+  }
+
+  bool add(const Any& oid, INDEX_T& lid) override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    return add(oid_, lid);
+  }
+
+  bool get_key(const INDEX_T& lid, Any& oid) const override {
+    KEY_T oid_;
+    bool flag = get_key(lid, oid_);
+    oid = Any::From(oid_);
+    return flag;
+  }
+
+  bool get_index(const Any& oid, INDEX_T& lid) const override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    return get_index(oid_, lid);
+  }
 
   size_t entry_num() const { return distances_.size(); }
 
@@ -540,7 +520,7 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
 
   bool empty() const { return (num_elements_ == 0); }
 
-  size_t size() const { return num_elements_; }
+  size_t size() const override { return num_elements_; }
 
   bool get_key(INDEX_T lid, KEY_T& oid) const {
     if (static_cast<size_t>(lid) >= num_elements_) {
@@ -762,7 +742,6 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
   size_t num_elements_ = 0;
   size_t num_slots_minus_one_ = 0;
 
-  // std::hash<KEY_T> hasher_;
   GHash<KEY_T> hasher_;
 
   template <typename _KEY_T, typename _INDEX_T>
@@ -801,8 +780,7 @@ struct _move_data<std::string_view, INDEX_T> {
 template <typename KEY_T, typename INDEX_T>
 void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       LFIndexer<INDEX_T>& lf, double rate) {
-  lf.set_type(AnyConverter<KEY_T>::type);
-  lf.set_key(std::make_shared<TypedColumn<KEY_T>>(StorageStrategy::kMem));
+  lf.init(AnyConverter<KEY_T>::type);
   double indices_rate = static_cast<double>(input.keys_.size()) /
                         static_cast<double>(input.indices_.size());
   CHECK_LT(indices_rate, rate);
