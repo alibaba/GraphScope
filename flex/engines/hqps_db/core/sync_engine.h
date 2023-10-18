@@ -185,6 +185,32 @@ class SyncEngine : public BaseEngine {
     return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
 
+  template <AppendOpt append_opt, typename LabelT, size_t num_labels,
+            typename std::enable_if<(append_opt == AppendOpt::Persist)>::type* =
+                nullptr,
+            typename COL_T = GeneralVertexSet<vertex_id_t, LabelT>>
+  static Context<COL_T, 0, 0, grape::EmptyType> ScanVertexWithOid(
+      const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels> v_labels,
+      int64_t oid) {
+    auto v_set_tuple =
+        Scan<GRAPH_INTERFACE>::ScanVertexWithOid(graph, v_labels, oid);
+
+    return Context<COL_T, 0, 0, grape::EmptyType>(std::move(v_set_tuple));
+  }
+
+  template <
+      AppendOpt append_opt, typename LabelT, size_t num_labels,
+      typename std::enable_if<(append_opt == AppendOpt::Temp)>::type* = nullptr,
+      typename COL_T = GeneralVertexSet<vertex_id_t, LabelT>>
+  static Context<COL_T, -1, 0, grape::EmptyType> ScanVertexWithOid(
+      const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels> v_labels,
+      int64_t oid) {
+    auto v_set_tuple =
+        Scan<GRAPH_INTERFACE>::ScanVertexWithOid(graph, v_labels, oid);
+
+    return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
+  }
+
   //////////////////////////EdgeExpand////////////////////////////
 
   ////Edge ExpandE with multiple edge label triplets. (src, dst, edge)

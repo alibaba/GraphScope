@@ -54,8 +54,18 @@ static constexpr const char* SCAN_OP_TEMPLATE_NO_EXPR_STR =
 /// 3. graph name
 /// 4. vertex label
 /// 5. oid
-static constexpr const char* SCAN_OP_WITH_OID_TEMPLATE_STR =
+static constexpr const char* SCAN_OP_WITH_OID_ONE_LABEL_TEMPLATE_STR =
     "auto %1% = Engine::template ScanVertexWithOid<%2%>(%3%, %4%, %5%);\n";
+
+/// Args
+/// 1. res_ctx_name
+/// 2. AppendOpt,
+/// 3. graph name
+/// 4. vertex label
+/// 5. oid
+static constexpr const char* SCAN_OP_WITH_OID_MUL_LABEL_TEMPLATE_STR =
+    "auto %1% = Engine::template ScanVertexWithOid<%2%>(%3%, "
+    "std::array<label_id_t, %4%>{%5%}, %6%);\n";
 
 /**
  * @brief When building scanOp, we ignore the data type provided in the pb.
@@ -212,15 +222,25 @@ class ScanOpBuilder {
   std::string scan_with_oid(const std::vector<int32_t>& label_ids,
                             const std::string& oid) const {
     VLOG(10) << "Scan with oid: " << oid;
-    CHECK(label_ids.size() == 1)
-        << "Currently only support one label for index scan";
     std::string next_ctx_name = ctx_.GetCurCtxName();
     auto append_opt = res_alias_to_append_opt(res_alias_);
 
-    boost::format formater(SCAN_OP_WITH_OID_TEMPLATE_STR);
-    formater % next_ctx_name % append_opt % ctx_.GraphVar() % label_ids[0] %
-        oid;
-    return formater.str();
+    if (label_ids.size() == 1) {
+      boost::format formater(SCAN_OP_WITH_OID_ONE_LABEL_TEMPLATE_STR);
+      formater % next_ctx_name % append_opt % ctx_.GraphVar() % label_ids[0] %
+          oid;
+      return formater.str();
+    } else {
+      boost::format formater(SCAN_OP_WITH_OID_MUL_LABEL_TEMPLATE_STR);
+      std::stringstream ss;
+      for (auto i = 0; i + 1 < label_ids.size(); ++i) {
+        ss << std::to_string(label_ids[i]) << ", ";
+      }
+      ss << std::to_string(label_ids[label_ids.size() - 1]);
+      formater % next_ctx_name % append_opt % ctx_.GraphVar() %
+          label_ids.size() % ss.str() % oid;
+      return formater.str();
+    }
   }
 
   std::string scan_without_expr(const std::vector<int32_t>& label_ids) const {
