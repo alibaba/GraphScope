@@ -106,25 +106,25 @@ public class Glogue {
         return this;
     }
 
-    // public Set<GlogueEdge> getOutEdges(Pattern pattern) {
-    //     Optional<Pattern> vertex = getGlogueVertex(pattern);
-    //     if (vertex.isPresent()) {
-    //         return getGlogueInEdges(vertex.get());
-    //     } else {
-    //         throw new RuntimeException(
-    //                 "pattern not found in glogue graph. queries pattern " + pattern);
-    //     }
-    // }
+    public Set<GlogueEdge> getOutEdges(Pattern pattern) {
+        Optional<Pattern> vertex = getGlogueVertex(pattern);
+        if (vertex.isPresent()) {
+            return getGlogueOutEdges(vertex.get());
+        } else {
+            throw new RuntimeException(
+                    "pattern not found in glogue graph. queries pattern " + pattern);
+        }
+    }
 
-    // public Set<GlogueEdge> getInEdges(Pattern pattern) {
-    //     Optional<Pattern> vertex = getGlogueVertex(pattern);
-    //     if (vertex.isPresent()) {
-    //         return getGlogueOutEdges(vertex.get());
-    //     } else {
-    //         throw new RuntimeException(
-    //                 "pattern not found in glogue graph. queries pattern " + pattern);
-    //     }
-    // }
+    public Set<GlogueEdge> getInEdges(Pattern pattern) {
+        Optional<Pattern> vertex = getGlogueVertex(pattern);
+        if (vertex.isPresent()) {
+            return getGlogueInEdges(vertex.get());
+        } else {
+            throw new RuntimeException(
+                    "pattern not found in glogue graph. queries pattern " + pattern);
+        }
+    }
 
     protected Set<GlogueEdge> getGlogueOutEdges(Pattern pattern) {
         return glogueGraph.outgoingEdgesOf(pattern);

@@ -25,6 +25,8 @@ public class Combinations {
                 || elements.size() - startIndex < k - currentCombination.size()) {
             return;
         }
+        // notice that we do not allow duplicates within the combination
+       // if (currentCombination.contains(elements.get(startIndex) )) return;
         currentCombination.add(elements.get(startIndex));
         getCombinationsHelper(elements, k, startIndex + 1, currentCombination, results);
         currentCombination.remove(currentCombination.size() - 1);
@@ -32,7 +34,7 @@ public class Combinations {
     }
 
     public static void main(String[] args) {
-        List<Integer> elements = Arrays.asList(1, 2, 3, 4);
+        List<Integer> elements = Arrays.asList(1, 2, 3, 3);
         for (int k = 1; k <= elements.size(); k++) {
             List<List<Integer>> combinations = Combinations.getCombinations(elements, k);
             for (List<Integer> comb : combinations) {
