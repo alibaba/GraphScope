@@ -37,8 +37,6 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
 
   vertex_label_num_ = graph_.schema().vertex_label_num();
   edge_label_num_ = graph_.schema().edge_label_num();
-  // added_vertices_.resize(vertex_label_num_);
-
   for (auto idx = 0; idx < vertex_label_num_; ++idx) {
     if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
       added_vertices_.emplace_back(
@@ -48,7 +46,6 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
           std::make_shared<IdIndexer<std::string_view, vid_t>>());
     } else {
       LOG(FATAL) << "Only int64 and string_view types for pk are supported..";
-      // added_vertices_.emplace_back(nullptr);
     }
   }
 
@@ -126,7 +123,8 @@ bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
   extra_vertex_properties_[label].ingest(row_num, oarc);
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(0) << label << oid;
+  arc_ << static_cast<uint8_t>(0) << label;
+  serialize_field(arc_, oid);
   arc_.AddBytes(arc.GetBuffer(), arc.GetSize());
   return true;
 }
@@ -155,8 +153,11 @@ bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
   updated_edge_data_[out_csr_index][src_lid].emplace(dst_lid, value);
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
-       << edge_label;
+  arc_ << static_cast<uint8_t>(1) << src_label;
+  serialize_field(arc_, src);
+  arc_ << dst_label;
+  serialize_field(arc_, dst);
+  arc_ << edge_label;
   serialize_field(arc_, value);
 
   return true;
@@ -359,7 +360,9 @@ bool UpdateTransaction::SetVertexField(label_t label, vid_t lid, int col_id,
   }
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(2) << label << lid_to_oid(label, lid) << col_id;
+  arc_ << static_cast<uint8_t>(2) << label;
+  serialize_field(arc_, lid_to_oid(label, lid));
+  arc_ << col_id;
   serialize_field(arc_, value);
   return true;
 }
@@ -380,9 +383,11 @@ void UpdateTransaction::SetEdgeData(bool dir, label_t label, vid_t v,
   }
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(3) << static_cast<uint8_t>(dir ? 1 : 0) << label
-       << lid_to_oid(label, v) << neighbor_label
-       << lid_to_oid(neighbor_label, nbr) << edge_label;
+  arc_ << static_cast<uint8_t>(3) << static_cast<uint8_t>(dir ? 1 : 0) << label;
+  serialize_field(arc_, lid_to_oid(label, v));
+  arc_ << neighbor_label;
+  serialize_field(arc_, lid_to_oid(neighbor_label, nbr));
+  arc_ << edge_label;
   serialize_field(arc_, value);
 }
 
@@ -459,8 +464,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     if (op_type == 0) {
       label_t label;
       Any oid;
-
-      arc >> label >> oid;
+      label = deserialize_oid(graph, arc, oid);
       vid_t vid;
       if (!graph.get_lid(label, oid, vid)) {
         vid = graph.add_vertex(label, oid);
@@ -470,8 +474,9 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       label_t src_label, dst_label, edge_label;
       Any src, dst;
       vid_t src_vid, dst_vid;
-
-      arc >> src_label >> src >> dst_label >> dst >> edge_label;
+      src_label = deserialize_oid(graph, arc, src);
+      dst_label = deserialize_oid(graph, arc, dst);
+      arc >> edge_label;
       CHECK(graph.get_lid(src_label, src, src_vid));
       CHECK(graph.get_lid(dst_label, dst, dst_vid));
       graph.IngestEdge(src_label, src_vid, dst_label, dst_vid, edge_label,
@@ -480,8 +485,8 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       label_t label;
       Any oid;
       int col_id;
-
-      arc >> label >> oid >> col_id;
+      label = deserialize_oid(graph, arc, oid);
+      arc >> col_id;
       vid_t vid;
       CHECK(graph.get_lid(label, oid, vid));
       graph.get_vertex_table(label).get_column_by_id(col_id)->ingest(vid, arc);
@@ -490,8 +495,10 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       label_t label, neighbor_label, edge_label;
       Any v, nbr;
       vid_t v_lid, nbr_lid;
-
-      arc >> dir >> label >> v >> neighbor_label >> nbr >> edge_label;
+      arc >> dir;
+      label = deserialize_oid(graph, arc, v);
+      neighbor_label = deserialize_oid(graph, arc, nbr);
+      arc >> edge_label;
       CHECK(graph.get_lid(label, v, v_lid));
       CHECK(graph.get_lid(neighbor_label, nbr, nbr_lid));
 

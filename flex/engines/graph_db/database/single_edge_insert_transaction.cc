@@ -63,8 +63,11 @@ bool SingleEdgeInsertTransaction::AddEdge(label_t src_label, const Any& src,
   src_label_ = src_label;
   dst_label_ = dst_label;
   edge_label_ = edge_label;
-  arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
-       << edge_label;
+  arc_ << static_cast<uint8_t>(1) << src_label;
+  serialize_field(arc_, src);
+  arc_ << dst_label;
+  serialize_field(arc_, dst);
+  arc_ << edge_label;
   serialize_field(arc_, prop);
   return true;
 }
@@ -96,9 +99,12 @@ void SingleEdgeInsertTransaction::Commit() {
   {
     arc.SetSlice(arc_.GetBuffer() + sizeof(WalHeader),
                  arc_.GetSize() - sizeof(WalHeader));
-    label_t label;
-    Any tmp;
-    arc >> label >> label >> tmp >> label >> tmp >> label;
+    label_t op_type, label;
+    Any temp;
+    arc >> op_type;
+    deserialize_oid(graph_, arc, temp);
+    deserialize_oid(graph_, arc, temp);
+    arc >> label;
   }
   graph_.IngestEdge(src_label_, src_vid_, dst_label_, dst_vid_, edge_label_,
                     timestamp_, arc, alloc_);
