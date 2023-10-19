@@ -37,7 +37,8 @@ InsertTransaction::~InsertTransaction() { Abort(); }
 bool InsertTransaction::AddVertex(label_t label, const Any& id,
                                   const std::vector<Any>& props) {
   size_t arc_size = arc_.GetSize();
-  arc_ << static_cast<uint8_t>(0) << label << id;
+  arc_ << static_cast<uint8_t>(0) << label;
+  serialize_field(arc_, id);
   const std::vector<PropertyType>& types =
       graph_.schema().get_vertex_properties(label);
   if (types.size() != props.size()) {
@@ -95,8 +96,11 @@ bool InsertTransaction::AddEdge(label_t src_label, const Any& src,
                << type << ", got " << prop.type;
     return false;
   }
-  arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
-       << edge_label;
+  arc_ << static_cast<uint8_t>(1) << src_label;
+  serialize_field(arc_, src);
+  arc_ << dst_label;
+  serialize_field(arc_, dst);
+  arc_ << edge_label;
   serialize_field(arc_, prop);
   return true;
 }
@@ -144,16 +148,16 @@ void InsertTransaction::IngestWal(MutablePropertyFragment& graph,
     if (op_type == 0) {
       label_t label;
       Any id;
-
-      arc >> label >> id;
+      label = deserialize_oid(graph, arc, id);
       vid_t lid = graph.add_vertex(label, id);
       graph.get_vertex_table(label).ingest(lid, arc);
     } else if (op_type == 1) {
       label_t src_label, dst_label, edge_label;
       Any src, dst;
       vid_t src_lid, dst_lid;
-
-      arc >> src_label >> src >> dst_label >> dst >> edge_label;
+      src_label = deserialize_oid(graph, arc, src);
+      dst_label = deserialize_oid(graph, arc, dst);
+      arc >> edge_label;
 
       CHECK(get_vertex_with_retries(graph, src_label, src, src_lid));
       CHECK(get_vertex_with_retries(graph, dst_label, dst, dst_lid));

@@ -27,12 +27,20 @@ GRIN_VERTEX_TYPE_LIST grin_get_vertex_types_with_primary_keys(GRIN_GRAPH g) {
  * @return The primary keys properties list
  */
 GRIN_VERTEX_PROPERTY_LIST grin_get_primary_keys_by_vertex_type(
-    GRIN_GRAPH, GRIN_VERTEX_TYPE label) {
+    GRIN_GRAPH g, GRIN_VERTEX_TYPE label) {
+  auto _g = static_cast<GRIN_GRAPH_T*>(g);
+  auto type = _g->g.lf_indexers_[label].get_type();
   GRIN_VERTEX_PROPERTY_LIST_T* vpl = new GRIN_VERTEX_PROPERTY_LIST_T();
   GRIN_VERTEX_PROPERTY vp;
   vp = 0;
   vp += (label * 1u) << 8;
-  vp += (GRIN_DATATYPE::Int64 * 1u) << 16;
+  if (type == gs::PropertyType::kInt64) {
+    vp += (GRIN_DATATYPE::Int64 * 1u) << 16;
+  } else if (type == gs::PropertyType::kString) {
+    vp += (GRIN_DATATYPE::String * 1u) << 16;
+  } else {
+    vp = GRIN_NULL_VERTEX_PROPERTY;
+  }
   vpl->emplace_back(vp);
   return vpl;
 }
@@ -49,9 +57,18 @@ GRIN_ROW grin_get_vertex_primary_keys_row(GRIN_GRAPH g, GRIN_VERTEX v) {
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
   auto vid = v & (0xffffffff);
   auto label = v >> 32;
-  auto oid = _g->g.get_oid(label, vid);
-  auto p = new gs::oid_t(oid);
-  row->emplace_back(p);
+  auto type = _g->g.lf_indexers_[label].get_type();
+  if (type == gs::PropertyType::kInt64) {
+    auto oid = _g->g.get_oid(label, vid).AsInt64();
+    auto p = new int64_t(oid);
+    row->emplace_back(p);
+  } else if (type == gs::PropertyType::kString) {
+    auto oid = _g->g.get_oid(label, vid).AsString();
+    auto p = new std::string_view(oid);
+    row->emplace_back(p);
+  } else {
+    return GRIN_NULL_ROW;
+  }
   return row;
 }
 #endif

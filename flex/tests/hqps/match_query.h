@@ -55,7 +55,6 @@ struct Query5expr1 {
 class MatchQuery : public HqpsAppBase<gs::MutableCSRInterface> {
  public:
   using GRAPH_INTERFACE = gs::MutableCSRInterface;
-  using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
