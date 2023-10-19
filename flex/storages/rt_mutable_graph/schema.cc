@@ -246,8 +246,8 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
   vlabel_indexer_.Serialize(writer);
   elabel_indexer_.Serialize(writer);
   grape::InArchive arc;
-  arc << vproperties_ << vprop_storage_ << eproperties_ << ie_strategy_
-      << oe_strategy_ << max_vnum_;
+  arc << v_primary_keys_ << vproperties_ << vprop_storage_ << eproperties_
+      << ie_strategy_ << oe_strategy_ << max_vnum_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -256,8 +256,8 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   elabel_indexer_.Deserialize(reader);
   grape::OutArchive arc;
   CHECK(reader->ReadArchive(arc));
-  arc >> vproperties_ >> vprop_storage_ >> eproperties_ >> ie_strategy_ >>
-      oe_strategy_ >> max_vnum_;
+  arc >> v_primary_keys_ >> vproperties_ >> vprop_storage_ >> eproperties_ >>
+      ie_strategy_ >> oe_strategy_ >> max_vnum_;
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
