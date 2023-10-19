@@ -16,7 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
 import org.apache.calcite.rel.RelNode;
@@ -24,6 +26,8 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rel.type.StructKind;
+import org.apache.calcite.util.NlsString;
+import org.apache.calcite.util.Sarg;
 
 import java.util.List;
 import java.util.Set;
@@ -52,5 +56,23 @@ public class Utils {
                                 })
                         .collect(Collectors.toList());
         return new RelRecordType(StructKind.FULLY_QUALIFIED, dedup);
+    }
+
+    public static List<Comparable> getValuesAsList(Comparable value) {
+        ImmutableList.Builder valueBuilder = ImmutableList.builder();
+        if (value instanceof NlsString) {
+            valueBuilder.add(((NlsString) value).getValue());
+        } else if (value instanceof Sarg) {
+            Sarg sarg = (Sarg) value;
+            if (sarg.isPoints()) {
+                Set<Range<Comparable>> rangeSets = sarg.rangeSet.asRanges();
+                for (Range<Comparable> range : rangeSets) {
+                    valueBuilder.addAll(getValuesAsList(range.lowerEndpoint()));
+                }
+            }
+        } else {
+            valueBuilder.add(value);
+        }
+        return valueBuilder.build();
     }
 }

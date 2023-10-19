@@ -125,8 +125,11 @@ public class GraphOptTable implements RelOptTable {
             case DOUBLE:
                 return typeFactory.createSqlType(SqlTypeName.DOUBLE);
             case DATE:
-                return typeFactory.createSqlType(
-                        SqlTypeName.DATE); // todo: support Time and DateTime in GraphSchema
+                return typeFactory.createSqlType(SqlTypeName.DATE);
+            case TIME32:
+                return typeFactory.createSqlType(SqlTypeName.TIME);
+            case TIMESTAMP:
+                return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
             default:
                 throw new UnsupportedOperationException(
                         "type " + property.getDataType().name() + " not supported");

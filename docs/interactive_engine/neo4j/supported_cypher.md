@@ -100,6 +100,7 @@ Note that some Aggregator operators, such as `max()`, we listed here are impleme
 | List | Fold expressions into a single list | [] | [] | <input type="checkbox" disabled checked /> |   |
 | Labels | Get label name of a vertex type | labels() | labels() | <input type="checkbox" disabled checked /> |   |
 | Type | Get label name of an edge type | type() | type() | <input type="checkbox" disabled checked /> |   |
+| Extract | Get interval value from a temporal type | \<temporal\>.\<interval\> | \<temporal\>.\<interval\> | <input type="checkbox" disabled checked /> |   |
 
 
 
