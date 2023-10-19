@@ -55,7 +55,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     @Override
     public List<AnyValue> parseFrom(IrResult.Record record) {
-        logger.info("record {}", record);
+        logger.debug("record {}", record);
         Preconditions.checkArgument(
                 record.getColumnsCount() == outputType.getFieldCount(),
                 "column size of results "
@@ -120,7 +120,6 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseCollection(IrResult.Collection collection, RelDataType componentType) {
-        logger.info("collection {}", collection);
         switch (componentType.getSqlTypeName()) {
             case BOOLEAN:
                 Boolean[] boolObjs =
