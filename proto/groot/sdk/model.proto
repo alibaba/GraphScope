@@ -180,3 +180,18 @@ message CommitDataLoadPb {
   string path = 3;
   int32 partitionId = 4;
 }
+
+message GetStoreStateRequest {
+
+}
+
+message PartitionStatePb {
+    // number of bytes
+    int64 totalSpace = 1;
+    int64 usableSpace = 2;
+}
+
+message GetStoreStateResponse {
+    map<int32, PartitionStatePb> partitionStates = 1;
+}
+
