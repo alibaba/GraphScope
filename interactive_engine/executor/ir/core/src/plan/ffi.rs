@@ -623,6 +623,8 @@ pub extern "C" fn build_physical_plan(
         plan.meta = plan.meta.with_partition();
     }
     let mut plan_meta = plan.meta.clone();
+    // TODO: build physical plan with plan_id, i.e., 
+    // let mut builder = PlanBuilder::new(plan_id);
     let mut builder = PlanBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = match build_result {
