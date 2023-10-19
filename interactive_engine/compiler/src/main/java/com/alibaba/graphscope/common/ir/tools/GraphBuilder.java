@@ -56,6 +56,7 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.GraphInferTypes;
 import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
@@ -571,6 +572,11 @@ public class GraphBuilder extends RelBuilder {
         if (!isCurrentSupported(operator)) {
             throw new UnsupportedOperationException(
                     "operator " + operator.getKind().name() + " not supported");
+        }
+        // infer unknown operands types from other known types
+        if (operator.getOperandTypeInference() != GraphInferTypes.RETURN_TYPE) {
+            operandList =
+                    inferOperandTypes(operator, getTypeFactory().createUnknownType(), operandList);
         }
         RexCallBinding callBinding =
                 new RexCallBinding(getTypeFactory(), operator, operandList, ImmutableList.of());
