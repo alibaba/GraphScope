@@ -101,27 +101,25 @@ seastar::future<query_result> executor::run_hqps_adhoc_query(
   int32_t job_id = -1;
   auto& codegen_proxy = server::CodegenProxy::get();
   if (codegen_proxy.Initialized()) {
-    auto ret = codegen_proxy.do_gen(plan);
-    if (ret.has_value()) {
-      auto& v = ret.value();
-      job_id = v.first;
-      lib_path = v.second;
-    }
+    return codegen_proxy.DoGen(plan).then(
+        [](std::pair<int32_t, std::string>&& job_id_and_lib_path) {
+          if (job_id_and_lib_path.first == -1) {
+            return seastar::make_exception_future<query_result>(
+                std::runtime_error("Fail to parse job id from codegen proxy"));
+          }
+          // 1. load and run.
+          LOG(INFO) << "Okay, try to run the query of lib path: "
+                    << job_id_and_lib_path.second
+                    << ", job id: " << job_id_and_lib_path.first
+                    << "local shard id: " << hiactor::local_shard_id();
+          seastar::sstring content = server::load_and_run(
+              job_id_and_lib_path.first, job_id_and_lib_path.second);
+          return seastar::make_ready_future<query_result>(std::move(content));
+        });
   } else {
     return seastar::make_exception_future<query_result>(
         std::runtime_error("Codegen proxy not initialized"));
   }
-  if (job_id == -1) {
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to parse job id from codegen proxy"));
-  }
-  // 1. load and run.
-  LOG(INFO) << "Okay, try to run the query of lib path: " << lib_path
-            << ", job id: " << job_id
-            << "local shard id: " << hiactor::local_shard_id();
-
-  seastar::sstring content = server::load_and_run(job_id, lib_path);
-  return seastar::make_ready_future<query_result>(std::move(content));
 }
 
 }  // namespace server
