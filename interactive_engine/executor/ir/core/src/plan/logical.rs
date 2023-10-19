@@ -903,7 +903,7 @@ fn triplet_to_index_predicate(
     if let Some(item) = &operators.get(2).unwrap().item {
         match item {
             common_pb::expr_opr::Item::Const(c) => {
-                if is_within && is_array_const(c) {
+                if is_within {
                     let or_predicates = match c.item.clone().unwrap() {
                         common_pb::value::Item::I32Array(array) => array
                             .item
@@ -925,7 +925,10 @@ fn triplet_to_index_predicate(
                             .into_iter()
                             .map(|val| build_and_predicate(key.clone(), val.into()))
                             .collect(),
-                        _ => unreachable!(),
+                        _ => Err(IrError::Unsupported(format!(
+                            "unsupported value type for within: {:?}",
+                            c
+                        )))?,
                     };
                     return Ok(Some(pb::IndexPredicate { or_predicates }));
                 } else {
@@ -953,20 +956,6 @@ fn triplet_to_index_predicate(
     }
 
     Ok(None)
-}
-
-fn is_array_const(value: &common_pb::Value) -> bool {
-    if let Some(item) = value.item.as_ref() {
-        match item {
-            common_pb::value::Item::I32Array(_)
-            | common_pb::value::Item::StrArray(_)
-            | common_pb::value::Item::I64Array(_)
-            | common_pb::value::Item::F64Array(_) => true,
-            _ => false,
-        }
-    } else {
-        false
-    }
 }
 
 fn build_and_predicate(
