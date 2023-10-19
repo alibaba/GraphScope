@@ -36,12 +36,14 @@
                           "Id": {}
                         }
                       },
+                      "cmp": null,
                       "value": {
-                        "item": {
-                          "I32": 1
+                        "Const": {
+                          "item": {
+                            "I32": 1
+                          }
                         }
-                      },
-                      "cmp": null
+                      }
                     }
                   ]
                 },
@@ -53,12 +55,14 @@
                           "Id": {}
                         }
                       },
+                      "cmp": null,
                       "value": {
-                        "item": {
-                          "I32": 2
+                        "Const": {
+                          "item": {
+                            "I32": 2
+                          }
                         }
-                      },
-                      "cmp": null
+                      }
                     }
                   ]
                 }
