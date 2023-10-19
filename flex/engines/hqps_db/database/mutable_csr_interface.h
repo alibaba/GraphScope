@@ -182,12 +182,10 @@ class MutableCSRInterface {
    * @param label
    * @param oid
    */
-  vertex_id_t ScanVerticesWithOid(const std::string& label,
-                                  outer_vertex_id_t oid) const {
+  bool ScanVerticesWithOid(const std::string& label, outer_vertex_id_t oid,
+                           vertex_id_t& vid) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
-    vertex_id_t vid;
-    CHECK(db_session_.graph().get_lid(label_id, oid, vid));
-    return vid;
+    return db_session_.graph().get_lid(label_id, oid, vid);
   }
 
   /**
@@ -196,11 +194,9 @@ class MutableCSRInterface {
    * @param label_id
    * @param oid
    */
-  vertex_id_t ScanVerticesWithOid(const label_id_t& label_id,
-                                  outer_vertex_id_t oid) const {
-    vertex_id_t vid;
-    CHECK(db_session_.graph().get_lid(label_id, oid, vid));
-    return vid;
+  bool ScanVerticesWithOid(const label_id_t& label_id, outer_vertex_id_t oid,
+                           vertex_id_t& vid) const {
+    return db_session_.graph().get_lid(label_id, oid, vid);
   }
 
   /**
