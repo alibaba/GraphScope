@@ -403,9 +403,13 @@ public class Pattern {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Pattern) {
-            Pattern other = (Pattern) obj;
+    public boolean equals(Object o) {
+//        if (this == o) return true;
+//        if (o == null || getClass() != o.getClass()) return false;
+//        Pattern pattern = (Pattern) o;
+//        return id == pattern.id && maxVertexId == pattern.maxVertexId && maxEdgeId == pattern.maxEdgeId && Objects.equals(patternGraph, pattern.patternGraph) && Objects.equals(patternOrder, pattern.patternOrder);
+        if (o instanceof Pattern) {
+            Pattern other = (Pattern) o;
             return isIsomorphicTo(other);
         }
         return false;
@@ -413,6 +417,7 @@ public class Pattern {
 
     @Override
     public int hashCode() {
+        // return Objects.hash(id, patternGraph, maxVertexId, maxEdgeId, patternOrder);
         return this.patternGraph.hashCode();
     }
 

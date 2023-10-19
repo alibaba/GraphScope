@@ -45,6 +45,6 @@ public class GraphPattern extends AbstractRelNode {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return pw.item("pattern", pattern);
+        return super.explainTerms(pw).item("pattern", pattern);
     }
 }

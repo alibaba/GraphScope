@@ -20,11 +20,8 @@ import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.meta.glogue.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.planner.rules.generative.ExtendIntersectRule;
-import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersectEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
@@ -32,22 +29,22 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatter
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
-
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.plan.volcano.ExtVolcanoPlanner;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.junit.Test;
 
-import java.util.Set;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 
 public class RelMetadataQueryTest {
     @Test
-    public void test() {
-        VolcanoPlanner planner = new VolcanoPlanner();
+    public void test() throws Exception {
+        VolcanoPlanner planner = new ExtVolcanoPlanner();
         planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
         RelOptCluster optCluster = GraphOptCluster.create(planner, Utils.rexBuilder);
 
@@ -77,13 +74,14 @@ public class RelMetadataQueryTest {
         p.addEdge(v2, v0, e);
         p.addEdge(v1, v2, e1);
         p.reordering();
-        System.out.println(gq.getInEdges(p));
+        // System.out.println(gq.getInEdges(p));
 
         GraphPattern graphPattern = new GraphPattern(optCluster, planner.emptyTraitSet(), p);
         // RelNode topNode = planner.changeTraits(graphPattern,
         // optCluster.traitSet().replace(EnumerableConvention.INSTANCE));
         // System.out.println(topNode.explain());
         planner.setTopDownOpt(true);
+        planner.setNoneConventionHasInfiniteCost(false);
         planner.addRule(
                 ExtendIntersectRule.Config.DEFAULT
                         .withRelBuilderFactory(GraphPlanner.relBuilderFactory)
@@ -91,18 +89,19 @@ public class RelMetadataQueryTest {
         planner.setRoot(graphPattern);
 
         RelNode after = planner.findBestExp();
+        planner.dump(new PrintWriter(new FileOutputStream("set.out"), true));
         System.out.println(after.explain());
-        System.out.println(mq.getRowCount(graphPattern));
-        Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
-
-        GlogueEdge first = glogueEdges.iterator().next();
-        RelNode extendIntersect =
-                new GraphExtendIntersect(
-                        optCluster,
-                        RelTraitSet.createEmpty(),
-                        new GraphPattern(
-                                optCluster, RelTraitSet.createEmpty(), first.getSrcPattern()),
-                        (GlogueExtendIntersectEdge) first);
-        System.out.println(mq.getNonCumulativeCost(extendIntersect));
+//        System.out.println(mq.getRowCount(graphPattern));
+//        Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
+//
+//        GlogueEdge first = glogueEdges.iterator().next();
+//        RelNode extendIntersect =
+//                new GraphExtendIntersect(
+//                        optCluster,
+//                        RelTraitSet.createEmpty(),
+//                        new GraphPattern(
+//                                optCluster, RelTraitSet.createEmpty(), first.getSrcPattern()),
+//                        (GlogueExtendIntersectEdge) first);
+//        System.out.println(mq.getNonCumulativeCost(extendIntersect));
     }
 }

@@ -49,6 +49,6 @@ public class GraphExtendIntersect extends SingleRel {
     }
 
     public RelWriter explainTerms(RelWriter pw) {
-        return pw.item("glogueEdge", glogueEdge);
+        return super.explainTerms(pw).item("glogueEdge", glogueEdge);
     }
 }
