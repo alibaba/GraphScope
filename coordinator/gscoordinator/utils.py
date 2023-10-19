@@ -19,6 +19,7 @@
 
 import copy
 import datetime
+import functools
 import glob
 import hashlib
 import inspect
@@ -30,6 +31,7 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
 import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
@@ -38,6 +40,7 @@ from queue import Queue
 from string import Template
 from typing import List
 
+import grpc
 import yaml
 from google.protobuf.any_pb2 import Any
 from graphscope.framework import utils
@@ -180,6 +183,36 @@ INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
 
 # default threads per worker configuration for GIE/GAIA
 INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
+
+
+def catch_unknown_errors(response_on_error=None, using_yield=False):
+    """A catcher that catches all (unknown) exceptions in gRPC handlers to ensure
+    the client not think the coordinator services is crashed.
+    """
+
+    def catch_exceptions(handler):
+        @functools.wraps(handler)
+        def handler_execution(self, request, context):
+            try:
+                if using_yield:
+                    for result in handler(self, request, context):
+                        yield result
+                else:
+                    yield handler(self, request, context)
+            except Exception as exc:
+                error_message = repr(exc)
+                error_traceback = traceback.format_exc()
+                context.set_code(grpc.StatusCode.ABORTED)
+                context.set_details(
+                    'Error occurs in handler: "%s", with traceback: ' % error_message
+                    + error_traceback
+                )
+                if response_on_error is not None:
+                    yield response_on_error
+
+        return handler_execution
+
+    return catch_exceptions
 
 
 def get_timestamp() -> float:
