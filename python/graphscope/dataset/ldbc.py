@@ -81,22 +81,6 @@ def load_ldbc(sess=None, prefix=None, directed=True):
             ["creationDate", "locationIP", "browserUsed", "content", "length"],
             "id",
         ),
-        "organisation": (
-            Loader(
-                os.path.join(prefix, "organisation_0_0.csv"),
-                header_row=True,
-                delimiter="|",
-            ),
-            ["type", "name", "url"],
-            "id",
-        ),
-        "tagclass": (
-            Loader(
-                os.path.join(prefix, "tagclass_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["name", "url"],
-            "id",
-        ),
         "person": (
             Loader(
                 os.path.join(prefix, "person_0_0.csv"), header_row=True, delimiter="|"
@@ -112,20 +96,6 @@ def load_ldbc(sess=None, prefix=None, directed=True):
             ],
             "id",
         ),
-        "forum": (
-            Loader(
-                os.path.join(prefix, "forum_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["title", "creationDate"],
-            "id",
-        ),
-        "place": (
-            Loader(
-                os.path.join(prefix, "place_0_0.csv"), header_row=True, delimiter="|"
-            ),
-            ["name", "url", "type"],
-            "id",
-        ),
         "post": (
             Loader(
                 os.path.join(prefix, "post_0_0.csv"), header_row=True, delimiter="|"
@@ -139,11 +109,6 @@ def load_ldbc(sess=None, prefix=None, directed=True):
                 "content",
                 "length",
             ],
-            "id",
-        ),
-        "tag": (
-            Loader(os.path.join(prefix, "tag_0_0.csv"), header_row=True, delimiter="|"),
-            ["name", "url"],
             "id",
         ),
     }
@@ -170,62 +135,6 @@ def load_ldbc(sess=None, prefix=None, directed=True):
                 ("Post.id", "post"),
             ),
         ],
-        "isPartOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "place_isPartOf_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Place.id", "place"),
-                ("Place.id.1", "place"),
-            )
-        ],
-        "isSubclassOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "tagclass_isSubclassOf_tagclass_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("TagClass.id", "tagclass"),
-                ("TagClass.id.1", "tagclass"),
-            )
-        ],
-        "hasTag": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_hasTag_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Forum.id", "forum"),
-                ("Tag.id", "tag"),
-            ),
-            (
-                Loader(
-                    os.path.join(prefix, "comment_hasTag_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Tag.id", "tag"),
-            ),
-            (
-                Loader(
-                    os.path.join(prefix, "post_hasTag_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Post.id", "post"),
-                ("Tag.id", "tag"),
-            ),
-        ],
         "knows": [
             (
                 Loader(
@@ -236,84 +145,6 @@ def load_ldbc(sess=None, prefix=None, directed=True):
                 ["creationDate"],
                 ("Person.id", "person"),
                 ("Person.id.1", "person"),
-            )
-        ],
-        "hasModerator": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_hasModerator_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Forum.id", "forum"),
-                ("Person.id", "person"),
-            )
-        ],
-        "hasInterest": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_hasInterest_tag_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Person.id", "person"),
-                ("Tag.id", "tag"),
-            )
-        ],
-        "isLocatedIn": [
-            (
-                Loader(
-                    os.path.join(prefix, "post_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Post.id", "post"),
-                ("Place.id", "place"),
-            ),
-            (
-                Loader(
-                    os.path.join(prefix, "comment_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Comment.id", "comment"),
-                ("Place.id", "place"),
-            ),
-            (
-                Loader(
-                    os.path.join(prefix, "organisation_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Organisation.id", "organisation"),
-                ("Place.id", "place"),
-            ),
-            (
-                Loader(
-                    os.path.join(prefix, "person_isLocatedIn_place_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Person.id", "person"),
-                ("Place.id", "place"),
-            ),
-        ],
-        "hasType": [
-            (
-                Loader(
-                    os.path.join(prefix, "tag_hasType_tagclass_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Tag.id", "tag"),
-                ("TagClass.id", "tagclass"),
             )
         ],
         "hasCreator": [
@@ -338,42 +169,6 @@ def load_ldbc(sess=None, prefix=None, directed=True):
                 ("Person.id", "person"),
             ),
         ],
-        "containerOf": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_containerOf_post_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                [],
-                ("Forum.id", "forum"),
-                ("Post.id", "post"),
-            )
-        ],
-        "hasMember": [
-            (
-                Loader(
-                    os.path.join(prefix, "forum_hasMember_person_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["joinDate"],
-                ("Forum.id", "forum"),
-                ("Person.id", "person"),
-            )
-        ],
-        "workAt": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_workAt_organisation_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["workFrom"],
-                ("Person.id", "person"),
-                ("Organisation.id", "organisation"),
-            )
-        ],
         "likes": [
             (
                 Loader(
@@ -395,18 +190,6 @@ def load_ldbc(sess=None, prefix=None, directed=True):
                 ("Person.id", "person"),
                 ("Post.id", "post"),
             ),
-        ],
-        "studyAt": [
-            (
-                Loader(
-                    os.path.join(prefix, "person_studyAt_organisation_0_0.csv"),
-                    header_row=True,
-                    delimiter="|",
-                ),
-                ["classYear"],
-                ("Person.id", "person"),
-                ("Organisation.id", "organisation"),
-            )
         ],
     }
     return sess.load_from(edges, vertices, directed, generate_eid=True, retain_oid=True)

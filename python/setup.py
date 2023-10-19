@@ -404,7 +404,7 @@ setup(
     package_dir=resolve_graphscope_package_dir(),
     packages=find_graphscope_packages(),
     package_data=parsed_package_data(),
-    ext_modules=build_learning_engine(),
+    # ext_modules=build_learning_engine(),
     cmdclass={
         "build_ext": BuildGLExt,
         "build_gltorch_ext": BuildGLTorchExt,
