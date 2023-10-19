@@ -28,6 +28,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.util.Sarg;
 
 import java.util.List;
 
@@ -36,10 +37,12 @@ import java.util.List;
  */
 public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expression> {
     private final boolean isColumnId;
+    private final RexBuilder rexBuilder;
 
-    public RexToProtoConverter(boolean deep, boolean isColumnId) {
+    public RexToProtoConverter(boolean deep, boolean isColumnId, RexBuilder rexBuilder) {
         super(deep);
         this.isColumnId = isColumnId;
+        this.rexBuilder = rexBuilder;
     }
 
     @Override
@@ -216,6 +219,26 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
     }
 
     private OuterExpression.Expression visitBinaryOperator(RexCall call) {
+        if (call.getOperator().getKind() == SqlKind.SEARCH) {
+            // ir core can not support continuous ranges in a search operator, here expand it to
+            // compositions of 'and' or 'or',
+            // i.e. a.age SEARCH [[1, 10]] -> a.age >= 1 and a.age <= 10
+            RexNode left = call.getOperands().get(0);
+            RexNode right = call.getOperands().get(1);
+            RexLiteral literal = null;
+            if (left instanceof RexLiteral) {
+                literal = (RexLiteral) left;
+            } else if (right instanceof RexLiteral) {
+                literal = (RexLiteral) right;
+            }
+            if (literal != null && literal.getValue() instanceof Sarg) {
+                Sarg sarg = (Sarg) literal.getValue();
+                // search continuous ranges
+                if (!sarg.isPoints()) {
+                    call = (RexCall) RexUtil.expandSearch(this.rexBuilder, null, call);
+                }
+            }
+        }
         SqlOperator operator = call.getOperator();
         OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
         // left-associative

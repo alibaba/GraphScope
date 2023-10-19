@@ -291,4 +291,24 @@ public class MatchTest {
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
+
+    @Test
+    public void match_16_test() {
+        RelNode node =
+                Utils.eval(
+                                "Match (a:person {name: $name})-[b]->(c:person {name: $name})"
+                                        + " Return a, c")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], c=[c], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                node.explain().trim());
+    }
 }

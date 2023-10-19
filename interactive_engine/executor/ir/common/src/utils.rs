@@ -431,40 +431,40 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
     }
 }
 
-impl TryFrom<pb::IndexPredicate> for Vec<(NameOrId, Object)> {
+impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
     type Error = ParsePbError;
 
     fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
-        let mut primary_key_values = vec![];
-        // for pk values, which should be a set of and_conditions.
-        let and_predicates = value
-            .or_predicates
-            .get(0)
-            .ok_or(ParsePbError::EmptyFieldError("`OrCondition` is emtpy".to_string()))?;
-        for predicate in &and_predicates.predicates {
-            let key_pb = predicate
-                .key
-                .clone()
-                .ok_or("key is empty in kv_pair in indexed_scan")?;
-            let value_pb = predicate
-                .value
-                .clone()
-                .ok_or("value is empty in kv_pair in indexed_scan")?;
-            let key = match key_pb.item {
-                Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
-                _ => Err(ParsePbError::Unsupported(
-                    "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
-                ))?,
-            };
-            if let pb::index_predicate::triplet::Value::Const(value) = value_pb {
-                let obj_val = Object::try_from(value)?;
-                primary_key_values.push((key, obj_val));
-            } else {
-                Err(ParsePbError::Unsupported(format!(
-                    "unsupported indexed predicate value {:?}",
-                    value_pb
-                )))?
+        let mut primary_key_values = Vec::with_capacity(value.or_predicates.len());
+        for and_predicates in value.or_predicates {
+            // PkValue can be one-column or multi-columns, which is a set of and_conditions.
+            let mut primary_key_value = Vec::with_capacity(and_predicates.predicates.len());
+            for predicate in &and_predicates.predicates {
+                let key_pb = predicate
+                    .key
+                    .clone()
+                    .ok_or("key is empty in kv_pair in indexed_scan")?;
+                let value_pb = predicate
+                    .value
+                    .clone()
+                    .ok_or("value is empty in kv_pair in indexed_scan")?;
+                let key = match key_pb.item {
+                    Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
+                    _ => Err(ParsePbError::Unsupported(
+                        "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
+                    ))?,
+                };
+                if let pb::index_predicate::triplet::Value::Const(value) = value_pb {
+                    let obj_val = Object::try_from(value)?;
+                    primary_key_value.push((key, obj_val));
+                } else {
+                    Err(ParsePbError::Unsupported(format!(
+                        "unsupported indexed predicate value {:?}",
+                        value_pb
+                    )))?
+                }
             }
+            primary_key_values.push(primary_key_value);
         }
         Ok(primary_key_values)
     }
