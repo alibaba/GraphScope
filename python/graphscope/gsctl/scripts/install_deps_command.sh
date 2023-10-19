@@ -133,7 +133,7 @@ ANALYTICAL_MACOS=(
 )
 
 _install_apache_arrow_ubuntu() {
-  if ! command -v dpkg -s libarrow-dev &>/dev/null; then
+  if ! dpkg -s libarrow-dev &>/dev/null; then
     log "Installing apache-arrow."
     ${SUDO} apt-get install -y lsb-release
     # shellcheck disable=SC2046,SC2019,SC2018

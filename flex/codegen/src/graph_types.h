@@ -40,9 +40,9 @@ enum class DataType {
   kVertexId = 8,
   kEdgeId = 9,
   kLength = 10,
-  kTime = 11,
-  kDate = 12,
-  kDateTime = 13,
+  kDate = 11,
+  kTime = 12,
+  kTimeStamp = 13,
   kLabelId = 14
 };
 
@@ -78,8 +78,12 @@ static codegen::DataType common_data_type_pb_2_data_type(
     return codegen::DataType::kInt32Array;
   case common::DataType::BOOLEAN:
     return codegen::DataType::kBoolean;
-  case common::DataType::DATE:
+  case common::DataType::DATE32:
     return codegen::DataType::kDate;
+  case common::DataType::TIME32:
+    return codegen::DataType::kTime;
+  case common::DataType::TIMESTAMP:
+    return codegen::DataType::kTimeStamp;
   default:
     // LOG(FATAL) << "unknown data type";
     throw std::runtime_error(
@@ -106,11 +110,10 @@ static std::string single_common_data_type_pb_2_str(
     return "std::vector<int64_t>";
   case common::DataType::INT32_ARRAY:
     return "std::vector<int32_t>";
-  case common::DataType::DATE:
+  case common::DataType::DATE32:
     return "Date";
+    // TODO: support time32 and timestamp
   default:
-    // LOG(FATAL) << "unknown data type";
-    // return "";
     throw std::runtime_error(
         "unknown data type when convert common data type to string:" +
         std::to_string(static_cast<int>(data_type)));

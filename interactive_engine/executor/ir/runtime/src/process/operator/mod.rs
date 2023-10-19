@@ -187,6 +187,8 @@ pub(crate) mod tests {
     pub const TAG_C: KeyId = 2;
     pub const TAG_D: KeyId = 3;
     pub const TAG_E: KeyId = 4;
+    pub const TAG_F: KeyId = 5;
+    pub const TAG_G: KeyId = 6;
 
     pub const PERSON_LABEL: LabelId = 0;
 

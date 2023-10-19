@@ -18,7 +18,8 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::Deref;
 
-use dyn_type::{Object, Primitives};
+use chrono::Timelike;
+use dyn_type::{DateTimeFormats, Object, Primitives};
 
 use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
@@ -335,6 +336,15 @@ impl TryFrom<common_pb::Value> for Object {
                     }
                     Ok(vec.into())
                 }
+                Date(date) => {
+                    Ok((DateTimeFormats::from_date32(date.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Time(time) => {
+                    Ok((DateTimeFormats::from_time32(time.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Timestamp(timestamp) => Ok((DateTimeFormats::from_timestamp_millis(timestamp.item)
+                    .map_err(|e| format!("{:?}", e))?)
+                .into()),
             };
         }
 
@@ -588,6 +598,28 @@ impl From<Object> for common_pb::Value {
                 common_pb::value::Item::PairArray(common_pb::PairArray { item: pairs })
             }
             Object::None => common_pb::value::Item::None(common_pb::None {}),
+            Object::DateFormat(datetime_formats) => match datetime_formats {
+                DateTimeFormats::Date(date) => common_pb::value::Item::Date(common_pb::Date32 {
+                    // convert to days since from 1970-01-01
+                    item: (date
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap() // can savely unwrap since it is valid hour/min/sec
+                        .timestamp()
+                        / 86400) as i32,
+                }),
+                DateTimeFormats::Time(time) => common_pb::value::Item::Time(common_pb::Time32 {
+                    // convert to milliseconds past midnight
+                    item: (time.hour() as i32 * 3600 + time.minute() as i32 * 60 + time.second() as i32)
+                        * 1000
+                        + time.nanosecond() as i32 / 1000_000,
+                }),
+                DateTimeFormats::DateTime(dt) => {
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
+                }
+                DateTimeFormats::DateTimeWithTz(dt) => {
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
+                }
+            },
             _ => unimplemented!(),
         };
 

@@ -158,10 +158,9 @@ message Extract {
     HOUR = 3;
     MINUTE = 4;
     SECOND = 5;
+    MILLISECOND = 6;
   }
-
   Interval interval = 1;
-  Expression data_time = 2;
 }
 
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.

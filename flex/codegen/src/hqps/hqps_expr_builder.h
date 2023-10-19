@@ -111,7 +111,7 @@ static std::string logical_to_str(const common::Logical& logical) {
   case common::Logical::WITHIN:
     return "< WithIn > ";
   case common::Logical::ISNULL:
-    return "IsNull";
+    return "NONE ==";  // Convert
   default:
     throw std::runtime_error("unknown logical");
   }
@@ -284,9 +284,20 @@ class ExprBuilder {
         }
         if (j == size) {
           LOG(WARNING) << "no right brace found" << j << "size: " << size;
-          // just add true, since the current expresion has no other expr_oprs
+          // just add true, since the current expresion has no other expr_ops
           AddExprOpr(std::string("true"));
           i = j;
+        }
+      } else if (expr.has_extract()) {
+        // special case for extract
+        auto extract = expr.extract();
+        if (i + 1 >= size) {
+          throw std::runtime_error("extract must have a following var/expr");
+        } else if (expr_ops[i + 1].item_case() != common::ExprOpr::kVar) {
+          throw std::runtime_error("extract must have a following var/expr");
+        } else {
+          AddExtractOpr(extract, expr_ops[i + 1]);
+          i += 2;
         }
       } else {
         AddExprOpr(expr_ops[i]);
@@ -398,34 +409,36 @@ class ExprBuilder {
     }
 
     case common::ExprOpr::kExtract: {
-      auto extract = opr.extract();
-      auto interval = extract.interval();
-      auto data_time = extract.data_time();
-      CHECK(data_time.operators_size() == 1)
-          << "Currently only support one var in extract";
-      auto expr_opr = data_time.operators(0);
-      CHECK(expr_opr.item_case() == common::ExprOpr::kVar)
-          << "Currently only support var in extract";
-      auto expr_var = expr_opr.var();
-      auto param_const = variable_to_param_const(expr_var, ctx_);
-      make_var_name_unique(param_const);
-      func_call_vars_.push_back(param_const);
-
-      boost::format formater(EXTRACT_TEMPLATE_STR);
-      formater % interval_to_str(interval) % param_const.var_name;
-      auto extract_node_str = formater.str();
-      expr_nodes_.emplace_back(extract_node_str);
-
-      tag_selectors_.emplace_back(
-          variable_to_tag_id_property_selector(ctx_, expr_var));
-      VLOG(10) << "extract opr: " << extract_node_str;
-      break;
+      LOG(FATAL) << "Should not reach here, Extract op should be handled "
+                    "separately";
     }
 
     default:
       LOG(WARNING) << "not recognized expr opr: " << opr.DebugString();
       throw std::runtime_error("not recognized expr opr");
     }
+  }
+
+  // Add extract operator with var. Currently not support extract on a compicate
+  // expression.
+  void AddExtractOpr(const common::Extract& extract_opr,
+                     const common::ExprOpr& expr_opr) {
+    CHECK(expr_opr.item_case() == common::ExprOpr::kVar)
+        << "Currently only support var in extract";
+    auto interval = extract_opr.interval();
+    auto expr_var = expr_opr.var();
+    auto param_const = variable_to_param_const(expr_var, ctx_);
+    make_var_name_unique(param_const);
+    func_call_vars_.push_back(param_const);
+
+    boost::format formater(EXTRACT_TEMPLATE_STR);
+    formater % interval_to_str(interval) % param_const.var_name;
+    auto extract_node_str = formater.str();
+    expr_nodes_.emplace_back(extract_node_str);
+
+    tag_selectors_.emplace_back(
+        variable_to_tag_id_property_selector(ctx_, expr_var));
+    VLOG(10) << "extract opr: " << extract_node_str;
   }
 
   // get expr nodes
