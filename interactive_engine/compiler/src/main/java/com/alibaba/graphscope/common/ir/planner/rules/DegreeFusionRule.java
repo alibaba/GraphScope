@@ -78,7 +78,7 @@ public class DegreeFusionRule<C extends DegreeFusionRule.Config> extends RelRule
                     new GraphAggCall(
                                     // aggregateCall.getCluster(),
                                     (GraphOptCluster) expandCount.getCluster(),
-                                    GraphStdOperatorTable.SUM, // change
+                                    GraphStdOperatorTable.SUM0, // change
                                     expandCountNode)
                             .as("sum")
                             .distinct(aggregateCall.isDistinct());
