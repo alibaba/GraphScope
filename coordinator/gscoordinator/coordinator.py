@@ -30,7 +30,7 @@ import grpc
 from graphscope.config import Config
 from graphscope.proto import coordinator_service_pb2_grpc
 
-from gscoordinator.servicer import *
+from gscoordinator.servicer import init_graphscope_one_service_servicer
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 
 logger = logging.getLogger("graphscope")

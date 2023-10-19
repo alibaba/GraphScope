@@ -20,7 +20,6 @@
 
 import atexit
 import base64
-import functools
 import json
 import logging
 import os
@@ -63,6 +62,7 @@ from gscoordinator.object_manager import LearningInstanceManager
 from gscoordinator.object_manager import ObjectManager
 from gscoordinator.op_executor import OperationExecutor
 from gscoordinator.operator_launcher import OperatorLauncher
+from gscoordinator.utils import catch_unknown_errors
 from gscoordinator.utils import check_server_ready
 from gscoordinator.utils import create_single_op_dag
 from gscoordinator.version import __version__
@@ -70,36 +70,6 @@ from gscoordinator.version import __version__
 __all__ = ["GraphScopeOneServiceServicer", "init_graphscope_one_service_servicer"]
 
 logger = logging.getLogger("graphscope")
-
-
-def catch_unknown_errors(response_on_error=None, using_yield=False):
-    """A catcher that catches all (unknown) exceptions in gRPC handlers to ensure
-    the client not think the coordinator services is crashed.
-    """
-
-    def catch_exceptions(handler):
-        @functools.wraps(handler)
-        def handler_execution(self, request, context):
-            try:
-                if using_yield:
-                    for result in handler(self, request, context):
-                        yield result
-                else:
-                    yield handler(self, request, context)
-            except Exception as exc:
-                error_message = repr(exc)
-                error_traceback = traceback.format_exc()
-                context.set_code(grpc.StatusCode.ABORTED)
-                context.set_details(
-                    'Error occurs in handler: "%s", with traceback: ' % error_message
-                    + error_traceback
-                )
-                if response_on_error is not None:
-                    yield response_on_error
-
-        return handler_execution
-
-    return catch_exceptions
 
 
 class GraphScopeOneServiceServicer(

@@ -28,10 +28,13 @@ def get_command_collection(context: Context):
         # treat gsctl as an utility script, providing hepler functions or utilities. e.g.
         # initialize and manage cluster, install the dependencies required to build graphscope locally
         commands = click.CommandCollection(sources=[common_cli, dev_cli])
+
     elif context.solution == "interactive":
         commands = click.CommandCollection(sources=[common_cli])
+
     else:
         raise RuntimeError(
             f"Failed to get command collection with context {context.name}"
         )
+
     return commands

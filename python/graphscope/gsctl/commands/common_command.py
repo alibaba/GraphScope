@@ -37,7 +37,7 @@ def cli():
     help="Coordinator endpoint which gsctl connect to, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to the launched coordinator by ~/.gs/config. If '--coordinator-endpoint' is specified,
+    """Connect to the launched coordinator by ~/.graphscope/config. If '--coordinator-endpoint' is specified,
     use it as the current context and override the config file.
     """
     if coordinator_endpoint is not None:
@@ -53,7 +53,7 @@ def connect(coordinator_endpoint):
         config = load_gs_config()
         config.set_and_write(context)
 
-    click.secho(f"Coordinator service connected.", fg="green")
+    click.secho("Coordinator service connected.", fg="green")
 
 
 @click.command()

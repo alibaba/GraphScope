@@ -25,7 +25,7 @@ from string import ascii_letters
 import yaml
 
 GS_CONFIG_DEFAULT_LOCATION = os.environ.get(
-    "GSCONFIG", os.path.expanduser("~/.gs/config")
+    "GSCONFIG", os.path.expanduser("~/.graphscope/config")
 )
 
 
@@ -34,7 +34,7 @@ class Context(object):
         self.supported_solutions = ["interactive"]
         if solution not in self.supported_solutions:
             raise RuntimeError(
-                "The solution {0} in context {01 is not supported yet.".format(
+                "The solution {0} in context {1} is not supported yet.".format(
                     solution, name
                 )
             )

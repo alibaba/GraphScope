@@ -16,13 +16,31 @@
 # limitations under the License.
 #
 
+import os
+import sys
+
 import click
 
-from graphscope.gsctl.commands import get_command_collection
-from graphscope.gsctl.config import get_current_context
+try:
+    import graphscope
+except ModuleNotFoundError:
+    # if graphscope is not installed, only basic functions or utilities
+    # can be used, e.g. install dependencies
+    graphscope = None
 
 
 def cli():
+    if graphscope is None:
+        sys.path.insert(
+            0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "commands")
+        )
+        from dev_command import cli as dev_cli
+
+        dev_cli()
+
+    from graphscope.gsctl.commands import get_command_collection
+    from graphscope.gsctl.config import get_current_context
+
     context = get_current_context()
     # get the specified commands under the FLEX architecture
     commands = get_command_collection(context)

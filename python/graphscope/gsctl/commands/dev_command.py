@@ -57,8 +57,8 @@ def cli():
     required=True,
 )
 @click.option(
-    "--repo-home",
-    envvar="REPO_HOME",
+    "--graphscope-repo",
+    envvar="GRAPHSCOPE_REPO",
     type=click.Path(),
     default=os.path.abspath("."),
     show_default=True,
@@ -112,7 +112,7 @@ def cli():
 )
 def install_deps(
     type,
-    repo_home,
+    graphscope_repo,
     cn,
     install_prefix,
     from_local,
@@ -145,7 +145,7 @@ def install_deps(
         cmd.append("--no-v6d")
     if cn:
         cmd.append("--cn")
-    run_shell_cmd(cmd, repo_home)
+    run_shell_cmd(cmd, graphscope_repo)
 
 
 @click.command()
@@ -170,8 +170,8 @@ def install_deps(
     required=False,
 )
 @click.option(
-    "--repo-home",
-    envvar="REPO_HOME",
+    "--graphscope-repo",
+    envvar="GRAPHSCOPE_REPO",
     type=click.Path(),
     default=os.path.abspath("."),
     show_default=True,
@@ -189,7 +189,7 @@ def install_deps(
     default="default",
     help="Make gie with specified storage type.",
 )
-def make(component, repo_home, install_prefix, storage_type):
+def make(component, graphscope_repo, install_prefix, storage_type):
     """Build executive binaries of COMPONENT. If not given a specific component, build all.
     \f
     TODO: maybe without make?
@@ -199,7 +199,7 @@ def make(component, repo_home, install_prefix, storage_type):
         fg="yellow",
     )
     click.secho(
-        f"Begin the make command, to build components [{component}] of GraphScope, with repo = {repo_home}",
+        f"Begin the make command, to build components [{component}] of GraphScope, with repo = {graphscope_repo}",
         fg="green",
     )
     if component is None:
@@ -215,7 +215,7 @@ def make(component, repo_home, install_prefix, storage_type):
         "-s",
         storage_type,
     ]
-    run_shell_cmd(cmd, repo_home)
+    run_shell_cmd(cmd, graphscope_repo)
 
 
 @click.command()
@@ -241,8 +241,8 @@ def make(component, repo_home, install_prefix, storage_type):
     required=False,
 )
 @click.option(
-    "--repo-home",
-    envvar="REPO_HOME",
+    "--graphscope-repo",
+    envvar="GRAPHSCOPE_REPO",
     type=click.Path(),
     default=os.path.abspath("."),
     show_default=True,
@@ -260,7 +260,7 @@ def make(component, repo_home, install_prefix, storage_type):
     show_default=True,
     help="registry name",
 )
-def make_image(component, repo_home, registry, tag):
+def make_image(component, graphscope_repo, registry, tag):
     """Make docker images from source code for deployment.
     \f
     TODO: fulfill this.
@@ -269,7 +269,7 @@ def make_image(component, repo_home, registry, tag):
         component = "all"
 
     cmd = ["bash", make_image_script, "-c", component, "-r", registry, "-t", tag]
-    run_shell_cmd(cmd, repo_home)
+    run_shell_cmd(cmd, graphscope_repo)
 
 
 @click.command()
@@ -290,8 +290,8 @@ def make_image(component, repo_home, registry, tag):
     required=False,
 )
 @click.option(
-    "--repo-home",
-    envvar="REPO_HOME",
+    "--graphscope-repo",
+    envvar="GRAPHSCOPE_REPO",
     type=click.Path(),
     default=os.path.abspath("."),
     show_default=True,
@@ -329,12 +329,12 @@ def make_image(component, repo_home, registry, tag):
     default=False,
     help="Run nx tests",
 )
-def test(type, repo_home, testdata, local, storage_type, k8s, nx):
+def test(type, graphscope_repo, testdata, local, storage_type, k8s, nx):
     """Trigger tests on built artifacts.
 
     \f
     TODO: fulfill this."""
-    click.secho(f"repo_home = {repo_home}", fg="green")
+    click.secho(f"graphscope_repo = {graphscope_repo}", fg="green")
     click.echo("test")
     if type is None:
         type = ""
@@ -354,7 +354,7 @@ def test(type, repo_home, testdata, local, storage_type, k8s, nx):
         "-n",
         str(nx),
     ]
-    run_shell_cmd(cmd, repo_home)
+    run_shell_cmd(cmd, graphscope_repo)
 
 
 cli.add_command(install_deps)
