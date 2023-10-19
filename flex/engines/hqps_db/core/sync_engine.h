@@ -802,6 +802,32 @@ class SyncEngine : public BaseEngine {
         graph, std::move(ctx), std::move(fold_opt));
   }
 
+  //--------- Sink the context to output--------
+  template <typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV>
+  static auto Sink(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx,
+      std::array<int32_t,
+                 Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>::col_num>
+          tag_ids) {
+    return SinkOp<GRAPH_INTERFACE>::Sink(graph, ctx, tag_ids);
+  }
+
+  //---------------Sink without giving the tags explicitly.----------------
+  template <typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV>
+  static auto Sink(const GRAPH_INTERFACE& graph,
+                   Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx) {
+    std::array<int32_t,
+               Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>::col_num>
+        tag_ids;
+    for (int i = 0; i < tag_ids.size(); i++) {
+      tag_ids[i] = i;
+    }
+    return Sink(graph, ctx, tag_ids);
+  }
+
   //////////////////////////////////////Shortest Path/////////////////////////
   // Return the path.
   template <AppendOpt opt, int alias_to_use, typename EXPR, typename CTX_HEAD_T,

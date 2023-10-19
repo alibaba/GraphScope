@@ -122,7 +122,7 @@ jobs:
           eval ${cmd}
         done
 
-        for i in 1 2 3 4 5 6 7 8 9;
+        for i in 1 2 3 4 5 6 7 8 9 10;
         do
           cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codgen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml "

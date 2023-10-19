@@ -42,15 +42,16 @@ class UnTypedEdgeSetIter {
   UnTypedEdgeSetIter(const std::vector<vid_t>& src_v,
                      std::vector<std::vector<edge_iter_t>>&& adj_lists,
                      size_t ind)
-      : src_vertices_(src_v),
+      : dummy_label_triplet_({0, 0, 0}),
+        dummy_prop_names_({}),
+        src_vertices_(src_v),
         adj_lists_(std::move(adj_lists)),
         vid_ind_(ind),
-        iter_ind_(0) {
+        iter_ind_(0),
+        cur_iter_(dummy_label_triplet_, nullptr, dummy_prop_names_) {
     LOG(INFO) << "UnTypedEdgeSetIter init,size: " << adj_lists_.size()
               << ", vertices size: " << src_vertices_.size();
-    if (vid_ind_ == src_vertices_.size()) {
-      cur_iter_ = edge_iter_t();  // invalid
-    } else {
+    if (vid_ind_ != src_vertices_.size()) {
       while (vid_ind_ < src_vertices_.size()) {
         auto& edge_iter_vec = adj_lists_[vid_ind_];
         while (iter_ind_ < edge_iter_vec.size()) {
@@ -80,6 +81,9 @@ class UnTypedEdgeSetIter {
   inline label_t GetSrcLabel() const { return cur_iter_.GetSrcLabel(); }
 
   inline Any GetData() const { return cur_iter_.GetData(); }
+  inline std::vector<std::string> GetPropNames() const {
+    return cur_iter_.GetPropNames();
+  }
 
   inline ele_tuple_t GetElement() const {
     return std::make_tuple(GetSrc(), GetDst(), GetData());
@@ -141,6 +145,9 @@ class UnTypedEdgeSetIter {
       iter_ind_ = 0;
     }
   }
+  // dummy data structures to init a invalid iter
+  std::array<LabelT, 3> dummy_label_triplet_;
+  std::vector<std::string> dummy_prop_names_;
 
   size_t vid_ind_, iter_ind_;
   edge_iter_t cur_iter_;
@@ -329,6 +336,7 @@ class UnTypedEdgeSet {
 
   std::pair<GeneralVertexSet<vid_t, label_t>, std::vector<offset_t>>
   getDstVertices(const std::vector<label_t>& req_labels) const {
+    VLOG(10) << "getDstVertices with " << req_labels.size() << " labels";
     std::vector<vid_t> ret;
     std::vector<offset_t> offset;
     ret.reserve(Size());
@@ -361,6 +369,7 @@ class UnTypedEdgeSet {
     for (auto i = 0; i < res_label_vec.size(); ++i) {
       label_to_ind_vec[res_label_vec[i]] = label_to_ind[res_label_vec[i]];
     }
+    VLOG(10) << "Start iterating edges to get dst vertices";
     size_t cur_cnt = 0;
     for (auto iter : *this) {
       offset.emplace_back(cur_cnt);
