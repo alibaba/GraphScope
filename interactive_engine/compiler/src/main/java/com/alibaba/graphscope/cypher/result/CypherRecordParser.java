@@ -26,8 +26,6 @@ import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.sql.type.ArraySqlType;
-import org.apache.calcite.sql.type.MapSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
@@ -57,7 +55,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     @Override
     public List<AnyValue> parseFrom(IrResult.Record record) {
-        logger.debug("record {}", record);
+        logger.info("record {}", record);
         Preconditions.checkArgument(
                 record.getColumnsCount() == outputType.getFieldCount(),
                 "column size of results "
@@ -85,22 +83,22 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         switch (dataType.getSqlTypeName()) {
             case MULTISET:
             case ARRAY:
-                if (dataType instanceof ArraySqlType) {
-                    return parseCollection(entry.getCollection(), dataType.getComponentType());
-                } else if (dataType instanceof ArbitraryArrayType) {
+                if (dataType instanceof ArbitraryArrayType) {
                     return parseCollection(
                             entry.getCollection(),
                             ((ArbitraryArrayType) dataType).getComponentTypes());
+                } else {
+                    return parseCollection(entry.getCollection(), dataType.getComponentType());
                 }
             case MAP:
-                if (dataType instanceof MapSqlType) {
-                    return parseKeyValues(
-                            entry.getMap(), dataType.getKeyType(), dataType.getValueType());
-                } else if (dataType instanceof ArbitraryMapType) {
+                if (dataType instanceof ArbitraryMapType) {
                     return parseKeyValues(
                             entry.getMap(),
                             ((ArbitraryMapType) dataType).getKeyTypes(),
                             ((ArbitraryMapType) dataType).getValueTypes());
+                } else {
+                    return parseKeyValues(
+                            entry.getMap(), dataType.getKeyType(), dataType.getValueType());
                 }
             default:
                 return parseElement(entry.getElement(), dataType);
@@ -122,6 +120,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseCollection(IrResult.Collection collection, RelDataType componentType) {
+        logger.info("collection {}", collection);
         switch (componentType.getSqlTypeName()) {
             case BOOLEAN:
                 Boolean[] boolObjs =
