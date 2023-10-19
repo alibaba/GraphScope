@@ -63,7 +63,7 @@ GRIN_ROW grin_get_vertex_primary_keys_row(GRIN_GRAPH g, GRIN_VERTEX v) {
     auto p = new int64_t(oid);
     row->emplace_back(p);
   } else if (type == gs::PropertyType::kString) {
-    auto oid = _g->g.get_oid(label, vid).AsString();
+    auto oid = _g->g.get_oid(label, vid).AsStringView();
     auto p = new std::string_view(oid);
     row->emplace_back(p);
   } else {
