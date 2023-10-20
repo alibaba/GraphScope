@@ -19,23 +19,26 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional
-import graphscope
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from langchain.callbacks.manager import CallbackManagerForChainRun
 from langchain.chains.base import Chain
 from langchain.chains.graph_qa.prompts import CYPHER_QA_PROMPT
 from langchain.chains.llm import LLMChain
-from langchain.graphs.neo4j_graph import Neo4jGraph
+from langchain.prompts.prompt import PromptTemplate
 from langchain.schema import BasePromptTemplate
 from langchain.schema.language_model import BaseLanguageModel
-from langchain.prompts.prompt import PromptTemplate
 
-Cases="""Right Cases:
+import graphscope
+
+Cases = """Right Cases:
 querys: 列举出鲁迅的一个别名可以吗？ answer:match (:ENTITY{name:'鲁迅'})<--(h)-[:Relationship{name:'别名'}]->(q) return distinct q.name limit 1
 querys: 我们常用的301SH不锈钢带的硬度公差是多少，你知道吗？ answers:match(p:ENTITY{name:'301SH不锈钢带'})-[:Relationship{name:'硬度公差'}]-> (q) return q.name
 Wrong Cases:
-querys: 12344加油这首歌真好听，你知道歌曲原唱是谁吗？ answers: MATCH (a:Actor)-[:ACTED_IN]->(m:Movie) WHERE m.name = '12345加油' RETURN a.name LIMIT 30
+querys: 12344加油这首歌真好听，你知道歌曲原唱是谁吗？ answers: MATCH (a:Actor)-[:ACTED_IN]->(m:Movie) WHERE m.name = '12345加油' RETURN a.name
 querys: 七宗梦是什么时候上映的？ answers: MATCH (a:Actor)-[:ACTED_IN]->(m:Movie) WHERE m.name = '七宗梦' RETURN a.name LIMIT 30"""
 
 
@@ -63,7 +66,7 @@ CYPHER_GENERATION_PROMPT = PromptTemplate(
 )
 
 
-CHECK_SCHEMA_TEMPLATE="""Task: Check the schema
+CHECK_SCHEMA_TEMPLATE = """Task: Check the schema
 {query}
 Schema:
 {schema}
@@ -79,7 +82,7 @@ Do not respond to any questions that might ask anything else than for you to con
 Do not include any text except the generated Cypher statement.
 """
 CHECK_SCHEMA_PROMPT = PromptTemplate(
-    input_variables=['query', 'schema'], template=CHECK_SCHEMA_TEMPLATE
+    input_variables=["query", "schema"], template=CHECK_SCHEMA_TEMPLATE
 )
 
 
@@ -175,13 +178,15 @@ class GraphCypherQAChain(Chain):
         graph_interface = graphscope.interactive(self.graph, with_cypher=True)
 
         generated_cypher = self.cypher_generation_chain.run(
-            {"question": question, "schema": self.graph.schema, "cases": Cases}, callbacks=callbacks
+            {"question": question, "schema": self.graph.schema, "cases": Cases},
+            callbacks=callbacks,
         )
 
         # Extract the Cypher code from the generated text
         generated_cypher = extract_cypher(generated_cypher)
         generated_cypher = self.check_schema_chain.run(
-            {"query": generated_cypher, "schema": self.graph.schema}, callbacks=callbacks
+            {"query": generated_cypher, "schema": self.graph.schema},
+            callbacks=callbacks,
         )
         generated_cypher = extract_cypher(generated_cypher)
 
