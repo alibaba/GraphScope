@@ -165,7 +165,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
         if (res == null || res.code != ResultCode.Success) {
             throw new IllegalStateException("print plan in ir core fail, msg : %s" + res, null);
         }
-        return res.msg;
+        return res.getMsg();
     }
 
     @Override

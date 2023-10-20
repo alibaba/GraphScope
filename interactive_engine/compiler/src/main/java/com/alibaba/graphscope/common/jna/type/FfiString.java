@@ -16,38 +16,33 @@
 
 package com.alibaba.graphscope.common.jna.type;
 
-import com.alibaba.graphscope.common.jna.IrTypeMapper;
+import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.sun.jna.Pointer;
-import com.sun.jna.Structure;
+import com.sun.jna.PointerType;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Structure.FieldOrder({"code", "msg"})
-public class FfiResult extends Structure {
-    public FfiResult() {
-        super(IrTypeMapper.INSTANCE);
+public class FfiString extends PointerType {
+    private static final Logger logger = LoggerFactory.getLogger(FfiString.class);
+    private final String value;
+
+    public FfiString(Pointer cstr) {
+        super(cstr);
+        this.value = (cstr == null) ? StringUtils.EMPTY : cstr.getString(0);
+        release();
     }
 
-    public static class ByValue extends FfiResult implements Structure.ByValue {}
-
-    public ResultCode code;
-    public Pointer msg;
-    private FfiString ffiStr;
-
-    public String getMsg() {
-        return ffiStr == null ? StringUtils.EMPTY : ffiStr.getValue();
+    public String getValue() {
+        return this.value;
     }
 
-    @Override
-    public void read() {
-        super.read();
-        if (ffiStr == null) {
-            ffiStr = new FfiString(msg);
+    private void release() {
+        Pointer cstr = getPointer();
+        if (cstr != null) {
+            logger.info("free ffi str pointed by {}", cstr);
+            IrCoreLibrary.INSTANCE.destroyCstrPointer(cstr);
         }
-    }
-
-    @Override
-    public String toString() {
-        return "FfiResult{" + "code=" + code + ", msg='" + getMsg() + '\'' + '}';
     }
 }
