@@ -146,6 +146,10 @@ public class IrSchemaParser {
                 return 9;
             case DATE:
                 return 12;
+            case TIME32:
+                return 13;
+            case TIMESTAMP:
+                return 14;
             default:
                 throw new UnsupportedOperationException(
                         "convert from DataType " + dataType + " to ir core is unsupported yet");

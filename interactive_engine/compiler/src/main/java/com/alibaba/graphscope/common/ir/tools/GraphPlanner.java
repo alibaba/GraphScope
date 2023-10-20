@@ -61,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 
 /**
  * A unified structure to build {@link PlannerInstance} which can further build logical and physical plan from an antlr tree
@@ -72,16 +73,18 @@ public class GraphPlanner {
     private final RelOptPlanner optPlanner;
     private final RexBuilder rexBuilder;
     private final AtomicLong idGenerator;
-    private static final RelBuilderFactory relBuilderFactory =
+    public static final RelBuilderFactory relBuilderFactory =
             (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
                     GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
+    public static final Function<Configs, RexBuilder> rexBuilderFactory =
+            (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
 
     public GraphPlanner(Configs graphConfig) {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         logger.debug("planner config: " + this.plannerConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
-        this.rexBuilder = new GraphRexBuilder(new GraphTypeFactoryImpl(graphConfig));
+        this.rexBuilder = rexBuilderFactory.apply(graphConfig);
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
     }
 
