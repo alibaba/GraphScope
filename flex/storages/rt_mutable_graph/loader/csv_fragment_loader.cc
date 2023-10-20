@@ -936,8 +936,7 @@ void CSVFragmentLoader::addVertices(label_t v_label_id,
   std::string v_label_name = schema_.get_vertex_label_name(v_label_id);
   VLOG(10) << "Start init vertices for label " << v_label_name << " with "
            << v_files.size() << " files.";
-  if (type == PropertyType::kInt64)  // type == int64
-  {
+  if (type == PropertyType::kInt64) {
     IdIndexer<int64_t, vid_t> indexer;
 
     addVerticesImpl<int64_t>(v_label_id, v_label_name, v_files, indexer);

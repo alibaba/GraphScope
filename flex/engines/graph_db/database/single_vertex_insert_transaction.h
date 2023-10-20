@@ -26,7 +26,6 @@ class MutablePropertyFragment;
 class ArenaAllocator;
 class WalWriter;
 class VersionManager;
-// class Any;
 
 class SingleVertexInsertTransaction {
  public:
