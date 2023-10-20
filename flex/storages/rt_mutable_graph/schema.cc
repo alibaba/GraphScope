@@ -248,7 +248,7 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
   grape::InArchive arc;
   arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
-      << max_vnum_;
+      << max_vnum_ << plugin_dir_ << plugin_list_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -258,7 +258,8 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   grape::OutArchive arc;
   CHECK(reader->ReadArchive(arc));
   arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
-      eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >> max_vnum_;
+      eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
+      max_vnum_ >> plugin_dir_ >> plugin_list_;
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
