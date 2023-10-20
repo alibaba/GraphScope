@@ -176,7 +176,9 @@ public abstract class AliasInference {
         while (!inputsQueue.isEmpty()) {
             RelNode cur = inputsQueue.remove(0);
             for (RelDataTypeField field : cur.getRowType().getFieldList()) {
-                uniqueNames.add(field.getName());
+                if (field.getName() != null && field.getName() != DEFAULT_NAME) {
+                    uniqueNames.add(field.getName());
+                }
             }
             if (removeAlias(cur)) {
                 break;
