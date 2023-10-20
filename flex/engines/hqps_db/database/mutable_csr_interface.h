@@ -182,7 +182,8 @@ class MutableCSRInterface {
    * @param oid
    */
   template <typename OID_T>
-  vertex_id_t ScanVerticesWithOid(const std::string& label, OID_T oid) const {
+  vertex_id_t ScanVerticesWithOid(const std::string& label, OID_T oid,
+                                  vertex_id_t& vid) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     return db_session_.graph().get_lid(label_id, Any::From(oid), vid);
   }
@@ -194,7 +195,8 @@ class MutableCSRInterface {
    * @param oid
    */
   template <typename OID_T>
-  vertex_id_t ScanVerticesWithOid(const label_id_t& label_id, OID_T oid) const {
+  vertex_id_t ScanVerticesWithOid(const label_id_t& label_id, OID_T oid,
+                                  vertex_id_t& vid) const {
     return db_session_.graph().get_lid(label_id, Any::From(oid), vid);
   }
 
