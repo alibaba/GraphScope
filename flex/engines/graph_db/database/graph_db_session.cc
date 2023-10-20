@@ -68,8 +68,7 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
   if (db_.graph().lf_indexers_[label].get_type() == PropertyType::kInt64) {
     return std::make_shared<TypedRefColumn<int64_t>>(
         dynamic_cast<const TypedColumn<int64_t>&>(
-            db_.graph().lf_indexers_[label].get_keys()));  //,
-    // StorageStrategy::kMem);
+            db_.graph().lf_indexers_[label].get_keys()));
   } else if (db_.graph().lf_indexers_[label].get_type() ==
              PropertyType::kString) {
     return std::make_shared<TypedRefColumn<std::string_view>>(
