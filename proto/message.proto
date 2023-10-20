@@ -246,3 +246,21 @@ message CloseLearningInstanceRequest {
 message CloseLearningInstanceResponse {
 
 };
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+// Protos under the FLEX architecture
+//
+////////////////////////////////////////////////////////////////////////////////
+
+message ConnectRequest {
+  // check version compatibility
+  string version = 1;
+}
+
+message ConnectResponse {
+  // We use the solution encompasses the various applications and use cases of the product
+  // across different industries and business scenarios, e.g. interactive, graphscope insight
+  string solution = 1;
+}

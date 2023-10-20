@@ -541,7 +541,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     public ImmutableMap<Integer, String> getDynamicParams() {
-        return this.paramsBuilder.build();
+        return this.paramsBuilder.buildKeepingLast();
     }
 
     private RexLiteral createIntervalLiteral(String fieldName) {
