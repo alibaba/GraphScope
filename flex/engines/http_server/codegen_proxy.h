@@ -15,6 +15,7 @@
 #ifndef ENGINES_HQPS_SERVER_CODEGEN_PROXY_H_
 #define ENGINES_HQPS_SERVER_CODEGEN_PROXY_H_
 
+#include <semaphore.h>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -27,6 +28,8 @@
 #include "flex/proto_generated_gie/job_service.pb.h"
 #include "flex/proto_generated_gie/physical.pb.h"
 
+#include <boost/program_options.hpp>
+#include <hiactor/core/thread_resource_pool.hh>
 #include <seastar/core/future.hh>
 
 namespace server {
@@ -45,6 +48,8 @@ struct StoredProcedureLibMeta {
   StoredProcedureLibMeta();
   StoredProcedureLibMeta(CodegenStatus status);
   StoredProcedureLibMeta(CodegenStatus status, std::string res_lib_path);
+
+  std::string to_string() const;
 };
 
 // Manages the codegen runner, process the incoming adhoc query, and output to
@@ -77,14 +82,20 @@ class CodegenProxy {
       const physical::PhysicalPlan& plan);
 
  private:
+  seastar::future<int> call_codegen_cmd(const physical::PhysicalPlan& plan);
+
+  seastar::future<int> call_codegen_cmd_impl(const std::string& plan_path,
+                                             const std::string& query_name,
+                                             const std::string& work_dir);
+
   seastar::future<std::pair<int32_t, std::string>> get_res_lib_path_from_cache(
       int32_t job_id);
 
-  std::string call_codegen_cmd(const std::string& plan_path,
-                               const std::string& query_name,
-                               const std::string& work_dir);
-
   std::string get_work_directory(int32_t job_id);
+
+  void insert_or_update(int32_t job_id, CodegenStatus status, std::string path);
+
+  bool check_job_running(int32_t job_id);
 
   void ensure_dir_exists(const std::string& working_dir);
 
@@ -99,10 +110,9 @@ class CodegenProxy {
   std::string ir_compiler_prop_;
   std::string compiler_graph_schema_;
   std::mutex mutex_;
+  std::condition_variable cv_;
   std::unordered_map<int32_t, StoredProcedureLibMeta> job_id_2_procedures_;
   bool initialized_;
-
-  static const int32_t MAX_RETRY_TIMES;
 };
 
 }  // namespace server

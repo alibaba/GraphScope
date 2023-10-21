@@ -30,6 +30,11 @@ StoredProcedureLibMeta::StoredProcedureLibMeta(CodegenStatus status,
                                                std::string res_lib_path)
     : status(status), res_lib_path(res_lib_path) {}
 
+std::string StoredProcedureLibMeta::to_string() const {
+  return "status: " + std::to_string(status) +
+         ", res_lib_path: " + res_lib_path;
+}
+
 CodegenProxy::CodegenProxy() : initialized_(false){};
 
 CodegenProxy::~CodegenProxy() {}
@@ -54,116 +59,146 @@ seastar::future<std::pair<int32_t, std::string>> CodegenProxy::DoGen(
     const physical::PhysicalPlan& plan) {
   LOG(INFO) << "Start generating for query: ";
   auto next_job_id = plan.plan_id();
-  auto work_dir = get_work_directory(next_job_id);
-  auto query_name = "query_" + std::to_string(next_job_id);
-  std::string plan_path = prepare_next_job_dir(work_dir, query_name, plan);
-  if (plan_path.empty()) {
-    return seastar::make_exception_future<std::pair<int32_t, std::string>>(
-        std::runtime_error("Fail to prepare next job dir"));
+
+  {
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock,
+             [this, next_job_id] { return !check_job_running(next_job_id); });
   }
 
-  if (job_id_2_procedures_.find(next_job_id) == job_id_2_procedures_.end() ||
-      job_id_2_procedures_[next_job_id].status == CodegenStatus::FAILED) {
-    // Do gen.
-    {
-      // First lock
-      std::lock_guard<std::mutex> lock(mutex_);
-      job_id_2_procedures_[next_job_id] =
-          StoredProcedureLibMeta{CodegenStatus::RUNNING, ""};
+  return call_codegen_cmd(plan).then_wrapped([this,
+                                              next_job_id](auto&& future) {
+    int return_code;
+    try {
+      return_code = future.get();
+    } catch (std::exception& e) {
+      LOG(ERROR) << "Compilation failed: " << e.what();
+      return seastar::make_ready_future<std::pair<int32_t, std::string>>(
+          std::make_pair(next_job_id,
+                         std::string("Compilation failed: ") + e.what()));
     }
-    std::string res_lib_path =
-        call_codegen_cmd(plan_path, query_name, work_dir);
-    if (!std::filesystem::exists(res_lib_path)) {
-      LOG(ERROR) << "Res lib path " << res_lib_path
-                 << " not exists, compilation failed";
-      {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (job_id_2_procedures_.find(next_job_id) !=
-            job_id_2_procedures_.end()) {
-          job_id_2_procedures_[next_job_id].status = CodegenStatus::FAILED;
-        } else {
-          job_id_2_procedures_.emplace(
-              next_job_id, StoredProcedureLibMeta{CodegenStatus::FAILED});
-        }
-      }
+    if (return_code != 0) {
+      LOG(ERROR) << "Codegen failed";
       return seastar::make_exception_future<std::pair<int32_t, std::string>>(
           std::runtime_error("Codegen failed"));
-    } else {
-      // Add res_lib_path to query_cache.
-      {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (job_id_2_procedures_.find(next_job_id) !=
-            job_id_2_procedures_.end()) {
-          job_id_2_procedures_[next_job_id].status = CodegenStatus::SUCCESS;
-          job_id_2_procedures_[next_job_id].res_lib_path = res_lib_path;
-        } else {
-          job_id_2_procedures_.emplace(
-              next_job_id,
-              StoredProcedureLibMeta{CodegenStatus::SUCCESS, res_lib_path});
-        }
-      }
     }
+    return get_res_lib_path_from_cache(next_job_id);
+  });
+}
+
+seastar::future<int> CodegenProxy::call_codegen_cmd(
+    const physical::PhysicalPlan& plan) {
+  // if the desired query lib for next_job_id is in cache, just return 0
+  // otherwise, call codegen cmd
+  auto next_job_id = plan.plan_id();
+  auto query_name = "query_" + std::to_string(next_job_id);
+  auto work_dir = get_work_directory(next_job_id);
+  std::string plan_path;
+
+  if (job_id_2_procedures_.find(next_job_id) != job_id_2_procedures_.end() &&
+      job_id_2_procedures_[next_job_id].status == CodegenStatus::SUCCESS) {
+    return seastar::make_ready_future<int>(0);
   }
 
-  return get_res_lib_path_from_cache(next_job_id);
+  insert_or_update(next_job_id, CodegenStatus::RUNNING, "");
+
+  plan_path = prepare_next_job_dir(work_dir, query_name, plan);
+  if (plan_path.empty()) {
+    insert_or_update(next_job_id, CodegenStatus::FAILED, "");
+    return seastar::make_exception_future<int>(std::runtime_error(
+        "Fail to prepare next job dir for " + query_name + ", job id: " +
+        std::to_string(next_job_id) + ", plan path: " + plan_path));
+  }
+
+  std::string expected_res_lib_path = work_dir + "/lib" + query_name + ".so";
+  return call_codegen_cmd_impl(plan_path, query_name, work_dir)
+      .then([this, next_job_id, expected_res_lib_path](int codegen_res) {
+        if (codegen_res != 0 ||
+            !std::filesystem::exists(expected_res_lib_path)) {
+          LOG(ERROR) << "Expected lib path " << expected_res_lib_path
+                     << " not exists, or compilation failure: " << codegen_res
+                     << " compilation failed";
+
+          insert_or_update(next_job_id, CodegenStatus::FAILED, "");
+          VLOG(10) << "Compilation failed, job id: " << next_job_id;
+        } else {
+          VLOG(10) << "Compilation success, job id: " << next_job_id;
+          insert_or_update(next_job_id, CodegenStatus::SUCCESS,
+                           expected_res_lib_path);
+        }
+        {
+          std::lock_guard<std::mutex> lock(mutex_);
+          cv_.notify_all();
+        }
+        return seastar::make_ready_future<int>(codegen_res);
+      });
 }
 
 seastar::future<std::pair<int32_t, std::string>>
 CodegenProxy::get_res_lib_path_from_cache(int32_t next_job_id) {
-  // status could be running,
-  int retry_times = 0;
-  volatile CodegenStatus codegen_status =
-      job_id_2_procedures_[next_job_id].status;
-  while (codegen_status == CodegenStatus::RUNNING &&
-         retry_times < MAX_RETRY_TIMES) {
-    // wait for codegen to finish
-    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    VLOG(10) << "Waiting for codegen to finish: retry times:" << retry_times;
-    retry_times += 1;
-    codegen_status = job_id_2_procedures_[next_job_id].status;
-  }
+  // the entry must exists
+  StoredProcedureLibMeta meta = job_id_2_procedures_[next_job_id];
 
-  if (retry_times >= MAX_RETRY_TIMES) {
-    LOG(ERROR) << "Codegen timeout";
-    return seastar::make_exception_future<std::pair<int32_t, std::string>>(
-        std::runtime_error("Codegen timeout"));
-  }
-
-  if (job_id_2_procedures_[next_job_id].status != CodegenStatus::SUCCESS) {
-    LOG(ERROR) << "Invalid state: "
-               << std::to_string(job_id_2_procedures_[next_job_id].status)
-               << ", " << job_id_2_procedures_[next_job_id].res_lib_path
+  if (meta.status == CodegenStatus::SUCCESS) {
+    return seastar::make_ready_future<std::pair<int32_t, std::string>>(
+        std::make_pair(next_job_id, meta.res_lib_path));
+  } else {
+    LOG(ERROR) << "Invalid state: " << meta.to_string() << ", "
                << ", compilation failure";
     return seastar::make_exception_future<std::pair<int32_t, std::string>>(
-        std::runtime_error("Invalid state"));
+        std::runtime_error("Compilation failed, invalid state: " +
+                           meta.to_string()));
   }
-
-  return seastar::make_ready_future<std::pair<int32_t, std::string>>(
-      std::make_pair(next_job_id,
-                     job_id_2_procedures_[next_job_id].res_lib_path));
 }
 
-std::string CodegenProxy::call_codegen_cmd(const std::string& plan_path,
-                                           const std::string& query_name,
-                                           const std::string& work_dir) {
+seastar::future<int> CodegenProxy::call_codegen_cmd_impl(
+    const std::string& plan_path, const std::string& query_name,
+    const std::string& work_dir) {
   // TODO: different suffix for different platform
-  std::string res_lib_path = work_dir + "/lib" + query_name + ".so";
   std::string cmd = codegen_bin_ + " -e=hqps " + " -i=" + plan_path +
                     " -w=" + work_dir + " --ir_conf=" + ir_compiler_prop_ +
                     " --graph_schema_path=" + compiler_graph_schema_;
   LOG(INFO) << "Start call codegen cmd: [" << cmd << "]";
-  auto res = std::system(cmd.c_str());
-  if (res != 0) {
-    LOG(ERROR) << "call codegen cmd failed: " << cmd;
-    return "";
-  }
-  return res_lib_path;
+
+  return hiactor::thread_resource_pool::submit_work([this, cmd] {
+           auto res = std::system(cmd.c_str());
+           LOG(INFO) << "Codegen cmd: [" << cmd << "] return: " << res;
+           return res;
+         })
+      .then_wrapped([](auto fut) {
+        VLOG(10) << "try";
+        try {
+          VLOG(10) << "Got future ";
+          return seastar::make_ready_future<int>(fut.get0());
+        } catch (std::exception& e) {
+          LOG(ERROR) << "Compilation failed: " << e.what();
+          return seastar::make_ready_future<int>(-1);
+        }
+      });
 }
 
 std::string CodegenProxy::get_work_directory(int32_t job_id) {
   std::string work_dir = working_directory_ + "/" + std::to_string(job_id);
   ensure_dir_exists(work_dir);
   return work_dir;
+}
+
+void CodegenProxy::insert_or_update(int32_t job_id, CodegenStatus status,
+                                    std::string path) {
+  if (job_id_2_procedures_.find(job_id) != job_id_2_procedures_.end()) {
+    job_id_2_procedures_[job_id].status = status;
+    job_id_2_procedures_[job_id].res_lib_path = path;
+  } else {
+    job_id_2_procedures_.emplace(job_id, StoredProcedureLibMeta{status, path});
+  }
+}
+
+bool CodegenProxy::check_job_running(int32_t job_id) {
+  if (job_id_2_procedures_.find(job_id) != job_id_2_procedures_.end()) {
+    return job_id_2_procedures_[job_id].status == CodegenStatus::RUNNING;
+  } else {
+    return false;
+  }
 }
 
 void CodegenProxy::ensure_dir_exists(const std::string& working_dir) {
@@ -213,7 +248,5 @@ std::string CodegenProxy::prepare_next_job_dir(
 
   return plan_path;
 }
-
-const int32_t CodegenProxy::MAX_RETRY_TIMES = 10;
 
 }  // namespace server
