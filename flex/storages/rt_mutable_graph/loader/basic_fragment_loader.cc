@@ -80,12 +80,6 @@ void BasicFragmentLoader::AddVertexBatch(
   }
 }
 
-void BasicFragmentLoader::FinishAddingVertex(
-    label_t v_label, const IdIndexer<oid_t, vid_t>& indexer) {
-  CHECK(v_label < vertex_label_num_);
-  build_lf_indexer(indexer, lf_indexers_[v_label]);
-}
-
 const LFIndexer<vid_t>& BasicFragmentLoader::GetLFIndexer(
     label_t v_label) const {
   CHECK(v_label < vertex_label_num_);

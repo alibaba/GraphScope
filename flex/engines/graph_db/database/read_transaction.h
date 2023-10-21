@@ -143,7 +143,7 @@ class ReadTransaction {
     void Next();
     void Goto(vid_t target);
 
-    oid_t GetId() const;
+    Any GetId() const;
     vid_t GetIndex() const;
 
     Any GetField(int col_id) const;
@@ -183,13 +183,13 @@ class ReadTransaction {
 
   vertex_iterator GetVertexIterator(label_t label) const;
 
-  vertex_iterator FindVertex(label_t label, oid_t id) const;
+  vertex_iterator FindVertex(label_t label, const Any& id) const;
 
-  bool GetVertexIndex(label_t label, oid_t id, vid_t& index) const;
+  bool GetVertexIndex(label_t label, const Any& id, vid_t& index) const;
 
   vid_t GetVertexNum(label_t label) const;
 
-  oid_t GetVertexId(label_t label, vid_t index) const;
+  Any GetVertexId(label_t label, vid_t index) const;
 
   edge_iterator GetOutEdgeIterator(label_t label, vid_t u,
                                    label_t neighnor_label,
