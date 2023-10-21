@@ -34,6 +34,9 @@ from langchain.schema.language_model import BaseLanguageModel
 
 import graphscope
 
+# The patterns to replace in the generated Cypher query
+PATTERN_TRANSFER = [("-[*]-", "-[]-")]
+
 Cases = """Right Cases:
 querys: 列举出鲁迅的一个别名可以吗？ answer:match (:ENTITY{name:'鲁迅'})<--(h)-[:Relationship{name:'别名'}]->(q) return distinct q.name limit 1
 querys: 我们常用的301SH不锈钢带的硬度公差是多少，你知道吗？ answers:match(p:ENTITY{name:'301SH不锈钢带'})-[:Relationship{name:'硬度公差'}]-> (q) return q.name
@@ -101,7 +104,12 @@ def extract_cypher(text: str) -> str:
     # Find all matches in the input text
     matches = re.findall(pattern, text, re.DOTALL)
 
-    return matches[0] if matches else text
+    cypher_query = matches[0] if matches else text
+
+    # Replace any patterns that are not supported by the graph database
+    for pattern, replacement in PATTERN_TRANSFER:
+        cypher_query = cypher_query.replace(pattern, replacement)
+    return cypher_query
 
 
 class GraphCypherQAChain(Chain):
@@ -175,7 +183,6 @@ class GraphCypherQAChain(Chain):
 
         intermediate_steps: List = []
         """Initialize from Graph."""
-        graph_interface = graphscope.interactive(self.graph, with_cypher=True)
 
         generated_cypher = self.cypher_generation_chain.run(
             {"question": question, "schema": self.graph.schema, "cases": Cases},
@@ -190,9 +197,6 @@ class GraphCypherQAChain(Chain):
         )
         generated_cypher = extract_cypher(generated_cypher)
 
-        if "limit" not in generated_cypher.lower():
-            generated_cypher += " LIMIT 30"
-
         _run_manager.on_text("Generated Cypher:", end="\n", verbose=self.verbose)
         _run_manager.on_text(
             generated_cypher, color="green", end="\n", verbose=self.verbose
@@ -200,12 +204,12 @@ class GraphCypherQAChain(Chain):
 
         intermediate_steps.append({"query": generated_cypher})
 
-        context = graph_interface.execute(generated_cypher, lang="cypher")
-        intermediate_steps.append({"context": context})
+        # context = graph_interface.execute(generated_cypher, lang="cypher")
+        # intermediate_steps.append({"context": context})
 
-        final_result = context
+        # final_result = context
 
-        chain_result: Dict[str, Any] = {self.output_key: final_result}
+        chain_result: Dict[str, Any] = {self.output_key: generated_cypher}
         if self.return_intermediate_steps:
             chain_result[INTERMEDIATE_STEPS_KEY] = intermediate_steps
 

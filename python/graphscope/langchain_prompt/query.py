@@ -16,14 +16,23 @@
 # limitations under the License.
 #
 
+import warnings
 
 from langchain.chat_models import ChatOpenAI
+
+import graphscope
 
 from .langchain_cypher import GraphCypherQAChain
 
 
 def query_to_cypher(
-    graph, query: str, endpoint: str = None, api_key: str = None, **kwargs
+    graph: graphscope.Graph,
+    query: str,
+    endpoint: str = None,
+    api_key: str = None,
+    return_result=False,
+    add_limit: bool = True,
+    **kwargs
 ) -> str:
     """
     The `query_to_cypher` function is a wrapper around the `LangChain` library, facilitating
@@ -35,12 +44,13 @@ def query_to_cypher(
         query (str): Natural language query for translation.
         endpoint (str, optional): URL for the OpenAI API. Defaults to standard endpoint.
         api_key (str, optional): Authentication key for OpenAI API.
+        return_result (bool): If true, returns the query results of the generated query.
+        add_limit (bool): If true, adds a limit of 30 to the generated query.
 
     Optional Args (**kwargs):
         model_name (str): OpenAI model for processing queries. Defaults to 'gpt-3.5-turbo'.
         temperature (float): Randomness in output, 0 (deterministic) to 1 (diverse). Defaults to 0.
         verbose (bool): Enables verbose mode for process details. Defaults to True.
-        return_intermediate_steps (bool): If true, returns steps of query transformation.
 
     Returns:
         cypher_query (str): Cypher query for graph databases.
@@ -51,7 +61,10 @@ def query_to_cypher(
         - A valid OpenAI API key is necessary.
 
     Example:
-        cypher_query, answer = query_to_cypher(graph, "What are the movies starring Tom Hanks?")
+        cypher_query = query_to_cypher(graph, "What are the movies starring Tom Hanks?")
+        Generates a Cypher query for use in graph databases.
+
+        cypher_query, answer = query_to_cypher(graph, "What are the movies starring Tom Hanks?", return_result=True)
         Generates a Cypher query for use in graph databases.
     """
     if endpoint is None:
@@ -63,7 +76,7 @@ def query_to_cypher(
     model_name = kwargs.get("model_name", "gpt-3.5-turbo")
     temperature = kwargs.get("temperature", 0)
     verbose = kwargs.get("verbose", True)
-    return_intermediate_steps = kwargs.get("return_intermediate_steps", False)
+    # return_intermediate_steps = kwargs.get("return_intermediate_steps", False)
 
     chain = GraphCypherQAChain.from_llm(
         ChatOpenAI(
@@ -74,11 +87,25 @@ def query_to_cypher(
         ),
         graph=graph,
         verbose=verbose,
-        return_intermediate_steps=return_intermediate_steps,
+        return_intermediate_steps=False,
     )
 
-    results = chain.run(query)
-    query_cypher = results[1].query
-    answer = results[0]
+    query_cypher = chain.run(query)
 
-    return query_cypher, answer
+    if "limit" not in query_cypher.lower():
+        warnings.warn(
+            "To avoid long wait times, a limit of 30 is added to the query. To remove, set add_limit=False."
+        )
+        query_cypher += " LIMIT 30"
+
+    if return_result:
+        warnings.warn(
+            "You set return_result=True. We will execute the Cypher query and return the results automatically."
+            + "Set return_result=False to avoid this."
+        )
+        graph_interface = graphscope.interactive(graph, with_cypher=True)
+        answer = graph_interface.execute(query_cypher, lang="cypher")
+        return query_cypher, answer
+
+    warnings.warn("Caution: Verify Cypher query accuracy before use to avoid issues.")
+    return query_cypher
