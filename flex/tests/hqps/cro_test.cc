@@ -8,6 +8,7 @@
 #include "flex/utils/property/types.h"
 
 namespace gs {
+using oid_t = int64_t;
 
 // Update vertex and edges.
 class Query0 {
@@ -116,7 +117,7 @@ class Query1 {
         auto nbr_vid = iter.neighbor;
         if (nbr_vid != center_vid) {
           auto nbr_oid = txn.GetVertexId(center_label_id_, nbr_vid);
-          res_vec.emplace_back(oid, iter.data, nbr_oid);
+          res_vec.emplace_back(oid.AsInt64(), iter.data, nbr_oid.AsInt64());
         }
       }
     }
@@ -182,7 +183,7 @@ class Query2 {
         auto cur_vid = edge.neighbor;
         if (cur_vid != center_vid) {
           auto cur_oid = txn.GetVertexId(center_label_id_, cur_vid);
-          res_vec.emplace_back(medium_oids[i], edge.data, cur_oid);
+          res_vec.emplace_back(medium_oids[i], edge.data, cur_oid.AsInt64());
         }
       }
     }
