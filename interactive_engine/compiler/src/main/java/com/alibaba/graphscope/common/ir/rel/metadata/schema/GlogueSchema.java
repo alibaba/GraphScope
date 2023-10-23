@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.javatuples.Triplet;
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
 
@@ -77,6 +76,10 @@ public class GlogueSchema {
     }
 
     // modern graph schema
+    // person: label 0, statistics 3;
+    // software: label 1, statistics 4;
+    // person-knows->person: label 0, statistics 5;
+    // person-created->software: label 1, statistics 6;
     public GlogueSchema DefaultGraphSchema() {
         Map<String, GraphVertex> vertexList = Maps.newHashMap();
         Map<String, GraphEdge> edgeList = Maps.newHashMap();
@@ -95,12 +98,12 @@ public class GlogueSchema {
 
         DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
-        vertexTypeCardinality.put(0, 4.0);
-        vertexTypeCardinality.put(1, 2.0);
+        vertexTypeCardinality.put(0, 3.0);
+        vertexTypeCardinality.put(1, 4.0);
 
         HashMap<EdgeTypeId, Double> edgeTypeCardinality = new HashMap<EdgeTypeId, Double>();
-        edgeTypeCardinality.put(new EdgeTypeId(0, 0, 0), 2.0);
-        edgeTypeCardinality.put(new EdgeTypeId(0, 1, 1), 4.0);
+        edgeTypeCardinality.put(new EdgeTypeId(0, 0, 0), 5.0);
+        edgeTypeCardinality.put(new EdgeTypeId(0, 1, 1), 6.0);
 
         GlogueSchema g = new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
         System.out.println("glogue schema: " + g);

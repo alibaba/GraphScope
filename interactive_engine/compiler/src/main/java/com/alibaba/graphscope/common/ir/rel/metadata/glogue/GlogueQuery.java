@@ -45,7 +45,6 @@ public class GlogueQuery {
         return fuzzyPatternProcessor.processFuzzyPatternAndGetFuzzyInfo(pattern);
     }
 
-
     // the query API for optimizer
     public Set<GlogueEdge> getOutEdges(Pattern pattern) {
         if (fuzzyPatternProcessor.isFuzzyPattern(pattern)) {
@@ -56,7 +55,8 @@ public class GlogueQuery {
             if (glogueVertexWithMapping.isPresent()) {
                 patternWithInfo.getValue1().setPatternMapping(glogueVertexWithMapping.get().getValue1());
                 Set<GlogueEdge> outEdges = glogue.getGlogueOutEdges(glogueVertexWithMapping.get().getValue0());
-                return fuzzyPatternProcessor.processGlogueEdgesWithFuzzyInfo(outEdges, patternWithInfo.getValue1(), true);
+                return fuzzyPatternProcessor.processGlogueEdgesWithFuzzyInfo(outEdges, patternWithInfo.getValue1(),
+                        true);
             } else {
                 throw new RuntimeException(
                         "pattern not found in glogue graph. queries pattern " + pattern);
@@ -89,7 +89,8 @@ public class GlogueQuery {
         GlogueQuery gq = new GlogueQuery(gl, g);
         Pattern p = new Pattern();
 
-        // p1 -> s0 <- p2 + p1 -> p2
+        // pattern: p1 -> s0 <- p2 + p1 -> p2
+        // best solution: 1) p, 2) p->p, 3) p->s<-p + p->p
         PatternVertex v0 = new SinglePatternVertex(1, 0);
         PatternVertex v1 = new SinglePatternVertex(0, 1);
         PatternVertex v2 = new SinglePatternVertex(0, 2);
@@ -104,6 +105,12 @@ public class GlogueQuery {
         p.addEdge(v2, v0, e);
         p.addEdge(v1, v2, e1);
         p.reordering();
+
+        System.out.println("Pattern: " + p);
+        Set<GlogueEdge> outEdges = gq.getOutEdges(p);
+        System.out.println("outEdges: " + outEdges);
+        Set<GlogueEdge> inEdges = gq.getInEdges(p);
+        System.out.println("inEdges: " + inEdges);
 
         // p0 -> s2 <- p1 + p0 -> p1
         Pattern p2 = new Pattern();
@@ -131,7 +138,7 @@ public class GlogueQuery {
         // (person) -(knows, creates)-> (person, software)
         Pattern p3 = new Pattern();
         PatternVertex v000 = new SinglePatternVertex(0, 0);
-        PatternVertex v111 = new FuzzyPatternVertex(Arrays.asList(0,1), 1);
+        PatternVertex v111 = new FuzzyPatternVertex(Arrays.asList(0, 1), 1);
         p3.addVertex(v000);
         p3.addVertex(v111);
         List<EdgeTypeId> eTypeIds000 = Arrays.asList(new EdgeTypeId(0, 0, 0), new EdgeTypeId(0, 1, 1));
@@ -140,8 +147,22 @@ public class GlogueQuery {
         p3.reordering();
         System.out.println("Pattern3: " + p3);
 
-        Double count3 = gq.getRowCount(p3);
-        System.out.println("estimated count: " + count3);
+        Pattern p4 = new Pattern();
+        PatternVertex v0000 = new SinglePatternVertex(0, 0);
+        PatternVertex v1111 = new SinglePatternVertex(0, 1);
+        PatternVertex v2222 = new SinglePatternVertex(0, 2);
+        p4.addVertex(v0000);
+        p4.addVertex(v1111);
+        p4.addVertex(v2222);
+        p4.addEdge(v0000, v1111, e1);
+        p4.addEdge(v1111, v2222, e1);
+        p4.addEdge(v0000, v2222, e1);
+        p4.reordering();
 
+        System.out.println("Pattern: " + p4);
+        Set<GlogueEdge> outEdges4 = gq.getOutEdges(p4);
+        System.out.println("outEdges: " + outEdges4);
+        Set<GlogueEdge> inEdges4 = gq.getInEdges(p4);
+        System.out.println("inEdges: " + inEdges4);
     }
 }
