@@ -41,6 +41,7 @@ class LimitOp {
         cur_offset += 1;
       }
       new_offsets.push_back(cur_offset);
+      cur_ind += 1;
     }
 
     std::vector<size_t> selected_indices;
