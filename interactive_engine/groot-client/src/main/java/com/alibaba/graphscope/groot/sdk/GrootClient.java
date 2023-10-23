@@ -23,7 +23,6 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -465,14 +464,11 @@ public class GrootClient {
     }
 
     public static class GrootClientBuilder {
-        private List<SocketAddress> addrs;
         private String target;
         private String username;
         private String password;
 
-        private GrootClientBuilder() {
-            this.addrs = new ArrayList<>();
-        }
+        private GrootClientBuilder() {}
 
         public GrootClientBuilder addHost(String host, int port) {
             target = host + ":" + port;
