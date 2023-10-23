@@ -15,7 +15,6 @@
 #ifndef ENGINES_HQPS_SERVER_CODEGEN_PROXY_H_
 #define ENGINES_HQPS_SERVER_CODEGEN_PROXY_H_
 
-#include <semaphore.h>
 #include <filesystem>
 #include <fstream>
 #include <string>
