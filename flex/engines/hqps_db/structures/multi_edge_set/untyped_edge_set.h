@@ -336,7 +336,6 @@ class UnTypedEdgeSet {
 
   std::pair<GeneralVertexSet<vid_t, label_t>, std::vector<offset_t>>
   getDstVertices(const std::vector<label_t>& req_labels) const {
-    VLOG(10) << "getDstVertices with " << req_labels.size() << " labels";
     std::vector<vid_t> ret;
     std::vector<offset_t> offset;
     ret.reserve(Size());
@@ -369,7 +368,6 @@ class UnTypedEdgeSet {
     for (auto i = 0; i < res_label_vec.size(); ++i) {
       label_to_ind_vec[res_label_vec[i]] = label_to_ind[res_label_vec[i]];
     }
-    VLOG(10) << "Start iterating edges to get dst vertices";
     size_t cur_cnt = 0;
     for (auto iter : *this) {
       offset.emplace_back(cur_cnt);
