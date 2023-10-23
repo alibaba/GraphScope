@@ -217,6 +217,10 @@ static bool parse_vertex_files(
         std::filesystem::path path(file_path);
         files[label_id].emplace_back(std::filesystem::canonical(path));
       } else {
+        // append file_path to data_location
+        if (!data_location.empty()) {
+          file_path = data_location + "/" + file_path;
+        }
         files[label_id].emplace_back(file_path);
       }
     }
@@ -385,6 +389,10 @@ static bool parse_edge_files(
         files[std::tuple{src_label_id, dst_label_id, edge_label_id}]
             .emplace_back(std::filesystem::canonical(path));
       } else {
+        // append file_path to data_location
+        if (!data_location.empty()) {
+          file_path = data_location + "/" + file_path;
+        }
         files[std::tuple{src_label_id, dst_label_id, edge_label_id}]
             .emplace_back(file_path);
       }
@@ -528,7 +536,7 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
   if (root["vertex_mappings"]) {
     VLOG(10) << "vertex_mappings is set";
     if (!parse_vertices_files_schema(root["vertex_mappings"], schema,
-                                     data_location, load_config.scheme_,
+                                     load_config.scheme_, data_location,
                                      load_config.vertex_loading_meta_,
                                      load_config.vertex_column_mappings_)) {
       return false;
@@ -537,7 +545,7 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
   if (root["edge_mappings"]) {
     VLOG(10) << "edge_mappings is set";
     if (!parse_edges_files_schema(
-            root["edge_mappings"], schema, data_location, load_config.scheme_,
+            root["edge_mappings"], schema, load_config.scheme_, data_location,
             load_config.edge_loading_meta_, load_config.edge_column_mappings_,
             load_config.edge_src_dst_col_)) {
       return false;
