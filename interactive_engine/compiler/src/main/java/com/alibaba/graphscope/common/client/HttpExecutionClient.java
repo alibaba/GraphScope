@@ -73,7 +73,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                             .headers(CONTENT_TYPE, TEXT_PLAIN)
                             .POST(
                                     HttpRequest.BodyPublishers.ofByteArray(
-                                            (byte[]) request.getRequestPhysical().build()))
+                                            (byte[]) request.getRequestPhysical().getContent()))
                             .build();
             CompletableFuture<HttpResponse<byte[]>> responseFuture =
                     httpClient

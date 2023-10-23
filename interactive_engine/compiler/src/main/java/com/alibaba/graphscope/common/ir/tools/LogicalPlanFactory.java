@@ -14,23 +14,10 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.runtime;
+package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.common.store.IrMeta;
 
-/**
- * build physical plan from logical plan
- */
-public abstract class PhysicalBuilder implements AutoCloseable {
-    protected final LogicalPlan logicalPlan;
-
-    protected PhysicalBuilder(LogicalPlan logicalPlan) {
-        this.logicalPlan = logicalPlan;
-    }
-
-    /**
-     * build physical plan
-     * @return
-     */
-    public abstract PhysicalPlan build();
+public interface LogicalPlanFactory {
+    LogicalPlan create(GraphBuilder builder, IrMeta irMeta, String query);
 }
