@@ -80,4 +80,7 @@ ldbc_test:
 pattern_test:
 	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.pattern.IrPatternTest
 
+cypher_test:
+	mvn test -Dtest=com.alibaba.graphscope.cypher.integration.movie.MovieTest
+
 .PHONY: build run

@@ -137,29 +137,29 @@ public class MovieQueries {
                 "MATCH (tom:Person {name:\"Tom Hanks\"})-[:ACTED_IN]->(m)<-[:ACTED_IN]-(coActors)\n"
                     + "RETURN m.title AS movieTitle, m.released AS releasedYear, coActors.name AS"
                     + " coActorName\n"
-                    + "ORDER BY releasedYear DESC, movieTitle ASC LIMIT 10;";
+                    + "ORDER BY releasedYear DESC, movieTitle ASC, coActorName ASC LIMIT 10;";
         List<String> expected =
                 Arrays.asList(
+                        "Record<{movieTitle: \"Cloud Atlas\", releasedYear: 2012, coActorName:"
+                                + " \"Halle Berry\"}>",
                         "Record<{movieTitle: \"Cloud Atlas\", releasedYear: 2012, coActorName:"
                                 + " \"Hugo Weaving\"}>",
                         "Record<{movieTitle: \"Cloud Atlas\", releasedYear: 2012, coActorName:"
                                 + " \"Jim Broadbent\"}>",
                         "Record<{movieTitle: \"Cloud Atlas\", releasedYear: 2012, coActorName:"
-                                + " \"Halle Berry\"}>",
-                        "Record<{movieTitle: \"Cloud Atlas\", releasedYear: 2012, coActorName:"
                                 + " \"Tom Hanks\"}>",
                         "Record<{movieTitle: \"Charlie Wilson's War\", releasedYear: 2007,"
                                 + " coActorName: \"Julia Roberts\"}>",
                         "Record<{movieTitle: \"Charlie Wilson's War\", releasedYear: 2007,"
-                                + " coActorName: \"Tom Hanks\"}>",
-                        "Record<{movieTitle: \"Charlie Wilson's War\", releasedYear: 2007,"
                                 + " coActorName: \"Philip Seymour Hoffman\"}>",
-                        "Record<{movieTitle: \"The Da Vinci Code\", releasedYear: 2006,"
+                        "Record<{movieTitle: \"Charlie Wilson's War\", releasedYear: 2007,"
                                 + " coActorName: \"Tom Hanks\"}>",
+                        "Record<{movieTitle: \"The Da Vinci Code\", releasedYear: 2006,"
+                                + " coActorName: \"Audrey Tautou\"}>",
                         "Record<{movieTitle: \"The Da Vinci Code\", releasedYear: 2006,"
                                 + " coActorName: \"Ian McKellen\"}>",
                         "Record<{movieTitle: \"The Da Vinci Code\", releasedYear: 2006,"
-                                + " coActorName: \"Audrey Tautou\"}>");
+                                + " coActorName: \"Paul Bettany\"}>");
         return new QueryContext(query, expected);
     }
 

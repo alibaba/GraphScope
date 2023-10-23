@@ -50,16 +50,10 @@ endif ()
 find_package(yaml-cpp REQUIRED)
 include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
 
-#set(yaml-cpp_INCLUDE_DIRS "/usr/local/Cellar/yaml-cpp/0.7.0/include")
-#include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
-#set(YAML_CPP_LIBRARIES "/usr/local/Cellar/yaml-cpp/0.7.0/lib/libyaml-cpp.0.7.0.dylib")
-
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
-message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../storages/rt_mutable_graph)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/property)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

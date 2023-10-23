@@ -67,7 +67,7 @@ public class SimpleMatchQueries {
 
     public static QueryContext get_simple_match_query_6_test() {
         String query =
-                "MATCH(a: PERSON) where a.id = 933 return a.firstName AS firstName, a.lastName as"
+                "MATCH(a: PERSON) where a.id = 933L return a.firstName AS firstName, a.lastName as"
                         + " lastName;";
         List<String> expected =
                 Arrays.asList("Record<{firstName: \"Mahinda\", lastName: \"Perera\"}>");

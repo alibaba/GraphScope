@@ -96,9 +96,10 @@ class Scan {
   /// @param v_label_id
   /// @param oid
   /// @return
+  template <typename OID_T>
   static vertex_set_t ScanVertexWithOid(const GRAPH_INTERFACE& graph,
                                         const label_id_t& v_label_id,
-                                        int64_t oid) {
+                                        OID_T oid) {
     std::vector<vertex_id_t> gids;
     vertex_id_t vid;
     if (graph.ScanVerticesWithOid(v_label_id, oid, vid)) {
@@ -112,10 +113,10 @@ class Scan {
   /// @param v_label_ids
   /// @param oid
   /// @return
-  template <size_t num_labels>
+  template <typename OID_T, size_t num_labels>
   static auto ScanVertexWithOid(
       const GRAPH_INTERFACE& graph,
-      const std::array<label_id_t, num_labels>& v_label_ids, int64_t oid) {
+      const std::array<label_id_t, num_labels>& v_label_ids, OID_T oid) {
     std::vector<vertex_id_t> gids;
     std::vector<label_id_t> labels_vec;
     std::vector<grape::Bitset> bitsets;
