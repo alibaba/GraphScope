@@ -50,14 +50,14 @@ public class MovieQueries {
                 Arrays.asList(
                         "Record<{personName: \"Aaron Sorkin\"}>",
                         "Record<{personName: \"Al Pacino\"}>",
-                        "Record<{personName: \"Angela Scope\"}>",
                         "Record<{personName: \"Annabella Sciorra\"}>",
                         "Record<{personName: \"Anthony Edwards\"}>",
                         "Record<{personName: \"Audrey Tautou\"}>",
                         "Record<{personName: \"Ben Miles\"}>",
                         "Record<{personName: \"Bill Paxton\"}>",
                         "Record<{personName: \"Bill Pullman\"}>",
-                        "Record<{personName: \"Billy Crystal\"}>");
+                        "Record<{personName: \"Billy Crystal\"}>",
+                        "Record<{personName: \"Bonnie Hunt\"}>");
         return new QueryContext(query, expected);
     }
 
