@@ -416,6 +416,8 @@ class SingleLabelEdgeSetBuilder {
     vec_.push_back(std::get<1>(tuple));
   }
 
+  void Insert(const ele_tuple_t& tuple) { vec_.push_back(tuple); }
+
   result_t Build() {
     return result_t(std::move(vec_), std::move(label_triplet_), prop_names_,
                     direction_);

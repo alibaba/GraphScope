@@ -1,7 +1,8 @@
 {
   "vertex_table_to_type": {
     "Movie.csv": "Movie",
-    "Person.csv": "Person"
+    "Person.csv": "Person",
+    "User.csv": "User"
   },
   "edge_table_to_type": {
     "ACTED_IN.csv": {
@@ -16,12 +17,12 @@
     },
     "REVIEWED.csv": {
       "etype": "REVIEW",
-      "src_vertex_type": "Person",
+      "src_vertex_type": "User",
       "dst_vertex_type": "Movie"
     },
     "FOLLOWS.csv": {
       "etype": "FOLLOWS",
-      "src_vertex_type": "Person",
+      "src_vertex_type": "User",
       "dst_vertex_type": "Person"
     },
     "WROTE.csv": {
@@ -37,7 +38,8 @@
   },
   "vertex_type_to_id": {
     "Movie": 0,
-    "Person": 1
+    "Person": 1,
+    "User": 2
   },
   "edge_type_to_id": {
     "ACTED_IN": 0,
@@ -73,6 +75,23 @@
       ]
     ],
     "Person": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "born",
+        "Integer",
+        false
+      ],
+      [
+        "name",
+        "String",
+        false
+      ]
+    ],
+    "User": [
       [
         "id",
         "ID",
