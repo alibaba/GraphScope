@@ -510,7 +510,7 @@ class SinkOp {
     }
   }
 
-  // sink collection of pod, expect for LabelKey type
+  // sink collection of pod type
   template <size_t Ind, size_t act_tag_id, typename T,
             typename std::enable_if<
                 (!gs::is_vector<T>::value) && (!gs::is_tuple<T>::value) &&
