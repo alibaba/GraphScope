@@ -42,13 +42,10 @@ class UnTypedEdgeSetIter {
   UnTypedEdgeSetIter(const std::vector<vid_t>& src_v,
                      std::vector<std::vector<edge_iter_t>>&& adj_lists,
                      size_t ind)
-      : dummy_label_triplet_({0, 0, 0}),
-        dummy_prop_names_({}),
-        src_vertices_(src_v),
+      : src_vertices_(src_v),
         adj_lists_(std::move(adj_lists)),
         vid_ind_(ind),
-        iter_ind_(0),
-        cur_iter_(dummy_label_triplet_, nullptr, dummy_prop_names_) {
+        iter_ind_(0) {
     LOG(INFO) << "UnTypedEdgeSetIter init,size: " << adj_lists_.size()
               << ", vertices size: " << src_vertices_.size();
     if (vid_ind_ != src_vertices_.size()) {
@@ -81,7 +78,7 @@ class UnTypedEdgeSetIter {
   inline label_t GetSrcLabel() const { return cur_iter_.GetSrcLabel(); }
 
   inline Any GetData() const { return cur_iter_.GetData(); }
-  inline std::vector<std::string> GetPropNames() const {
+  inline const std::vector<std::string>& GetPropNames() const {
     return cur_iter_.GetPropNames();
   }
 
@@ -145,9 +142,6 @@ class UnTypedEdgeSetIter {
       iter_ind_ = 0;
     }
   }
-  // dummy data structures to init a invalid iter
-  std::array<LabelT, 3> dummy_label_triplet_;
-  std::vector<std::string> dummy_prop_names_;
 
   size_t vid_ind_, iter_ind_;
   edge_iter_t cur_iter_;
