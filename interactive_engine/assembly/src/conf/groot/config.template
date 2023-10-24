@@ -9,7 +9,7 @@ frontend.node.count=1
 ingestor.node.count=2
 coordinator.node.count=1
 ingestor.queue.count=2
-partition.count=8
+partition.count=1
 engine.type=gaia
 discovery.mode=zookeeper
 
@@ -21,6 +21,7 @@ ingestor.sender.buffer.size=128
 snapshot.increase.interval.ms=1000
 offsets.persist.interval.ms=3000
 log.recycle.enable=true
+file.meta.store.path=./meta
 
 ## Store Config
 store.data.path=./data
@@ -28,10 +29,10 @@ store.write.thread.count=1
 
 ## Zk Config
 zk.base.path=/graphscope/groot
-zk.connect.string=graph_env:2181
+zk.connect.string=localhost:2181
 
 ## Kafka Config
-kafka.servers=graph_env:9092
+kafka.servers=localhost:9092
 kafka.topic=groot
 
 ## Frontend Config
@@ -41,10 +42,6 @@ gremlin.server.port=12312
 backup.enable=false
 store.backup.thread.count=1
 
-executor.worker.per.process=2
-executor.query.thread.count=2
-executor.query.manager.thread.count=2
-executor.query.store.thread.count=2
 log4rs.config=LOG4RS_CONFIG
 
 dns.name.prefix.frontend=localhost
@@ -52,10 +49,13 @@ dns.name.prefix.ingestor=localhost
 dns.name.prefix.coordinator=localhost
 dns.name.prefix.store=localhost
 
-# rpc.port=55555
-# executor.graph.port=55556
-# executor.query.port=55557
-# executor.engine.port=55558
 gaia.enable=true
 neo4j.bolt.server.disabled=true
 
+pegasus.worker.num=2
+pegasus.timeout=240000
+pegasus.batch.size=1024
+pegasus.output.capacity=16
+pegasus.hosts=localhost:8080
+
+kafka.test.cluster.enable=true

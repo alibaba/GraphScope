@@ -37,10 +37,10 @@ class InsertTransaction {
 
   ~InsertTransaction();
 
-  bool AddVertex(label_t label, oid_t id, const std::vector<Any>& props);
+  bool AddVertex(label_t label, const Any& id, const std::vector<Any>& props);
 
-  bool AddEdge(label_t src_label, oid_t src, label_t dst_label, oid_t dst,
-               label_t edge_label, const Any& prop);
+  bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
+               const Any& dst, label_t edge_label, const Any& prop);
 
   void Commit();
 
@@ -55,11 +55,12 @@ class InsertTransaction {
   void clear();
 
   static bool get_vertex_with_retries(MutablePropertyFragment& graph,
-                                      label_t label, oid_t oid, vid_t& lid);
+                                      label_t label, const Any& oid,
+                                      vid_t& lid);
 
   grape::InArchive arc_;
 
-  std::set<std::pair<label_t, oid_t>> added_vertices_;
+  std::set<std::pair<label_t, Any>> added_vertices_;
 
   MutablePropertyFragment& graph_;
   ArenaAllocator& alloc_;

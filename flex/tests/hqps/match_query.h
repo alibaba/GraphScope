@@ -55,7 +55,6 @@ struct Query5expr1 {
 class MatchQuery : public HqpsAppBase<gs::MutableCSRInterface> {
  public:
   using GRAPH_INTERFACE = gs::MutableCSRInterface;
-  using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
@@ -116,7 +115,7 @@ class MatchQuery : public HqpsAppBase<gs::MutableCSRInterface> {
       VLOG(10) << gs::to_string(ele);
     }
 
-    return Engine::Sink(ctx3, std::array<int32_t, 2>{0, 1});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 2>{0, 1});
   }
 };
 
@@ -152,7 +151,7 @@ class MatchQuery1 : public HqpsAppBase<gs::MutableCSRInterface> {
       VLOG(10) << gs::to_string(iter.GetAllElement());
     }
 
-    return Engine::Sink(ctx3, std::array<int32_t, 1>{0});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{0});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -208,7 +207,7 @@ class MatchQuery2 : public HqpsAppBase<gs::MutableCSRInterface> {
       auto ele = iter.GetAllElement();
       LOG(INFO) << gs::to_string(ele);
     }
-    return Engine::Sink(ctx3, std::array<int32_t, 1>{3});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -276,7 +275,7 @@ class MatchQuery3 : public HqpsAppBase<gs::MutableCSRInterface> {
 
     auto ctx6 = Engine::GroupByWithoutKey(graph, std::move(ctx4),
                                           std::tuple{std::move(agg_func4)});
-    return Engine::Sink(ctx6, std::array<int32_t, 1>{2});
+    return Engine::Sink(graph, ctx6, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -371,7 +370,7 @@ class MatchQuery4 : public HqpsAppBase<gs::MutableCSRInterface> {
 
     auto ctx3 = Engine::GroupByWithoutKey(graph, std::move(ctx2),
                                           std::tuple{std::move(agg_func2)});
-    return Engine::Sink(ctx3, std::array<int32_t, 1>{3});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{3});
   }
 
   // Wrapper query function for query class
@@ -421,7 +420,7 @@ class MatchQuery5 : public HqpsAppBase<gs::MutableCSRInterface> {
     for (auto iter : ctx3) {
       VLOG(10) << "ctx3: " << gs::to_string(iter.GetAllElement());
     }
-    return Engine::Sink(ctx3, std::array<int32_t, 1>{2});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -465,7 +464,7 @@ class MatchQuery7 : public HqpsAppBase<gs::MutableCSRInterface> {
     auto ctx5 = Engine::Sort(
         graph, std::move(ctx4), gs::Range(0, 10),
         std::tuple{gs::OrderingPropPair<gs::SortOrder::DESC, 0, int32_t>("")});
-    return Engine::Sink(ctx5, std::array<int32_t, 1>{3});
+    return Engine::Sink(graph, ctx5, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -508,7 +507,7 @@ class MatchQuery9 : public HqpsAppBase<gs::MutableCSRInterface> {
     auto ctx4 = Engine::Sort(
         graph, std::move(ctx3), gs::Range(0, 10),
         std::tuple{gs::OrderingPropPair<gs::SortOrder::ASC, 0, int64_t>("")});
-    return Engine::Sink(ctx4, std::array<int32_t, 1>{3});
+    return Engine::Sink(graph, ctx4, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -612,7 +611,7 @@ class MatchQuery10 : public HqpsAppBase<gs::MutableCSRInterface> {
                        gs::PropertySelector<std::string_view>("lastName")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
                        gs::PropertySelector<int64_t>("id"))});
-    return Engine::Sink(ctx7, std::array<int32_t, 4>{4, 5, 6, 7});
+    return Engine::Sink(graph, ctx7, std::array<int32_t, 4>{4, 5, 6, 7});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -732,7 +731,7 @@ class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
                        gs::PropertySelector<LabelKey>("label")),
                    gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
                        gs::PropertySelector<LabelKey>("label"))});
-    return Engine::Sink(ctx4, std::array<int32_t, 2>{0, 1});
+    return Engine::Sink(graph, ctx4, std::array<int32_t, 2>{0, 1});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
@@ -741,30 +740,6 @@ class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
 
     return Query(graph);
   }
-};
-
-struct MatchQuery12Expr0 {
- public:
-  using result_t = bool;
-  MatchQuery12Expr0() {}
-
-  inline auto operator()(Date var0) const {
-    return gs::DateTimeExtractor<Interval::MONTH>::extract(var0) == 7;
-  }
-
- private:
-};
-
-struct MatchQuery12Expr1 {
- public:
-  using result_t = int64_t;
-  MatchQuery12Expr1() {}
-
-  inline auto operator()(Date var1) const {
-    return gs::DateTimeExtractor<Interval::MONTH>::extract(var1);
-  }
-
- private:
 };
 
 class MatchQuery12 : public HqpsAppBase<gs::MutableCSRInterface> {
@@ -780,8 +755,60 @@ class MatchQuery12 : public HqpsAppBase<gs::MutableCSRInterface> {
     auto ctx1 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx0),
         std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+            gs::PropertySelector<grape::EmptyType>(""))});
+    auto ctx2 = Engine::Limit(std::move(ctx1), 0, 5);
+    auto res = Engine::Sink(graph, ctx2, std::array<int32_t, 1>{0});
+    LOG(INFO) << "res: " << res.DebugString();
+    return res;
+  }
+  // Wrapper query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
+                                   Decoder& decoder) const override {
+    // decoding params from decoder, and call real query func
+
+    return Query(graph);
+  }
+};
+
+struct MatchQuery13Expr0 {
+ public:
+  using result_t = bool;
+  MatchQuery13Expr0() {}
+
+  inline auto operator()(Date var0) const {
+    return gs::DateTimeExtractor<Interval::MONTH>::extract(var0) == 7;
+  }
+
+ private:
+};
+
+struct MatchQuery13Expr1 {
+ public:
+  using result_t = int64_t;
+  MatchQuery13Expr1() {}
+
+  inline auto operator()(Date var1) const {
+    return gs::DateTimeExtractor<Interval::MONTH>::extract(var1);
+  }
+
+ private:
+};
+
+class MatchQuery13 : public HqpsAppBase<gs::MutableCSRInterface> {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  // Query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, 1, Filter<TruePredicate>());
+
+    auto ctx1 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx0),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
             gs::PropertySelector<Date>("birthday"))});
-    auto expr0 = gs::make_filter(MatchQuery12Expr0(),
+    auto expr0 = gs::make_filter(MatchQuery13Expr0(),
                                  gs::PropertySelector<Date>("None"));
     auto ctx2 = Engine::template Select<INPUT_COL_ID(0)>(graph, std::move(ctx1),
                                                          std::move(expr0));
@@ -789,8 +816,8 @@ class MatchQuery12 : public HqpsAppBase<gs::MutableCSRInterface> {
     auto ctx3 = Engine::Project<PROJ_TO_NEW>(
         graph, std::move(ctx2),
         std::tuple{gs::make_mapper_with_expr<0>(
-            MatchQuery12Expr1(), gs::PropertySelector<Date>("None"))});
-    return Engine::Sink(ctx3, std::array<int32_t, 1>{2});
+            MatchQuery13Expr1(), gs::PropertySelector<Date>("None"))});
+    return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
   results::CollectiveResults Query(const gs::MutableCSRInterface& graph,

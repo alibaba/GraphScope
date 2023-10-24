@@ -161,12 +161,12 @@ class SyncEngine : public BaseEngine {
     return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
 
-  template <AppendOpt append_opt, typename LabelT,
+  template <AppendOpt append_opt, typename OID_T, typename LabelT,
             typename std::enable_if<(append_opt == AppendOpt::Persist)>::type* =
                 nullptr,
             typename COL_T = default_vertex_set_t>
   static Context<COL_T, 0, 0, grape::EmptyType> ScanVertexWithOid(
-      const GRAPH_INTERFACE& graph, LabelT v_label, int64_t oid) {
+      const GRAPH_INTERFACE& graph, LabelT v_label, OID_T oid) {
     auto v_set_tuple =
         Scan<GRAPH_INTERFACE>::ScanVertexWithOid(graph, v_label, oid);
 
@@ -174,26 +174,28 @@ class SyncEngine : public BaseEngine {
   }
 
   template <
-      AppendOpt append_opt, typename LabelT,
+      AppendOpt append_opt, typename OID_T, typename LabelT,
       typename std::enable_if<(append_opt == AppendOpt::Temp)>::type* = nullptr,
       typename COL_T = default_vertex_set_t>
   static Context<COL_T, -1, 0, grape::EmptyType> ScanVertexWithOid(
-      const GRAPH_INTERFACE& graph, LabelT v_label, int64_t oid) {
-    auto v_set_tuple =
-        Scan<GRAPH_INTERFACE>::ScanVertexWithOid(graph, v_label, oid);
+      const GRAPH_INTERFACE& graph, LabelT v_label, OID_T oid) {
+    auto v_set_tuple = Scan<GRAPH_INTERFACE>::template ScanVertexWithOid<OID_T>(
+        graph, v_label, oid);
 
     return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
 
-  template <AppendOpt append_opt, typename LabelT, size_t num_labels,
+  template <AppendOpt append_opt, typename OID_T, typename LabelT,
+            size_t num_labels,
             typename std::enable_if<(append_opt == AppendOpt::Persist)>::type* =
                 nullptr,
             typename COL_T = GeneralVertexSet<vertex_id_t, LabelT>>
   static Context<COL_T, 0, 0, grape::EmptyType> ScanVertexWithOid(
       const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels> v_labels,
-      int64_t oid) {
+      OID_T oid) {
     auto v_set_tuple =
-        Scan<GRAPH_INTERFACE>::ScanVertexWithOid(graph, v_labels, oid);
+        Scan<GRAPH_INTERFACE>::template ScanVertexWithOid<OID_T, num_labels>(
+            graph, v_labels, oid);
 
     return Context<COL_T, 0, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
@@ -798,6 +800,32 @@ class SyncEngine : public BaseEngine {
     VLOG(10) << "[Group] with fold opt";
     return GroupByOp<GRAPH_INTERFACE>::GroupByWithoutKeyImpl(
         graph, std::move(ctx), std::move(fold_opt));
+  }
+
+  //--------- Sink the context to output--------
+  template <typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV>
+  static auto Sink(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx,
+      std::array<int32_t,
+                 Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>::col_num>
+          tag_ids) {
+    return SinkOp<GRAPH_INTERFACE>::Sink(graph, ctx, tag_ids);
+  }
+
+  //---------------Sink without giving the tags explicitly.----------------
+  template <typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV>
+  static auto Sink(const GRAPH_INTERFACE& graph,
+                   Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx) {
+    std::array<int32_t,
+               Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>::col_num>
+        tag_ids;
+    for (int i = 0; i < tag_ids.size(); i++) {
+      tag_ids[i] = i;
+    }
+    return Sink(graph, ctx, tag_ids);
   }
 
   //////////////////////////////////////Shortest Path/////////////////////////

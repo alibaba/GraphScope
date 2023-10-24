@@ -65,8 +65,18 @@ std::shared_ptr<ColumnBase> GraphDBSession::get_vertex_property_column(
 
 std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
     uint8_t label) const {
-  return std::make_shared<TypedRefColumn<oid_t>>(
-      db_.graph().lf_indexers_[label].get_keys(), StorageStrategy::kMem);
+  if (db_.graph().lf_indexers_[label].get_type() == PropertyType::kInt64) {
+    return std::make_shared<TypedRefColumn<int64_t>>(
+        dynamic_cast<const TypedColumn<int64_t>&>(
+            db_.graph().lf_indexers_[label].get_keys()));
+  } else if (db_.graph().lf_indexers_[label].get_type() ==
+             PropertyType::kString) {
+    return std::make_shared<TypedRefColumn<std::string_view>>(
+        dynamic_cast<const TypedColumn<std::string_view>&>(
+            db_.graph().lf_indexers_[label].get_keys()));
+  } else {
+    return nullptr;
+  }
 }
 
 #define likely(x) __builtin_expect(!!(x), 1)

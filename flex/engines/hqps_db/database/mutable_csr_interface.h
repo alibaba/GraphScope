@@ -66,7 +66,6 @@ class MutableCSRInterface {
   const GraphDBSession& GetDBSession() const { return db_session_; }
 
   using vertex_id_t = vid_t;
-  using outer_vertex_id_t = oid_t;
   using label_id_t = uint8_t;
 
   using nbr_list_array_t = mutable_csr_graph_impl::NbrListArray;
@@ -106,6 +105,8 @@ class MutableCSRInterface {
     LOG(INFO) << "Creating MutableCSRInterface";
     LOG(INFO) << "person label num: " << db_session_.graph().vertex_num(1);
   }
+
+  const Schema& schema() const { return db_session_.schema(); }
 
   /**
    * @brief Get the Vertex Label id
@@ -182,10 +183,11 @@ class MutableCSRInterface {
    * @param label
    * @param oid
    */
-  bool ScanVerticesWithOid(const std::string& label, outer_vertex_id_t oid,
-                           vertex_id_t& vid) const {
+  template <typename OID_T>
+  vertex_id_t ScanVerticesWithOid(const std::string& label, OID_T oid,
+                                  vertex_id_t& vid) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
-    return db_session_.graph().get_lid(label_id, oid, vid);
+    return db_session_.graph().get_lid(label_id, Any::From(oid), vid);
   }
 
   /**
@@ -194,9 +196,10 @@ class MutableCSRInterface {
    * @param label_id
    * @param oid
    */
-  bool ScanVerticesWithOid(const label_id_t& label_id, outer_vertex_id_t oid,
-                           vertex_id_t& vid) const {
-    return db_session_.graph().get_lid(label_id, oid, vid);
+  template <typename OID_T>
+  vertex_id_t ScanVerticesWithOid(const label_id_t& label_id, OID_T oid,
+                                  vertex_id_t& vid) const {
+    return db_session_.graph().get_lid(label_id, Any::From(oid), vid);
   }
 
   /**
@@ -237,7 +240,7 @@ class MutableCSRInterface {
     std::vector<std::tuple<T...>> props(oids.size());
 
     for (size_t i = 0; i < oids.size(); ++i) {
-      db_session_.graph().get_lid(label_id, oids[i], vids[i]);
+      db_session_.graph().get_lid(label_id, Any::From(oids[i]), vids[i]);
       get_tuple_from_column_tuple(vids[i], props[i], columns);
     }
 
@@ -802,6 +805,16 @@ class MutableCSRInterface {
       }
     }
     return column;
+  }
+
+  std::shared_ptr<RefColumnBase> GetRefColumnBase(
+      const label_t& label_id, const std::string& prop_name) const {
+    if (prop_name == "id" || prop_name == "ID" || prop_name == "Id") {
+      return db_session_.get_vertex_id_column(label_id);
+    } else {
+      return create_ref_column(
+          db_session_.get_vertex_property_column(label_id, prop_name));
+    }
   }
 
  private:

@@ -20,6 +20,9 @@ vertex_mappings:
   - type_name: Person  # must align with the schema
     inputs:
       - Person.csv
+  - type_name: User
+    inputs:
+      - User.csv
   - type_name: Movie
     inputs:
       - Movie.csv
@@ -28,70 +31,30 @@ edge_mappings:
       edge: ACTED_IN
       source_vertex:  Person
       destination_vertex:  Movie
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: id
     inputs:
       - ACTED_IN.csv
   - type_triplet:
       edge: DIRECTED
       source_vertex:  Person
       destination_vertex:  Movie
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: id
     inputs:
       - DIRECTED.csv
   - type_triplet:
       edge: FOLLOWS
-      source_vertex:  Person
+      source_vertex:  User
       destination_vertex:  Person
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: id
     inputs:
       - FOLLOWS.csv
   - type_triplet:
       edge: PRODUCED
       source_vertex:  Person
       destination_vertex:  Movie
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: id
     inputs:
       - PRODUCED.csv
   - type_triplet:
       edge: REVIEW
-      source_vertex:  Person
+      source_vertex:  User
       destination_vertex:  Movie
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: id
     column_mappings:
       - column:
           index: 3
@@ -103,13 +66,5 @@ edge_mappings:
       edge: WROTE
       source_vertex:  Person
       destination_vertex:  Movie
-    source_vertex_mappings:
-      - column:
-          index: 0
-          name: id
-    destination_vertex_mappings:
-      - column:
-          index: 1
-          name: id
     inputs:
       - WROTE.csv
