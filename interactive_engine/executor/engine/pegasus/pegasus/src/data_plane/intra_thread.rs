@@ -82,7 +82,7 @@ impl<T: Send> Push<T> for ThreadPush<T> {
 impl<T> Drop for ThreadPush<T> {
     fn drop(&mut self) {
         if Arc::strong_count(&self.exhaust) == 2 && !self.exhaust.load(Ordering::SeqCst) {
-            warn_worker!("{:?}: drop 'ThreadPush' without close;", self.id);
+            trace_worker!("{:?}: drop 'ThreadPush' without close;", self.id);
             // if cfg!(debug_assertions) {
             //     let bt = backtrace::Backtrace::new();
             //     error_worker!("caused by:\n{:?}", bt);
