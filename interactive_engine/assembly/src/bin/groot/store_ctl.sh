@@ -2,7 +2,7 @@
 #
 # groot command tool
 
-set -xeo pipefail
+set -eo pipefail
 
 usage() {
 	cat <<END
