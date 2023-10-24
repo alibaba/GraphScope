@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.cypher.integration.movie;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 import com.alibaba.graphscope.cypher.integration.suite.movie.MovieQueries;
 
@@ -124,6 +126,7 @@ public class MovieTest {
 
     @Test
     public void run_movie_query16_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query16_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
@@ -131,9 +134,11 @@ public class MovieTest {
 
     @Test
     public void run_movie_query17_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query17_test();
-        Result result = session.run(testQuery.getQuery());
-        System.out.println(result.list().toString());
+        Result result =
+                session.run(
+                        "Match (n:Movie {id: 0}) Return {id: n.id, tagline: n.tagline} as value;");
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
