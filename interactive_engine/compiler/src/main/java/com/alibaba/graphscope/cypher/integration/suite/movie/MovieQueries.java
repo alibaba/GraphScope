@@ -301,4 +301,18 @@ public class MovieQueries {
                             + " \"Tom Cruise\"}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_movie_query16_test() {
+        String query = "Match (n:Movie {id: 0}) Return [n.id, n.tagline] as value;";
+        List<String> expected =
+                Arrays.asList("Record<{value: [0, \"Welcome to the Real World\"]}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query17_test() {
+        String query = "Match (n:Movie {id: 0}) Return {id: n.id, tagline: n.tagline} as value;";
+        List<String> expected =
+                Arrays.asList("Record<{value: {tagline: \"Welcome to the Real World\", id: 0}}>");
+        return new QueryContext(query, expected);
+    }
 }

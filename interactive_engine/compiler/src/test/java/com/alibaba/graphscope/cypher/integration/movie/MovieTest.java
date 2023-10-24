@@ -122,6 +122,21 @@ public class MovieTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_movie_query16_test() {
+        QueryContext testQuery = MovieQueries.get_movie_query16_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query17_test() {
+        QueryContext testQuery = MovieQueries.get_movie_query17_test();
+        Result result = session.run(testQuery.getQuery());
+        System.out.println(result.list().toString());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     @AfterClass
     public static void afterClass() {
         if (session != null) {
