@@ -196,7 +196,7 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
     value->set_f64(any.value.db);
     break;
   default:
-    LOG(FATAL) << "unknown type";
+    LOG(WARNING) << "Unsupported type: " << any.type;
     break;
   }
 }
