@@ -139,4 +139,16 @@ public class SimpleMatchQueries {
                 Arrays.asList("Record<{vertexLabelName: \"PERSON\", edgeLabelName: \"KNOWS\"}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_11_test() {
+        String query = "Match( p: PLACE) return p ORDER BY p.id LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{p: node<0>}>",
+                        "Record<{p: node<1>}>",
+                        "Record<{p: node<2>}>",
+                        "Record<{p: node<3>}>",
+                        "Record<{p: node<4>}>");
+        return new QueryContext(query, expected);
+    }
 }

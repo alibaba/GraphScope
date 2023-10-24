@@ -33,14 +33,17 @@ template <typename LabelT>
 class EdgeIter {
  public:
   using label_id_t = LabelT;
-  EdgeIter() {}
-  EdgeIter(const std::array<LabelT, 3>& label_triplet)
-      : label_triplet_(label_triplet) {}
+  EdgeIter() : label_triplet_(), ptr1_(nullptr), prop_names_(nullptr) {}
+
   EdgeIter(const EdgeIter& other)
-      : label_triplet_(other.label_triplet_), ptr1_(other.ptr1_) {}
+      : label_triplet_(other.label_triplet_),
+        ptr1_(other.ptr1_),
+        prop_names_(other.prop_names_) {}
   EdgeIter(const std::array<LabelT, 3>& label_triplet,
-           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr)
-      : label_triplet_(label_triplet), ptr1_(ptr) {}
+           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr,
+           const std::vector<std::string>* prop_names)
+      : label_triplet_(label_triplet), ptr1_(ptr), prop_names_(prop_names) {}
+
   inline void Next() const { ptr1_->next(); }
   inline vid_t GetDstId() const { return ptr1_->get_neighbor(); }
 
@@ -50,6 +53,15 @@ class EdgeIter {
 
   inline Any GetData() const { return ptr1_->get_data(); }
   inline bool IsValid() const { return ptr1_ && ptr1_->is_valid(); }
+
+  const std::vector<std::string>& GetPropNames() const { return *prop_names_; }
+
+  EdgeIter<LabelT>& operator=(const EdgeIter<LabelT>& rhs) {
+    this->ptr1_ = rhs.ptr1_;
+    this->label_triplet_ = rhs.label_triplet_;
+    this->prop_names_ = rhs.prop_names_;
+    return *this;
+  }
 
   size_t Size() const {
     if (ptr1_) {
@@ -61,6 +73,7 @@ class EdgeIter {
  private:
   std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
   std::array<LabelT, 3> label_triplet_;
+  const std::vector<std::string>* prop_names_;
 };
 
 // A subGraph is a view of a simple graph, with one src label and one dst label.
@@ -77,9 +90,9 @@ class SubGraph {
 
   inline iterator get_edges(VID_T vid) const {
     if (first_) {
-      return iterator(label_triplet_, first_->edge_iter(vid));
+      return iterator(label_triplet_, first_->edge_iter(vid), &prop_names_);
     }
-    return iterator(label_triplet_, nullptr);
+    return iterator(label_triplet_, nullptr, &prop_names_);
   }
 
   label_id_t GetSrcLabel() const { return label_triplet_[0]; }

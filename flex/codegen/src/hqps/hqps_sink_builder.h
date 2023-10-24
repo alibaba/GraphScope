@@ -31,7 +31,7 @@ limitations under the License.
 namespace gs {
 
 static constexpr const char* SINK_OP_TEMPLATE_STR =
-    "return Engine::Sink(%1%, std::array<int32_t, %2%>{%3%});";
+    "return Engine::Sink(%1%, %2%, std::array<int32_t, %3%>{%4%});";
 class SinkOpBuilder {
  public:
   SinkOpBuilder(BuildingContext& ctx) : ctx_(ctx) {}
@@ -56,7 +56,8 @@ class SinkOpBuilder {
       tag_ids_str = ss.str();
     }
     boost::format formater(SINK_OP_TEMPLATE_STR);
-    formater % prev_ctx_name % tag_ind_2_tag_ids.size() % tag_ids_str;
+    formater % ctx_.GraphVar() % prev_ctx_name % tag_ind_2_tag_ids.size() %
+        tag_ids_str;
     return formater.str();
   }
 
