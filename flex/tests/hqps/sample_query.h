@@ -25,18 +25,17 @@ namespace gs {
 struct Expression1 {
  public:
   using result_t = bool;
-  Expression1(oid_t oid) : oid_(oid) {}
+  Expression1(int64_t oid) : oid_(oid) {}
 
-  inline bool operator()(oid_t data) const { return oid_ == data; }
+  inline bool operator()(int64_t data) const { return oid_ == data; }
 
  private:
-  oid_t oid_;
+  int64_t oid_;
 };
 
 class SampleQuery : public HqpsAppBase<gs::MutableCSRInterface> {
  public:
   using GRAPH_INTERFACE = gs::MutableCSRInterface;
-  using oid_t = typename GRAPH_INTERFACE::outer_vertex_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
@@ -59,7 +58,7 @@ class SampleQuery : public HqpsAppBase<gs::MutableCSRInterface> {
     using Engine = SyncEngine<GRAPH_INTERFACE>;
 
     auto filter =
-        gs::make_filter(Expression1(id), gs::PropertySelector<oid_t>("id"));
+        gs::make_filter(Expression1(id), gs::PropertySelector<int64_t>("id"));
     auto ctx0 = Engine::template ScanVertex<AppendOpt::Temp>(
         graph, person_label_id, std::move(filter));
 
@@ -76,7 +75,7 @@ class SampleQuery : public HqpsAppBase<gs::MutableCSRInterface> {
 
     gs::OrderingPropPair<gs::SortOrder::DESC, INPUT_COL_ID(-1), int64_t> pair0(
         "creationDate");  // creationDate.
-    gs::OrderingPropPair<gs::SortOrder::ASC, INPUT_COL_ID(-1), oid_t> pair1(
+    gs::OrderingPropPair<gs::SortOrder::ASC, INPUT_COL_ID(-1), int64_t> pair1(
         "id");
     auto ctx4 = Engine::Sort(graph, std::move(ctx3), gs::Range(0, 20),
                              std::tuple{pair0, pair1});
@@ -84,13 +83,13 @@ class SampleQuery : public HqpsAppBase<gs::MutableCSRInterface> {
     // project
     // double t3 = -grape::GetCurrentTime();
     auto mapper1 = gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
-        PropertySelector<oid_t>("id"));
+        PropertySelector<int64_t>("id"));
     auto mapper2 = gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
         PropertySelector<std::string_view>("firstName"));
     auto mapper3 = gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
         PropertySelector<std::string_view>("lastName"));
     auto mapper4 = gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
-        PropertySelector<oid_t>("id"));
+        PropertySelector<int64_t>("id"));
     auto mapper5 = gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
         PropertySelector<std::string_view>("content"));
     auto mapper6 = gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
