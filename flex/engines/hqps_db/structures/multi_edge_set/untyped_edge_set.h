@@ -48,9 +48,7 @@ class UnTypedEdgeSetIter {
         iter_ind_(0) {
     LOG(INFO) << "UnTypedEdgeSetIter init,size: " << adj_lists_.size()
               << ", vertices size: " << src_vertices_.size();
-    if (vid_ind_ == src_vertices_.size()) {
-      cur_iter_ = edge_iter_t();  // invalid
-    } else {
+    if (vid_ind_ != src_vertices_.size()) {
       while (vid_ind_ < src_vertices_.size()) {
         auto& edge_iter_vec = adj_lists_[vid_ind_];
         while (iter_ind_ < edge_iter_vec.size()) {
@@ -80,6 +78,9 @@ class UnTypedEdgeSetIter {
   inline label_t GetSrcLabel() const { return cur_iter_.GetSrcLabel(); }
 
   inline Any GetData() const { return cur_iter_.GetData(); }
+  inline const std::vector<std::string>& GetPropNames() const {
+    return cur_iter_.GetPropNames();
+  }
 
   inline ele_tuple_t GetElement() const {
     return std::make_tuple(GetSrc(), GetDst(), GetData());
