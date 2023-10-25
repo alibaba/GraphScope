@@ -760,18 +760,9 @@ class OperationExecutor:
                 "\n"
             )
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
-<<<<<<< HEAD
+        deseralization_options = json.loads(op.attr[types_pb2.DESERIALIZATION_OPTIONS].s.decode())
         vineyard_endpoint = self._launcher.vineyard_endpoint
         vineyard_ipc_socket = self._launcher.vineyard_socket
-=======
-        deseralization_options = json.loads(op.attr[types_pb2.DESERIALIZATION_OPTIONS].s.decode())
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
->>>>>>> 54ddef33 (Prototype for load_from and write_to)
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
         graph_id = vineyard.io.deserialize(

@@ -696,6 +696,15 @@ def deprecated(msg):
     return decorator
 
 
+def apply_docstring(fn):
+    """Apply the docstring of `fn` to annotated function."""
+
+    def decorator(func):
+        func.__doc__ = fn.__doc__
+        return func
+
+    return decorator
+
 def generate_graphar_info_from_schema(path, schema, graphar_options):
     import copy
 

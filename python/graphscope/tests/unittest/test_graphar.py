@@ -24,7 +24,6 @@ from graphscope import pagerank
 graphar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
 
 
-@pytest.mark.skip(reason="Issue 3162")
 def test_load_from_graphar(graphscope_session):
     # graph_yaml = os.path.join(
     #     graphar_test_repo_dir, "graphar/ldbc_sample/parquet/ldbc_sample.graph.yml"
@@ -40,7 +39,6 @@ def test_load_from_graphar(graphscope_session):
     del g
 
 
-@pytest.mark.skip(reason="Issue 3162")
 def test_save_to_graphar(ldbc_graph):
     graphar_options = {
         "graph_name": "ldbc_sample",
