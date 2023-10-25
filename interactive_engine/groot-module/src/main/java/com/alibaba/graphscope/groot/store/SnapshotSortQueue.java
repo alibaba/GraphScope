@@ -34,15 +34,15 @@ public class SnapshotSortQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(SnapshotSortQueue.class);
 
-    private long queueWaitMs;
-    private int queueCount;
+    private final long queueWaitMs;
+    private final int queueCount;
 
-    private List<BlockingQueue<StoreDataBatch>> innerQueues;
-    private List<StoreDataBatch> queueHeads;
+    private final List<BlockingQueue<StoreDataBatch>> innerQueues;
+    private final List<StoreDataBatch> queueHeads;
 
     private int currentPollQueueIdx;
     private long currentPollSnapshotId;
-    private AtomicInteger size;
+    private final AtomicInteger size;
 
     public SnapshotSortQueue(Configs configs, MetaService metaService) {
         this.currentPollSnapshotId = -1L;

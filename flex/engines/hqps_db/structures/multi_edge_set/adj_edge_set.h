@@ -84,7 +84,8 @@ class AdjEdgeSetIter {
   using index_ele_tuple_t =
       std::tuple<size_t, VID_T, VID_T, std::tuple<EDATA_T...>>;
   AdjEdgeSetIter(const std::vector<VID_T>& vids,
-                 const adj_list_array_t& adj_lists, size_t ind)
+                 const adj_list_array_t& adj_lists, size_t ind,
+                 const std::vector<std::string>& prop_names)
       : vids_(vids), adj_lists_(adj_lists), ind_(ind) {
     if (ind_ == vids_.size()) {
       begin_ = adj_list_iter_t();
@@ -113,6 +114,8 @@ class AdjEdgeSetIter {
   inline const std::tuple<EDATA_T...> GetData() const {
     return begin_.properties();
   }
+
+  const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
   inline ele_tuple_t GetElement() const {
     return std::tuple{GetSrc(), GetDst(), GetData()};
@@ -163,6 +166,7 @@ class AdjEdgeSetIter {
   const adj_list_array_t& adj_lists_;
   size_t ind_;
   adj_list_iter_t begin_, end_;
+  const std::vector<std::string>& prop_names_;
 };
 
 template <typename GI, typename VID_T>
@@ -176,8 +180,10 @@ class AdjEdgeSetIter<GI, VID_T, grape::EmptyType> {
   using ele_tuple_t = std::tuple<VID_T, VID_T, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, VID_T, grape::EmptyType>;
   AdjEdgeSetIter(const std::vector<VID_T>& vids,
-                 const adj_list_array_t& adj_lists, size_t ind)
-      : vids_(vids), adj_lists_(adj_lists), ind_(ind) {
+                 const adj_list_array_t& adj_lists, size_t ind,
+                 const std::vector<std::string>& prop_names)
+      : vids_(vids), adj_lists_(adj_lists), ind_(ind), prop_names_(prop_names) {
+    CHECK(prop_names_.size() == 0);
     if (ind_ == vids_.size()) {
       // begin_ = end_ = nullptr;
       begin_ = adj_list_iter_t();
@@ -224,6 +230,7 @@ class AdjEdgeSetIter<GI, VID_T, grape::EmptyType> {
   inline VID_T GetSrc() const { return vids_[ind_]; }
   inline VID_T GetDst() const { return begin_.neighbor(); }
   inline grape::EmptyType GetData() const { return grape::EmptyType(); }
+  const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
   inline ele_tuple_t GetElement() const {
     return std::tuple{GetSrc(), GetDst(), GetData()};
@@ -255,6 +262,7 @@ class AdjEdgeSetIter<GI, VID_T, grape::EmptyType> {
   const adj_list_array_t& adj_lists_;
   size_t ind_;
   adj_list_iter_t begin_, end_;
+  const std::vector<std::string>& prop_names_;
 };
 
 template <typename GI, typename VID_T, typename LabelT, typename... EDATA_T>
@@ -280,7 +288,7 @@ class AdjEdgeSet {
 
   AdjEdgeSet(std::vector<VID_T>&& vids, adj_list_array_t&& adj_lists,
              LabelT edge_label, LabelT src_label, LabelT dst_label,
-             std::array<LabelT, sizeof...(EDATA_T)> prop_names, Direction dir)
+             std::vector<std::string> prop_names, Direction dir)
       : vids_(std::move(vids)),
         adj_lists_(std::move(adj_lists)),
         edge_label_(edge_label),
@@ -298,9 +306,19 @@ class AdjEdgeSet {
     return builder_t(src_label_, dst_label_, edge_label_, prop_names_, dir_);
   }
 
-  iterator begin() const { return iterator(vids_, adj_lists_, 0); }
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> label_vec(Size());
+    std::fill(label_vec.begin(), label_vec.end(), {edge_label_});
+    return label_vec;
+  }
 
-  iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
+  iterator begin() const { return iterator(vids_, adj_lists_, 0, prop_names_); }
+
+  iterator end() const {
+    return iterator(vids_, adj_lists_, vids_.size(), prop_names_);
+  }
+
+  const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
   template <typename EXPR, size_t num_labels>
   std::pair<RowVertexSet<LabelT, VID_T, grape::EmptyType>, std::vector<size_t>>
@@ -340,7 +358,7 @@ class AdjEdgeSet {
     // TODO :better label vec
     std::vector<int32_t> label_vec(res.size(), 0);
     return flat_t(std::move(res), edge_label_, {src_label_}, dst_label_,
-                  prop_names_, std::move(label_vec));
+                  {prop_names_}, std::move(label_vec));
   }
 
   template <typename... PropT>
@@ -369,7 +387,7 @@ class AdjEdgeSet {
   std::vector<VID_T> vids_;
   LabelT edge_label_, src_label_, dst_label_;
   adj_list_array_t adj_lists_;
-  std::array<LabelT, sizeof...(EDATA_T)> prop_names_;
+  std::vector<std::string> prop_names_;
   Direction dir_;
 };
 
@@ -410,9 +428,17 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
     return builder_t(src_label_, dst_label_, edge_label_, dir_);
   }
 
-  iterator begin() const { return iterator(vids_, adj_lists_, 0); }
+  iterator begin() const { return iterator(vids_, adj_lists_, 0, prop_names_); }
 
-  iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
+  iterator end() const {
+    return iterator(vids_, adj_lists_, vids_.size(), prop_names_);
+  }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> label_vec(Size());
+    std::fill(label_vec.begin(), label_vec.end(), {edge_label_});
+    return label_vec;
+  }
 
   size_t Size() const { return size_; }
 
@@ -477,6 +503,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
   LabelT edge_label_, src_label_, dst_label_;
   adj_list_array_t adj_lists_;
   Direction dir_;
+  std::vector<std::string> prop_names_;
 };
 
 }  // namespace gs

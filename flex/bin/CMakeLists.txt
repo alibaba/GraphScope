@@ -10,6 +10,17 @@ if(Hiactor_FOUND)
                 LIBRARY DESTINATION lib)
 endif()
 
+if(Hiactor_FOUND)
+        include_directories(../engines/http_server)
+        add_executable(rt_bench rt_bench.cc)
+        target_link_libraries(rt_bench flex_utils flex_rt_mutable_graph flex_graph_db flex_server)
+
+        install(TARGETS rt_bench
+                RUNTIME DESTINATION bin
+                ARCHIVE DESTINATION lib
+                LIBRARY DESTINATION lib)
+endif()
+
 add_executable(rt_admin rt_admin.cc)
 target_link_libraries(rt_admin flex_utils flex_rt_mutable_graph flex_graph_db)
 
@@ -26,10 +37,17 @@ install(TARGETS flex_analytical_engine
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 
+add_executable(graph_loader graph_loader.cc)
+target_link_libraries(graph_loader flex_rt_mutable_graph flex_graph_db ${GLOG_LIBRARIES})
+install(TARGETS graph_loader
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)
+
 if(BUILD_HQPS)
         if(Hiactor_FOUND)
                 add_executable(sync_server sync_server.cc)
-                target_link_libraries(sync_server flex_utils flex_graph_db flex_server hqps_plan_proto ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+                target_link_libraries(sync_server flex_utils flex_graph_db flex_server hqps_plan_proto ${GLOG_LIBRARIES})
 
                 install(TARGETS sync_server
                         RUNTIME DESTINATION bin

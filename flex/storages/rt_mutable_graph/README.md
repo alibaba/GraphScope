@@ -72,26 +72,26 @@ schema:
         - id
   edge_types:
     - type_name: knows
-      x_csr_params:
-        incoming_edge_strategy: None
-        outgoing_edge_strategy: Multiple
       vertex_type_pair_relations:
         source_vertex: person
         destination_vertex: person
         relation: MANY_TO_MANY
+        x_csr_params:
+          incoming_edge_strategy: Multiple
+          outgoing_edge_strategy: Multiple
       properties:
         - property_id: 0
           property_name: weight
           property_type:
             primitive_type: DT_DOUBLE
     - type_name: created
-      x_csr_params: 
-        incoming_edge_strategy: None
-        outgoing_edge_strategy: Single
       vertex_type_pair_relations:
         source_vertex: person
         destination_vertex: software
         relation: ONE_TO_MANY
+        x_csr_params: 
+          incoming_edge_strategy: Multiple
+          outgoing_edge_strategy: Single
       properties:
         - property_id: 0
           property_name: weight

@@ -24,9 +24,11 @@ import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.util.Sarg;
 
 import java.util.List;
 
@@ -35,10 +37,12 @@ import java.util.List;
  */
 public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expression> {
     private final boolean isColumnId;
+    private final RexBuilder rexBuilder;
 
-    public RexToProtoConverter(boolean deep, boolean isColumnId) {
+    public RexToProtoConverter(boolean deep, boolean isColumnId, RexBuilder rexBuilder) {
         super(deep);
         this.isColumnId = isColumnId;
+        this.rexBuilder = rexBuilder;
     }
 
     @Override
@@ -106,66 +110,104 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
         Preconditions.checkArgument(
                 operands.size() == 2 && operands.get(0) instanceof RexLiteral,
                 "'EXTRACT' operator has invalid operands " + operands);
-        OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
-        exprBuilder.addOperators(
+        OuterExpression.Expression.Builder builder = OuterExpression.Expression.newBuilder();
+        builder.addOperators(
                 OuterExpression.ExprOpr.newBuilder()
                         .setExtract(
                                 OuterExpression.Extract.newBuilder()
                                         .setInterval(
-                                                Utils.protoInterval((RexLiteral) operands.get(0)))
-                                        .setDataTime(operands.get(1).accept(this)))
+                                                Utils.protoInterval((RexLiteral) operands.get(0))))
                         .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)));
-        return exprBuilder.build();
+        SqlOperator operator = call.getOperator();
+        RexNode operand = operands.get(1);
+        boolean needBrace = needBrace(operator, operand);
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE));
+        }
+        builder.addAllOperators(operand.accept(this).getOperatorsList());
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE));
+        }
+        return builder.build();
     }
 
     private OuterExpression.Expression visitUnaryOperator(RexCall call) {
         SqlOperator operator = call.getOperator();
         RexNode operand = call.getOperands().get(0);
         switch (operator.getKind()) {
-                // convert IS_NULL to unary call: IS_NULL(XX)
-            case IS_NULL:
-                return visitIsNullOperator(operand);
                 // convert IS_NOT_NULL to NOT(IS_NULL(XX))
             case IS_NOT_NULL:
                 return OuterExpression.Expression.newBuilder()
-                        .addOperators(Utils.protoOperator(GraphStdOperatorTable.NOT))
+                        .addOperators(
+                                Utils.protoOperator(GraphStdOperatorTable.NOT).toBuilder()
+                                        .setNodeType(
+                                                Utils.protoIrDataType(call.getType(), isColumnId)))
                         .addOperators(
                                 OuterExpression.ExprOpr.newBuilder()
                                         .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
-                        .addAllOperators(visitIsNullOperator(operand).getOperatorsList())
+                        .addAllOperators(
+                                visitUnaryOperator(
+                                                GraphStdOperatorTable.IS_NULL,
+                                                operand,
+                                                call.getType())
+                                        .getOperatorsList())
                         .addOperators(
                                 OuterExpression.ExprOpr.newBuilder()
                                         .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
                         .build();
+            case IS_NULL:
             case NOT:
             default:
-                return OuterExpression.Expression.newBuilder()
-                        .addOperators(Utils.protoOperator(operator))
-                        .addOperators(
-                                OuterExpression.ExprOpr.newBuilder()
-                                        .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
-                        .addAllOperators(operand.accept(this).getOperatorsList())
-                        .addOperators(
-                                OuterExpression.ExprOpr.newBuilder()
-                                        .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
-                        .build();
+                return visitUnaryOperator(operator, operand, call.getType());
         }
     }
 
-    private OuterExpression.Expression visitIsNullOperator(RexNode operand) {
-        return OuterExpression.Expression.newBuilder()
-                .addOperators(Utils.protoOperator(GraphStdOperatorTable.IS_NULL))
-                .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
-                .addAllOperators(operand.accept(this).getOperatorsList())
-                .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
-                .build();
+    private OuterExpression.Expression visitUnaryOperator(
+            SqlOperator operator, RexNode operand, RelDataType dataType) {
+        OuterExpression.Expression.Builder builder = OuterExpression.Expression.newBuilder();
+        builder.addOperators(
+                Utils.protoOperator(operator).toBuilder()
+                        .setNodeType(Utils.protoIrDataType(dataType, isColumnId)));
+        boolean needBrace = needBrace(operator, operand);
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE));
+        }
+        builder.addAllOperators(operand.accept(this).getOperatorsList());
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE));
+        }
+        return builder.build();
     }
 
     private OuterExpression.Expression visitBinaryOperator(RexCall call) {
+        if (call.getOperator().getKind() == SqlKind.SEARCH) {
+            // ir core can not support continuous ranges in a search operator, here expand it to
+            // compositions of 'and' or 'or',
+            // i.e. a.age SEARCH [[1, 10]] -> a.age >= 1 and a.age <= 10
+            RexNode left = call.getOperands().get(0);
+            RexNode right = call.getOperands().get(1);
+            RexLiteral literal = null;
+            if (left instanceof RexLiteral) {
+                literal = (RexLiteral) left;
+            } else if (right instanceof RexLiteral) {
+                literal = (RexLiteral) right;
+            }
+            if (literal != null && literal.getValue() instanceof Sarg) {
+                Sarg sarg = (Sarg) literal.getValue();
+                // search continuous ranges
+                if (!sarg.isPoints()) {
+                    call = (RexCall) RexUtil.expandSearch(this.rexBuilder, null, call);
+                }
+            }
+        }
         SqlOperator operator = call.getOperator();
         OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
         // left-associative

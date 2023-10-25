@@ -26,9 +26,9 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
 #include "flex/codegen/src/string_utils.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 static constexpr const char* PROJECT_MAPPER_VAR_TEMPLATE_STR =
@@ -117,14 +117,15 @@ std::string project_case_when_from_project_mapping(
     throw std::runtime_error("case when sanity check failed");
   }
   CaseWhenBuilder builder(ctx);
-  builder.return_type(data_type)
-      .when_then_exprs(expr_case.when_then_expressions())
+  builder.when_then_exprs(expr_case.when_then_expressions())
       .else_expr(expr_case.else_result_expression());
 
   std::string expr_func_name, expr_code;
   std::vector<codegen::ParamConst> func_construct_param_const;
   std::vector<std::pair<int32_t, std::string>> expr_selectors;
-  common::DataType ret_data_type;  // returned data type for case when building
+  std::vector<common::DataType>
+      ret_data_type;  // returned data type for case when building
+  // ret_data_type is not used.
   std::tie(expr_func_name, func_construct_param_const, expr_selectors,
            expr_code, ret_data_type) = builder.Build();
 
@@ -150,17 +151,17 @@ std::string project_expression_from_project_mapping(
     BuildingContext& ctx, const common::Expression& expr,
     int32_t out_alias_tag) {
   auto expr_builder = ExprBuilder(ctx);
-  CHECK(expr.operators_size() == 3)
-      << "Current only support binary expression for project";
-  CHECK(expr.operators(1).has_node_type());
-  auto data_type_name =
-      common_data_type_pb_2_str(expr.operators(1).node_type().data_type());
-  expr_builder.set_return_type(expr.operators(1).node_type().data_type());
+  VLOG(10) << "Projecting expression: " << expr.DebugString();
+  auto ret_data_type = eval_expr_return_type(expr);
+  LOG(INFO) << "Expression return type: "
+            << single_common_data_type_pb_2_str(ret_data_type);
+
   expr_builder.AddAllExprOpr(expr.operators());
+  expr_builder.set_return_type(ret_data_type);
   std::string expr_func_name, expr_code;
   std::vector<codegen::ParamConst> func_construct_param_const;
   std::vector<std::pair<int32_t, std::string>> expr_selectors;
-  common::DataType unused_expr_ret_type;
+  std::vector<common::DataType> unused_expr_ret_type;
   std::tie(expr_func_name, func_construct_param_const, expr_selectors,
            expr_code, unused_expr_ret_type) = expr_builder.Build();
 
@@ -195,7 +196,6 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
     VLOG(10) << "Got case when in projecting";
     auto case_when = expr_op.case_();
     VLOG(10) << case_when.DebugString();
-    CHECK(expr_op.node_type().type_case() == common::IrDataType::kDataType);
     return project_case_when_from_project_mapping(
         ctx, case_when, expr_op.node_type().data_type(), real_res_col_id);
   }
@@ -211,6 +211,13 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
         prop_names.push_back(prop.key().name());
         data_types.push_back(
             common_data_type_pb_2_data_type(var.node_type().data_type()));
+      } else if (prop.item_case() == common::Property::kLen) {
+        prop_names.push_back("length");
+        data_types.push_back(codegen::DataType::kLength);
+      } else if (prop.item_case() == common::Property::kLabel) {
+        // return the label id.
+        prop_names.push_back("label");
+        data_types.push_back(codegen::DataType::kLabelId);
       } else {
         LOG(FATAL) << "Unknown property type" << prop.DebugString();
       }

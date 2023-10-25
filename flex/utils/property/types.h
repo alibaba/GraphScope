@@ -67,6 +67,13 @@ struct AnyConverter;
 
 struct Any {
   Any() : type(PropertyType::kEmpty) {}
+
+  template <typename T>
+  Any(const T& val) {
+    Any a = Any::From(val);
+    memcpy(this, &a, sizeof(a));
+  }
+
   ~Any() {}
 
   int64_t get_long() const {
@@ -151,6 +158,51 @@ struct Any {
   template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
+  }
+
+  bool operator==(const Any& other) const {
+    if (type == other.type) {
+      if (type == PropertyType::kInt32) {
+        return value.i == other.value.i;
+      } else if (type == PropertyType::kInt64) {
+        return value.l == other.value.l;
+      } else if (type == PropertyType::kDate) {
+        return value.d.milli_second == other.value.d.milli_second;
+      } else if (type == PropertyType::kString) {
+        return value.s == other.value.s;
+      } else if (type == PropertyType::kEmpty) {
+        return true;
+      } else if (type == PropertyType::kDouble) {
+        return value.db == other.value.db;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+  }
+
+  bool operator<(const Any& other) const {
+    if (type == other.type) {
+      if (type == PropertyType::kInt32) {
+        return value.i < other.value.i;
+      } else if (type == PropertyType::kInt64) {
+        return value.l < other.value.l;
+      } else if (type == PropertyType::kDate) {
+        return value.d.milli_second < other.value.d.milli_second;
+      } else if (type == PropertyType::kString) {
+        return value.s < other.value.s;
+      } else if (type == PropertyType::kEmpty) {
+        return false;
+      } else if (type == PropertyType::kDouble) {
+        return value.db < other.value.db;
+      } else {
+        return false;
+      }
+    } else {
+      LOG(FATAL) << "Type [" << static_cast<int>(type) << "] and ["
+                 << static_cast<int>(other.type) << "] cannot be compared..";
+    }
   }
 
   PropertyType type;
@@ -269,6 +321,12 @@ struct AnyConverter<Date> {
   static constexpr PropertyType type = PropertyType::kDate;
 
   static Any to_any(const Date& value) {
+    Any ret;
+    ret.set_date(value);
+    return ret;
+  }
+
+  static Any to_any(int64_t value) {
     Any ret;
     ret.set_date(value);
     return ret;

@@ -17,10 +17,10 @@ use std::any::TypeId;
 use std::collections::BTreeMap;
 use std::io;
 
+use chrono::{Datelike, Timelike};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::{de_dyn_obj, DateTimeFormats, Object, Primitives};
-use chrono::{Datelike, Timelike};
 
 impl Encode for Primitives {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {

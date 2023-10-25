@@ -86,17 +86,27 @@ public abstract class Utils {
                                         "type_id not exist in yaml config");
                 List<GraphProperty> propertyList = Lists.newArrayList();
                 List propertyNodes = (List) elementMap.get("properties");
-                for (Object property : propertyNodes) {
-                    if (property instanceof Map) {
-                        Map<String, Object> propertyMap = (Map<String, Object>) property;
-                        String propertyName = (String) propertyMap.get("property_name");
-                        int propertyId = (int) propertyMap.get("property_id");
-                        propNameToIdMap.put(propertyName, propertyId);
-                        propertyList.add(
-                                new DefaultGraphProperty(
-                                        propertyId,
-                                        propertyName,
-                                        toDataType(propertyMap.get("property_type"))));
+                if (propertyNodes != null) {
+                    for (Object property : propertyNodes) {
+                        if (property instanceof Map) {
+                            Map<String, Object> propertyMap = (Map<String, Object>) property;
+                            String propertyName =
+                                    (String)
+                                            Objects.requireNonNull(
+                                                    propertyMap.get("property_name"),
+                                                    "property_name not exist in yaml config");
+                            int propertyId =
+                                    (int)
+                                            Objects.requireNonNull(
+                                                    propertyMap.get("property_id"),
+                                                    "property_id not exist in yaml config");
+                            propNameToIdMap.put(propertyName, propertyId);
+                            propertyList.add(
+                                    new DefaultGraphProperty(
+                                            propertyId,
+                                            propertyName,
+                                            toDataType(propertyMap.get("property_type"))));
+                        }
                     }
                 }
                 List primaryKeyNodes = (List) elementMap.get("primary_keys");
@@ -149,14 +159,15 @@ public abstract class Utils {
                         return DataType.DOUBLE;
                     case "DT_STRING":
                         return DataType.STRING;
+                    case "DT_DATE32":
+                        return DataType.DATE;
+                    case "DT_TIME32":
+                        return DataType.TIME32;
+                    case "TIMESTAMP":
+                        return DataType.TIMESTAMP;
                     default:
                         throw new UnsupportedOperationException(
                                 "unsupported primitive type: " + value);
-                }
-            } else if ((value = typeMap.get("date")) instanceof Map) {
-                Object format = ((Map) value).get("date_format");
-                if (format != null && format.toString().equals("DF_YYYY_MM_DD")) {
-                    return DataType.DATE;
                 }
             }
         }
@@ -263,6 +274,10 @@ public abstract class Utils {
                 return DataType.STRING_LIST;
             case 12:
                 return DataType.DATE;
+            case 13:
+                return DataType.TIME32;
+            case 14:
+                return DataType.TIMESTAMP;
             default:
                 throw new UnsupportedOperationException(
                         "convert from ir core type " + ordinal + " to DataType is unsupported yet");

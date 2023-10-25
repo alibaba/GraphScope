@@ -23,8 +23,6 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -127,6 +125,50 @@ public class GrootClient {
             List<Edge> edges, StreamObserver<BatchWriteResponse> callback, WriteTypePb writeType) {
         List<WriteRequestPb> requests = getEdgeWriteRequestPbs(edges, writeType);
         submit(requests, callback);
+    }
+
+    private long modifyVerticesAndEdge(
+            List<Vertex> vertices, List<Edge> edges, WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
+        requests.addAll(getEdgeWriteRequestPbs(edges, writeType));
+        return submit(requests);
+    }
+
+    private void modifyVerticesAndEdge(
+            List<Vertex> vertices,
+            List<Edge> edges,
+            StreamObserver<BatchWriteResponse> callback,
+            WriteTypePb writeType) {
+        List<WriteRequestPb> requests = getVertexWriteRequestPbs(vertices, writeType);
+        requests.addAll(getEdgeWriteRequestPbs(edges, writeType));
+        submit(requests, callback);
+    }
+
+    public long addVerticesAndEdges(List<Vertex> vertices, List<Edge> edges) {
+        return modifyVerticesAndEdge(vertices, edges, WriteTypePb.INSERT);
+    }
+
+    public long updateVerticesAndEdges(List<Vertex> vertices, List<Edge> edges) {
+        return modifyVerticesAndEdge(vertices, edges, WriteTypePb.UPDATE);
+    }
+
+    public long deleteVerticesAndEdges(List<Vertex> vertices, List<Edge> edges) {
+        return modifyVerticesAndEdge(vertices, edges, WriteTypePb.DELETE);
+    }
+
+    public void addVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.INSERT);
+    }
+
+    public void updateVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.UPDATE);
+    }
+
+    public void deleteVerticesAndEdges(
+            List<Vertex> vertices, List<Edge> edges, StreamObserver<BatchWriteResponse> callback) {
+        modifyVerticesAndEdge(vertices, edges, callback, WriteTypePb.DELETE);
     }
 
     /**
@@ -422,30 +464,19 @@ public class GrootClient {
     }
 
     public static class GrootClientBuilder {
-        private List<SocketAddress> addrs;
+        private String target;
         private String username;
         private String password;
 
-        private GrootClientBuilder() {
-            this.addrs = new ArrayList<>();
-        }
+        private GrootClientBuilder() {}
 
-        public GrootClientBuilder addAddress(SocketAddress address) {
-            this.addrs.add(address);
+        public GrootClientBuilder addHost(String host, int port) {
+            target = host + ":" + port;
             return this;
         }
 
-        public GrootClientBuilder addHost(String host, int port) {
-            return this.addAddress(new InetSocketAddress(host, port));
-        }
-
-        public GrootClientBuilder setHosts(String hosts) {
-            List<SocketAddress> addresses = new ArrayList<>();
-            for (String host : hosts.split(",")) {
-                String[] items = host.split(":");
-                addresses.add(new InetSocketAddress(items[0], Integer.valueOf(items[1])));
-            }
-            this.addrs = addresses;
+        public GrootClientBuilder setHosts(String target) {
+            this.target = target;
             return this;
         }
 
@@ -460,14 +491,12 @@ public class GrootClient {
         }
 
         public GrootClient build() {
-            MultiAddrResovlerFactory multiAddrResovlerFactory =
-                    new MultiAddrResovlerFactory(this.addrs);
             ManagedChannel channel =
-                    ManagedChannelBuilder.forTarget("hosts")
-                            .nameResolverFactory(multiAddrResovlerFactory)
+                    ManagedChannelBuilder.forTarget(target)
                             .defaultLoadBalancingPolicy("round_robin")
                             .usePlaintext()
                             .build();
+
             ClientGrpc.ClientBlockingStub clientBlockingStub = ClientGrpc.newBlockingStub(channel);
             ClientWriteGrpc.ClientWriteBlockingStub clientWriteBlockingStub =
                     ClientWriteGrpc.newBlockingStub(channel);

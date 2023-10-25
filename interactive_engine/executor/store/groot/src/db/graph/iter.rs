@@ -182,12 +182,13 @@ impl IntoIterator for EdgeKindScan {
                     {
                         Ok(decoder) => {
                             let edge_kind = self.edge_kind_info.get_type();
-                            Some(Ok(RocksEdgeImpl::new(
+                            let edge = RocksEdgeImpl::new(
                                 edge_id.into(),
                                 edge_kind.into(),
                                 Some(decoder),
                                 raw_val,
-                            )))
+                            );
+                            Some(Ok(edge))
                         }
                         Err(e) => Some(Err(e.into())),
                     }

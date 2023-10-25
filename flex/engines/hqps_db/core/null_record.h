@@ -77,10 +77,30 @@ static inline bool IsNull(const T& opt) {
   return opt == NullRecordCreator<T>::GetNull();
 }
 
+template <typename VID_T>
+static inline bool IsNull(const DefaultEdge<VID_T>& edge) {
+  return IsNull(edge.src) || IsNull(edge.dst);
+}
+
 // customized operator ==
 template <typename T>
 bool operator==(const T& lhs, const None& rhs) {
   return IsNull(lhs);
+}
+
+template <typename T>
+bool operator==(const None& lhs, const T& rhs) {
+  return IsNull(rhs);
+}
+
+template <typename T>
+bool operator!=(const T& lhs, const None& rhs) {
+  return !IsNull(lhs);
+}
+
+template <typename T>
+bool operator!=(const None& lhs, const T& rhs) {
+  return !IsNull(rhs);
 }
 }  // namespace gs
 

@@ -2,7 +2,7 @@
 #
 # groot command tool
 
-set -xeo pipefail
+set -eo pipefail
 
 usage() {
 	cat <<END
@@ -98,7 +98,7 @@ start_server() {
             -XX:+PrintGCApplicationStoppedTime
             -Xloggc:${LOG_DIR}/${LOG_NAME}.gc.log
             -XX:+UseGCLogFileRotation
-            -XX:NumberOfGCLogFiles=32
+            -XX:NumberOfGCLogFiles=4
             -XX:GCLogFileSize=64m"
 
 	java ${java_opt} \
@@ -107,7 +107,7 @@ start_server() {
 		-Dlog.dir="${LOG_DIR}" \
 		-Dlog.name="${LOG_NAME}" \
 		-cp "${libpath}" com.alibaba.graphscope.groot.servers.GrootGraph \
-		"$@" > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
+		"$@" # > >(tee -a "${LOG_DIR}/${LOG_NAME}.out") 2> >(tee -a "${LOG_DIR}/${LOG_NAME}.err" >&2)
 }
 
 # parse argv

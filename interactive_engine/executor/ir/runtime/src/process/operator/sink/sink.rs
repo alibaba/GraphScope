@@ -254,6 +254,7 @@ impl MapFunction<Record, Vec<u8>> for RecordSinkEncoder {
         }
 
         let record_pb = result_pb::Record { columns: sink_columns };
+        debug!("sink record_pb {:?}", record_pb);
         let results = result_pb::Results { inner: Some(result_pb::results::Inner::Record(record_pb)) };
         Ok(results.encode_to_vec())
     }

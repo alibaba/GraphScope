@@ -18,8 +18,8 @@ install(TARGETS flex_rt_mutable_graph
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/mutable_property_fragment.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/schema.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/mutable_csr.h
-              ${CMAKE_CURRENT_SOURCE_DIR}/types.h
-        DESTINATION include/flex/storages/rt_mutable_graph)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        DESTINATION include/flex/storages
+        FILES_MATCHING
+        PATTERN "*.h"
+)

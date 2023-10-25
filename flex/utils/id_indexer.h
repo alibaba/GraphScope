@@ -26,6 +26,8 @@ limitations under the License.
 
 #include "flat_hash_map/flat_hash_map.hpp"
 #include "flex/utils/mmap_array.h"
+#include "flex/utils/property/column.h"
+#include "flex/utils/property/types.h"
 #include "flex/utils/string_view_vector.h"
 #include "glog/logging.h"
 #include "grape/io/local_io_adaptor.h"
@@ -146,11 +148,22 @@ struct GHash {
 template <>
 struct GHash<int64_t> {
   size_t operator()(const int64_t& val) const {
-    uint64_t x = static_cast<int64_t>(val);
+    uint64_t x = static_cast<uint64_t>(val);
     x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
     x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
     x = x ^ (x >> 31);
     return x;
+  }
+};
+
+template <>
+struct GHash<Any> {
+  size_t operator()(const Any& val) const {
+    if (val.type == PropertyType::kInt64) {
+      return GHash<int64_t>()(val.AsInt64());
+    } else {
+      return GHash<std::string_view>()(val.AsString());
+    }
   }
 };
 
@@ -160,29 +173,51 @@ class IdIndexer;
 template <typename INDEX_T>
 class LFIndexer;
 
-template <class INDEX_T>
-void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
+template <typename KEY_T, typename INDEX_T>
+void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       LFIndexer<INDEX_T>& output, double rate = 0.8);
 
 template <typename INDEX_T>
 class LFIndexer {
  public:
-  LFIndexer() : num_elements_(0), hasher_() {}
-  LFIndexer(const LFIndexer& rhs)
+  LFIndexer() : num_elements_(0), hasher_(), keys_(nullptr) {}
+  LFIndexer(LFIndexer&& rhs)
       : keys_(rhs.keys_),
         indices_(rhs.indices_),
         num_elements_(rhs.num_elements_.load()),
         num_slots_minus_one_(rhs.num_slots_minus_one_),
         hasher_(rhs.hasher_) {
+    if (keys_ != rhs.keys_) {
+      if (keys_ != nullptr) {
+        delete keys_;
+      }
+      keys_ = rhs.keys_;
+    }
     hash_policy_.set_mod_function_by_index(
         rhs.hash_policy_.get_mod_function_index());
   }
 
-  size_t size() const { return num_elements_.load(); }
+  void init(const PropertyType& type) {
+    if (keys_ != nullptr) {
+      delete keys_;
+    }
+    keys_ = nullptr;
+    if (type == PropertyType::kInt64) {
+      keys_ = new TypedColumn<int64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kString) {
+      keys_ = new TypedColumn<std::string_view>(StorageStrategy::kMem);
+    } else {
+      LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
+    }
+  }
 
-  INDEX_T insert(int64_t oid) {
+  size_t size() const { return num_elements_.load(); }
+  PropertyType get_type() const { return keys_->type(); }
+
+  INDEX_T insert(const Any& oid) {
+    assert(oid.type == get_type());
     INDEX_T ind = static_cast<INDEX_T>(num_elements_.fetch_add(1));
-    keys_[ind] = oid;
+    keys_->set_any(ind, oid);
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
@@ -195,23 +230,26 @@ class LFIndexer {
     return ind;
   }
 
-  INDEX_T get_index(int64_t oid) const {
+  INDEX_T get_index(const Any& oid) const {
+    assert(oid.type == get_type());
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
     while (true) {
       INDEX_T ind = indices_[index];
       if (ind == sentinel) {
-        LOG(FATAL) << "cannot find " << oid << " in id_indexer";
-      } else if (keys_[ind] == oid) {
+        LOG(FATAL) << "cannot find " << oid.to_string() << " in id_indexer";
+      } else if (keys_->get(ind) == oid) {
         return ind;
       } else {
-        index = (index + 1) % indices_size_;
+        index = (index + 1) % num_slots_minus_one_;
       }
     }
   }
 
-  bool get_index(int64_t oid, INDEX_T& ret) const {
+  bool get_index(const Any& oid, INDEX_T& ret) const {
+    assert(oid.type == get_type());
+
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
@@ -219,7 +257,7 @@ class LFIndexer {
       INDEX_T ind = indices_[index];
       if (ind == sentinel) {
         return false;
-      } else if (keys_[ind] == oid) {
+      } else if (keys_->get(ind) == oid) {
         ret = ind;
         return true;
       } else {
@@ -229,12 +267,12 @@ class LFIndexer {
     return false;
   }
 
-  int64_t get_key(const INDEX_T& index) const { return keys_[index]; }
+  Any get_key(const INDEX_T& index) const { return keys_->get(index); }
 
   void Serialize(const std::string& prefix) {
     {
       grape::InArchive arc;
-      arc << keys_.size() << indices_.size();
+      arc << get_type() << keys_->size() << indices_.size();
       arc << hash_policy_.get_mod_function_index() << num_elements_.load()
           << num_slots_minus_one_ << indices_size_;
       std::string meta_file_path = prefix + ".meta";
@@ -244,8 +282,8 @@ class LFIndexer {
       fclose(fout);
     }
 
-    if (keys_.size() > 0) {
-      keys_.dump_to_file(prefix + ".keys");
+    if (keys_->size() > 0) {
+      keys_->Serialize(prefix + ".keys", keys_->size());
     }
     if (indices_.size() > 0) {
       indices_.dump_to_file(prefix + ".indices");
@@ -265,13 +303,15 @@ class LFIndexer {
                meta_file_size);
       grape::OutArchive arc;
       arc.SetSlice(buf.data(), meta_file_size);
-
-      arc >> keys_size >> indices_size;
+      PropertyType type;
+      arc >> type >> keys_size >> indices_size;
       arc >> mod_function_index >> num_elements >> num_slots_minus_one_ >>
           indices_size_;
+      init(type);
     }
-    keys_.open_for_read(prefix + ".keys");
-    CHECK_EQ(keys_.size(), keys_size);
+
+    keys_->Deserialize(prefix + ".keys");
+    CHECK_EQ(keys_->size(), keys_size);
     indices_.open_for_read(prefix + ".indices");
     CHECK_EQ(indices_.size(), indices_size);
     hash_policy_.set_mod_function_by_index(mod_function_index);
@@ -279,24 +319,35 @@ class LFIndexer {
   }
 
   // get keys
-  const mmap_array<int64_t>& get_keys() const { return keys_; }
+  const ColumnBase& get_keys() const { return *keys_; }
 
  private:
-  mmap_array<int64_t> keys_;
+  ColumnBase* keys_;
+
   mmap_array<INDEX_T> indices_;
   std::atomic<size_t> num_elements_;
   size_t num_slots_minus_one_;
   size_t indices_size_;
   ska::ska::prime_number_hash_policy hash_policy_;
-  GHash<int64_t> hasher_;
+  GHash<Any> hasher_;
 
-  template <typename _INDEX_T>
-  friend void build_lf_indexer(const IdIndexer<int64_t, _INDEX_T>& input,
+  template <typename _KEY_T, typename _INDEX_T>
+  friend void build_lf_indexer(const IdIndexer<_KEY_T, _INDEX_T>& input,
                                LFIndexer<_INDEX_T>& output, double rate);
 };
-
+template <typename INDEX_T>
+class IdIndexerBase {
+ public:
+  IdIndexerBase() {}
+  virtual PropertyType get_type() const = 0;
+  virtual void _add(const Any& oid) = 0;
+  virtual bool add(const Any& oid, INDEX_T& lid) = 0;
+  virtual bool get_key(const INDEX_T& lid, Any& oid) const = 0;
+  virtual bool get_index(const Any& oid, INDEX_T& lid) const = 0;
+  virtual size_t size() const = 0;
+};
 template <typename KEY_T, typename INDEX_T>
-class IdIndexer {
+class IdIndexer : public IdIndexerBase<INDEX_T> {
  public:
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
   using ind_buffer_t = std::vector<INDEX_T>;
@@ -304,6 +355,36 @@ class IdIndexer {
 
   IdIndexer() : hasher_() { reset_to_empty_state(); }
   ~IdIndexer() {}
+
+  PropertyType get_type() const override { return AnyConverter<KEY_T>::type; }
+
+  void _add(const Any& oid) override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    _add(oid_);
+  }
+
+  bool add(const Any& oid, INDEX_T& lid) override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    return add(oid_, lid);
+  }
+
+  bool get_key(const INDEX_T& lid, Any& oid) const override {
+    KEY_T oid_;
+    bool flag = get_key(lid, oid_);
+    oid = Any::From(oid_);
+    return flag;
+  }
+
+  bool get_index(const Any& oid, INDEX_T& lid) const override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    return get_index(oid_, lid);
+  }
 
   size_t entry_num() const { return distances_.size(); }
 
@@ -439,7 +520,7 @@ class IdIndexer {
 
   bool empty() const { return (num_elements_ == 0); }
 
-  size_t size() const { return num_elements_; }
+  size_t size() const override { return num_elements_; }
 
   bool get_key(INDEX_T lid, KEY_T& oid) const {
     if (static_cast<size_t>(lid) >= num_elements_) {
@@ -657,20 +738,49 @@ class IdIndexer {
 
   ska::ska::prime_number_hash_policy hash_policy_;
   int8_t max_lookups_ = id_indexer_impl::min_lookups - 1;
+
   size_t num_elements_ = 0;
   size_t num_slots_minus_one_ = 0;
 
-  // std::hash<KEY_T> hasher_;
   GHash<KEY_T> hasher_;
 
-  template <typename _INDEX_T>
-  friend void build_lf_indexer(const IdIndexer<int64_t, _INDEX_T>& input,
+  template <typename _KEY_T, typename _INDEX_T>
+  friend void build_lf_indexer(const IdIndexer<_KEY_T, _INDEX_T>& input,
                                LFIndexer<_INDEX_T>& output, double rate);
 };
+template <typename KEY_T, typename INDEX_T>
+struct _move_data {
+  using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& lf, size_t size) {}
+};
 
-template <class INDEX_T>
-void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
+template <typename INDEX_T>
+struct _move_data<int64_t, INDEX_T> {
+  using key_buffer_t = typename id_indexer_impl::KeyBuffer<int64_t>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
+    // size_t size = input.keys_.size();
+    auto& buffer = dynamic_cast<TypedColumn<int64_t>&>(col);
+    memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
+  }
+};
+
+template <typename INDEX_T>
+struct _move_data<std::string_view, INDEX_T> {
+  using key_buffer_t =
+      typename id_indexer_impl::KeyBuffer<std::string_view>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
+    // size_t size = input.keys_.size();
+    auto& keys = dynamic_cast<TypedColumn<std::string_view>&>(col);
+    for (size_t idx = 0; idx < size; ++idx) {
+      keys.set_value(idx, input[idx]);
+    }
+  }
+};
+
+template <typename KEY_T, typename INDEX_T>
+void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       LFIndexer<INDEX_T>& lf, double rate) {
+  lf.init(AnyConverter<KEY_T>::type);
   double indices_rate = static_cast<double>(input.keys_.size()) /
                         static_cast<double>(input.indices_.size());
   CHECK_LT(indices_rate, rate);
@@ -679,30 +789,48 @@ void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
   size_t lf_size = static_cast<double>(size) / rate + 1;
   lf_size = std::max(lf_size, static_cast<size_t>(1024));
 
-  lf.keys_.resize(lf_size);
-  memcpy(lf.keys_.data(), input.keys_.data(), sizeof(int64_t) * size);
+  lf.keys_->resize(lf_size);
+  _move_data<KEY_T, INDEX_T>()(input.keys_, *lf.keys_, size);
 
   lf.num_elements_.store(size);
 
   lf.indices_.clear();
-  lf.indices_.resize_fill(input.indices_.size(),
+  lf.indices_.resize_fill(input.num_slots_minus_one_,
                           std::numeric_limits<INDEX_T>::max());
   lf.indices_size_ = input.indices_.size();
 
   lf.hash_policy_.set_mod_function_by_index(
       input.hash_policy_.get_mod_function_index());
   lf.num_slots_minus_one_ = input.num_slots_minus_one_;
-
-  for (auto oid : input.keys_) {
+  std::vector<std::pair<KEY_T, INDEX_T>> res;
+  for (auto idx = 0; idx < input.keys_.size(); ++idx) {
+    auto oid = input.keys_[idx];
     size_t index = input.hash_policy_.index_for_hash(
         input.hasher_(oid), input.num_slots_minus_one_);
     for (int8_t distance = 0; input.distances_[index] >= distance;
          ++distance, ++index) {
       INDEX_T ret = input.indices_[index];
       if (input.keys_[ret] == oid) {
-        lf.indices_[index] = ret;
+        if (index >= input.num_slots_minus_one_) {
+          res.emplace_back(oid, ret);
+        } else {
+          lf.indices_[index] = ret;
+        }
         break;
       }
+    }
+  }
+  static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
+
+  for (const auto& [oid, lid] : res) {
+    size_t index = input.hash_policy_.index_for_hash(
+        input.hasher_(oid), input.num_slots_minus_one_);
+    while (true) {
+      if (lf.indices_[index] == sentinel) {
+        lf.indices_[index] = lid;
+        break;
+      }
+      index = (index + 1) % input.num_slots_minus_one_;
     }
   }
 }

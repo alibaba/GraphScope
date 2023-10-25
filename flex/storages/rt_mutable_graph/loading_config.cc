@@ -62,11 +62,11 @@ static bool fetch_src_dst_column_mapping(const Schema& schema, YAML::Node node,
         return false;
       }
     }
-
+    return true;
   } else {
-    LOG(ERROR) << "No primary key column mapping for [" << key << "]";
+    LOG(WARNING) << "No primary key column mapping for [" << key << "]";
+    return false;
   }
-  return true;
 }
 
 // Function to parse memory size represented as a string
@@ -124,7 +124,10 @@ static bool parse_column_mappings(
 
     std::string property_name;  // property name is optional.
     if (!get_scalar(node[i], "property", property_name)) {
-      LOG(ERROR) << "Expect property name for column mapping";
+      LOG(ERROR) << "Expect property name for column mapping, when parsing "
+                    "column mapping for label: "
+                 << label_name << ", column_id: " << column_id
+                 << ", column_name: " << column_name;
       return false;
     }
     if (!condition(label_name, property_name)) {
@@ -301,17 +304,18 @@ static bool parse_edge_files(
 
     if (!fetch_src_dst_column_mapping(schema, node, src_label_id,
                                       "source_vertex_mappings", src_columns)) {
-      LOG(ERROR) << "Field [source_vertex_mappings] is not set for edge ["
-                 << src_label << "->[" << edge_label << "]->" << dst_label
-                 << "]";
-      return false;
+      LOG(WARNING) << "Field [source_vertex_mappings] is not set for edge ["
+                   << src_label << "->[" << edge_label << "]->" << dst_label
+                   << "], using default choice: column_id 0";
+      src_columns.push_back(0);
     }
     if (!fetch_src_dst_column_mapping(schema, node, dst_label_id,
                                       "destination_vertex_mappings",
                                       dst_columns)) {
-      LOG(ERROR) << "Field [destination_vertex_mappings] is not set for edge["
-                 << src_label << "->[" << edge_label << "]->" << dst_label;
-      return false;
+      LOG(WARNING) << "Field [destination_vertex_mappings] is not set for edge["
+                   << src_label << "->[" << edge_label << "]->" << dst_label
+                   << "], using default choice: column_id 1";
+      dst_columns.push_back(1);
     }
 
     VLOG(10) << "src: " << src_label << ", dst: " << dst_label
