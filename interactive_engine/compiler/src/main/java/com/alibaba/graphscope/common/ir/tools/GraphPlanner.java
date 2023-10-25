@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
@@ -199,8 +200,18 @@ public class GraphPlanner {
                                         } else if (k.equals(
                                                 NotMatchToAntiJoinRule.class.getSimpleName())) {
                                             ruleConfigs.add(NotMatchToAntiJoinRule.Config.DEFAULT);
-                                        } else {
-                                            // todo: add more rule configs
+                                        } else if (k.equals(
+                                                DegreeFusionRule.ExpandDegreeFusionRule.class
+                                                        .getSimpleName())) {
+                                            ruleConfigs.add(
+                                                    DegreeFusionRule.ExpandDegreeFusionRule.Config
+                                                            .DEFAULT);
+                                        } else if (k.equals(
+                                                DegreeFusionRule.ExpandGetVDegreeFusionRule.class
+                                                        .getSimpleName())) {
+                                            ruleConfigs.add(
+                                                    DegreeFusionRule.ExpandGetVDegreeFusionRule
+                                                            .Config.DEFAULT);
                                         }
                                     });
                     HepProgramBuilder hepBuilder = HepProgram.builder();

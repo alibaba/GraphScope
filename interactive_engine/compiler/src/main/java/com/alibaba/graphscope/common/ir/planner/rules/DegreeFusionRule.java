@@ -50,8 +50,9 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
     }
 
     // transform expand + count to expandDegree + sum
-    public static class Expand extends DegreeFusionRule<Expand.Config> {
-        protected Expand(Config config) {
+    public static class ExpandDegreeFusionRule
+            extends DegreeFusionRule<ExpandDegreeFusionRule.Config> {
+        protected ExpandDegreeFusionRule(Config config) {
             super(config);
         }
 
@@ -64,8 +65,8 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
         }
 
         public static class Config implements RelRule.Config {
-            public static Expand.Config DEFAULT =
-                    new Expand.Config()
+            public static ExpandDegreeFusionRule.Config DEFAULT =
+                    new ExpandDegreeFusionRule.Config()
                             .withOperandSupplier(
                                     b0 ->
                                             b0.operand(GraphLogicalAggregate.class)
@@ -102,20 +103,22 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
             private RelBuilderFactory builderFactory;
 
             @Override
-            public Expand.Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
+            public ExpandDegreeFusionRule.Config withRelBuilderFactory(
+                    RelBuilderFactory relBuilderFactory) {
                 this.builderFactory = relBuilderFactory;
                 return this;
             }
 
             @Override
-            public Expand.Config withDescription(
+            public ExpandDegreeFusionRule.Config withDescription(
                     @org.checkerframework.checker.nullness.qual.Nullable String s) {
                 this.description = s;
                 return this;
             }
 
             @Override
-            public Expand.Config withOperandSupplier(OperandTransform operandTransform) {
+            public ExpandDegreeFusionRule.Config withOperandSupplier(
+                    OperandTransform operandTransform) {
                 this.operandSupplier = operandTransform;
                 return this;
             }
@@ -131,8 +134,8 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
             }
 
             @Override
-            public Expand toRule() {
-                return new Expand(this);
+            public ExpandDegreeFusionRule toRule() {
+                return new ExpandDegreeFusionRule(this);
             }
 
             @Override
@@ -143,8 +146,9 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
     }
 
     // transform expand + getV + count to expandDegree + sum
-    public static class ExpandGetV extends DegreeFusionRule<ExpandGetV.Config> {
-        protected ExpandGetV(Config config) {
+    public static class ExpandGetVDegreeFusionRule
+            extends DegreeFusionRule<ExpandGetVDegreeFusionRule.Config> {
+        protected ExpandGetVDegreeFusionRule(Config config) {
             super(config);
         }
 
@@ -157,8 +161,8 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
         }
 
         public static class Config implements RelRule.Config {
-            public static ExpandGetV.Config DEFAULT =
-                    new ExpandGetV.Config()
+            public static ExpandGetVDegreeFusionRule.Config DEFAULT =
+                    new ExpandGetVDegreeFusionRule.Config()
                             .withOperandSupplier(
                                     b0 ->
                                             b0.operand(GraphLogicalAggregate.class)
@@ -217,20 +221,22 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
             private RelBuilderFactory builderFactory;
 
             @Override
-            public ExpandGetV.Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
+            public ExpandGetVDegreeFusionRule.Config withRelBuilderFactory(
+                    RelBuilderFactory relBuilderFactory) {
                 this.builderFactory = relBuilderFactory;
                 return this;
             }
 
             @Override
-            public ExpandGetV.Config withDescription(
+            public ExpandGetVDegreeFusionRule.Config withDescription(
                     @org.checkerframework.checker.nullness.qual.Nullable String s) {
                 this.description = s;
                 return this;
             }
 
             @Override
-            public ExpandGetV.Config withOperandSupplier(OperandTransform operandTransform) {
+            public ExpandGetVDegreeFusionRule.Config withOperandSupplier(
+                    OperandTransform operandTransform) {
                 this.operandSupplier = operandTransform;
                 return this;
             }
@@ -246,8 +252,8 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
             }
 
             @Override
-            public ExpandGetV toRule() {
-                return new ExpandGetV(this);
+            public ExpandGetVDegreeFusionRule toRule() {
+                return new ExpandGetVDegreeFusionRule(this);
             }
 
             @Override

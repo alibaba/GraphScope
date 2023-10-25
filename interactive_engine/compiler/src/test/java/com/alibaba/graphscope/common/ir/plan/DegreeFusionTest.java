@@ -42,7 +42,8 @@ public class DegreeFusionTest {
                         + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 before.explain().trim());
-        RelOptPlanner planner = Utils.mockPlanner(DegreeFusionRule.ExpandGetV.Config.DEFAULT);
+        RelOptPlanner planner =
+                Utils.mockPlanner(DegreeFusionRule.ExpandGetVDegreeFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
@@ -80,7 +81,8 @@ public class DegreeFusionTest {
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 before.explain().trim());
-        RelOptPlanner planner = Utils.mockPlanner(DegreeFusionRule.Expand.Config.DEFAULT);
+        RelOptPlanner planner =
+                Utils.mockPlanner(DegreeFusionRule.ExpandDegreeFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
