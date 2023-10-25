@@ -65,7 +65,8 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
             Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan, PlanPointer planPointer) {
         super(
                 logicalPlan,
-                new GraphRelShuttleWrapper(new RelToFfiConverter(irMeta.getSchema().isColumnId())));
+                new GraphRelShuttleWrapper(
+                        new RelToFfiConverter(irMeta.getSchema().isColumnId(), graphConfig)));
         this.graphConfig = graphConfig;
         this.irMeta = irMeta;
         this.planPointer = Objects.requireNonNull(planPointer);

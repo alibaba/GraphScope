@@ -33,14 +33,17 @@ template <typename LabelT>
 class EdgeIter {
  public:
   using label_id_t = LabelT;
-  EdgeIter() {}
-  EdgeIter(const std::array<LabelT, 3>& label_triplet)
-      : label_triplet_(label_triplet) {}
+  EdgeIter() : label_triplet_(), ptr1_(nullptr), prop_names_(nullptr) {}
+
   EdgeIter(const EdgeIter& other)
-      : label_triplet_(other.label_triplet_), ptr1_(other.ptr1_) {}
+      : label_triplet_(other.label_triplet_),
+        ptr1_(other.ptr1_),
+        prop_names_(other.prop_names_) {}
   EdgeIter(const std::array<LabelT, 3>& label_triplet,
-           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr)
-      : label_triplet_(label_triplet), ptr1_(ptr) {}
+           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr,
+           const std::vector<std::string>* prop_names)
+      : label_triplet_(label_triplet), ptr1_(ptr), prop_names_(prop_names) {}
+
   inline void Next() const { ptr1_->next(); }
   inline vid_t GetDstId() const { return ptr1_->get_neighbor(); }
 
@@ -49,13 +52,28 @@ class EdgeIter {
   inline label_id_t GetSrcLabel() const { return label_triplet_[0]; }
 
   inline Any GetData() const { return ptr1_->get_data(); }
-  inline bool IsValid() const { return ptr1_->is_valid(); }
+  inline bool IsValid() const { return ptr1_ && ptr1_->is_valid(); }
 
-  size_t Size() const { return ptr1_->size(); }
+  const std::vector<std::string>& GetPropNames() const { return *prop_names_; }
+
+  EdgeIter<LabelT>& operator=(const EdgeIter<LabelT>& rhs) {
+    this->ptr1_ = rhs.ptr1_;
+    this->label_triplet_ = rhs.label_triplet_;
+    this->prop_names_ = rhs.prop_names_;
+    return *this;
+  }
+
+  size_t Size() const {
+    if (ptr1_) {
+      return ptr1_->size();
+    }
+    return 0;
+  }
 
  private:
   std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
   std::array<LabelT, 3> label_triplet_;
+  const std::vector<std::string>* prop_names_;
 };
 
 // A subGraph is a view of a simple graph, with one src label and one dst label.
@@ -66,21 +84,28 @@ class SubGraph {
   using iterator = EdgeIter<LabelT>;
   using label_id_t = LabelT;
   SubGraph(const MutableCsrBase* first,
-           const std::array<label_id_t, 3>& label_triplet)
-      : first_(first), label_triplet_(label_triplet) {}
+           const std::array<label_id_t, 3>& label_triplet,
+           const std::vector<std::string>& prop_names)
+      : first_(first), label_triplet_(label_triplet), prop_names_(prop_names) {}
 
   inline iterator get_edges(VID_T vid) const {
-    return iterator(label_triplet_, first_->edge_iter(vid));
+    if (first_) {
+      return iterator(label_triplet_, first_->edge_iter(vid), &prop_names_);
+    }
+    return iterator(label_triplet_, nullptr, &prop_names_);
   }
 
   label_id_t GetSrcLabel() const { return label_triplet_[0]; }
   label_id_t GetEdgeLabel() const { return label_triplet_[2]; }
   label_id_t GetDstLabel() const { return label_triplet_[1]; }
 
+  const std::vector<std::string>& GetPropNames() const { return prop_names_; }
+
  private:
   const MutableCsrBase* first_;
   // We assume first is out edge, second is in edge.
   std::array<label_id_t, 3> label_triplet_;
+  std::vector<std::string> prop_names_;
 };
 
 template <typename T>

@@ -66,7 +66,7 @@ class EngineCluster:
         learning_start_port,
     ):
         self._instance_id = config.session.instance_id
-        self._glog_level = parse_as_glog_level(config.session.log_level)
+        self._glog_level = parse_as_glog_level(config.log_level)
         self._num_workers = config.session.num_workers
 
         launcher_config: KubernetesLauncherConfig = config.kubernetes_launcher

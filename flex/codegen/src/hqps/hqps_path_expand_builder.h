@@ -23,9 +23,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_get_v_builder.h"
 #include "flex/codegen/src/pb_parser/expand_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
 
 // #ifndef HOP_RANGE_PARAM
 // #define HOP_RANGE_PARAM
@@ -33,12 +33,20 @@ limitations under the License.
 
 namespace gs {
 
-static constexpr const char* PATH_EXPAND_OP_TEMPLATE_STR =
+static constexpr const char* PATH_EXPAND_V_OP_TEMPLATE_STR =
     "%1%\n"
     "%2%\n"
-    "auto %3% = gs::make_path_expand_opt(std::move(%4%), std::move(%5%), "
+    "auto %3% = gs::make_path_expandv_opt(std::move(%4%), std::move(%5%), "
     "gs::Range(%6%, %7%));\n"
     "auto %8% = Engine::PathExpandV<%9%, %10%>(%11%, std::move(%12%), "
+    "std::move(%13%));\n";
+
+static constexpr const char* PATH_EXPAND_PATH_OP_TEMPLATE_STR =
+    "%1%\n"
+    "%2%\n"
+    "auto %3% = gs::make_path_expandv_opt(std::move(%4%), std::move(%5%), "
+    "gs::Range(%6%, %7%));\n"
+    "auto %8% = Engine::PathExpandP<%9%, %10%>(%11%, std::move(%12%), "
     "std::move(%13%));\n";
 
 std::string path_opt_pb_2_str(
@@ -253,6 +261,16 @@ class PathExpandOpBuilder {
     return *this;
   }
 
+  PathExpandOpBuilder& set_output_to_vertices() {
+    output_to_vertices_ = true;
+    return *this;
+  }
+
+  PathExpandOpBuilder& set_output_paths() {
+    output_to_vertices_ = false;
+    return *this;
+  }
+
   std::string Build() const {
     {
       // first put the possible param vars into context
@@ -284,7 +302,13 @@ class PathExpandOpBuilder {
 
     auto append_opt = res_alias_to_append_opt(out_tag_id_);
     auto input_col_str = format_input_col(in_tag_id_);
-    boost::format formater(PATH_EXPAND_OP_TEMPLATE_STR);
+    boost::format formater("");
+    if (output_to_vertices_) {
+      formater = boost::format(PATH_EXPAND_V_OP_TEMPLATE_STR);
+    } else {
+      formater = boost::format(PATH_EXPAND_PATH_OP_TEMPLATE_STR);
+    }
+
     formater % edge_expand_opt_ % getv_opt_code_ % path_expand_opt_var %
         edge_expand_opt_name_ % getv_opt_name_ % range_lower_value %
         range_upper_value % next_ctx_name % append_opt % input_col_str %
@@ -303,6 +327,7 @@ class PathExpandOpBuilder {
   std::string path_opt_str_, result_opt_str_;
   std::vector<LabelT> dst_vertex_labels_;
   internal::Direction direction_;
+  bool output_to_vertices_;  // true: output to vertices, false: output to paths
 };
 
 // edge_expand_opt
@@ -313,7 +338,7 @@ class PathExpandOpBuilder {
 // path_expand_pb itself, while the res_alilas shall be fetch from the later
 // get_v
 template <typename LabelT>
-static std::string BuildPathExpandOp(
+static std::string BuildPathExpandVOp(
     BuildingContext& ctx, const physical::PathExpand& path_expand_pb,
     const google::protobuf::RepeatedPtrField<physical::PhysicalOpr::MetaData>&
         meta_data,
@@ -326,7 +351,7 @@ static std::string BuildPathExpandOp(
   }
 
   // CHECK(!path_expand_pb.has_alias());
-  builder.out_tag(out_tag_id);
+  builder.out_tag(out_tag_id);  // out_tag_id overrides alias
 
   return builder
       .path_expand_opt(path_expand_pb.base().edge_expand(),
@@ -337,7 +362,41 @@ static std::string BuildPathExpandOp(
       .path_opt(path_expand_pb.path_opt())
       .result_opt(path_expand_pb.result_opt())
       .condition(path_expand_pb.condition())
+      .set_output_to_vertices()
+      .Build();
+}
 
+// PathExpand without fusing with getv.
+template <typename LabelT>
+static std::string BuildPathExpandPathOp(
+    BuildingContext& ctx, const physical::PathExpand& path_expand_pb,
+    const google::protobuf::RepeatedPtrField<physical::PhysicalOpr::MetaData>&
+        meta_data) {
+  PathExpandOpBuilder<LabelT> builder(ctx);
+  if (path_expand_pb.has_start_tag()) {
+    builder.in_tag(path_expand_pb.start_tag().value());
+  } else {
+    builder.in_tag(-1);
+  }
+
+  // CHECK(path_expand_pb.has_alias());
+  // if not, alias should be 0?
+  if (path_expand_pb.has_alias()) {
+    builder.out_tag(path_expand_pb.alias().value());
+  } else {
+    builder.out_tag(-1);
+  }
+
+  return builder
+      .path_expand_opt(path_expand_pb.base().edge_expand(),
+                       path_expand_pb.base().get_v(),
+                       meta_data)  // get_v_opt must be called first to
+                                   // provide dst_label ids.
+      .hop_range(path_expand_pb.hop_range())
+      .path_opt(path_expand_pb.path_opt())
+      .result_opt(path_expand_pb.result_opt())
+      .condition(path_expand_pb.condition())
+      .set_output_paths()
       .Build();
 }
 }  // namespace gs

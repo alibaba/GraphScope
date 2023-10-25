@@ -35,6 +35,8 @@ install_vineyard() {
   fi
   pushd ${directory} || exit
 
+  # make sure it complain loudly if installing vineyard fails
+  set -e
   cmake . -DCMAKE_PREFIX_PATH="${install_prefix}" \
         -DCMAKE_INSTALL_PREFIX="${V6D_PREFIX}" \
         -DBUILD_VINEYARD_TESTS=OFF \
@@ -46,6 +48,7 @@ install_vineyard() {
   strip "${V6D_PREFIX}"/bin/vineyard* "${V6D_PREFIX}"/lib/libvineyard*
   pip3 install --no-cache -i https://pypi.org/simple -U "vineyard" "vineyard-io"
   cp -rs "${V6D_PREFIX}"/* "${install_prefix}"/
+  set +e
   popd || exit
   popd || exit
   cleanup_files "${workdir}/${directory}" "${workdir}/${file}"

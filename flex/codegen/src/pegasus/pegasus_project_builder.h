@@ -19,9 +19,9 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 #include "flex/codegen/src/building_context.h"
 #include "flex/codegen/src/codegen_utils.h"

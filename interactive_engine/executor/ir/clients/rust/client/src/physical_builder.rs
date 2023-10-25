@@ -564,6 +564,7 @@ mod test {
             alias: None,
             params: None,
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let sink_pb = algebra_pb::Sink { tags: vec![], sink_target: None };
@@ -587,6 +588,7 @@ mod test {
             alias: None,
             params: None,
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let scan2_pb = scan1_pb.clone();

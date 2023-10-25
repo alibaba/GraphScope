@@ -65,7 +65,7 @@ engines:
   # Available options of log_level: INFO, DEBUG
   log_level: INFO
 
-  enabled_engines: "analytical,interactive,learning"
+  enabled_engines: "analytical,interactive"
   gae:
     resources:
       requests:

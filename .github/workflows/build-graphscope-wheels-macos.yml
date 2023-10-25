@@ -19,7 +19,7 @@ concurrency:
 jobs:
   build-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
-    runs-on: macos-11
+    runs-on: macos-12
     steps:
     - uses: actions/checkout@v3
       with:
@@ -95,6 +95,9 @@ jobs:
         python3 -m pip install libclang
         echo ${CC}
 
+        # make sure the python's local bin is in PATH (by `pip install --user`)
+        export PATH=$HOME/.local/bin:$PATH
+
         # change the version for nightly release
         # e.g. 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
@@ -128,7 +131,7 @@ jobs:
 
   build-client-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
@@ -185,6 +188,9 @@ jobs:
       run: |
         python3 -c "import sys; print(sys.version)"
         . ~/.graphscope_env
+
+        # make sure the python's local bin is in PATH (by `pip install --user`)
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
 
         # change the version for nightly release
         # 0.15.0 -> 0.15.0a20220808
@@ -259,7 +265,7 @@ jobs:
 
   python-test:
     if: ${{ (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch') }}
-    runs-on: macos-11
+    runs-on: macos-12
     needs: [build-wheels, build-client-wheels]
     strategy:
       fail-fast: false
@@ -298,8 +304,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         export JAVA_HOME=$(/usr/libexec/java_home -v11)
-        export PATH=$JAVA_HOME/bin:$HOME/.local/bin:$PATH
-        export PATH=$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
+        export PATH=$JAVA_HOME/bin:$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
 
         python3 -c "import sys; print(sys.version)"
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}

@@ -375,13 +375,17 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/k8s
           # Use a dummy builder image (tag=ci, which is actually a busybox) to reduce time and space to pull the builder
-          make graphscope CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make analytical CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make interactive CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make coordinator CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+
+          docker images
 
       - name: Install Python dependencies
         run: |
           cd ${GITHUB_WORKSPACE}/python
-          pip3 install -r requirements.txt
-          pip3 install pytest pytest-cov pytest-timeout
+          pip3 install -r requirements.txt -r requirements-dev.txt
+          pip3 install pytest pytest-cov pytest-timeout pytest-xdist
 
           # build python client proto
           cd ${GITHUB_WORKSPACE}/python
@@ -428,8 +432,8 @@ jobs:
           echo "Loaded frontend"
           minikube image load graphscope/interactive-executor:${SHORT_SHA}
           echo "Loaded executor"
-          minikube image load graphscope/learning:${SHORT_SHA}
-          echo "loaded learning"
+          # minikube image load graphscope/learning:${SHORT_SHA}
+          # echo "loaded learning"
 
       - uses: dashanji/kubernetes-log-export-action@v5
         env:
@@ -457,7 +461,10 @@ jobs:
           export GS_ADDR=${NODE_IP}:${NODE_PORT}
           cd ${GITHUB_WORKSPACE}/python
 
-          python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_helm_installation
+          python3 -m pytest -d --tx popen//python=python3 \
+                            -s -vvv \
+                            ./graphscope/tests/kubernetes/test_demo_script.py \
+                            -k test_helm_installation
 
       - uses: dashanji/kubernetes-log-export-action@v5
         env:
@@ -484,10 +491,11 @@ jobs:
           cd ${GITHUB_WORKSPACE}/python
           export PATH=${HOME}/.local/bin:${PATH}
 
-          python3 -m pytest --ignore=./graphscope/tests/kubernetes/test_store_service.py \
-                          --cov=graphscope --cov-config=.coveragerc --cov-report=xml \
-                          --cov-report=term -s -vvv --log-cli-level=INFO \
-                          ./graphscope/tests/kubernetes
+          python3 -m pytest -d --tx popen//python=python3 \
+                            --ignore=./graphscope/tests/kubernetes/test_store_service.py \
+                            --cov=graphscope --cov-config=.coveragerc --cov-report=xml --cov-report=term \
+                            -s -vvv --log-cli-level=INFO \
+                            ./graphscope/tests/kubernetes
 
       - name: Upload Coverage
         uses: codecov/codecov-action@v3
@@ -522,7 +530,10 @@ jobs:
 
           # run test
           cd ${GITHUB_WORKSPACE}/python
-          python3 -m pytest -s -vvv ./graphscope/tests/kubernetes/test_demo_script.py -k test_demo_on_hdfs
+          python3 -m pytest -d --tx popen//python=python3 \
+                            -s -vvv \
+                            ./graphscope/tests/kubernetes/test_demo_script.py \
+                            -k test_demo_on_hdfs
           # Check the result file have successfully written to the given location
           # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
@@ -566,13 +577,17 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/k8s
           # Use a dummy builder image (tag=ci, which is actually a busybox) to reduce time and space to pull the builder
-          make graphscope CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make analytical CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make interactive CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+          make coordinator CI=true VERSION=${SHORT_SHA} REGISTRY=registry-vpc.cn-hongkong.aliyuncs.com BUILDER_VERSION=ci
+
+          docker images
 
       - name: Install Python dependencies
         run: |
           cd ${GITHUB_WORKSPACE}/python
-          pip3 install -r requirements.txt
-          pip3 install pytest pytest-cov pytest-timeout
+          pip3 install -r requirements.txt -r requirements-dev.txt
+          pip3 install pytest pytest-cov pytest-timeout pytest-xdist
 
           # build python client proto
           python3 setup.py build_proto
@@ -581,7 +596,7 @@ jobs:
         run: |
           export GS_TEST_DIR=${GITHUB_WORKSPACE}/interactive_engine/tests/src/main/resources
           minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
-                         --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+                         --cpus='12' --memory='32000mb' --disk-size='60000mb' \
                          --mount=true --mount-string="${GS_TEST_DIR}:${GS_TEST_DIR}"
 
           export GS_REGISTRY=""
@@ -590,7 +605,6 @@ jobs:
           minikube image load graphscope/analytical:${SHORT_SHA}
           minikube image load graphscope/interactive-frontend:${SHORT_SHA}
           minikube image load graphscope/interactive-executor:${SHORT_SHA}
-          minikube image load graphscope/learning:${SHORT_SHA}
 
           export PYTHONPATH=${GITHUB_WORKSPACE}/python:${PYTHONPATH}
           cd ${GITHUB_WORKSPACE}/interactive_engine && mvn clean install --quiet -DskipTests -Drust.compile.skip=true -P graphscope
@@ -683,7 +697,7 @@ jobs:
 
           # prepare minikube cluster
           minikube start --base-image='registry-vpc.cn-hongkong.aliyuncs.com/graphscope/kicbase:v0.0.30' \
-          --cpus='12' --memory='32000mb' --disk-size='40000mb' \
+          --cpus='12' --memory='32000mb' --disk-size='60000mb' \
           --mount=true --mount-string="${STORE_DATA_PATH}:${STORE_DATA_PATH}"
           minikube image load ${GIE_IMAGE}:${SHORT_SHA}
 

@@ -852,6 +852,7 @@ subSetWithRemovedIndicesImpl(std::vector<offset_t>& removed_indices,
 template <typename LabelT, typename VID_T, typename... T>
 class RowVertexSetImpl {
  public:
+  using element_type = VID_T;
   using element_t = VID_T;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<T...>;
@@ -948,6 +949,16 @@ class RowVertexSetImpl {
   }
 
   const LabelT& GetLabel() const { return v_label_; }
+
+  const std::vector<LabelKey> GetLabelVec() {
+    std::vector<LabelKey> res;
+    // fill res with v_label_
+    res.reserve(vids_.size());
+    for (auto i = 0; i < vids_.size(); ++i) {
+      res.emplace_back(v_label_);
+    }
+    return res;
+  }
 
   const std::vector<lid_t>& GetVertices() const { return vids_; }
 
@@ -1172,6 +1183,7 @@ template <typename LabelT, typename VID_T>
 class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
  public:
   using element_t = VID_T;
+  using element_type = VID_T;
   using lid_t = VID_T;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   // from this tuple, we can reconstruct the partial set.
@@ -1241,6 +1253,16 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   }
 
   const LabelT& GetLabel() const { return v_label_; }
+
+  const std::vector<LabelKey> GetLabelVec() {
+    std::vector<LabelKey> res;
+    // fill res with v_label_
+    res.reserve(vids_.size());
+    for (auto i = 0; i < vids_.size(); ++i) {
+      res.emplace_back(v_label_);
+    }
+    return res;
+  }
 
   const std::vector<lid_t>& GetVertices() const { return vids_; }
   std::vector<lid_t>& GetMutableVertices() { return vids_; }
@@ -1429,6 +1451,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   LabelT v_label_;
 };
 
+// VID_T can be std::optional<VID_T> or VID_T directly.
 template <typename LabelT, typename VID_T, typename... T>
 using RowVertexSet = RowVertexSetImpl<LabelT, VID_T, T...>;
 

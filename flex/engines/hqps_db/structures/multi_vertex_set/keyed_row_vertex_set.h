@@ -569,6 +569,16 @@ class KeyedRowVertexSetImpl {
 
   LabelT GetLabel() const { return v_label_; }
 
+  const std::vector<LabelKey> GetLabelVec() {
+    std::vector<LabelKey> res;
+    // fill res with vertex labels
+    res.reserve(vids_.size());
+    for (auto i = 0; i < vids_.size(); ++i) {
+      res.emplace_back(v_label_);
+    }
+    return res;
+  }
+
   const std::array<std::string, sizeof...(T)>& GetPropNames() const {
     return prop_names_;
   }
@@ -767,6 +777,16 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
   size_t Size() const { return keys_.size(); }
 
   LabelT GetLabel() const { return v_label_; }
+
+  const std::vector<LabelKey> GetLabelVec() {
+    std::vector<LabelKey> res;
+    // fill res with vertex labels
+    res.reserve(vids_.size());
+    for (auto i = 0; i < vids_.size(); ++i) {
+      res.emplace_back(v_label_);
+    }
+    return res;
+  }
 
   const std::vector<lid_t>& GetVertices() const { return vids_; }
 

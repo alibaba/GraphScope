@@ -37,13 +37,13 @@ class LouvainContext
   using fragment_t = FRAG_T;
   using oid_t = typename FRAG_T::oid_t;
   using vid_t = typename FRAG_T::vid_t;
-  using edata_t = double;
   using vertex_t = typename FRAG_T::vertex_t;
   using state_t = LouvainNodeState<vid_t>;
   using vertex_state_array_t =
       typename fragment_t::template vertex_array_t<state_t>;
 
  public:
+  using edata_t = typename state_t::edata_t;
   explicit LouvainContext(const FRAG_T& fragment)
       : grape::VertexDataContext<FRAG_T, typename COMPUTE_CONTEXT_T::vd_t>(
             fragment),
@@ -94,8 +94,8 @@ class LouvainContext
     return sum;
   }
 
-  edata_t GetLocalEdgeWeightSum() {
-    edata_t sum = 0;
+  double GetLocalEdgeWeightSum() {
+    double sum = 0;
     for (const auto& val : local_total_edge_weight_) {
       sum += val;
     }
@@ -118,7 +118,7 @@ class LouvainContext
 
   std::vector<int64_t>& local_change_num() { return local_change_num_; }
 
-  std::vector<edata_t>& local_total_edge_weight() {
+  std::vector<double>& local_total_edge_weight() {
     return local_total_edge_weight_;
   }
   std::vector<double>& local_actual_quality() { return local_actual_quality_; }
@@ -137,9 +137,9 @@ class LouvainContext
   COMPUTE_CONTEXT_T compute_context_;
   vertex_state_array_t vertex_state_;
 
-  // members to store local aggrated value
+  // members to store local aggregated value
   std::vector<int64_t> local_change_num_;
-  std::vector<edata_t> local_total_edge_weight_;
+  std::vector<double> local_total_edge_weight_;
   std::vector<double> local_actual_quality_;
 
   bool halt_;  // phase-1 halt

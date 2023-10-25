@@ -35,11 +35,13 @@ class LimitOp {
     size_t cur_ind = 0;
     std::vector<size_t> new_offsets;
     new_offsets.emplace_back(0);
+    upper_bound = std::min((size_t) upper_bound, cur_.Size());
     for (auto iter : ctx) {
       if (cur_ind >= lower_bound && cur_ind < upper_bound) {
         cur_offset += 1;
       }
       new_offsets.push_back(cur_offset);
+      cur_ind += 1;
     }
 
     std::vector<size_t> selected_indices;

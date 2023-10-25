@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rex.RexTmpVariable;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
@@ -320,6 +321,24 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
         List<CypherGSParser.OC_ExpressionContext> exprCtx = ctx.oC_Expression();
         String functionName = ctx.oC_FunctionName().getText();
         switch (functionName.toUpperCase()) {
+            case "LABELS":
+                RexNode labelVar = builder.variable(exprCtx.get(0).getText());
+                Preconditions.checkArgument(
+                        labelVar.getType() instanceof GraphSchemaType
+                                && ((GraphSchemaType) labelVar.getType()).getScanOpt()
+                                        == GraphOpt.Source.VERTEX,
+                        "'labels' can only be applied on vertex type");
+                return new ExprVisitorResult(
+                        builder.variable(exprCtx.get(0).getText(), GraphProperty.LABEL_KEY));
+            case "TYPE":
+                RexNode typeVar = builder.variable(exprCtx.get(0).getText());
+                Preconditions.checkArgument(
+                        typeVar.getType() instanceof GraphSchemaType
+                                && ((GraphSchemaType) typeVar.getType()).getScanOpt()
+                                        == GraphOpt.Source.EDGE,
+                        "'type' can only be applied on edge type");
+                return new ExprVisitorResult(
+                        builder.variable(exprCtx.get(0).getText(), GraphProperty.LABEL_KEY));
             case "LENGTH":
                 Preconditions.checkArgument(
                         !exprCtx.isEmpty(), "LENGTH function should have one argument");
@@ -361,6 +380,8 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
 
     private FunctionType getFunctionType(String functionName) {
         switch (functionName.toUpperCase()) {
+            case "LABELS":
+            case "TYPE":
             case "LENGTH":
             case "HEAD":
                 return FunctionType.SIMPLE;
@@ -520,7 +541,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     public ImmutableMap<Integer, String> getDynamicParams() {
-        return this.paramsBuilder.build();
+        return this.paramsBuilder.buildKeepingLast();
     }
 
     private RexLiteral createIntervalLiteral(String fieldName) {

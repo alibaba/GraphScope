@@ -18,7 +18,8 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::Deref;
 
-use dyn_type::{Object, Primitives};
+use chrono::Timelike;
+use dyn_type::{DateTimeFormats, Object, Primitives};
 
 use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
@@ -254,6 +255,39 @@ impl From<String> for common_pb::Variable {
     }
 }
 
+impl From<i32> for pb::index_predicate::triplet::Value {
+    fn from(value: i32) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<i64> for pb::index_predicate::triplet::Value {
+    fn from(value: i64) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<String> for pb::index_predicate::triplet::Value {
+    fn from(value: String) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<common_pb::Value> for pb::index_predicate::triplet::Value {
+    fn from(value: common_pb::Value) -> Self {
+        pb::index_predicate::triplet::Value::Const(value)
+    }
+}
+
+impl From<common_pb::DynamicParam> for pb::index_predicate::triplet::Value {
+    fn from(param: common_pb::DynamicParam) -> Self {
+        pb::index_predicate::triplet::Value::Param(param)
+    }
+}
+
 impl From<i64> for pb::index_predicate::AndPredicate {
     fn from(id: i64) -> Self {
         pb::index_predicate::AndPredicate {
@@ -329,6 +363,15 @@ impl TryFrom<common_pb::Value> for Object {
                     }
                     Ok(vec.into())
                 }
+                Date(date) => {
+                    Ok((DateTimeFormats::from_date32(date.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Time(time) => {
+                    Ok((DateTimeFormats::from_time32(time.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Timestamp(timestamp) => Ok((DateTimeFormats::from_timestamp_millis(timestamp.item)
+                    .map_err(|e| format!("{:?}", e))?)
+                .into()),
             };
         }
 
@@ -350,22 +393,29 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
             let (key, value) = (predicate.key.as_ref(), predicate.value.as_ref());
             let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
             if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
-                let value = value.ok_or("value is empty in kv_pair in indexed_scan")?;
+                let value_item = value.ok_or(ParsePbError::EmptyFieldError(
+                    "`Value` is empty in kv_pair in indexed_scan".to_string(),
+                ))?;
 
-                match &value.item {
-                    Some(common_pb::value::Item::I64(v)) => {
-                        global_ids.push(*v);
-                    }
-                    Some(common_pb::value::Item::I64Array(arr)) => {
-                        global_ids.extend(arr.item.iter().cloned())
-                    }
-                    Some(common_pb::value::Item::I32(v)) => {
-                        global_ids.push(*v as i64);
-                    }
-                    Some(common_pb::value::Item::I32Array(arr)) => {
-                        global_ids.extend(arr.item.iter().map(|i| *i as i64));
-                    }
-                    _ => Err(ParsePbError::Unsupported(
+                match value_item {
+                    pb::index_predicate::triplet::Value::Const(value) => match value.item.as_ref() {
+                        Some(common_pb::value::Item::I64(v)) => {
+                            global_ids.push(*v);
+                        }
+                        Some(common_pb::value::Item::I64Array(arr)) => {
+                            global_ids.extend(arr.item.iter().cloned())
+                        }
+                        Some(common_pb::value::Item::I32(v)) => {
+                            global_ids.push(*v as i64);
+                        }
+                        Some(common_pb::value::Item::I32Array(arr)) => {
+                            global_ids.extend(arr.item.iter().map(|i| *i as i64));
+                        }
+                        _ => Err(ParsePbError::Unsupported(
+                            "indexed value other than integer (I32, I64) and integer array".to_string(),
+                        ))?,
+                    },
+                    pb::index_predicate::triplet::Value::Param(_) => Err(ParsePbError::Unsupported(
                         "indexed value other than integer (I32, I64) and integer array".to_string(),
                     ))?,
                 }
@@ -375,33 +425,40 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
     }
 }
 
-impl TryFrom<pb::IndexPredicate> for Vec<(NameOrId, Object)> {
+impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
     type Error = ParsePbError;
 
     fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
-        let mut primary_key_values = vec![];
-        // for pk values, which should be a set of and_conditions.
-        let and_predicates = value
-            .or_predicates
-            .get(0)
-            .ok_or(ParsePbError::EmptyFieldError("`OrCondition` is emtpy".to_string()))?;
-        for predicate in &and_predicates.predicates {
-            let key_pb = predicate
-                .key
-                .clone()
-                .ok_or("key is empty in kv_pair in indexed_scan")?;
-            let value = predicate
-                .value
-                .clone()
-                .ok_or("value is empty in kv_pair in indexed_scan")?;
-            let key = match key_pb.item {
-                Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
-                _ => Err(ParsePbError::Unsupported(
-                    "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
-                ))?,
-            };
-            let obj_val = Object::try_from(value)?;
-            primary_key_values.push((key, obj_val));
+        let mut primary_key_values = Vec::with_capacity(value.or_predicates.len());
+        for and_predicates in value.or_predicates {
+            // PkValue can be one-column or multi-columns, which is a set of and_conditions.
+            let mut primary_key_value = Vec::with_capacity(and_predicates.predicates.len());
+            for predicate in &and_predicates.predicates {
+                let key_pb = predicate
+                    .key
+                    .clone()
+                    .ok_or("key is empty in kv_pair in indexed_scan")?;
+                let value_pb = predicate
+                    .value
+                    .clone()
+                    .ok_or("value is empty in kv_pair in indexed_scan")?;
+                let key = match key_pb.item {
+                    Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
+                    _ => Err(ParsePbError::Unsupported(
+                        "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
+                    ))?,
+                };
+                if let pb::index_predicate::triplet::Value::Const(value) = value_pb {
+                    let obj_val = Object::try_from(value)?;
+                    primary_key_value.push((key, obj_val));
+                } else {
+                    Err(ParsePbError::Unsupported(format!(
+                        "unsupported indexed predicate value {:?}",
+                        value_pb
+                    )))?
+                }
+            }
+            primary_key_values.push(primary_key_value);
         }
         Ok(primary_key_values)
     }
@@ -582,6 +639,28 @@ impl From<Object> for common_pb::Value {
                 common_pb::value::Item::PairArray(common_pb::PairArray { item: pairs })
             }
             Object::None => common_pb::value::Item::None(common_pb::None {}),
+            Object::DateFormat(datetime_formats) => match datetime_formats {
+                DateTimeFormats::Date(date) => common_pb::value::Item::Date(common_pb::Date32 {
+                    // convert to days since from 1970-01-01
+                    item: (date
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap() // can savely unwrap since it is valid hour/min/sec
+                        .timestamp()
+                        / 86400) as i32,
+                }),
+                DateTimeFormats::Time(time) => common_pb::value::Item::Time(common_pb::Time32 {
+                    // convert to milliseconds past midnight
+                    item: (time.hour() as i32 * 3600 + time.minute() as i32 * 60 + time.second() as i32)
+                        * 1000
+                        + time.nanosecond() as i32 / 1000_000,
+                }),
+                DateTimeFormats::DateTime(dt) => {
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
+                }
+                DateTimeFormats::DateTimeWithTz(dt) => {
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
+                }
+            },
             _ => unimplemented!(),
         };
 
@@ -792,6 +871,7 @@ impl From<pb::Scan> for physical_pb::Scan {
             alias: scan.alias.map(|tag| tag.try_into().unwrap()),
             params: scan.params,
             idx_predicate: scan.idx_predicate,
+            is_count_only: scan.is_count_only,
         }
     }
 }

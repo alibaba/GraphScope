@@ -19,21 +19,22 @@ package com.alibaba.graphscope.cypher.result;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.neo4j.values.AnyValue;
-import org.neo4j.values.storable.BooleanValue;
-import org.neo4j.values.storable.Values;
+import org.neo4j.values.storable.*;
 import org.neo4j.values.virtual.MapValue;
 import org.neo4j.values.virtual.NodeValue;
 import org.neo4j.values.virtual.RelationshipValue;
@@ -41,8 +42,10 @@ import org.neo4j.values.virtual.VirtualValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CypherRecordParser implements RecordParser<AnyValue> {
@@ -148,7 +151,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         return VirtualValues.nodeValue(
                 vertex.getId(),
                 Values.stringArray(getLabelName(vertex.getLabel(), getLabelTypes(dataType))),
-                MapValue.EMPTY);
+                parseProperties(vertex.getPropertiesList(), dataType));
     }
 
     protected RelationshipValue parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
@@ -165,7 +168,46 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                                 getDstLabelName(edge.getDstLabel(), getLabelTypes(dataType))),
                         MapValue.EMPTY),
                 Values.stringValue(getLabelName(edge.getLabel(), getLabelTypes(dataType))),
-                MapValue.EMPTY);
+                parseProperties(edge.getPropertiesList(), dataType));
+    }
+
+    private MapValue parseProperties(List<IrResult.Property> properties, RelDataType dataType) {
+        Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
+        // data types of properties
+        List<RelDataTypeField> typeFields = dataType.getFieldList();
+        properties.forEach(
+                k -> {
+                    Common.NameOrId key = k.getKey();
+                    // property key string which is used for display
+                    String keyStr;
+                    RelDataTypeField field;
+                    switch (key.getItemCase()) {
+                        case NAME:
+                            // find target field in typeFields by property name
+                            field =
+                                    findFieldByPredicate(
+                                            k1 -> k1.getName().equals(key.getName()), typeFields);
+                            keyStr = key.getName();
+                            break;
+                        case ID:
+                        default:
+                            // find target field in typeFields by property id
+                            field =
+                                    findFieldByPredicate(
+                                            k1 -> k1.getIndex() == key.getId(), typeFields);
+                            keyStr =
+                                    (field != null) ? field.getName() : String.valueOf(key.getId());
+                    }
+                    AnyValue value =
+                            parseValue(k.getValue(), field != null ? field.getType() : null);
+                    valueMap.put(keyStr, value);
+                });
+        return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
+    }
+
+    private RelDataTypeField findFieldByPredicate(
+            Predicate<RelDataTypeField> p, List<RelDataTypeField> typeFields) {
+        return typeFields.stream().filter(k -> p.test(k)).findFirst().orElse(null);
     }
 
     protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
@@ -189,6 +231,9 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
+        if (dataType instanceof GraphLabelType) {
+            return Values.stringValue(parseLabelValue(value, (GraphLabelType) dataType));
+        }
         switch (value.getItemCase()) {
             case BOOLEAN:
                 return value.getBoolean() ? BooleanValue.TRUE : BooleanValue.FALSE;
@@ -219,23 +264,41 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 return Values.stringArray(value.getStrArray().getItemList().toArray(String[]::new));
             case NONE:
                 return Values.NO_VALUE;
+            case DATE:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.DATE,
+                        "date32 value should have date type");
+                return DateValue.epochDate(value.getDate().getItem());
+            case TIME:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.TIME,
+                        "time32 value should have time type");
+                return TimeValue.time(value.getTime().getItem() * 1000_000L, ZoneOffset.UTC);
+            case TIMESTAMP:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.TIMESTAMP,
+                        "timestamp value should have timestamp type");
+                return DateTimeValue.ofEpochMillis(
+                        Values.longValue(value.getTimestamp().getItem()));
             default:
                 throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
         }
     }
 
-    private String getLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+    private String getLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
         switch (nameOrId.getItemCase()) {
             case NAME:
                 return nameOrId.getName();
             case ID:
             default:
                 List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getLabelId() == nameOrId.getId()) {
-                        return labelType.getLabel();
+                if (labelTypes != null) {
+                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
+                        if (labelType.getLabelId() == nameOrId.getId()) {
+                            return labelType.getLabel();
+                        }
+                        labelIds.add(labelType.getLabelId());
                     }
-                    labelIds.add(labelType.getLabelId());
                 }
                 logger.warn(
                         "label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
@@ -243,16 +306,18 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private String getSrcLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+    private String getSrcLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
         switch (nameOrId.getItemCase()) {
             case NAME:
                 return nameOrId.getName();
             case ID:
             default:
                 List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getSrcLabelId() == nameOrId.getId()) {
-                        return labelType.getSrcLabel();
+                if (labelTypes != null) {
+                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
+                        if (labelType.getSrcLabelId() == nameOrId.getId()) {
+                            return labelType.getSrcLabel();
+                        }
                     }
                 }
                 logger.warn(
@@ -263,16 +328,18 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private String getDstLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
+    private String getDstLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
         switch (nameOrId.getItemCase()) {
             case NAME:
                 return nameOrId.getName();
             case ID:
             default:
                 List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getDstLabelId() == nameOrId.getId()) {
-                        return labelType.getDstLabel();
+                if (labelTypes != null) {
+                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
+                        if (labelType.getDstLabelId() == nameOrId.getId()) {
+                            return labelType.getDstLabel();
+                        }
                     }
                 }
                 logger.warn(
@@ -283,18 +350,12 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         }
     }
 
-    private List<GraphLabelType> getLabelTypes(RelDataType dataType) {
-        List<GraphLabelType> labelTypes = Lists.newArrayList();
-        if (dataType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) dataType)
-                    .forEach(
-                            k -> {
-                                labelTypes.add(k.getLabelType());
-                            });
-        } else if (dataType instanceof GraphSchemaType) {
-            labelTypes.add(((GraphSchemaType) dataType).getLabelType());
+    private @Nullable GraphLabelType getLabelTypes(RelDataType dataType) {
+        if (dataType instanceof GraphSchemaType) {
+            return ((GraphSchemaType) dataType).getLabelType();
+        } else {
+            return null;
         }
-        return labelTypes;
     }
 
     private RelDataType getVertexType(RelDataType graphPathType) {
@@ -307,5 +368,36 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         return (graphPathType instanceof GraphPathType)
                 ? ((GraphPathType) graphPathType).getComponentType().getExpandType()
                 : graphPathType;
+    }
+
+    private String parseLabelValue(Common.Value value, GraphLabelType type) {
+        switch (value.getItemCase()) {
+            case STR:
+                return value.getStr();
+            case I32:
+                return parseLabelValue(value.getI32(), type);
+            case I64:
+                return parseLabelValue(value.getI64(), type);
+            default:
+                throw new IllegalArgumentException(
+                        "cannot parse label value with type=" + value.getItemCase().name());
+        }
+    }
+
+    private String parseLabelValue(long labelId, GraphLabelType type) {
+        List<Object> expectedLabelIds = Lists.newArrayList();
+        for (GraphLabelType.Entry entry : type.getLabelsEntry()) {
+            if (entry.getLabelId() == labelId) {
+                return entry.getLabel();
+            }
+            expectedLabelIds.add(entry.getLabelId());
+        }
+        throw new IllegalArgumentException(
+                "cannot parse label value="
+                        + labelId
+                        + " from expected type="
+                        + type
+                        + ", expected ids are "
+                        + expectedLabelIds);
     }
 }

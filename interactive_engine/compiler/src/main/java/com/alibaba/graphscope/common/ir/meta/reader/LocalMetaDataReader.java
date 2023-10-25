@@ -57,8 +57,19 @@ public class LocalMetaDataReader implements MetaDataReader {
                         GraphConfig.GRAPH_STORED_PROCEDURES_ENABLE_LISTS.get(configs));
         List<InputStream> procedureInputs = Lists.newArrayList();
         if (enableProcedureList.isEmpty()) {
+            logger.info("Load all procedures in {}", procedurePath);
             for (File file : procedureDir.listFiles()) {
-                procedureInputs.add(new FileInputStream(file));
+                logger.debug("Found procedure config {}", file.getName());
+                try {
+                    if (FileUtils.getFormatType(file.getAbsolutePath()) == FileFormatType.YAML) {
+                        procedureInputs.add(new FileInputStream(file));
+                    }
+                } catch (Exception e) {
+                    logger.warn(
+                            "procedure config {} has invalid format, error msg: {}",
+                            file.getName(),
+                            e);
+                }
             }
         } else {
             Map<String, InputStream> procedureInputMap =
@@ -81,8 +92,16 @@ public class LocalMetaDataReader implements MetaDataReader {
             throws IOException {
         Map<String, InputStream> procedureInputMap = Maps.newHashMap();
         for (File file : procedureDir.listFiles()) {
-            String procedureName = getProcedureName(file);
-            procedureInputMap.put(procedureName, new FileInputStream(file));
+            try {
+                if (FileUtils.getFormatType(file.getAbsolutePath()) == FileFormatType.YAML) {
+                    String procedureName = getProcedureName(file);
+                    procedureInputMap.put(procedureName, new FileInputStream(file));
+                    logger.debug("load procedure {}", procedureName);
+                }
+            } catch (Exception e) {
+                logger.debug(
+                        "procedure config {} has invalid format, error msg: {}", file.getName(), e);
+            }
         }
         return procedureInputMap;
     }

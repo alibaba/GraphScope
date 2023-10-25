@@ -89,7 +89,7 @@ seastar::future<query_result> executor::run_hqps_adhoc_query(
   physical::PhysicalPlan plan;
   bool ret = plan.ParseFromArray(str_data, str_length);
   if (ret) {
-    LOG(INFO) << "Parse physical plan: " << plan.DebugString();
+    VLOG(10) << "Parse physical plan: " << plan.DebugString();
   } else {
     LOG(ERROR) << "Fail to parse physical plan";
     return seastar::make_exception_future<query_result>(
