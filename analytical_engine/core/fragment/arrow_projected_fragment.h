@@ -862,17 +862,17 @@ class ArrowProjectedFragment
     size_t nbytes = 0;
     if (fragment->directed()) {
       vineyard::FixedInt64Builder ie_offsets_begin_builder(
-          client, fragment->ivnums_[v_label]);
+          client, fragment->tvnums_[v_label]);
       vineyard::FixedInt64Builder ie_offsets_end_builder(
-          client, fragment->ivnums_[v_label]);
+          client, fragment->tvnums_[v_label]);
       std::shared_ptr<vineyard::FixedInt64Builder> ie_boffsets_begin_builder;
       std::shared_ptr<vineyard::FixedInt64Builder> ie_boffsets_end_builder;
       if (COMPACT) {
         ie_boffsets_begin_builder =
             std::make_shared<vineyard::FixedInt64Builder>(
-                client, fragment->ivnums_[v_label]);
+                client, fragment->tvnums_[v_label]);
         ie_boffsets_end_builder = std::make_shared<vineyard::FixedInt64Builder>(
-            client, fragment->ivnums_[v_label]);
+            client, fragment->tvnums_[v_label]);
         selectEdgeByNeighborLabel(
             fragment, v_label,
             fragment->compact_ie_lists_[v_label][e_label]->GetArray(),
@@ -914,17 +914,17 @@ class ArrowProjectedFragment
         oe_boffsets_end;
     {
       vineyard::FixedInt64Builder oe_offsets_begin_builder(
-          client, fragment->ivnums_[v_label]);
+          client, fragment->tvnums_[v_label]);
       vineyard::FixedInt64Builder oe_offsets_end_builder(
-          client, fragment->ivnums_[v_label]);
+          client, fragment->tvnums_[v_label]);
       std::shared_ptr<vineyard::FixedInt64Builder> oe_boffsets_begin_builder;
       std::shared_ptr<vineyard::FixedInt64Builder> oe_boffsets_end_builder;
       if (COMPACT) {
         oe_boffsets_begin_builder =
             std::make_shared<vineyard::FixedInt64Builder>(
-                client, fragment->ivnums_[v_label]);
+                client, fragment->tvnums_[v_label]);
         oe_boffsets_end_builder = std::make_shared<vineyard::FixedInt64Builder>(
-            client, fragment->ivnums_[v_label]);
+            client, fragment->tvnums_[v_label]);
         selectEdgeByNeighborLabel(
             fragment, v_label,
             fragment->compact_oe_lists_[v_label][e_label]->GetArray(),
@@ -1680,6 +1680,7 @@ class ArrowProjectedFragment
       const std::shared_ptr<arrow::FixedSizeBinaryArray>& nbr_list,
       const std::shared_ptr<arrow::Int64Array>& offsets, int64_t* begins,
       int64_t* ends) {
+    const int64_t* offset_values = offsets->raw_values();
     vineyard::parallel_for(
         static_cast<vid_t>(0), fragment->tvnums_[v_label],
         [&](vid_t i) {

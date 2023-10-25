@@ -33,9 +33,9 @@ def test_load_from_graphar(graphscope_session):
     graph_yaml_path = "graphar+file:///tmp/graphar/ldbc_sample.graph.yml" 
     print(graph_yaml_path)
     g = Graph.load_from(graph_yaml_path, graphscope_session)
-    # ldbc_simple = g.project(vertices={"person": []}, edges={"knows": []})
-    # ctx = pagerank(ldbc_simple)
-    # print(ctx.to_dataframe({"id": "v.id", "value": "r"}))
+    ldbc_simple = g.project(vertices={"person": []}, edges={"knows": []})
+    ctx = pagerank(ldbc_simple)
+    print(ctx.to_dataframe({"id": "v.id", "value": "r"}))
     assert g.schema is not None
     del g
 
