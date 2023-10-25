@@ -120,7 +120,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     @Override
-    public RelNode visit(GraphLogicalExpandCount expandCount) {
+    public RelNode visit(GraphLogicalExpandDegree expandCount) {
         GraphLogicalExpand fusedExpand = expandCount.getFusedExpand();
         Pointer ptrExpandCount =
                 LIB.initEdgexpdOperator(

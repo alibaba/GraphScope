@@ -32,7 +32,7 @@ public interface GraphRelShuttle {
 
     RelNode visit(GraphLogicalExpand expand);
 
-    RelNode visit(GraphLogicalExpandCount expandCount);
+    RelNode visit(GraphLogicalExpandDegree expandCount);
 
     RelNode visit(GraphLogicalGetV getV);
 

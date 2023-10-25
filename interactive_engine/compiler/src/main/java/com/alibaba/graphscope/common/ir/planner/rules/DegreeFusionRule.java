@@ -2,175 +2,258 @@ package com.alibaba.graphscope.common.ir.planner.rules;
 
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpandCount;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpandDegree;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
-import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.plan.*;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptRuleCall;
+import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.TransformationRule;
-import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.SqlKind;
+import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class DegreeFusionRule<C extends DegreeFusionRule.Config> extends RelRule<C>
+public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule<C>
         implements TransformationRule {
     protected DegreeFusionRule(C config) {
         super(config);
     }
 
-    @Override
-    public void onMatch(RelOptRuleCall call) {
-        GraphLogicalAggregate aggregate = call.rel(0);
-        GraphLogicalGetV getV = call.rel(1);
-        GraphLogicalExpand expand = call.rel(2);
-
-        GraphBuilder graphBuilder = (GraphBuilder) call.builder();
-
-        List<GraphAggCall> groupCalls = aggregate.getAggCalls();
-
-        // aggregate have one aggcall, and none key, which means this is COUNT(*)
-        if (!(groupCalls.size() == 1 && aggregate.getGroupKey().groupKeyCount() == 0)) {
-            return;
-        }
-
-        // if expand has alias, e.g. g.V().out().as("a"),
-        // or getV has alias, e.g. g.V().as("a").out(),
-        // can't fusion
-        //        if (expand.getAliasName() != null
-        //                || expand.getAliasName() != AliasInference.DEFAULT_NAME
-        //                || getV.getAliasName() != null
-        //                || getV.getAliasName() != AliasInference.DEFAULT_NAME) {
-        //            return;
-        //        }
-
-        // Create new expandcount for Degree Fusion
-        // type is RecordType(BIGINT cnt of y)
-        RelNode expandCount =
-                GraphLogicalExpandCount.create(
+    protected RelNode transform(
+            GraphLogicalAggregate count, GraphLogicalExpand expand, GraphBuilder builder) {
+        RelNode expandDegree =
+                GraphLogicalExpandDegree.create(
                         (GraphOptCluster) expand.getCluster(),
                         ImmutableList.of(),
                         expand.getInput(0),
-                        (GraphLogicalExpand) expand,
-                        "cnt of " + expand.getAliasName());
-        graphBuilder.push(expandCount);
-
-        //        GroupKey key = graphBuilder.groupKey();
-
-        // create new aggcalls for new aggregate
-        List<GraphAggCall> newCalls = new ArrayList<>(aggregate.getAggCallList().size());
-        int i = 1; // for test
-        for (GraphAggCall aggregateCall : groupCalls) {
-            System.out.println(i);
-            i++; // for test
-            // get first operand, which is expandCount
-            List<RexNode> expandCountNode = new ArrayList<>();
-            expandCountNode.add(
-                    graphBuilder.variable(((GraphLogicalExpandCount) expandCount).getAliasName()));
-            GraphAggCall newCall =
-                    new GraphAggCall(
-                                    // aggregateCall.getCluster(),
-                                    (GraphOptCluster) expandCount.getCluster(),
-                                    GraphStdOperatorTable.SUM0, // change
-                                    expandCountNode)
-                            .as("sum")
-                            .distinct(aggregateCall.isDistinct());
-            newCalls.add(newCall);
-        }
-
-        // create aggregate(sum)
-        GraphLogicalAggregate newAggregate =
-                GraphLogicalAggregate.create(
-                        (GraphOptCluster) expandCount.getCluster(),
-                        ImmutableList.of(),
-                        expandCount,
-                        (GraphGroupKeys) graphBuilder.groupKey(), // SUM, also empty
-                        newCalls);
-
-        System.out.println(newAggregate.getRowType().toString());
-
-        call.transformTo(newAggregate);
+                        expand,
+                        null);
+        builder.push(expandDegree);
+        Preconditions.checkArgument(
+                !count.getAggCalls().isEmpty(),
+                "there should be at least one aggregate call in count");
+        String countAlias = count.getAggCalls().get(0).getAlias();
+        return builder.aggregate(
+                        builder.groupKey(),
+                        builder.sum0(false, countAlias, builder.variable((String) null)))
+                .build();
     }
 
-    public static class Config implements RelRule.Config {
-        public static DegreeFusionRule.Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(
-                                b0 ->
-                                        b0.operand(GraphLogicalAggregate.class)
-                                                .predicate(
-                                                        aggregate ->
-                                                                aggregate
-                                                                                .getGroupKey()
-                                                                                .groupKeyCount()
-                                                                        == 0)
-                                                //
-                                                // .predicate(aggregate ->
-                                                // aggregate.getAggCalls().get(0).
-                                                //
-                                                //              getAggFunction() == SqlKind.COUNT)
-                                                .oneInput(
-                                                        b1 ->
-                                                                b1.operand(GraphLogicalGetV.class)
-                                                                        .oneInput(
-                                                                                b2 ->
-                                                                                        b2.operand(
-                                                                                                        GraphLogicalExpand
-                                                                                                                .class)
-                                                                                                .anyInputs())))
-                        .withRelBuilderFactory(
-                                (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
-                                        GraphBuilder.create(
-                                                null, (GraphOptCluster) cluster, schema));
-
-        private RelRule.OperandTransform operandSupplier;
-        private @Nullable String description;
-        private RelBuilderFactory builderFactory;
-
-        @Override
-        public RelRule toRule() {
-            return new DegreeFusionRule(this);
+    // transform expand + count to expandDegree + sum
+    public static class Expand extends DegreeFusionRule<Expand.Config> {
+        protected Expand(Config config) {
+            super(config);
         }
 
         @Override
-        public Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
-            this.builderFactory = relBuilderFactory;
-            return this;
+        public void onMatch(RelOptRuleCall call) {
+            GraphLogicalAggregate count = call.rel(0);
+            GraphLogicalExpand expand = call.rel(1);
+            GraphBuilder builder = (GraphBuilder) call.builder();
+            call.transformTo(transform(count, expand, builder));
+        }
+
+        public static class Config implements RelRule.Config {
+            public static Expand.Config DEFAULT =
+                    new Expand.Config()
+                            .withOperandSupplier(
+                                    b0 ->
+                                            b0.operand(GraphLogicalAggregate.class)
+                                                    .predicate(
+                                                            (GraphLogicalAggregate aggregate) -> {
+                                                                RelBuilder.GroupKey key =
+                                                                        aggregate.getGroupKey();
+                                                                List<GraphAggCall> calls =
+                                                                        aggregate.getAggCalls();
+                                                                return key.groupKeyCount() == 0
+                                                                        && calls.size() == 1
+                                                                        && calls.get(0)
+                                                                                        .getAggFunction()
+                                                                                        .getKind()
+                                                                                == SqlKind.COUNT
+                                                                        && !calls.get(0)
+                                                                                .isDistinct();
+                                                            })
+                                                    .oneInput(
+                                                            b1 ->
+                                                                    b1.operand(
+                                                                                    GraphLogicalExpand
+                                                                                            .class)
+                                                                            .predicate(
+                                                                                    (GraphLogicalExpand
+                                                                                                    expand) ->
+                                                                                            expand
+                                                                                                            .getAliasName()
+                                                                                                    == AliasInference
+                                                                                                            .DEFAULT_NAME)
+                                                                            .anyInputs()));
+            private RelRule.OperandTransform operandSupplier;
+            private @Nullable String description;
+            private RelBuilderFactory builderFactory;
+
+            @Override
+            public Expand.Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
+                this.builderFactory = relBuilderFactory;
+                return this;
+            }
+
+            @Override
+            public Expand.Config withDescription(
+                    @org.checkerframework.checker.nullness.qual.Nullable String s) {
+                this.description = s;
+                return this;
+            }
+
+            @Override
+            public Expand.Config withOperandSupplier(OperandTransform operandTransform) {
+                this.operandSupplier = operandTransform;
+                return this;
+            }
+
+            @Override
+            public OperandTransform operandSupplier() {
+                return this.operandSupplier;
+            }
+
+            @Override
+            public @org.checkerframework.checker.nullness.qual.Nullable String description() {
+                return this.description;
+            }
+
+            @Override
+            public Expand toRule() {
+                return new Expand(this);
+            }
+
+            @Override
+            public RelBuilderFactory relBuilderFactory() {
+                return this.builderFactory;
+            }
+        }
+    }
+
+    // transform expand + getV + count to expandDegree + sum
+    public static class ExpandGetV extends DegreeFusionRule<ExpandGetV.Config> {
+        protected ExpandGetV(Config config) {
+            super(config);
         }
 
         @Override
-        public Config withDescription(
-                @org.checkerframework.checker.nullness.qual.Nullable String s) {
-            this.description = s;
-            return this;
+        public void onMatch(RelOptRuleCall call) {
+            GraphLogicalAggregate count = call.rel(0);
+            GraphLogicalExpand expand = call.rel(2);
+            GraphBuilder builder = (GraphBuilder) call.builder();
+            call.transformTo(transform(count, expand, builder));
         }
 
-        @Override
-        public Config withOperandSupplier(OperandTransform operandTransform) {
-            this.operandSupplier = operandTransform;
-            return this;
-        }
+        public static class Config implements RelRule.Config {
+            public static ExpandGetV.Config DEFAULT =
+                    new ExpandGetV.Config()
+                            .withOperandSupplier(
+                                    b0 ->
+                                            b0.operand(GraphLogicalAggregate.class)
+                                                    // should be global count and is not distinct
+                                                    .predicate(
+                                                            (GraphLogicalAggregate aggregate) -> {
+                                                                RelBuilder.GroupKey key =
+                                                                        aggregate.getGroupKey();
+                                                                List<GraphAggCall> calls =
+                                                                        aggregate.getAggCalls();
+                                                                return key.groupKeyCount() == 0
+                                                                        && calls.size() == 1
+                                                                        && calls.get(0)
+                                                                                        .getAggFunction()
+                                                                                        .getKind()
+                                                                                == SqlKind.COUNT
+                                                                        && !calls.get(0)
+                                                                                .isDistinct();
+                                                            })
+                                                    .oneInput(
+                                                            b1 ->
+                                                                    // should be getV without any
+                                                                    // query given alias, and opt is
+                                                                    // not BOTH
+                                                                    b1.operand(
+                                                                                    GraphLogicalGetV
+                                                                                            .class)
+                                                                            .predicate(
+                                                                                    (GraphLogicalGetV
+                                                                                                    getV) ->
+                                                                                            getV
+                                                                                                                    .getAliasName()
+                                                                                                            == AliasInference
+                                                                                                                    .DEFAULT_NAME
+                                                                                                    && getV
+                                                                                                                    .getOpt()
+                                                                                                            != GraphOpt
+                                                                                                                    .GetV
+                                                                                                                    .BOTH)
+                                                                            .oneInput(
+                                                                                    b2 ->
+                                                                                            // should be expand without any query given alias
+                                                                                            b2.operand(
+                                                                                                            GraphLogicalExpand
+                                                                                                                    .class)
+                                                                                                    .predicate(
+                                                                                                            (GraphLogicalExpand
+                                                                                                                            expand) ->
+                                                                                                                    expand
+                                                                                                                                    .getAliasName()
+                                                                                                                            == AliasInference
+                                                                                                                                    .DEFAULT_NAME)
+                                                                                                    .anyInputs())));
+            private RelRule.OperandTransform operandSupplier;
+            private @Nullable String description;
+            private RelBuilderFactory builderFactory;
 
-        @Override
-        public OperandTransform operandSupplier() {
-            return this.operandSupplier;
-        }
+            @Override
+            public ExpandGetV.Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
+                this.builderFactory = relBuilderFactory;
+                return this;
+            }
 
-        @Override
-        public @org.checkerframework.checker.nullness.qual.Nullable String description() {
-            return this.description;
-        }
+            @Override
+            public ExpandGetV.Config withDescription(
+                    @org.checkerframework.checker.nullness.qual.Nullable String s) {
+                this.description = s;
+                return this;
+            }
 
-        @Override
-        public RelBuilderFactory relBuilderFactory() {
-            return this.builderFactory;
+            @Override
+            public ExpandGetV.Config withOperandSupplier(OperandTransform operandTransform) {
+                this.operandSupplier = operandTransform;
+                return this;
+            }
+
+            @Override
+            public OperandTransform operandSupplier() {
+                return this.operandSupplier;
+            }
+
+            @Override
+            public @org.checkerframework.checker.nullness.qual.Nullable String description() {
+                return this.description;
+            }
+
+            @Override
+            public ExpandGetV toRule() {
+                return new ExpandGetV(this);
+            }
+
+            @Override
+            public RelBuilderFactory relBuilderFactory() {
+                return this.builderFactory;
+            }
         }
     }
 }

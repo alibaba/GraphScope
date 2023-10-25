@@ -16,14 +16,10 @@
 
 package com.alibaba.graphscope.common.ir;
 
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpandCount;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.google.common.collect.ImmutableList;
 
-import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -117,33 +113,5 @@ public class ExpandTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 pathExpand.explain().trim());
-    }
-
-    @Test
-    public void fuse_expand_count_test() {
-        GraphBuilder builder = Utils.mockGraphBuilder();
-        RelNode expand =
-                builder.source(
-                                new SourceConfig(
-                                        GraphOpt.Source.VERTEX,
-                                        new LabelConfig(false).addLabel("person")))
-                        .expand(
-                                new ExpandConfig(
-                                        GraphOpt.Expand.OUT,
-                                        new LabelConfig(false).addLabel("knows")))
-                        .build();
-        RelNode expandCount =
-                GraphLogicalExpandCount.create(
-                        (GraphOptCluster) expand.getCluster(),
-                        ImmutableList.of(),
-                        expand.getInput(0),
-                        (GraphLogicalExpand) expand,
-                        "a");
-        Assert.assertEquals(
-                "GraphLogicalExpandCount(tableConfig=[{isAll=false, tables=[knows]}], alias=[a])\n"
-                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
-                expandCount.explain().trim());
-        Assert.assertEquals("RecordType(BIGINT a)", expandCount.getRowType().toString());
     }
 }

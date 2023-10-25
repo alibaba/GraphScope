@@ -34,12 +34,12 @@ import java.util.List;
 import java.util.Objects;
 
 // fuse expand + count after applying 'DegreeFusionRule'
-public class GraphLogicalExpandCount extends SingleRel {
+public class GraphLogicalExpandDegree extends SingleRel {
     private final GraphLogicalExpand fusedExpand;
     private final String aliasName;
     private final int aliasId;
 
-    protected GraphLogicalExpandCount(
+    protected GraphLogicalExpandDegree(
             GraphOptCluster cluster,
             List<RelHint> hints,
             RelNode input,
@@ -53,13 +53,13 @@ public class GraphLogicalExpandCount extends SingleRel {
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
     }
 
-    public static GraphLogicalExpandCount create(
+    public static GraphLogicalExpandDegree create(
             GraphOptCluster cluster,
             List<RelHint> hints,
             RelNode input,
             GraphLogicalExpand innerExpand,
             @Nullable String alias) {
-        return new GraphLogicalExpandCount(cluster, hints, input, innerExpand, alias);
+        return new GraphLogicalExpandDegree(cluster, hints, input, innerExpand, alias);
     }
 
     @Override
