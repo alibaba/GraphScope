@@ -5,10 +5,7 @@ import static com.alibaba.graphscope.common.ir.tools.Utils.getOutputType;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
-import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
@@ -17,10 +14,7 @@ import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexPermuteGraphShuttle;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
-import com.alibaba.graphscope.common.ir.tools.config.GetVConfig;
-import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
-import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
@@ -28,7 +22,10 @@ import com.google.common.collect.ImmutableSet;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.apache.calcite.linq4j.Ord;
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Join;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -38,6 +35,7 @@ import org.apache.calcite.rex.RexVisitor;
 import org.apache.calcite.sql2rel.RelFieldTrimmer;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.util.ReflectUtil;
+import org.apache.calcite.util.mapping.IntPair;
 import org.apache.calcite.util.mapping.Mapping;
 import org.apache.calcite.util.mapping.MappingType;
 import org.apache.calcite.util.mapping.Mappings;
@@ -379,6 +377,99 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     RelNode newMatch =
         graphBuilder.match(newInputs.get(0), newInputs.subList(1, sentences.size())).build();
     return result(newMatch, mapping, multiMatch);
+  }
+
+
+  public TrimResult trimFields(GraphLogicalPathExpand pathExpand, UsedFields fieldsUsed) {
+   RelNode input=pathExpand.getInput();
+   RelNode expand=pathExpand.getExpand();
+   RelNode getV=pathExpand.getGetV();
+
+    int fieldCount = pathExpand.getRowType().getFieldCount();
+    final Mapping mapping = Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldCount);
+    for (int i = 0; i < fieldCount; ++i) {
+      mapping.set(i, i);
+    }
+
+   //trim children
+    RelNode newInput=trimChild(input,fieldsUsed).left;
+    RelNode newExpand=trimChild(expand,fieldsUsed).left;
+    RelNode newGetV=trimChild(getV,fieldsUsed).left;
+    GraphLogicalPathExpand newPathExpand= GraphLogicalPathExpand.create((GraphOptCluster) pathExpand.getCluster(),
+                                                      pathExpand.getHints(), newInput,
+                                   newExpand, newGetV,
+                                  pathExpand.getOffset(), pathExpand.getFetch(), pathExpand.getResultOpt(),
+                                  pathExpand.getPathOpt(), pathExpand.getAliasName());
+    return result(newPathExpand,mapping,pathExpand);
+
+  }
+
+
+  public TrimResult trimFields(Join join, UsedFields fieldsUsed) {
+   UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
+   ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
+
+   List<RelDataTypeField> inputFields=new ArrayList<>(join.getLeft().getRowType().getFieldList());
+   inputFields.addAll(join.getRight().getRowType().getFieldList());
+   final int inputFieldCount=inputFields.size();
+   int newInputFieldCount=0;
+
+    // Find used properties in  join conditions
+    final RexNode condition=join.getCondition();
+   condition.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+            .forEach(varUsedBuilder::add);
+   ImmutableSet<RelDataTypeField> current =
+           findUsedFieldsByVars(varUsedBuilder.build(), inputFields);
+   inputFieldsUsed.concat(current);
+
+   // FIXME: do we need to cope with system fields
+
+    final List<RelNode> newInputs = new ArrayList<>(2);
+    final List<Mapping> inputMappings = new ArrayList<>();
+
+    for(RelNode input:join.getInputs()){
+       TrimResult result= trimChild(input,inputFieldsUsed);
+       newInputs.add(result.left);
+      inputMappings.add(result.right);
+       newInputFieldCount+=result.right.getTargetCount();
+    }
+
+    Mapping mapping =
+            Mappings.create(
+                    MappingType.INVERSE_SURJECTION,
+                    inputFieldCount,
+                    newInputFieldCount);
+
+    for (int i = 0; i < inputMappings.size(); i++) {
+      Mapping inputMapping = inputMappings.get(i);
+      for (IntPair pair : inputMapping) {
+        mapping.set(pair.source , pair.target );
+      }
+    }
+
+    // Build new join.
+    final RexVisitor<RexNode> shuttle =
+            new RexPermuteGraphShuttle(
+                    mapping, newInputs.get(0), newInputs.get(1));
+    RexNode newConditionExpr =
+            condition.accept(shuttle);
+
+    graphBuilder.push(newInputs.get(0));
+    graphBuilder.push(newInputs.get(1));
+
+    // For SemiJoins and AntiJoins only map fields from the left-side
+    if(join.getJoinType()== JoinRelType.SEMI||join.getJoinType()==JoinRelType.ANTI){
+      Mapping inputMapping = inputMappings.get(0);
+      mapping = Mappings.create(MappingType.INVERSE_SURJECTION,
+                                join.getRowType().getFieldCount(),
+                                inputMapping.getTargetCount());
+      for (IntPair pair : inputMapping) {
+        mapping.set(pair.source , pair.target);
+      }
+    }
+
+    graphBuilder.join(join.getJoinType(),newConditionExpr);
+    return result(graphBuilder.build(),mapping,join);
   }
 
   public TrimResult trimFields(AbstractBindableTableScan tableScan, UsedFields fieldsUsed) {

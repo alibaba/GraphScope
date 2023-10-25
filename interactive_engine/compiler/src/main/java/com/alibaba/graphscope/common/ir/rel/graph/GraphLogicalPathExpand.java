@@ -52,6 +52,8 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     private final int aliasId;
 
+    private final @Nullable List<RelHint> hints;
+
     protected GraphLogicalPathExpand(
             GraphOptCluster cluster,
             @Nullable List<RelHint> hints,
@@ -64,6 +66,7 @@ public class GraphLogicalPathExpand extends SingleRel {
             GraphOpt.PathExpandPath pathOpt,
             @Nullable String aliasName) {
         super(cluster, RelTraitSet.createEmpty(), input);
+        this.hints=hints;
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
@@ -78,7 +81,7 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     public static GraphLogicalPathExpand create(
             GraphOptCluster cluster,
-            List<RelHint> hints,
+            @Nullable List<RelHint> hints,
             RelNode input,
             RelNode expand,
             RelNode getV,
@@ -134,6 +137,8 @@ public class GraphLogicalPathExpand extends SingleRel {
     public @Nullable RexNode getFetch() {
         return fetch;
     }
+
+    public @Nullable List<RelHint> getHints(){return this.hints;}
 
     @Override
     protected RelDataType deriveRowType() {

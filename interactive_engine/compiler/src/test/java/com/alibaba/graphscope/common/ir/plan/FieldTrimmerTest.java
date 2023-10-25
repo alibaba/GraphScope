@@ -182,7 +182,7 @@ public class FieldTrimmerTest {
         rowTypeString(after));
   }
 
-  // Match(x:person)-[y:knows]->( ) witch name=x.name where name = "Alice" return x.id
+  // Match(x:person)-[y:knows]->( ) with name=x.name where name = "Alice" return x.id
   // test append=true
   @Test
   public void field_trimmer_4_test() {
@@ -221,8 +221,8 @@ public class FieldTrimmerTest {
 
     Assert.assertEquals(
         "RecordType(BIGINT id)\n"
-            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) x)\n"
-            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) x)\n"
+            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name) x)\n"
+            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name) x)\n"
             + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name) x, Graph_Schema_Type() y)\n",
         rowTypeString(after));
   }
