@@ -31,7 +31,8 @@ class HQPSService {
   ~HQPSService();
 
   // the store procedure contains <query_id, query_name, store_path>
-  void init(uint32_t num_shards, uint16_t http_port, bool dpdk_mode);
+  void init(uint32_t num_shards, uint16_t http_port, bool dpdk_mode,
+            bool enable_thread_resource_pool, unsigned external_thread_num);
 
   void run_and_wait_for_exit();
   void set_exit_state();

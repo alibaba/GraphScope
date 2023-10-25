@@ -26,8 +26,13 @@ namespace server {
 
 class actor_system {
  public:
-  actor_system(uint32_t num_shards, bool enable_dpdk)
-      : num_shards_(num_shards), enable_dpdk_(enable_dpdk) {}
+  actor_system(uint32_t num_shards, bool enable_dpdk,
+               bool enable_thread_resource_pool = false,
+               unsigned external_thread_num = 1)
+      : num_shards_(num_shards),
+        enable_dpdk_(enable_dpdk),
+        enable_thread_resource_pool_(enable_thread_resource_pool),
+        external_thread_num_(external_thread_num) {}
   ~actor_system();
 
   void launch();
@@ -39,6 +44,8 @@ class actor_system {
  private:
   const uint32_t num_shards_;
   const bool enable_dpdk_;
+  const bool enable_thread_resource_pool_;
+  const unsigned external_thread_num_;
   std::unique_ptr<std::thread> main_thread_;
   std::atomic<bool> running_{false};
   sem_t ready_;

@@ -28,7 +28,7 @@ import org.apache.calcite.sql.SqlOperator;
 
 import java.util.List;
 
-public class ProcedurePhysicalBuilder extends PhysicalBuilder<byte[]> {
+public class ProcedurePhysicalBuilder extends PhysicalBuilder {
     private final StoredProcedure.Query.Builder builder;
 
     public ProcedurePhysicalBuilder(LogicalPlan logicalPlan) {
@@ -59,19 +59,18 @@ public class ProcedurePhysicalBuilder extends PhysicalBuilder<byte[]> {
     }
 
     @Override
-    public String explain() {
+    public PhysicalPlan build() {
+        return new PhysicalPlan(this.builder.build().toByteArray(), explain());
+    }
+
+    @Override
+    public void close() throws Exception {}
+
+    private String explain() {
         try {
             return JsonFormat.printer().print(this.builder);
         } catch (InvalidProtocolBufferException e) {
             throw new RuntimeException(e);
         }
     }
-
-    @Override
-    public byte[] build() {
-        return this.builder.build().toByteArray();
-    }
-
-    @Override
-    public void close() throws Exception {}
 }

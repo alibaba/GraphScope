@@ -16,21 +16,26 @@
 
 package com.alibaba.graphscope.common.ir.runtime;
 
-import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import org.apache.commons.lang3.StringUtils;
 
-/**
- * build physical plan from logical plan
- */
-public abstract class PhysicalBuilder implements AutoCloseable {
-    protected final LogicalPlan logicalPlan;
+public class PhysicalPlan<T> {
+    private final T content;
+    private final String explain;
 
-    protected PhysicalBuilder(LogicalPlan logicalPlan) {
-        this.logicalPlan = logicalPlan;
+    public static PhysicalPlan createEmpty() {
+        return new PhysicalPlan(null, StringUtils.EMPTY);
     }
 
-    /**
-     * build physical plan
-     * @return
-     */
-    public abstract PhysicalPlan build();
+    public PhysicalPlan(T content, String explain) {
+        this.content = content;
+        this.explain = explain;
+    }
+
+    public T getContent() {
+        return content;
+    }
+
+    public String explain() {
+        return explain;
+    }
 }
