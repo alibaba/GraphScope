@@ -21,6 +21,7 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -58,5 +59,18 @@ public class TableConfig {
                         .map(k -> k.getQualifiedName().get(0))
                         .collect(Collectors.toList());
         return "{" + "isAll=" + isAll + ", tables=" + labelNames + '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TableConfig that = (TableConfig) o;
+        return isAll == that.isAll && Objects.equals(tables, that.tables);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(isAll, tables);
     }
 }

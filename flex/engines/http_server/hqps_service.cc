@@ -16,9 +16,11 @@
 #include "flex/engines/http_server/options.h"
 namespace server {
 
-void HQPSService::init(uint32_t num_shards, uint16_t http_port,
-                       bool dpdk_mode) {
-  actor_sys_ = std::make_unique<actor_system>(num_shards, dpdk_mode);
+void HQPSService::init(uint32_t num_shards, uint16_t http_port, bool dpdk_mode,
+                       bool enable_thread_resource_pool,
+                       unsigned external_thread_num) {
+  actor_sys_ = std::make_unique<actor_system>(
+      num_shards, dpdk_mode, enable_thread_resource_pool, external_thread_num);
   http_hdl_ = std::make_unique<hqps_http_handler>(http_port);
 }
 

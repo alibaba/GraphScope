@@ -301,4 +301,22 @@ public class MovieQueries {
                             + " \"Tom Cruise\"}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_movie_query16_test() {
+        String query = "Match (n:Movie {id: 0}) Where n.title starts with 'The' Return n.title;";
+        List<String> expected = Arrays.asList("Record<{title: \"The Matrix\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query17_test() {
+        String query = "Match (n:Movie {id: 0}) Where n.title ends with 'Matrix' Return n.title;";
+        List<String> expected = Arrays.asList("Record<{title: \"The Matrix\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query18_test() {
+        String query = "Match (n:Movie {id: 0}) Where n.title contains 'The' Return n.title;";
+        List<String> expected = Arrays.asList("Record<{title: \"The Matrix\"}>");
+        return new QueryContext(query, expected);
+    }
 }

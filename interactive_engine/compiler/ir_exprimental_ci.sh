@@ -24,6 +24,7 @@ sleep 5s
 cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/movie_schema.json &
 sleep 10s
 # run cypher movie tests
+export ENGINE_TYPE=pegasus
 cd ${base_dir} && make cypher_test
 exit_code=$?
 # clean service

@@ -157,7 +157,8 @@ impl ExprToken for pb::ExprOpr {
                         | pb::Logical::Without
                         | pb::Logical::Startswith
                         | pb::Logical::Endswith
-                        | pb::Logical::Isnull => 80,
+                        | pb::Logical::Isnull
+                        | pb::Logical::Regex => 80,
                         pb::Logical::And => 75,
                         pb::Logical::Or => 70,
                         pb::Logical::Not => 110,
