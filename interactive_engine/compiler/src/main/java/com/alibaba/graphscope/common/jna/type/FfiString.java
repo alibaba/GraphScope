@@ -41,7 +41,7 @@ public class FfiString extends PointerType {
     private void release() {
         Pointer cstr = getPointer();
         if (cstr != null) {
-            logger.info("free ffi str pointed by {}", cstr);
+            logger.debug("free ffi str pointed by {}", cstr);
             IrCoreLibrary.INSTANCE.destroyCstrPointer(cstr);
         }
     }
