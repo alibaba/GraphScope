@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
@@ -167,6 +168,31 @@ public class ExpressionTest {
         RexNode node = builder.call(GraphStdOperatorTable.UNARY_MINUS, var);
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.INTEGER);
         Assert.assertEquals("-(a.age)", node.toString());
+    }
+
+    // @age + 1
+    @Test
+    public void dynamic_param_type_test() {
+        GraphRexBuilder rexBuilder = (GraphRexBuilder) builder.getRexBuilder();
+        RexNode plus =
+                builder.call(
+                        GraphStdOperatorTable.PLUS,
+                        rexBuilder.makeGraphDynamicParam("age", 0),
+                        builder.literal(1));
+        Assert.assertEquals(SqlTypeName.INTEGER, plus.getType().getSqlTypeName());
+    }
+
+    @Test
+    public void posix_regex_test() {
+        RexNode regex =
+                builder.source(mockSourceConfig(null))
+                        .call(
+                                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                                builder.variable(null, "name"),
+                                builder.literal("^marko"));
+        Assert.assertEquals(SqlTypeName.BOOLEAN, regex.getType().getSqlTypeName());
+        Assert.assertEquals(
+                "POSIX REGEX CASE SENSITIVE(DEFAULT.name, _UTF-8'^marko')", regex.toString());
     }
 
     private SourceConfig mockSourceConfig(String alias) {

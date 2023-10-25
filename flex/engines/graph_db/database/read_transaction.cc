@@ -41,7 +41,7 @@ void ReadTransaction::vertex_iterator::Goto(vid_t target) {
   cur_ = std::min(target, num_);
 }
 
-oid_t ReadTransaction::vertex_iterator::GetId() const {
+Any ReadTransaction::vertex_iterator::GetId() const {
   return graph_.get_oid(label_, cur_);
 }
 vid_t ReadTransaction::vertex_iterator::GetIndex() const { return cur_; }
@@ -89,8 +89,8 @@ ReadTransaction::vertex_iterator ReadTransaction::GetVertexIterator(
   return {label, 0, graph_.vertex_num(label), graph_};
 }
 
-ReadTransaction::vertex_iterator ReadTransaction::FindVertex(label_t label,
-                                                             oid_t id) const {
+ReadTransaction::vertex_iterator ReadTransaction::FindVertex(
+    label_t label, const Any& id) const {
   vid_t lid;
   if (graph_.get_lid(label, id, lid)) {
     return {label, lid, graph_.vertex_num(label), graph_};
@@ -99,7 +99,7 @@ ReadTransaction::vertex_iterator ReadTransaction::FindVertex(label_t label,
   }
 }
 
-bool ReadTransaction::GetVertexIndex(label_t label, oid_t id,
+bool ReadTransaction::GetVertexIndex(label_t label, const Any& id,
                                      vid_t& index) const {
   return graph_.get_lid(label, id, index);
 }
@@ -108,7 +108,7 @@ vid_t ReadTransaction::GetVertexNum(label_t label) const {
   return graph_.vertex_num(label);
 }
 
-oid_t ReadTransaction::GetVertexId(label_t label, vid_t index) const {
+Any ReadTransaction::GetVertexId(label_t label, vid_t index) const {
   return graph_.get_oid(label, index);
 }
 

@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.cypher.executor.GraphQueryExecutor;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -164,6 +165,7 @@ public class CypherQueryServiceBootstrap extends FabricServicesBootstrap.Communi
         var graphPlanner = (GraphPlanner) resolve(GraphPlanner.class);
         var metaQueryCallback = (IrMetaQueryCallback) resolve(IrMetaQueryCallback.class);
         var executionClient = (ExecutionClient) resolve(ExecutionClient.class);
+        var queryCache = (QueryCache) resolve(QueryCache.class);
         var fabricExecutor =
                 new GraphQueryExecutor(
                         fabricConfig,
@@ -177,7 +179,8 @@ public class CypherQueryServiceBootstrap extends FabricServicesBootstrap.Communi
                         antlr4Parser,
                         graphPlanner,
                         metaQueryCallback,
-                        executionClient);
+                        executionClient,
+                        queryCache);
         register(fabricExecutor, FabricExecutor.class);
 
         register(

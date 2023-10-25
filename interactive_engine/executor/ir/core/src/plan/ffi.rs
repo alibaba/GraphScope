@@ -616,14 +616,15 @@ pub extern "C" fn destroy_ffi_data(data: FfiData) {
 /// To build a physical plan from the logical plan.
 #[no_mangle]
 pub extern "C" fn build_physical_plan(
-    ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
+    ptr_plan: *const c_void, num_workers: u32, num_servers: u32, plan_id: i32,
 ) -> FfiData {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     if num_workers > 1 || num_servers > 1 {
         plan.meta = plan.meta.with_partition();
     }
     let mut plan_meta = plan.meta.clone();
-    let mut builder = PlanBuilder::default();
+    let mut builder = PlanBuilder::new(plan_id);
+    // let mut builder = PlanBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = match build_result {
         Ok(_) => {
@@ -1755,7 +1756,11 @@ mod scan {
     fn parse_equiv_predicate(
         key: FfiProperty, value: FfiConst,
     ) -> Result<pb::index_predicate::Triplet, FfiResult> {
-        Ok(pb::index_predicate::Triplet { key: key.try_into()?, value: Some(value.try_into()?), cmp: None })
+        Ok(pb::index_predicate::Triplet {
+            key: key.try_into()?,
+            value: Some(pb::index_predicate::triplet::Value::Const(value.try_into()?)),
+            cmp: None,
+        })
     }
 
     #[no_mangle]

@@ -16,6 +16,7 @@
 #ifndef GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 #define GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 
+#include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/types.h"
 #include "glog/logging.h"
 #include "grape/serialization/in_archive.h"
@@ -69,6 +70,15 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   default:
     LOG(FATAL) << "Unexpected property type";
   }
+}
+
+inline label_t deserialize_oid(const MutablePropertyFragment& graph,
+                               grape::OutArchive& arc, Any& oid) {
+  label_t label;
+  arc >> label;
+  oid.type = std::get<0>(graph.schema_.get_vertex_primary_key(label).at(0));
+  deserialize_field(arc, oid);
+  return label;
 }
 
 }  // namespace gs

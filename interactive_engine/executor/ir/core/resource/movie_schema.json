@@ -1,0 +1,236 @@
+{
+  "entities": [
+    {
+      "label": {
+        "id": 0,
+        "name": "Movie"
+      },
+      "columns": [
+        {
+          "key": {
+            "id": 4,
+            "name": "id"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 1,
+            "name": "released"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 2,
+            "name": "tagline"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 3,
+            "name": "title"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        }
+      ]
+    },
+    {
+      "label": {
+        "id": 1,
+        "name": "Person"
+      },
+      "columns": [
+        {
+          "key": {
+            "id": 4,
+            "name": "id"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 0,
+            "name": "born"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 1,
+            "name": "name"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        }
+      ]
+    },
+    {
+      "label": {
+        "id": 2,
+        "name": "User"
+      },
+      "columns": [
+        {
+          "key": {
+            "id": 4,
+            "name": "id"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 0,
+            "name": "born"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 1,
+            "name": "name"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        }
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "label": {
+        "id": 0,
+        "name": "ACTED_IN"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 1,
+            "name": "Person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "Movie"
+          }
+        }
+      ],
+      "columns": []
+    },
+    {
+      "label": {
+        "id": 1,
+        "name": "DIRECTED"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 1,
+            "name": "Person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "Movie"
+          }
+        }
+      ],
+      "columns": []
+    },
+    {
+      "label": {
+        "id": 2,
+        "name": "REVIEW"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 1,
+            "name": "User"
+          },
+          "dst": {
+            "id": 0,
+            "name": "Movie"
+          }
+        }
+      ],
+      "columns": [
+        {
+          "key": {
+            "id": 3,
+            "name": "rating"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        }
+      ]
+    },
+    {
+      "label": {
+        "id": 3,
+        "name": "FOLLOWS"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 1,
+            "name": "User"
+          },
+          "dst": {
+            "id": 0,
+            "name": "Person"
+          }
+        }
+      ],
+      "columns": []
+    },
+     {
+      "label": {
+        "id": 4,
+        "name": "WROTE"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 1,
+            "name": "Person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "Movie"
+          }
+        }
+      ],
+      "columns": []
+    },
+    {
+      "label": {
+        "id": 5,
+        "name": "PRODUCED"
+      },
+      "entity_pairs": [
+        {
+          "src": {
+            "id": 1,
+            "name": "Person"
+          },
+          "dst": {
+            "id": 0,
+            "name": "Movie"
+          }
+        }
+      ],
+      "columns": []
+    }
+  ],
+  "is_table_id": true,
+  "is_column_id": false
+}
+

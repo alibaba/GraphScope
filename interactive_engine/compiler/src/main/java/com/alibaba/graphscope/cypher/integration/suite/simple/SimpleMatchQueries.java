@@ -67,7 +67,7 @@ public class SimpleMatchQueries {
 
     public static QueryContext get_simple_match_query_6_test() {
         String query =
-                "MATCH(a: PERSON) where a.id = 933 return a.firstName AS firstName, a.lastName as"
+                "MATCH(a: PERSON) where a.id = 933L return a.firstName AS firstName, a.lastName as"
                         + " lastName;";
         List<String> expected =
                 Arrays.asList("Record<{firstName: \"Mahinda\", lastName: \"Perera\"}>");
@@ -137,6 +137,18 @@ public class SimpleMatchQueries {
                         + " vertexLabelName, type(b) AS edgeLabelName;";
         List<String> expected =
                 Arrays.asList("Record<{vertexLabelName: \"PERSON\", edgeLabelName: \"KNOWS\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_simple_match_query_11_test() {
+        String query = "Match( p: PLACE) return p ORDER BY p.id LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{p: node<0>}>",
+                        "Record<{p: node<1>}>",
+                        "Record<{p: node<2>}>",
+                        "Record<{p: node<3>}>",
+                        "Record<{p: node<4>}>");
         return new QueryContext(query, expected);
     }
 }
