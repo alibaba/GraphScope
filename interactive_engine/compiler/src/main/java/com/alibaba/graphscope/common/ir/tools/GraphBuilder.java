@@ -306,13 +306,12 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         RelNode match =
                 GraphLogicalMultiMatch.create(
-                        (GraphOptCluster) cluster,
-                        null,
-                        input,
-                        first,
-                        ImmutableList.copyOf(others));
-        if (size() > 0) pop();
-        push(match);
+                        (GraphOptCluster) cluster, null, null, first, ImmutableList.copyOf(others));
+        if (input == null) {
+            push(match);
+        } else {
+            push(match).join(getJoinRelType(GraphOpt.Match.INNER), getJoinCondition(input, match));
+        }
         return this;
     }
 
