@@ -117,9 +117,9 @@ public class FieldTrimmerTest {
             + "], matchOpt=[INNER])",
         after.explain().trim());
     Assert.assertEquals(
-        "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) p)\n"
-            + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) p, INTEGER age)\n"
-            + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) p, INTEGER age)\n"
+        "RecordType(Graph_Schema_Type() p)\n"
+            + "RecordType(Graph_Schema_Type(CHAR(1) name) p, INTEGER age)\n"
+            + "RecordType(Graph_Schema_Type(CHAR(1) name) p, INTEGER age)\n"
             + "RecordType(Graph_Schema_Type(CHAR(1) name, INTEGER age) x, Graph_Schema_Type() y, Graph_Schema_Type() v)\n",
         rowTypeString(after));
     // for property trimming
@@ -175,8 +175,8 @@ public class FieldTrimmerTest {
             + "], matchOpt=[INNER])",
         after.explain().trim());
     Assert.assertEquals(
-        "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) x, BIGINT cnt)\n"
-            + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) x, BIGINT cnt)\n"
+        "RecordType(Graph_Schema_Type() x, BIGINT cnt)\n"
+            + "RecordType(Graph_Schema_Type() x, BIGINT cnt)\n"
             + "RecordType(Graph_Schema_Type(INTEGER age) x, Graph_Schema_Type() y, Graph_Schema_Type() friend)\n"
             + "RecordType(Graph_Schema_Type(INTEGER age) x, Graph_Schema_Type() y, Graph_Schema_Type() friend)\n",
         rowTypeString(after));
@@ -221,8 +221,8 @@ public class FieldTrimmerTest {
 
     Assert.assertEquals(
         "RecordType(BIGINT id)\n"
-            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name) x)\n"
-            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id, CHAR(1) name) x)\n"
+            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id) x)\n"
+            + "RecordType(CHAR(1) name, Graph_Schema_Type(BIGINT id) x)\n"
             + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name) x, Graph_Schema_Type() y)\n",
         rowTypeString(after));
   }

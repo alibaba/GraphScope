@@ -90,7 +90,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
       RexNode proj = ord.e;
 
       mapping.set(ord.i, newProjects.size());
-      newProjects.add(proj);
+
       aliasList.add(field.getName());
 
       // find field used by project
@@ -106,7 +106,15 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         // e.g `with v as person`, need to convert person.name back to v.name
         inputFieldsUsed.add(
             new RelDataTypeFieldImpl(var.getName(), var.getAliasId(), parentsUsedField.getType()));
+        RexGraphVariable oldProj = (RexGraphVariable) proj;
+        proj =
+            RexGraphVariable.of(
+                oldProj.getAliasId(),
+                oldProj.getColumnId(),
+                oldProj.getName(),
+                parentsUsedField.getType());
       }
+      newProjects.add(proj);
       varUsedBuilder.addAll(list);
     }
 
@@ -123,7 +131,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
           RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
           mapping.set(i, newProjects.size());
           newProjects.add(
-              RexGraphVariable.of(field.getIndex(), i, field.getName(), field.getType()));
+              RexGraphVariable.of(field.getIndex(), i, field.getName(), parentsUsedField.getType()));
           aliasList.add(field.getName());
           inputFieldsUsed.add(parentsUsedField);
         }
@@ -149,7 +157,6 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
 
     // build new projects
     final RexVisitor<RexNode> shuttle = new RexPermuteGraphShuttle(inputMapping, newInput);
-    // TODO(huaiyu): change graphSchema
 
     final RelNode newProject =
         graphBuilder
@@ -179,6 +186,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     // for group by keys, do we need to collect and convert?
     // e.g:  group().by(values("v").as("a")) where v is a node?
     GraphGroupKeys keys = aggregate.getGroupKey();
+    List<RexNode> groupVars=new ArrayList<>();
     for (Ord<RexNode> ord : Ord.zip(keys.getVariables())) {
       RexNode node = ord.e;
       List<RexGraphVariable> vars =
@@ -191,17 +199,24 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
       if (vars.size() == 1 && field.getType() instanceof GraphSchemaType) {
         RexGraphVariable var = vars.get(0);
 
-        if (fieldsUsed.containsKey(field.getIndex())) {
-          RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
-          inputFieldUsed.add(
+        RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
+        if (parentsUsedField!=null) {
+          parentsUsedField=
               new RelDataTypeFieldImpl(
-                  var.getName(), var.getAliasId(), parentsUsedField.getType()));
+                  var.getName(), var.getAliasId(), parentsUsedField.getType());
         } else {
-          inputFieldUsed.add(emptyField(field));
+          parentsUsedField=emptyField(field);
         }
+        inputFieldUsed.add(parentsUsedField);
+         groupVars.add(RexGraphVariable.of(var.getAliasId(),var.getColumnId(),var.getName(),
+                                           parentsUsedField.getType()));
+      }else{
+        groupVars.add(ord.e);
+        varUsedBuilder.addAll(vars);
       }
-      varUsedBuilder.addAll(vars);
     }
+
+    keys=new GraphGroupKeys(groupVars,keys.getAliases());
 
     // for aggregate calls, only record the graph variable used by calls
     for (Ord<GraphAggCall> ord : Ord.zip(aggregate.getAggCalls())) {
@@ -265,16 +280,15 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
 
     ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
 
-    if(offset!=null){
+    if (offset != null) {
       offset.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
-            .forEach(varUsedBuilder::add);
+          .forEach(varUsedBuilder::add);
     }
 
-    if(fetch!=null){
+    if (fetch != null) {
       fetch.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
-           .forEach(varUsedBuilder::add);
+          .forEach(varUsedBuilder::add);
     }
-
 
     for (RexNode expr : sort.getSortExps()) {
       expr.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
@@ -293,8 +307,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
 
     // build new sort
     final RexVisitor<RexNode> shuttle = new RexPermuteGraphShuttle(inputMapping, newInput);
-    RexNode newOffset =offset==null? null:offset.accept(shuttle);
-    RexNode newFetch = fetch==null?null:fetch.accept(shuttle);
+    RexNode newOffset = offset == null ? null : offset.accept(shuttle);
+    RexNode newFetch = fetch == null ? null : fetch.accept(shuttle);
     List<RexNode> newSortExprs =
         sort.getSortExps().stream()
             .map(e -> e.accept(shuttle))
@@ -379,11 +393,10 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     return result(newMatch, mapping, multiMatch);
   }
 
-
   public TrimResult trimFields(GraphLogicalPathExpand pathExpand, UsedFields fieldsUsed) {
-   RelNode input=pathExpand.getInput();
-   RelNode expand=pathExpand.getExpand();
-   RelNode getV=pathExpand.getGetV();
+    RelNode input = pathExpand.getInput();
+    RelNode expand = pathExpand.getExpand();
+    RelNode getV = pathExpand.getGetV();
 
     int fieldCount = pathExpand.getRowType().getFieldCount();
     final Mapping mapping = Mappings.create(MappingType.INVERSE_SURJECTION, fieldCount, fieldCount);
@@ -391,85 +404,87 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
       mapping.set(i, i);
     }
 
-   //trim children
-    RelNode newInput=trimChild(input,fieldsUsed).left;
-    RelNode newExpand=trimChild(expand,fieldsUsed).left;
-    RelNode newGetV=trimChild(getV,fieldsUsed).left;
-    GraphLogicalPathExpand newPathExpand= GraphLogicalPathExpand.create((GraphOptCluster) pathExpand.getCluster(),
-                                                      pathExpand.getHints(), newInput,
-                                   newExpand, newGetV,
-                                  pathExpand.getOffset(), pathExpand.getFetch(), pathExpand.getResultOpt(),
-                                  pathExpand.getPathOpt(), pathExpand.getAliasName());
-    return result(newPathExpand,mapping,pathExpand);
-
+    // trim children
+    RelNode newInput = trimChild(input, fieldsUsed).left;
+    RelNode newExpand = trimChild(expand, fieldsUsed).left;
+    RelNode newGetV = trimChild(getV, fieldsUsed).left;
+    GraphLogicalPathExpand newPathExpand =
+        GraphLogicalPathExpand.create(
+            (GraphOptCluster) pathExpand.getCluster(),
+            pathExpand.getHints(),
+            newInput,
+            newExpand,
+            newGetV,
+            pathExpand.getOffset(),
+            pathExpand.getFetch(),
+            pathExpand.getResultOpt(),
+            pathExpand.getPathOpt(),
+            pathExpand.getAliasName());
+    return result(newPathExpand, mapping, pathExpand);
   }
 
-
   public TrimResult trimFields(Join join, UsedFields fieldsUsed) {
-   UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
-   ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
+    UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
+    ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
 
-   List<RelDataTypeField> inputFields=new ArrayList<>(join.getLeft().getRowType().getFieldList());
-   inputFields.addAll(join.getRight().getRowType().getFieldList());
-   final int inputFieldCount=inputFields.size();
-   int newInputFieldCount=0;
+    List<RelDataTypeField> inputFields =
+        new ArrayList<>(join.getLeft().getRowType().getFieldList());
+    inputFields.addAll(join.getRight().getRowType().getFieldList());
+    final int inputFieldCount = inputFields.size();
+    int newInputFieldCount = 0;
 
     // Find used properties in  join conditions
-    final RexNode condition=join.getCondition();
-   condition.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
-            .forEach(varUsedBuilder::add);
-   ImmutableSet<RelDataTypeField> current =
-           findUsedFieldsByVars(varUsedBuilder.build(), inputFields);
-   inputFieldsUsed.concat(current);
+    final RexNode condition = join.getCondition();
+    condition.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+        .forEach(varUsedBuilder::add);
+    ImmutableSet<RelDataTypeField> current =
+        findUsedFieldsByVars(varUsedBuilder.build(), inputFields);
+    inputFieldsUsed.concat(current);
 
-   // FIXME: do we need to cope with system fields
 
     final List<RelNode> newInputs = new ArrayList<>(2);
     final List<Mapping> inputMappings = new ArrayList<>();
 
-    for(RelNode input:join.getInputs()){
-       TrimResult result= trimChild(input,inputFieldsUsed);
-       newInputs.add(result.left);
+    for (RelNode input : join.getInputs()) {
+      TrimResult result = trimChild(input, inputFieldsUsed);
+      newInputs.add(result.left);
       inputMappings.add(result.right);
-       newInputFieldCount+=result.right.getTargetCount();
+      newInputFieldCount += result.right.getTargetCount();
     }
 
     Mapping mapping =
-            Mappings.create(
-                    MappingType.INVERSE_SURJECTION,
-                    inputFieldCount,
-                    newInputFieldCount);
+        Mappings.create(MappingType.INVERSE_SURJECTION, inputFieldCount, newInputFieldCount);
 
     for (int i = 0; i < inputMappings.size(); i++) {
       Mapping inputMapping = inputMappings.get(i);
       for (IntPair pair : inputMapping) {
-        mapping.set(pair.source , pair.target );
+        mapping.set(pair.source, pair.target);
       }
     }
 
     // Build new join.
     final RexVisitor<RexNode> shuttle =
-            new RexPermuteGraphShuttle(
-                    mapping, newInputs.get(0), newInputs.get(1));
-    RexNode newConditionExpr =
-            condition.accept(shuttle);
+        new RexPermuteGraphShuttle(mapping, newInputs.get(0), newInputs.get(1));
+    RexNode newConditionExpr = condition.accept(shuttle);
 
     graphBuilder.push(newInputs.get(0));
     graphBuilder.push(newInputs.get(1));
 
     // For SemiJoins and AntiJoins only map fields from the left-side
-    if(join.getJoinType()== JoinRelType.SEMI||join.getJoinType()==JoinRelType.ANTI){
+    if (join.getJoinType() == JoinRelType.SEMI || join.getJoinType() == JoinRelType.ANTI) {
       Mapping inputMapping = inputMappings.get(0);
-      mapping = Mappings.create(MappingType.INVERSE_SURJECTION,
-                                join.getRowType().getFieldCount(),
-                                inputMapping.getTargetCount());
+      mapping =
+          Mappings.create(
+              MappingType.INVERSE_SURJECTION,
+              join.getRowType().getFieldCount(),
+              inputMapping.getTargetCount());
       for (IntPair pair : inputMapping) {
-        mapping.set(pair.source , pair.target);
+        mapping.set(pair.source, pair.target);
       }
     }
 
-    graphBuilder.join(join.getJoinType(),newConditionExpr);
-    return result(graphBuilder.build(),mapping,join);
+    graphBuilder.join(join.getJoinType(), newConditionExpr);
+    return result(graphBuilder.build(), mapping, join);
   }
 
   public TrimResult trimFields(AbstractBindableTableScan tableScan, UsedFields fieldsUsed) {
