@@ -15,6 +15,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.Coloring;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.ColoringImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
@@ -33,6 +35,8 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
     // PatternVertex.
     // the value is a list of group ids
     private Map<List<Integer>, List<Integer>> mapTypeToGroup;
+
+    private static Logger logger = LoggerFactory.getLogger(PatternOrderCanonicalLabelingImpl.class);
 
     final static Comparator<List<Integer>> vertexTypeListComparator = (o1, o2) -> {
         if (o1.size() != o2.size()) {
@@ -191,7 +195,7 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             // should have the same number of types and groups
             if (this.mapTypeToGroup.size() != other.mapTypeToGroup.size()
                     || this.initColoring.getColorClasses().size() != other.initColoring.getColorClasses().size()) {
-                System.out.println("In color comparing, numbers of types / colors not equal: "
+                logger.debug("In color comparing, numbers of types / colors not equal: "
                         + this.mapTypeToGroup.size() + " vs " + other.mapTypeToGroup.size() + " / "
                         + this.initColoring.getColorClasses().size() + " vs "
                         + other.initColoring.getColorClasses().size());
@@ -211,7 +215,7 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
                 for (List<Integer> vertexTypeIds : this.mapTypeToGroup.keySet()) {
                     if (this.mapTypeToGroup.get(vertexTypeIds).size() != other.mapTypeToGroup.get(vertexTypeIds)
                             .size()) {
-                        System.out.println(
+                        logger.debug(
                                 "In color comparing, numbers of groups for type " + vertexTypeIds + " not equal: "
                                         + this.mapTypeToGroup.get(vertexTypeIds).size() + " vs "
                                         + other.mapTypeToGroup.get(vertexTypeIds).size());
@@ -222,7 +226,7 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
                         List<Integer> colors2 = other.mapTypeToGroup.get(vertexTypeIds);
                         colors2.sort(Comparator.naturalOrder());
                         if (!colors1.equals(colors2)) {
-                            System.out.println("In groups comparing, groups for type " + vertexTypeIds + " not equal: "
+                            logger.debug("In groups comparing, groups for type " + vertexTypeIds + " not equal: "
                                     + colors1.toString() + " vs " + colors2.toString());
                             return false;
                         }

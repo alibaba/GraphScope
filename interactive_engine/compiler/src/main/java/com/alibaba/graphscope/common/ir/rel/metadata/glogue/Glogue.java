@@ -12,8 +12,9 @@ import java.util.Set;
 import org.javatuples.Pair;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternProcessor;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternMapping;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
@@ -30,6 +31,8 @@ public class Glogue {
     private List<Pattern> roots;
     // maxPatternId records the max pattern id in Glogue
     private int maxPatternId;
+
+    private static Logger logger = LoggerFactory.getLogger(Glogue.class);
 
     protected Glogue() {
         this.glogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
@@ -52,31 +55,31 @@ public class Glogue {
             this.addRoot(new_pattern);
             patternQueue.add(new_pattern);
         }
-        System.out.println("init glogue:\n" + this);
+        logger.debug("init glogue:\n" + this);
         while (patternQueue.size() > 0) {
             Pattern pattern = patternQueue.pop();
             if (pattern.getVertexNumber() >= maxPatternSize) {
                 continue;
             }
-            System.out.println("~~~~~~~~pop pattern in queue~~~~~~~~~~");
+            logger.debug("~~~~~~~~pop pattern in queue~~~~~~~~~~");
             List<ExtendStep> extendSteps = pattern.getExtendSteps(schema);
-            System.out.println("original pattern " + pattern.toString());
-            System.out.println("extend steps number: " + extendSteps.size());
+            logger.debug("original pattern " + pattern.toString());
+            logger.debug("extend steps number: " + extendSteps.size());
             for (ExtendStep extendStep : extendSteps) {
-                System.out.println(extendStep);
+                logger.debug(extendStep.toString());
                 Pattern newPattern = pattern.extend(extendStep);
                 Optional<Pattern> existingPattern = this.getGlogueVertex(newPattern);
                 if (!existingPattern.isPresent()) {
                     this.addPattern(newPattern);
-                    System.out.println("add new pattern: " + newPattern);
+                    logger.debug("add new pattern: " + newPattern);
                     Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
                             extendStep);
                     this.addEdge(pattern, newPattern, extendStep, srcToDstPatternMapping);
                     patternQueue.add(newPattern);
                 } else {
-                    System.out.println(
+                    logger.debug(
                             "pattern already exists: " + existingPattern.get());
-                    System.out.println("v.s. the new pattern: " + newPattern);
+                    logger.debug("v.s. the new pattern: " + newPattern);
                     if (!this.containsEdge(pattern, existingPattern.get())) {
                         // notice that the mapping should be computed based on pattern to newPattern,
                         // rather than pattern to existingPattern
@@ -84,26 +87,17 @@ public class Glogue {
                                 extendStep);
                         this.addEdge(pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
                     } else {
-                        System.out
-                                .println("edge already exists as well");
+                        logger.debug("edge already exists as well, " + pattern + " -> " + existingPattern.get() + ": "
+                                + extendStep);
                     }
                 }
             }
-            System.out.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         }
-
-        System.out.println("NewGlogue " + this.toString());
-        System.out.println();
-        System.out.println();
         // compute pattern cardinality
         this.glogueCardinalityEstimation = new GlogueBasicCardinalityEstimationImpl().create(this, schema);
 
-        System.out.println("GlogueBasicCardinalityEstimationImpl " + this.glogueCardinalityEstimation.toString());
-
-        System.out.println("GlogueEdges:");
-        this.glogueGraph.edgeSet().forEach(edge -> {
-            System.out.println(edge);
-        });
+        logger.info("GlogueGraph\n" + this.toString());
 
         return this;
     }
@@ -176,7 +170,7 @@ public class Glogue {
             Map<Integer, Integer> srcToDstIdMapping) {
         GlogueExtendIntersectEdge glogueEdge = new GlogueExtendIntersectEdge(srcPattern, dstPattern, edge,
                 srcToDstIdMapping);
-        System.out.println("add glogue edge " + glogueEdge);
+        logger.debug("add glogue edge " + glogueEdge);
         return this.glogueGraph.addEdge(srcPattern, dstPattern, glogueEdge);
     }
 
@@ -209,7 +203,19 @@ public class Glogue {
 
     @Override
     public String toString() {
-        return "GlogueVertices: " + this.glogueGraph.vertexSet() + "\nGlogueEdges: " + this.glogueGraph.edgeSet();
+        String s = "GlogueVertices:\n";
+        for (Pattern p : this.glogueGraph.vertexSet()) {
+            s += p.toString() + "\n";
+        }
+        s += "\nGlogueEdges:\n";
+        for (GlogueEdge e : this.glogueGraph.edgeSet()) {
+            s += e.toString() + "\n";
+        }
+        if (this.glogueCardinalityEstimation != null) {
+            s += "\nGlogueCardinalityEstimation:\n";
+            s += this.glogueCardinalityEstimation.toString();
+        }
+        return s;
     }
 
     public static void main(String[] args) {

@@ -16,10 +16,11 @@ import org.jgrapht.GraphMapping;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.Coloring;
 import org.jgrapht.alg.isomorphism.ColorRefinementIsomorphismInspector;
-import org.jgrapht.alg.isomorphism.IsomorphicGraphMapping;
 import org.jgrapht.alg.isomorphism.VF2GraphIsomorphismInspector;
 import org.jgrapht.graph.AsUndirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
@@ -40,6 +41,8 @@ public class Pattern {
     // Noticed that it is not an identifier of Pattern. i.e., two patterns with same
     // pattern ordering may not be isomorphic.
     private PatternOrder patternOrder;
+
+    private static Logger logger = LoggerFactory.getLogger(Pattern.class);
 
     // vertex type comparator and edge type comparator are used for isomorphism
     // inspector
@@ -238,11 +241,11 @@ public class Pattern {
             EdgeTypeId edgeTypeId = extendEdge.getEdgeTypeId();
             // TODO: be very careful if we allow "both" direction in schema
             if (dir.equals(PatternDirection.OUT)) {
-                System.out.println("To extend: " + srcVertex + " -> " + targetVertex + " " + edgeTypeId);
+                logger.debug("To extend: " + srcVertex + " -> " + targetVertex + " " + edgeTypeId);
                 PatternEdge edge = new SinglePatternEdge(srcVertex, targetVertex, edgeTypeId, newPattern.maxEdgeId);
                 newPattern.addEdge(srcVertex, targetVertex, edge);
             } else {
-                System.out.println("To extend: " + targetVertex + " -> " + srcVertex + " " + edgeTypeId);
+                logger.debug("To extend: " + targetVertex + " -> " + srcVertex + " " + edgeTypeId);
                 PatternEdge edge = new SinglePatternEdge(targetVertex, srcVertex, edgeTypeId, newPattern.maxEdgeId);
                 newPattern.addEdge(targetVertex, srcVertex, edge);
             }
@@ -337,8 +340,8 @@ public class Pattern {
                     this.patternGraph,
                     other.patternGraph, vertexTypeComparator, edgeTypeComparator);
             if (isomorphismInspector.isomorphismExists()) {
-                System.out.println("!!!Notice that different pattern order, but the same pattern!!!");
-                System.out.println("pattern1 v.s. pattern2: \n" + this + "\n" + other);
+                logger.debug("!!!Notice that different pattern order, but the same pattern!!!");
+                logger.debug("pattern1 v.s. pattern2: \n" + this + "\n" + other);
                 return true;
             } else {
                 return false;
