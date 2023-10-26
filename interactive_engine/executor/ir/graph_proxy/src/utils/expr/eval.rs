@@ -247,6 +247,10 @@ pub(crate) fn apply_logical<'a>(
                     .as_str()?
                     .ends_with(b.as_str()?.as_ref())
                     .into()),
+                Regex => {
+                    let regex = regex::Regex::new(b.as_str()?.as_ref())?;
+                    Ok(regex.is_match(a.as_str()?.as_ref()).into())
+                }
                 Not => unreachable!(),
                 Isnull => unreachable!(),
             }
@@ -1231,6 +1235,67 @@ mod tests {
             let eval = Evaluator::try_from(case).unwrap();
             println!("{:?}", eval.eval::<_, Vertices>(Some(&ctxt)).unwrap());
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+        }
+    }
+
+    fn gen_regex_expression(to_match: &str, pattern: &str) -> common_pb::Expression {
+        let mut regex_expr = common_pb::Expression { operators: vec![] };
+        let left = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                item: Some(common_pb::value::Item::Str(to_match.to_string())),
+            })),
+        };
+        regex_expr.operators.push(left);
+        let regex_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Regex as i32)),
+        };
+        regex_expr.operators.push(regex_opr);
+        let right = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                item: Some(common_pb::value::Item::Str(pattern.to_string())),
+            })),
+        };
+        regex_expr.operators.push(right);
+        regex_expr
+    }
+
+    #[test]
+    fn test_eval_regex() {
+        // TODO: the parser does not support escape characters in regex well yet.
+        // So use gen_regex_expression() to help generate expression
+        let cases: Vec<(&str, &str)> = vec![
+            ("Josh", r"^J"),                                                    // startWith, true
+            ("Josh", r"J.*"),                                                   // true
+            ("Josh", r"h$"),                                                    // endWith, true
+            ("Josh", r".*h"),                                                   // true
+            ("Josh", r"os"),                                                    // true
+            ("Josh", r"A.*"),                                                   // false
+            ("Josh", r".*A"),                                                   // false
+            ("Josh", r"ab"),                                                    // false
+            ("Josh", r"Josh.+"),                                                // false
+            ("2010-03-14", r"^\d{4}-\d{2}-\d{2}$"),                             // true
+            (r"I categorically deny having triskaidekaphobia.", r"\b\w{13}\b"), //true
+        ];
+        let expected: Vec<Object> = vec![
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(true),
+            object!(true),
+        ];
+
+        for ((to_match, pattern), expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(gen_regex_expression(to_match, pattern)).unwrap();
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 }

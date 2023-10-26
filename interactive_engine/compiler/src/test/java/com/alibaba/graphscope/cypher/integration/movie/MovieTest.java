@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.cypher.integration.movie;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 import com.alibaba.graphscope.cypher.integration.suite.movie.MovieQueries;
 
@@ -118,6 +120,30 @@ public class MovieTest {
     @Test
     public void run_movie_query15_test() {
         QueryContext testQuery = MovieQueries.get_movie_query15_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query16_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query16_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query17_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query17_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query18_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query18_test();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }

@@ -23,7 +23,9 @@ import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -43,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CypherRecordParser implements RecordParser<AnyValue> {
@@ -148,7 +151,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         return VirtualValues.nodeValue(
                 vertex.getId(),
                 Values.stringArray(getLabelName(vertex.getLabel(), getLabelTypes(dataType))),
-                MapValue.EMPTY);
+                parseProperties(vertex.getPropertiesList(), dataType));
     }
 
     protected RelationshipValue parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
@@ -165,7 +168,46 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                                 getDstLabelName(edge.getDstLabel(), getLabelTypes(dataType))),
                         MapValue.EMPTY),
                 Values.stringValue(getLabelName(edge.getLabel(), getLabelTypes(dataType))),
-                MapValue.EMPTY);
+                parseProperties(edge.getPropertiesList(), dataType));
+    }
+
+    private MapValue parseProperties(List<IrResult.Property> properties, RelDataType dataType) {
+        Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
+        // data types of properties
+        List<RelDataTypeField> typeFields = dataType.getFieldList();
+        properties.forEach(
+                k -> {
+                    Common.NameOrId key = k.getKey();
+                    // property key string which is used for display
+                    String keyStr;
+                    RelDataTypeField field;
+                    switch (key.getItemCase()) {
+                        case NAME:
+                            // find target field in typeFields by property name
+                            field =
+                                    findFieldByPredicate(
+                                            k1 -> k1.getName().equals(key.getName()), typeFields);
+                            keyStr = key.getName();
+                            break;
+                        case ID:
+                        default:
+                            // find target field in typeFields by property id
+                            field =
+                                    findFieldByPredicate(
+                                            k1 -> k1.getIndex() == key.getId(), typeFields);
+                            keyStr =
+                                    (field != null) ? field.getName() : String.valueOf(key.getId());
+                    }
+                    AnyValue value =
+                            parseValue(k.getValue(), field != null ? field.getType() : null);
+                    valueMap.put(keyStr, value);
+                });
+        return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
+    }
+
+    private RelDataTypeField findFieldByPredicate(
+            Predicate<RelDataTypeField> p, List<RelDataTypeField> typeFields) {
+        return typeFields.stream().filter(k -> p.test(k)).findFirst().orElse(null);
     }
 
     protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {

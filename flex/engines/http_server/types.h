@@ -52,6 +52,7 @@ struct payload {
 
 using query_param = payload<seastar::sstring>;
 using query_result = payload<seastar::sstring>;
+using adhoc_result = payload<std::pair<int32_t, std::string>>;
 
 }  // namespace server
 
