@@ -311,4 +311,40 @@ public class MatchTest {
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
+
+    @Test
+    public void match_17_test() {
+        RelNode node =
+                Utils.eval("Match (a:person) Where a.name starts with 'marko' Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
+                        + " _UTF-8'marko.*')]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void match_18_test() {
+        RelNode node =
+                Utils.eval("Match (a:person) Where a.name ends with 'marko' Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
+                        + " _UTF-8'.*marko')]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void match_19_test() {
+        RelNode node =
+                Utils.eval("Match (a:person) Where a.name contains 'marko' Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
+                        + " _UTF-8'.*marko.*')]], opt=[VERTEX])",
+                node.explain().trim());
+    }
 }

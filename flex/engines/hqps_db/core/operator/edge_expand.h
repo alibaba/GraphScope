@@ -1418,7 +1418,7 @@ class EdgeExpand {
         AdjEdgeSet<GRAPH_INTERFACE, vertex_id_t, label_id_t, grape::EmptyType>(
             std::move(copied_vids), std::move(adj_list_array),
             state.edge_label_, state.cur_vertex_set_.GetLabel(),
-            state.other_label_, state.direction_);
+            state.other_label_, array_to_vec(prop_names), state.direction_);
     return std::make_pair(std::move(edge_set), std::move(offset));
   }
 

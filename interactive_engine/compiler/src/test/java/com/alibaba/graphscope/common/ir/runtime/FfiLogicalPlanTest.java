@@ -84,13 +84,12 @@ public class FfiLogicalPlanTest {
                     + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])",
                 aggregate.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
-            ffiBuilder.build();
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan_1.json"),
-                    ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_1.json"), plan.explain());
         }
     }
 
@@ -115,13 +114,12 @@ public class FfiLogicalPlanTest {
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
                         + " fusedFilter=[[=(DEFAULT.age, ?0)]], opt=[VERTEX])",
                 filter.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter))) {
-            ffiBuilder.build();
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan_2.json"),
-                    ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_2.json"), plan.explain());
         }
     }
 
@@ -142,13 +140,12 @@ public class FfiLogicalPlanTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[n], opt=[VERTEX])",
                 project.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
-            ffiBuilder.build();
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan_3.json"),
-                    ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_3.json"), plan.explain());
         }
     }
 
@@ -157,10 +154,10 @@ public class FfiLogicalPlanTest {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
                         "Call ldbc_ic2(10l, 20120112l)");
-        try (PhysicalBuilder<byte[]> ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
-            ffiBuilder.build();
+        try (PhysicalBuilder ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("call_procedure.json"), ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("call_procedure.json"), plan.explain());
         }
     }
 
@@ -191,12 +188,11 @@ public class FfiLogicalPlanTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
-            ffiBuilder.build();
-            Assert.assertEquals(
-                    FileUtils.readJsonFromResource("case_when.json"), ffiBuilder.explain());
+            PhysicalPlan plan = ffiBuilder.build();
+            Assert.assertEquals(FileUtils.readJsonFromResource("case_when.json"), plan.explain());
         }
     }
 
@@ -221,13 +217,13 @@ public class FfiLogicalPlanTest {
                         + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[1, 2, 3])]],"
                         + " opt=[VERTEX])",
                 node.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
-            ffiBuilder.build();
+            PhysicalPlan physicalPlan = ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan_6.json"),
-                    ffiBuilder.explain());
+                    physicalPlan.explain());
         }
     }
 
@@ -250,13 +246,13 @@ public class FfiLogicalPlanTest {
                         + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[[1..10]])]],"
                         + " opt=[VERTEX])",
                 node.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
-            ffiBuilder.build();
+            PhysicalPlan physicalPlan = ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan_7.json"),
-                    ffiBuilder.explain());
+                    physicalPlan.explain());
         }
     }
 
@@ -278,13 +274,13 @@ public class FfiLogicalPlanTest {
                         + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
                         + " Sarg[1, 2])])",
                 node.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
-            ffiBuilder.build();
+            PhysicalPlan physicalPlan = ffiBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("ffi_logical_plan_8.json"),
-                    ffiBuilder.explain());
+                    physicalPlan.explain());
         }
     }
 
