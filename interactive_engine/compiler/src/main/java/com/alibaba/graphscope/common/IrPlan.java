@@ -69,7 +69,9 @@ public class IrPlan implements Closeable {
                     FfiResult e1 = irCoreLib.setScanParams(scan, createParams(paramsOpt.get()));
                     if (e1.code != ResultCode.Success) {
                         throw new InterOpIllegalArgException(
-                                baseOp.getClass(), "params", "setScanParams returns " + e1.msg);
+                                baseOp.getClass(),
+                                "params",
+                                "setScanParams returns " + e1.getMsg());
                     }
                 }
 
@@ -84,7 +86,9 @@ public class IrPlan implements Closeable {
                                         idsPredicate, ArgUtils.asKey(ArgUtils.ID), ffiIds.get(i));
                         if (e2.code != ResultCode.Success) {
                             throw new InterOpIllegalArgException(
-                                    baseOp.getClass(), "ids", "orEquivPredicate returns " + e2.msg);
+                                    baseOp.getClass(),
+                                    "ids",
+                                    "orEquivPredicate returns " + e2.getMsg());
                         }
                     }
                     if (!ffiIds.isEmpty()) {
@@ -116,7 +120,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             baseOp.getClass(),
                             "predicate",
-                            "setSelectPredicate returns " + error.msg);
+                            "setSelectPredicate returns " + error.getMsg());
                 }
                 return select;
             }
@@ -145,7 +149,9 @@ public class IrPlan implements Closeable {
                             irCoreLib.setEdgexpdParams(expand, createParams(paramsOpt.get()));
                     if (e1.code != ResultCode.Success) {
                         throw new InterOpIllegalArgException(
-                                baseOp.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
+                                baseOp.getClass(),
+                                "params",
+                                "setEdgexpdParams returns " + e1.getMsg());
                     }
                 }
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
@@ -176,7 +182,9 @@ public class IrPlan implements Closeable {
                                 (Integer) upper.get().applyArg());
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            baseOp.getClass(), "lower+upper", "setLimitRange returns " + error.msg);
+                            baseOp.getClass(),
+                            "lower+upper",
+                            "setLimitRange returns " + error.getMsg());
                 }
                 return ptrLimit;
             }
@@ -203,7 +211,7 @@ public class IrPlan implements Closeable {
                                 throw new InterOpIllegalArgException(
                                         baseOp.getClass(),
                                         "exprWithAlias",
-                                        "append returns " + error.msg);
+                                        "append returns " + error.getMsg());
                             }
                         });
                 return ptrProject;
@@ -322,7 +330,9 @@ public class IrPlan implements Closeable {
                                         createSampleType(sampleOp.getSampleType()).toByteArray()));
                 if (error1.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            baseOp.getClass(), "sampleType", "setSampleType returns " + error1.msg);
+                            baseOp.getClass(),
+                            "sampleType",
+                            "setSampleType returns " + error1.getMsg());
                 }
                 FfiResult.ByValue error3 =
                         irCoreLib.setSampleWeightVariable(
@@ -333,7 +343,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             baseOp.getClass(),
                             "variable",
-                            "setSampleWeightVariable returns " + error3.msg);
+                            "setSampleWeightVariable returns " + error3.getMsg());
                 }
                 return ptrSample;
             }
@@ -428,7 +438,7 @@ public class IrPlan implements Closeable {
                                     throw new InterOpIllegalArgException(
                                             baseOp.getClass(),
                                             "columns",
-                                            "addSinkColumn returns " + error.msg);
+                                            "addSinkColumn returns " + error.getMsg());
                                 }
                             });
                 } else if (sinkArg instanceof SinkGraph) {
@@ -465,7 +475,7 @@ public class IrPlan implements Closeable {
                         throw new InterOpIllegalArgException(
                                 baseOp.getClass(),
                                 "setPathxpdCondition",
-                                res.code + ", " + res.msg);
+                                res.code + ", " + res.getMsg());
                     }
                 }
 
@@ -495,7 +505,9 @@ public class IrPlan implements Closeable {
                     FfiResult e1 = irCoreLib.setGetvParams(ptrGetV, createParams(paramsOpt.get()));
                     if (e1.code != ResultCode.Success) {
                         throw new InterOpIllegalArgException(
-                                baseOp.getClass(), "params", "setGetvParams returns " + e1.msg);
+                                baseOp.getClass(),
+                                "params",
+                                "setGetvParams returns " + e1.getMsg());
                     }
                 }
 
@@ -636,7 +648,7 @@ public class IrPlan implements Closeable {
                 Pointer asPtr = irCoreLib.initAsOperator();
                 FfiResult error = irCoreLib.setAsAlias(asPtr, ArgUtils.asNoneAlias());
                 if (error != null && error.code != ResultCode.Success) {
-                    throw new AppendInterOpException(baseOp.getClass(), error.msg);
+                    throw new AppendInterOpException(baseOp.getClass(), error.getMsg());
                 }
                 return asPtr;
             }
@@ -648,14 +660,16 @@ public class IrPlan implements Closeable {
                 FfiResult error = irCoreLib.addParamsTable(ptrParams, table);
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            InterOpBase.class, "table", "addParamsTable returns " + error.msg);
+                            InterOpBase.class, "table", "addParamsTable returns " + error.getMsg());
                 }
             }
             for (FfiNameOrId.ByValue column : params.getColumns()) {
                 FfiResult error = irCoreLib.addParamsColumn(ptrParams, column);
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            InterOpBase.class, "column", "addParamsColumn returns " + error.msg);
+                            InterOpBase.class,
+                            "column",
+                            "addParamsColumn returns " + error.getMsg());
                 }
             }
             Optional<String> predicateOpt = params.getPredicate();
@@ -665,7 +679,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             InterOpBase.class,
                             "predicate",
-                            "setParamsPredicate returns " + error.msg);
+                            "setParamsPredicate returns " + error.getMsg());
                 }
             }
             Optional<Pair<Integer, Integer>> rangeOpt = params.getRange();
@@ -675,7 +689,7 @@ public class IrPlan implements Closeable {
                         irCoreLib.setParamsRange(ptrParams, range.getValue0(), range.getValue1());
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            InterOpBase.class, "range", "setParamsRange returns " + error.msg);
+                            InterOpBase.class, "range", "setParamsRange returns " + error.getMsg());
                 }
             }
             params.getExtraParams()
@@ -686,7 +700,7 @@ public class IrPlan implements Closeable {
                                     throw new InterOpIllegalArgException(
                                             InterOpBase.class,
                                             "extraParams",
-                                            "addParamsExtra returns " + error.msg);
+                                            "addParamsExtra returns " + error.getMsg());
                                 }
                             });
             if (params.isAllColumns()) {
@@ -695,7 +709,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             InterOpBase.class,
                             "setIsAll",
-                            "setParamsIsAllColumns returns " + error.msg);
+                            "setParamsIsAllColumns returns " + error.getMsg());
                 }
             }
             Optional<Double> sampleRatioOpt = params.getSampleRatioOpt();
@@ -705,7 +719,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             InterOpBase.class,
                             "setIsAll",
-                            "setParamsSampleRatio returns " + error.msg);
+                            "setParamsSampleRatio returns " + error.getMsg());
                 }
             }
             return ptrParams;
@@ -745,7 +759,7 @@ public class IrPlan implements Closeable {
         FfiResult error = buffer.error;
         if (error.code != ResultCode.Success) {
             throw new BuildPhysicalException(
-                    "call libc returns " + error.code.name() + ", msg is " + error.msg);
+                    "call libc returns " + error.code.name() + ", msg is " + error.getMsg());
         }
         byte[] bytes = buffer.getBytes();
         buffer.close();
@@ -760,7 +774,7 @@ public class IrPlan implements Closeable {
                 throw new InterOpIllegalArgException(
                         InterOpBase.class, "printPlanAsJson", "code is " + e.code);
             }
-            json = e.msg;
+            json = e.getMsg();
         }
         return json;
     }
@@ -883,7 +897,7 @@ public class IrPlan implements Closeable {
         }
         if (error != null && error.code != ResultCode.Success) {
             throw new AppendInterOpException(
-                    base.getClass(), error.code.name() + ", msg is " + error.msg);
+                    base.getClass(), error.code.name() + ", msg is " + error.getMsg());
         }
         // add alias after the op if necessary
         return setPostAlias(oprId.getValue(), base);
@@ -896,11 +910,11 @@ public class IrPlan implements Closeable {
             Pointer ptrAs = irCoreLib.initAsOperator();
             FfiResult error = irCoreLib.setAsAlias(ptrAs, ffiAlias);
             if (error != null && error.code != ResultCode.Success) {
-                throw new AppendInterOpException(base.getClass(), error.msg);
+                throw new AppendInterOpException(base.getClass(), error.getMsg());
             }
             FfiResult appendOp = irCoreLib.appendAsOperator(ptrPlan, ptrAs, parentId, oprId);
             if (appendOp != null && appendOp.code != ResultCode.Success) {
-                throw new AppendInterOpException(base.getClass(), appendOp.msg);
+                throw new AppendInterOpException(base.getClass(), appendOp.getMsg());
             }
         }
         return oprId;
