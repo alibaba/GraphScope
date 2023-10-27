@@ -203,7 +203,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer> {
         if (res == null || res.code != ResultCode.Success) {
             throw new IllegalStateException("print plan in ir core fail, msg : %s" + res, null);
         }
-        return res.msg;
+        return res.getMsg();
     }
 
     private void appendMatch(PhysicalNode<Pointer> node, IntByReference oprIdx) {

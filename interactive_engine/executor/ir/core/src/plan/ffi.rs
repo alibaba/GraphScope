@@ -2233,6 +2233,13 @@ mod graph {
         destroy_ptr::<pb::GetV>(ptr)
     }
 
+    #[no_mangle]
+    pub extern "C" fn destroy_cstr_pointer(cstr: *const c_char) {
+        if !cstr.is_null() {
+            let _ = unsafe { std::ffi::CString::from_raw(cstr as *mut c_char) };
+        }
+    }
+
     #[allow(dead_code)]
     #[repr(i32)]
     pub enum PathOpt {

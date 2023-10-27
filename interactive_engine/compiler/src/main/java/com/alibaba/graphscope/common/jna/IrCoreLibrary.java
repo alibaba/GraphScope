@@ -274,4 +274,6 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue appendSampleOperator(
             Pointer plan, Pointer sample, int parent, IntByReference oprIdx);
+
+    void destroyCstrPointer(Pointer cstr);
 }
