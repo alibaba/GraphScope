@@ -23,7 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.ir.planner.GraphFieldTrimmer;
+import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
@@ -38,7 +38,6 @@ import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-
 import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
@@ -136,6 +135,9 @@ public class GraphPlanner {
                     && logicalPlan.getRegularQuery() != null
                     && !logicalPlan.isReturnEmpty()) {
                 RelNode regularQuery = logicalPlan.getRegularQuery();
+                if (plannerConfig.getRules().contains(FieldTrimRule.class.getSimpleName())) {
+                    regularQuery = FieldTrimRule.trim(graphBuilder, regularQuery);
+                }
                 RelOptPlanner planner = this.optCluster.getPlanner();
                 planner.setRoot(regularQuery);
                 logicalPlan =
@@ -158,15 +160,6 @@ public class GraphPlanner {
             } else {
                 return new ProcedurePhysicalBuilder(logicalPlan).build();
             }
-        }
-
-        protected RelNode trimUnusedFields(  GraphBuilder builder, RelNode root){
-            // TODO(huaiyu): add isTrimUnusedFields property
-            if(plannerConfig.isOn() && root != null){
-                final GraphFieldTrimmer trimmer=new GraphFieldTrimmer(builder);
-                root=trimmer.trim(root);
-            }
-            return root;
         }
     }
 
