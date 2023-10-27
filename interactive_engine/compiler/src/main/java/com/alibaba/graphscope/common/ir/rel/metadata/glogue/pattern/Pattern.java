@@ -9,6 +9,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMapping;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.Coloring;
 import org.jgrapht.alg.isomorphism.ColorRefinementIsomorphismInspector;
 import org.jgrapht.alg.isomorphism.VF2GraphIsomorphismInspector;
@@ -30,6 +31,8 @@ public class Pattern {
     // Noticed that it is not an identifier of Pattern. i.e., two patterns with same
     // pattern ordering may not be isomorphic.
     private PatternOrder patternOrder;
+
+    private final ConnectivityInspector<PatternVertex, PatternEdge> connectivityInspector;
 
     // vertex type comparator and edge type comparator are used for isomorphism
     // inspector
@@ -77,12 +80,14 @@ public class Pattern {
     // by default, simple directed graph is used for pattern representation.
     public Pattern() {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         this.maxVertexId = 0;
         this.maxEdgeId = 0;
     }
 
     public Pattern(Graph<PatternVertex, PatternEdge> patternGraph) {
         this.patternGraph = patternGraph;
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         this.maxVertexId = patternGraph.vertexSet().size();
         this.maxEdgeId = patternGraph.edgeSet().size();
         this.reordering();
@@ -90,6 +95,7 @@ public class Pattern {
 
     public Pattern(Pattern pattern) {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         for (PatternVertex vertex : pattern.getVertexSet()) {
             addVertex(vertex);
         }
@@ -103,6 +109,7 @@ public class Pattern {
 
     public Pattern(PatternVertex vertex) {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         this.patternGraph.addVertex(vertex);
         this.maxVertexId = 1;
         this.maxEdgeId = 0;
@@ -127,6 +134,10 @@ public class Pattern {
 
     public Set<PatternEdge> getEdgeSet() {
         return this.patternGraph.edgeSet();
+    }
+
+    public Set<PatternEdge> getEdgesOf(PatternVertex vertex) {
+        return this.patternGraph.edgesOf(vertex);
     }
 
     /// Find all possible ExtendSteps of current pattern based on the given
@@ -278,6 +289,25 @@ public class Pattern {
         return added;
     }
 
+    /**
+     * Remove a vertex with its adjacent edges from pattern, and return the connected components of the remaining pattern.
+     * @param vertex
+     * @return
+     */
+    public List<Set<PatternVertex>> removeVertex(PatternVertex vertex) {
+        boolean removed = this.patternGraph.removeVertex(vertex);
+        if (removed) {
+            this.maxVertexId = this.patternGraph.vertexSet().size();
+            this.maxEdgeId = this.patternGraph.edgeSet().size();
+            this.reordering();
+        }
+        return this.connectivityInspector.connectedSets();
+    }
+
+    public int getDegree(PatternVertex vertex) {
+        return this.patternGraph.degreeOf(vertex);
+    }
+
     public boolean addEdge(
             PatternVertex srcVertex, PatternVertex dstVertex, EdgeTypeId edgeTypeId) {
         PatternEdge edge = new SinglePatternEdge(srcVertex, dstVertex, edgeTypeId, this.maxEdgeId);
@@ -404,10 +434,12 @@ public class Pattern {
 
     @Override
     public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        Pattern pattern = (Pattern) o;
-//        return id == pattern.id && maxVertexId == pattern.maxVertexId && maxEdgeId == pattern.maxEdgeId && Objects.equals(patternGraph, pattern.patternGraph) && Objects.equals(patternOrder, pattern.patternOrder);
+        //        if (this == o) return true;
+        //        if (o == null || getClass() != o.getClass()) return false;
+        //        Pattern pattern = (Pattern) o;
+        //        return id == pattern.id && maxVertexId == pattern.maxVertexId && maxEdgeId ==
+        // pattern.maxEdgeId && Objects.equals(patternGraph, pattern.patternGraph) &&
+        // Objects.equals(patternOrder, pattern.patternOrder);
         if (o instanceof Pattern) {
             Pattern other = (Pattern) o;
             return isIsomorphicTo(other);

@@ -22,6 +22,7 @@ public class Glogue {
     private List<Pattern> roots;
     // maxPatternId records the max pattern id in Glogue
     private int maxPatternId;
+    private int maxPatternSize;
 
     public Glogue() {
         this.glogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
@@ -36,6 +37,7 @@ public class Glogue {
 
     // Construct NewGlogue from a graph schema with given max pattern size
     public Glogue create(GlogueSchema schema, int maxPatternSize) {
+        this.maxPatternSize = maxPatternSize;
         Deque<Pattern> patternQueue = new ArrayDeque<>();
         for (Integer vertexTypeId : schema.getVertexTypes()) {
             PatternVertex vertex = new SinglePatternVertex(vertexTypeId);
@@ -207,6 +209,10 @@ public class Glogue {
     // TODO: implements interface in Calcite
     public Double getRowCount(Pattern pattern) {
         return this.glogueCardinalityEstimation.getCardinality(pattern);
+    }
+
+    public int getMaxPatternSize() {
+        return maxPatternSize;
     }
 
     @Override

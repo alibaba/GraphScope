@@ -77,6 +77,10 @@ public class GlogueQuery {
         }
     }
 
+    public int getMaxPatternSize() {
+        return this.glogue.getMaxPatternSize();
+    }
+
     @Override
     public String toString() {
         return glogue.toString();

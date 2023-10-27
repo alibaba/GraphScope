@@ -28,7 +28,10 @@ public class ExtVolcanoPlanner extends VolcanoPlanner {
     protected RelOptCost upperBoundForInputs(RelNode mExpr, RelOptCost upperBound) {
         RelSubset group = getSubset(mExpr);
         RelOptCost bestCost = (group != null) ? group.bestCost : null;
-        RelOptCost currentUpperBound = (bestCost == null || upperBound != null && upperBound.isLt(bestCost)) ? upperBound : bestCost;
+        RelOptCost currentUpperBound =
+                (bestCost == null || upperBound != null && upperBound.isLt(bestCost))
+                        ? upperBound
+                        : bestCost;
         if (currentUpperBound != null && !currentUpperBound.isInfinite()) {
             RelOptCost rootCost = mExpr.getCluster().getMetadataQuery().getNonCumulativeCost(mExpr);
             if (rootCost != null && !rootCost.isInfinite()) {

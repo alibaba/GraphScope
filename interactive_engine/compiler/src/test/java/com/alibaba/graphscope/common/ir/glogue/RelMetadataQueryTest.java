@@ -29,6 +29,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatter
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
@@ -85,23 +86,56 @@ public class RelMetadataQueryTest {
         planner.addRule(
                 ExtendIntersectRule.Config.DEFAULT
                         .withRelBuilderFactory(GraphPlanner.relBuilderFactory)
+                        .withMaxPatternSizeInGlogue(gq.getMaxPatternSize())
                         .toRule());
         planner.setRoot(graphPattern);
 
         RelNode after = planner.findBestExp();
-        planner.dump(new PrintWriter(new FileOutputStream("set.out"), true));
+        planner.dump(new PrintWriter(new FileOutputStream("set1.out"), true));
         System.out.println(after.explain());
-//        System.out.println(mq.getRowCount(graphPattern));
-//        Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
-//
-//        GlogueEdge first = glogueEdges.iterator().next();
-//        RelNode extendIntersect =
-//                new GraphExtendIntersect(
-//                        optCluster,
-//                        RelTraitSet.createEmpty(),
-//                        new GraphPattern(
-//                                optCluster, RelTraitSet.createEmpty(), first.getSrcPattern()),
-//                        (GlogueExtendIntersectEdge) first);
-//        System.out.println(mq.getNonCumulativeCost(extendIntersect));
+        //        System.out.println(mq.getRowCount(graphPattern));
+        //        Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
+        //
+        //        GlogueEdge first = glogueEdges.iterator().next();
+        //        RelNode extendIntersect =
+        //                new GraphExtendIntersect(
+        //                        optCluster,
+        //                        RelTraitSet.createEmpty(),
+        //                        new GraphPattern(
+        //                                optCluster, RelTraitSet.createEmpty(),
+        // first.getSrcPattern()),
+        //                        (GlogueExtendIntersectEdge) first);
+        //        System.out.println(mq.getNonCumulativeCost(extendIntersect));
+    }
+
+    @Test
+    public void test_2() {
+        Pattern p = new Pattern();
+        // p1 -> s0 <- p2 + p1 -> p2
+        PatternVertex v0 = new SinglePatternVertex(1, 0);
+        PatternVertex v1 = new SinglePatternVertex(0, 1);
+        PatternVertex v2 = new SinglePatternVertex(0, 2);
+        // p -> s
+        EdgeTypeId e = new EdgeTypeId(0, 1, 1);
+        // p -> p
+        EdgeTypeId e1 = new EdgeTypeId(0, 0, 0);
+        p.addVertex(v0);
+        p.addVertex(v1);
+        p.addVertex(v2);
+        p.addEdge(v1, v0, e);
+        p.addEdge(v2, v0, e);
+        p.addEdge(v1, v2, e1);
+        System.out.println(
+                System.identityHashCode(v0)
+                        + " "
+                        + System.identityHashCode(v1)
+                        + " "
+                        + System.identityHashCode(v2));
+
+        Pattern p1 = new Pattern(p);
+        for (PatternVertex v : p1.getVertexSet()) {
+            System.out.println(System.identityHashCode(v));
+        }
+        // System.out.println(p.removeVertex(v2));
     }
 }

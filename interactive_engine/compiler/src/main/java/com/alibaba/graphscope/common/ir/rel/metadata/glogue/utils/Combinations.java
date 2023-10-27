@@ -26,7 +26,7 @@ public class Combinations {
             return;
         }
         // notice that we do not allow duplicates within the combination
-       // if (currentCombination.contains(elements.get(startIndex) )) return;
+        // if (currentCombination.contains(elements.get(startIndex) )) return;
         currentCombination.add(elements.get(startIndex));
         getCombinationsHelper(elements, k, startIndex + 1, currentCombination, results);
         currentCombination.remove(currentCombination.size() - 1);

@@ -19,6 +19,14 @@ public class ExtendEdge {
         this.direction = direction;
     }
 
+    public ExtendEdge(
+            int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction, Double weight) {
+        this.srcVertexOrder = srcVertexOrder;
+        this.edgeTypeId = edgeTypeId;
+        this.direction = direction;
+        this.weight = weight;
+    }
+
     public int getSrcVertexOrder() {
         return srcVertexOrder;
     }

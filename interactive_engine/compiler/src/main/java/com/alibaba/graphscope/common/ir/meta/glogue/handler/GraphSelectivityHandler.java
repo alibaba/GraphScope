@@ -26,7 +26,7 @@ public class GraphSelectivityHandler implements BuiltInMetadata.Selectivity.Hand
     @Override
     public @Nullable Double getSelectivity(
             RelNode node, RelMetadataQuery mq, @Nullable RexNode condition) {
-        // todo: estimate selectivity of a vertex or an edge
+        // todo: estimate selectivity of a pattern
         return 1.0d;
     }
 }

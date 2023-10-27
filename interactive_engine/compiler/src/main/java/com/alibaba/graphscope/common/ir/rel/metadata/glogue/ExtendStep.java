@@ -17,6 +17,17 @@ public class ExtendStep {
         this.extendEdges = extendEdges;
     }
 
+    public ExtendStep(
+            Integer targetVertexType,
+            Integer targetVertexOrder,
+            List<ExtendEdge> extendEdges,
+            Double weight) {
+        this.targetVertexType = targetVertexType;
+        this.targetVertexOrder = targetVertexOrder;
+        this.extendEdges = extendEdges;
+        this.weight = weight;
+    }
+
     public Integer getTargetVertexType() {
         return targetVertexType;
     }
