@@ -88,7 +88,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     public RelDataType deriveRowType() {
         List<GraphSchemaType> tableTypes = new ArrayList<>();
         List<RelOptTable> tables = ObjectUtils.requireNonEmpty(this.tableConfig.getTables());
-      RelDataTypeFactory typeFactory = tables.get(0).getRelOptSchema().getTypeFactory();
+        RelDataTypeFactory typeFactory = tables.get(0).getRelOptSchema().getTypeFactory();
         for (RelOptTable table : tables) {
             GraphSchemaType type = (GraphSchemaType) table.getRowType();
             // flat fuzzy labels to the list
@@ -106,10 +106,11 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return rowType;
     }
 
-    public void setRowType(GraphSchemaType graphType){
-        rowType=   new RelRecordType(
-                ImmutableList.of(
-                        new RelDataTypeFieldImpl(getAliasName(), getAliasId(), graphType)));
+    public void setRowType(GraphSchemaType graphType) {
+        rowType =
+                new RelRecordType(
+                        ImmutableList.of(
+                                new RelDataTypeFieldImpl(getAliasName(), getAliasId(), graphType)));
     }
 
     public String getAliasName() {
@@ -120,7 +121,9 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return this.aliasId;
     }
 
-    public TableConfig getTableConfig(){return  this.tableConfig;}
+    public TableConfig getTableConfig() {
+        return this.tableConfig;
+    }
 
     // toString
 
@@ -142,7 +145,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
         this.filters = Objects.requireNonNull(filters);
     }
 
-        public @Nullable ImmutableList<RexNode> getFilters() {
+    public @Nullable ImmutableList<RexNode> getFilters() {
         return filters;
     }
 }

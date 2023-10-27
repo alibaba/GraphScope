@@ -63,8 +63,8 @@ public class LogicalPlan {
         return regularQuery;
     }
 
-    public void setRegularQuery(@Nullable RelNode root){
-        this.regularQuery=root;
+    public void setRegularQuery(@Nullable RelNode root) {
+        this.regularQuery = root;
     }
 
     public @Nullable RexNode getProcedureCall() {

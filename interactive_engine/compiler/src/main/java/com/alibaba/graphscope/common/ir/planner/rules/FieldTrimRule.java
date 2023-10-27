@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.planner.rules;
 
 import com.alibaba.graphscope.common.ir.planner.GraphFieldTrimmer;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+
 import org.apache.calcite.rel.RelNode;
 
 public abstract class FieldTrimRule {

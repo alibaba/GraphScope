@@ -317,7 +317,7 @@ public class GraphBuilder extends RelBuilder {
     }
 
     @Override
-    public GraphBuilder push(RelNode node){
+    public GraphBuilder push(RelNode node) {
         super.push(node);
         return this;
     }
@@ -518,13 +518,13 @@ public class GraphBuilder extends RelBuilder {
                         + aliases);
     }
 
-    private static class                                                                                                                                    ColumnField extends Pair<Integer, RelDataTypeField> {
+    private static class ColumnField extends Pair<Integer, RelDataTypeField> {
         public ColumnField(Integer left, RelDataTypeField right) {
             super(left, right);
         }
     }
 
-    private int  getColumnIndex(RelNode node, RelDataTypeField field) {
+    private int getColumnIndex(RelNode node, RelDataTypeField field) {
         Set<String> uniqueFieldNames = Sets.newHashSet();
         if (!visitField(node, field, uniqueFieldNames)) {
             throw new IllegalArgumentException("field " + field + " not found in node" + node);
@@ -536,7 +536,6 @@ public class GraphBuilder extends RelBuilder {
     // i.e. (a)-[b]->(c) -> a:0, b:1, c:2
     private boolean visitField(
             RelNode topNode, RelDataTypeField targetField, Set<String> uniqueFieldNames) {
-
         if (!(AliasInference.removeAlias(topNode)
                 || topNode instanceof Join
                 || topNode instanceof AbstractLogicalMatch)) {
@@ -546,7 +545,6 @@ public class GraphBuilder extends RelBuilder {
                 }
             }
         }
-
         List<RelDataTypeField> fields = topNode.getRowType().getFieldList();
         for (RelDataTypeField field : fields) {
             if (field.getName() != AliasInference.DEFAULT_NAME && field.equals(targetField)) {
@@ -556,8 +554,6 @@ public class GraphBuilder extends RelBuilder {
                 uniqueFieldNames.add(field.getName());
             }
         }
-
-
         return false;
     }
 
@@ -572,7 +568,6 @@ public class GraphBuilder extends RelBuilder {
     public RexNode call(SqlOperator operator, RexNode... operands) {
         return call_(operator, ImmutableList.copyOf(operands));
     }
-
 
     @Override
     public RexNode call(SqlOperator operator, Iterable<? extends RexNode> operands) {
@@ -1021,8 +1016,6 @@ public class GraphBuilder extends RelBuilder {
         replaceTop(project);
         return this;
     }
-
-
 
     /**
      * derive {@code RelDataType} of project operators

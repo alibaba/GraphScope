@@ -120,7 +120,9 @@ public class RexGraphVariable extends RexInputRef {
         return aliasId;
     }
 
-    public int getColumnId(){return index;}
+    public int getColumnId() {
+        return index;
+    }
 
     public @Nullable GraphProperty getProperty() {
         return property;

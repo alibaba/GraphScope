@@ -1,8 +1,6 @@
 package com.alibaba.graphscope.common.ir.rex;
 
-import com.alibaba.graphscope.common.ir.planner.GraphFieldTrimmer;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexPermuteInputsShuttle;
@@ -10,8 +8,6 @@ import org.apache.calcite.util.mapping.Mappings;
 
 public class RexPermuteGraphShuttle extends RexPermuteInputsShuttle {
     private final Mappings.TargetMapping mapping;
-
-
 
     /**
      * Creates a RexPermuteInputsShuttle.
@@ -24,7 +20,6 @@ public class RexPermuteGraphShuttle extends RexPermuteInputsShuttle {
      * @param mapping Mapping
      * @param inputs  Input relational expressions
      */
-
     public RexPermuteGraphShuttle(Mappings.TargetMapping mapping, RelNode... inputs) {
         super(mapping, inputs);
         this.mapping = mapping;
@@ -34,20 +29,20 @@ public class RexPermuteGraphShuttle extends RexPermuteInputsShuttle {
     public RexNode visitInputRef(RexInputRef local) {
         final int index = local.getIndex();
         int target = mapping.getTarget(index);
-        return (local instanceof RexGraphVariable) ?
-                visitGraphVariable((RexGraphVariable) local) :
-                new RexInputRef(
-                        target,
-                        local.getType());
+        return (local instanceof RexGraphVariable)
+                ? visitGraphVariable((RexGraphVariable) local)
+                : new RexInputRef(target, local.getType());
     }
 
     public RexNode visitGraphVariable(RexGraphVariable variable) {
         final int index = variable.getIndex(); // resource column id
         int target = mapping.getTarget(index);
 
-        return variable.getProperty() == null ?
-                RexGraphVariable.of(variable.getAliasId(), target, variable.getName(), variable.getType()) :
-                RexGraphVariable.of(variable.getAliasId(),
+        return variable.getProperty() == null
+                ? RexGraphVariable.of(
+                        variable.getAliasId(), target, variable.getName(), variable.getType())
+                : RexGraphVariable.of(
+                        variable.getAliasId(),
                         variable.getProperty(),
                         target,
                         variable.getName(),
