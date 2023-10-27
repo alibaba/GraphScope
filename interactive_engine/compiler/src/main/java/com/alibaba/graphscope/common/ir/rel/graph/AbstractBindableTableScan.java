@@ -106,9 +106,10 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return rowType;
     }
 
-    public void setRowType(RelDataTypeField field){
-        rowType= new RelRecordType(
-                ImmutableList.of(field));
+    public void setRowType(GraphSchemaType graphType){
+        rowType=   new RelRecordType(
+                ImmutableList.of(
+                        new RelDataTypeFieldImpl(getAliasName(), getAliasId(), graphType)));
     }
 
     public String getAliasName() {

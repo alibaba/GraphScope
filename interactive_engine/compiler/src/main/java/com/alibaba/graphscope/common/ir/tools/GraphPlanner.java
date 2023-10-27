@@ -128,6 +128,7 @@ public class GraphPlanner {
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
                             null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
+
             LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
 
             // apply optimizations

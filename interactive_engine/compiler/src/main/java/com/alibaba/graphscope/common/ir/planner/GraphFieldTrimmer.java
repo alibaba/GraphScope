@@ -69,63 +69,27 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     List<RelDataTypeField> fieldList = rowType.getFieldList();
     final int fieldCount = rowType.getFieldCount();
     RelDataType fullRowType = project.isAppend() ? getOutputType(project) : rowType;
+    List<RelDataTypeField> fullFields = fullRowType.getFieldList();
+    int fullSize = fullRowType.getFieldCount();
 
     // key: id of field in project RowType, value: id of filed in input RowType
     final Mapping mapping =
         Mappings.create(
-            MappingType.INVERSE_SURJECTION, fullRowType.getFieldCount(), fieldsUsed.size());
+            MappingType.INVERSE_SURJECTION, fullSize, fieldsUsed.size());
 
     ImmutableSet.Builder varUsedBuilder = ImmutableSet.builder();
     List<RexNode> newProjects = new ArrayList<>();
     List<String> aliasList = new ArrayList<>();
     UsedFields inputFieldsUsed = new UsedFields();
+    int appendSize=fullSize-project.getProjects().size();
 
-    for (Ord<RexNode> ord : Ord.zip(project.getProjects())) {
-      RelDataTypeField field = fieldList.get(ord.i);
-
-      if (!fieldsUsed.containsKey(field.getIndex())) {
-        continue;
-      }
-
-      RexNode proj = ord.e;
-
-      mapping.set(ord.i, newProjects.size());
-
-      aliasList.add(field.getName());
-
-      // find field used by project
-      List<RexGraphVariable> list =
-          ord.e.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
-              .collect(Collectors.toUnmodifiableList());
-
-      if (list.size() == 1 && field.getType() instanceof GraphSchemaType) {
-        // if output type is  node/edge, we can simply think this proj just do alias
-        RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
-        RexGraphVariable var = list.get(0);
-
-        // e.g `with v as person`, need to convert person.name back to v.name
-        inputFieldsUsed.add(
-            new RelDataTypeFieldImpl(var.getName(), var.getAliasId(), parentsUsedField.getType()));
-        RexGraphVariable oldProj = (RexGraphVariable) proj;
-        proj =
-            RexGraphVariable.of(
-                oldProj.getAliasId(),
-                oldProj.getColumnId(),
-                oldProj.getName(),
-                parentsUsedField.getType());
-      }
-      newProjects.add(proj);
-      varUsedBuilder.addAll(list);
-    }
 
     // If project is append, we:
     // 1. Check whether the field is used by parents
     // 2. If used, create a new RexGraphVariable as project item, add it in inputFieldUsed and
     // newFieldList
     if (project.isAppend()) {
-      List<RelDataTypeField> fullFields = fullRowType.getFieldList();
-      int fullSize = fullFields.size();
-      for (int i = fieldList.size(); i < fullSize; ++i) {
+      for (int i=0;i<appendSize;++i) {
         RelDataTypeField field = fullFields.get(i);
         if (fieldsUsed.containsKey(field.getIndex())) {
           RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
@@ -137,6 +101,47 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         }
       }
     }
+
+    for (Ord<RexNode> ord : Ord.zip(project.getProjects())) {
+      RelDataTypeField field = fieldList.get(ord.i);
+
+      if (!fieldsUsed.containsKey(field.getIndex())) {
+        continue;
+      }
+
+      RexNode proj = ord.e;
+      int i=ord.i+appendSize;
+
+      mapping.set(i, newProjects.size());
+
+      aliasList.add(field.getName());
+
+      // find field used by project
+      List<RexGraphVariable> list =
+              ord.e.accept(new RexVariableAliasCollector<>(true, this::findInput)).stream()
+                   .collect(Collectors.toUnmodifiableList());
+
+      if (list.size() == 1 && field.getType() instanceof GraphSchemaType) {
+        // if output type is  node/edge, we can simply think this proj just do alias
+        RelDataTypeField parentsUsedField = fieldsUsed.get(field.getIndex());
+        RexGraphVariable var = list.get(0);
+
+        // e.g `with v as person`, need to convert person.name back to v.name
+        inputFieldsUsed.add(
+                new RelDataTypeFieldImpl(var.getName(), var.getAliasId(), parentsUsedField.getType()));
+        RexGraphVariable oldProj = (RexGraphVariable) proj;
+        proj =
+                RexGraphVariable.of(
+                        oldProj.getAliasId(),
+                        oldProj.getColumnId(),
+                        oldProj.getName(),
+                        parentsUsedField.getType());
+      }
+      newProjects.add(proj);
+      varUsedBuilder.addAll(list);
+    }
+
+
 
     // e.g: with v as person, v.age as age where age>1 and person.name <> "Li"
     // need concat inputFieldUsed(v.name) and currentFields(v.age)
@@ -411,7 +416,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     GraphLogicalPathExpand newPathExpand =
         GraphLogicalPathExpand.create(
             (GraphOptCluster) pathExpand.getCluster(),
-            pathExpand.getHints(),
+            List.of(),
             newInput,
             newExpand,
             newGetV,
@@ -498,8 +503,10 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
 
     // create new RowType of table scan
     RelDataTypeField field;
+    boolean setAlias=false;
     if (fieldsUsed.containsKey(aliasId)) {
       field = fieldsUsed.get(aliasId);
+      setAlias=true;
     } else {
       RelDataTypeField origin = rowType.getFieldList().get(0);
       field = emptyField(origin);
@@ -513,9 +520,10 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     // create new RelNode
     if (tableScan instanceof GraphLogicalSource) {
       GraphLogicalSource source = (GraphLogicalSource) tableScan;
-      SourceConfig config = new SourceConfig(source.getOpt(), labelConfig, source.getAliasName());
+      SourceConfig config = new SourceConfig(source.getOpt(), labelConfig,setAlias?source.getAliasName():null
+    );
       RelNode newSource = graphBuilder.source(config).build();
-      ((AbstractBindableTableScan) newSource).setRowType(field);
+      ((AbstractBindableTableScan) newSource).setRowType((GraphSchemaType) field.getType());
       return result(newSource, mapping, source);
 
     } else if (tableScan instanceof GraphLogicalExpand) {
@@ -525,9 +533,9 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
       RelNode newInput = result.left;
       ExpandConfig config =
           new ExpandConfig(
-              expand.getOpt(), labelConfig, field == null ? null : expand.getAliasName());
+              expand.getOpt(), labelConfig, setAlias ? expand.getAliasName():null);
       RelNode newExpand = graphBuilder.push(newInput).expand(config).build();
-      ((AbstractBindableTableScan) newExpand).setRowType(field);
+      ((AbstractBindableTableScan) newExpand).setRowType((GraphSchemaType) field.getType());
       return result(newExpand, mapping, expand);
 
     } else if (tableScan instanceof GraphLogicalGetV) {
@@ -536,9 +544,9 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
       TrimResult result = trimChild(input, fieldsUsed);
       RelNode newInput = result.left;
       GetVConfig config =
-          new GetVConfig(getV.getOpt(), labelConfig, field == null ? null : getV.getAliasName());
+          new GetVConfig(getV.getOpt(), labelConfig, setAlias ? getV.getAliasName():null);
       RelNode newGetV = graphBuilder.push(newInput).getV(config).build();
-      ((AbstractBindableTableScan) newGetV).setRowType(field);
+      ((AbstractBindableTableScan) newGetV).setRowType((GraphSchemaType) field.getType());
       return result(newGetV, mapping, getV);
     }
 

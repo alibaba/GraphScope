@@ -537,6 +537,16 @@ public class GraphBuilder extends RelBuilder {
     private boolean visitField(
             RelNode topNode, RelDataTypeField targetField, Set<String> uniqueFieldNames) {
 
+        if (!(AliasInference.removeAlias(topNode)
+                || topNode instanceof Join
+                || topNode instanceof AbstractLogicalMatch)) {
+            for (RelNode child : topNode.getInputs()) {
+                if (visitField(child, targetField, uniqueFieldNames)) {
+                    return true;
+                }
+            }
+        }
+
         List<RelDataTypeField> fields = topNode.getRowType().getFieldList();
         for (RelDataTypeField field : fields) {
             if (field.getName() != AliasInference.DEFAULT_NAME && field.equals(targetField)) {
@@ -547,15 +557,6 @@ public class GraphBuilder extends RelBuilder {
             }
         }
 
-        if (!(AliasInference.removeAlias(topNode)
-                || topNode instanceof Join
-                || topNode instanceof AbstractLogicalMatch)) {
-            for (RelNode child : topNode.getInputs()) {
-                if (visitField(child, targetField, uniqueFieldNames)) {
-                    return true;
-                }
-            }
-        }
 
         return false;
     }
@@ -1017,32 +1018,6 @@ public class GraphBuilder extends RelBuilder {
                         nodeList,
                         deriveType(nodeList, fieldNameList, input, isAppend),
                         isAppend);
-        replaceTop(project);
-        return this;
-    }
-
-    public GraphBuilder project(
-            Iterable<? extends RexNode> nodes,
-            RelDataType rowType) {
-        Config config = Utils.getFieldValue(RelBuilder.class, this, "config");
-        RexSimplify simplifier = Utils.getFieldValue(RelBuilder.class, this, "simplifier");
-
-        List<RexNode> nodeList = Lists.newArrayList(nodes);
-        // Simplify expressions.
-        if (config.simplify()) {
-            for (int i = 0; i < nodeList.size(); i++) {
-                nodeList.set(i, simplifier.simplifyPreservingType(nodeList.get(i)));
-            }
-        }
-        RelNode input = requireNonNull(peek(), "frame stack is empty");
-        RelNode project =
-                GraphLogicalProject.create(
-                        (GraphOptCluster) getCluster(),
-                        ImmutableList.of(),
-                        input,
-                        Lists.newArrayList(nodes),
-                        rowType,
-                       false);
         replaceTop(project);
         return this;
     }
