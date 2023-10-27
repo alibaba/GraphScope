@@ -22,7 +22,7 @@ import click
 
 from graphscope.gsctl.config import Context
 from graphscope.gsctl.config import load_gs_config
-from graphscope.gsctl.rpc import get_grpc_client
+from graphscope.gsctl.client.rpc import get_grpc_client
 
 
 @click.group()
@@ -31,14 +31,16 @@ def cli():
     pass
 
 
-@click.command()
+@cli.command()
 @click.option(
     "--coordinator-endpoint",
     help="Coordinator endpoint which gsctl connect to, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to the launched coordinator by ~/.graphscope/config. If '--coordinator-endpoint' is specified,
-    use it as the current context and override the config file.
+    """Connect to the launched coordinator by ~/.graphscope/config
+
+    If '--coordinator-endpoint' is specified, use it as the current context
+    and override the config file.
     """
     if coordinator_endpoint is not None:
         click.secho(
@@ -56,9 +58,9 @@ def connect(coordinator_endpoint):
     click.secho("Coordinator service connected.", fg="green")
 
 
-@click.command()
+@cli.command()
 def close():
-    """Close the connection from the coordinator."""
+    """Close the connection from the coordinator"""
     config = load_gs_config()
 
     current_context = config.current_context()
@@ -67,10 +69,6 @@ def close():
 
     config.remove_and_write(current_context)
     click.secho(f"Disconnect from the {current_context.to_dict()}.", fg="green")
-
-
-cli.add_command(connect)
-cli.add_command(close)
 
 
 if __name__ == "__main__":

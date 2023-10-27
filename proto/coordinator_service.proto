@@ -17,6 +17,7 @@ syntax = "proto3";
 package gs.rpc;
 
 import "message.proto";
+import "interactive.proto";
 
 service CoordinatorService {
   // Connect a session.
@@ -51,4 +52,32 @@ service CoordinatorService {
 
   // service functions under FLEX architecture
   rpc Connect(ConnectRequest) returns (ConnectResponse);
+
+  rpc CreateInteractiveGraph(CreateInteractiveGraphRequest) returns (ApiResponse);
+
+  rpc RemoveInteractiveGraph(RemoveInteractiveGraphRequest) returns (ApiResponse);
+
+  rpc ListInteractiveGraph(ListInteractiveGraphRequest) returns (ListInteractiveGraphResponse);
+
+  rpc ImportInteractiveGraph(ImportInteractiveGraphRequest) returns (ApiResponse);
+
+  rpc ListInteractiveJob(ListInteractiveJobRequest) returns (ListInteractiveJobResponse);
+
+  rpc CreateInteractiveProcedure(CreateInteractiveProcedureRequest) returns (ApiResponse);
+
+  rpc ListInteractiveProcedure(ListInteractiveProcedureRequest) returns (ListInteractiveProcedureResponse);
+
+  rpc UpdateInteractiveProcedure(UpdateInteractiveProcedureRequest) returns (ApiResponse);
+
+  rpc RemoveInteractiveProcedure(RemoveInteractiveProcedureRequest) returns (ApiResponse);
+
+  rpc GetInteractiveServiceStatus(GetInteractiveServiceStatusRequest) returns (GetInteractiveServiceStatusResponse);
+
+  rpc StartInteractiveService(StartInteractiveServiceRequest) returns (ApiResponse);
+
+  rpc StopInteractiveService(StopInteractiveServiceRequest) returns (ApiResponse);
+
+  rpc RestartInteractiveService(RestartInteractiveServiceRequest) returns (ApiResponse);
+
+  rpc GetNodeStatus(GetNodeStatusRequest) returns (GetNodeStatusResponse);
 }

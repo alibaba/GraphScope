@@ -25,7 +25,7 @@ try:
     import graphscope
 except ModuleNotFoundError:
     # if graphscope is not installed, only basic functions or utilities
-    # can be used, e.g. install dependencies
+    # can be used, e.g. install dependencies.
     graphscope = None
 
 

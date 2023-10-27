@@ -16,4 +16,27 @@
 # limitations under the License.
 #
 
-from graphscope.gsctl.commands.utils import *
+import click
+
+from graphscope.gsctl.commands.common import cli as common_cli
+from graphscope.gsctl.commands.dev import cli as dev_cli
+from graphscope.gsctl.commands.interactive import cli as interactive_cli
+from graphscope.gsctl.config import Context
+from graphscope.gsctl.config import FLEX_INTERACTIVE
+
+
+def get_command_collection(context: Context):
+    if context is None:
+        # treat gsctl as an utility script, providing hepler functions or utilities. e.g.
+        # initialize and manage cluster, install the dependencies required to build graphscope locally
+        commands = click.CommandCollection(sources=[common_cli, dev_cli])
+
+    elif context.solution == FLEX_INTERACTIVE:
+        commands = click.CommandCollection(sources=[common_cli, interactive_cli])
+
+    else:
+        raise RuntimeError(
+            f"Failed to get command collection with context {context.name}"
+        )
+
+    return commands

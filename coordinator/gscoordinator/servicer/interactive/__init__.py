@@ -16,5 +16,11 @@
 # limitations under the License.
 #
 
-from gscoordinator.servicer.interactive.service import *
-from gscoordinator.servicer.graphscope_one.service import *
+import os
+import sys
+
+try:
+    sys.path.insert(0, os.path.dirname(__file__))
+    import interactive_client
+except ImportError:
+    raise

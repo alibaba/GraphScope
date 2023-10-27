@@ -1,0 +1,283 @@
+// Copyright 2020 Alibaba Group Holding Limited. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+syntax = "proto3";
+
+package gs.rpc;
+
+import "error_codes.proto";
+
+// property type
+message PropertyTypeProto {
+    string primitive_type = 1;  // [ DT_DOUBLE, DT_STRING, DT_SIGNED_INT32, DT_SIGNED_INT64 ]
+}
+
+// property
+message PropertyProto {
+  int32 property_id = 1;
+  string property_name = 2;
+  PropertyTypeProto property_type = 3;
+}
+
+// csr params definition, used for storage optimization
+message CSRParamsProto {
+  optional string incoming_edge_strategy = 1;  // one of [Single, Multple]
+  optional string outgoing_edge_strategy = 2;  // one of [Single, Multple]
+}
+
+// vertex pair
+message VertexPairProto {
+  string source_vertex = 1;  // label
+  string destination_vertex = 2;  // label
+  string relation = 3;  // one of [ MANY_TO_MANY, ONE_TO_MANY, MANY_TO_ONE, ONE_TO_ONE, ]
+  CSRParamsProto x_csr_params = 4;
+}
+
+// vertex
+message VertexProto {
+  int32 type_id = 1;  // index
+  string type_name = 2;  // label
+  repeated PropertyProto properties = 3;
+  repeated string primary_keys = 4;
+}
+
+// edge
+message EdgeProto {
+  int32 type_id = 1;  // index
+  string type_name = 2;  // label
+  repeated VertexPairProto vertex_type_pair_relations = 3;
+  repeated PropertyProto properties = 4;
+}
+
+// schema
+message Schema {
+  repeated VertexProto vertex_types = 1;
+  repeated EdgeProto edge_types = 2;
+}
+
+// stored procedure
+message StoredProcedureProto {
+  string directory = 1;  // one of [ plugins ]
+}
+
+// graph
+message GraphProto {
+  string name = 1;
+  string store_type = 2;  // one of [ mutable_csr, ]
+  StoredProcedureProto stored_procedures = 3;
+  Schema schema = 4;
+}
+
+// column
+message Column {
+  int32 index = 1;
+  string name = 2;
+}
+
+// column mapping
+// column index(name) of datasource -> property
+message ColumnMapping {
+  Column column = 1;
+  string property = 2;
+}
+
+// vertex mapping
+message VertexMapping {
+  string type_name = 1;  // vertex label
+  repeated string inputs = 2;  // protocol:///path/to/data
+  repeated bytes raw_data = 3;  // raw data
+  repeated ColumnMapping column_mappings = 4;
+}
+
+// type triplet for edge
+message TypeTriplet {
+  string edge = 1;  // edge label
+  string source_vertex = 2;  // src vertex label
+  string destination_vertex = 3;  // dst vertex label
+}
+
+// edge mapping
+message EdgeMapping {
+  TypeTriplet type_triplet = 1;
+  repeated string inputs = 2;
+  repeated bytes raw_data = 3;
+  repeated ColumnMapping source_vertex_mappings = 4;
+  repeated ColumnMapping destination_vertex_mappings = 5;
+  repeated ColumnMapping column_mappings = 6;
+}
+
+// data source config
+message DataSource {
+  string scheme = 1;  // file, oss, s3, hdfs; only file is supported now
+  string location = 2;  // unified prefix
+}
+
+// format
+message DataSourceFormat {
+  string type = 1;  // csv
+  map<string, string> metadata = 2;
+}
+
+// loading config
+message LoadingConfig {
+  DataSource data_source = 1;
+  string import_option = 2;   // init, append, overwrite, only init is supported now
+  DataSourceFormat format = 3;
+}
+
+// schema mapping
+message SchemaMapping {
+  string graph = 1;
+  LoadingConfig loading_config = 2;
+  repeated VertexMapping vertex_mappings = 3;
+  repeated EdgeMapping edge_mappings = 4;
+}
+
+// job status
+message JobStatus {
+  string jobid = 1;
+  string status = 2;
+  string start_time = 3;
+  string end_time = 4;
+  map<string, string> detail = 5;
+  string message = 6;
+}
+
+// procedure runtime params, used both in property and return type
+message ProcedureRuntimeParam {
+  string name = 1;
+  string type = 2;
+}
+
+// procedure
+message Procedure {
+  string name = 1;
+  string bound_graph = 2;
+  string description = 3;
+  optional string type = 4;  // [ cpp, cypher ]
+  string query = 5;  // content
+  bool enable = 6;
+
+  // runtime info, assign by Interactive server side.
+  repeated ProcedureRuntimeParam params = 7;  // parameters in call
+  repeated ProcedureRuntimeParam rlts_meta = 8;
+}
+
+// service
+message Service {
+  string graph_name = 1;
+}
+
+// service status
+message ServiceStatus {
+  string status = 1;
+  string graph_name = 2;
+  int32 bolt_port = 3;
+  int32 hqps_port = 4;
+}
+
+// node status
+message NodeStatus {
+  string node = 1;  // node name
+  int32 cpu_usage = 2;
+  int32 memory_usage = 3;
+  int32 disk_usage = 4;
+}
+
+// message
+message ApiResponse {
+  Code code = 1;
+  optional string error_msg = 2;
+}
+
+message CreateInteractiveGraphRequest {
+  GraphProto graph_def = 1;
+}
+
+message RemoveInteractiveGraphRequest {
+  string graph_name = 1;
+}
+
+message ListInteractiveGraphRequest {}
+
+message ListInteractiveGraphResponse {
+  Code code = 1;
+  optional string error_msg = 2;
+
+  repeated GraphProto graphs = 3;
+}
+
+message ImportInteractiveGraphRequest {
+  SchemaMapping schema_mapping = 1;
+}
+
+message ListInteractiveJobRequest {}
+
+message ListInteractiveJobResponse {
+  Code code = 1;
+  optional string error_msg = 2;
+
+  repeated JobStatus job_status = 3;
+}
+
+message CreateInteractiveProcedureRequest {
+  Procedure procedure_def = 1;
+}
+
+message ListInteractiveProcedureRequest {
+  string graph_name = 1;
+}
+
+message ListInteractiveProcedureResponse {
+  Code code = 1;
+  optional string error_msg = 2;
+
+  repeated Procedure procedures = 3;
+}
+
+message UpdateInteractiveProcedureRequest {
+  repeated Procedure procedures = 1;
+}
+
+message RemoveInteractiveProcedureRequest {
+  string graph_name = 1;
+  string procedure_name = 2;
+}
+
+message GetInteractiveServiceStatusRequest {}
+
+message GetInteractiveServiceStatusResponse {
+  Code code = 1;
+  optional string error_msg = 2;
+
+  ServiceStatus service_status = 3;
+}
+
+message StartInteractiveServiceRequest {
+  Service service_def = 1;
+}
+
+message StopInteractiveServiceRequest {}
+
+message RestartInteractiveServiceRequest {}
+
+message GetNodeStatusRequest {}
+
+message GetNodeStatusResponse {
+  Code code = 1;
+  optional string error_msg = 2;
+
+  repeated NodeStatus nodes_status = 3;
+}
