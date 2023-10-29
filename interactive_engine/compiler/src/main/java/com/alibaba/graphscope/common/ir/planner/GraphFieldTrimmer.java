@@ -61,11 +61,11 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
     }
 
     /**
-     * @param project
-     * @param fieldsUsed
-     * @return
+     * @param project which to be trimmed
+     * @param fieldsUsed fields used by parent
+     * @return  a pair of new project relNode and mapping
      */
-    public TrimResult trimFields(GraphLogicalProject project, UsedFields fieldsUsed) {
+    protected TrimResult trimFields(GraphLogicalProject project, UsedFields fieldsUsed) {
         // current project rowType
         final RelDataType rowType = project.getRowType();
         List<RelDataTypeField> fieldList = rowType.getFieldList();
@@ -143,7 +143,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                 proj =
                         RexGraphVariable.of(
                                 oldProj.getAliasId(),
-                                oldProj.getColumnId(),
+                                oldProj.getIndex(),
                                 oldProj.getName(),
                                 parentsUsedField.getType());
             }
@@ -164,7 +164,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
 
         final Mapping inputMapping = trimResult.right;
 
-        if (newProjects.size() == 0) {
+        if (newProjects.isEmpty()) {
             return dummyProject(fieldCount, newInput, project);
         }
 
@@ -184,7 +184,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newProject, mapping, project);
     }
 
-    public TrimResult trimFields(GraphLogicalAggregate aggregate, UsedFields fieldsUsed) {
+    protected TrimResult trimFields(GraphLogicalAggregate aggregate, UsedFields fieldsUsed) {
 
         List<GraphAggCall> aggCalls = new ArrayList<>();
 
@@ -226,7 +226,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                 groupVars.add(
                         RexGraphVariable.of(
                                 var.getAliasId(),
-                                var.getColumnId(),
+                                var.getIndex(),
                                 var.getName(),
                                 parentsUsedField.getType()));
             } else {
@@ -295,7 +295,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newAggregate, mapping, aggregate);
     }
 
-    public TrimResult trimFields(GraphLogicalSort sort, UsedFields fieldsUsed) {
+    protected TrimResult trimFields(GraphLogicalSort sort, UsedFields fieldsUsed) {
         RexNode offset = sort.offset;
         RexNode fetch = sort.fetch;
         RelNode input = sort.getInput();
@@ -343,7 +343,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newSort, inputMapping, sort);
     }
 
-    public TrimResult trimFields(LogicalFilter filter, UsedFields fieldsUsed) {
+    protected TrimResult trimFields(LogicalFilter filter, UsedFields fieldsUsed) {
         RelDataType inputRowType = getOutputType(filter.getInput());
         UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
 
@@ -376,7 +376,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newFilter, inputMapping, filter);
     }
 
-    public TrimResult trimFields(GraphLogicalSingleMatch singleMatch, UsedFields fieldsUsed) {
+    protected TrimResult trimFields(GraphLogicalSingleMatch singleMatch, UsedFields fieldsUsed) {
         RelNode sentence = singleMatch.getSentence();
         int fieldCount = singleMatch.getRowType().getFieldCount();
         TrimResult result = trimChild(sentence, fieldsUsed);
