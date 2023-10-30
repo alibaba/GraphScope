@@ -65,7 +65,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
      * @param fieldsUsed fields used by parent
      * @return  a pair of new project relNode and mapping
      */
-    protected TrimResult trimFields(GraphLogicalProject project, UsedFields fieldsUsed) {
+    public TrimResult trimFields(GraphLogicalProject project, UsedFields fieldsUsed) {
         // current project rowType
         final RelDataType rowType = project.getRowType();
         List<RelDataTypeField> fieldList = rowType.getFieldList();
@@ -184,7 +184,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newProject, mapping, project);
     }
 
-    protected TrimResult trimFields(GraphLogicalAggregate aggregate, UsedFields fieldsUsed) {
+    public TrimResult trimFields(GraphLogicalAggregate aggregate, UsedFields fieldsUsed) {
 
         List<GraphAggCall> aggCalls = new ArrayList<>();
 
@@ -295,7 +295,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newAggregate, mapping, aggregate);
     }
 
-    protected TrimResult trimFields(GraphLogicalSort sort, UsedFields fieldsUsed) {
+    public TrimResult trimFields(GraphLogicalSort sort, UsedFields fieldsUsed) {
         RexNode offset = sort.offset;
         RexNode fetch = sort.fetch;
         RelNode input = sort.getInput();
@@ -343,7 +343,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newSort, inputMapping, sort);
     }
 
-    protected TrimResult trimFields(LogicalFilter filter, UsedFields fieldsUsed) {
+    public TrimResult trimFields(LogicalFilter filter, UsedFields fieldsUsed) {
         RelDataType inputRowType = getOutputType(filter.getInput());
         UsedFields inputFieldsUsed = new UsedFields(fieldsUsed);
 
@@ -376,7 +376,7 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
         return result(newFilter, inputMapping, filter);
     }
 
-    protected TrimResult trimFields(GraphLogicalSingleMatch singleMatch, UsedFields fieldsUsed) {
+    public TrimResult trimFields(GraphLogicalSingleMatch singleMatch, UsedFields fieldsUsed) {
         RelNode sentence = singleMatch.getSentence();
         int fieldCount = singleMatch.getRowType().getFieldCount();
         TrimResult result = trimChild(sentence, fieldsUsed);
