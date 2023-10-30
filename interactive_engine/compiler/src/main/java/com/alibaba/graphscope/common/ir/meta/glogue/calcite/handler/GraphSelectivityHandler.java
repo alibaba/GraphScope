@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.meta.glogue.handler;
+package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.BuiltInMetadata;

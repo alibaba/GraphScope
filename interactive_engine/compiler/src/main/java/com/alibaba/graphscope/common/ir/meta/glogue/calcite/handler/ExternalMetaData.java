@@ -14,31 +14,32 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.meta.glogue.handler;
+package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 
-import com.alibaba.graphscope.common.ir.rel.GraphPattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
-import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.metadata.Metadata;
+import org.apache.calcite.rel.metadata.MetadataDef;
+import org.apache.calcite.rel.metadata.MetadataHandler;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Set;
 
-public class GraphGlogueEdgesHandler implements ExternalMetaData.GlogueEdges.Handler {
-    private final GlogueQuery glogueQuery;
+public abstract class ExternalMetaData {
 
-    public GraphGlogueEdgesHandler(GlogueQuery glogueQuery) {
-        this.glogueQuery = glogueQuery;
-    }
+    /** Metadata to find all incoming {@code GlogueEdge} (s) of a specific {@code Pattern} */
+    public interface GlogueEdges extends Metadata {
+        /** Handler API. */
+        @FunctionalInterface
+        interface Handler extends MetadataHandler<ExternalMetaData.GlogueEdges> {
+            @Nullable Set<GlogueEdge> getGlogueEdges(RelNode node, RelMetadataQuery mq);
 
-    @Override
-    public @Nullable Set<GlogueEdge> getGlogueEdges(RelNode node, RelMetadataQuery mq) {
-        Preconditions.checkArgument(
-                node instanceof GraphPattern,
-                "can not find incoming glogue edges for the node=" + node.getClass());
-        return glogueQuery.getInEdges(((GraphPattern) node).getPattern());
+            @Override
+            default MetadataDef<ExternalMetaData.GlogueEdges> getDef() {
+                return null;
+            }
+        }
     }
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.meta.glogue.handler;
+package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;

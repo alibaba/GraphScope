@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.common.ir.glogue;
 
 import com.alibaba.graphscope.common.ir.Utils;
-import com.alibaba.graphscope.common.ir.meta.glogue.GraphRelMetadataQuery;
-import com.alibaba.graphscope.common.ir.meta.glogue.handler.GraphMetadataHandlerProvider;
+import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
+import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.planner.rules.generative.ExtendIntersectRule;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;

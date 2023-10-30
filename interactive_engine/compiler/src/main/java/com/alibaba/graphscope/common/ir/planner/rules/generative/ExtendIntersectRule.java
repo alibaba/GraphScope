@@ -17,8 +17,8 @@
 package com.alibaba.graphscope.common.ir.planner.rules.generative;
 
 import com.alibaba.graphscope.common.ir.meta.glogue.ExtendWeightEstimator;
-import com.alibaba.graphscope.common.ir.meta.glogue.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
+import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
