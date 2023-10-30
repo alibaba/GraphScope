@@ -210,16 +210,16 @@ vid_t MutablePropertyFragment::vertex_num(label_t vertex_label) const {
   return static_cast<vid_t>(lf_indexers_[vertex_label].size());
 }
 
-bool MutablePropertyFragment::get_lid(label_t label, oid_t oid,
+bool MutablePropertyFragment::get_lid(label_t label, const Any& oid,
                                       vid_t& lid) const {
   return lf_indexers_[label].get_index(oid, lid);
 }
 
-oid_t MutablePropertyFragment::get_oid(label_t label, vid_t lid) const {
+Any MutablePropertyFragment::get_oid(label_t label, vid_t lid) const {
   return lf_indexers_[label].get_key(lid);
 }
 
-vid_t MutablePropertyFragment::add_vertex(label_t label, oid_t id) {
+vid_t MutablePropertyFragment::add_vertex(label_t label, const Any& id) {
   return lf_indexers_[label].insert(id);
 }
 

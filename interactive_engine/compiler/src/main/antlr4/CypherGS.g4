@@ -226,9 +226,17 @@ oC_PartialComparisonExpression
                                | ( '<=' SP? oC_StringListNullPredicateExpression )
                                | ( '>=' SP? oC_StringListNullPredicateExpression )
                                ;
-
 oC_StringListNullPredicateExpression
-                         :  oC_AddOrSubtractExpression ( oC_NullPredicateExpression )? ;
+                                 :  oC_AddOrSubtractExpression ( oC_StringPredicateExpression | oC_NullPredicateExpression )* ;
+
+oC_StringPredicateExpression
+                         :  ( ( SP STARTS SP WITH ) | ( SP ENDS SP WITH ) | ( SP CONTAINS ) ) SP? oC_AddOrSubtractExpression ;
+
+STARTS : ( 'S' | 's' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'S' | 's' ) ;
+
+ENDS : ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'D' | 'd' ) ( 'S' | 's' ) ;
+
+CONTAINS : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'S' | 's' ) ;
 
 oC_NullPredicateExpression
                        :  ( SP IS SP NULL )

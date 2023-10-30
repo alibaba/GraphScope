@@ -133,7 +133,7 @@ ANALYTICAL_MACOS=(
 )
 
 _install_apache_arrow_ubuntu() {
-  if ! command -v dpkg -s libarrow-dev &>/dev/null; then
+  if ! dpkg -s libarrow-dev &>/dev/null; then
     log "Installing apache-arrow."
     ${SUDO} apt-get install -y lsb-release
     # shellcheck disable=SC2046,SC2019,SC2018
@@ -331,7 +331,7 @@ write_env_config() {
   {
     echo "export GRAPHSCOPE_HOME=${install_prefix}"
     echo "export CMAKE_PREFIX_PATH=/opt/vineyard"
-    echo "export PATH=${install_prefix}/bin:\$HOME/.cargo/bin:\$PATH"
+    echo "export PATH=${install_prefix}/bin:\$HOME/.local/bin:\$HOME/.cargo/bin:\$PATH"
     echo "export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}"
     echo "export LIBRARY_PATH=${install_prefix}/lib:${install_prefix}/lib64"
   } >>"${OUTPUT_ENV_FILE}"

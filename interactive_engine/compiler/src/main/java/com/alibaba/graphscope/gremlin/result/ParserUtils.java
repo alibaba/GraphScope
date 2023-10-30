@@ -141,10 +141,10 @@ public class ParserUtils {
                     FfiResult.ByValue result = irCoreLib.getKeyName(key.getId(), type);
                     if (result.code != ResultCode.Success) {
                         String errorMsg =
-                                "code is " + result.code.name() + ", msg is " + result.msg;
+                                "code is " + result.code.name() + ", msg is " + result.getMsg();
                         throw new GremlinResultParserException("getKeyName fail " + errorMsg);
                     }
-                    return result.msg;
+                    return result.getMsg();
                 }
             default:
                 // throw new GremlinResultParserException("key type " + key.getItemCase().name() + "

@@ -20,11 +20,19 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
-import com.alibaba.graphscope.common.config.*;
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
+import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.LogicalPlanFactory;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
+import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.alibaba.graphscope.cypher.service.CypherBootstrapper;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
@@ -67,7 +75,12 @@ public class GraphServer {
 
     public void start() throws Exception {
         ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
-        GraphPlanner graphPlanner = new GraphPlanner(configs);
+        LogicalPlanFactory planFactory =
+                (GraphBuilder builder, IrMeta irMeta, String query) ->
+                        new LogicalPlanVisitor(builder, irMeta)
+                                .visit(new CypherAntlr4Parser().parse(query));
+        GraphPlanner graphPlanner = new GraphPlanner(configs, planFactory);
+        QueryCache queryCache = new QueryCache(configs, graphPlanner);
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
             this.gremlinServer =
                     new IrGremlinServer(
@@ -77,7 +90,7 @@ public class GraphServer {
         if (!FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs)) {
             this.cypherBootstrapper =
                     new CypherBootstrapper(
-                            configs, graphPlanner, metaQueryCallback, executionClient);
+                            configs, graphPlanner, metaQueryCallback, executionClient, queryCache);
             Path neo4jHomePath = getNeo4jHomePath();
             this.cypherBootstrapper.start(
                     neo4jHomePath,

@@ -50,7 +50,7 @@ public class RexToProtoTest {
                                 GraphStdOperatorTable.MINUS,
                                 builder.literal(1),
                                 builder.variable("a", "age")));
-        RexToProtoConverter converter = new RexToProtoConverter(true, false);
+        RexToProtoConverter converter = new RexToProtoConverter(true, false, Utils.rexBuilder);
         Assert.assertEquals(
                 FileUtils.readJsonFromResource("proto/expression_with_brace.json"),
                 JsonFormat.printer().print(braceExpr.accept(converter)));

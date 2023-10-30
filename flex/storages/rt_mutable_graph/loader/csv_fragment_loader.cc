@@ -274,35 +274,78 @@ static void set_vertex_properties(gs::ColumnBase* col,
 
 template <typename EDATA_T>
 static void append_edges(
-    std::shared_ptr<arrow::Int64Array> src_col,
-    std::shared_ptr<arrow::Int64Array> dst_col,
-    const LFIndexer<vid_t>& src_indexer, const LFIndexer<vid_t>& dst_indexer,
+    std::shared_ptr<arrow::Array> src_col,
+    std::shared_ptr<arrow::Array> dst_col, const LFIndexer<vid_t>& src_indexer,
+    const LFIndexer<vid_t>& dst_indexer,
     std::vector<std::shared_ptr<arrow::Array>>& edata_cols,
     std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
     std::vector<int32_t>& ie_degree, std::vector<int32_t>& oe_degree) {
   CHECK(src_col->length() == dst_col->length());
+  if (src_indexer.get_type() == PropertyType::kInt64) {
+    CHECK(src_col->type() == arrow::int64());
+  } else if (src_indexer.get_type() == PropertyType::kString) {
+    CHECK(src_col->type() == arrow::utf8() ||
+          src_col->type() == arrow::large_utf8());
+  }
 
+  if (dst_indexer.get_type() == PropertyType::kInt64) {
+    CHECK(dst_col->type() == arrow::int64());
+  } else if (dst_indexer.get_type() == PropertyType::kString) {
+    CHECK(dst_col->type() == arrow::utf8() ||
+          dst_col->type() == arrow::large_utf8());
+  }
   auto old_size = parsed_edges.size();
   parsed_edges.resize(old_size + src_col->length());
   VLOG(10) << "resize parsed_edges from" << old_size << " to "
            << parsed_edges.size();
 
-  auto src_col_thread = std::thread([&]() {
+  auto _append = [&](bool is_dst) {
     size_t cur_ind = old_size;
-    for (auto i = 0; i < src_col->length(); ++i) {
-      auto src_vid = src_indexer.get_index(src_col->Value(i));
-      std::get<0>(parsed_edges[cur_ind++]) = src_vid;
-      oe_degree[src_vid]++;
+    const auto& col = is_dst ? dst_col : src_col;
+    const auto& indexer = is_dst ? dst_indexer : src_indexer;
+    if (col->type() == arrow::int64()) {
+      auto casted = std::static_pointer_cast<arrow::Int64Array>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto vid = indexer.get_index(Any::From(casted->Value(j)));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
+    } else if (col->type() == arrow::utf8()) {
+      auto casted = std::static_pointer_cast<arrow::StringArray>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto str = casted->GetView(j);
+        std::string_view str_view(str.data(), str.size());
+        auto vid = indexer.get_index(Any::From(str_view));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
+    } else if (col->type() == arrow::large_utf8()) {
+      auto casted = std::static_pointer_cast<arrow::LargeStringArray>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto str = casted->GetView(j);
+        std::string_view str_view(str.data(), str.size());
+        auto vid = indexer.get_index(Any::From(str_view));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
     }
-  });
-  auto dst_col_thread = std::thread([&]() {
-    size_t cur_ind = old_size;
-    for (auto i = 0; i < dst_col->length(); ++i) {
-      auto dst_vid = dst_indexer.get_index(dst_col->Value(i));
-      std::get<1>(parsed_edges[cur_ind++]) = dst_vid;
-      ie_degree[dst_vid]++;
-    }
-  });
+  };
+
+  auto src_col_thread = std::thread([&]() { _append(false); });
+  auto dst_col_thread = std::thread([&]() { _append(true); });
   src_col_thread.join();
   dst_col_thread.join();
 
@@ -345,40 +388,74 @@ static void append_edges(
     std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
     std::vector<int32_t>& ie_degree, std::vector<int32_t>& oe_degree) {
   CHECK(src_col->length() == dst_col->length());
-  CHECK(src_col->type() == arrow::int64());
-  CHECK(dst_col->type() == arrow::int64());
+  if (src_indexer.get_type() == PropertyType::kInt64) {
+    CHECK(src_col->type() == arrow::int64());
+  } else if (src_indexer.get_type() == PropertyType::kString) {
+    CHECK(src_col->type() == arrow::utf8() ||
+          src_col->type() == arrow::large_utf8());
+  }
+
+  if (dst_indexer.get_type() == PropertyType::kInt64) {
+    CHECK(dst_col->type() == arrow::int64());
+  } else if (dst_indexer.get_type() == PropertyType::kString) {
+    CHECK(dst_col->type() == arrow::utf8() ||
+          dst_col->type() == arrow::large_utf8());
+  }
 
   auto old_size = parsed_edges.size();
   parsed_edges.resize(old_size + src_col->length());
   VLOG(10) << "resize parsed_edges from" << old_size << " to "
            << parsed_edges.size();
-
-  auto src_col_thread = std::thread([&]() {
+  auto _append = [&](bool is_dst) {
     size_t cur_ind = old_size;
-    for (auto i = 0; i < src_col->num_chunks(); ++i) {
-      auto chunk = src_col->chunk(i);
-      CHECK(chunk->type() == arrow::int64());
-      auto casted_chunk = std::static_pointer_cast<arrow::Int64Array>(chunk);
-      for (auto j = 0; j < casted_chunk->length(); ++j) {
-        auto src_vid = src_indexer.get_index(casted_chunk->Value(j));
-        std::get<0>(parsed_edges[cur_ind++]) = src_vid;
-        oe_degree[src_vid]++;
+    const auto& col = is_dst ? dst_col : src_col;
+    const auto& indexer = is_dst ? dst_indexer : src_indexer;
+    for (auto i = 0; i < col->num_chunks(); ++i) {
+      auto chunk = col->chunk(i);
+      CHECK(chunk->type() == col->type());
+      if (col->type() == arrow::int64()) {
+        auto casted_chunk = std::static_pointer_cast<arrow::Int64Array>(chunk);
+        for (auto j = 0; j < casted_chunk->length(); ++j) {
+          auto vid = indexer.get_index(Any::From(casted_chunk->Value(j)));
+          if (is_dst) {
+            std::get<1>(parsed_edges[cur_ind++]) = vid;
+          } else {
+            std::get<0>(parsed_edges[cur_ind++]) = vid;
+          }
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
+      } else if (col->type() == arrow::utf8()) {
+        auto casted_chunk = std::static_pointer_cast<arrow::StringArray>(chunk);
+        for (auto j = 0; j < casted_chunk->length(); ++j) {
+          auto str = casted_chunk->GetView(j);
+          std::string_view str_view(str.data(), str.size());
+          auto vid = indexer.get_index(Any::From(str_view));
+          if (is_dst) {
+            std::get<1>(parsed_edges[cur_ind++]) = vid;
+          } else {
+            std::get<0>(parsed_edges[cur_ind++]) = vid;
+          }
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
+      } else if (col->type() == arrow::large_utf8()) {
+        auto casted_chunk =
+            std::static_pointer_cast<arrow::LargeStringArray>(chunk);
+        for (auto j = 0; j < casted_chunk->length(); ++j) {
+          auto str = casted_chunk->GetView(j);
+          std::string_view str_view(str.data(), str.size());
+          auto vid = indexer.get_index(Any::From(str_view));
+          if (is_dst) {
+            std::get<1>(parsed_edges[cur_ind++]) = vid;
+          } else {
+            std::get<0>(parsed_edges[cur_ind++]) = vid;
+          }
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
       }
     }
-  });
-  auto dst_col_thread = std::thread([&]() {
-    size_t cur_ind = old_size;
-    for (auto i = 0; i < dst_col->num_chunks(); ++i) {
-      auto chunk = dst_col->chunk(i);
-      CHECK(chunk->type() == arrow::int64());
-      auto casted_chunk = std::static_pointer_cast<arrow::Int64Array>(chunk);
-      for (auto j = 0; j < casted_chunk->length(); ++j) {
-        auto dst_vid = dst_indexer.get_index(casted_chunk->Value(j));
-        std::get<1>(parsed_edges[cur_ind++]) = dst_vid;
-        ie_degree[dst_vid]++;
-      }
-    }
-  });
+  };
+  auto src_col_thread = std::thread([&]() { _append(false); });
+  auto dst_col_thread = std::thread([&]() { _append(true); });
 
   // if EDATA_T is grape::EmptyType, no need to read columns
   auto edata_col_thread = std::thread([&]() {
@@ -533,32 +610,83 @@ CSVFragmentLoader::createEdgeTableReader(label_t src_label_id,
   return res.ValueOrDie();
 }
 
+template <typename KEY_T>
+struct _add_vertex {
+  void operator()(const std::shared_ptr<arrow::Array>& col,
+                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {}
+};
+
+template <>
+struct _add_vertex<int64_t> {
+  void operator()(const std::shared_ptr<arrow::Array>& col,
+                  IdIndexer<int64_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::int64());
+    size_t row_num = col->length();
+
+    auto casted_array = std::static_pointer_cast<arrow::Int64Array>(col);
+    vid_t vid;
+    for (auto i = 0; i < row_num; ++i) {
+      if (!indexer.add(casted_array->Value(i), vid)) {
+        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
+      }
+      vids.emplace_back(vid);
+    }
+  }
+};
+
+template <>
+struct _add_vertex<std::string_view> {
+  void operator()(const std::shared_ptr<arrow::Array>& col,
+                  IdIndexer<std::string_view, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    size_t row_num = col->length();
+    CHECK(col->type() == arrow::utf8() || col->type() == arrow::large_utf8());
+    if (col->type() == arrow::utf8()) {
+      auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
+      vid_t vid;
+      for (auto i = 0; i < row_num; ++i) {
+        auto str = casted_array->GetView(i);
+        std::string_view str_view(str.data(), str.size());
+
+        if (!indexer.add(str_view, vid)) {
+          LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+        }
+        vids.emplace_back(vid);
+      }
+    } else {
+      auto casted_array =
+          std::static_pointer_cast<arrow::LargeStringArray>(col);
+      vid_t vid;
+      for (auto i = 0; i < row_num; ++i) {
+        auto str = casted_array->GetView(i);
+        std::string_view str_view(str.data(), str.size());
+
+        if (!indexer.add(str_view, vid)) {
+          LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+        }
+        vids.emplace_back(vid);
+      }
+    }
+  }
+};
+
+template <typename KEY_T>
 void CSVFragmentLoader::addVertexBatch(
-    label_t v_label_id, IdIndexer<oid_t, vid_t>& indexer,
+    label_t v_label_id, IdIndexer<KEY_T, vid_t>& indexer,
     std::shared_ptr<arrow::Array>& primary_key_col,
     const std::vector<std::shared_ptr<arrow::Array>>& property_cols) {
   size_t row_num = primary_key_col->length();
-  CHECK_EQ(primary_key_col->type()->id(), arrow::Type::INT64);
   auto col_num = property_cols.size();
   for (size_t i = 0; i < col_num; ++i) {
     CHECK_EQ(property_cols[i]->length(), row_num);
   }
-  auto casted_array =
-      std::static_pointer_cast<arrow::Int64Array>(primary_key_col);
-  std::vector<std::vector<Any>> prop_vec(property_cols.size());
 
   double t = -grape::GetCurrentTime();
-  vid_t vid;
   std::vector<vid_t> vids;
   vids.reserve(row_num);
-  for (auto i = 0; i < row_num; ++i) {
-    if (!indexer.add(casted_array->Value(i), vid)) {
-      LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << " for "
-                 << schema_.get_vertex_label_name(v_label_id);
-    }
-    vids.emplace_back(vid);
-  }
 
+  _add_vertex<KEY_T>()(primary_key_col, indexer, vids);
   t += grape::GetCurrentTime();
   for (double tmp = convert_to_internal_vertex_time_;
        !convert_to_internal_vertex_time_.compare_exchange_weak(tmp, tmp + t);) {
@@ -580,34 +708,94 @@ void CSVFragmentLoader::addVertexBatch(
   VLOG(10) << "Insert rows: " << row_num;
 }
 
+template <typename KEY_T>
+struct _add_vertex_chunk {
+  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
+                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {}
+};
+
+template <>
+struct _add_vertex_chunk<int64_t> {
+  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
+                  IdIndexer<int64_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::int64());
+    size_t row_num = col->length();
+
+    for (auto i = 0; i < col->num_chunks(); ++i) {
+      auto chunk = col->chunk(i);
+      auto casted_array = std::static_pointer_cast<arrow::Int64Array>(chunk);
+      for (auto j = 0; j < casted_array->length(); ++j) {
+        vid_t vid;
+        if (!indexer.add(casted_array->Value(j), vid)) {
+          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
+                     << " .. ";
+        }
+        vids.emplace_back(vid);
+      }
+    }
+  }
+};
+
+template <>
+struct _add_vertex_chunk<std::string_view> {
+  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
+                  IdIndexer<std::string_view, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::utf8() || col->type() == arrow::large_utf8());
+    size_t row_num = col->length();
+
+    if (col->type() == arrow::utf8()) {
+      for (auto i = 0; i < col->num_chunks(); ++i) {
+        auto chunk = col->chunk(i);
+        auto casted_array = std::static_pointer_cast<arrow::StringArray>(chunk);
+        for (auto j = 0; j < casted_array->length(); ++j) {
+          vid_t vid;
+          auto str = casted_array->GetView(j);
+          std::string_view str_view(str.data(), str.size());
+
+          if (!indexer.add(str_view, vid)) {
+            LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
+          }
+          vids.emplace_back(vid);
+        }
+      }
+    } else {
+      for (auto i = 0; i < col->num_chunks(); ++i) {
+        auto chunk = col->chunk(i);
+        auto casted_array =
+            std::static_pointer_cast<arrow::LargeStringArray>(chunk);
+        for (auto j = 0; j < casted_array->length(); ++j) {
+          vid_t vid;
+          auto str = casted_array->GetView(j);
+          std::string_view str_view(str.data(), str.size());
+
+          if (!indexer.add(str_view, vid)) {
+            LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
+          }
+          vids.emplace_back(vid);
+        }
+      }
+    }
+  }
+};
+
+template <typename KEY_T>
 void CSVFragmentLoader::addVertexBatch(
-    label_t v_label_id, IdIndexer<oid_t, vid_t>& indexer,
+    label_t v_label_id, IdIndexer<KEY_T, vid_t>& indexer,
     std::shared_ptr<arrow::ChunkedArray>& primary_key_col,
     const std::vector<std::shared_ptr<arrow::ChunkedArray>>& property_cols) {
   size_t row_num = primary_key_col->length();
   std::vector<vid_t> vids;
   vids.reserve(row_num);
-  CHECK_EQ(primary_key_col->type()->id(), arrow::Type::INT64);
-  // check row num
+  //  check row num
   auto col_num = property_cols.size();
   for (size_t i = 0; i < col_num; ++i) {
     CHECK_EQ(property_cols[i]->length(), row_num);
   }
-  std::vector<std::vector<Any>> prop_vec(property_cols.size());
 
   double t = -grape::GetCurrentTime();
-  for (auto i = 0; i < primary_key_col->num_chunks(); ++i) {
-    auto chunk = primary_key_col->chunk(i);
-    auto casted_array = std::static_pointer_cast<arrow::Int64Array>(chunk);
-    for (auto j = 0; j < casted_array->length(); ++j) {
-      vid_t vid;
-      if (!indexer.add(casted_array->Value(j), vid)) {
-        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
-                   << " for " << schema_.get_vertex_label_name(v_label_id);
-      }
-      vids.emplace_back(vid);
-    }
-  }
+  _add_vertex_chunk<KEY_T>()(primary_key_col, indexer, vids);
 
   t += grape::GetCurrentTime();
   for (double tmp = convert_to_internal_vertex_time_;
@@ -628,9 +816,10 @@ void CSVFragmentLoader::addVertexBatch(
   VLOG(10) << "Insert rows: " << row_num;
 }
 
+template <typename KEY_T>
 void CSVFragmentLoader::addVerticesImplWithTableReader(
     const std::string& v_file, label_t v_label_id,
-    IdIndexer<oid_t, vid_t>& indexer) {
+    IdIndexer<KEY_T, vid_t>& indexer) {
   auto vertex_column_mappings =
       loading_config_.GetVertexColumnMappings(v_label_id);
   auto primary_key = schema_.get_vertex_primary_key(v_label_id)[0];
@@ -666,9 +855,10 @@ void CSVFragmentLoader::addVerticesImplWithTableReader(
   addVertexBatch(v_label_id, indexer, primary_key_column, other_columns_array);
 }
 
+template <typename KEY_T>
 void CSVFragmentLoader::addVerticesImplWithStreamReader(
     const std::string& v_file, label_t v_label_id,
-    IdIndexer<oid_t, vid_t>& indexer) {
+    IdIndexer<KEY_T, vid_t>& indexer) {
   auto vertex_column_mappings =
       loading_config_.GetVertexColumnMappings(v_label_id);
   auto primary_key = schema_.get_vertex_primary_key(v_label_id)[0];
@@ -710,18 +900,19 @@ void CSVFragmentLoader::addVerticesImplWithStreamReader(
   }
 }
 
+template <typename KEY_T>
 void CSVFragmentLoader::addVerticesImpl(label_t v_label_id,
                                         const std::string& v_label_name,
                                         const std::vector<std::string> v_files,
-                                        IdIndexer<oid_t, vid_t>& indexer) {
+                                        IdIndexer<KEY_T, vid_t>& indexer) {
   VLOG(10) << "Parsing vertex file:" << v_files.size() << " for label "
            << v_label_name;
 
   for (auto& v_file : v_files) {
     if (loading_config_.GetIsBatchReader()) {
-      addVerticesImplWithStreamReader(v_file, v_label_id, indexer);
+      addVerticesImplWithStreamReader<KEY_T>(v_file, v_label_id, indexer);
     } else {
-      addVerticesImplWithTableReader(v_file, v_label_id, indexer);
+      addVerticesImplWithTableReader<KEY_T>(v_file, v_label_id, indexer);
     }
   }
 
@@ -736,23 +927,36 @@ void CSVFragmentLoader::addVertices(label_t v_label_id,
   if (primary_keys.size() != 1) {
     LOG(FATAL) << "Only support one primary key for vertex.";
   }
-  if (std::get<0>(primary_keys[0]) != PropertyType::kInt64) {
-    LOG(FATAL) << "Only support int64_t primary key for vertex.";
+  auto type = std::get<0>(primary_keys[0]);
+  if (type != PropertyType::kInt64 && type != PropertyType::kString) {
+    LOG(FATAL)
+        << "Only support int64_t and string_view primary key for vertex.";
   }
 
   std::string v_label_name = schema_.get_vertex_label_name(v_label_id);
   VLOG(10) << "Start init vertices for label " << v_label_name << " with "
            << v_files.size() << " files.";
+  if (type == PropertyType::kInt64) {
+    IdIndexer<int64_t, vid_t> indexer;
 
-  IdIndexer<oid_t, vid_t> indexer;
+    addVerticesImpl<int64_t>(v_label_id, v_label_name, v_files, indexer);
 
-  addVerticesImpl(v_label_id, v_label_name, v_files, indexer);
+    if (indexer.bucket_count() == 0) {
+      indexer._rehash(schema_.get_max_vnum(v_label_name));
+    }
+    basic_fragment_loader_.FinishAddingVertex<int64_t>(v_label_id, indexer);
+  } else if (type == PropertyType::kString) {
+    IdIndexer<std::string_view, vid_t> indexer;
 
-  if (indexer.bucket_count() == 0) {
-    indexer._rehash(schema_.get_max_vnum(v_label_name));
+    addVerticesImpl<std::string_view>(v_label_id, v_label_name, v_files,
+                                      indexer);
+
+    if (indexer.bucket_count() == 0) {
+      indexer._rehash(schema_.get_max_vnum(v_label_name));
+    }
+    basic_fragment_loader_.FinishAddingVertex<std::string_view>(v_label_id,
+                                                                indexer);
   }
-  basic_fragment_loader_.FinishAddingVertex(v_label_id, indexer);
-
   VLOG(10) << "Finish init vertices for label " << v_label_name;
 }
 
@@ -795,9 +999,11 @@ void CSVFragmentLoader::addEdgesImplWithTableReader(
   CHECK(columns.size() >= 2);
   auto src_col = columns[0];
   auto dst_col = columns[1];
-  CHECK(src_col->type() == arrow::int64())
+  CHECK(src_col->type() == arrow::int64() || src_col->type() == arrow::utf8() ||
+        src_col->type() == arrow::large_utf8())
       << "src_col type: " << src_col->type()->ToString();
-  CHECK(dst_col->type() == arrow::int64())
+  CHECK(dst_col->type() == arrow::int64() || dst_col->type() == arrow::utf8() ||
+        dst_col->type() == arrow::large_utf8())
       << "dst_col type: " << dst_col->type()->ToString();
 
   std::vector<std::shared_ptr<arrow::ChunkedArray>> property_cols;
@@ -808,8 +1014,6 @@ void CSVFragmentLoader::addEdgesImplWithTableReader(
       << "Currently only support at most one property on edge";
   {
     CHECK(src_col->length() == dst_col->length());
-    CHECK(src_col->type() == arrow::int64());
-    CHECK(dst_col->type() == arrow::int64());
     t = -grape::GetCurrentTime();
     append_edges(src_col, dst_col, src_indexer, dst_indexer, property_cols,
                  parsed_edges, ie_degree, oe_degree);
@@ -868,9 +1072,13 @@ void CSVFragmentLoader::addEdgesImplWithStreamReader(
     CHECK(columns.size() >= 2);
     auto src_col = columns[0];
     auto dst_col = columns[1];
-    CHECK(src_col->type() == arrow::int64())
+    CHECK(src_col->type() == arrow::int64() ||
+          src_col->type() == arrow::utf8() ||
+          src_col->type() == arrow::large_utf8())
         << "src_col type: " << src_col->type()->ToString();
-    CHECK(dst_col->type() == arrow::int64())
+    CHECK(dst_col->type() == arrow::int64() ||
+          dst_col->type() == arrow::utf8() ||
+          dst_col->type() == arrow::large_utf8())
         << "dst_col type: " << dst_col->type()->ToString();
 
     std::vector<std::shared_ptr<arrow::Array>> property_cols;
@@ -882,15 +1090,9 @@ void CSVFragmentLoader::addEdgesImplWithStreamReader(
     {
       // add edges to vector
       CHECK(src_col->length() == dst_col->length());
-      CHECK(src_col->type() == arrow::int64());
-      CHECK(dst_col->type() == arrow::int64());
-      auto src_casted_array =
-          std::static_pointer_cast<arrow::Int64Array>(src_col);
-      auto dst_casted_array =
-          std::static_pointer_cast<arrow::Int64Array>(dst_col);
       t = -grape::GetCurrentTime();
-      append_edges(src_casted_array, dst_casted_array, src_indexer, dst_indexer,
-                   property_cols, parsed_edges, ie_degree, oe_degree);
+      append_edges(src_col, dst_col, src_indexer, dst_indexer, property_cols,
+                   parsed_edges, ie_degree, oe_degree);
       t += grape::GetCurrentTime();
       for (double tmp = convert_to_internal_edge_time_;
            !convert_to_internal_edge_time_.compare_exchange_weak(tmp, tmp + t);

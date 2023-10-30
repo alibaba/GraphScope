@@ -74,4 +74,7 @@ public class CommonConfig {
 
     public static final Config<Integer> ID_ALLOCATE_SIZE =
             Config.intConfig("id.allocate.size", 1000000);
+    // Whether to create test kafka cluster on MaxNode
+    public static final Config<Boolean> KAFKA_TEST_CLUSTER_ENABLE =
+            Config.boolConfig("kafka.test.cluster.enable", true);
 }

@@ -48,10 +48,10 @@ class UpdateTransaction {
 
   void Abort();
 
-  bool AddVertex(label_t label, oid_t oid, const std::vector<Any>& props);
+  bool AddVertex(label_t label, const Any& oid, const std::vector<Any>& props);
 
-  bool AddEdge(label_t src_label, oid_t src, label_t dst_label, oid_t dst,
-               label_t edge_label, const Any& value);
+  bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
+               const Any& dst, label_t edge_label, const Any& value);
 
   class vertex_iterator {
    public:
@@ -62,7 +62,7 @@ class UpdateTransaction {
     void Next();
     void Goto(vid_t target);
 
-    oid_t GetId() const;
+    Any GetId() const;
 
     vid_t GetIndex() const;
 
@@ -146,9 +146,9 @@ class UpdateTransaction {
   size_t get_out_csr_index(label_t src_label, label_t dst_label,
                            label_t edge_label) const;
 
-  bool oid_to_lid(label_t label, oid_t oid, vid_t& lid) const;
+  bool oid_to_lid(label_t label, const Any& oid, vid_t& lid) const;
 
-  oid_t lid_to_oid(label_t label, vid_t lid) const;
+  Any lid_to_oid(label_t label, vid_t lid) const;
 
   void release();
 
@@ -168,7 +168,7 @@ class UpdateTransaction {
   size_t vertex_label_num_;
   size_t edge_label_num_;
 
-  std::vector<IdIndexer<oid_t, vid_t>> added_vertices_;
+  std::vector<std::shared_ptr<IdIndexerBase<vid_t>>> added_vertices_;
   std::vector<vid_t> added_vertices_base_;
   std::vector<vid_t> vertex_nums_;
   std::vector<ska::flat_hash_map<vid_t, vid_t>> vertex_offsets_;

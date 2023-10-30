@@ -1,0 +1,191 @@
+{
+  "vertex_table_to_type": {
+    "Movie.csv": "Movie",
+    "Person.csv": "Person",
+    "User.csv": "User"
+  },
+  "edge_table_to_type": {
+    "ACTED_IN.csv": {
+      "etype": "ACTED_IN",
+      "src_vertex_type": "Person",
+      "dst_vertex_type": "Movie"
+    },
+    "DIRECTED.csv": {
+      "etype": "DIRECTED",
+      "src_vertex_type": "Person",
+      "dst_vertex_type": "Movie"
+    },
+    "REVIEWED.csv": {
+      "etype": "REVIEW",
+      "src_vertex_type": "User",
+      "dst_vertex_type": "Movie"
+    },
+    "FOLLOWS.csv": {
+      "etype": "FOLLOWS",
+      "src_vertex_type": "User",
+      "dst_vertex_type": "Person"
+    },
+    "WROTE.csv": {
+      "etype": "WROTE",
+      "src_vertex_type": "Person",
+      "dst_vertex_type": "Movie"
+    },
+    "PRODUCED.csv": {
+      "etype": "PRODUCED",
+      "src_vertex_type": "Person",
+      "dst_vertex_type": "Movie"
+    }
+  },
+  "vertex_type_to_id": {
+    "Movie": 0,
+    "Person": 1,
+    "User": 2
+  },
+  "edge_type_to_id": {
+    "ACTED_IN": 0,
+    "DIRECTED": 1,
+    "REVIEW": 2,
+    "FOLLOWS": 3,
+    "WROTE": 4,
+    "PRODUCED": 5
+  },
+  "vertex_type_hierarchy": {},
+  "column_name_to_id": {},
+  "vertex_columns": {
+    "Movie": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "released",
+        "Integer",
+        false
+      ],
+      [
+        "tagline",
+        "String",
+        false
+      ],
+      [
+        "title",
+        "String",
+        false
+      ]
+    ],
+    "Person": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "born",
+        "Integer",
+        false
+      ],
+      [
+        "name",
+        "String",
+        false
+      ]
+    ],
+    "User": [
+      [
+        "id",
+        "ID",
+        true
+      ],
+      [
+        "born",
+        "Integer",
+        false
+      ],
+      [
+        "name",
+        "String",
+        false
+      ]
+    ]
+  },
+  "edge_columns": {
+    "ACTED_IN": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "DIRECTED": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "REVIEW": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ],
+      [
+        "rating",
+        "Integer",
+        false
+      ]
+    ],
+    "FOLLOWS": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "WROTE": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ],
+    "PRODUCED": [
+      [
+        "start_id",
+        "ID",
+        true
+      ],
+      [
+        "end_id",
+        "ID",
+        true
+      ]
+    ]
+  }
+}

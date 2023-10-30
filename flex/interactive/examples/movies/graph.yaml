@@ -30,6 +30,19 @@ schema:
             primitive_type: DT_STRING
       primary_keys:
         - id
+    - type_name: User
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: born
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+        - property_name: name
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
   edge_types:
     - type_name: ACTED_IN
       vertex_type_pair_relations:
@@ -43,7 +56,7 @@ schema:
           relation: MANY_TO_MANY
     - type_name: REVIEW
       vertex_type_pair_relations:
-        - source_vertex: Person
+        - source_vertex: User
           destination_vertex: Movie
           relation: MANY_TO_MANY
       properties:
@@ -52,7 +65,7 @@ schema:
             primitive_type: DT_SIGNED_INT32
     - type_name: FOLLOWS
       vertex_type_pair_relations:
-        - source_vertex: Person
+        - source_vertex: User
           destination_vertex: Person
           relation: MANY_TO_MANY
     - type_name: WROTE

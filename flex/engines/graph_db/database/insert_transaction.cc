@@ -34,10 +34,11 @@ InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
 
 InsertTransaction::~InsertTransaction() { Abort(); }
 
-bool InsertTransaction::AddVertex(label_t label, oid_t id,
+bool InsertTransaction::AddVertex(label_t label, const Any& id,
                                   const std::vector<Any>& props) {
   size_t arc_size = arc_.GetSize();
-  arc_ << static_cast<uint8_t>(0) << label << id;
+  arc_ << static_cast<uint8_t>(0) << label;
+  serialize_field(arc_, id);
   const std::vector<PropertyType>& types =
       graph_.schema().get_vertex_properties(label);
   if (types.size() != props.size()) {
@@ -65,15 +66,15 @@ bool InsertTransaction::AddVertex(label_t label, oid_t id,
   return true;
 }
 
-bool InsertTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
-                                oid_t dst, label_t edge_label,
-                                const Any& prop) {
+bool InsertTransaction::AddEdge(label_t src_label, const Any& src,
+                                label_t dst_label, const Any& dst,
+                                label_t edge_label, const Any& prop) {
   vid_t lid;
   if (!graph_.get_lid(src_label, src, lid)) {
     if (added_vertices_.find(std::make_pair(src_label, src)) ==
         added_vertices_.end()) {
       std::string label_name = graph_.schema().get_vertex_label_name(src_label);
-      LOG(ERROR) << "Source vertex " << label_name << "[" << src
+      LOG(ERROR) << "Source vertex " << label_name << "[" << src.to_string()
                  << "] not found...";
       return false;
     }
@@ -82,8 +83,8 @@ bool InsertTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
     if (added_vertices_.find(std::make_pair(dst_label, dst)) ==
         added_vertices_.end()) {
       std::string label_name = graph_.schema().get_vertex_label_name(dst_label);
-      LOG(ERROR) << "Destination vertex " << label_name << "[" << dst
-                 << "] not found...";
+      LOG(ERROR) << "Destination vertex " << label_name << "["
+                 << dst.to_string() << "] not found...";
       return false;
     }
   }
@@ -95,8 +96,11 @@ bool InsertTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
                << type << ", got " << prop.type;
     return false;
   }
-  arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
-       << edge_label;
+  arc_ << static_cast<uint8_t>(1) << src_label;
+  serialize_field(arc_, src);
+  arc_ << dst_label;
+  serialize_field(arc_, dst);
+  arc_ << edge_label;
   serialize_field(arc_, prop);
   return true;
 }
@@ -143,17 +147,17 @@ void InsertTransaction::IngestWal(MutablePropertyFragment& graph,
     arc >> op_type;
     if (op_type == 0) {
       label_t label;
-      oid_t id;
-
-      arc >> label >> id;
+      Any id;
+      label = deserialize_oid(graph, arc, id);
       vid_t lid = graph.add_vertex(label, id);
       graph.get_vertex_table(label).ingest(lid, arc);
     } else if (op_type == 1) {
       label_t src_label, dst_label, edge_label;
-      oid_t src, dst;
+      Any src, dst;
       vid_t src_lid, dst_lid;
-
-      arc >> src_label >> src >> dst_label >> dst >> edge_label;
+      src_label = deserialize_oid(graph, arc, src);
+      dst_label = deserialize_oid(graph, arc, dst);
+      arc >> edge_label;
 
       CHECK(get_vertex_with_retries(graph, src_label, src, src_lid));
       CHECK(get_vertex_with_retries(graph, dst_label, dst, dst_lid));
@@ -177,7 +181,7 @@ void InsertTransaction::clear() {
 #define likely(x) __builtin_expect(!!(x), 1)
 
 bool InsertTransaction::get_vertex_with_retries(MutablePropertyFragment& graph,
-                                                label_t label, oid_t oid,
+                                                label_t label, const Any& oid,
                                                 vid_t& lid) {
   if (likely(graph.get_lid(label, oid, lid))) {
     return true;
@@ -189,7 +193,7 @@ bool InsertTransaction::get_vertex_with_retries(MutablePropertyFragment& graph,
     }
   }
 
-  LOG(ERROR) << "get_vertex [" << oid << "] failed";
+  LOG(ERROR) << "get_vertex [" << oid.to_string() << "] failed";
   return false;
 }
 

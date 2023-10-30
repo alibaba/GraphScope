@@ -24,15 +24,18 @@ use pegasus::{BuildJobError, JobConf, ServerConf};
 use pegasus_server::pb as pegasus_pb;
 use prost::Message;
 
+const DEFAULT_PLAN_ID: i32 = i32::MAX;
+
 /// A plan builder used to build a GIE physical JobRequest.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlanBuilder {
+    id: i32,
     plan: Vec<pb::PhysicalOpr>,
 }
 
 impl Default for PlanBuilder {
     fn default() -> Self {
-        PlanBuilder { plan: vec![] }
+        PlanBuilder {id: DEFAULT_PLAN_ID, plan: vec![] }
     }
 }
 
@@ -51,6 +54,10 @@ impl DerefMut for PlanBuilder {
 }
 
 impl PlanBuilder {
+    pub fn new(plan_id: i32) -> Self {
+        PlanBuilder { id: plan_id, plan: vec![] }
+    }
+
     pub fn add_dummy_source(&mut self) -> &mut Self {
         let op = pb::physical_opr::operator::OpKind::Root(pb::Root {});
         self.plan.push(op.into());
@@ -158,7 +165,7 @@ impl PlanBuilder {
         let apply = pb::Apply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys: vec![],
-            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take() }),
+            sub_plan: Some(pb::PhysicalPlan {  plan: sub_plan.take(), plan_id: DEFAULT_PLAN_ID }),
             alias,
         };
         let op = pb::physical_opr::operator::OpKind::Apply(apply);
@@ -186,7 +193,7 @@ impl PlanBuilder {
         let apply = pb::Apply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys,
-            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take() }),
+            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take(), plan_id: DEFAULT_PLAN_ID }),
             alias,
         };
         let op = pb::physical_opr::operator::OpKind::Apply(apply);
@@ -214,8 +221,8 @@ impl PlanBuilder {
             left_keys,
             right_keys,
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
-            left_plan: Some(pb::PhysicalPlan { plan: left_plan.take() }),
-            right_plan: Some(pb::PhysicalPlan { plan: right_plan.take() }),
+            left_plan: Some(pb::PhysicalPlan { plan: left_plan.take() , plan_id: DEFAULT_PLAN_ID}),
+            right_plan: Some(pb::PhysicalPlan { plan: right_plan.take(), plan_id: DEFAULT_PLAN_ID }),
         };
         let op = pb::physical_opr::operator::OpKind::Join(join);
         self.plan.push(op.into());
@@ -240,7 +247,7 @@ impl PlanBuilder {
     pub fn union(&mut self, mut plans: Vec<PlanBuilder>) -> &mut Self {
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(pb::PhysicalPlan { plan: plan.take() });
+            sub_plans.push(pb::PhysicalPlan { plan: plan.take() , plan_id: DEFAULT_PLAN_ID});
         }
         let union = pb::Union { sub_plans };
         let op = pb::physical_opr::operator::OpKind::Union(union);
@@ -252,7 +259,7 @@ impl PlanBuilder {
         let key = key.try_into().unwrap();
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(pb::PhysicalPlan { plan: plan.take() });
+            sub_plans.push(pb::PhysicalPlan { plan: plan.take() , plan_id: DEFAULT_PLAN_ID});
         }
         let intersect = pb::Intersect { sub_plans, key };
         let op = pb::physical_opr::operator::OpKind::Intersect(intersect);
@@ -324,7 +331,7 @@ impl PlanBuilder {
     }
 
     pub fn build(self) -> pb::PhysicalPlan {
-        pb::PhysicalPlan { plan: self.plan }
+        pb::PhysicalPlan { plan: self.plan , plan_id: self.id}
     }
 }
 

@@ -90,9 +90,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._config.kubernetes_launcher.engine.post_setup()
         launcher_config = config.kubernetes_launcher
 
+        # glog level
+        self._glog_level = parse_as_glog_level(config.log_level)
+
         # Session Config
         self._num_workers = config.session.num_workers
-        self._glog_level = parse_as_glog_level(config.session.log_level)
         self._instance_id = config.session.instance_id
         self._timeout_seconds = config.session.timeout_seconds
         self._retry_time_seconds = config.session.retry_time_seconds

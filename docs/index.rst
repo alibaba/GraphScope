@@ -23,6 +23,7 @@ and the vineyard store that offers efficient in-memory data transfers.
 
    overview/intro
    overview/getting_started
+   loading_graphs
    overview/graph_analytics_workloads
    overview/graph_interactive_workloads
    overview/graph_learning_workloads
@@ -30,7 +31,6 @@ and the vineyard store that offers efficient in-memory data transfers.
    overview/positioning
    overview/glossary
    release_notes
-   loading_graphs
    frequently_asked_questions
 
 .. toctree::

@@ -46,8 +46,7 @@ schema:
         - property_id: 3
           property_name: creationDate
           property_type:
-            date:
-              date_format: DF_YYYY_MM_DD
+            primitive_type: DT_DATE32
       primary_keys:
         - id
   edge_types:

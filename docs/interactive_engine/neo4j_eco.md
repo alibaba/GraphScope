@@ -16,4 +16,5 @@ maxdepth: 2
 ---
 neo4j/cypher_sdk
 neo4j/supported_cypher
+neo4j/llm_assistant
 ```
