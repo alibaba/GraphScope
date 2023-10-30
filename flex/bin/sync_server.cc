@@ -182,7 +182,11 @@ int main(int argc, char** argv) {
                                    "codegen binary path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "data-path,a", bpo::value<std::string>(), "data directory path")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
+      "open-thread-resource-pool", bpo::value<bool>()->default_value(true),
+      "open thread resource pool")("worker-thread-number",
+                                   bpo::value<unsigned>()->default_value(2),
+                                   "worker thread number");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -253,7 +257,9 @@ int main(int argc, char** argv) {
 
   gs::init_codegen_proxy(vm, graph_schema_path, server_config_path);
 
-  server::HQPSService::get().init(shard_num, http_port, false);
+  server::HQPSService::get().init(shard_num, http_port, false,
+                                  vm["open-thread-resource-pool"].as<bool>(),
+                                  vm["worker-thread-number"].as<unsigned>());
   server::HQPSService::get().run_and_wait_for_exit();
 
   return 0;

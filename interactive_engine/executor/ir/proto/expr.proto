@@ -79,6 +79,8 @@ enum Logical {
   NOT = 12;
   // A unary logical isnull operator
   ISNULL = 13;
+  // A binary operator to verify whether a string matches a regular expression
+  REGEX = 14;
 }
 
 enum Arithmetic {

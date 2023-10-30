@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.cypher.antlr4.visitor.type.ExprVisitorResult;
 import com.alibaba.graphscope.grammar.CypherGSBaseVisitor;
 import com.alibaba.graphscope.grammar.CypherGSParser;
+import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rex.RexCall;
@@ -63,6 +64,8 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
                     sentences.get(0),
                     (ctx.OPTIONAL() != null) ? GraphOpt.Match.OPTIONAL : GraphOpt.Match.INNER);
         } else if (sentences.size() > 1) {
+            Preconditions.checkArgument(
+                    ctx.OPTIONAL() == null, "multiple sentences in match should not be optional");
             builder.match(sentences.get(0), sentences.subList(1, sentences.size()));
         } else {
             throw new IllegalArgumentException("sentences in match should not be empty");
