@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.ir.planner.rules.generative;
+package com.alibaba.graphscope.common.ir.planner.rules.volcano;
 
 import com.alibaba.graphscope.common.ir.meta.glogue.ExtendWeightEstimator;
 import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
