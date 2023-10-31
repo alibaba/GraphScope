@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.plugin.traversal;
 
+import com.google.common.collect.Maps;
+
 import org.apache.tinkerpop.gremlin.process.remote.RemoteConnection;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal.Admin;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
@@ -26,8 +28,14 @@ import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.apache.tinkerpop.gremlin.structure.util.StringFactory;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.Collections;
+import java.util.Map;
 
 public class IrCustomizedTraversalSource extends GraphTraversalSource {
+    private @Nullable Map<String, String> queryConfigs;
+
     public IrCustomizedTraversalSource(
             final Graph graph, final TraversalStrategies traversalStrategies) {
         super(graph, traversalStrategies);
@@ -44,25 +52,22 @@ public class IrCustomizedTraversalSource extends GraphTraversalSource {
     @Override
     public IrCustomizedTraversalSource clone() {
         IrCustomizedTraversalSource clone = (IrCustomizedTraversalSource) super.clone();
-        clone.strategies = this.strategies.clone();
-        clone.bytecode = this.bytecode.clone();
+        clone.queryConfigs = Maps.newHashMap();
         return clone;
     }
 
     @Override
     public IrCustomizedTraversal<Vertex, Vertex> V(final Object... vertexIds) {
-        IrCustomizedTraversalSource clone = this.clone();
-        clone.bytecode.addStep("V", vertexIds);
-        Admin<Vertex, Vertex> traversal = new IrCustomizedTraversal(clone);
+        bytecode.addStep("V", vertexIds);
+        Admin<Vertex, Vertex> traversal = new IrCustomizedTraversal(this);
         return (IrCustomizedTraversal<Vertex, Vertex>)
                 traversal.addStep(new GraphStep(traversal, Vertex.class, true, vertexIds));
     }
 
     @Override
     public IrCustomizedTraversal<Edge, Edge> E(final Object... edgesIds) {
-        IrCustomizedTraversalSource clone = this.clone();
-        clone.bytecode.addStep("E", edgesIds);
-        Admin<Edge, Edge> traversal = new IrCustomizedTraversal(clone);
+        bytecode.addStep("E", edgesIds);
+        Admin<Edge, Edge> traversal = new IrCustomizedTraversal(this);
         return (IrCustomizedTraversal<Edge, Edge>)
                 traversal.addStep(new GraphStep(traversal, Edge.class, true, edgesIds));
     }
@@ -77,5 +82,18 @@ public class IrCustomizedTraversalSource extends GraphTraversalSource {
     @Override
     public String toString() {
         return StringFactory.traversalSourceString(this);
+    }
+
+    public @Nullable Map<String, String> getConfigs() {
+        if (this.queryConfigs != null) {
+            return Collections.unmodifiableMap(this.queryConfigs);
+        }
+        return null;
+    }
+
+    public void addConfig(String key, Object value) {
+        if (this.queryConfigs != null) {
+            this.queryConfigs.put(key, String.valueOf(value));
+        }
     }
 }

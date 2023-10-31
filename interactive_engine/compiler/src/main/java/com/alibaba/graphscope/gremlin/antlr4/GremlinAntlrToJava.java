@@ -33,24 +33,16 @@ public class GremlinAntlrToJava extends GremlinGSBaseVisitor<Object> {
     final GremlinGSBaseVisitor<GraphTraversalSource> gvisitor;
     final GremlinGSBaseVisitor<GraphTraversal> tvisitor;
 
-    private static GremlinAntlrToJava instance;
     // return nested traversal as IrCustomizedTraversal type
     private static Supplier<GraphTraversal<?, ?>> traversalSupplier =
             () -> new IrCustomizedTraversal<>();
-
-    public static GremlinAntlrToJava getInstance(GraphTraversalSource g) {
-        if (instance == null) {
-            instance = new GremlinAntlrToJava(g);
-        }
-        return instance;
-    }
 
     public static Supplier<GraphTraversal<?, ?>> getTraversalSupplier() {
         return traversalSupplier;
     }
 
-    private GremlinAntlrToJava(GraphTraversalSource g) {
-        this.g = g;
+    public GremlinAntlrToJava(GraphTraversalSource g) {
+        this.g = g.clone();
         this.gvisitor = new GraphTraversalSourceVisitor(this.g);
         this.tvisitor = new TraversalRootVisitor(this.gvisitor);
     }
