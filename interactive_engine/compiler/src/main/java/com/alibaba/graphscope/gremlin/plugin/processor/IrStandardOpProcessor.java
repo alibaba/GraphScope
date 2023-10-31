@@ -53,6 +53,7 @@ import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -72,7 +73,6 @@ import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 
-import javax.script.SimpleBindings;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -82,6 +82,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
+
+import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Graph graph;
