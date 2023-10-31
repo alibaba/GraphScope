@@ -16,5 +16,4 @@
 
 package com.alibaba.graphscope.common.ir.planner.type;
 
-public interface DataKey {
-}
+public interface DataKey {}

@@ -20,16 +20,16 @@ import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class DataValue {
-    private final @Nullable Integer tag;
+    private final int alias;
     private final @Nullable RexNode filter;
 
-    public DataValue(Integer tag, RexNode filter) {
-        this.tag = tag;
+    public DataValue(int alias, RexNode filter) {
+        this.alias = alias;
         this.filter = filter;
     }
 
-    public @Nullable Integer getTag() {
-        return tag;
+    public int getAlias() {
+        return alias;
     }
 
     public @Nullable RexNode getFilter() {

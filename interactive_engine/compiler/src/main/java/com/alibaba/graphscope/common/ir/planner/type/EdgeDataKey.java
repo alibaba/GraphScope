@@ -57,7 +57,8 @@ public class EdgeDataKey implements DataKey {
             case OUT:
                 return PatternDirection.IN;
             default:
-                throw new UnsupportedOperationException("direction: " + direction + " is unsupported yet");
+                throw new UnsupportedOperationException(
+                        "direction: " + direction + " is unsupported yet");
         }
     }
 
@@ -66,7 +67,9 @@ public class EdgeDataKey implements DataKey {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         EdgeDataKey edgeKey = (EdgeDataKey) o;
-        return lowOrderId == edgeKey.lowOrderId && highOrderId == edgeKey.highOrderId && direction == edgeKey.direction;
+        return lowOrderId == edgeKey.lowOrderId
+                && highOrderId == edgeKey.highOrderId
+                && direction == edgeKey.direction;
     }
 
     @Override
