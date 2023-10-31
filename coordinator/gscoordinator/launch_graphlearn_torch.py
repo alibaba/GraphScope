@@ -22,9 +22,13 @@ import logging
 import os.path as osp
 import sys
 
+import graphscope
 import graphscope.learning.graphlearn_torch as glt
 import torch
 from graphscope.learning.gl_torch_graph import GLTorchGraph
+
+graphscope.set_option(show_log=True)
+graphscope.set_option(log_level='DEBUG')
 
 logger = logging.getLogger("graphscope")
 
@@ -56,18 +60,36 @@ def run_server_proc(proc_rank, handle, config, server_rank, dataset):
 
 def launch_graphlearn_torch_server(handle, config, server_rank):
     logger.info(f"-- [Server {server_rank}] Initializing server ...")
-
+    logger.info(f"handle:::::::: {handle}")
     edge_dir = config.pop("edge_dir")
+
     random_node_split = config.pop("random_node_split")
-    dataset = glt.distributed.DistDataset(edge_dir=edge_dir)
+    logger.info(f'random_node_split: {random_node_split}')
+    dataset = glt.distributed.DistDataset(
+        edge_dir=edge_dir,
+        num_partitions=handle["num_servers"],
+        partition_idx=server_rank,
+        node_pb=glt.data.VineyardPartitionBook(
+            str(handle["vineyard_socket"]),
+            str(handle["fragments"][server_rank]),
+            "paper",
+            # {str(handle["fragments"][0]): 0, str(handle["fragments"][1]): 1}
+        )
+    )
     dataset.load_vineyard(
-        vineyard_id=str(handle["vineyard_id"]),
+        # vineyard_id=str(handle["vineyard_id"]),
+        vineyard_id=str(handle["fragments"][server_rank]),
         vineyard_socket=handle["vineyard_socket"],
+        id2idx=glt.data.VineyardGid2Lid(
+            sock=str(handle["vineyard_socket"]),
+            fid=str(handle["fragments"][server_rank]),
+            v_label_name="paper",
+        ),
         **config,
     )
     if random_node_split is not None:
-        dataset.random_node_split(**random_node_split)
-    logger.info(f"-- [Server {server_rank}] Initializing server ...")
+        dataset.random_node_split(**random_node_split, id_filter=glt.data.v6d_id_filter)
+    logger.info(f"-- [Server {server_rank}] Running server ...")
 
     torch.multiprocessing.spawn(
         fn=run_server_proc, args=(handle, config, server_rank, dataset), nprocs=1
@@ -78,7 +100,6 @@ if __name__ == "__main__":
     if len(sys.argv) < 3:
         logger.info(
             "Usage: ./launch_graphlearn_torch.py <handle> <config> <server_index>",
-            file=sys.stderr,
         )
         sys.exit(-1)
 
@@ -87,7 +108,7 @@ if __name__ == "__main__":
     server_index = int(sys.argv[3])
     config = GLTorchGraph.reverse_transform_config(config)
 
-    logger.info(
-        f"launch_graphlearn_torch_server handle: {handle} config: {config} server_index: {server_index}"
-    )
+    # logger.info(
+    #     f"launch_graphlearn_torch_server handle: {handle} config: {config} server_index: {server_index}",
+    # )
     launch_graphlearn_torch_server(handle, config, server_index)

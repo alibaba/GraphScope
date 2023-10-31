@@ -11,9 +11,12 @@ from graphscope.dataset import load_ogbn_arxiv
 from graphscope.learning.graphlearn_torch.typing import Split
 
 
+gs.set_option(log_level='DEBUG')
+gs.set_option(show_log=True)
+
 @torch.no_grad()
 def test(model, test_loader, dataset_name):
-    evaluator = Evaluator(name=dataset_name)
+    # evaluator = Evaluator(name=dataset_name)
     model.eval()
     xs = []
     y_true = []
@@ -29,20 +32,25 @@ def test(model, test_loader, dataset_name):
     xs = [t.to(device) for t in xs]
     y_true = [t.to(device) for t in y_true]
     y_pred = torch.cat(xs, dim=0).argmax(dim=-1, keepdim=True)
-    y_true = torch.cat(y_true, dim=0).unsqueeze(-1)
-    test_acc = evaluator.eval(
-        {
-            "y_true": y_true,
-            "y_pred": y_pred,
-        }
-    )["acc"]
-    return test_acc
+    y_true = torch.cat(y_true, dim=0)#.unsqueeze(-1)
+    # print(y_true.T == y_pred.T)
+    test_acc = sum((y_pred.T == y_true.T)[0]) / len(y_true.T[0])
+    # print(test_acc)
+    # print(y_true.shape, y_pred.shape)
+    # print(y_true, y_pred)
+    # test_acc = evaluator.eval(
+    #     {
+    #         "y_true": y_true,
+    #         "y_pred": y_pred,
+    #     }
+    # )["acc"]
 
-
-gs.set_option(show_log=True)
+    return test_acc.item()
 
 # load the ogbn_arxiv graph as an example.
-g = load_ogbn_arxiv()
+sess = gs.session(cluster_type="hosts", num_workers=3)
+g = load_ogbn_arxiv(sess=sess)
+print(f"here {g.fragments}, {g.vineyard_id}")
 glt_graph = gs.graphlearn_torch(
     g,
     edges=[
@@ -63,7 +71,7 @@ glt_graph = gs.graphlearn_torch(
 
 print("-- Initializing client ...")
 glt.distributed.init_client(
-    num_servers=1,
+    num_servers=3,
     num_clients=1,
     client_rank=0,
     master_addr=glt_graph.master_addr,
@@ -78,9 +86,9 @@ device = torch.device("cpu")
 print("-- Creating training dataloader ...")
 train_loader = glt.distributed.DistNeighborLoader(
     data=None,
-    num_neighbors=[15, 10, 5],
+    num_neighbors=[10, 5],
     input_nodes=Split.train,
-    batch_size=512,
+    batch_size=256,
     shuffle=True,
     collect_features=True,
     to_device=device,
@@ -92,6 +100,7 @@ train_loader = glt.distributed.DistNeighborLoader(
         prefetch_size=1,
         glt_graph=glt_graph,
         workload_type="train",
+        id_select=glt.data.v6d_id_select
     ),
 )
 
@@ -99,9 +108,9 @@ train_loader = glt.distributed.DistNeighborLoader(
 print("-- Creating testing dataloader ...")
 test_loader = glt.distributed.DistNeighborLoader(
     data=None,
-    num_neighbors=[15, 10, 5],
+    num_neighbors=[10, 5, 3],
     input_nodes=Split.test,
-    batch_size=512,
+    batch_size=256,
     shuffle=False,
     collect_features=True,
     to_device=device,
@@ -113,6 +122,7 @@ test_loader = glt.distributed.DistNeighborLoader(
         prefetch_size=1,
         glt_graph=glt_graph,
         workload_type="test",
+        id_select=glt.data.v6d_id_select
     ),
 )
 
@@ -124,7 +134,7 @@ model = GraphSAGE(
     num_layers=3,
     out_channels=47,
 ).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=0.01)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 # Train and test.
 print("-- Start training and testing ...")
@@ -134,15 +144,17 @@ for epoch in range(0, epochs):
     model.train()
     start = time.time()
     for batch in train_loader:
+        # print(f"batch: {batch}")
         optimizer.zero_grad()
         batch.x = batch.x.to(torch.float32)  # TODO
         out = model(batch.x, batch.edge_index)[: batch.batch_size].log_softmax(dim=-1)
-        loss = F.nll_loss(out, batch.y[: batch.batch_size])
+        # print(f"out: {out.shape}")
+        loss = F.nll_loss(out, torch.flatten(batch.y[: batch.batch_size]))
         loss.backward()
         optimizer.step()
 
     end = time.time()
-    print(f"-- Epoch: {epoch:03d}, Loss: {loss:.4f}, Epoch Time: {end - start}")
+    print(f"-- Epoch: {epoch:03d}, Loss: {loss:04f} Epoch Time: {end - start}")
     # Test accuracy.
     if epoch == 0 or epoch > (epochs // 2):
         test_acc = test(model, test_loader, dataset_name)

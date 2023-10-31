@@ -347,7 +347,7 @@ class LocalLauncher(AbstractLauncher):
                 config,
                 str(index),
             ]
-            logger.debug("launching graphlearn_torch server: %s", " ".join(str(cmd)))
+            # logger.debug("launching graphlearn_torch server: %s", " ".join(cmd))
 
             proc = subprocess.Popen(
                 cmd,
@@ -359,11 +359,17 @@ class LocalLauncher(AbstractLauncher):
                 universal_newlines=True,
                 bufsize=1,
             )
+            logger.debug('suppressed: %s', (not logger.isEnabledFor(logging.DEBUG)))
             stdout_watcher = PipeWatcher(
                 proc.stdout,
                 sys.stdout,
                 suppressed=(not logger.isEnabledFor(logging.DEBUG)),
             )
+
+            import time
+            time.sleep(5)
+            logger.debug('process status: %s', proc.poll())
+
             setattr(proc, "stdout_watcher", stdout_watcher)
             self._learning_instance_processes[object_id].append(proc)
         return server_list

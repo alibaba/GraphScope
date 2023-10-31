@@ -1343,7 +1343,7 @@ class Session(object):
             "vineyard_id": graph.vineyard_id,
             "fragments": graph.fragments,
             "master_addr": "localhost",
-            "num_servers": 1,
+            "num_servers": len(graph.fragments),
             "num_clients": 1,
         }
 
