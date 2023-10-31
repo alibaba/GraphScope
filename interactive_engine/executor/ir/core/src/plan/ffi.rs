@@ -902,6 +902,14 @@ fn set_tag(ptr: *const c_void, tag: FfiNameOrId, opt: InnerOpt) -> FfiResult {
     }
 }
 
+#[no_mangle]
+pub extern "C" fn set_count_only(ptr: *const c_void, is_count_only: i32) -> FfiResult {
+    let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+    scan.is_count_only = is_count_only != 0;
+    std::mem::forget(scan);
+    FfiResult::success()
+}
+
 mod params {
     use std::collections::HashMap;
 
