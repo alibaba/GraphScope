@@ -330,6 +330,38 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
+    public ExprVisitorResult visitOC_MapLiteral(CypherGSParser.OC_MapLiteralContext ctx) {
+        List<String> keys =
+                ctx.oC_PropertyKeyName().stream()
+                        .map(k -> k.getText())
+                        .collect(Collectors.toList());
+        List<ExprVisitorResult> values =
+                ctx.oC_Expression().stream()
+                        .map(k -> visitOC_Expression(k))
+                        .collect(Collectors.toList());
+        Preconditions.checkArgument(
+                keys.size() == values.size(),
+                "keys size="
+                        + keys.size()
+                        + " is not consistent with values size="
+                        + values.size()
+                        + " in MapLiteral");
+        List<RelBuilder.AggCall> aggCallList = Lists.newArrayList();
+        List<RexNode> expressions = Lists.newArrayList();
+        for (int i = 0; i < keys.size(); ++i) {
+            ExprVisitorResult valueExpr = values.get(i);
+            if (!valueExpr.getAggCalls().isEmpty()) {
+                aggCallList.addAll(valueExpr.getAggCalls());
+            }
+            expressions.add(builder.literal(keys.get(i)));
+            expressions.add(valueExpr.getExpr());
+        }
+        return new ExprVisitorResult(
+                aggCallList,
+                builder.call(GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR, expressions));
+    }
+
+    @Override
     public ExprVisitorResult visitOC_Parameter(CypherGSParser.OC_ParameterContext ctx) {
         String paramName = ctx.oC_SymbolicName().getText();
         int paramIndex = this.paramIdGenerator.generate(paramName);

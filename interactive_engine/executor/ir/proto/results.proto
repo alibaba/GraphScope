@@ -65,10 +65,19 @@ message Collection {
   repeated Element collection = 1;
 }
 
+message KeyValues {
+  message KeyValue {
+    common.Value key = 1;
+    Element value = 2;
+  }
+  repeated KeyValue key_values = 1;
+}
+
 message Entry {
   oneof inner {
       Element element = 1;
       Collection collection = 2;
+      KeyValues map = 3;
   }
 }
 

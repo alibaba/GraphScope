@@ -195,6 +195,22 @@ public class ExpressionTest {
                 "POSIX REGEX CASE SENSITIVE(DEFAULT.name, _UTF-8'^marko')", regex.toString());
     }
 
+    @Test
+    public void map_constructor_test() {
+        RexNode map =
+                builder.source(mockSourceConfig(null))
+                        .call(
+                                GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
+                                builder.literal("id"),
+                                builder.variable(null, "id"),
+                                builder.literal("age"),
+                                builder.variable(null, "age"));
+        Assert.assertEquals(
+                "MAP(_UTF-8'id', DEFAULT.id, _UTF-8'age', DEFAULT.age)", map.toString());
+        // key type is string while value type is bigint
+        Assert.assertEquals("(CHAR(3), BIGINT) MAP", map.getType().toString());
+    }
+
     private SourceConfig mockSourceConfig(String alias) {
         return new SourceConfig(
                 GraphOpt.Source.VERTEX, new LabelConfig(false).addLabel("person"), alias);

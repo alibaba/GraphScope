@@ -52,6 +52,8 @@ pub enum Operand {
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<Operand>),
     VarMap(Vec<Operand>),
+    // TODO: this is the new definition of VarMap. Will replace VarMap soon.
+    Map(Vec<(Object, Operand)>),
 }
 
 #[derive(Debug, Clone)]
@@ -536,6 +538,25 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     }
                     Ok(Self::VarMap(vec))
                 }
+
+                Map(key_vals) => {
+                    let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+                    for key_val in key_vals.key_vals {
+                        let (_key, _value) = (key_val.key, key_val.value);
+                        let key = if let Some(key) = _key {
+                            Object::try_from(key)?
+                        } else {
+                            return Err(ParsePbError::from("empty key provided in Map"));
+                        };
+                        let value = if let Some(value) = _value {
+                            Operand::try_from(value)?
+                        } else {
+                            return Err(ParsePbError::from("empty value provided in Map"));
+                        };
+                        vec.push((key, value));
+                    }
+                    Ok(Self::Map(vec))
+                }
                 _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {
@@ -672,6 +693,13 @@ impl Evaluate for Operand {
                         )),
                     }?;
                     map.insert(obj_key, get_object(var.eval(context))?);
+                }
+                Ok(Object::KV(map))
+            }
+            Self::Map(vars) => {
+                let mut map = BTreeMap::new();
+                for (obj_key, var) in vars {
+                    map.insert(obj_key.clone(), get_object(var.eval(context))?);
                 }
                 Ok(Object::KV(map))
             }
