@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
@@ -129,12 +130,17 @@ public class GraphPlanner {
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
                             null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
+
             LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
+
             // apply optimizations
             if (plannerConfig.isOn()
                     && logicalPlan.getRegularQuery() != null
                     && !logicalPlan.isReturnEmpty()) {
                 RelNode regularQuery = logicalPlan.getRegularQuery();
+                if (plannerConfig.getRules().contains(FieldTrimRule.class.getSimpleName())) {
+                    regularQuery = FieldTrimRule.trim(graphBuilder, regularQuery);
+                }
                 RelOptPlanner planner = this.optCluster.getPlanner();
                 planner.setRoot(regularQuery);
                 logicalPlan =

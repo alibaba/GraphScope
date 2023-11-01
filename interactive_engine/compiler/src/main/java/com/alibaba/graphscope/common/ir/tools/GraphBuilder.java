@@ -315,6 +315,12 @@ public class GraphBuilder extends RelBuilder {
         return this;
     }
 
+    @Override
+    public GraphBuilder push(RelNode node) {
+        super.push(node);
+        return this;
+    }
+
     public RexNode getJoinCondition(RelNode first, RelNode second) {
         List<RexNode> conditions = Lists.newArrayList();
         List<RelDataTypeField> firstFields =
