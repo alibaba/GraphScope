@@ -63,6 +63,10 @@ public class InterOpCollection {
         opCollection.remove(i);
     }
 
+    public void replaceInterOp(int i, InterOpBase op) {
+        opCollection.set(i, op);
+    }
+
     public static void applyStrategies(InterOpCollection opCollection) {
         opCollection
                 .unmodifiableCollection()

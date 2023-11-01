@@ -20,7 +20,7 @@ import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.FfiAggOpt;
-import com.alibaba.graphscope.common.jna.type.FfiAlias;
+import com.google.common.collect.ImmutableList;
 
 import org.javatuples.Pair;
 
@@ -40,11 +40,7 @@ public class SourceCountFusionStrategy implements InterOpStrategy {
             ArgAggFn next = nextCount(original, i);
             if (cur instanceof ScanFusionOp && !cur.getAlias().isPresent() && next != null) {
                 ((ScanFusionOp) cur).setCountOnly(true);
-                FfiAlias.ByValue nextAlias = next.getAlias();
-                if (nextAlias != null && nextAlias.isQueryGiven) {
-                    cur.setAlias(new OpArg(nextAlias));
-                }
-                opCollection.removeInterOp(i + 1);
+                opCollection.replaceInterOp(i + 1, createSumOp(next));
             }
         }
     }
@@ -69,5 +65,15 @@ public class SourceCountFusionStrategy implements InterOpStrategy {
             }
         }
         return null;
+    }
+
+    private GroupOp createSumOp(ArgAggFn count) {
+        GroupOp sum = new GroupOp();
+        sum.setGroupByKeys(new OpArg(ImmutableList.of()));
+        sum.setGroupByValues(
+                new OpArg(
+                        ImmutableList.of(
+                                new ArgAggFn(FfiAggOpt.Sum, count.getAlias(), count.getVar()))));
+        return sum;
     }
 }
