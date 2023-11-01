@@ -136,6 +136,30 @@ public class MovieTest {
     public void run_movie_query17_test() {
         assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
         QueryContext testQuery = MovieQueries.get_movie_query17_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query18_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query18_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query19_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query19_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query20_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query20_test();
         Result result =
                 session.run(
                         "Match (n:Movie {id: 0}) Return {id: n.id, tagline: n.tagline} as value;");

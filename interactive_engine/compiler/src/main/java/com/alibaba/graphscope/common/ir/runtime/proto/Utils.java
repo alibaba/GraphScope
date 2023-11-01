@@ -224,6 +224,10 @@ public abstract class Utils {
                 return OuterExpression.ExprOpr.newBuilder()
                         .setLogical(OuterExpression.Logical.WITHIN)
                         .build();
+            case POSIX_REGEX_CASE_SENSITIVE:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setLogical(OuterExpression.Logical.REGEX)
+                        .build();
             default:
                 throw new UnsupportedOperationException(
                         "operator type="

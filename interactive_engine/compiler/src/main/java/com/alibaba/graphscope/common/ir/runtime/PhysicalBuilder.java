@@ -18,13 +18,10 @@ package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * build physical plan from logical plan
- * @param <R> is the actual type of physical plan
  */
-public abstract class PhysicalBuilder<R> implements AutoCloseable {
+public abstract class PhysicalBuilder implements AutoCloseable {
     protected final LogicalPlan logicalPlan;
 
     protected PhysicalBuilder(LogicalPlan logicalPlan) {
@@ -32,30 +29,8 @@ public abstract class PhysicalBuilder<R> implements AutoCloseable {
     }
 
     /**
-     * print physical plan
-     */
-    public abstract String explain();
-
-    /**
      * build physical plan
      * @return
      */
-    public abstract R build();
-
-    public static final PhysicalBuilder createEmpty(LogicalPlan logicalPlan) {
-        return new PhysicalBuilder(logicalPlan) {
-            @Override
-            public String explain() {
-                return StringUtils.EMPTY;
-            }
-
-            @Override
-            public Object build() {
-                return null;
-            }
-
-            @Override
-            public void close() throws Exception {}
-        };
-    }
+    public abstract PhysicalPlan build();
 }

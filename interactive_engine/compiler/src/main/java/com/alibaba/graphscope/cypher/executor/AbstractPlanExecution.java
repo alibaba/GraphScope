@@ -16,9 +16,7 @@
 
 package com.alibaba.graphscope.cypher.executor;
 
-import com.alibaba.graphscope.common.client.ExecutionClient;
-import com.alibaba.graphscope.common.client.type.ExecutionRequest;
-import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.cypher.result.CypherRecordParser;
 import com.alibaba.graphscope.cypher.result.CypherRecordProcessor;
@@ -27,37 +25,26 @@ import org.neo4j.fabric.stream.StatementResults;
 import org.neo4j.kernel.impl.query.QueryExecution;
 import org.neo4j.kernel.impl.query.QuerySubscriber;
 
-public class GraphPlanExecution<C> implements StatementResults.SubscribableExecution {
-    private final ExecutionClient<C> client;
+public abstract class AbstractPlanExecution implements StatementResults.SubscribableExecution {
     private final GraphPlanner.Summary planSummary;
-    private final QueryTimeoutConfig timeoutConfig;
 
-    public GraphPlanExecution(
-            ExecutionClient<C> client,
-            GraphPlanner.Summary planSummary,
-            QueryTimeoutConfig timeoutConfig) {
-        this.client = client;
+    public AbstractPlanExecution(GraphPlanner.Summary planSummary) {
         this.planSummary = planSummary;
-        this.timeoutConfig = timeoutConfig;
     }
 
     @Override
     public QueryExecution subscribe(QuerySubscriber querySubscriber) {
         try {
-            ExecutionRequest request =
-                    new ExecutionRequest(
-                            this.planSummary.getId(),
-                            this.planSummary.getName(),
-                            this.planSummary.getLogicalPlan(),
-                            this.planSummary.getPhysicalBuilder());
             CypherRecordProcessor recordProcessor =
                     new CypherRecordProcessor(
                             new CypherRecordParser(planSummary.getLogicalPlan().getOutputType()),
                             querySubscriber);
-            this.client.submit(request, recordProcessor, timeoutConfig);
+            execute(recordProcessor);
             return recordProcessor;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
+
+    protected abstract void execute(ExecutionResponseListener listener) throws Exception;
 }

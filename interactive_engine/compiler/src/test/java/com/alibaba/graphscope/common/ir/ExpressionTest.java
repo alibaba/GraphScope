@@ -183,6 +183,19 @@ public class ExpressionTest {
     }
 
     @Test
+    public void posix_regex_test() {
+        RexNode regex =
+                builder.source(mockSourceConfig(null))
+                        .call(
+                                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                                builder.variable(null, "name"),
+                                builder.literal("^marko"));
+        Assert.assertEquals(SqlTypeName.BOOLEAN, regex.getType().getSqlTypeName());
+        Assert.assertEquals(
+                "POSIX REGEX CASE SENSITIVE(DEFAULT.name, _UTF-8'^marko')", regex.toString());
+    }
+
+    @Test
     public void map_constructor_test() {
         RexNode map =
                 builder.source(mockSourceConfig(null))

@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PlannerConfig;
@@ -24,9 +23,11 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
@@ -38,7 +39,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.plan.*;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
@@ -73,81 +73,95 @@ public class GraphPlanner {
     private final RelOptPlanner optPlanner;
     private final RexBuilder rexBuilder;
     private final AtomicLong idGenerator;
+    private final LogicalPlanFactory logicalPlanFactory;
+
     public static final RelBuilderFactory relBuilderFactory =
             (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
                     GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
 
-    public GraphPlanner(Configs graphConfig) {
+    public GraphPlanner(Configs graphConfig, LogicalPlanFactory logicalPlanFactory) {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         logger.debug("planner config: " + this.plannerConfig);
         this.optPlanner = createRelOptPlanner(this.plannerConfig);
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
+        this.logicalPlanFactory = logicalPlanFactory;
     }
 
-    public PlannerInstance instance(ParseTree parsedQuery, IrMeta irMeta) {
-        long id = generateInstanceId();
-        String name = "ir_plan_" + id;
+    public PlannerInstance instance(String query, IrMeta irMeta) {
         GraphOptCluster optCluster = GraphOptCluster.create(this.optPlanner, this.rexBuilder);
-        return new PlannerInstance(id, name, parsedQuery, optCluster, irMeta);
+        return new PlannerInstance(query, optCluster, irMeta);
     }
 
-    public long generateInstanceId() {
+    public long generateUniqueId() {
         long delta = FrontendConfig.FRONTEND_SERVER_NUM.get(graphConfig);
         return idGenerator.getAndAdd(delta);
     }
 
+    public String generateUniqueName(long uniqueId) {
+        return "ir_plan_" + uniqueId;
+    }
+
     public class PlannerInstance {
-        private final long id;
-        private final String name;
-        private final ParseTree parsedQuery;
+        private final String query;
         private final GraphOptCluster optCluster;
         private final IrMeta irMeta;
 
-        public PlannerInstance(
-                long id,
-                String name,
-                ParseTree parsedQuery,
-                GraphOptCluster optCluster,
-                IrMeta irMeta) {
-            this.id = id;
-            this.name = name;
-            this.parsedQuery = parsedQuery;
+        public PlannerInstance(String query, GraphOptCluster optCluster, IrMeta irMeta) {
+            this.query = query;
             this.optCluster = optCluster;
             this.irMeta = irMeta;
         }
 
         public Summary plan() {
+            long jobId = generateUniqueId();
+            LogicalPlan logicalPlan = planLogical();
+            return new Summary(
+                    jobId, generateUniqueName(jobId), logicalPlan, planPhysical(logicalPlan));
+        }
+
+        public LogicalPlan planLogical() {
             // build logical plan from parsed query
             IrGraphSchema schema = irMeta.getSchema();
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
                             null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
-            LogicalPlan logicalPlan =
-                    new LogicalPlanVisitor(graphBuilder, this.irMeta).visit(this.parsedQuery);
+
+            LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
+
             // apply optimizations
             if (plannerConfig.isOn()
                     && logicalPlan.getRegularQuery() != null
                     && !logicalPlan.isReturnEmpty()) {
                 RelNode regularQuery = logicalPlan.getRegularQuery();
+                if (plannerConfig.getRules().contains(FieldTrimRule.class.getSimpleName())) {
+                    regularQuery = FieldTrimRule.trim(graphBuilder, regularQuery);
+                }
                 RelOptPlanner planner = this.optCluster.getPlanner();
                 planner.setRoot(regularQuery);
                 logicalPlan =
                         new LogicalPlan(planner.findBestExp(), logicalPlan.getDynamicParams());
             }
+            return logicalPlan;
+        }
+
+        public PhysicalPlan planPhysical(LogicalPlan logicalPlan) {
             // build physical plan from logical plan
-            PhysicalBuilder physicalBuilder;
             if (logicalPlan.isReturnEmpty()) {
-                physicalBuilder = PhysicalBuilder.createEmpty(logicalPlan);
+                return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getRegularQuery() != null) {
-                physicalBuilder = new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan);
+                try (PhysicalBuilder physicalBuilder =
+                        new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                    return physicalBuilder.build();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
             } else {
-                physicalBuilder = new ProcedurePhysicalBuilder(logicalPlan);
+                return new ProcedurePhysicalBuilder(logicalPlan).build();
             }
-            return new Summary(this.id, this.name, logicalPlan, physicalBuilder);
         }
     }
 
@@ -155,14 +169,13 @@ public class GraphPlanner {
         private final long id;
         private final String name;
         private final LogicalPlan logicalPlan;
-        private final PhysicalBuilder physicalBuilder;
+        private final PhysicalPlan physicalPlan;
 
-        public Summary(
-                long id, String name, LogicalPlan logicalPlan, PhysicalBuilder physicalBuilder) {
+        public Summary(long id, String name, LogicalPlan logicalPlan, PhysicalPlan physicalPlan) {
             this.id = id;
             this.name = name;
             this.logicalPlan = Objects.requireNonNull(logicalPlan);
-            this.physicalBuilder = Objects.requireNonNull(physicalBuilder);
+            this.physicalPlan = Objects.requireNonNull(physicalPlan);
         }
 
         public long getId() {
@@ -177,8 +190,8 @@ public class GraphPlanner {
             return logicalPlan;
         }
 
-        public @Nullable PhysicalBuilder getPhysicalBuilder() {
-            return physicalBuilder;
+        public PhysicalPlan getPhysicalPlan() {
+            return physicalPlan;
         }
     }
 
@@ -253,15 +266,17 @@ public class GraphPlanner {
         ExperimentalMetaFetcher metaFetcher =
                 new ExperimentalMetaFetcher(new LocalMetaDataReader(configs));
         String query = FileUtils.readFileToString(new File(args[1]), StandardCharsets.UTF_8);
-        GraphPlanner planner = new GraphPlanner(configs);
-        Antlr4Parser cypherParser = new CypherAntlr4Parser();
-        PlannerInstance instance =
-                planner.instance(cypherParser.parse(query), metaFetcher.fetch().get());
+        GraphPlanner planner =
+                new GraphPlanner(
+                        configs,
+                        (GraphBuilder builder, IrMeta irMeta, String q) ->
+                                new LogicalPlanVisitor(builder, irMeta)
+                                        .visit(new CypherAntlr4Parser().parse(q)));
+        PlannerInstance instance = planner.instance(query, metaFetcher.fetch().get());
         Summary summary = instance.plan();
         // write physical plan to file
-        try (PhysicalBuilder<byte[]> physicalBuilder = summary.getPhysicalBuilder()) {
-            FileUtils.writeByteArrayToFile(new File(args[2]), physicalBuilder.build());
-        }
+        PhysicalPlan<byte[]> physicalPlan = summary.physicalPlan;
+        FileUtils.writeByteArrayToFile(new File(args[2]), physicalPlan.getContent());
         // write stored procedure meta to file
         LogicalPlan logicalPlan = summary.getLogicalPlan();
         Configs extraConfigs = createExtraConfigs(args.length > 4 ? args[4] : null);

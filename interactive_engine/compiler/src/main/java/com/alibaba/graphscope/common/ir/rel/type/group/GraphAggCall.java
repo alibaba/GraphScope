@@ -173,4 +173,34 @@ public class GraphAggCall implements RelBuilder.AggCall {
                 .as(alias)
                 .distinct(this.distinct);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GraphAggCall that = (GraphAggCall) o;
+        return distinct == that.distinct
+                && approximate == that.approximate
+                && ignoreNulls == that.ignoreNulls
+                && Objects.equals(operands, that.operands)
+                && Objects.equals(aggFunction, that.aggFunction)
+                && Objects.equals(alias, that.alias)
+                && Objects.equals(filter, that.filter)
+                && Objects.equals(distinctKeys, that.distinctKeys)
+                && Objects.equals(orderKeys, that.orderKeys);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                operands,
+                aggFunction,
+                alias,
+                distinct,
+                approximate,
+                ignoreNulls,
+                filter,
+                distinctKeys,
+                orderKeys);
+    }
 }

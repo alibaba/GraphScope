@@ -428,6 +428,8 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
 
   iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
 
+  const std::vector<std::string>& GetPropNames() const { return prop_names_; }
+
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     res.reserve(Size());
@@ -634,6 +636,8 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
 
   iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
 
+  const std::vector<std::string>& GetPropNames() const { return prop_names_; }
+
   size_t Size() const {
     if (size_ == 0) {
       for (auto i = 0; i < adj_lists_.size(); ++i) {
@@ -708,6 +712,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
   adj_list_array_t adj_lists_;
   grape::Bitset bitsets_;  // bitset of src vertices.
   Direction dir_;
+  std::vector<std::string> prop_names_;
 };
 }  // namespace gs
 #endif  // ENGINES_HQPS_ENGINE_DS_EDGE_MULTISET_GENERAL_EDGE_SET_H_

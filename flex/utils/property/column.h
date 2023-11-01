@@ -116,6 +116,7 @@ std::shared_ptr<ColumnBase> CreateColumn(
 class RefColumnBase {
  public:
   virtual ~RefColumnBase() {}
+  virtual Any get(size_t index) const = 0;
 };
 
 // Different from TypedColumn, RefColumn is a wrapper of mmap_array
@@ -131,6 +132,10 @@ class TypedRefColumn : public RefColumnBase {
   ~TypedRefColumn() {}
 
   inline T get_view(size_t index) const { return buffer_[index]; }
+
+  Any get(size_t index) const override {
+    return AnyConverter<T>::to_any(buffer_[index]);
+  }
 
  private:
   const mmap_array<T>& buffer_;

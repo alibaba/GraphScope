@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import org.apache.calcite.plan.RelDigest;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalValues;
 import org.apache.calcite.rel.type.RelDataType;
@@ -117,5 +118,25 @@ public class LogicalPlan {
 
     public List<StoredProcedureMeta.Parameter> getDynamicParams() {
         return Collections.unmodifiableList(dynamicParams);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LogicalPlan that = (LogicalPlan) o;
+        return returnEmpty == that.returnEmpty
+                && Objects.equals(getDigest(regularQuery), getDigest(that.regularQuery))
+                && Objects.equals(procedureCall, that.procedureCall)
+                && Objects.equals(dynamicParams, that.dynamicParams);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getDigest(regularQuery), procedureCall, returnEmpty, dynamicParams);
+    }
+
+    private RelDigest getDigest(RelNode rel) {
+        return rel == null ? null : rel.getRelDigest();
     }
 }
