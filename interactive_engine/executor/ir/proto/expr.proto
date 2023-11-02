@@ -121,6 +121,15 @@ message VariableKeys {
   repeated Variable keys = 1;
 }
 
+message VariableKeyValue {
+  common.Value key = 1;
+  Variable value = 2;
+}
+
+message VariableKeyValues {
+  repeated VariableKeyValue key_vals = 1;
+}
+
 // dynamic param
 message DynamicParam {
   string name = 1;
@@ -174,6 +183,8 @@ message ExprOpr {
     DynamicParam param = 9;
     Case case = 10;
     Extract extract = 11;
+    // TODO: the new definition for var_map, that allows user-given key name. Will remove the old var_map soon.
+    VariableKeyValues map = 13;
   }
   // The data of type of ExprOpr
   common.IrDataType node_type = 12;
