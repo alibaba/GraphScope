@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
@@ -36,8 +37,9 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             RelNode input,
             GraphOpt.Expand opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        super(cluster, hints, input, tableConfig, alias);
+            @Nullable String alias,
+            AliasNameWithId startAlias) {
+        super(cluster, hints, input, tableConfig, alias, startAlias);
         this.opt = opt;
     }
 
@@ -47,8 +49,9 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             RelNode input,
             GraphOpt.Expand opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        return new GraphLogicalExpand(cluster, hints, input, opt, tableConfig, alias);
+            @Nullable String alias,
+            AliasNameWithId startAlias) {
+        return new GraphLogicalExpand(cluster, hints, input, opt, tableConfig, alias, startAlias);
     }
 
     public GraphOpt.Expand getOpt() {
