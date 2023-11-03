@@ -78,7 +78,7 @@ public class GraphMetadataHandlerProvider implements MetadataHandlerProvider {
                     RelNode rel = Objects.requireNonNull((RelNode) args[0], "rel must not be null");
                     for (Method method1 : first.getClass().getMethods()) {
                         Class<?>[] types = method1.getParameterTypes();
-                        if (types.length > 0 && types[0].isAssignableFrom(rel.getClass())) {
+                        if (method.getName().equals(method1.getName()) && types.length > 0 && types[0].isAssignableFrom(rel.getClass())) {
                             return method1.invoke(first, args);
                         }
                     }
