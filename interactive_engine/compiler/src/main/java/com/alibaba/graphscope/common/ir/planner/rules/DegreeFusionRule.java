@@ -18,6 +18,7 @@ import org.apache.calcite.rel.rules.TransformationRule;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -177,7 +178,8 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
                                                     .oneInput(
                                                             b1 ->
                                                                     // should be getV which opt is
-                                                                    // not BOTH
+                                                                    // not BOTH and without any
+                                                                    // filters
                                                                     b1.operand(
                                                                                     GraphLogicalGetV
                                                                                             .class)
@@ -185,10 +187,14 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
                                                                                     (GraphLogicalGetV
                                                                                                     getV) ->
                                                                                             getV
-                                                                                                            .getOpt()
-                                                                                                    != GraphOpt
-                                                                                                            .GetV
-                                                                                                            .BOTH)
+                                                                                                                    .getOpt()
+                                                                                                            != GraphOpt
+                                                                                                                    .GetV
+                                                                                                                    .BOTH
+                                                                                                    && ObjectUtils
+                                                                                                            .isEmpty(
+                                                                                                                    getV
+                                                                                                                            .getFilters()))
                                                                             .oneInput(
                                                                                     b2 ->
                                                                                             b2.operand(
