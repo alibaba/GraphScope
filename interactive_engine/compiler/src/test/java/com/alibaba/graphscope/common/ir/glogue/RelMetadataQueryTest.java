@@ -59,6 +59,14 @@ public class RelMetadataQueryTest {
 
         optCluster.setMetadataQuerySupplier(() -> mq);
 
+        planner.setTopDownOpt(true);
+        planner.setNoneConventionHasInfiniteCost(false);
+        planner.addRule(
+                ExtendIntersectRule.Config.DEFAULT
+                        .withRelBuilderFactory(GraphPlanner.relBuilderFactory)
+                        .withMaxPatternSizeInGlogue(gq.getMaxPatternSize())
+                        .toRule());
+
         Pattern p = new Pattern();
         // p1 -> s0 <- p2 + p1 -> p2
         PatternVertex v0 = new SinglePatternVertex(1, 0);
@@ -75,37 +83,13 @@ public class RelMetadataQueryTest {
         p.addEdge(v2, v0, e);
         p.addEdge(v1, v2, e1);
         p.reordering();
-        // System.out.println(gq.getInEdges(p));
 
         GraphPattern graphPattern = new GraphPattern(optCluster, planner.emptyTraitSet(), p);
-        // RelNode topNode = planner.changeTraits(graphPattern,
-        // optCluster.traitSet().replace(EnumerableConvention.INSTANCE));
-        // System.out.println(topNode.explain());
-        planner.setTopDownOpt(true);
-        planner.setNoneConventionHasInfiniteCost(false);
-        planner.addRule(
-                ExtendIntersectRule.Config.DEFAULT
-                        .withRelBuilderFactory(GraphPlanner.relBuilderFactory)
-                        .withMaxPatternSizeInGlogue(gq.getMaxPatternSize())
-                        .toRule());
         planner.setRoot(graphPattern);
 
         RelNode after = planner.findBestExp();
         planner.dump(new PrintWriter(new FileOutputStream("set1.out"), true));
         System.out.println(after.explain());
-        //        System.out.println(mq.getRowCount(graphPattern));
-        //        Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
-        //
-        //        GlogueEdge first = glogueEdges.iterator().next();
-        //        RelNode extendIntersect =
-        //                new GraphExtendIntersect(
-        //                        optCluster,
-        //                        RelTraitSet.createEmpty(),
-        //                        new GraphPattern(
-        //                                optCluster, RelTraitSet.createEmpty(),
-        // first.getSrcPattern()),
-        //                        (GlogueExtendIntersectEdge) first);
-        //        System.out.println(mq.getNonCumulativeCost(extendIntersect));
     }
 
     @Test
