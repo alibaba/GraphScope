@@ -180,7 +180,8 @@ public class GlogueSchema {
                     int dstLabelId = dstGraphVertex.getLabelId();
                     DefaultEdgeRelation relation = new DefaultEdgeRelation(srcGraphVertex, dstGraphVertex);
                     DefaultGraphEdge edge = new DefaultGraphEdge(labelId, label, List.of(), List.of(relation), 0);
-                    edgeList.put(label, edge);
+                    String edgeLabel = srcLabelId+label+dstLabelId;
+                    edgeList.put(edgeLabel, edge);
                     edgeTypeCardinality.put(new EdgeTypeId(srcLabelId, dstLabelId, labelId), statistics);
                 }
             }
