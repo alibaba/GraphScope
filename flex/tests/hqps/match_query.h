@@ -828,5 +828,46 @@ class MatchQuery13 : public HqpsAppBase<gs::MutableCSRInterface> {
   }
 };
 
+// Auto generated query class definition
+class MatchQuery14 : public HqpsAppBase<gs::MutableCSRInterface> {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  // Query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+    auto expr0 = gs::make_filter(Query0expr0());
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, 2, std::move(expr0));
+
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
+        gs::Direction::Out, (label_id_t) 2,
+        std::array<label_id_t, 2>{(label_id_t) 2, (label_id_t) 3});
+
+    auto get_v_opt0 = make_getv_opt(
+        gs::VOpt::Itself,
+        std::array<label_id_t, 2>{(label_id_t) 2, (label_id_t) 3});
+
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(0, 3));
+    auto ctx1 = Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+    auto ctx2 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx1),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<int64_t>("id")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<int64_t>("id"))});
+    return Engine::Sink(graph, ctx2, std::array<int32_t, 2>{2, 3});
+  }
+  // Wrapper query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
+                                   Decoder& decoder) const override {
+    // decoding params from decoder, and call real query func
+
+    return Query(graph);
+  }
+};
+
 }  // namespace gs
 #endif  // TESTS_HQPS_MATCH_QUERY_H_

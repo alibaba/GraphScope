@@ -180,7 +180,7 @@ class PathExpand {
     return std::make_pair(std::move(row_vertex_set), std::move(res_offsets));
   }
 
-  // PathExpandV for row vertex set as input.
+  // PathExpandV for row vertex set as input, retrieve no properties.
   template <typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
             typename EDGE_FILTER_T, typename RES_SET_T = vertex_set_t<Dist>,
             typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
@@ -205,6 +205,76 @@ class PathExpand {
                                               std::move(tuple_vec), {"dist"});
     return std::make_pair(std::move(row_vertex_set),
                           std::move(std::get<2>(tuple)));
+  }
+
+  // PathExpandV with multiple dst labels, for row vertex set as input, output
+  // no properties.
+  template <
+      typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
+      size_t num_labels, typename EDGE_FILTER_T, size_t get_v_num_labels,
+      typename RES_SET_T = GeneralVertexSet<vertex_id_t, label_id_t, Dist>,
+      typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
+  static RES_T PathExpandV(
+      const GRAPH_INTERFACE& graph,
+      const RowVertexSet<LabelT, vertex_id_t, V_SET_T...>& vertex_set,
+      PathExpandVMultiDstOpt<LabelT, num_labels, EDGE_FILTER_T,
+                             get_v_num_labels, VERTEX_FILTER_T>&&
+          path_expand_opt) {
+    //
+    auto cur_label = vertex_set.GetLabel();
+    auto& range = path_expand_opt.range_;
+    auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
+    auto& get_v_opt = path_expand_opt.get_v_opt_;
+    return PathExpandMultiDstV(graph, cur_label, vertex_set.GetVertices(),
+                               range, edge_expand_opt, get_v_opt);
+  }
+
+  // PathExpandV with multiple dst labels, for twoLabelSet vertex set as input,
+  // output no properties.
+  template <
+      typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
+      size_t num_labels, typename EDGE_FILTER_T, size_t get_v_num_labels,
+      typename RES_SET_T = GeneralVertexSet<vertex_id_t, label_id_t, Dist>,
+      typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
+  static RES_T PathExpandV(
+      const GRAPH_INTERFACE& graph,
+      const TwoLabelVertexSet<vertex_id_t, label_id_t, V_SET_T...>& vertex_set,
+      PathExpandVMultiDstOpt<LabelT, num_labels, EDGE_FILTER_T,
+                             get_v_num_labels, VERTEX_FILTER_T>&&
+          path_expand_opt) {
+    auto& range = path_expand_opt.range_;
+    auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
+    auto& get_v_opt = path_expand_opt.get_v_opt_;
+    auto& bitset = vertex_set.GetBitset();
+    auto src_label_vec = vertex_set.GetLabelVec();
+    auto src_label_id_vec = label_key_vec_2_label_id_vec(src_label_vec);
+    return PathExpandMultiDstVFromTwoLabelSet(graph, vertex_set.GetVertices(),
+                                              src_label_id_vec, bitset, range,
+                                              edge_expand_opt, get_v_opt);
+  }
+
+  // PathExpandV with multiple dst labels, for general vertex set as input,
+  // output no properties.
+  template <
+      typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
+      size_t num_labels, typename EDGE_FILTER_T, size_t get_v_num_labels,
+      typename RES_SET_T = GeneralVertexSet<vertex_id_t, label_id_t, Dist>,
+      typename RES_T = std::pair<RES_SET_T, std::vector<offset_t>>>
+  static RES_T PathExpandV(
+      const GRAPH_INTERFACE& graph,
+      const GeneralVertexSet<vertex_id_t, label_id_t, V_SET_T...>& vertex_set,
+      PathExpandVMultiDstOpt<LabelT, num_labels, EDGE_FILTER_T,
+                             get_v_num_labels, VERTEX_FILTER_T>&&
+          path_expand_opt) {
+    auto& range = path_expand_opt.range_;
+    auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
+    auto& get_v_opt = path_expand_opt.get_v_opt_;
+    auto& bitsets = vertex_set.GetBitsets();
+    auto src_label_vec = vertex_set.GetLabelVec();
+    auto src_label_id_vec = label_key_vec_2_label_id_vec(src_label_vec);
+    return PathExpandMultiDstVFromGeneralSet(graph, vertex_set.GetVertices(),
+                                             src_label_id_vec, bitsets, range,
+                                             edge_expand_opt, get_v_opt);
   }
 
   template <typename LabelT, typename EDGE_FILTER_T, typename... SELECTOR>
@@ -301,7 +371,6 @@ class PathExpand {
     }
     std::vector<std::vector<vertex_id_t>> gids;
     std::vector<std::vector<offset_t>> offsets;
-    std::unordered_set<vertex_id_t> visited_vertices;
 
     gids.resize(range.limit_);
     offsets.resize(range.limit_);
@@ -317,7 +386,6 @@ class PathExpand {
       offsets[0].emplace_back(i);
     }
     offsets[0].emplace_back(src_vertices_size);
-    visited_vertices.insert(src_vertices_vec.begin(), src_vertices_vec.end());
 
     double visit_array_time = 0.0;
     for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
@@ -378,6 +446,137 @@ class PathExpand {
   }
 
  private:
+  // Expand V from single label vertices, only take vertices.
+  // Collect multiple dst label vertices.
+  template <typename EDGE_FILTER_FUNC, size_t num_labels,
+            typename VERTEX_FILTER_T, size_t get_v_num_labels>
+  static auto PathExpandMultiDstV(
+      const GRAPH_INTERFACE& graph, label_id_t src_label,
+      const std::vector<vertex_id_t>& vertices_vec, const Range& range,
+      const EdgeExpandOptMultiLabel<label_id_t, num_labels, EDGE_FILTER_FUNC>&
+          edge_opt,
+      const GetVOpt<label_id_t, get_v_num_labels, VERTEX_FILTER_T>& get_vopt) {
+    // We suppose VERTEX_FILTER is true
+    auto& edge_other_labels = edge_opt.other_labels_;
+    auto& vertex_other_labels = get_vopt.v_labels_;
+    auto edge_other_labels_vec = array_to_vec(edge_other_labels);
+    auto vertex_other_labels_vec = array_to_vec(vertex_other_labels);
+    auto edge_label = edge_opt.edge_label_;
+    std::vector<vertex_id_t> res_vertices;
+    std::vector<offset_t> res_offsets;
+    std::vector<Dist> res_dists;
+    std::vector<label_id_t> res_labels_vec;
+    std::vector<label_id_t> src_labels_vec(vertices_vec.size(), src_label);
+    std::tie(res_vertices, res_dists, res_labels_vec, res_offsets) =
+        path_expandv_from_src_label_with_multi_dst(
+            graph, edge_label, edge_other_labels_vec, vertex_other_labels_vec,
+            edge_opt.direction_, vertices_vec, src_labels_vec, range);
+    auto res_dist_tuple = single_col_vec_to_tuple_vec(std::move(res_dists));
+    CHECK(res_offsets.size() == vertices_vec.size() + 1);
+    CHECK(res_vertices.size() == res_labels_vec.size());
+    std::vector<grape::Bitset> res_bitsets;
+    std::vector<label_id_t> label_id_vec;
+    std::tie(res_bitsets, label_id_vec) =
+        convert_label_id_vec_to_bitsets(res_labels_vec);
+    CHECK(label_id_vec.size() <= vertex_other_labels.size())
+        << "label_id_vec.size(): " << label_id_vec.size()
+        << ", vertex_other_labels.size(): " << vertex_other_labels.size();
+    CHECK(res_bitsets.size() == label_id_vec.size())
+        << "res_bitsets.size(): " << res_bitsets.size()
+        << ", label_id_vec.size(): " << label_id_vec.size();
+    auto set = make_general_set(
+        std::move(res_vertices), std::move(res_dist_tuple), {"dist"},
+        std::move(label_id_vec), std::move(res_bitsets));
+    return std::make_pair(std::move(set), std::move(res_offsets));
+  }
+
+  // Expand V from two label vertices.
+  // Collect multiple dst label vertices.
+  template <typename EDGE_FILTER_FUNC, size_t num_labels,
+            typename VERTEX_FILTER_T, size_t get_v_num_labels>
+  static auto PathExpandMultiDstVFromTwoLabelSet(
+      const GRAPH_INTERFACE& graph,
+      const std::vector<vertex_id_t>& vertices_vec,
+      const std::vector<label_id_t>& src_labels_vec,
+      const grape::Bitset& bitset, const Range& range,
+      const EdgeExpandOptMultiLabel<label_id_t, num_labels, EDGE_FILTER_FUNC>&
+          edge_opt,
+      const GetVOpt<label_id_t, get_v_num_labels, VERTEX_FILTER_T>& get_vopt) {
+    auto& edge_other_labels = edge_opt.other_labels_;
+    auto& vertex_other_labels = get_vopt.v_labels_;
+    auto edge_other_labels_vec = array_to_vec(edge_other_labels);
+    auto vertex_other_labels_vec = array_to_vec(vertex_other_labels);
+    auto edge_label = edge_opt.edge_label_;
+    std::vector<vertex_id_t> res_vertices;
+    std::vector<offset_t> res_offsets;
+    std::vector<Dist> res_dists;
+    std::vector<label_id_t> res_labels_vec;
+    std::tie(res_vertices, res_dists, res_labels_vec, res_offsets) =
+        path_expandv_from_src_label_with_multi_dst(
+            graph, edge_label, edge_other_labels_vec, vertex_other_labels_vec,
+            edge_opt.direction_, vertices_vec, src_labels_vec, range);
+    auto res_dist_tuple = single_col_vec_to_tuple_vec(std::move(res_dists));
+    CHECK(res_offsets.size() == vertices_vec.size() + 1);
+    CHECK(res_vertices.size() == res_labels_vec.size());
+    std::vector<grape::Bitset> res_bitsets;
+    std::vector<label_id_t> label_id_vec;
+    std::tie(res_bitsets, label_id_vec) =
+        convert_label_id_vec_to_bitsets(res_labels_vec);
+    CHECK(label_id_vec.size() <= vertex_other_labels.size())
+        << "label_id_vec.size(): " << label_id_vec.size()
+        << ", vertex_other_labels.size(): " << vertex_other_labels.size();
+    CHECK(res_bitsets.size() == label_id_vec.size())
+        << "res_bitsets.size(): " << res_bitsets.size()
+        << ", label_id_vec.size(): " << label_id_vec.size();
+    auto set = make_general_set(
+        std::move(res_vertices), std::move(res_dist_tuple), {"dist"},
+        std::move(label_id_vec), std::move(res_bitsets));
+    return std::make_pair(std::move(set), std::move(res_offsets));
+  }
+
+  // PathExpandMultiDstVFromGeneralSet
+  template <typename EDGE_FILTER_FUNC, size_t num_labels,
+            typename VERTEX_FILTER_T, size_t get_v_num_labels>
+  static auto PathExpandMultiDstVFromGeneralSet(
+      const GRAPH_INTERFACE& graph,
+      const std::vector<vertex_id_t>& vertices_vec,
+      const std::vector<label_id_t>& src_labels_vec,
+      const std::vector<grape::Bitset>& bitsets, const Range& range,
+      const EdgeExpandOptMultiLabel<label_id_t, num_labels, EDGE_FILTER_FUNC>&
+          edge_opt,
+      const GetVOpt<label_id_t, get_v_num_labels, VERTEX_FILTER_T>& get_vopt) {
+    auto& edge_other_labels = edge_opt.other_labels_;
+    auto& vertex_other_labels = get_vopt.v_labels_;
+    auto edge_other_labels_vec = array_to_vec(edge_other_labels);
+    auto vertex_other_labels_vec = array_to_vec(vertex_other_labels);
+    auto edge_label = edge_opt.edge_label_;
+    std::vector<vertex_id_t> res_vertices;
+    std::vector<offset_t> res_offsets;
+    std::vector<Dist> res_dists;
+    std::vector<label_id_t> res_labels_vec;
+    std::tie(res_vertices, res_dists, res_labels_vec, res_offsets) =
+        path_expandv_from_src_label_with_multi_dst(
+            graph, edge_label, edge_other_labels_vec, vertex_other_labels_vec,
+            edge_opt.direction_, vertices_vec, src_labels_vec, range);
+    auto res_dist_tuple = single_col_vec_to_tuple_vec(std::move(res_dists));
+    CHECK(res_offsets.size() == vertices_vec.size() + 1);
+    CHECK(res_vertices.size() == res_labels_vec.size());
+    std::vector<grape::Bitset> res_bitsets;
+    std::vector<label_id_t> label_id_vec;
+    std::tie(res_bitsets, label_id_vec) =
+        convert_label_id_vec_to_bitsets(res_labels_vec);
+    CHECK(label_id_vec.size() <= vertex_other_labels.size())
+        << "label_id_vec.size(): " << label_id_vec.size()
+        << ", vertex_other_labels.size(): " << vertex_other_labels.size();
+    CHECK(res_bitsets.size() == label_id_vec.size())
+        << "res_bitsets.size(): " << res_bitsets.size()
+        << ", label_id_vec.size(): " << label_id_vec.size();
+    auto set = make_general_set(
+        std::move(res_vertices), std::move(res_dist_tuple), {"dist"},
+        std::move(label_id_vec), std::move(res_bitsets));
+    return std::make_pair(std::move(set), std::move(res_offsets));
+  }
+
   // Expand Path from single label vertices, only take vertices.
   template <typename EDGE_FILTER_FUNC, typename VERTEX_FILTER_T,
             typename... EDATA_T>
@@ -465,6 +664,228 @@ class PathExpand {
     return std::make_pair(std::move(path_set), std::move(ctx_offsets));
   }
 
+  // expand from single src label to multiple dst labels.
+  static auto path_expandv_from_src_label_with_multi_dst(
+      const GRAPH_INTERFACE& graph, label_id_t edge_label,
+      const std::vector<label_id_t>& other_labels,
+      const std::vector<label_id_t>&
+          vertex_other_labels,  // vertex_other_labels is used to filter
+                                // vertices with other labels.
+      const Direction& direction, const std::vector<vertex_id_t>& vertices_vec,
+      const std::vector<label_id_t>& src_v_labels_vec, const Range& range) {
+    // (range, other_label_ind, vertices)
+    std::vector<std::vector<vertex_id_t>> other_vertices;
+    std::vector<std::vector<label_id_t>> other_labels_vec;
+    std::vector<std::vector<offset_t>> other_offsets;
+    other_vertices.resize(range.limit_);
+    other_offsets.resize(range.limit_);
+    other_labels_vec.resize(range.limit_);
+    for (auto i = 0; i < range.limit_; ++i) {
+      other_offsets[i].reserve(vertices_vec.size() + 1);
+    }
+    other_vertices[0].insert(other_vertices[0].end(), vertices_vec.begin(),
+                             vertices_vec.end());
+    other_labels_vec[0] = src_v_labels_vec;
+    for (auto i = 0; i < vertices_vec.size(); ++i) {
+      other_offsets[0].emplace_back(i);
+    }
+    other_offsets[0].emplace_back(vertices_vec.size());
+    // the input vertices can have many labels. Should be the union of
+    // src_vertex_labels and other_labels.
+    std::vector<label_id_t> src_label_candidates;
+    {
+      src_label_candidates.insert(src_label_candidates.end(),
+                                  src_v_labels_vec.begin(),
+                                  src_v_labels_vec.end());
+      src_label_candidates.insert(src_label_candidates.end(),
+                                  other_labels.begin(), other_labels.end());
+      std::sort(src_label_candidates.begin(), src_label_candidates.end());
+      // dedup
+      auto last =
+          std::unique(src_label_candidates.begin(), src_label_candidates.end());
+      src_label_candidates.erase(last, src_label_candidates.end());
+    }
+    // iterate for all hops
+    for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
+      using nbr_list_type =
+          std::pair<std::vector<gs::mutable_csr_graph_impl::Nbr>, label_id_t>;
+      std::vector<std::vector<nbr_list_type>> nbr_lists;
+      nbr_lists.resize(other_vertices[cur_hop - 1].size());
+      std::vector<bool> indicator(other_vertices[cur_hop - 1].size(), false);
+      // std::vector<label_id_t> other_vertex_labels;
+      // other_vertex_labels.resize(other_vertices[cur_hop - 1].size());
+      for (auto& src_other_label : src_label_candidates) {
+        std::vector<size_t> indices;
+
+        std::vector<vertex_id_t> other_vertices_for_cur_label;
+        std::tie(other_vertices_for_cur_label, indices) =
+            get_vertices_with_label(other_vertices[cur_hop - 1],
+                                    other_labels_vec[cur_hop - 1],
+                                    src_other_label);
+        if (indices.size() > 0) {
+          VLOG(10) << "Get vertices with label: "
+                   << std::to_string(src_other_label) << ", "
+                   << other_vertices_for_cur_label.size();
+
+          for (auto other_label_ind = 0; other_label_ind < other_labels.size();
+               ++other_label_ind) {
+            auto other_label = other_labels[other_label_ind];
+            label_id_t real_src_label, real_dst_label;
+            if (direction == Direction::Out) {
+              real_src_label = src_other_label;
+              real_dst_label = other_label;
+            } else {
+              // in or both.
+              real_src_label = other_label;
+              real_dst_label = src_other_label;
+            }
+            auto cur_nbr_list =
+                graph.GetOtherVertices(real_src_label, real_dst_label,
+                                       edge_label, other_vertices_for_cur_label,
+                                       gs::to_string(direction), INT_MAX);
+            {
+              size_t tmp_sum = 0;
+              for (auto i = 0; i < cur_nbr_list.size(); ++i) {
+                tmp_sum += cur_nbr_list.get_vector(i).size();
+              }
+              VLOG(10) << "Get other vertices: " << cur_nbr_list.size()
+                       << ", nbr size: " << tmp_sum
+                       << ", from: " << std::to_string(real_src_label)
+                       << ", to: " << std::to_string(real_dst_label)
+                       << ", edge_label: " << std::to_string(edge_label)
+                       << ", direction: " << gs::to_string(direction);
+            }
+
+            for (auto i = 0; i < indices.size(); ++i) {
+              auto index = indices[i];
+              nbr_lists[index].emplace_back(cur_nbr_list.get_vector(i),
+                                            other_label);
+              indicator[index] = true;
+            }
+          }
+        } else {
+          VLOG(10) << "No vertices with label: "
+                   << std::to_string(src_other_label);
+        }
+      }
+      // extract vertices from nbrs, and add them to other_vertices[cur_hop]
+      // and update other_offset
+      auto& cur_other_vertices = other_vertices[cur_hop];
+      auto& cur_other_offsets =
+          other_offsets[cur_hop];  // other_offset is always aligned with
+                                   // src_vertices.
+      auto& cur_other_labels_vec = other_labels_vec[cur_hop];
+      size_t cur_hop_new_vnum = 0;
+      for (auto i = 0; i < nbr_lists.size(); ++i) {
+        for (auto& nbr_list_pair : nbr_lists[i]) {
+          cur_hop_new_vnum += nbr_list_pair.first.size();
+        }
+      }
+      VLOG(10) << "cur_hop_new_vnum: " << cur_hop_new_vnum;
+      cur_other_vertices.reserve(cur_hop_new_vnum);
+      // cur_other_offsets.reserve(cur_hop_new_vnum);
+      cur_other_labels_vec.reserve(cur_hop_new_vnum);
+      cur_other_offsets.reserve(vertices_vec.size() + 1);
+      // cur_other_offsets.emplace_back(0);
+      std::vector<offset_t> tmp_cur_offset;
+      tmp_cur_offset.reserve(cur_hop_new_vnum);
+      tmp_cur_offset.emplace_back(0);
+      size_t cur_cnt = 0;
+      for (auto i = 0; i < nbr_lists.size(); ++i) {
+        for (auto& nbr_list_pair : nbr_lists[i]) {
+          auto cur_other_vertex_label = nbr_list_pair.second;
+          auto& nbr_list = nbr_list_pair.first;
+          for (auto j = 0; j < nbr_list.size(); ++j) {
+            auto& nbr = nbr_list[j];
+            cur_other_vertices.emplace_back(nbr.neighbor());
+            cur_other_labels_vec.emplace_back(cur_other_vertex_label);
+          }
+          cur_cnt += nbr_list.size();
+        }
+        tmp_cur_offset.emplace_back(cur_cnt);
+      }
+      CHECK(cur_cnt == cur_hop_new_vnum);
+      for (auto i = 0; i < other_offsets[cur_hop - 1].size(); ++i) {
+        other_offsets[cur_hop].emplace_back(
+            tmp_cur_offset[other_offsets[cur_hop - 1][i]]);
+      }
+    }
+
+    // select vertices that are in range and are in vertex_other_labels.
+    std::vector<vertex_id_t> res_vertices;
+    std::vector<offset_t> res_offsets;
+    std::vector<Dist> res_dists;
+    std::vector<label_id_t> res_labels_vec;
+    std::vector<bool> valid_labels(sizeof(label_id_t) * 8, false);
+    for (auto& v_label : vertex_other_labels) {
+      CHECK(v_label < sizeof(label_id_t) * 8)
+          << "v_label: " << v_label << ", " << sizeof(label_id_t) * 8;
+      valid_labels[v_label] = true;
+    }
+    auto num_valid_labels =
+        std::accumulate(valid_labels.begin(), valid_labels.end(), 0);
+    VLOG(10) << "Select vertices within " << num_valid_labels
+             << " valid labels, from " << other_labels.size();
+
+    size_t flat_size = 0;
+    for (auto i = range.start_; i < range.limit_; ++i) {
+      flat_size += other_vertices[i].size();
+    }
+    VLOG(10) << "PathExpandV from single label, flat size: " << flat_size;
+    res_vertices.reserve(flat_size);
+    res_dists.reserve(flat_size);
+    res_labels_vec.reserve(flat_size);
+    res_offsets.reserve(vertices_vec.size() + 1);
+    res_offsets.emplace_back(0);
+    for (auto i = 0; i < vertices_vec.size(); ++i) {
+      for (auto j = range.start_; j < range.limit_; ++j) {
+        auto start = other_offsets[j][i];
+        auto end = other_offsets[j][i + 1];
+        for (auto k = start; k < end; ++k) {
+          auto gid = other_vertices[j][k];
+          auto label = other_labels_vec[j][k];
+          if (valid_labels[label]) {
+            res_vertices.emplace_back(gid);
+            res_dists.emplace_back(j);
+            res_labels_vec.emplace_back(label);
+          }
+        }
+      }
+      res_offsets.emplace_back(res_vertices.size());
+    }
+    return std::make_tuple(std::move(res_vertices), std::move(res_dists),
+                           std::move(res_labels_vec), std::move(res_offsets));
+  }
+
+  // returns the vector of valid labels and the bitsets.
+  static std::pair<std::vector<grape::Bitset>, std::vector<label_id_t>>
+  convert_label_id_vec_to_bitsets(const std::vector<label_id_t>& label_vec) {
+    // convert label_id_vec to bitsets.
+    std::vector<grape::Bitset> res_bitsets;
+    std::vector<label_id_t> res_label_id_vec;
+    std::vector<int32_t>
+        label_to_index;  // label to index in res_bitsets vector.
+    label_to_index.resize(sizeof(label_id_t) * 8, -1);
+    for (auto i = 0; i < label_vec.size(); ++i) {
+      if (label_to_index[label_vec[i]] == -1) {
+        label_to_index[label_vec[i]] = res_bitsets.size();
+        res_bitsets.emplace_back();
+        res_bitsets.back().init(label_vec.size());
+        res_label_id_vec.emplace_back(label_vec[i]);
+      }
+    }
+    auto num_valid_labels = res_bitsets.size();
+    VLOG(10) << "num valid labels: " << num_valid_labels;
+
+    for (auto i = 0; i < label_vec.size(); ++i) {
+      auto index = label_to_index[label_vec[i]];
+      CHECK(index != -1);
+      res_bitsets[index].set_bit(i);
+    }
+    CHECK(res_label_id_vec.size() == num_valid_labels);
+    return std::make_pair(std::move(res_bitsets), std::move(res_label_id_vec));
+  }
+
   template <typename T, typename... Ts>
   static auto prepend_tuple(std::vector<T>&& first_col,
                             std::vector<std::tuple<Ts...>>&& old_cols) {
@@ -484,6 +905,31 @@ class PathExpand {
     res_vec.reserve(vec.size());
     for (auto i = 0; i < vec.size(); ++i) {
       res_vec.emplace_back(std::make_tuple(vec[i]));
+    }
+    return res_vec;
+  }
+
+  static std::pair<std::vector<vertex_id_t>, std::vector<size_t>>
+  get_vertices_with_label(const std::vector<vertex_id_t>& vertices,
+                          const std::vector<label_id_t>& label_vec,
+                          const label_id_t query_label) {
+    std::vector<vertex_id_t> res_vertices;
+    std::vector<size_t> indices;
+    for (auto i = 0; i < label_vec.size(); ++i) {
+      if (label_vec[i] == query_label) {
+        res_vertices.emplace_back(vertices[i]);
+        indices.emplace_back(i);
+      }
+    }
+    return std::make_pair(std::move(res_vertices), std::move(indices));
+  }
+
+  static std::vector<label_id_t> label_key_vec_2_label_id_vec(
+      const std::vector<LabelKey>& label_key_vec) {
+    std::vector<label_id_t> res_vec;
+    res_vec.reserve(label_key_vec.size());
+    for (auto& label_key : label_key_vec) {
+      res_vec.emplace_back(label_key.label_id);
     }
     return res_vec;
   }

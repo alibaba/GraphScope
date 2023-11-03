@@ -95,7 +95,8 @@ class SyncEngine : public BaseEngine {
             typename... SELECTOR,
             typename std::enable_if<(append_opt == AppendOpt::Persist &&
                                      num_labels != 2)>::type* = nullptr,
-            typename COL_T = GeneralVertexSet<vertex_id_t, label_id_t>>
+            typename COL_T =
+                GeneralVertexSet<vertex_id_t, label_id_t, grape::EmptyType>>
   static Context<COL_T, 0, 0, grape::EmptyType> ScanVertex(
       const GRAPH_INTERFACE& graph,
       std::array<label_id_t, num_labels>&& v_labels,
@@ -111,7 +112,8 @@ class SyncEngine : public BaseEngine {
             typename... SELECTOR,
             typename std::enable_if<(append_opt == AppendOpt::Temp &&
                                      num_labels != 2)>::type* = nullptr,
-            typename COL_T = GeneralVertexSet<vertex_id_t, label_id_t>>
+            typename COL_T =
+                GeneralVertexSet<vertex_id_t, label_id_t, grape::EmptyType>>
   static Context<COL_T, 0, 0, grape::EmptyType> ScanVertex(
       const GRAPH_INTERFACE& graph,
       std::array<label_id_t, num_labels>&& v_labels,
@@ -185,11 +187,11 @@ class SyncEngine : public BaseEngine {
     return Context<COL_T, -1, 0, grape::EmptyType>(std::move(v_set_tuple));
   }
 
-  template <AppendOpt append_opt, typename OID_T, typename LabelT,
-            size_t num_labels,
-            typename std::enable_if<(append_opt == AppendOpt::Persist)>::type* =
-                nullptr,
-            typename COL_T = GeneralVertexSet<vertex_id_t, LabelT>>
+  template <
+      AppendOpt append_opt, typename OID_T, typename LabelT, size_t num_labels,
+      typename std::enable_if<(append_opt == AppendOpt::Persist)>::type* =
+          nullptr,
+      typename COL_T = GeneralVertexSet<vertex_id_t, LabelT, grape::EmptyType>>
   static Context<COL_T, 0, 0, grape::EmptyType> ScanVertexWithOid(
       const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels> v_labels,
       OID_T oid) {
@@ -203,7 +205,7 @@ class SyncEngine : public BaseEngine {
   template <
       AppendOpt append_opt, typename LabelT, size_t num_labels,
       typename std::enable_if<(append_opt == AppendOpt::Temp)>::type* = nullptr,
-      typename COL_T = GeneralVertexSet<vertex_id_t, LabelT>>
+      typename COL_T = GeneralVertexSet<vertex_id_t, LabelT, grape::EmptyType>>
   static Context<COL_T, -1, 0, grape::EmptyType> ScanVertexWithOid(
       const GRAPH_INTERFACE& graph, std::array<LabelT, num_labels> v_labels,
       int64_t oid) {
@@ -404,6 +406,32 @@ class SyncEngine : public BaseEngine {
       const GRAPH_INTERFACE& graph,
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
       PathExpandVOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T, T...>&&
+          path_expand_opt) {
+    if (path_expand_opt.path_opt_ != PathOpt::Arbitrary) {
+      LOG(FATAL) << "Only support Arbitrary path now";
+    }
+    if (path_expand_opt.result_opt_ != ResultOpt::EndV) {
+      LOG(FATAL) << "Only support EndV now";
+    }
+    auto& select_node = gs::Get<alias_to_use>(ctx);
+    auto pair = PathExpand<GRAPH_INTERFACE>::PathExpandV(
+        graph, select_node, std::move(path_expand_opt));
+
+    // create new context node, update offsets.
+    return ctx.template AddNode<opt>(std::move(pair.first),
+                                     std::move(pair.second), alias_to_use);
+    // old context will be abandon here.
+  }
+
+  template <AppendOpt opt, int alias_to_use, typename VERTEX_FILTER_T,
+            typename CTX_HEAD_T, int cur_alias, int base_tag,
+            typename... CTX_PREV, typename LabelT, size_t num_labels,
+            typename EDGE_FILTER_T, size_t get_v_num_labels, typename... T>
+  static auto PathExpandV(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
+      PathExpandVMultiDstOpt<LabelT, num_labels, EDGE_FILTER_T,
+                             get_v_num_labels, VERTEX_FILTER_T, T...>&&
           path_expand_opt) {
     if (path_expand_opt.path_opt_ != PathOpt::Arbitrary) {
       LOG(FATAL) << "Only support Arbitrary path now";

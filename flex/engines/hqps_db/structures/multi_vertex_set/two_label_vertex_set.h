@@ -744,7 +744,7 @@ class TwoLabelVertexSetImpl {
 
   const std::array<LabelT, 2>& GetLabels() const { return label_names_; }
 
-  const std::vector<LabelKey> GetLabelVec() {
+  std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     // fill with each vertex's label
     for (auto i = 0; i < vec_.size(); ++i) {
@@ -1019,8 +1019,8 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
 
   const std::array<LabelT, 2>& GetLabels() const { return label_names_; }
 
-  const std::vector<LabelT> GetLabelVec() {
-    std::vector<LabelT> res;
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
     // fill with each vertex's label
     for (auto i = 0; i < vec_.size(); ++i) {
       if (bitset_.get_bit(i)) {

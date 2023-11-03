@@ -239,10 +239,10 @@ struct LengthKey {
 };
 
 struct LabelKey {
-  using label_data_type = int32_t;
+  using label_data_type = uint8_t;
   int32_t label_id;
   LabelKey() = default;
-  LabelKey(int32_t id) : label_id(id) {}
+  LabelKey(label_data_type id) : label_id(id) {}
 };
 
 template <typename T>
@@ -738,10 +738,44 @@ struct PathExpandOptImpl {
   ResultOpt result_opt_;  // Get all vertices on Path or only ending vertices.
 };
 
+// Path expand with only one edge label, but possible multiple dst labels.
+template <typename LabelT, size_t num_labels, typename EDGE_FILTER_T,
+          size_t get_v_num_labels, typename VERTEX_FILTER_T,
+          typename UNTIL_CONDITION, typename... T>
+struct PathExpandMultiDstOptImpl {
+  PathExpandMultiDstOptImpl(
+      EdgeExpandOptMultiLabel<LabelT, num_labels, EDGE_FILTER_T>&&
+          edge_expand_opt,
+      GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...>&& get_v_opt,
+      Range&& range, UNTIL_CONDITION&& until_condition,
+      PathOpt path_opt = PathOpt::Arbitrary,
+      ResultOpt result_opt = ResultOpt::EndV)
+      : edge_expand_opt_(std::move(edge_expand_opt)),
+        get_v_opt_(std::move(get_v_opt)),
+        range_(std::move(range)),
+        until_condition_(std::move(until_condition)),
+        path_opt_(path_opt),
+        result_opt_(result_opt) {}
+
+  EdgeExpandOptMultiLabel<LabelT, num_labels, EDGE_FILTER_T> edge_expand_opt_;
+  GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...> get_v_opt_;
+  Range range_;  // Range for result vertices, default is [0,INT_MAX)
+  UNTIL_CONDITION until_condition_;
+  PathOpt path_opt_;      // Single path or not.
+  ResultOpt result_opt_;  // Get all vertices on Path or only ending vertices.
+};
+
 template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T,
           typename... T>
 using PathExpandVOpt = PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T,
                                          Filter<TruePredicate>, T...>;
+
+template <typename LabelT, size_t num_labels, typename EDGE_FILTER_T,
+          size_t get_v_num_labels, typename VERTEX_FILTER_T, typename... T>
+using PathExpandVMultiDstOpt =
+    PathExpandMultiDstOptImpl<LabelT, num_labels, EDGE_FILTER_T,
+                              get_v_num_labels, VERTEX_FILTER_T,
+                              Filter<TruePredicate>, T...>;
 
 template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T>
 using PathExpandPOpt = PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T,
@@ -762,6 +796,20 @@ auto make_path_expandv_opt(
     PathOpt path_opt = PathOpt::Arbitrary,
     ResultOpt result_opt = ResultOpt::EndV) {
   return PathExpandVOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T, T...>(
+      std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
+      Filter<TruePredicate>(), path_opt, result_opt);
+}
+
+template <typename LabelT, size_t num_labels, typename EDGE_FILTER_T,
+          size_t get_v_num_labels, typename VERTEX_FILTER_T, typename... T>
+auto make_path_expandv_opt(
+    EdgeExpandOptMultiLabel<LabelT, num_labels, EDGE_FILTER_T>&&
+        edge_expand_opt,
+    GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...>&& get_v_opt,
+    Range&& range, PathOpt path_opt = PathOpt::Arbitrary,
+    ResultOpt result_opt = ResultOpt::EndV) {
+  return PathExpandVMultiDstOpt<LabelT, num_labels, EDGE_FILTER_T,
+                                get_v_num_labels, VERTEX_FILTER_T, T...>(
       std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
       Filter<TruePredicate>(), path_opt, result_opt);
 }

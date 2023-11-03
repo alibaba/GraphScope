@@ -696,38 +696,39 @@ class MutableCSRInterface {
       const label_id_t& edge_label_id, const std::vector<vertex_id_t>& vids,
       const std::string& direction_str, size_t limit) const {
     mutable_csr_graph_impl::NbrListArray ret;
-
+    ret.resize(vids.size());
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
       auto csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                 edge_label_id);
-      ret.resize(vids.size());
-      for (size_t i = 0; i < vids.size(); ++i) {
-        auto v = vids[i];
-        auto iter = csr->edge_iter(v);
-        auto& vec = ret.get_vector(i);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+      if (csr) {
+        for (size_t i = 0; i < vids.size(); ++i) {
+          auto v = vids[i];
+          auto iter = csr->edge_iter(v);
+          auto& vec = ret.get_vector(i);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
       }
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
       auto csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
                                                 edge_label_id);
-      ret.resize(vids.size());
-      for (size_t i = 0; i < vids.size(); ++i) {
-        auto v = vids[i];
-        auto iter = csr->edge_iter(v);
-        auto& vec = ret.get_vector(i);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+      if (csr) {
+        for (size_t i = 0; i < vids.size(); ++i) {
+          auto v = vids[i];
+          auto iter = csr->edge_iter(v);
+          auto& vec = ret.get_vector(i);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
       }
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
-      ret.resize(vids.size());
       auto ocsr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                  edge_label_id);
       auto icsr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
@@ -735,15 +736,19 @@ class MutableCSRInterface {
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         auto& vec = ret.get_vector(i);
-        auto iter = ocsr->edge_iter(v);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+        if (ocsr) {
+          auto iter = ocsr->edge_iter(v);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
-        iter = icsr->edge_iter(v);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+        if (icsr) {
+          auto iter = icsr->edge_iter(v);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
       }
     } else {

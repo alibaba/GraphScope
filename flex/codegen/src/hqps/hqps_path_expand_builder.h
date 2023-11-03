@@ -117,13 +117,14 @@ class PathExpandOpBuilder {
           throw std::runtime_error("Expect edge graph type");
         }
         auto& edge_type = act_graph_type.graph_data_type();
-        if (edge_type.size() != 1) {
-          throw std::runtime_error("Expect only one edge type");
+        CHECK(edge_type.size() >= 1) << "Expect at least one edge type";
+        std::vector<int32_t> src_labels, dst_labels;
+        for (auto i = 0; i < edge_type.size(); ++i) {
+          auto& edge_type_i = edge_type[i];
+          auto& edge_labels_i = edge_type_i.label();
+          src_labels.push_back(edge_labels_i.src_label().value());
+          dst_labels.push_back(edge_labels_i.dst_label().value());
         }
-        auto& edge_type0 = edge_type[0];
-        auto& edge_labels = edge_type0.label();
-        auto src_label = edge_labels.src_label().value();
-        auto dst_label = edge_labels.dst_label().value();
 
         // if find edge triplets, we clear current
         VLOG(10) << "Clear current dst labels:"
@@ -131,12 +132,28 @@ class PathExpandOpBuilder {
         dst_vertex_labels_.clear();
 
         if (direction_ == internal::Direction::kBoth) {
-          CHECK(src_label == dst_label);
-          dst_vertex_labels_.emplace_back(src_label);
+          // if direction is both, we need to check src_label == dst_label
+          // dedup src_labels
+          std::sort(src_labels.begin(), src_labels.end());
+          src_labels.erase(std::unique(src_labels.begin(), src_labels.end()),
+                           src_labels.end());
+          // dedup dst_labels
+          std::sort(dst_labels.begin(), dst_labels.end());
+          dst_labels.erase(std::unique(dst_labels.begin(), dst_labels.end()),
+                           dst_labels.end());
+          CHECK(src_labels.size() == dst_labels.size());
+          for (auto i = 0; i < src_labels.size(); ++i) {
+            CHECK(src_labels[i] == dst_labels[i]);
+            dst_vertex_labels_.emplace_back(dst_labels[i]);
+          }
         } else if (direction_ == internal::Direction::kOut) {
-          dst_vertex_labels_.emplace_back(dst_label);
+          for (auto i = 0; i < dst_labels.size(); ++i) {
+            dst_vertex_labels_.emplace_back(dst_labels[i]);
+          }
         } else if (direction_ == internal::Direction::kIn) {
-          dst_vertex_labels_.emplace_back(src_label);
+          for (auto i = 0; i < src_labels.size(); ++i) {
+            dst_vertex_labels_.emplace_back(src_labels[i]);
+          }
         } else {
           throw std::runtime_error("Unknown direction");
         }

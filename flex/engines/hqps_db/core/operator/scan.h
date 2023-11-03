@@ -50,10 +50,10 @@ class Scan {
   }
 
   template <typename EXPR, typename... SELECTOR, size_t num_labels>
-  static GeneralVertexSet<vertex_id_t, label_id_t> ScanMultiLabelVertex(
-      const GRAPH_INTERFACE& graph,
-      const std::array<label_id_t, num_labels>& labels,
-      Filter<EXPR, SELECTOR...>&& filter) {
+  static GeneralVertexSet<vertex_id_t, label_id_t, grape::EmptyType>
+  ScanMultiLabelVertex(const GRAPH_INTERFACE& graph,
+                       const std::array<label_id_t, num_labels>& labels,
+                       Filter<EXPR, SELECTOR...>&& filter) {
     auto expr = filter.expr_;
     auto selectors = filter.selectors_;
     return scan_multi_label_vertex_with_selector(graph, labels, expr,
@@ -139,7 +139,7 @@ class Scan {
 
  private:
   template <typename EXPR, typename... SELECTOR, size_t num_labels>
-  static GeneralVertexSet<vertex_id_t, label_id_t>
+  static GeneralVertexSet<vertex_id_t, label_id_t, grape::EmptyType>
   scan_multi_label_vertex_with_selector(
       const GRAPH_INTERFACE& graph,
       const std::array<label_id_t, num_labels>& labels, const EXPR& expr,

@@ -151,4 +151,16 @@ public class SimpleMatchQueries {
                         "Record<{p: node<4>}>");
         return new QueryContext(query, expected);
     }
+
+public static QueryContext get_simple_match_query_12_test() {
+        String query = "MATCH(p)<-[:ISLOCATEDIN*1..2]-(a : POST | COMMENT) WITH DISTINCT p, a RETURN p.id AS placeId, p.name AS placeName, a.id AS postOrCommentId ORDER BY placeId ASC, postOrCommentId ASC LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54780}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54971}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54972}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54973}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54974}>");
+        return new QueryContext(query, expected);
+    }
 }

@@ -720,12 +720,12 @@ class SinkOp {
   }
 
   // sink general vertex, we only return vertex ids.
-  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT>
-  static void sink_col_impl(const GRAPH_INTERFACE& graph,
-                            results::CollectiveResults& results_vec,
-                            const GeneralVertexSet<VID_T, LabelT>& vertex_set,
-                            const std::vector<size_t>& repeat_offsets,
-                            int32_t tag_id) {
+  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT,
+            typename... SET_T>
+  static void sink_col_impl(
+      const GRAPH_INTERFACE& graph, results::CollectiveResults& results_vec,
+      const GeneralVertexSet<VID_T, LabelT, SET_T...>& vertex_set,
+      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
     auto& schema = graph.schema();
     auto vertices_vec = vertex_set.GetVertices();
     auto labels_vec = vertex_set.GetLabels();
