@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2022 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,5 +33,5 @@ CURRENT=$(pwd)
 
 for dir in "${directories[@]}"; do
   cd "${CURRENT}/${dir}"
-  cargo +nightly fmt
+  cargo +nightly fmt -- --check
 done

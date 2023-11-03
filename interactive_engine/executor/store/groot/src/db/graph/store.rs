@@ -34,7 +34,7 @@ pub struct GraphStore {
     edge_manager: EdgeTypeManager,
     storage: Arc<dyn ExternalStorage>,
     data_root: String,
-    // ensure all modification to graph is in ascending order of si
+    // ensure all modification to graph is in ascending order of snapshot id
     si_guard: AtomicIsize,
     lock: GraphMutexLock<()>,
 }
@@ -121,8 +121,11 @@ impl MultiVersionGraph for GraphStore {
         &self, si: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>> {
-        debug!("scan_vertex {:?}, {:?}", label_id, condition);
-        let with_prop = property_ids.is_some();
+        debug!("scan_vertex {:?}, {:?}, {:?}", label_id, condition, property_ids);
+        let with_prop = match property_ids {
+            Some(vec) => !vec.is_empty(),
+            None => false,
+        };
         let mut iter = match label_id {
             Some(label_id) => {
                 match self
@@ -841,7 +844,10 @@ impl GraphStore {
         label_id: Option<LabelId>, condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<RocksEdgeImpl>> {
         debug!("query_edges {:?}, {:?}, {:?} {:?}", vertex_id, label_id, property_ids, direction);
-        let with_prop = property_ids.is_some();
+        let with_prop = match property_ids {
+            Some(vec) => !vec.is_empty(),
+            None => false,
+        };
         let mut iter = match label_id {
             Some(label_id) => {
                 match self
