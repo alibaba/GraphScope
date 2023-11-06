@@ -122,10 +122,7 @@ impl MultiVersionGraph for GraphStore {
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>> {
         debug!("scan_vertex {:?}, {:?}, {:?}", label_id, condition, property_ids);
-        let with_prop = match property_ids {
-            Some(vec) => !vec.is_empty(),
-            None => false,
-        };
+        let with_prop = property_ids.is_some();
         let mut iter = match label_id {
             Some(label_id) => {
                 match self
@@ -844,10 +841,7 @@ impl GraphStore {
         label_id: Option<LabelId>, condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<RocksEdgeImpl>> {
         debug!("query_edges {:?}, {:?}, {:?} {:?}", vertex_id, label_id, property_ids, direction);
-        let with_prop = match property_ids {
-            Some(vec) => !vec.is_empty(),
-            None => false,
-        };
+        let with_prop = property_ids.is_some();
         let mut iter = match label_id {
             Some(label_id) => {
                 match self
