@@ -26,7 +26,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.volcano.RelSubset;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
@@ -85,7 +84,7 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     if (subset != null) {
                         GraphExtendIntersect extendIntersect =
                                 (GraphExtendIntersect)
-                                        findCandidate(subset, GraphExtendIntersect.class);
+                                        feasibleIntersects(subset);
                         ExtendStep extendStep = extendIntersect.getGlogueEdge().getExtendStep();
                         int targetOrder = extendStep.getTargetVertexOrder();
                         PatternVertex target = pattern.getVertexByOrder(targetOrder);
@@ -142,11 +141,18 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
         throw new IllegalArgumentException("can not estimate row count for the node=" + node);
     }
 
-    private @Nullable RelNode findCandidate(
-            RelSubset subSet, Class<? extends RelNode> expectedType) {
+    private @Nullable RelNode feasibleIntersects(RelSubset subSet) {
         List<RelNode> rels = subSet.getRelList();
         for (RelNode rel : rels) {
-            if (expectedType.isInstance(rel)) return rel;
+            if (rel instanceof GraphExtendIntersect) {
+                GraphExtendIntersect intersect1 = (GraphExtendIntersect) rel;
+                if (intersect1.getInput(0) instanceof RelSubset) {
+                    RelSubset subset1 = (RelSubset) intersect1.getInput(0);
+                    if (subset1.getBest() != null) {
+                        return rel;
+                    }
+                }
+            }
         }
         return null;
     }
@@ -164,9 +170,6 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
 
     private @Nullable RelNode subGraphPattern(GraphExtendIntersect intersect) {
         RelNode input = intersect.getInput(0);
-        if (input instanceof RelSubset) {
-            return findCandidate((RelSubset) input, GraphPattern.class);
-        }
-        return null;
+        return (input instanceof RelSubset) ? ((RelSubset) input).getOriginal() : input;
     }
 }

@@ -48,12 +48,10 @@ public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulat
         if (node instanceof GraphExtendIntersect) {
             GlogueExtendIntersectEdge glogueEdge = ((GraphExtendIntersect) node).getGlogueEdge();
             double weight = glogueEdge.getExtendStep().getWeight();
+            RelNode input = node.getInput(0);
             double srcPatternCount =
-                    mq.getRowCount(
-                            new GraphPattern(
-                                    node.getCluster(),
-                                    node.getTraitSet(),
-                                    glogueEdge.getSrcPattern()));
+                    mq.getRowCount
+                            (input instanceof RelSubset ? ((RelSubset) input).getOriginal() : input);
             double dRows = weight * srcPatternCount;
             double dCpu = dRows + 1;
             double dIo = 0;
