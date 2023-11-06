@@ -102,7 +102,7 @@ cluster.close();
   ```bash
   hosts: [your_endpoint_address]
   port: [your_endpoint_port]
-  serializer: { className: org.apache.tinkerpop.gremlin.driver.ser.GryoMessageSerializerV1d0, config: { serializeResultToString: true }}
+  serializer: { className: org.apache.tinkerpop.gremlin.driver.ser.GraphBinaryMessageSerializerV1, config: { serializeResultToString: true }}
   ```
 
 3. Open the Gremlin console
