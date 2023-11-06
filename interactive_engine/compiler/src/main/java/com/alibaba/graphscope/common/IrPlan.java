@@ -96,6 +96,10 @@ public class IrPlan implements Closeable {
                     }
                 }
 
+                if (op.isCountOnly()) {
+                    irCoreLib.setCountOnly(scan, true);
+                }
+
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
                 if (aliasOpt.isPresent()) {
                     FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
