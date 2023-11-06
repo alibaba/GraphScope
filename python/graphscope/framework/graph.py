@@ -307,7 +307,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._compact_edges = compact_edges
         self._use_perfect_hash = use_perfect_hash
         # for need to extend label in 'eager mode' when add_vertices and add_edges
-        # 0 - not extending label 
+        # 0 - not extending label
         # 1 - extend vertex label
         # 2 - extend edge label
         self._extend_label_data = 0
@@ -517,8 +517,10 @@ class GraphDAGNode(DAGNode, GraphInterface):
         # currently not support local_vertex_map
         if label in self._v_labels:
             self._extend_label_data = 1
-            warnings.warn(f"Label {label} already existed in graph"
-                            ", origin label data will be extend.")
+            warnings.warn(
+                f"Label {label} already existed in graph"
+                ", origin label data will be extend."
+            )
         unsealed_vertices_and_edges = deepcopy(self._unsealed_vertices_and_edges)
         vertex_label = VertexLabel(
             label=label,

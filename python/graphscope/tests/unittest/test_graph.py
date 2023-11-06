@@ -20,6 +20,7 @@ import logging
 import os
 
 import numpy as np
+import pandas as pd
 import pytest
 
 import graphscope
@@ -296,6 +297,52 @@ def test_add_vertices_edges(graphscope_session):
 
     assert graph.schema.vertex_labels == ["person", "software"]
     assert graph.schema.edge_labels == ["knows", "created"]
+
+
+@pytest.mark.skip("unlock this when update")
+def test_extend_vertices_edges(graphscope_session):
+    prefix = os.path.expandvars("${GS_TEST_DIR}/")
+    verts = pd.read_csv(f"{prefix}/p2p_v.csv")
+    edges = pd.read_csv(f"{prefix}/p2p_e.csv")
+    test_list = ["v11308", "v50089", "v60129"]
+
+    g1 = graphscope_session.g(oid_type="std::string")
+    g1 = g1.add_vertices(Loader(verts), "person")
+    g1 = g1.add_edges(Loader(edges), "knows", src_label="person", dst_label="person")
+
+    g2 = graphscope_session.g(oid_type="std::string")
+    g2 = g2.add_vertices(Loader(verts[:12980]), "person")
+    g2 = g2.add_vertices(Loader(verts[12980:31530]), "person")
+    g2 = g2.add_vertices(Loader(verts[31530:]), "person")
+
+    g2 = g2.add_edges(
+        Loader(edges[:2302]), "knows", src_label="person", dst_label="person"
+    )
+    g2 = g2.add_edges(
+        Loader(edges[2302:40021]), "knows", src_label="person", dst_label="person"
+    )
+    g2 = g2.add_edges(
+        Loader(edges[40021:]), "knows", src_label="person", dst_label="person"
+    )
+
+    sg1 = g1.project(vertices={"person": ["id"]}, edges={"knows": ["dist"]})
+    sg2 = g2.project(vertices={"person": ["id"]}, edges={"knows": ["dist"]})
+    for src in test_list:
+        res1 = graphscope.sssp(sg1, src=src, weight="dist")
+        res2 = graphscope.sssp(sg2, src=src, weight="dist")
+        df1 = res1.to_dataframe(selector={"id": "v.id", "r": "r"}).sort_values(
+            by=["id"], ignore_index=True
+        )
+        df2 = res2.to_dataframe(selector={"id": "v.id", "r": "r"}).sort_values(
+            by=["id"], ignore_index=True
+        )
+        if not df1.equals(df2):
+            pytest.raises(
+                AssertionError, "different sssp result got after extending graph data"
+            )
+
+    del g1, g2, sg1, sg2
+    print("pass graph extending test")
 
 
 def test_complicated_add_edges(graphscope_session):
