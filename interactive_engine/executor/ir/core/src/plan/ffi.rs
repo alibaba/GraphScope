@@ -613,6 +613,14 @@ pub extern "C" fn destroy_ffi_data(data: FfiData) {
     }
 }
 
+// To release a cstr pointer
+#[no_mangle]
+pub extern "C" fn destroy_cstr_pointer(cstr: *const c_char) {
+    if !cstr.is_null() {
+        let _ = unsafe { std::ffi::CString::from_raw(cstr as *mut c_char) };
+    }
+}
+
 /// To build a physical plan from the logical plan.
 #[no_mangle]
 pub extern "C" fn build_physical_plan(
@@ -1849,6 +1857,14 @@ mod scan {
         set_alias(ptr_scan, alias, InnerOpt::Scan)
     }
 
+    #[no_mangle]
+    pub extern "C" fn set_count_only(ptr: *const c_void, is_count_only: i32) -> FfiResult {
+        let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+        scan.is_count_only = is_count_only != 0;
+        std::mem::forget(scan);
+        FfiResult::success()
+    }
+
     /// Append a scan operator to the logical plan
     #[no_mangle]
     pub extern "C" fn append_scan_operator(
@@ -2231,13 +2247,6 @@ mod graph {
     #[no_mangle]
     pub extern "C" fn destroy_getv_operator(ptr: *const c_void) {
         destroy_ptr::<pb::GetV>(ptr)
-    }
-
-    #[no_mangle]
-    pub extern "C" fn destroy_cstr_pointer(cstr: *const c_char) {
-        if !cstr.is_null() {
-            let _ = unsafe { std::ffi::CString::from_raw(cstr as *mut c_char) };
-        }
     }
 
     #[allow(dead_code)]

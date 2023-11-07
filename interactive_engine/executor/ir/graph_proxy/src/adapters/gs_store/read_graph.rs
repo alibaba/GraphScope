@@ -478,40 +478,51 @@ where
     }
 
     fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
-        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
-        if !worker_partitions.is_empty() {
-            let store = self.store.clone();
-            let si = params
-                .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
-                .unwrap_or(DEFAULT_SNAPSHOT_ID);
-            let label_ids = encode_storage_labels(params.labels.as_ref())?;
-            let count = store.count_all_vertices(si, label_ids.as_ref(), None, worker_partitions.as_ref());
-            Ok(count)
+        if params.filter.is_some() {
+            // the filter can not be pushed down to store,
+            // so we need to scan all vertices with filter and then count
+            Ok(self.scan_vertex(params)?.count() as u64)
         } else {
-            Ok(0)
+            let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+            if !worker_partitions.is_empty() {
+                let store = self.store.clone();
+                let si = params
+                    .get_extra_param(SNAPSHOT_ID)
+                    .map(|s| {
+                        s.parse::<SnapshotId>()
+                            .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                    })
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID);
+                let label_ids = encode_storage_labels(params.labels.as_ref())?;
+                let count =
+                    store.count_all_vertices(si, label_ids.as_ref(), None, worker_partitions.as_ref());
+                Ok(count)
+            } else {
+                Ok(0)
+            }
         }
     }
 
     fn count_edge(&self, params: &QueryParams) -> GraphProxyResult<u64> {
-        let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
-        if !worker_partitions.is_empty() {
-            let store = self.store.clone();
-            let si = params
-                .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
-                .unwrap_or(DEFAULT_SNAPSHOT_ID);
-            let label_ids = encode_storage_labels(params.labels.as_ref())?;
-            let count = store.count_all_edges(si, label_ids.as_ref(), None, worker_partitions.as_ref());
-            Ok(count)
+        if params.filter.is_some() {
+            Ok(self.scan_edge(params)?.count() as u64)
         } else {
-            Ok(0)
+            let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+            if !worker_partitions.is_empty() {
+                let store = self.store.clone();
+                let si = params
+                    .get_extra_param(SNAPSHOT_ID)
+                    .map(|s| {
+                        s.parse::<SnapshotId>()
+                            .unwrap_or(DEFAULT_SNAPSHOT_ID)
+                    })
+                    .unwrap_or(DEFAULT_SNAPSHOT_ID);
+                let label_ids = encode_storage_labels(params.labels.as_ref())?;
+                let count = store.count_all_edges(si, label_ids.as_ref(), None, worker_partitions.as_ref());
+                Ok(count)
+            } else {
+                Ok(0)
+            }
         }
     }
 }
