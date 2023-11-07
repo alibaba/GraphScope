@@ -136,6 +136,12 @@ impl From<(common_pb::VariableKeys, bool)> for common_pb::ExprOpr {
     }
 }
 
+impl From<common_pb::VariableKeyValues> for common_pb::ExprOpr {
+    fn from(vars: common_pb::VariableKeyValues) -> Self {
+        common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Map(vars)) }
+    }
+}
+
 impl From<bool> for common_pb::Value {
     fn from(b: bool) -> Self {
         common_pb::Value { item: Some(common_pb::value::Item::Boolean(b)) }

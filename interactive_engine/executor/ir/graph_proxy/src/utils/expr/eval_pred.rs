@@ -317,6 +317,14 @@ impl EvalPred for Operand {
                 }
                 Ok(true)
             }
+            Operand::Map(key_vals) => {
+                for key_val in key_vals {
+                    if !key_val.1.eval_bool(_context)? {
+                        return Ok(false);
+                    }
+                }
+                Ok(true)
+            }
         }
     }
 }
@@ -466,7 +474,7 @@ fn process_predicates(
                         container.push(opr.clone());
                     }
                 }
-                Item::Const(_) | Item::Var(_) | Item::Vars(_) | Item::VarMap(_) => {
+                Item::Const(_) | Item::Var(_) | Item::Vars(_) | Item::VarMap(_) | Item::Map(_) => {
                     if left_brace_count == 0 {
                         if partial.get_left().is_none() {
                             partial.left(opr.clone().try_into()?)?;

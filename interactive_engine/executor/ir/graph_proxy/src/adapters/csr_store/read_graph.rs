@@ -174,28 +174,38 @@ impl ReadGraph for CSRStore {
     }
 
     fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
-        let worker_index = self.cluster_info.get_worker_index()?;
-        let workers_num = self.cluster_info.get_local_worker_num()?;
-        if worker_index % workers_num == 0 {
-            let label_ids = encode_storage_label(&params.labels);
-            let count = self
-                .store
-                .count_all_vertices(label_ids.as_ref());
-            Ok(count as u64)
+        if params.filter.is_some() {
+            // the filter can not be pushed down to store,
+            // so we need to scan all vertices with filter and then count
+            Ok(self.scan_vertex(params)?.count() as u64)
         } else {
-            Ok(0)
+            let worker_index = self.cluster_info.get_worker_index()?;
+            let workers_num = self.cluster_info.get_local_worker_num()?;
+            if worker_index % workers_num == 0 {
+                let label_ids = encode_storage_label(&params.labels);
+                let count = self
+                    .store
+                    .count_all_vertices(label_ids.as_ref());
+                Ok(count as u64)
+            } else {
+                Ok(0)
+            }
         }
     }
 
     fn count_edge(&self, params: &QueryParams) -> GraphProxyResult<u64> {
-        let worker_index = self.cluster_info.get_worker_index()?;
-        let workers_num = self.cluster_info.get_local_worker_num()?;
-        if worker_index % workers_num == 0 {
-            let label_ids = encode_storage_label(&params.labels);
-            let count = self.store.count_all_edges(label_ids.as_ref());
-            Ok(count as u64)
+        if params.filter.is_some() {
+            Ok(self.scan_edge(params)?.count() as u64)
         } else {
-            Ok(0)
+            let worker_index = self.cluster_info.get_worker_index()?;
+            let workers_num = self.cluster_info.get_local_worker_num()?;
+            if worker_index % workers_num == 0 {
+                let label_ids = encode_storage_label(&params.labels);
+                let count = self.store.count_all_edges(label_ids.as_ref());
+                Ok(count as u64)
+            } else {
+                Ok(0)
+            }
         }
     }
 }
