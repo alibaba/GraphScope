@@ -1,55 +1,71 @@
-# GIE Graph Optimizer
-The GIE Graph Optimizer is composed of RBO and CBO, similar to traditional optimizers, both RBO and CBO are based on registered Rules to perform corresponding transformations, and find the optimal execution path through heuristic or cost-estimated methods. The differences are:
+# A Generic Graph Optimizer for GIE
 
-1. We provide specific Rules for specific graph operators that exist in the Graph, and Relational operators can still directly reuse Sql Rules, which allows our optimizer to truly optimize the structure where Graph and Relational coexist.
-2. In addition, our CBO provides high-order statistics based on the graph structure, which can provide more accurate cardinality estimates compared to traditional optimizers.
+We have developed a versatile graph optimizer for the Graph Interactive Engine (GIE), capable of optimizing the execution for multiple query languages in GraphScope, including [Gremlin](./tinkerpop_eco) and [Cypher](./neo4j_eco). This optimizer is built upon the [Apache Calcite](https://calcite.apache.org/) framework, traditionally focused on relational databases, but now extended to accommodate graph databases by incorporating graph-specific operations and rules. The optimizer consists of two main components: the Rule-based Optimizer (RBO) and the Cost-based Optimizer (CBO). Like their relational counterparts, both RBO and CBO utilize pre-registered rules for transformation and path optimization, either through heuristic methods or cost estimation. However, our optimizer differs from standard relational optimizers in two key aspects:
 
-## Rules
-Next, we will focus on introducing some existing Rules.
-### RBO
-#### FilterMatchRule
-Push the Filter condition down to each graph operator in Match, for example, for the `Cypher` query:
+1. **Graph-specific Rules**: Our optimizer integrates rules for specific graph operators within Graph and Relational databases, allowing for true optimization where Graph and Relational structures coexist. Relational operators directly benefit from the reuse of existing SQL rules.
+
+2. **High-Order Statistics in CBO**: Our CBO offers advanced statistics based on graph structure, yielding more precise cardinality estimates than traditional optimizers.
+
+
+## Rule-based Optimizer (RBO)
+
+| Rule Name              | Description                                                  |
+|------------------------|--------------------------------------------------------------|
+| FilterMatchRule        | Pushes filter conditions to graph operators in `Match`.      |
+| DegreeFusionRule       | Uses pre-calculated degrees of vertices from graph storage.  |
+| NotMatchToAntiJoinRule | Converts `Where Not` queries into anti-joins.                |
+| FieldTrimRule          | Removes unnecessary aliases or properties.                   |
+
+This table offers a concise overview of the existing rules for RBO. Each rule is designed to optimize graph query performance by transforming the way queries are processed and executed. Examples of how these rules conceptually affect the execution of queries are detailed as follows. Note that we use Cypher as the query language for demonstration purposes, but the rules apply to Gremlin as well.
+
+### FilterMatchRule
+This rule pushes filter conditions down to individual graph operators within a `Match` clause. For example:
 ```bash
 Match (p1:PERSON)-[:KNOWS]->(p2:PERSON)
 Where p1.id = $id1 and p2.id = $id2
 Return p1, p2;
 ```
-After pushing down, the filter conditions in `Where` will be broken down and pushed down to p1 and p2 respectively, equivalent to the query:
+becomes:
 ```bash
 Match (p1:PERSON {id: $id1})-[:KNOWS]->(p2:PERSON {id: $id2})
 Return p1, p2;
 ```
-#### DegreeFusionRule
-Calculate the degree of each vertex separately, and finally sum them up. Compared with the method of unfolding all edges and then counting, it can effectively reduce the amount of calculation. For example, for the `Gremlin` query:
+following the push-down, splitting the `Where` clause to filter directly at the vertices p1 and p2.
+
+### DegreeFusionRule
+The DegreeFusionRule capitalizes on the fact that most graph storage systems already maintain the count of neighbors (i.e., the degree) for each vertex. For example:
 ```bash
-g.V().out().count()
+Match (p1:PERSON {id: $id1})-[]->(p2)
+Return p1, COUNT(p2);
 ```
-After Fusion, it is equivalent to the query:
-```bash
-g.V().out_degree().sum()
-```
-`out_degree` represents the operation of calculating the out-degree of the current vertex, and it is not a real operator.
-#### NotMatchToAntiJoinRule
-Convert where-not-sub-query to anti-join, for example, for the `Cypher` query:
+With this rule applied, instead of individually counting each neighbor of `p1`, we can directly obtain `p1`'s degree, streamlining the process considerably. This optimization effectively utilizes pre-existing graph data structures to expedite query execution.
+
+### NotMatchToAntiJoinRule
+This rule converts queries containing `Where Not` clauses into the equivalent anti-join structures, where the anti-join
+is a relational operator that returns all rows from the left table that fail to match with the right table.
+Consider the following query:
 ```bash
 Match (p1:PERSON)-[:KNOWS]->(:PERSON)-[:KNOWS]->(p2:PERSON)
 Where Not (p1)-[:KNOWS]->(p2)
 Return p1, p2;
 ```
-After optimization, it becomes:
+Under this rule, the query is transformed to:
 ```bash
-Match (p1:PERSON)-[:KNOWS]->(:PERSON)-[:KNOWS]>(p2:PERSON)
+Match (p1:PERSON)-[:KNOWS]->(:PERSON)-[:KNOWS]->(p2:PERSON)
 <Anti Join>
 Match (p1)-[:KNOWS]->(p2)
 Return p1, p2;
 ```
-`<Anti Join>` is not a real operator, it is used here just for a better explanation of this optimization.
-#### FieldTrimRule
-`FieldTrimRule` can help to remove unnecessary aliases or properties from the query execution, which can reduce the amount of data that needs to be processed.
+Here, `<Anti Join>` serves as a conceptual operator, used here to effectively illustrate how the original query's intent is preserved while enhancing its execution efficiency.
 
-For example, consider the query:
+### FieldTrimRule
+Removes unnecessary aliases or properties, reducing data processing. Consider:
 ```bash
-Match (p1:PERSON)-[k1:KNOWS]->(p2:PERSON)-[k2:KNOWS]>(p3:PERSON)
+Match (p1:PERSON)-[k1:KNOWS]->(p2:PERSON)-[k2:KNOWS]->(p3:PERSON)
 Return p1.name;
 ```
-In the end, only the 'name' attribute of p1 will be output. The aliases of k1, k2, p2, p3 do not need to be retained. Besides, except for the 'name' attribute in p1 that needs to be retained, other attributes in p1, as well as attributes in other nodes or edges involved in the query, are not necessary for the final output. The optimization to eliminate these unnecessary data retrievals can be achieved through field trim.
+Here, only `p1.name` is required in the output, making aliases like k1, k2, and properties of p2, p3 redundant.
+This rule optimizes to retain only necessary data, significantly reducing the volume of the intermediate results.
+
+## Cost-based Optimizer (CBO)
+TODO
