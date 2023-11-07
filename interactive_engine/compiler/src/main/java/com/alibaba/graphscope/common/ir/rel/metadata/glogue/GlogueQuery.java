@@ -5,6 +5,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternPr
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
+
 import org.javatuples.Pair;
 
 import java.util.Arrays;
@@ -24,10 +25,11 @@ public class GlogueQuery {
     // the query API for optimizer
     public Set<GlogueEdge> getInEdges(Pattern pattern) {
         if (fuzzyPatternProcessor.isFuzzyPattern(pattern)) {
-            Pair<Pattern, FuzzyInfo> patternWithInfo = this.fuzzyPatternProcessor
-                    .processFuzzyPatternAndGetFuzzyInfo(pattern);
+            Pair<Pattern, FuzzyInfo> patternWithInfo =
+                    this.fuzzyPatternProcessor.processFuzzyPatternAndGetFuzzyInfo(pattern);
             Set<GlogueEdge> inEdges = glogue.getGlogueInEdges(patternWithInfo.getValue0());
-            return fuzzyPatternProcessor.processGlogueEdgesWithFuzzyInfo(inEdges, patternWithInfo.getValue1(), false);
+            return fuzzyPatternProcessor.processGlogueEdgesWithFuzzyInfo(
+                    inEdges, patternWithInfo.getValue1(), false);
         } else {
             return glogue.getInEdges(pattern);
         }
@@ -41,15 +43,18 @@ public class GlogueQuery {
     // the query API for optimizer
     public Set<GlogueEdge> getOutEdges(Pattern pattern) {
         if (fuzzyPatternProcessor.isFuzzyPattern(pattern)) {
-            Pair<Pattern, FuzzyInfo> patternWithInfo = this.fuzzyPatternProcessor
-                    .processFuzzyPatternAndGetFuzzyInfo(pattern);
-            Optional<Pair<Pattern, PatternMapping>> glogueVertexWithMapping = glogue
-                    .getGlogueVertexWithMapping(patternWithInfo.getValue0());
+            Pair<Pattern, FuzzyInfo> patternWithInfo =
+                    this.fuzzyPatternProcessor.processFuzzyPatternAndGetFuzzyInfo(pattern);
+            Optional<Pair<Pattern, PatternMapping>> glogueVertexWithMapping =
+                    glogue.getGlogueVertexWithMapping(patternWithInfo.getValue0());
             if (glogueVertexWithMapping.isPresent()) {
-                patternWithInfo.getValue1().setPatternMapping(glogueVertexWithMapping.get().getValue1());
-                Set<GlogueEdge> outEdges = glogue.getGlogueOutEdges(glogueVertexWithMapping.get().getValue0());
-                return fuzzyPatternProcessor.processGlogueEdgesWithFuzzyInfo(outEdges, patternWithInfo.getValue1(),
-                        true);
+                patternWithInfo
+                        .getValue1()
+                        .setPatternMapping(glogueVertexWithMapping.get().getValue1());
+                Set<GlogueEdge> outEdges =
+                        glogue.getGlogueOutEdges(glogueVertexWithMapping.get().getValue0());
+                return fuzzyPatternProcessor.processGlogueEdgesWithFuzzyInfo(
+                        outEdges, patternWithInfo.getValue1(), true);
             } else {
                 throw new RuntimeException(
                         "pattern not found in glogue graph. queries pattern " + pattern);
@@ -61,11 +66,12 @@ public class GlogueQuery {
 
     public Double getRowCount(Pattern pattern) {
         if (fuzzyPatternProcessor.isFuzzyPattern(pattern)) {
-            Pair<Pattern, FuzzyInfo> patternWithInfo = this.fuzzyPatternProcessor
-                    .processFuzzyPatternAndGetFuzzyInfo(pattern);
+            Pair<Pattern, FuzzyInfo> patternWithInfo =
+                    this.fuzzyPatternProcessor.processFuzzyPatternAndGetFuzzyInfo(pattern);
 
             Double count = glogue.getRowCount(patternWithInfo.getValue0());
-            return fuzzyPatternProcessor.estimateCountWithFuzzyInfo(count, patternWithInfo.getValue1());
+            return fuzzyPatternProcessor.estimateCountWithFuzzyInfo(
+                    count, patternWithInfo.getValue1());
         } else {
             return glogue.getRowCount(pattern);
         }
@@ -138,7 +144,8 @@ public class GlogueQuery {
         PatternVertex v111 = new FuzzyPatternVertex(Arrays.asList(0, 1), 1);
         p3.addVertex(v000);
         p3.addVertex(v111);
-        List<EdgeTypeId> eTypeIds000 = Arrays.asList(new EdgeTypeId(0, 0, 0), new EdgeTypeId(0, 1, 1));
+        List<EdgeTypeId> eTypeIds000 =
+                Arrays.asList(new EdgeTypeId(0, 0, 0), new EdgeTypeId(0, 1, 1));
         PatternEdge e000 = new FuzzyPatternEdge(v000, v111, eTypeIds000, 0);
         p3.addEdge(v000, v111, e000);
         p3.reordering();

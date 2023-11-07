@@ -18,10 +18,10 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Range;
-import com.google.common.collect.Sets;
+import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
+import com.alibaba.graphscope.common.ir.rel.GraphPattern;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
+import com.google.common.collect.*;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -33,6 +33,7 @@ import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Sarg;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -103,5 +104,24 @@ public class Utils {
             inputs.addAll(input.getInputs());
         }
         return builder.toString();
+    }
+
+    public static Map<Integer, Pattern> getAllPatterns(RelNode rel) {
+        List<RelNode> queue = Lists.newArrayList(rel);
+        Map<Integer, Pattern> patterns = Maps.newLinkedHashMap();
+        while(!queue.isEmpty()) {
+            RelNode cur = queue.remove(0);
+            if (cur instanceof GraphExtendIntersect) {
+                Pattern src = ((GraphExtendIntersect) cur).getGlogueEdge().getSrcPattern();
+                Pattern dst = ((GraphExtendIntersect) cur).getGlogueEdge().getDstPattern();
+                patterns.put(src.getPatternId(), src);
+                patterns.put(dst.getPatternId(), dst);
+            } else if (cur instanceof GraphPattern) {
+                Pattern pattern = ((GraphPattern) cur).getPattern();
+                patterns.put(pattern.getPatternId(), pattern);
+            }
+            queue.addAll(cur.getInputs());
+        }
+        return patterns;
     }
 }

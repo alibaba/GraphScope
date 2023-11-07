@@ -1,22 +1,13 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
 import org.jgrapht.Graph;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.Coloring;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.ColoringImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
@@ -34,76 +25,40 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
     // the key is a list of vertex type ids, notice that it is the type of a
     // PatternVertex.
     // the value is a list of group ids
-    private Map<List<Integer>, List<Integer>> mapTypeToGroup;
+    private Map<IsomorphismChecker, List<Integer>> mapCheckerToGroup;
 
     private static Logger logger = LoggerFactory.getLogger(PatternOrderCanonicalLabelingImpl.class);
-
-    final static Comparator<List<Integer>> vertexTypeListComparator = (o1, o2) -> {
-        if (o1.size() != o2.size()) {
-            return o1.size() - o2.size();
-        } else {
-            o1.sort(Integer::compareTo);
-            o2.sort(Integer::compareTo);
-            for (int i = 0; i < o1.size(); i++) {
-                if (!o1.get(i).equals(o2.get(i))) {
-                    return o1.get(i) - o2.get(i);
-                }
-            }
-            return 0;
-        }
-    };
-
-    final static Comparator<Set<Integer>> vertexTypeSetComparator = (o1, o2) -> {
-        if (o1.size() != o2.size()) {
-            return o1.size() - o2.size();
-        } else {
-            TreeSet<Integer> o1TreeSet = new TreeSet<Integer>(o1);
-            TreeSet<Integer> o2TreeSet = new TreeSet<Integer>(o2);
-            Iterator<Integer> o1Iterator = o1TreeSet.iterator();
-            Iterator<Integer> o2Iterator = o2TreeSet.iterator();
-            while (o1Iterator.hasNext()) {
-                Integer o1Next = o1Iterator.next();
-                Integer o2Next = o2Iterator.next();
-                if (!o1Next.equals(o2Next)) {
-                    return o1Next - o2Next;
-                }
-            }
-            return 0;
-        }
-    };
 
     public PatternOrderCanonicalLabelingImpl(Graph<PatternVertex, PatternEdge> patternGraph) {
         // different vertex types are initialized with different colors;
         // if with multiple vertex types, initialize the colors in order of vertex types
         Map<PatternVertex, Integer> initialColors = new HashMap<>();
-        Map<List<Integer>, Integer> initialMapTypeToColor = new HashMap<>();
+        Map<IsomorphismChecker, Integer> initialMapCheckerToColor = new HashMap<>();
         Integer colorId = 0;
 
         // first, sort the initial types, and assign the color id in order to each
         // type(s).
-        Set<List<Integer>> verticesTypeIds = new TreeSet<>(vertexTypeListComparator);
+        Set<IsomorphismChecker> checkerSet = new TreeSet();
         for (PatternVertex patternVertex : patternGraph.vertexSet()) {
-            List<Integer> vertexTypeIds = patternVertex.getVertexTypeIds();
-            if (!verticesTypeIds.contains(vertexTypeIds)) {
-                verticesTypeIds.add(vertexTypeIds);
-            }
+            checkerSet.add(patternVertex.getIsomorphismChecker());
         }
-        for (List<Integer> vertexTypeIds : verticesTypeIds) {
-            vertexTypeIds.sort(Comparator.naturalOrder());
-            initialMapTypeToColor.put(vertexTypeIds, colorId);
+        for (IsomorphismChecker checker : checkerSet) {
+            initialMapCheckerToColor.put(checker, colorId);
             colorId++;
         }
 
         // then, assign the color id to each vertex
         for (PatternVertex patternVertex : patternGraph.vertexSet()) {
-            List<Integer> vertexTypeIds = patternVertex.getVertexTypeIds();
-            vertexTypeIds.sort(Comparator.naturalOrder());
-            initialColors.put(patternVertex, initialMapTypeToColor.get(vertexTypeIds));
+            initialColors.put(
+                    patternVertex,
+                    initialMapCheckerToColor.get(patternVertex.getIsomorphismChecker()));
         }
-        ColoringImpl<PatternVertex> initialColoringImpl = new ColoringImpl<PatternVertex>(initialColors, colorId);
-        ColorRefinementAlgorithm<PatternVertex, PatternEdge> colorRefinementAlgorithm = new ColorRefinementAlgorithm<PatternVertex, PatternEdge>(
-                patternGraph,
-                initialColoringImpl);
+
+        ColoringImpl<PatternVertex> initialColoringImpl =
+                new ColoringImpl<PatternVertex>(initialColors, colorId);
+        ColorRefinementAlgorithm<PatternVertex, PatternEdge> colorRefinementAlgorithm =
+                new ColorRefinementAlgorithm<PatternVertex, PatternEdge>(
+                        patternGraph, initialColoringImpl);
         Coloring<PatternVertex> initColoring = colorRefinementAlgorithm.getColoring();
         setTypeGroupMapping(initColoring);
         this.initColoring = initColoring;
@@ -133,7 +88,8 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
     }
 
     // recolor if the current color is not unique
-    private Coloring<PatternVertex> recolor(Graph<PatternVertex, PatternEdge> patternGraph,
+    private Coloring<PatternVertex> recolor(
+            Graph<PatternVertex, PatternEdge> patternGraph,
             Coloring<PatternVertex> patternColoring) {
         Map<PatternVertex, Integer> initialColors = patternColoring.getColors();
         int maxColorId = patternColoring.getColorClasses().size();
@@ -145,23 +101,22 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             }
         }
         ColoringImpl initialColoringImpl = new ColoringImpl(initialColors, maxColorId);
-        ColorRefinementAlgorithm colorRefinementAlgorithm = new ColorRefinementAlgorithm(patternGraph,
-                initialColoringImpl);
+        ColorRefinementAlgorithm colorRefinementAlgorithm =
+                new ColorRefinementAlgorithm(patternGraph, initialColoringImpl);
         Coloring<PatternVertex> newColor = colorRefinementAlgorithm.getColoring();
         return newColor;
     }
 
     private void setTypeGroupMapping(Coloring<PatternVertex> color) {
-        mapTypeToGroup = new TreeMap<>(vertexTypeListComparator);
+        mapCheckerToGroup = new TreeMap();
         Integer groupId = 0;
         for (Set<PatternVertex> coloredPatternVertices : color.getColorClasses()) {
-            List<Integer> vertexTypeIds = coloredPatternVertices.iterator().next().getVertexTypeIds();
-            vertexTypeIds.sort(Comparator.naturalOrder());
-            if (mapTypeToGroup.containsKey(vertexTypeIds)) {
-                mapTypeToGroup.get(vertexTypeIds).add(groupId);
+            IsomorphismChecker checker =
+                    coloredPatternVertices.iterator().next().getIsomorphismChecker();
+            if (mapCheckerToGroup.containsKey(checker)) {
+                mapCheckerToGroup.get(checker).add(groupId);
             } else {
-                mapTypeToGroup.put(vertexTypeIds,
-                        new ArrayList<Integer>(Arrays.asList(groupId)));
+                mapCheckerToGroup.put(checker, new ArrayList<Integer>(Arrays.asList(groupId)));
             }
             groupId++;
         }
@@ -184,7 +139,9 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
     @Override
     public String toString() {
-        return "uniqueColoring :" + this.uniqueColoring.toString() + ", groupColoring: "
+        return "uniqueColoring :"
+                + this.uniqueColoring.toString()
+                + ", groupColoring: "
                 + this.initColoring.toString();
     }
 
@@ -193,41 +150,55 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
         if (obj instanceof PatternOrderCanonicalLabelingImpl) {
             PatternOrderCanonicalLabelingImpl other = (PatternOrderCanonicalLabelingImpl) obj;
             // should have the same number of types and groups
-            if (this.mapTypeToGroup.size() != other.mapTypeToGroup.size()
-                    || this.initColoring.getColorClasses().size() != other.initColoring.getColorClasses().size()) {
-                logger.debug("In color comparing, numbers of types / colors not equal: "
-                        + this.mapTypeToGroup.size() + " vs " + other.mapTypeToGroup.size() + " / "
-                        + this.initColoring.getColorClasses().size() + " vs "
-                        + other.initColoring.getColorClasses().size());
+            if (this.mapCheckerToGroup.size() != other.mapCheckerToGroup.size()
+                    || this.initColoring.getColorClasses().size()
+                            != other.initColoring.getColorClasses().size()) {
+                logger.debug(
+                        "In color comparing, numbers of types / colors not equal: "
+                                + this.mapCheckerToGroup.size()
+                                + " vs "
+                                + other.mapCheckerToGroup.size()
+                                + " / "
+                                + this.initColoring.getColorClasses().size()
+                                + " vs "
+                                + other.initColoring.getColorClasses().size());
                 return false;
             }
             // each type should have the same number of groups
             else {
                 // first compare if types are the same
-                List<List<Integer>> thisTypeList = new ArrayList<>(this.mapTypeToGroup.keySet());
-                List<List<Integer>> otherTypeList = new ArrayList<>(other.mapTypeToGroup.keySet());
-                thisTypeList.sort(vertexTypeListComparator);
-                otherTypeList.sort(vertexTypeListComparator);
+                List<IsomorphismChecker> thisTypeList =
+                        new ArrayList<>(this.mapCheckerToGroup.keySet());
+                List<IsomorphismChecker> otherTypeList =
+                        new ArrayList<>(other.mapCheckerToGroup.keySet());
                 if (!thisTypeList.equals(otherTypeList)) {
                     return false;
                 }
                 // then compare the number of groups for each type
-                for (List<Integer> vertexTypeIds : this.mapTypeToGroup.keySet()) {
-                    if (this.mapTypeToGroup.get(vertexTypeIds).size() != other.mapTypeToGroup.get(vertexTypeIds)
-                            .size()) {
+                for (IsomorphismChecker checker : this.mapCheckerToGroup.keySet()) {
+                    if (this.mapCheckerToGroup.get(checker).size()
+                            != other.mapCheckerToGroup.get(checker).size()) {
                         logger.debug(
-                                "In color comparing, numbers of groups for type " + vertexTypeIds + " not equal: "
-                                        + this.mapTypeToGroup.get(vertexTypeIds).size() + " vs "
-                                        + other.mapTypeToGroup.get(vertexTypeIds).size());
+                                "In color comparing, numbers of groups for type "
+                                        + checker
+                                        + " not equal: "
+                                        + this.mapCheckerToGroup.get(checker).size()
+                                        + " vs "
+                                        + other.mapCheckerToGroup.get(checker).size());
                         return false;
                     } else {
-                        List<Integer> colors1 = this.mapTypeToGroup.get(vertexTypeIds);
+                        List<Integer> colors1 = this.mapCheckerToGroup.get(checker);
                         colors1.sort(Comparator.naturalOrder());
-                        List<Integer> colors2 = other.mapTypeToGroup.get(vertexTypeIds);
+                        List<Integer> colors2 = other.mapCheckerToGroup.get(checker);
                         colors2.sort(Comparator.naturalOrder());
                         if (!colors1.equals(colors2)) {
-                            logger.debug("In groups comparing, groups for type " + vertexTypeIds + " not equal: "
-                                    + colors1.toString() + " vs " + colors2.toString());
+                            logger.debug(
+                                    "In groups comparing, groups for type "
+                                            + checker
+                                            + " not equal: "
+                                            + colors1.toString()
+                                            + " vs "
+                                            + colors2.toString());
                             return false;
                         }
                     }
@@ -237,5 +208,4 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
         // TODO: more filtering conditions?
         return true;
     }
-
 }

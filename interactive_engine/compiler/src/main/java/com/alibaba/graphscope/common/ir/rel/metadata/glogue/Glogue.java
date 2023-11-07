@@ -6,6 +6,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVerte
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
+
 import org.javatuples.Pair;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.DirectedPseudograph;
@@ -66,30 +67,37 @@ public class Glogue {
                 if (!existingPattern.isPresent()) {
                     this.addPattern(newPattern);
                     logger.debug("add new pattern: " + newPattern);
-                    Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
-                            extendStep);
+                    Map<Integer, Integer> srcToDstPatternMapping =
+                            this.computePatternMapping(pattern, newPattern, extendStep);
                     this.addEdge(pattern, newPattern, extendStep, srcToDstPatternMapping);
                     patternQueue.add(newPattern);
                 } else {
-                    logger.debug(
-                            "pattern already exists: " + existingPattern.get());
+                    logger.debug("pattern already exists: " + existingPattern.get());
                     logger.debug("v.s. the new pattern: " + newPattern);
                     if (!this.containsEdge(pattern, existingPattern.get())) {
-                        // notice that the mapping should be computed based on pattern to newPattern,
+                        // notice that the mapping should be computed based on pattern to
+                        // newPattern,
                         // rather than pattern to existingPattern
-                        Map<Integer, Integer> srcToDstPatternMapping = this.computePatternMapping(pattern, newPattern,
-                                extendStep);
-                        this.addEdge(pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
+                        Map<Integer, Integer> srcToDstPatternMapping =
+                                this.computePatternMapping(pattern, newPattern, extendStep);
+                        this.addEdge(
+                                pattern, existingPattern.get(), extendStep, srcToDstPatternMapping);
                     } else {
-                        logger.debug("edge already exists as well, " + pattern + " -> " + existingPattern.get() + ": "
-                                + extendStep);
+                        logger.debug(
+                                "edge already exists as well, "
+                                        + pattern
+                                        + " -> "
+                                        + existingPattern.get()
+                                        + ": "
+                                        + extendStep);
                     }
                 }
             }
             logger.debug("~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         }
         // compute pattern cardinality
-        this.glogueCardinalityEstimation = new GlogueBasicCardinalityEstimationImpl().create(this, schema);
+        this.glogueCardinalityEstimation =
+                new GlogueBasicCardinalityEstimationImpl().create(this, schema);
 
         logger.info("GlogueGraph\n" + this.toString());
 
@@ -160,10 +168,13 @@ public class Glogue {
         return this.glogueGraph.addVertex(pattern);
     }
 
-    private boolean addEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep edge,
+    private boolean addEdge(
+            Pattern srcPattern,
+            Pattern dstPattern,
+            ExtendStep edge,
             Map<Integer, Integer> srcToDstIdMapping) {
-        GlogueExtendIntersectEdge glogueEdge = new GlogueExtendIntersectEdge(srcPattern, dstPattern, edge,
-                srcToDstIdMapping);
+        GlogueExtendIntersectEdge glogueEdge =
+                new GlogueExtendIntersectEdge(srcPattern, dstPattern, edge, srcToDstIdMapping);
         logger.debug("add glogue edge " + glogueEdge);
         return this.glogueGraph.addEdge(srcPattern, dstPattern, glogueEdge);
     }
@@ -173,7 +184,8 @@ public class Glogue {
     /// Notice that, the dstPattern should be extended from srcPattern.
     /// Besides, during the mapping computation, the target vertex order will be
     /// assigned.
-    private Map<Integer, Integer> computePatternMapping(Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep) {
+    private Map<Integer, Integer> computePatternMapping(
+            Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep) {
         Map<Integer, Integer> srcToDstPatternMapping = new HashMap<>();
         for (PatternVertex dstVertex : dstPattern.getVertexSet()) {
             Integer dstVertexOrder = dstPattern.getVertexOrder(dstVertex);

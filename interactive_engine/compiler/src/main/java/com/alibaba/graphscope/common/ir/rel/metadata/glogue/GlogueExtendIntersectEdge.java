@@ -3,7 +3,6 @@ package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 
 import java.util.Map;
-import java.util.Objects;
 
 public class GlogueExtendIntersectEdge extends GlogueEdge {
     /// a mapping from src pattern vertex order to target pattern vertex order
@@ -56,21 +55,5 @@ public class GlogueExtendIntersectEdge extends GlogueEdge {
                 + ", srcToTargetIdMapping="
                 + srcToTargetOrderMapping
                 + '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        GlogueExtendIntersectEdge that = (GlogueExtendIntersectEdge) o;
-        return Objects.equals(srcToTargetOrderMapping, that.srcToTargetOrderMapping)
-                && Objects.equals(extendStep, that.extendStep)
-                && Objects.equals(srcPattern, that.srcPattern)
-                && Objects.equals(dstPattern, that.dstPattern);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(srcToTargetOrderMapping, extendStep, srcPattern, dstPattern);
     }
 }

@@ -91,6 +91,7 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
         } else {
             for (PatternVertex vertex : pattern.getVertexSet()) {
                 Pattern clone = new Pattern(pattern);
+                clone.setPatternId(UUID.randomUUID().hashCode());
                 List connectedSets = clone.removeVertex(vertex);
                 if (connectedSets.size() != 1) {
                     continue;

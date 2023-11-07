@@ -58,10 +58,6 @@ public class EdgeTypeId {
     }
 
     public int compareTo(EdgeTypeId other) {
-        if (this.edgeType.equals(other.edgeType)) {
-            return 0;
-        } else {
-            return this.edgeType.getValue0() < other.edgeType.getValue0() ? -1 : 1;
-        }
+        return this.edgeType.compareTo(other.edgeType);
     }
 }

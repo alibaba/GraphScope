@@ -8,12 +8,16 @@ public class FuzzyPatternVertex extends PatternVertex {
     private List<Integer> vertexTypeIds;
 
     public FuzzyPatternVertex(List<Integer> vertexTypeIds) {
-        this.vertexTypeIds = vertexTypeIds;
-        this.id = 0;
+        this(vertexTypeIds, 0);
     }
 
     public FuzzyPatternVertex(List<Integer> vertexTypeIds, int id) {
-        this.vertexTypeIds = vertexTypeIds;
+        this(vertexTypeIds, id, new ElementDetails());
+    }
+
+    public FuzzyPatternVertex(List<Integer> typeIds, int id, ElementDetails details) {
+        super(details, new VertexIsomorphismChecker(typeIds, details));
+        this.vertexTypeIds = typeIds;
         this.id = id;
     }
 

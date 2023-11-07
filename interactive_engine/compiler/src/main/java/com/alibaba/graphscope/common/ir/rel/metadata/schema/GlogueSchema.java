@@ -1,18 +1,5 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.schema;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.rmi.server.ExportException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
-
 import com.alibaba.graphscope.groot.common.schema.api.EdgeRelation;
 import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
@@ -23,6 +10,19 @@ import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphSchema;
 import com.alibaba.graphscope.groot.common.schema.impl.DefaultGraphVertex;
 import com.google.common.collect.Maps;
 
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.rmi.server.ExportException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class GlogueSchema {
     private Graph<Integer, EdgeTypeId> schemaGraph;
     private HashMap<Integer, Double> vertexTypeCardinality;
@@ -32,7 +32,9 @@ public class GlogueSchema {
         this.schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
     }
 
-    public GlogueSchema(GraphSchema graphSchema, HashMap<Integer, Double> vertexTypeCardinality,
+    public GlogueSchema(
+            GraphSchema graphSchema,
+            HashMap<Integer, Double> vertexTypeCardinality,
             HashMap<EdgeTypeId, Double> edgeTypeCardinality) {
         this.schemaGraph = new DirectedPseudograph<Integer, EdgeTypeId>(EdgeTypeId.class);
         for (GraphVertex vertex : graphSchema.getVertexList()) {
@@ -88,18 +90,23 @@ public class GlogueSchema {
         Map<String, GraphVertex> vertexList = Maps.newHashMap();
         Map<String, GraphEdge> edgeList = Maps.newHashMap();
 
-        DefaultGraphVertex person = new DefaultGraphVertex(0, "person", List.of(), List.of(), 0, -1);
-        DefaultGraphVertex software = new DefaultGraphVertex(1, "software", List.of(), List.of(), 0, -1);
+        DefaultGraphVertex person =
+                new DefaultGraphVertex(0, "person", List.of(), List.of(), 0, -1);
+        DefaultGraphVertex software =
+                new DefaultGraphVertex(1, "software", List.of(), List.of(), 0, -1);
         vertexList.put("person", person);
         vertexList.put("software", software);
         DefaultEdgeRelation knowsRelation = new DefaultEdgeRelation(person, person);
-        DefaultGraphEdge knows = new DefaultGraphEdge(0, "knows", List.of(), List.of(knowsRelation), 0);
+        DefaultGraphEdge knows =
+                new DefaultGraphEdge(0, "knows", List.of(), List.of(knowsRelation), 0);
         DefaultEdgeRelation createdRelation = new DefaultEdgeRelation(person, software);
-        DefaultGraphEdge created = new DefaultGraphEdge(1, "created", List.of(), List.of(createdRelation), 0);
+        DefaultGraphEdge created =
+                new DefaultGraphEdge(1, "created", List.of(), List.of(createdRelation), 0);
         edgeList.put("knows", knows);
         edgeList.put("created", created);
 
-        DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
+        DefaultGraphSchema graphSchema =
+                new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
         vertexTypeCardinality.put(0, 3.0);
         vertexTypeCardinality.put(1, 4.0);
@@ -117,18 +124,23 @@ public class GlogueSchema {
     public GlogueSchema DefaultGraphSchema2() {
         Map<String, GraphVertex> vertexList = Maps.newHashMap();
         Map<String, GraphEdge> edgeList = Maps.newHashMap();
-        DefaultGraphVertex person = new DefaultGraphVertex(11, "person", List.of(), List.of(), 0, -1);
-        DefaultGraphVertex software = new DefaultGraphVertex(22, "software", List.of(), List.of(), 0, -1);
+        DefaultGraphVertex person =
+                new DefaultGraphVertex(11, "person", List.of(), List.of(), 0, -1);
+        DefaultGraphVertex software =
+                new DefaultGraphVertex(22, "software", List.of(), List.of(), 0, -1);
         vertexList.put("person", person);
         vertexList.put("software", software);
         DefaultEdgeRelation usesRelation = new DefaultEdgeRelation(person, software);
-        DefaultGraphEdge uses = new DefaultGraphEdge(1111, "uses", List.of(), List.of(usesRelation), 0);
+        DefaultGraphEdge uses =
+                new DefaultGraphEdge(1111, "uses", List.of(), List.of(usesRelation), 0);
         DefaultEdgeRelation createdRelation = new DefaultEdgeRelation(person, software);
-        DefaultGraphEdge created = new DefaultGraphEdge(1112, "created", List.of(), List.of(createdRelation), 0);
+        DefaultGraphEdge created =
+                new DefaultGraphEdge(1112, "created", List.of(), List.of(createdRelation), 0);
         edgeList.put("uses", uses);
         edgeList.put("created", created);
 
-        DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
+        DefaultGraphSchema graphSchema =
+                new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         HashMap<Integer, Double> vertexTypeCardinality = new HashMap<Integer, Double>();
         vertexTypeCardinality.put(11, 4.0);
         vertexTypeCardinality.put(22, 2.0);
@@ -163,7 +175,8 @@ public class GlogueSchema {
                     int labelId = Integer.parseInt(parts[1]);
                     String label = parts[2];
                     Double statistics = Double.parseDouble(parts[3]);
-                    DefaultGraphVertex vertex = new DefaultGraphVertex(labelId, label, List.of(), List.of(), 0, -1);
+                    DefaultGraphVertex vertex =
+                            new DefaultGraphVertex(labelId, label, List.of(), List.of(), 0, -1);
                     vertexList.put(label, vertex);
                     vertexTypeCardinality.put(labelId, statistics);
                 }
@@ -178,11 +191,14 @@ public class GlogueSchema {
                     Double statistics = Double.parseDouble(parts[5]);
                     int srcLabelId = srcGraphVertex.getLabelId();
                     int dstLabelId = dstGraphVertex.getLabelId();
-                    DefaultEdgeRelation relation = new DefaultEdgeRelation(srcGraphVertex, dstGraphVertex);
-                    DefaultGraphEdge edge = new DefaultGraphEdge(labelId, label, List.of(), List.of(relation), 0);
-                    String edgeLabel = srcLabelId+label+dstLabelId;
+                    DefaultEdgeRelation relation =
+                            new DefaultEdgeRelation(srcGraphVertex, dstGraphVertex);
+                    DefaultGraphEdge edge =
+                            new DefaultGraphEdge(labelId, label, List.of(), List.of(relation), 0);
+                    String edgeLabel = srcLabelId + label + dstLabelId;
                     edgeList.put(edgeLabel, edge);
-                    edgeTypeCardinality.put(new EdgeTypeId(srcLabelId, dstLabelId, labelId), statistics);
+                    edgeTypeCardinality.put(
+                            new EdgeTypeId(srcLabelId, dstLabelId, labelId), statistics);
                 }
             }
             bufferedReader.close();
@@ -190,19 +206,24 @@ public class GlogueSchema {
             e.printStackTrace();
         }
 
-        DefaultGraphSchema graphSchema = new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
+        DefaultGraphSchema graphSchema =
+                new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         GlogueSchema g = new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
         return g;
     }
 
     public static void main(String[] args) throws URISyntaxException, ExportException {
-        GlogueSchema g = new GlogueSchema().SchemaFromFile(
-                "/workspaces/GraphScope/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/rel/metadata/schema/resource/ldbc1_statistics.txt");
+        GlogueSchema g =
+                new GlogueSchema()
+                        .SchemaFromFile(
+                                "/workspaces/GraphScope/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/rel/metadata/schema/resource/ldbc1_statistics.txt");
         for (Integer vertexType : g.getVertexTypes()) {
-            System.out.println("cardinality of " + vertexType + ": " + g.getVertexTypeCardinality(vertexType));
+            System.out.println(
+                    "cardinality of " + vertexType + ": " + g.getVertexTypeCardinality(vertexType));
         }
         for (EdgeTypeId edgeType : g.getEdgeTypes()) {
-            System.out.println("cardinality of " + edgeType + ": " + g.getEdgeTypeCardinality(edgeType));
+            System.out.println(
+                    "cardinality of " + edgeType + ": " + g.getEdgeTypeCardinality(edgeType));
         }
         System.out.println("edges of place");
         g.getAdjEdgeTypes(0).forEach(System.out::println);

@@ -46,6 +46,7 @@ import org.junit.Test;
 
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.util.Map;
 
 public class RelMetadataQueryTest {
     @Test
@@ -80,10 +81,15 @@ public class RelMetadataQueryTest {
         GraphIOProcessor ioProcessor = new GraphIOProcessor(builder, Utils.schemaMeta);
         planner.setRoot(ioProcessor.processInput(match));
         RelNode after = planner.findBestExp();
-        RelNode output = ioProcessor.processOutput(after);
+        // RelNode output = ioProcessor.processOutput(after);
 
         planner.dump(new PrintWriter(new FileOutputStream("set1.out"), true));
-        System.out.println(output.explain());
+        System.out.println(after.explain());
+
+        Map<Integer, Pattern> patterns = com.alibaba.graphscope.common.ir.tools.Utils.getAllPatterns(after);
+        patterns.forEach((k, v) -> {
+            System.out.println(v);
+        });
     }
 
     @Test

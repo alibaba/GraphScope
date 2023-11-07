@@ -63,10 +63,7 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -124,6 +121,7 @@ public class GraphIOProcessor {
 
         private Pattern visit(List<RelNode> sentences) {
             Pattern pattern = new Pattern();
+            pattern.setPatternId(UUID.randomUUID().hashCode());
             Map<Object, DataValue> vertexOrEdgeDetails = Maps.newHashMap();
             RelVisitor visitor =
                     new RelVisitor() {
