@@ -613,17 +613,26 @@ pub extern "C" fn destroy_ffi_data(data: FfiData) {
     }
 }
 
+// To release a cstr pointer
+#[no_mangle]
+pub extern "C" fn destroy_cstr_pointer(cstr: *const c_char) {
+    if !cstr.is_null() {
+        let _ = unsafe { std::ffi::CString::from_raw(cstr as *mut c_char) };
+    }
+}
+
 /// To build a physical plan from the logical plan.
 #[no_mangle]
 pub extern "C" fn build_physical_plan(
-    ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
+    ptr_plan: *const c_void, num_workers: u32, num_servers: u32, plan_id: i32,
 ) -> FfiData {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     if num_workers > 1 || num_servers > 1 {
         plan.meta = plan.meta.with_partition();
     }
     let mut plan_meta = plan.meta.clone();
-    let mut builder = PlanBuilder::default();
+    let mut builder = PlanBuilder::new(plan_id);
+    // let mut builder = PlanBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = match build_result {
         Ok(_) => {
@@ -1846,6 +1855,14 @@ mod scan {
     #[no_mangle]
     pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiAlias) -> FfiResult {
         set_alias(ptr_scan, alias, InnerOpt::Scan)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_count_only(ptr: *const c_void, is_count_only: i32) -> FfiResult {
+        let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+        scan.is_count_only = is_count_only != 0;
+        std::mem::forget(scan);
+        FfiResult::success()
     }
 
     /// Append a scan operator to the logical plan

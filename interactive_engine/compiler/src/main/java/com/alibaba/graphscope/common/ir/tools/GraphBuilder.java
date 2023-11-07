@@ -306,13 +306,18 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         RelNode match =
                 GraphLogicalMultiMatch.create(
-                        (GraphOptCluster) cluster,
-                        null,
-                        input,
-                        first,
-                        ImmutableList.copyOf(others));
-        if (size() > 0) pop();
-        push(match);
+                        (GraphOptCluster) cluster, null, null, first, ImmutableList.copyOf(others));
+        if (input == null) {
+            push(match);
+        } else {
+            push(match).join(getJoinRelType(GraphOpt.Match.INNER), getJoinCondition(input, match));
+        }
+        return this;
+    }
+
+    @Override
+    public GraphBuilder push(RelNode node) {
+        super.push(node);
         return this;
     }
 
@@ -655,10 +660,12 @@ public class GraphBuilder extends RelBuilder {
                 || (sqlKind == SqlKind.PROCEDURE_CALL)
                 || (sqlKind == SqlKind.NOT)
                 || sqlKind == SqlKind.ARRAY_VALUE_CONSTRUCTOR
+                || sqlKind == SqlKind.MAP_VALUE_CONSTRUCTOR
                 || sqlKind == SqlKind.IS_NULL
                 || sqlKind == SqlKind.IS_NOT_NULL
                 || sqlKind == SqlKind.EXTRACT
-                || sqlKind == SqlKind.SEARCH;
+                || sqlKind == SqlKind.SEARCH
+                || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE;
     }
 
     @Override

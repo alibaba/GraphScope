@@ -58,7 +58,9 @@ public class RpcExecutionClient extends ExecutionClient<RpcChannel> {
         RpcClient rpcClient = rpcClientRef.get();
         PegasusClient.JobRequest jobRequest =
                 PegasusClient.JobRequest.newBuilder()
-                        .setPlan(ByteString.copyFrom((byte[]) request.getRequestPhysical().build()))
+                        .setPlan(
+                                ByteString.copyFrom(
+                                        (byte[]) request.getRequestPhysical().getContent()))
                         .build();
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()

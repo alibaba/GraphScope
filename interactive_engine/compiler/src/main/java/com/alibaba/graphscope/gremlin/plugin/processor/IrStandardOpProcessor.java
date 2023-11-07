@@ -117,9 +117,16 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
 
+        String defaultValidateQuery = "''";
+        // ad-hoc handling for connection validation
+        if (script.equals(defaultValidateQuery)) {
+            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SUCCESS).create());
+            return;
+        }
+
         String language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
 
-        long jobId = graphPlanner.generateInstanceId();
+        long jobId = graphPlanner.generateUniqueId();
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
         GremlinExecutor.LifeCycle lifeCycle =

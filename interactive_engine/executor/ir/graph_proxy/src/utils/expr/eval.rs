@@ -52,6 +52,8 @@ pub enum Operand {
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<Operand>),
     VarMap(Vec<Operand>),
+    // TODO: this is the new definition of VarMap. Will replace VarMap soon.
+    Map(Vec<(Object, Operand)>),
 }
 
 #[derive(Debug, Clone)]
@@ -247,6 +249,10 @@ pub(crate) fn apply_logical<'a>(
                     .as_str()?
                     .ends_with(b.as_str()?.as_ref())
                     .into()),
+                Regex => {
+                    let regex = regex::Regex::new(b.as_str()?.as_ref())?;
+                    Ok(regex.is_match(a.as_str()?.as_ref()).into())
+                }
                 Not => unreachable!(),
                 Isnull => unreachable!(),
             }
@@ -532,6 +538,25 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     }
                     Ok(Self::VarMap(vec))
                 }
+
+                Map(key_vals) => {
+                    let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+                    for key_val in key_vals.key_vals {
+                        let (_key, _value) = (key_val.key, key_val.value);
+                        let key = if let Some(key) = _key {
+                            Object::try_from(key)?
+                        } else {
+                            return Err(ParsePbError::from("empty key provided in Map"));
+                        };
+                        let value = if let Some(value) = _value {
+                            Operand::try_from(value)?
+                        } else {
+                            return Err(ParsePbError::from("empty value provided in Map"));
+                        };
+                        vec.push((key, value));
+                    }
+                    Ok(Self::Map(vec))
+                }
                 _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {
@@ -668,6 +693,13 @@ impl Evaluate for Operand {
                         )),
                     }?;
                     map.insert(obj_key, get_object(var.eval(context))?);
+                }
+                Ok(Object::KV(map))
+            }
+            Self::Map(vars) => {
+                let mut map = BTreeMap::new();
+                for (obj_key, var) in vars {
+                    map.insert(obj_key.clone(), get_object(var.eval(context))?);
                 }
                 Ok(Object::KV(map))
             }
@@ -1231,6 +1263,67 @@ mod tests {
             let eval = Evaluator::try_from(case).unwrap();
             println!("{:?}", eval.eval::<_, Vertices>(Some(&ctxt)).unwrap());
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+        }
+    }
+
+    fn gen_regex_expression(to_match: &str, pattern: &str) -> common_pb::Expression {
+        let mut regex_expr = common_pb::Expression { operators: vec![] };
+        let left = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                item: Some(common_pb::value::Item::Str(to_match.to_string())),
+            })),
+        };
+        regex_expr.operators.push(left);
+        let regex_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Regex as i32)),
+        };
+        regex_expr.operators.push(regex_opr);
+        let right = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                item: Some(common_pb::value::Item::Str(pattern.to_string())),
+            })),
+        };
+        regex_expr.operators.push(right);
+        regex_expr
+    }
+
+    #[test]
+    fn test_eval_regex() {
+        // TODO: the parser does not support escape characters in regex well yet.
+        // So use gen_regex_expression() to help generate expression
+        let cases: Vec<(&str, &str)> = vec![
+            ("Josh", r"^J"),                                                    // startWith, true
+            ("Josh", r"J.*"),                                                   // true
+            ("Josh", r"h$"),                                                    // endWith, true
+            ("Josh", r".*h"),                                                   // true
+            ("Josh", r"os"),                                                    // true
+            ("Josh", r"A.*"),                                                   // false
+            ("Josh", r".*A"),                                                   // false
+            ("Josh", r"ab"),                                                    // false
+            ("Josh", r"Josh.+"),                                                // false
+            ("2010-03-14", r"^\d{4}-\d{2}-\d{2}$"),                             // true
+            (r"I categorically deny having triskaidekaphobia.", r"\b\w{13}\b"), //true
+        ];
+        let expected: Vec<Object> = vec![
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(true),
+            object!(true),
+        ];
+
+        for ((to_match, pattern), expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(gen_regex_expression(to_match, pattern)).unwrap();
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 }

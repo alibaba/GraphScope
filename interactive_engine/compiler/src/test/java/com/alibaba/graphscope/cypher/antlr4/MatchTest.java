@@ -311,4 +311,75 @@ public class MatchTest {
                     + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
+
+    @Test
+    public void match_17_test() {
+        RelNode node =
+                Utils.eval("Match (a:person) Where a.name starts with 'marko' Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
+                        + " _UTF-8'marko.*')]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void match_18_test() {
+        RelNode node =
+                Utils.eval("Match (a:person) Where a.name ends with 'marko' Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
+                        + " _UTF-8'.*marko')]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void match_19_test() {
+        RelNode node =
+                Utils.eval("Match (a:person) Where a.name contains 'marko' Return a").build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
+                        + " _UTF-8'.*marko.*')]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void match_20_test() {
+        RelNode node =
+                Utils.eval(
+                                "Match (a:person)-[]->(b:person) Match (a:person)-[]-(c:person),"
+                                        + " (c:person)-[]->(b:person) Return a, b")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
+                    + "  LogicalJoin(condition=[AND(=(a, a), =(b, b))], joinType=[inner])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])\n"
+                    + "    GraphLogicalMultiMatch(input=[null],"
+                    + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=false,"
+                    + " tables=[person]}], alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], opt=[VERTEX])\n"
+                    + "]}])",
+                node.explain().trim());
+    }
 }

@@ -20,16 +20,29 @@ jobs:
   build-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
     runs-on: macos-12
+    strategy:
+      matrix:
+        python-version: ['3.11']
+
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - name: Install Dependencies
       run: |
         brew update || true
         brew install bash coreutils
+
         alias bash=$(brew --prefix)/bin/bash
+
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
+
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
@@ -96,7 +109,7 @@ jobs:
         echo ${CC}
 
         # make sure the python's local bin is in PATH (by `pip install --user`)
-        export PATH=$HOME/.local/bin:$PATH
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
 
         # change the version for nightly release
         # e.g. 0.15.0 -> 0.15.0a20220808
@@ -109,7 +122,6 @@ jobs:
 
         python3 -m pip install numpy pandas "grpcio>=1.49" "grpcio-tools>=1.49" "mypy-protobuf>=3.4.0" wheel
 
-        export PATH=$PATH:/Users/runner/Library/Python/3.11/bin
         # build graphscope server wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal
         sudo -E env PATH=$PATH make graphscope-py3-package GRAPHSCOPE_HOME=/usr/local

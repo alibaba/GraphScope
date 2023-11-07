@@ -42,4 +42,7 @@ public class FrontendConfig {
 
     public static final Config<String> CALCITE_DEFAULT_CHARSET =
             Config.stringConfig("calcite.default.charset", "UTF-8");
+
+    public static final Config<Integer> QUERY_CACHE_SIZE =
+            Config.intConfig("query.cache.size", 100);
 }

@@ -101,7 +101,7 @@ class SampleQuery : public HqpsAppBase<gs::MutableCSRInterface> {
         std::tuple{std::move(mapper1), std::move(mapper2), std::move(mapper3),
                    std::move(mapper4), std::move(mapper5), std::move(mapper6),
                    std::move(mapper7)});
-    return Engine::Sink(ctx5);
+    return Engine::Sink(graph, ctx5);
   }
 };
 }  // namespace gs
