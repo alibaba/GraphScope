@@ -161,21 +161,22 @@ jobs:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
         docker_username: ${{ secrets.DOCKER_USER }}
       run: |
-        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.REGISTRY }} --password-stdin
+        echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
+
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
         # create
-        
+
         sudo docker manifest create \
           ${{ env.GSS_IMAGE }}:${version}a${time} \
           ${{ env.GSS_IMAGE }}:${version}a${time}-x86_64 \
           ${{ env.GSS_IMAGE }}:${version}a${time}-aarch64
-        
+
         sudo docker manifest create \
           ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }} \
           ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-x86_64 \
           ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-aarch64
-        
+
         # push
         sudo docker manifest push ${{ env.GSS_IMAGE }}:${version}a${time}
         sudo docker manifest push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}

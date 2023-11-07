@@ -41,7 +41,7 @@ def configure_environ():
     if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "open-mpi")):
         opal_prefix = os.path.join(GRAPHSCOPE_HOME, "open-mpi")
     if opal_prefix is None:
-        logger.warning(
+        logger.info(
             "Failed to resolve the openmpi path, moving towards the system-wide one"
         )
     else:
