@@ -1,19 +1,14 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.utils.Combinations;
+import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMapping;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
+import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.interfaces.VertexColoringAlgorithm.Coloring;
 import org.jgrapht.alg.isomorphism.ColorRefinementIsomorphismInspector;
 import org.jgrapht.alg.isomorphism.VF2GraphIsomorphismInspector;
@@ -22,11 +17,7 @@ import org.jgrapht.graph.SimpleDirectedGraph;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.utils.Combinations;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
+import java.util.*;
 
 public class Pattern {
     /// pattern id, i.e., the index of the pattern in Glogue
@@ -41,6 +32,8 @@ public class Pattern {
     // Noticed that it is not an identifier of Pattern. i.e., two patterns with same
     // pattern ordering may not be isomorphic.
     private PatternOrder patternOrder;
+
+    private final ConnectivityInspector<PatternVertex, PatternEdge> connectivityInspector;
 
     private static Logger logger = LoggerFactory.getLogger(Pattern.class);
 
@@ -84,12 +77,14 @@ public class Pattern {
     // by default, simple directed graph is used for pattern representation.
     public Pattern() {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         this.maxVertexId = 0;
         this.maxEdgeId = 0;
     }
 
     public Pattern(Graph<PatternVertex, PatternEdge> patternGraph) {
         this.patternGraph = patternGraph;
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         this.maxVertexId = patternGraph.vertexSet().size();
         this.maxEdgeId = patternGraph.edgeSet().size();
         this.reordering();
@@ -97,6 +92,7 @@ public class Pattern {
 
     public Pattern(Pattern pattern) {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         for (PatternVertex vertex : pattern.getVertexSet()) {
             addVertex(vertex);
         }
@@ -110,6 +106,7 @@ public class Pattern {
 
     public Pattern(PatternVertex vertex) {
         this.patternGraph = new SimpleDirectedGraph<PatternVertex, PatternEdge>(PatternEdge.class);
+        this.connectivityInspector = new ConnectivityInspector<>(this.patternGraph);
         this.patternGraph.addVertex(vertex);
         this.maxVertexId = 1;
         this.maxEdgeId = 0;
@@ -134,6 +131,10 @@ public class Pattern {
 
     public Set<PatternEdge> getEdgeSet() {
         return this.patternGraph.edgeSet();
+    }
+
+    public Set<PatternEdge> getEdgesOf(PatternVertex vertex) {
+        return this.patternGraph.edgesOf(vertex);
     }
 
     /// Find all possible ExtendSteps of current pattern based on the given
@@ -274,7 +275,27 @@ public class Pattern {
         return added;
     }
 
-    public boolean addEdge(PatternVertex srcVertex, PatternVertex dstVertex, EdgeTypeId edgeTypeId) {
+    /**
+     * Remove a vertex with its adjacent edges from pattern, and return the connected components of the remaining pattern.
+     * @param vertex
+     * @return
+     */
+    public List<Set<PatternVertex>> removeVertex(PatternVertex vertex) {
+        boolean removed = this.patternGraph.removeVertex(vertex);
+        if (removed) {
+            this.maxVertexId = this.patternGraph.vertexSet().size();
+            this.maxEdgeId = this.patternGraph.edgeSet().size();
+            this.reordering();
+        }
+        return this.connectivityInspector.connectedSets();
+    }
+
+    public int getDegree(PatternVertex vertex) {
+        return this.patternGraph.degreeOf(vertex);
+    }
+
+    public boolean addEdge(
+            PatternVertex srcVertex, PatternVertex dstVertex, EdgeTypeId edgeTypeId) {
         PatternEdge edge = new SinglePatternEdge(srcVertex, dstVertex, edgeTypeId, this.maxEdgeId);
         return addEdge(srcVertex, dstVertex, edge);
     }

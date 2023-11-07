@@ -1,26 +1,18 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
-import org.javatuples.Pair;
-import org.jgrapht.Graph;
-import org.jgrapht.graph.DirectedPseudograph;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternMapping;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
+import org.javatuples.Pair;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DirectedPseudograph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 public class Glogue {
     // the topology of GLogue graph
@@ -31,10 +23,11 @@ public class Glogue {
     private List<Pattern> roots;
     // maxPatternId records the max pattern id in Glogue
     private int maxPatternId;
+    private int maxPatternSize;
 
     private static Logger logger = LoggerFactory.getLogger(Glogue.class);
 
-    protected Glogue() {
+    public Glogue() {
         this.glogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
         this.roots = new ArrayList<>();
         this.maxPatternId = 0;
@@ -47,6 +40,7 @@ public class Glogue {
 
     // Construct NewGlogue from a graph schema with given max pattern size
     public Glogue create(GlogueSchema schema, int maxPatternSize) {
+        this.maxPatternSize = maxPatternSize;
         Deque<Pattern> patternQueue = new ArrayDeque<>();
         for (Integer vertexTypeId : schema.getVertexTypes()) {
             PatternVertex vertex = new SinglePatternVertex(vertexTypeId);
@@ -199,6 +193,10 @@ public class Glogue {
     // TODO: implements interface in Calcite
     public Double getRowCount(Pattern pattern) {
         return this.glogueCardinalityEstimation.getCardinality(pattern);
+    }
+
+    public int getMaxPatternSize() {
+        return maxPatternSize;
     }
 
     @Override

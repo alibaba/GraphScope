@@ -1,29 +1,22 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternProcessor;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternProcessor.FuzzyInfo;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
+import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
+import org.javatuples.Pair;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import org.javatuples.Pair;
-
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternProcessor;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy.FuzzyPatternProcessor.FuzzyInfo;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.FuzzyPatternEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.FuzzyPatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternMapping;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
-
 public class GlogueQuery {
     private Glogue glogue;
     private FuzzyPatternProcessor fuzzyPatternProcessor;
 
-    protected GlogueQuery(Glogue glogue, GlogueSchema schema) {
+    public GlogueQuery(Glogue glogue, GlogueSchema schema) {
         this.glogue = glogue;
         this.fuzzyPatternProcessor = new FuzzyPatternProcessor(schema);
     }
@@ -76,6 +69,10 @@ public class GlogueQuery {
         } else {
             return glogue.getRowCount(pattern);
         }
+    }
+
+    public int getMaxPatternSize() {
+        return this.glogue.getMaxPatternSize();
     }
 
     @Override
