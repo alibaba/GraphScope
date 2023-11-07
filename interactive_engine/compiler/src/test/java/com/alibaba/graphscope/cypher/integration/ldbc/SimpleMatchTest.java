@@ -121,7 +121,6 @@ public class SimpleMatchTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
-
     @AfterClass
     public static void afterClass() {
         if (session != null) {
