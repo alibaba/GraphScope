@@ -41,9 +41,9 @@ static std::vector<std::string> read_header(const std::string& file_name,
   preprocess_line(line_buf);
   const char* cur = line_buf;
   std::vector<std::string> res_vec;
-  while (*cur != '\0') {
+  while (*cur != '\0' && *cur != '\n' && *cur != '\r') {
     const char* tmp = cur;
-    while (*tmp != '\0' && *tmp != delimiter) {
+    while (*tmp != '\0' && *cur != '\n' && *cur != '\r' && *tmp != delimiter) {
       ++tmp;
     }
 
