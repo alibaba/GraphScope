@@ -30,6 +30,8 @@ static std::vector<std::string> read_header(const std::string& file_name,
       std::stringstream ss(line);
       std::string token;
       while (std::getline(ss, token, delimiter)) {
+        //trim the token
+        token.erase(token.find_last_not_of(" \n\r\t") + 1);
         res_vec.push_back(token);
       }
     }
