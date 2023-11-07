@@ -459,6 +459,13 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
 }  // namespace gs
 
 namespace std {
+inline bool operator==(const grape::EmptyType& a, const grape::EmptyType& b) {
+  return true;
+}
+
+inline bool operator!=(const grape::EmptyType& a, const grape::EmptyType& b) {
+  return false;
+}
 
 inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   os << dt.to_string();

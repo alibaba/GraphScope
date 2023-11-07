@@ -9,7 +9,7 @@ docker build -f interactive-base.Dockerfile -t interactive-base .
 ## Build Runtime Image with latest GraphScope
 
 ```bash
-docker build -f interactive-base.Dockerfile --target final_image -t interactive .
+docker build -f interactive-runtime.Dockerfile --target final_image -t interactive .
 ```
 
 ## Tag the image

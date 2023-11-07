@@ -1,0 +1,13 @@
+id|strategy
+0|Partition
+1|Scheduling
+2|Dense Representation
+3|Communication Pruning
+4|Subgraph-Centric
+5|Push-Pull Optimization
+6|Aggregation
+7|Navigation
+8|Trade-off between Global and Local Computation
+9|Asynchronous
+10|Pruning
+11|Segmented Processing

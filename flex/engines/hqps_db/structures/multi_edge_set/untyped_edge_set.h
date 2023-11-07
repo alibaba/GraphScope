@@ -71,6 +71,8 @@ class UnTypedEdgeSetIter {
     }
   }
 
+  inline LabelT GetEdgeLabel() const { return cur_iter_.GetEdgeLabel(); }
+
   inline VID_T GetSrc() const { return src_vertices_[vid_ind_]; }
   inline VID_T GetDst() const { return cur_iter_.GetDstId(); }
 
@@ -420,8 +422,6 @@ class UnTypedEdgeSet {
       auto& cur_edge_iters = edge_iters[i];
       auto src_label_ind = label_indices_[i];
       auto src_label = src_labels_[src_label_ind];
-      auto cur_triplets_vec = edge_label_triplets[src_label_ind];
-      CHECK(cur_triplets_vec.size() == cur_edge_iters.size());
 
       for (auto j = 0; j < cur_edge_iters.size(); ++j) {
         auto& cur_iter = cur_edge_iters[j];

@@ -18,10 +18,10 @@
 
 namespace gs {
 
-
 static std::vector<std::string> read_header(const std::string& file_name,
                                             char delimiter) {
- // read the header line of the file, and split into vector to string by delimiter
+  // read the header line of the file, and split into vector to string by
+  // delimiter
   std::vector<std::string> res_vec;
   std::ifstream file(file_name);
   std::string line;
@@ -30,12 +30,11 @@ static std::vector<std::string> read_header(const std::string& file_name,
       std::stringstream ss(line);
       std::string token;
       while (std::getline(ss, token, delimiter)) {
-        //trim the token
+        // trim the token
         token.erase(token.find_last_not_of(" \n\r\t") + 1);
         res_vec.push_back(token);
       }
-    }
-    else {
+    } else {
       LOG(FATAL) << "Fail to read header line of file: " << file_name;
     }
     file.close();

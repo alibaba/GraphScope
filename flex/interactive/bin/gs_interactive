@@ -191,7 +191,7 @@ DOCKER_DB_SERVER_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/sync_server"
 DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/graph_loader"
 DOCKER_DB_COMPILER_BIN="com.alibaba.graphscope.GraphServer"
 DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/load_plan_and_gen.sh"
-HOST_DB_TMP_DIR="/tmp"
+HOST_DB_TMP_DIR="/tmp/"
 
 #################### DEFINE DEFAULT CONSTATNS ####################
 DATABASE_VERSION="v0.0.2"

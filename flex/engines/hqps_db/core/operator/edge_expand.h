@@ -1305,7 +1305,8 @@ class EdgeExpand {
     auto prop_names = state.prop_names_;
     auto& cur_set = state.cur_vertex_set_;
     VLOG(10) << "[EdgeExpandESingleLabelSrcImpl]" << prop_names.size()
-             << ", set size: " << cur_set.Size();
+             << ", set size: " << cur_set.Size()
+             << ", direction: " << gs::to_string(state.direction_);
     for (auto v : prop_names) {
       VLOG(10) << "prop:" << v;
     }

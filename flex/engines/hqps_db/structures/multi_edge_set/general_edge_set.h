@@ -155,7 +155,7 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
   const grape::Bitset& bitset_;
   Direction direction_;
 };
-template <typename GI, typename VID_T, typename... T>
+template <typename GI, typename VID_T, typename LabelT, typename... T>
 class GeneralEdgeSetIter {
  public:
   using adj_list_array_t = typename GI::template adj_list_array_t<T...>;
@@ -164,11 +164,20 @@ class GeneralEdgeSetIter {
   using ele_tuple_t = std::tuple<VID_T, adj_list_iterator>;
   using data_tuple_t = ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, adj_list_iterator>;
-  using self_type_t = GeneralEdgeSetIter<GI, VID_T, T...>;
+  using self_type_t = GeneralEdgeSetIter<GI, VID_T, LabelT, T...>;
 
   GeneralEdgeSetIter(const std::vector<VID_T>& vids,
-                     const adj_list_array_t& adj_lists, size_t ind)
-      : vids_(vids), adj_lists_(adj_lists), ind_(ind) {
+                     const adj_list_array_t& adj_lists,
+                     const grape::Bitset& bitsets,
+                     const std::array<LabelT, 2>& src_labels, LabelT dst_label,
+                     LabelT edge_label, size_t ind)
+      : vids_(vids),
+        adj_lists_(adj_lists),
+        bitsets_(bitsets),
+        src_labels_(src_labels),
+        dst_label_(dst_label),
+        edge_label_(edge_label),
+        ind_(ind) {
     if (ind_ == 0) {
       probe_next_valid_adj();
     }
@@ -178,13 +187,31 @@ class GeneralEdgeSetIter {
   GeneralEdgeSetIter(const self_type_t& other)
       : vids_(other.vids_),
         adj_lists_(other.adj_lists_),
+        bitsets_(other.bitsets_),
+        src_labels_(other.src_labels_),
+        dst_label_(other.dst_label_),
+        edge_label_(other.edge_label_),
         ind_(other.ind_),
         cur_adj_list_(other.cur_adj_list_),
         begin_(other.begin_),
         end_(other.end_) {}
 
+  inline LabelT GetEdgeLabel() const { return edge_label_; }
+
   inline VID_T GetSrc() const { return vids_[ind_]; }
+
+  inline LabelT GetSrcLabel() const {
+    if (bitsets_.get_bit(ind_)) {
+      return src_labels_[0];
+    } else {
+      return src_labels_[1];
+    }
+  }
+
   inline VID_T GetDst() const { return begin_.neighbor(); }
+
+  inline LabelT GetDstLabel() const { return dst_label_; }
+
   inline const std::tuple<T...>& GetData() const { return begin_.properties(); }
 
   ele_tuple_t GetElement() const { return ele_tuple_t(GetSrc(), begin_); }
@@ -239,12 +266,16 @@ class GeneralEdgeSetIter {
   const std::vector<VID_T>& vids_;
   const adj_list_array_t& adj_lists_;
   adj_list_t cur_adj_list_;
+  const grape::Bitset& bitsets_;
   adj_list_iterator begin_, end_;
+  const std::array<LabelT, 2>& src_labels_;
+  LabelT dst_label_;
+  LabelT edge_label_;
   size_t ind_;
 };
 
-template <typename GI, typename VID_T>
-class GeneralEdgeSetIter<GI, VID_T, grape::EmptyType> {
+template <typename GI, typename VID_T, typename LabelT>
+class GeneralEdgeSetIter<GI, VID_T, LabelT, grape::EmptyType> {
  public:
   using adj_list_array_t = typename GI::template adj_list_array_t<>;
   using adj_list_t = typename GI::template adj_list_t<>;
@@ -252,11 +283,20 @@ class GeneralEdgeSetIter<GI, VID_T, grape::EmptyType> {
   using ele_tuple_t = std::tuple<VID_T, adj_list_iterator>;
   using data_tuple_t = ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, adj_list_iterator>;
-  using self_type_t = GeneralEdgeSetIter<GI, VID_T, grape::EmptyType>;
+  using self_type_t = GeneralEdgeSetIter<GI, VID_T, LabelT, grape::EmptyType>;
 
   GeneralEdgeSetIter(const std::vector<VID_T>& vids,
-                     const adj_list_array_t& adj_lists, size_t ind)
-      : vids_(vids), adj_lists_(adj_lists), ind_(ind) {
+                     const adj_list_array_t& adj_lists,
+                     const grape::Bitset& bitsets,
+                     const std::array<LabelT, 2>& src_labels, LabelT dst_label,
+                     LabelT edge_label, size_t ind)
+      : vids_(vids),
+        adj_lists_(adj_lists),
+        bitsets_(bitsets),
+        src_labels_(src_labels),
+        dst_label_(dst_label),
+        edge_label_(edge_label),
+        ind_(ind) {
     if (ind_ == 0) {
       probe_next_valid_adj();
     }
@@ -266,13 +306,31 @@ class GeneralEdgeSetIter<GI, VID_T, grape::EmptyType> {
   GeneralEdgeSetIter(const self_type_t& other)
       : vids_(other.vids_),
         adj_lists_(other.adj_lists_),
+        bitsets_(other.bitsets_),
+        src_labels_(other.src_labels_),
+        dst_label_(other.dst_label_),
+        edge_label_(other.edge_label_),
         ind_(other.ind_),
         cur_adj_list_(other.cur_adj_list_),
         begin_(other.begin_),
         end_(other.end_) {}
 
+  inline LabelT GetEdgeLabel() const { return edge_label_; }
+
   inline VID_T GetSrc() const { return vids_[ind_]; }
+
+  inline LabelT GetSrcLabel() const {
+    if (bitsets_.get_bit(ind_)) {
+      return src_labels_[0];
+    } else {
+      return src_labels_[1];
+    }
+  }
+
   inline VID_T GetDst() const { return begin_.neighbor(); }
+
+  inline LabelT GetDstLabel() const { return dst_label_; }
+
   inline const std::tuple<grape::EmptyType> GetData() const {
     return std::make_tuple(grape::EmptyType());
   }
@@ -328,7 +386,11 @@ class GeneralEdgeSetIter<GI, VID_T, grape::EmptyType> {
  private:
   const std::vector<VID_T>& vids_;
   const adj_list_array_t& adj_lists_;
-  adj_list_t cur_adj_list_;
+  const grape::Bitset& bitsets_;
+  const std::array<LabelT, 2>& src_labels_;
+  LabelT dst_label_;
+  LabelT edge_label_;
+  const adj_list_t cur_adj_list_;
   adj_list_iterator begin_, end_;
   size_t ind_;
 };
@@ -393,7 +455,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
   using self_type_t =
       GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>>;
 
-  using iterator = GeneralEdgeSetIter<GI, VID_T, T...>;
+  using iterator = GeneralEdgeSetIter<GI, VID_T, LabelT, T...>;
   using builder_t = GeneralEdgeSetBuilder<2, GI, VID_T, LabelT,
                                           std::tuple<T...>, std::tuple<T...>>;
   GeneralEdgeSet(std::vector<VID_T>&& vids, adj_list_array_t&& adj_lists,
@@ -424,9 +486,15 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     bitsets_.swap(other.bitsets_);
   }
 
-  iterator begin() const { return iterator(vids_, adj_lists_, 0); }
+  iterator begin() const {
+    return iterator(vids_, adj_lists_, bitsets_, src_labels_, dst_label_,
+                    edge_label_, 0);
+  }
 
-  iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
+  iterator end() const {
+    return iterator(vids_, adj_lists_, bitsets_, src_labels_, dst_label_,
+                    edge_label_, vids_.size());
+  }
 
   const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
@@ -594,7 +662,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
   using data_tuple_t = ele_tuple_t;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, adj_list_iter_t>;
 
-  using iterator = GeneralEdgeSetIter<GI, VID_T, grape::EmptyType>;
+  using iterator = GeneralEdgeSetIter<GI, VID_T, LabelT, grape::EmptyType>;
   using builder_t =
       GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
                             std::tuple<grape::EmptyType>>;

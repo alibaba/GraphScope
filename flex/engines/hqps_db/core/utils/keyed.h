@@ -101,7 +101,7 @@ struct KeyedT<KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>,
   using keyed_set_t = KeyedRowVertexSetImpl<LabelT, VID_T, SET_T...>;
   // // The builder type.
   using keyed_builder_t =
-    KeyedRowVertexSetBuilder<LabelT, KEY_T, VID_T, SET_T...>;
+      KeyedRowVertexSetBuilder<LabelT, KEY_T, VID_T, SET_T...>;
   using unkeyed_builder_t =
       typename KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>::builder_t;
   static keyed_builder_t create_keyed_builder(
@@ -379,6 +379,21 @@ struct KeyedAggT<GI, UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>,
   static aggregate_res_builder_t create_agg_builder(
       const UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>& set,
       const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return CountBuilder<tag_id>();
+  }
+};
+
+template <typename GI, typename VID_T, typename LabelT, typename SET_T,
+          int tag_id>
+struct KeyedAggT<GI, SingleLabelEdgeSet<VID_T, LabelT, SET_T>, AggFunc::COUNT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using aggregate_res_builder_t = CountBuilder<tag_id>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const SingleLabelEdgeSet<VID_T, LabelT, SET_T>& set, const GI& graph,
       std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     return CountBuilder<tag_id>();
   }
