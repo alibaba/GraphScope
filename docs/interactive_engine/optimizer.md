@@ -4,8 +4,7 @@ We have developed a versatile graph optimizer for the Graph Interactive Engine (
 
 1. **Graph-specific Rules**: Our optimizer integrates rules for specific graph operators within Graph and Relational databases, allowing for true optimization where Graph and Relational structures coexist. Relational operators directly benefit from the reuse of existing SQL rules.
 
-2. **High-Order Statistics in CBO**: Our CBO offers advanced statistics based on graph structure, yielding more precise cardinality estimates than traditional optimizers.
-
+2. **High-Order Statistics in CBO**: Our Cost-Based Optimizer (CBO) utilizes sophisticated statistical models grounded in graph structures, providing more accurate cardinality estimates compared to conventional optimizers. The foundational work for our CBO primarily stems from the research presented in [GlogS](https://www.usenix.org/conference/atc23/presentation/lai), which was published at ATC 2023. This research has been instrumental in enhancing the efficacy of graph pattern matching, setting a new standard for optimization in graph databases.
 
 ## Rule-based Optimizer (RBO)
 
