@@ -1,5 +1,4 @@
 <configuration scan="true" scanPeriod="30 seconds">
-    <define name="hostname" class="ch.qos.logback.core.property.CanonicalHostNamePropertyDefiner"/>
     <property name="log_dir" value="${log.dir:-/var/log/graphscope}"/>
     <property name="log_name" value="${log.name:-groot}"/>
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -11,12 +10,12 @@
             <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>[%d{ISO8601}][%p][%t][${hostname}][%c:%L] %m%n</pattern>
+            <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
         </encoder>
     </appender>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>[%d{ISO8601}][%p][%t][${hostname}][%c:%L] %m%n</pattern>
+            <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
         </encoder>
     </appender>
     <appender name="Metric" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -24,8 +23,8 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${log_dir}/metric.log.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>10</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
+            <maxHistory>5</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>%m%n</pattern>

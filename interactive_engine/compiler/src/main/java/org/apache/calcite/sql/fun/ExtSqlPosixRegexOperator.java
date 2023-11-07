@@ -25,6 +25,11 @@ import org.apache.calcite.sql.type.SqlTypeUtil;
 import org.apache.calcite.util.Static;
 import org.apache.calcite.util.Util;
 
+/**
+ * The operator is used for regex match for string values, i.e a.name like '%marko' in a sql expression.
+ * The original implementation will check operand types by {@link org.apache.calcite.sql.SqlCall}, which is a structure in sql parser phase.
+ * Here we override the interface to check types by {@link org.apache.calcite.rex.RexCall} which represents an algebra relation.
+ */
 public class ExtSqlPosixRegexOperator extends SqlPosixRegexOperator {
     public ExtSqlPosixRegexOperator(
             String name, SqlKind kind, boolean caseSensitive, boolean negated) {

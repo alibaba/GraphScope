@@ -246,8 +246,9 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
   vlabel_indexer_.Serialize(writer);
   elabel_indexer_.Serialize(writer);
   grape::InArchive arc;
-  arc << vproperties_ << vprop_storage_ << eproperties_ << ie_strategy_
-      << oe_strategy_ << max_vnum_;
+  arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
+      << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
+      << max_vnum_ << plugin_dir_ << plugin_list_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -256,8 +257,9 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   elabel_indexer_.Deserialize(reader);
   grape::OutArchive arc;
   CHECK(reader->ReadArchive(arc));
-  arc >> vproperties_ >> vprop_storage_ >> eproperties_ >> ie_strategy_ >>
-      oe_strategy_ >> max_vnum_;
+  arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
+      eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
+      max_vnum_ >> plugin_dir_ >> plugin_list_;
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
@@ -561,8 +563,10 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
                  << " is not found in properties";
       return false;
     }
-    if (property_types[primary_key_inds[i]] != PropertyType::kInt64) {
-      LOG(ERROR) << "Primary key " << primary_key_name << " should be int64";
+    if (property_types[primary_key_inds[i]] != PropertyType::kInt64 &&
+        property_types[primary_key_inds[i]] != PropertyType::kString) {
+      LOG(ERROR) << "Primary key " << primary_key_name
+                 << " should be int64 or string";
       return false;
     }
     primary_keys.emplace_back(property_types[primary_key_inds[i]],
@@ -782,7 +786,7 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
           schema.EmplacePlugin(f);
         }
       } else {
-        schema.EmplacePlugin(std::filesystem::canonical(f));
+        schema.EmplacePlugin(std::filesystem::canonical(real_file));
       }
     }
   }

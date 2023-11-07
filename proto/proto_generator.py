@@ -27,6 +27,8 @@ def gather_all_proto(proto_dir, suffix="*.proto"):
     pattern = os.path.join(proto_dir, suffix)
     return glob.glob(pattern)
 
+def gather_all_service_proto(proto_dir):
+    return gather_all_proto(proto_dir, "*_service.proto")
 
 def create_path(path):
     """Utility function to create a path."""
@@ -51,6 +53,8 @@ def cpp_out(relative_dir, output_dir):
 
 def python_out(relative_dir, output_dir):
     files = gather_all_proto(relative_dir)
+    groot_files = gather_all_proto(os.path.join(relative_dir, "groot", "sdk"))
+    files.extend(groot_files)
     for proto_file in files:
         cmd = [
             sys.executable,
@@ -71,8 +75,7 @@ def cpp_service_out(relative_dir, output_dir):
     plugin_path = str(
         subprocess.check_output([shutil.which("which"), "grpc_cpp_plugin"]), "utf-8"
     ).strip()
-    suffix = "*_service.proto"
-    files = gather_all_proto(relative_dir, suffix)
+    files = gather_all_service_proto(relative_dir)
     for proto_file in files:
         cmd = [
             shutil.which("protoc"),
@@ -88,8 +91,9 @@ def cpp_service_out(relative_dir, output_dir):
 
 
 def python_service_out(relative_dir, output_dir):
-    suffix = "*_service.proto"
-    files = gather_all_proto(relative_dir, suffix)
+    files = gather_all_service_proto(relative_dir)
+    groot_files = gather_all_service_proto(os.path.join(relative_dir, "groot", "sdk"))
+    files.extend(groot_files)
     for proto_file in files:
         cmd = [
             sys.executable,

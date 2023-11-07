@@ -27,9 +27,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * build physical plan from logical plan of a regular query
  * @param <T>
- * @param <R>
  */
-public abstract class RegularPhysicalBuilder<T, R> extends PhysicalBuilder<R> {
+public abstract class RegularPhysicalBuilder<T> extends PhysicalBuilder {
     protected RelShuttle relShuttle;
 
     protected RegularPhysicalBuilder(LogicalPlan logicalPlan, RelShuttle relShuttle) {

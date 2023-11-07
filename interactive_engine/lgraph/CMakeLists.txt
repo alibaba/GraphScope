@@ -41,7 +41,7 @@ find_package(CppKafka 0.3.1 REQUIRED)
 # Proto file generating
 set(PROTO_FILE_DIR ${Lgraph_SOURCE_DIR}/../../proto)
 set(GRPC_FILES
-  ${PROTO_FILE_DIR}/groot/sdk/client.proto
+  ${PROTO_FILE_DIR}/groot/sdk/client_service.proto
   ${PROTO_FILE_DIR}/groot/sdk/client_backup_service.proto)
 set(PROTO_FILES
   ${GRPC_FILES}

@@ -48,6 +48,43 @@ public abstract class Utils {
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
     public static final Common.Value protoValue(RexLiteral literal) {
+        if (literal.getTypeName() == SqlTypeName.SARG) {
+            Sarg sarg = literal.getValueAs(Sarg.class);
+            if (!sarg.isPoints()) {
+                throw new UnsupportedOperationException(
+                        "can not convert continuous ranges to ir core array, sarg=" + sarg);
+            }
+            List<Comparable> values =
+                    com.alibaba.graphscope.common.ir.tools.Utils.getValuesAsList(sarg);
+            switch (literal.getType().getSqlTypeName()) {
+                case INTEGER:
+                    Common.I32Array.Builder i32Array = Common.I32Array.newBuilder();
+                    values.forEach(value -> i32Array.addItem(((Number) value).intValue()));
+                    return Common.Value.newBuilder().setI32Array(i32Array).build();
+                case BIGINT:
+                    Common.I64Array.Builder i64Array = Common.I64Array.newBuilder();
+                    values.forEach(value -> i64Array.addItem(((Number) value).longValue()));
+                    return Common.Value.newBuilder().setI64Array(i64Array).build();
+                case CHAR:
+                    Common.StringArray.Builder stringArray = Common.StringArray.newBuilder();
+                    values.forEach(
+                            value ->
+                                    stringArray.addItem(
+                                            (value instanceof NlsString)
+                                                    ? ((NlsString) value).getValue()
+                                                    : (String) value));
+                    return Common.Value.newBuilder().setStrArray(stringArray).build();
+                case DECIMAL:
+                case FLOAT:
+                case DOUBLE:
+                    Common.DoubleArray.Builder doubleArray = Common.DoubleArray.newBuilder();
+                    values.forEach(value -> doubleArray.addItem(((Number) value).doubleValue()));
+                    return Common.Value.newBuilder().setF64Array(doubleArray).build();
+                default:
+                    throw new UnsupportedOperationException(
+                            "can not convert sarg=" + sarg + " ir core array");
+            }
+        }
         switch (literal.getType().getSqlTypeName()) {
             case NULL:
                 return Common.Value.newBuilder().setNone(Common.None.newBuilder().build()).build();
@@ -73,53 +110,6 @@ public abstract class Utils {
                 return Common.Value.newBuilder()
                         .setF64(((Number) literal.getValue()).doubleValue())
                         .build();
-            case SARG:
-                Sarg sarg = literal.getValueAs(Sarg.class);
-                if (sarg.isPoints()) {
-                    Common.Value.Builder valueBuilder = Common.Value.newBuilder();
-                    List<Comparable> values =
-                            com.alibaba.graphscope.common.ir.tools.Utils.getValuesAsList(sarg);
-                    if (values.isEmpty()) {
-                        // return an empty string array to handle the case i.e. within []
-                        return valueBuilder
-                                .setStrArray(Common.StringArray.newBuilder().build())
-                                .build();
-                    }
-                    Comparable first = values.get(0);
-                    if (first instanceof Integer) {
-                        Common.I32Array.Builder i32Array = Common.I32Array.newBuilder();
-                        values.forEach(value -> i32Array.addItem((Integer) value));
-                        valueBuilder.setI32Array(i32Array);
-                    } else if (first instanceof Number) {
-                        Common.I64Array.Builder i64Array = Common.I64Array.newBuilder();
-                        values.forEach(value -> i64Array.addItem(((Number) value).longValue()));
-                        valueBuilder.setI64Array(i64Array);
-                    } else if (first instanceof Double || first instanceof Float) {
-                        Common.DoubleArray.Builder doubleArray = Common.DoubleArray.newBuilder();
-                        values.forEach(
-                                value ->
-                                        doubleArray.addItem(
-                                                (value instanceof Float)
-                                                        ? (Float) value
-                                                        : (Double) value));
-                        valueBuilder.setF64Array(doubleArray);
-                    } else if (first instanceof String || first instanceof NlsString) {
-                        Common.StringArray.Builder stringArray = Common.StringArray.newBuilder();
-                        values.forEach(
-                                value ->
-                                        stringArray.addItem(
-                                                (value instanceof NlsString)
-                                                        ? ((NlsString) value).getValue()
-                                                        : (String) value));
-                        valueBuilder.setStrArray(stringArray);
-                    } else {
-                        throw new UnsupportedOperationException(
-                                "can not convert value list=" + values + " to ir core array");
-                    }
-                    return valueBuilder.build();
-                }
-                throw new UnsupportedOperationException(
-                        "can not convert continuous ranges to ir core structure, sarg=" + sarg);
             default:
                 throw new UnsupportedOperationException(
                         "literal type " + literal.getTypeName() + " is unsupported yet");
@@ -234,6 +224,10 @@ public abstract class Utils {
                 return OuterExpression.ExprOpr.newBuilder()
                         .setLogical(OuterExpression.Logical.WITHIN)
                         .build();
+            case POSIX_REGEX_CASE_SENSITIVE:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setLogical(OuterExpression.Logical.REGEX)
+                        .build();
             default:
                 throw new UnsupportedOperationException(
                         "operator type="
@@ -282,7 +276,11 @@ public abstract class Utils {
                                         + " is unsupported yet");
                 }
             case DATE:
-                return Common.DataType.DATE;
+                return Common.DataType.DATE32;
+            case TIME:
+                return Common.DataType.TIME32;
+            case TIMESTAMP:
+                return Common.DataType.TIMESTAMP;
             default:
                 throw new UnsupportedOperationException(
                         "basic type " + basicType.getSqlTypeName() + " is unsupported yet");
@@ -309,6 +307,7 @@ public abstract class Utils {
                                 + " to IrDataType is unsupported yet");
             case MULTISET:
             case ARRAY:
+            case MAP:
                 logger.warn("multiset or array type can not be converted to any ir core data type");
                 return DataType.IrDataType.newBuilder().build();
             default:

@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.rex.operator;
 
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCallBinding;
@@ -24,13 +26,17 @@ import org.apache.calcite.sql.SqlOperatorBinding;
 import org.apache.calcite.sql.fun.SqlMultisetValueConstructor;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.sql.type.SqlTypeUtil;
-import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Static;
 import org.apache.calcite.util.Util;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
+/**
+ * This operator is used to fold columns into a map, i.e. {name: a.name, age: a.age} in cypher queries.
+ * However, original implementation in calcite does not allow expressions with different types as its operands, so we extend the superclass to support the situation.
+ * If the expressions do not have a least-restrictive type, then the derived type will be {@code SqlTypeName.ANY}.
+ */
 public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
     public SqlMapValueConstructor() {
         super("MAP", SqlKind.MAP_VALUE_CONSTRUCTOR);
@@ -39,11 +45,19 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
     public RelDataType inferReturnType(SqlOperatorBinding opBinding) {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> argTypes = opBinding.collectOperandTypes();
-        Pair<RelDataType, RelDataType> type =
-                Pair.of(
-                        getComponentType(typeFactory, Util.quotientList(argTypes, 2, 0)),
-                        getComponentType(typeFactory, Util.quotientList(argTypes, 2, 1)));
-        return SqlTypeUtil.createMapType(opBinding.getTypeFactory(), type.left, type.right, false);
+        List<RelDataType> keyTypes = Util.quotientList(argTypes, 2, 0);
+        List<RelDataType> valueTypes = Util.quotientList(argTypes, 2, 1);
+        RelDataType keyType = getComponentType(typeFactory, keyTypes);
+        RelDataType valueType = getComponentType(typeFactory, valueTypes);
+        if (keyType != null
+                && keyType.getSqlTypeName() != SqlTypeName.ANY
+                && valueType != null
+                && valueType.getSqlTypeName() != SqlTypeName.ANY) {
+            return SqlTypeUtil.createMapType(opBinding.getTypeFactory(), keyType, valueType, false);
+        } else {
+            return ((GraphTypeFactoryImpl) typeFactory)
+                    .createArbitraryMapType(keyTypes, valueTypes, false);
+        }
     }
 
     @Override
@@ -63,7 +77,7 @@ public class SqlMapValueConstructor extends SqlMultisetValueConstructor {
             return (componentType == null)
                     ? typeFactory.createSqlType(SqlTypeName.ANY)
                     : componentType;
-        } catch (AssertionError e) {
+        } catch (Throwable e) {
             return typeFactory.createSqlType(SqlTypeName.ANY);
         }
     }

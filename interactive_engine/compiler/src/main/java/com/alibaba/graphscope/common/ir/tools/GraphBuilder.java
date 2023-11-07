@@ -54,6 +54,7 @@ import org.apache.calcite.sql.SqlAggFunction;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.BasicSqlType;
+import org.apache.calcite.sql.type.GraphInferTypes;
 import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
@@ -305,13 +306,18 @@ public class GraphBuilder extends RelBuilder {
         RelNode input = size() > 0 ? peek() : null;
         RelNode match =
                 GraphLogicalMultiMatch.create(
-                        (GraphOptCluster) cluster,
-                        null,
-                        input,
-                        first,
-                        ImmutableList.copyOf(others));
-        if (size() > 0) pop();
-        push(match);
+                        (GraphOptCluster) cluster, null, null, first, ImmutableList.copyOf(others));
+        if (input == null) {
+            push(match);
+        } else {
+            push(match).join(getJoinRelType(GraphOpt.Match.INNER), getJoinCondition(input, match));
+        }
+        return this;
+    }
+
+    @Override
+    public GraphBuilder push(RelNode node) {
+        super.push(node);
         return this;
     }
 
@@ -571,6 +577,11 @@ public class GraphBuilder extends RelBuilder {
         if (!isCurrentSupported(operator)) {
             throw new UnsupportedOperationException(
                     "operator " + operator.getKind().name() + " not supported");
+        }
+        // infer unknown operands types from other known types
+        if (operator.getOperandTypeInference() != GraphInferTypes.RETURN_TYPE) {
+            operandList =
+                    inferOperandTypes(operator, getTypeFactory().createUnknownType(), operandList);
         }
         RexCallBinding callBinding =
                 new RexCallBinding(getTypeFactory(), operator, operandList, ImmutableList.of());
@@ -1414,6 +1425,11 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public RexNode equals(RexNode operand0, RexNode operand1) {
         return this.call(GraphStdOperatorTable.EQUALS, operand0, operand1);
+    }
+
+    @Override
+    public RexNode not(RexNode operand) {
+        return this.call(GraphStdOperatorTable.NOT, operand);
     }
 
     /**

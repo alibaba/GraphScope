@@ -24,6 +24,7 @@ import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -54,6 +55,8 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
             return visitCase(call);
         } else if (operator.getKind() == SqlKind.ARRAY_VALUE_CONSTRUCTOR) {
             return visitArrayValueConstructor(call);
+        } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
+            return visitMapValueConstructor(call);
         } else if (operator.getKind() == SqlKind.EXTRACT) {
             return visitExtract(call);
         } else if (call.getOperands().size() == 1) {
@@ -104,68 +107,115 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 .build();
     }
 
+    private OuterExpression.Expression visitMapValueConstructor(RexCall call) {
+        OuterExpression.VariableKeyValues.Builder varMapBuilder =
+                OuterExpression.VariableKeyValues.newBuilder();
+        List<RexNode> operands = call.getOperands();
+        for (int i = 0; i < operands.size() - 1; i += 2) {
+            RexNode key = operands.get(i);
+            RexNode value = operands.get(i + 1);
+            Preconditions.checkArgument(
+                    key instanceof RexLiteral,
+                    "key type of 'MAP_VALUE_CONSTRUCTOR' should be 'literal', but is "
+                            + key.getClass());
+            Preconditions.checkArgument(
+                    value instanceof RexGraphVariable,
+                    "value type of 'MAP_VALUE_CONSTRUCTOR' should be 'variable', but is "
+                            + value.getClass());
+            varMapBuilder.addKeyVals(
+                    OuterExpression.VariableKeyValue.newBuilder()
+                            .setKey(key.accept(this).getOperators(0).getConst())
+                            .setValue(value.accept(this).getOperators(0).getVar())
+                            .build());
+        }
+        return OuterExpression.Expression.newBuilder()
+                .addOperators(
+                        OuterExpression.ExprOpr.newBuilder()
+                                .setMap(varMapBuilder)
+                                .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)))
+                .build();
+    }
+
     private OuterExpression.Expression visitExtract(RexCall call) {
         List<RexNode> operands = call.getOperands();
         Preconditions.checkArgument(
                 operands.size() == 2 && operands.get(0) instanceof RexLiteral,
                 "'EXTRACT' operator has invalid operands " + operands);
-        OuterExpression.Expression.Builder exprBuilder = OuterExpression.Expression.newBuilder();
-        exprBuilder.addOperators(
+        OuterExpression.Expression.Builder builder = OuterExpression.Expression.newBuilder();
+        builder.addOperators(
                 OuterExpression.ExprOpr.newBuilder()
                         .setExtract(
                                 OuterExpression.Extract.newBuilder()
                                         .setInterval(
-                                                Utils.protoInterval((RexLiteral) operands.get(0)))
-                                        .setDataTime(operands.get(1).accept(this)))
+                                                Utils.protoInterval((RexLiteral) operands.get(0))))
                         .setNodeType(Utils.protoIrDataType(call.getType(), isColumnId)));
-        return exprBuilder.build();
+        SqlOperator operator = call.getOperator();
+        RexNode operand = operands.get(1);
+        boolean needBrace = needBrace(operator, operand);
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE));
+        }
+        builder.addAllOperators(operand.accept(this).getOperatorsList());
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE));
+        }
+        return builder.build();
     }
 
     private OuterExpression.Expression visitUnaryOperator(RexCall call) {
         SqlOperator operator = call.getOperator();
         RexNode operand = call.getOperands().get(0);
         switch (operator.getKind()) {
-                // convert IS_NULL to unary call: IS_NULL(XX)
-            case IS_NULL:
-                return visitIsNullOperator(operand);
                 // convert IS_NOT_NULL to NOT(IS_NULL(XX))
             case IS_NOT_NULL:
                 return OuterExpression.Expression.newBuilder()
-                        .addOperators(Utils.protoOperator(GraphStdOperatorTable.NOT))
+                        .addOperators(
+                                Utils.protoOperator(GraphStdOperatorTable.NOT).toBuilder()
+                                        .setNodeType(
+                                                Utils.protoIrDataType(call.getType(), isColumnId)))
                         .addOperators(
                                 OuterExpression.ExprOpr.newBuilder()
                                         .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
-                        .addAllOperators(visitIsNullOperator(operand).getOperatorsList())
+                        .addAllOperators(
+                                visitUnaryOperator(
+                                                GraphStdOperatorTable.IS_NULL,
+                                                operand,
+                                                call.getType())
+                                        .getOperatorsList())
                         .addOperators(
                                 OuterExpression.ExprOpr.newBuilder()
                                         .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
                         .build();
+            case IS_NULL:
             case NOT:
             default:
-                return OuterExpression.Expression.newBuilder()
-                        .addOperators(Utils.protoOperator(operator))
-                        .addOperators(
-                                OuterExpression.ExprOpr.newBuilder()
-                                        .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
-                        .addAllOperators(operand.accept(this).getOperatorsList())
-                        .addOperators(
-                                OuterExpression.ExprOpr.newBuilder()
-                                        .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
-                        .build();
+                return visitUnaryOperator(operator, operand, call.getType());
         }
     }
 
-    private OuterExpression.Expression visitIsNullOperator(RexNode operand) {
-        return OuterExpression.Expression.newBuilder()
-                .addOperators(Utils.protoOperator(GraphStdOperatorTable.IS_NULL))
-                .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE))
-                .addAllOperators(operand.accept(this).getOperatorsList())
-                .addOperators(
-                        OuterExpression.ExprOpr.newBuilder()
-                                .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE))
-                .build();
+    private OuterExpression.Expression visitUnaryOperator(
+            SqlOperator operator, RexNode operand, RelDataType dataType) {
+        OuterExpression.Expression.Builder builder = OuterExpression.Expression.newBuilder();
+        builder.addOperators(
+                Utils.protoOperator(operator).toBuilder()
+                        .setNodeType(Utils.protoIrDataType(dataType, isColumnId)));
+        boolean needBrace = needBrace(operator, operand);
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.LEFT_BRACE));
+        }
+        builder.addAllOperators(operand.accept(this).getOperatorsList());
+        if (needBrace) {
+            builder.addOperators(
+                    OuterExpression.ExprOpr.newBuilder()
+                            .setBrace(OuterExpression.ExprOpr.Brace.RIGHT_BRACE));
+        }
+        return builder.build();
     }
 
     private OuterExpression.Expression visitBinaryOperator(RexCall call) {

@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -55,18 +56,25 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             Configs graphConfig,
             GraphPlanner graphPlanner,
             IrMetaQueryCallback queryCallback,
-            ExecutionClient client) {
+            ExecutionClient client,
+            QueryCache queryCache) {
         this.client = client;
         this.externalDependencies =
                 createExternalDependencies(
-                        graphConfig, new CypherAntlr4Parser(), graphPlanner, queryCallback, client);
+                        graphConfig,
+                        new CypherAntlr4Parser(),
+                        graphPlanner,
+                        queryCallback,
+                        client,
+                        queryCache);
         this.externalClassTypes =
                 Arrays.asList(
                         Configs.class,
                         Antlr4Parser.class,
                         GraphPlanner.class,
                         IrMetaQueryCallback.class,
-                        ExecutionClient.class);
+                        ExecutionClient.class,
+                        QueryCache.class);
     }
 
     @Override
@@ -94,10 +102,11 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             Antlr4Parser cypherParser,
             GraphPlanner graphPlanner,
             IrMetaQueryCallback queryCallback,
-            ExecutionClient client) {
+            ExecutionClient client,
+            QueryCache queryCache) {
         Dependencies dependencies = new Dependencies();
         dependencies.satisfyDependencies(
-                configs, cypherParser, graphPlanner, queryCallback, client);
+                configs, cypherParser, graphPlanner, queryCallback, client, queryCache);
         return dependencies;
     }
 

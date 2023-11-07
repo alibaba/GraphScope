@@ -72,7 +72,7 @@ class TwoLabelVertexSetImplBuilder {
   }
 
   res_t Build() {
-    VLOG(10) << "Try to resize from " << bitset_.size_ << ", to "
+    VLOG(10) << "Try to resize from " << bitset_.cardinality() << ", to "
              << vec_.size();
     bitset_.resize(vec_.size());
     return res_t(std::move(vec_), std::move(data_), std::move(labels_),

@@ -68,4 +68,17 @@ public class GraphGroupKeys implements RelBuilder.GroupKey {
                         .collect(Collectors.toList())
                 + '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GraphGroupKeys that = (GraphGroupKeys) o;
+        return Objects.equals(variables, that.variables) && Objects.equals(aliases, that.aliases);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(variables, aliases);
+    }
 }

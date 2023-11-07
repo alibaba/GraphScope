@@ -121,15 +121,15 @@ class DatasetConfig:
 class EngineConfig:
     """Engine configuration"""
 
-    enabled_engines: str = "gae,gie,gle"  # A set of engines to enable.
+    enabled_engines: str = "gae,gie"  # A set of engines to enable.
     # Node selector for engine pods, default is None.
     node_selector: Union[str, None] = None
 
-    enable_gae: bool = True  # Enable or disable analytical engine.
+    enable_gae: bool = False  # Enable or disable analytical engine.
     # Enable or disable analytical engine with java support.
     enable_gae_java: bool = False
-    enable_gie: bool = True  # Enable or disable interactive engine.
-    enable_gle: bool = True  # Enable or disable learning engine.
+    enable_gie: bool = False  # Enable or disable interactive engine.
+    enable_gle: bool = False  # Enable or disable learning engine.
 
     preemptive: bool = True
 
@@ -309,9 +309,6 @@ class SessionConfig:
     reconnect: bool = False  # Connect to an existed GraphScope Cluster
     instance_id: Union[str, None] = None  # Unique id for each GraphScope instance.
 
-    show_log: bool = False  # Show log or not.
-    log_level: str = "info"  # Log level, choose from 'info' or 'debug'.
-
     # The length of time to wait before giving up launching graphscope.z
     timeout_seconds: int = 600
     # The length of time to wait starting from client disconnected before killing the graphscope instance.
@@ -325,8 +322,16 @@ class SessionConfig:
 
 @dataclass
 class Config(Serializable):
+    # Solution under the FLEX architecture, choose from 'GraphScope One', 'Interactive' or 'GraphScope Insight'
+    solution: str = "GraphScope One"
+
     # Launcher type, choose from 'hosts', 'k8s' or 'operator'.
     launcher_type: str = "k8s"
+
+    # Show log or not.
+    show_log: bool = False
+    # Log level, choose from 'info' or 'debug'.
+    log_level: str = "info"
 
     session: SessionConfig = field(default_factory=SessionConfig)
 
@@ -424,9 +429,9 @@ class Config(Serializable):
             self.session.num_workers = value
             self.session.default_local_num_workers = value
         elif key == "show_log":
-            self.session.show_log = value
+            self.show_log = value
         elif key == "log_level":
-            self.session.log_level = value
+            self.log_level = value
         elif key == "timeout_seconds":
             self.session.timeout_seconds = value
         elif key == "dangling_timeout_seconds":

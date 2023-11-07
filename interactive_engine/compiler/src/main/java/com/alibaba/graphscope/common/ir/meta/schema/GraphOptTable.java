@@ -43,6 +43,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Maintain {@link RelDataType} and {@link Statistic} per entity or per relation
@@ -125,8 +126,11 @@ public class GraphOptTable implements RelOptTable {
             case DOUBLE:
                 return typeFactory.createSqlType(SqlTypeName.DOUBLE);
             case DATE:
-                return typeFactory.createSqlType(
-                        SqlTypeName.DATE); // todo: support Time and DateTime in GraphSchema
+                return typeFactory.createSqlType(SqlTypeName.DATE);
+            case TIME32:
+                return typeFactory.createSqlType(SqlTypeName.TIME);
+            case TIMESTAMP:
+                return typeFactory.createSqlType(SqlTypeName.TIMESTAMP);
             default:
                 throw new UnsupportedOperationException(
                         "type " + property.getDataType().name() + " not supported");
@@ -211,5 +215,18 @@ public class GraphOptTable implements RelOptTable {
     public List<ColumnStrategy> getColumnStrategies() {
         throw new UnsupportedOperationException(
                 "columnStrategies is unsupported for it will never be used");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        GraphOptTable that = (GraphOptTable) o;
+        return Objects.equals(tableName, that.tableName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tableName);
     }
 }

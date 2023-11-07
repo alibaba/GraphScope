@@ -17,7 +17,10 @@
 package com.alibaba.graphscope.common.jna.type;
 
 import com.alibaba.graphscope.common.jna.IrTypeMapper;
+import com.sun.jna.Pointer;
 import com.sun.jna.Structure;
+
+import org.apache.commons.lang3.StringUtils;
 
 @Structure.FieldOrder({"code", "msg"})
 public class FfiResult extends Structure {
@@ -28,10 +31,23 @@ public class FfiResult extends Structure {
     public static class ByValue extends FfiResult implements Structure.ByValue {}
 
     public ResultCode code;
-    public String msg;
+    public Pointer msg;
+    private FfiString ffiStr;
+
+    public String getMsg() {
+        return ffiStr == null ? StringUtils.EMPTY : ffiStr.getValue();
+    }
+
+    @Override
+    public void read() {
+        super.read();
+        if (ffiStr == null) {
+            ffiStr = new FfiString(msg);
+        }
+    }
 
     @Override
     public String toString() {
-        return "FfiResult{" + "code=" + code + ", msg='" + msg + '\'' + '}';
+        return "FfiResult{" + "code=" + code + ", msg='" + getMsg() + '\'' + '}';
     }
 }

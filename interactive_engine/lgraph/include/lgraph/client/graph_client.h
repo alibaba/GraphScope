@@ -19,7 +19,7 @@
 #include <grpc++/grpc++.h>
 #include "lgraph/common/backup_info.h"
 #include "lgraph/common/logger_info.h"
-#include "lgraph/proto/groot/sdk/client.grpc.pb.h"
+#include "lgraph/proto/groot/sdk/client_service.grpc.pb.h"
 #include "lgraph/proto/groot/sdk/client_backup_service.grpc.pb.h"
 
 namespace LGRAPH_NAMESPACE {

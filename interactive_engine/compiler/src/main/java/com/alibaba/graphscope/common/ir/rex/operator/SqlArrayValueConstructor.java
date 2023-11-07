@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.rex.operator;
 
+import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
+
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.sql.SqlCallBinding;
@@ -28,6 +30,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
+/**
+ * This operator is used to fold multiple columns into a single array, i.e. [a.name, a.age] in cypher queries.
+ * However, original implementation in calcite does not allow expressions with different types as its operands, so we extend the superclass to support the situation.
+ * If the expressions do not have a least-restrictive type, then the derived type will be {@code SqlTypeName.ANY}.
+ */
 public class SqlArrayValueConstructor extends SqlMultisetValueConstructor {
     public SqlArrayValueConstructor() {
         super("ARRAY", SqlKind.ARRAY_VALUE_CONSTRUCTOR);
@@ -38,7 +45,11 @@ public class SqlArrayValueConstructor extends SqlMultisetValueConstructor {
         RelDataTypeFactory typeFactory = opBinding.getTypeFactory();
         List<RelDataType> argTypes = opBinding.collectOperandTypes();
         RelDataType componentType = getComponentType(typeFactory, argTypes);
-        return SqlTypeUtil.createArrayType(typeFactory, componentType, false);
+        if (componentType != null && componentType.getSqlTypeName() != SqlTypeName.ANY) {
+            return SqlTypeUtil.createArrayType(typeFactory, componentType, false);
+        } else {
+            return ((GraphTypeFactoryImpl) typeFactory).createArbitraryArrayType(argTypes, false);
+        }
     }
 
     // operands of array value constructor can be any, even if empty, i.e []
@@ -55,7 +66,7 @@ public class SqlArrayValueConstructor extends SqlMultisetValueConstructor {
             return (componentType == null)
                     ? typeFactory.createSqlType(SqlTypeName.ANY)
                     : componentType;
-        } catch (AssertionError e) {
+        } catch (Throwable e) {
             return typeFactory.createSqlType(SqlTypeName.ANY);
         }
     }

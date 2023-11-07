@@ -213,6 +213,9 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
     // combine multiple expressions into a list
     public static final SqlOperator ARRAY_VALUE_CONSTRUCTOR = new SqlArrayValueConstructor();
 
+    // combine multiple expressions into a map
+    public static final SqlOperator MAP_VALUE_CONSTRUCTOR = new SqlMapValueConstructor();
+
     public static final SqlFunction EXTRACT =
             new SqlFunction(
                     "EXTRACT",
@@ -221,8 +224,6 @@ public class GraphStdOperatorTable extends SqlStdOperatorTable {
                     null,
                     GraphOperandTypes.INTERVALINTERVAL_INTERVALDATETIME,
                     SqlFunctionCategory.SYSTEM);
-
-    public static final SqlOperator MAP_VALUE_CONSTRUCTOR = new SqlMapValueConstructor();
 
     public static final SqlOperator POSIX_REGEX_CASE_SENSITIVE =
             new ExtSqlPosixRegexOperator(

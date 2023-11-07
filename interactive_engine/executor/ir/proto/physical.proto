@@ -307,5 +307,6 @@ message PhysicalOpr {
 }
 
 message PhysicalPlan {
-  repeated PhysicalOpr plan = 1;
+  int32 plan_id = 1;
+  repeated PhysicalOpr plan = 2;
 }

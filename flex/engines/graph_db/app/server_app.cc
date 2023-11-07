@@ -22,7 +22,7 @@ static uint32_t get_vertex_vid(const gs::ReadTransaction& txn, uint8_t label,
   uint32_t vid = std::numeric_limits<uint32_t>::max();
   auto vit = txn.GetVertexIterator(label);
   for (; vit.IsValid(); vit.Next()) {
-    if (vit.GetId() == id) {
+    if (vit.GetId().AsInt64() == id) {
       vid = vit.GetIndex();
       break;
     }
@@ -99,7 +99,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
     uint8_t vertex_label_id = txn.schema().get_vertex_label_id(vertex_label);
     auto vit = txn.GetVertexIterator(vertex_label_id);
     for (; vit.IsValid(); vit.Next()) {
-      if (vit.GetId() == vertex_id) {
+      if (vit.GetId().AsInt64() == vertex_id) {
         output.put_int(1);
         int field_num = vit.FieldNum();
         for (int i = 0; i < field_num; ++i) {
@@ -233,13 +233,13 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
 
         std::vector<std::tuple<int64_t, int64_t, std::string>> match_edges;
         for (uint32_t v = dst_range.from; v != dst_range.to; ++v) {
-          int64_t v_oid = txn.GetVertexId(dst_label_id, v);
+          int64_t v_oid = txn.GetVertexId(dst_label_id, v).AsInt64();
           auto ieit = txn.GetInEdgeIterator(dst_label_id, v, src_label_id,
                                             edge_label_id);
           while (ieit.IsValid()) {
             uint32_t u = ieit.GetNeighbor();
             if (src_range.contains(u)) {
-              int64_t u_oid = txn.GetVertexId(src_label_id, u);
+              int64_t u_oid = txn.GetVertexId(src_label_id, u).AsInt64();
               match_edges.emplace_back(u_oid, v_oid,
                                        ieit.GetData().to_string());
             }
@@ -248,13 +248,13 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
         }
         if (match_edges.empty()) {
           for (uint32_t u = src_range.from; u != src_range.to; ++u) {
-            int64_t u_oid = txn.GetVertexId(src_label_id, u);
+            int64_t u_oid = txn.GetVertexId(src_label_id, u).AsInt64();
             auto oeit = txn.GetOutEdgeIterator(src_label_id, u, dst_label_id,
                                                edge_label_id);
             while (oeit.IsValid()) {
               uint32_t v = oeit.GetNeighbor();
               if (dst_range.contains(v)) {
-                int64_t v_oid = txn.GetVertexId(dst_label_id, v);
+                int64_t v_oid = txn.GetVertexId(dst_label_id, v).AsInt64();
                 match_edges.emplace_back(u_oid, v_oid,
                                          oeit.GetData().to_string());
               }
