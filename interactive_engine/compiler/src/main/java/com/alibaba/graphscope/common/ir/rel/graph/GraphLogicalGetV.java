@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
@@ -58,5 +59,16 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("opt", getOpt());
+    }
+
+    @Override
+    public GraphLogicalGetV copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new GraphLogicalGetV(
+                (GraphOptCluster) getCluster(),
+                getHints(),
+                inputs.get(0),
+                this.getOpt(),
+                this.tableConfig,
+                this.getAliasName());
     }
 }
