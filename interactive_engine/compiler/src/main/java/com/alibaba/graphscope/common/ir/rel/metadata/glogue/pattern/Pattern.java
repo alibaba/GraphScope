@@ -5,7 +5,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.utils.Combinations;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
-
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMapping;
 import org.jgrapht.alg.color.ColorRefinementAlgorithm;
@@ -15,6 +14,8 @@ import org.jgrapht.alg.isomorphism.ColorRefinementIsomorphismInspector;
 import org.jgrapht.alg.isomorphism.VF2GraphIsomorphismInspector;
 import org.jgrapht.graph.AsUndirectedGraph;
 import org.jgrapht.graph.SimpleDirectedGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -34,48 +35,44 @@ public class Pattern {
 
     private final ConnectivityInspector<PatternVertex, PatternEdge> connectivityInspector;
 
+    private static Logger logger = LoggerFactory.getLogger(Pattern.class);
+
     // vertex type comparator and edge type comparator are used for isomorphism
     // inspector
-    static final Comparator<PatternVertex> vertexTypeComparator =
-            (o1, o2) -> {
-                if (o1.getVertexTypeIds().size() != o2.getVertexTypeIds().size()) {
-                    return o1.getVertexTypeIds().size() - o2.getVertexTypeIds().size();
-                } else {
-                    ArrayList<Integer> o1List = new ArrayList<>(o1.getVertexTypeIds());
-                    o1List.sort(Integer::compareTo);
-                    ArrayList<Integer> o2List = new ArrayList<>(o2.getVertexTypeIds());
-                    o2List.sort(Integer::compareTo);
-                    for (int i = 0; i < o1List.size(); i++) {
-                        if (!o1List.get(i).equals(o2List.get(i))) {
-                            return o1List.get(i) - o2List.get(i);
-                        }
-                    }
-                    return 0;
+    final static Comparator<PatternVertex> vertexTypeComparator = (o1, o2) -> {
+        if (o1.getVertexTypeIds().size() != o2.getVertexTypeIds().size()) {
+            return o1.getVertexTypeIds().size() - o2.getVertexTypeIds().size();
+        } else {
+            ArrayList<Integer> o1List = new ArrayList<>(o1.getVertexTypeIds());
+            o1List.sort(Integer::compareTo);
+            ArrayList<Integer> o2List = new ArrayList<>(o2.getVertexTypeIds());
+            o2List.sort(Integer::compareTo);
+            for (int i = 0; i < o1List.size(); i++) {
+                if (!o1List.get(i).equals(o2List.get(i))) {
+                    return o1List.get(i) - o2List.get(i);
                 }
-            };
-    static final Comparator<PatternEdge> edgeTypeComparator =
-            (o1, o2) -> {
-                if (o1.getEdgeTypeIds().size() != o2.getEdgeTypeIds().size()) {
-                    return o1.getEdgeTypeIds().size() - o2.getEdgeTypeIds().size();
-                } else {
-                    ArrayList<EdgeTypeId> o1List = new ArrayList<>(o1.getEdgeTypeIds());
-                    o1List.sort(
-                            Comparator.comparingInt(EdgeTypeId::getSrcLabelId)
-                                    .thenComparingInt(EdgeTypeId::getDstLabelId)
-                                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
-                    ArrayList<EdgeTypeId> o2List = new ArrayList<>(o2.getEdgeTypeIds());
-                    o2List.sort(
-                            Comparator.comparingInt(EdgeTypeId::getSrcLabelId)
-                                    .thenComparingInt(EdgeTypeId::getDstLabelId)
-                                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
-                    for (int i = 0; i < o1List.size(); i++) {
-                        if (!o1List.get(i).equals(o2List.get(i))) {
-                            return o1List.get(i).compareTo(o2List.get(i));
-                        }
-                    }
-                    return 0;
+            }
+            return 0;
+        }
+    };
+    final static Comparator<PatternEdge> edgeTypeComparator = (o1, o2) -> {
+        if (o1.getEdgeTypeIds().size() != o2.getEdgeTypeIds().size()) {
+            return o1.getEdgeTypeIds().size() - o2.getEdgeTypeIds().size();
+        } else {
+            ArrayList<EdgeTypeId> o1List = new ArrayList<>(o1.getEdgeTypeIds());
+            o1List.sort(Comparator.comparingInt(EdgeTypeId::getSrcLabelId).thenComparingInt(EdgeTypeId::getDstLabelId)
+                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
+            ArrayList<EdgeTypeId> o2List = new ArrayList<>(o2.getEdgeTypeIds());
+            o2List.sort(Comparator.comparingInt(EdgeTypeId::getSrcLabelId).thenComparingInt(EdgeTypeId::getDstLabelId)
+                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
+            for (int i = 0; i < o1List.size(); i++) {
+                if (!o1List.get(i).equals(o2List.get(i))) {
+                    return o1List.get(i).compareTo(o2List.get(i));
                 }
-            };
+            }
+            return 0;
+        }
+    };
 
     // by default, simple directed graph is used for pattern representation.
     public Pattern() {
@@ -165,29 +162,26 @@ public class Pattern {
                 }
                 if (!srcPatternVertex.isDistinct()) {
                     throw new UnsupportedOperationException(
-                            "In ExtendStep, srcPatternVertex "
-                                    + srcPatternVertex
-                                    + " is not supported");
+                            "In ExtendStep, srcPatternVertex " + srcPatternVertex + " is not supported");
                 }
                 Integer srcVertexType = srcPatternVertex.getVertexTypeIds().get(0);
                 // Get all adjacent edges from srcVertex to targetVertex
                 List<EdgeTypeId> outEdges = schema.getEdgeTypes(srcVertexType, targetVertexType);
                 for (EdgeTypeId outEdge : outEdges) {
                     if (srcVertexType.equals(outEdge.getSrcLabelId())) {
-                        ExtendEdge extendEdge =
-                                new ExtendEdge(srcVertexOrder, outEdge, PatternDirection.OUT);
+                        ExtendEdge extendEdge = new ExtendEdge(
+                                srcVertexOrder,
+                                outEdge,
+                                PatternDirection.OUT);
                         if (extendEdgesWithDstType.containsKey(outEdge.getDstLabelId())) {
                             extendEdgesWithDstType.get(outEdge.getDstLabelId()).add(extendEdge);
                         } else {
-                            extendEdgesWithDstType.put(
-                                    outEdge.getDstLabelId(),
+                            extendEdgesWithDstType.put(outEdge.getDstLabelId(),
                                     new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
                         }
                     } else {
                         throw new UnsupportedOperationException(
-                                "In ExtendStep, srcVertexType "
-                                        + srcVertexType
-                                        + " is not equal to outEdge srcLabelId "
+                                "In ExtendStep, srcVertexType " + srcVertexType + " is not equal to outEdge srcLabelId "
                                         + outEdge.getSrcLabelId());
                     }
                 }
@@ -198,20 +192,19 @@ public class Pattern {
                 List<EdgeTypeId> inEdges = schema.getEdgeTypes(targetVertexType, srcVertexType);
                 for (EdgeTypeId inEdge : inEdges) {
                     if (srcVertexType.equals(inEdge.getDstLabelId())) {
-                        ExtendEdge extendEdge =
-                                new ExtendEdge(srcVertexOrder, inEdge, PatternDirection.IN);
+                        ExtendEdge extendEdge = new ExtendEdge(
+                                srcVertexOrder,
+                                inEdge,
+                                PatternDirection.IN);
                         if (extendEdgesWithDstType.containsKey(inEdge.getSrcLabelId())) {
                             extendEdgesWithDstType.get(inEdge.getSrcLabelId()).add(extendEdge);
                         } else {
-                            extendEdgesWithDstType.put(
-                                    inEdge.getSrcLabelId(),
+                            extendEdgesWithDstType.put(inEdge.getSrcLabelId(),
                                     new ArrayList<ExtendEdge>(Arrays.asList(extendEdge)));
                         }
                     } else {
                         throw new UnsupportedOperationException(
-                                "In ExtendStep, srcVertexType "
-                                        + srcVertexType
-                                        + " is not equal to inEdge dstLabelId "
+                                "In ExtendStep, srcVertexType " + srcVertexType + " is not equal to inEdge dstLabelId "
                                         + inEdge.getDstLabelId());
                     }
                 }
@@ -240,8 +233,7 @@ public class Pattern {
     public Pattern extend(ExtendStep extendStep) {
         Pattern newPattern = new Pattern(this);
         Integer targetVertexTypeId = extendStep.getTargetVertexType();
-        PatternVertex targetVertex =
-                new SinglePatternVertex(targetVertexTypeId, newPattern.maxVertexId);
+        PatternVertex targetVertex = new SinglePatternVertex(targetVertexTypeId, newPattern.maxVertexId);
         newPattern.addVertex(targetVertex);
         for (ExtendEdge extendEdge : extendStep.getExtendEdges()) {
             PatternDirection dir = extendEdge.getDirection();
@@ -250,28 +242,22 @@ public class Pattern {
             EdgeTypeId edgeTypeId = extendEdge.getEdgeTypeId();
             // TODO: be very careful if we allow "both" direction in schema
             if (dir.equals(PatternDirection.OUT)) {
-                System.out.println(
-                        "To extend: " + srcVertex + " -> " + targetVertex + " " + edgeTypeId);
-                PatternEdge edge =
-                        new SinglePatternEdge(
-                                srcVertex, targetVertex, edgeTypeId, newPattern.maxEdgeId);
+                logger.debug("To extend: " + srcVertex + " -> " + targetVertex + " " + edgeTypeId);
+                PatternEdge edge = new SinglePatternEdge(srcVertex, targetVertex, edgeTypeId, newPattern.maxEdgeId);
                 newPattern.addEdge(srcVertex, targetVertex, edge);
             } else {
-                System.out.println(
-                        "To extend: " + targetVertex + " -> " + srcVertex + " " + edgeTypeId);
-                PatternEdge edge =
-                        new SinglePatternEdge(
-                                targetVertex, srcVertex, edgeTypeId, newPattern.maxEdgeId);
+                logger.debug("To extend: " + targetVertex + " -> " + srcVertex + " " + edgeTypeId);
+                PatternEdge edge = new SinglePatternEdge(targetVertex, srcVertex, edgeTypeId, newPattern.maxEdgeId);
                 newPattern.addEdge(targetVertex, srcVertex, edge);
             }
+
         }
         newPattern.reordering();
         return newPattern;
     }
 
     public void reordering() {
-        PatternOrderCanonicalLabelingImpl patternOrder =
-                new PatternOrderCanonicalLabelingImpl(this.patternGraph);
+        PatternOrderCanonicalLabelingImpl patternOrder = new PatternOrderCanonicalLabelingImpl(this.patternGraph);
         this.patternOrder = patternOrder;
     }
 
@@ -351,19 +337,15 @@ public class Pattern {
 
     @Override
     public String toString() {
-        return "Pattern "
-                + this.id
-                + " Vertices: "
-                + this.patternGraph.vertexSet().toString()
+        return "Pattern " + this.id + " Vertices: " + this.patternGraph.vertexSet().toString()
                 + ", PatternEdges: "
-                + this.patternGraph.edgeSet().toString()
-                + ", PatternOrder: "
-                + this.patternOrder;
+                + this.patternGraph.edgeSet().toString() + ", PatternOrder: " + this.patternOrder;
     }
 
     private boolean preCheck(Pattern other) {
         // compare vertex number and edge number
-        if (this.maxVertexId != other.maxVertexId || this.maxEdgeId != other.maxEdgeId) {
+        if (this.maxVertexId != other.maxVertexId
+                || this.maxEdgeId != other.maxEdgeId) {
             return false;
         }
         // compare pattern order
@@ -375,16 +357,12 @@ public class Pattern {
         }
         if (!this.patternOrder.equals(other.patternOrder)) {
             // TODO: remove this, this is for debugging
-            VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector =
-                    new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
-                            this.patternGraph,
-                            other.patternGraph,
-                            vertexTypeComparator,
-                            edgeTypeComparator);
+            VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector = new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
+                    this.patternGraph,
+                    other.patternGraph, vertexTypeComparator, edgeTypeComparator);
             if (isomorphismInspector.isomorphismExists()) {
-                System.out.println(
-                        "!!!Notice that different pattern order, but the same pattern!!!");
-                System.out.println("pattern1 v.s. pattern2: \n" + this + "\n" + other);
+                logger.debug("!!!Notice that different pattern order, but the same pattern!!!");
+                logger.debug("pattern1 v.s. pattern2: \n" + this + "\n" + other);
                 return true;
             } else {
                 return false;
@@ -397,24 +375,21 @@ public class Pattern {
         return isIsomorphicTo(other, vertexTypeComparator, edgeTypeComparator);
     }
 
-    public boolean isIsomorphicTo(
-            Pattern other,
-            Comparator<PatternVertex> vertexComparator,
+    public boolean isIsomorphicTo(Pattern other, Comparator<PatternVertex> vertexComparator,
             Comparator<PatternEdge> edgeComparator) {
         if (this == other) {
             return true;
         } else if (!this.preCheck(other)) {
             return false;
         } else {
-            Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings =
-                    getIsomorphicMappings(other, vertexComparator, edgeComparator);
-            return mappings.hasNext();
+            Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings = getIsomorphicMappings(other,
+                    vertexComparator, edgeComparator);
+            return  mappings.hasNext();
         }
     }
 
     public Optional<PatternMapping> getIsomorphicMapping(Pattern other) {
-        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings =
-                getIsomorphicMappings(other, vertexTypeComparator, edgeTypeComparator);
+        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings = getIsomorphicMappings(other, vertexTypeComparator, edgeTypeComparator);
         if (mappings.hasNext()) {
             return Optional.of(new PatternMapping(mappings.next()));
         } else {
@@ -422,26 +397,19 @@ public class Pattern {
         }
     }
 
-    private Iterator<GraphMapping<PatternVertex, PatternEdge>> getIsomorphicMappings(
-            Pattern other,
+    private Iterator<GraphMapping<PatternVertex, PatternEdge>> getIsomorphicMappings(Pattern other,
             Comparator<PatternVertex> vertexComparator,
             Comparator<PatternEdge> edgeComparator) {
-        VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector =
-                new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
-                        this.patternGraph, other.patternGraph, vertexComparator, edgeComparator);
+        VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector = new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
+                this.patternGraph, other.patternGraph,
+                vertexComparator, edgeComparator);
         return isomorphismInspector.getMappings();
     }
 
     @Override
-    public boolean equals(Object o) {
-        //        if (this == o) return true;
-        //        if (o == null || getClass() != o.getClass()) return false;
-        //        Pattern pattern = (Pattern) o;
-        //        return id == pattern.id && maxVertexId == pattern.maxVertexId && maxEdgeId ==
-        // pattern.maxEdgeId && Objects.equals(patternGraph, pattern.patternGraph) &&
-        // Objects.equals(patternOrder, pattern.patternOrder);
-        if (o instanceof Pattern) {
-            Pattern other = (Pattern) o;
+    public boolean equals(Object obj) {
+        if (obj instanceof Pattern) {
+            Pattern other = (Pattern) obj;
             return isIsomorphicTo(other);
         }
         return false;
@@ -449,7 +417,6 @@ public class Pattern {
 
     @Override
     public int hashCode() {
-        // return Objects.hash(id, patternGraph, maxVertexId, maxEdgeId, patternOrder);
         return this.patternGraph.hashCode();
     }
 
@@ -499,10 +466,9 @@ public class Pattern {
         EdgeTypeId e3 = new EdgeTypeId(1, 0, 2);
         p4.addEdge(v0, v2, e3);
 
-        VF2GraphIsomorphismInspector isomorphismInspector =
-                new VF2GraphIsomorphismInspector(p.patternGraph, p1.patternGraph);
-        System.out.println(
-                "pattern isomorphic of p v.s. p1 " + isomorphismInspector.isomorphismExists());
+        VF2GraphIsomorphismInspector isomorphismInspector = new VF2GraphIsomorphismInspector(p.patternGraph,
+                p1.patternGraph);
+        System.out.println("pattern isomorphic of p v.s. p1 " + isomorphismInspector.isomorphismExists());
 
         Graph<PatternVertex, PatternEdge> undirectedP = new AsUndirectedGraph<>(p.patternGraph);
         Graph<PatternVertex, PatternEdge> undirectedP1 = new AsUndirectedGraph<>(p1.patternGraph);
@@ -511,21 +477,19 @@ public class Pattern {
         // ColorRefinementIsomorphismInspector(
         // p.patternGraph, p1.patternGraph);
 
-        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector =
-                new ColorRefinementIsomorphismInspector(undirectedP, undirectedP1);
+        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector = new ColorRefinementIsomorphismInspector(
+                undirectedP, undirectedP1);
 
         // TODO: throws exception when using color refinement to check isomorphism on
         // directed graph
-        System.out.println(
-                "pattern isomorphic check of p v.s. p1 by color refinement "
-                        + colorRefinementIsomorphismInspector.isomorphismExists());
+        System.out.println("pattern isomorphic check of p v.s. p1 by color refinement "
+                + colorRefinementIsomorphismInspector.isomorphismExists());
 
-        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector04 =
-                new ColorRefinementIsomorphismInspector(p.patternGraph, p4.patternGraph);
+        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector04 = new ColorRefinementIsomorphismInspector(
+                p.patternGraph, p4.patternGraph);
 
-        System.out.println(
-                "pattern isomorphic check of p v.s. p4 by color refinement "
-                        + colorRefinementIsomorphismInspector04.isomorphismExists());
+        System.out.println("pattern isomorphic check of p v.s. p4 by color refinement "
+                + colorRefinementIsomorphismInspector04.isomorphismExists());
 
         // p2 -> s0 <- p1 + p1 -> p2
         Pattern p2 = new Pattern(p);
@@ -538,34 +502,28 @@ public class Pattern {
 
         System.out.println("pattern 2 equals pattern 3 " + p2.equals(p3));
 
-        VF2GraphIsomorphismInspector isomorphismInspector23 =
-                new VF2GraphIsomorphismInspector(p2.patternGraph, p3.patternGraph);
-        System.out.println(
-                "pattern isomorphic of p2 v.s. p3 " + isomorphismInspector23.isomorphismExists());
+        VF2GraphIsomorphismInspector isomorphismInspector23 = new VF2GraphIsomorphismInspector(p2.patternGraph,
+                p3.patternGraph);
+        System.out.println("pattern isomorphic of p2 v.s. p3 " + isomorphismInspector23.isomorphismExists());
 
-        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector23 =
-                new ColorRefinementIsomorphismInspector(p2.patternGraph, p3.patternGraph);
+        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector23 = new ColorRefinementIsomorphismInspector(
+                p2.patternGraph, p3.patternGraph);
 
-        System.out.println(
-                "pattern isomorphic check of p2 v.s. p3 by color refinement "
-                        + colorRefinementIsomorphismInspector23.isomorphismExists());
+        System.out.println("pattern isomorphic check of p2 v.s. p3 by color refinement "
+                + colorRefinementIsomorphismInspector23.isomorphismExists());
 
         System.out.println("mappings:");
 
         System.out.println("vf2 mappings of p v.s. p1:");
-        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings =
-                isomorphismInspector.getMappings();
+        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings = isomorphismInspector.getMappings();
         while (mappings.hasNext()) {
             GraphMapping<PatternVertex, PatternEdge> mapping = mappings.next();
             System.out.println("mapping " + mapping);
             for (PatternVertex vertex : p2.patternGraph.vertexSet()) {
                 System.out.println(
-                        "vertex "
-                                + vertex
-                                + " mapping "
-                                + mapping.getVertexCorrespondence(vertex, true)
-                                + ", "
+                        "vertex " + vertex + " mapping " + mapping.getVertexCorrespondence(vertex, true) + ", "
                                 + mapping.getVertexCorrespondence(vertex, false));
+
             }
         }
 
@@ -589,61 +547,51 @@ public class Pattern {
         // }
 
         System.out.println("vf2 mapping checking of p2 v.s. p3:");
-        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings23 =
-                isomorphismInspector23.getMappings();
+        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings23 = isomorphismInspector23.getMappings();
         while (mappings23.hasNext()) {
             GraphMapping<PatternVertex, PatternEdge> mapping = mappings23.next();
             System.out.println("mapping " + mapping);
             for (PatternVertex vertex : p2.patternGraph.vertexSet()) {
                 System.out.println(
-                        "vertex "
-                                + vertex
-                                + " mapping "
-                                + mapping.getVertexCorrespondence(vertex, true)
-                                + ", "
+                        "vertex " + vertex + " mapping " + mapping.getVertexCorrespondence(vertex, true) + ", "
                                 + mapping.getVertexCorrespondence(vertex, false));
+
             }
         }
 
         System.out.println("color refinement mapping checking of p2 v.s. p3:");
-        Iterator<GraphMapping<PatternVertex, PatternEdge>> colorRefinementMappings23 =
-                colorRefinementIsomorphismInspector23.getMappings();
+        Iterator<GraphMapping<PatternVertex, PatternEdge>> colorRefinementMappings23 = colorRefinementIsomorphismInspector23
+                .getMappings();
         while (colorRefinementMappings23.hasNext()) {
             GraphMapping<PatternVertex, PatternEdge> mapping = colorRefinementMappings23.next();
             System.out.println("mapping " + mapping);
             for (PatternVertex vertex : p2.patternGraph.vertexSet()) {
                 System.out.println(
-                        "vertex "
-                                + vertex
-                                + " mapping "
-                                + mapping.getVertexCorrespondence(vertex, true)
-                                + ", "
+                        "vertex " + vertex + " mapping " + mapping.getVertexCorrespondence(vertex, true) + ", "
                                 + mapping.getVertexCorrespondence(vertex, false));
+
             }
         }
 
         System.out.println("Graph colors: ...");
-        ColorRefinementAlgorithm colorRefinementAlgorithm =
-                new ColorRefinementAlgorithm(p.patternGraph);
+        ColorRefinementAlgorithm colorRefinementAlgorithm = new ColorRefinementAlgorithm(p.patternGraph);
         Coloring<PatternVertex> color = colorRefinementAlgorithm.getColoring();
         System.out.println("p color " + color);
-        ColorRefinementAlgorithm colorRefinementAlgorithm1 =
-                new ColorRefinementAlgorithm(p1.patternGraph);
+        ColorRefinementAlgorithm colorRefinementAlgorithm1 = new ColorRefinementAlgorithm(p1.patternGraph);
         Coloring<PatternVertex> color1 = colorRefinementAlgorithm1.getColoring();
         System.out.println("p1 color " + color1);
 
-        PatternOrderCanonicalLabelingImpl canonicalLabelManager =
-                new PatternOrderCanonicalLabelingImpl(p.patternGraph);
+        PatternOrderCanonicalLabelingImpl canonicalLabelManager = new PatternOrderCanonicalLabelingImpl(p.patternGraph);
         System.out.println("p0 canonical label " + canonicalLabelManager.toString());
-        PatternOrderCanonicalLabelingImpl canonicalLabelManager1 =
-                new PatternOrderCanonicalLabelingImpl(p1.patternGraph);
+        PatternOrderCanonicalLabelingImpl canonicalLabelManager1 = new PatternOrderCanonicalLabelingImpl(
+                p1.patternGraph);
         System.out.println("p1 canonical label " + canonicalLabelManager1.toString());
 
-        PatternOrderCanonicalLabelingImpl canonicalLabelManager2 =
-                new PatternOrderCanonicalLabelingImpl(p2.patternGraph);
+        PatternOrderCanonicalLabelingImpl canonicalLabelManager2 = new PatternOrderCanonicalLabelingImpl(
+                p2.patternGraph);
         System.out.println("p2 canonical label " + canonicalLabelManager2.toString());
-        PatternOrderCanonicalLabelingImpl canonicalLabelManager3 =
-                new PatternOrderCanonicalLabelingImpl(p3.patternGraph);
+        PatternOrderCanonicalLabelingImpl canonicalLabelManager3 = new PatternOrderCanonicalLabelingImpl(
+                p3.patternGraph);
         System.out.println("p3 canonical label " + canonicalLabelManager3.toString());
 
         Pattern p5 = new Pattern();
@@ -668,12 +616,11 @@ public class Pattern {
         Graph<PatternVertex, PatternEdge> undirectedP5 = new AsUndirectedGraph<>(p5.patternGraph);
         Graph<PatternVertex, PatternEdge> undirectedP6 = new AsUndirectedGraph<>(p6.patternGraph);
 
-        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector56 =
-                new ColorRefinementIsomorphismInspector(undirectedP5, undirectedP6);
+        ColorRefinementIsomorphismInspector colorRefinementIsomorphismInspector56 = new ColorRefinementIsomorphismInspector(
+                undirectedP5, undirectedP6);
 
-        System.out.println(
-                "pattern isomorphic check of p5 v.s. p6 by color refinement "
-                        + colorRefinementIsomorphismInspector56.isomorphismExists());
+        System.out.println("pattern isomorphic check of p5 v.s. p6 by color refinement "
+                + colorRefinementIsomorphismInspector56.isomorphismExists());
 
         // software
         PatternVertex v70 = new SinglePatternVertex(1, 0);
@@ -697,11 +644,11 @@ public class Pattern {
 
         System.out.println("p7 " + p7);
         System.out.println("p8 " + p8);
-        PatternOrderCanonicalLabelingImpl canonicalLabelManager7 =
-                new PatternOrderCanonicalLabelingImpl(p7.patternGraph);
+        PatternOrderCanonicalLabelingImpl canonicalLabelManager7 = new PatternOrderCanonicalLabelingImpl(
+                p7.patternGraph);
         System.out.println("p7 canonical label " + canonicalLabelManager7.toString());
-        PatternOrderCanonicalLabelingImpl canonicalLabelManager8 =
-                new PatternOrderCanonicalLabelingImpl(p8.patternGraph);
+        PatternOrderCanonicalLabelingImpl canonicalLabelManager8 = new PatternOrderCanonicalLabelingImpl(
+                p8.patternGraph);
         System.out.println("p8 canonical label " + canonicalLabelManager8.toString());
 
         /// fuzzy pattern test
@@ -744,10 +691,8 @@ public class Pattern {
 
         PatternVertex singleV000 = new SinglePatternVertex(1, 0);
         PatternVertex singleV111 = new SinglePatternVertex(1, 1);
-        PatternEdge fuzzyEdge111 =
-                new FuzzyPatternEdge(singleV000, singleV111, new ArrayList<>(fuzzEdgeTypeIds), 0);
-        PatternEdge fuzzyEdge222 =
-                new FuzzyPatternEdge(singleV111, singleV000, new ArrayList<>(fuzzEdgeTypeIds), 1);
+        PatternEdge fuzzyEdge111 = new FuzzyPatternEdge(singleV000, singleV111, new ArrayList<>(fuzzEdgeTypeIds), 0);
+        PatternEdge fuzzyEdge222 = new FuzzyPatternEdge(singleV111, singleV000, new ArrayList<>(fuzzEdgeTypeIds), 1);
         Pattern fuzzyP2 = new Pattern();
         fuzzyP2.addVertex(singleV000);
         fuzzyP2.addVertex(singleV111);
@@ -761,10 +706,8 @@ public class Pattern {
 
         PatternVertex fuzzyV0000 = new FuzzyPatternVertex(new ArrayList<>(fuzzyVertexTypes), 0);
         PatternVertex singleV1111 = new SinglePatternVertex(1, 1);
-        PatternEdge fuzzyEdge1111 =
-                new FuzzyPatternEdge(fuzzyV0000, singleV1111, new ArrayList<>(fuzzEdgeTypeIds), 0);
-        PatternEdge fuzzyEdge2222 =
-                new FuzzyPatternEdge(singleV1111, fuzzyV0000, new ArrayList<>(fuzzEdgeTypeIds), 1);
+        PatternEdge fuzzyEdge1111 = new FuzzyPatternEdge(fuzzyV0000, singleV1111, new ArrayList<>(fuzzEdgeTypeIds), 0);
+        PatternEdge fuzzyEdge2222 = new FuzzyPatternEdge(singleV1111, fuzzyV0000, new ArrayList<>(fuzzEdgeTypeIds), 1);
         Pattern fuzzyP3 = new Pattern();
         fuzzyP3.addVertex(fuzzyV0000);
         fuzzyP3.addVertex(singleV1111);
@@ -778,10 +721,10 @@ public class Pattern {
 
         PatternVertex fuzzyV00000 = new FuzzyPatternVertex(new ArrayList<>(fuzzyVertexTypes), 0);
         PatternVertex fuzzyV11111 = new FuzzyPatternVertex(new ArrayList<>(fuzzyVertexTypes), 1);
-        PatternEdge fuzzyEdge11111 =
-                new FuzzyPatternEdge(fuzzyV00000, fuzzyV11111, new ArrayList<>(fuzzEdgeTypeIds), 0);
-        PatternEdge fuzzyEdge22222 =
-                new FuzzyPatternEdge(fuzzyV11111, fuzzyV00000, new ArrayList<>(fuzzEdgeTypeIds), 1);
+        PatternEdge fuzzyEdge11111 = new FuzzyPatternEdge(fuzzyV00000, fuzzyV11111, new ArrayList<>(fuzzEdgeTypeIds),
+                0);
+        PatternEdge fuzzyEdge22222 = new FuzzyPatternEdge(fuzzyV11111, fuzzyV00000, new ArrayList<>(fuzzEdgeTypeIds),
+                1);
         Pattern fuzzyP4 = new Pattern();
         fuzzyP4.addVertex(fuzzyV00000);
         fuzzyP4.addVertex(fuzzyV11111);
@@ -793,47 +736,23 @@ public class Pattern {
         fuzzyP4.reordering();
         System.out.println("fuzzy pattern 4 order " + fuzzyP4.patternOrder);
 
-        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy =
-                new VF2GraphIsomorphismInspector(
-                        fuzzyP.patternGraph,
-                        fuzzyP1.patternGraph,
-                        vertexTypeComparator,
-                        edgeTypeComparator);
-        System.out.println(
-                "fuzzy pattern isomorphic of p v.s. p1 "
-                        + isomorphismInspectorFuzzy.isomorphismExists());
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP1.patternGraph, vertexTypeComparator, edgeTypeComparator);
+        System.out.println("fuzzy pattern isomorphic of p v.s. p1 " + isomorphismInspectorFuzzy.isomorphismExists());
 
-        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy1 =
-                new VF2GraphIsomorphismInspector(
-                        fuzzyP.patternGraph,
-                        fuzzyP2.patternGraph,
-                        vertexTypeComparator,
-                        edgeTypeComparator);
-        System.out.println(
-                "fuzzy pattern isomorphic of p v.s. p2 "
-                        + isomorphismInspectorFuzzy1.isomorphismExists());
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy1 = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP2.patternGraph, vertexTypeComparator, edgeTypeComparator);
+        System.out.println("fuzzy pattern isomorphic of p v.s. p2 " + isomorphismInspectorFuzzy1.isomorphismExists());
 
-        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy2 =
-                new VF2GraphIsomorphismInspector(
-                        fuzzyP.patternGraph,
-                        fuzzyP3.patternGraph,
-                        vertexTypeComparator,
-                        edgeTypeComparator);
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy2 = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP3.patternGraph, vertexTypeComparator, edgeTypeComparator);
 
-        System.out.println(
-                "fuzzy pattern isomorphic of p v.s. p3 "
-                        + isomorphismInspectorFuzzy2.isomorphismExists());
+        System.out.println("fuzzy pattern isomorphic of p v.s. p3 " + isomorphismInspectorFuzzy2.isomorphismExists());
 
-        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy3 =
-                new VF2GraphIsomorphismInspector(
-                        fuzzyP.patternGraph,
-                        fuzzyP4.patternGraph,
-                        vertexTypeComparator,
-                        edgeTypeComparator);
+        VF2GraphIsomorphismInspector isomorphismInspectorFuzzy3 = new VF2GraphIsomorphismInspector(fuzzyP.patternGraph,
+                fuzzyP4.patternGraph, vertexTypeComparator, edgeTypeComparator);
 
-        System.out.println(
-                "fuzzy pattern isomorphic of p v.s. p4 "
-                        + isomorphismInspectorFuzzy3.isomorphismExists());
+        System.out.println("fuzzy pattern isomorphic of p v.s. p4 " + isomorphismInspectorFuzzy3.isomorphismExists());
 
         // test for pattern order
         PatternVertex v100 = new SinglePatternVertex(0, 0);
@@ -857,14 +776,9 @@ public class Pattern {
         System.out.println("p100 " + p100);
         System.out.println("p101 " + p101);
 
-        VF2GraphIsomorphismInspector isomorphismInspector100101 =
-                new VF2GraphIsomorphismInspector(
-                        p100.patternGraph,
-                        p101.patternGraph,
-                        vertexTypeComparator,
-                        edgeTypeComparator);
-        System.out.println(
-                "pattern isomorphic of p100 v.s. p101 "
-                        + isomorphismInspector100101.isomorphismExists());
+        VF2GraphIsomorphismInspector isomorphismInspector100101 = new VF2GraphIsomorphismInspector(p100.patternGraph,
+                p101.patternGraph, vertexTypeComparator, edgeTypeComparator);
+        System.out.println("pattern isomorphic of p100 v.s. p101 " + isomorphismInspector100101.isomorphismExists());
+
     }
 }
