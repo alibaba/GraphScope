@@ -41,4 +41,11 @@ public class VertexDataKey implements DataKey {
     public int hashCode() {
         return Objects.hash(orderId);
     }
+
+    @Override
+    public String toString() {
+        return "VertexDataKey{" +
+                "orderId=" + orderId +
+                '}';
+    }
 }

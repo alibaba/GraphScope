@@ -76,4 +76,13 @@ public class EdgeDataKey implements DataKey {
     public int hashCode() {
         return Objects.hash(lowOrderId, highOrderId, direction);
     }
+
+    @Override
+    public String toString() {
+        return "EdgeDataKey{" +
+                "lowOrderId=" + lowOrderId +
+                ", highOrderId=" + highOrderId +
+                ", direction=" + direction +
+                '}';
+    }
 }

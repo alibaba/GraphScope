@@ -17,10 +17,11 @@
 package com.alibaba.graphscope.common.ir.rel;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.AbstractRelNode;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -41,6 +42,14 @@ public class GraphPattern extends AbstractRelNode {
     @Override
     public RelDataType deriveRowType() {
         return getCluster().getTypeFactory().createSqlType(SqlTypeName.ANY);
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphRelShuttleX) {
+            return ((GraphRelShuttleX) shuttle).visit(this);
+        }
+        return super.accept(shuttle);
     }
 
     @Override

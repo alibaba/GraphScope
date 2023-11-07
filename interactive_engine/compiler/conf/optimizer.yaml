@@ -1,0 +1,18 @@
+graph:
+  mode: CBO # or RBO
+  rules:
+    - ExtendIntersectRule:
+        dependencies:
+          - FilterIntoJoinRule
+          - FilterMatchRule
+  metadata:
+    glogue:
+      size: 3
+relation:
+  mode: RBO
+  rules:
+    - FilterIntoJoinRule:
+        dependencies:
+    - FilterMatchRule:
+        dependencies:
+  metadata:

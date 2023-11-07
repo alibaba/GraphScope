@@ -27,17 +27,35 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 
 public abstract class GraphRelShuttleX extends RelShuttleImpl {
-    public abstract RelNode visit(GraphLogicalSource source);
+    public RelNode visit(GraphLogicalSource source) {
+        return source;
+    }
 
-    public abstract RelNode visit(GraphLogicalExpand expand);
+    public RelNode visit(GraphLogicalExpand expand) {
+        return visitChildren(expand);
+    }
 
-    public abstract RelNode visit(GraphLogicalGetV getV);
+    public RelNode visit(GraphLogicalGetV getV) {
+        return visitChildren(getV);
+    }
 
-    public abstract RelNode visit(GraphLogicalPathExpand expand);
+    public RelNode visit(GraphLogicalPathExpand expand) {
+        return visitChildren(expand);
+    }
 
-    public abstract RelNode visit(GraphLogicalSingleMatch match);
+    public RelNode visit(GraphLogicalSingleMatch match) {
+        return match;
+    }
 
-    public abstract RelNode visit(GraphLogicalMultiMatch match);
+    public RelNode visit(GraphLogicalMultiMatch match) {
+        return match;
+    }
 
-    public abstract RelNode visit(GraphExtendIntersect intersect);
+    public RelNode visit(GraphPattern graph) {
+        return graph;
+    }
+
+    public RelNode visit(GraphExtendIntersect intersect) {
+        return intersect;
+    }
 }

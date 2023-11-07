@@ -20,19 +20,27 @@ import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class DataValue {
-    private final int alias;
+    private final String alias;
     private final @Nullable RexNode filter;
 
-    public DataValue(int alias, RexNode filter) {
+    public DataValue(String alias, RexNode filter) {
         this.alias = alias;
         this.filter = filter;
     }
 
-    public int getAlias() {
+    public String getAlias() {
         return alias;
     }
 
     public @Nullable RexNode getFilter() {
         return filter;
+    }
+
+    @Override
+    public String toString() {
+        return "DataValue{" +
+                "alias='" + alias + '\'' +
+                ", filter=" + filter +
+                '}';
     }
 }

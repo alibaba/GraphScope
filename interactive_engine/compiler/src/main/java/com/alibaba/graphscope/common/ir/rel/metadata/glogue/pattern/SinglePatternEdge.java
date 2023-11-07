@@ -11,11 +11,6 @@ public class SinglePatternEdge extends PatternEdge {
     private PatternVertex srcVertex;
     private PatternVertex dstVertex;
 
-    public SinglePatternEdge(EdgeTypeId edgeTypeId, int id) {
-        this.edgeTypeId = edgeTypeId;
-        this.id = id;
-    }
-
     public SinglePatternEdge(PatternVertex src, PatternVertex dst, EdgeTypeId edgeTypeId, int id) {
         this.edgeTypeId = edgeTypeId;
         this.id = id;

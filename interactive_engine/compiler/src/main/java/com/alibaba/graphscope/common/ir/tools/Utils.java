@@ -16,11 +16,14 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
+import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
+import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Range;
 import com.google.common.collect.Sets;
 
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -74,5 +77,31 @@ public class Utils {
             valueBuilder.add(value);
         }
         return valueBuilder.build();
+    }
+
+    public static String toString(RelNode node) {
+        return toString("root:", node, Sets.newHashSet());
+    }
+
+    private static String toString(String header, RelNode node, Set<String> dedup) {
+        StringBuilder builder = new StringBuilder();
+        if (!header.isEmpty()) {
+            dedup.add(header);
+            builder.append(header).append("\n");
+        }
+        builder.append(RelOptUtil.toString(node));
+        List<RelNode> inputs = Lists.newArrayList(node.getInputs());
+        while (!inputs.isEmpty()) {
+            RelNode input = inputs.remove(0);
+            if (input instanceof CommonTableScan) {
+                CommonOptTable optTable = (CommonOptTable) ((CommonTableScan) input).getTable();
+                String name = optTable.getQualifiedName().get(0) + ":";
+                if (!dedup.contains(name)) {
+                    builder.append(toString(name, optTable.getCommon(), dedup));
+                }
+            }
+            inputs.addAll(input.getInputs());
+        }
+        return builder.toString();
     }
 }

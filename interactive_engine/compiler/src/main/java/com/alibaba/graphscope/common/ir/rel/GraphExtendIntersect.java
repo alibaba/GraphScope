@@ -17,12 +17,14 @@
 package com.alibaba.graphscope.common.ir.rel;
 
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersectEdge;
-
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.List;
 
@@ -46,6 +48,19 @@ public class GraphExtendIntersect extends SingleRel {
     public GraphExtendIntersect copy(RelTraitSet traitSet, List<RelNode> inputs) {
         return new GraphExtendIntersect(
                 getCluster(), traitSet, inputs.get(0), this.getGlogueEdge());
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphRelShuttleX) {
+            return ((GraphRelShuttleX) shuttle).visit(this);
+        }
+        return super.accept(shuttle);
+    }
+
+    @Override
+    public RelDataType deriveRowType() {
+        return getCluster().getTypeFactory().createSqlType(SqlTypeName.ANY);
     }
 
     public RelWriter explainTerms(RelWriter pw) {

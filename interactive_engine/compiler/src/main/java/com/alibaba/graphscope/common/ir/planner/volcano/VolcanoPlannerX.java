@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.common.ir.planner.volcano;
 
 import com.alibaba.graphscope.gremlin.Utils;
-
 import com.google.common.base.Preconditions;
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -28,7 +27,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ExtVolcanoPlanner extends VolcanoPlanner {
+public class VolcanoPlannerX extends VolcanoPlanner {
     @Override
     protected RelOptCost upperBoundForInputs(RelNode mExpr, RelOptCost upperBound) {
 //        RelSubset group = getSubset(mExpr);
