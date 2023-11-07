@@ -23,6 +23,7 @@ import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
 
 import java.nio.charset.Charset;
+import java.util.List;
 
 public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     private final Configs configs;
@@ -62,5 +63,15 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     @Override
     public Charset getDefaultCharset() {
         return Charset.forName(FrontendConfig.CALCITE_DEFAULT_CHARSET.get(configs));
+    }
+
+    public RelDataType createArbitraryArrayType(
+            List<RelDataType> componentTypes, boolean isNullable) {
+        return new ArbitraryArrayType(componentTypes, isNullable);
+    }
+
+    public RelDataType createArbitraryMapType(
+            List<RelDataType> keyTypes, List<RelDataType> valueTypes, boolean isNullable) {
+        return new ArbitraryMapType(keyTypes, valueTypes, isNullable);
     }
 }

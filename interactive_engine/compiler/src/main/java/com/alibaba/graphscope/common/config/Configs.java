@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -74,6 +75,10 @@ public class Configs {
         } else {
             return this.properties.getProperty(name, defaultValue);
         }
+    }
+
+    public Iterator<Object> getKeys() {
+        return this.properties.keys().asIterator();
     }
 
     @Override

@@ -46,6 +46,12 @@ public class ScanFusionOp extends InterOpBase {
         return params;
     }
 
+    public boolean isCountOnly() {
+        return isCountOnly;
+    }
+
+    private boolean isCountOnly;
+
     public void setScanOpt(OpArg scanOpt) {
         this.scanOpt = Optional.of(scanOpt);
     }
@@ -56,5 +62,9 @@ public class ScanFusionOp extends InterOpBase {
 
     public void setParams(QueryParams params) {
         this.params = Optional.of(params);
+    }
+
+    public void setCountOnly(boolean isCountOnly) {
+        this.isCountOnly = isCountOnly;
     }
 }

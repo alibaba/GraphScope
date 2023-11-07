@@ -66,8 +66,8 @@ impl RawBytes {
         RawBytes { ptr: null(), len: 0 }
     }
 
-    pub unsafe fn to_slice(&self) -> &[u8] {
-        std::slice::from_raw_parts(self.ptr, self.len)
+    pub fn to_slice(&self) -> &[u8] {
+        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
     }
 }
 

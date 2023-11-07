@@ -34,7 +34,7 @@ pub struct GraphStore {
     edge_manager: EdgeTypeManager,
     storage: Arc<dyn ExternalStorage>,
     data_root: String,
-    // ensure all modification to graph is in ascending order of snapshot_id
+    // ensure all modification to graph is in ascending order of snapshot id
     si_guard: AtomicIsize,
     lock: GraphMutexLock<()>,
 }
@@ -71,21 +71,18 @@ impl MultiVersionGraph for GraphStore {
     type E = RocksEdgeImpl;
 
     fn get_vertex(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
+        &self, si: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::V>> {
         debug!("get_vertex {:?}, {:?}, {:?}", vertex_id, label_id, property_ids);
         if let Some(label_id) = label_id {
-            self.get_vertex_from_label(snapshot_id, vertex_id, label_id, property_ids)
+            self.get_vertex_from_label(si, vertex_id, label_id, property_ids)
         } else {
-            let mut iter = self.vertex_manager.get_all(snapshot_id as i64);
+            let mut iter = self.vertex_manager.get_all(si as i64);
             while let Some(info) = iter.next() {
-                if let Some(vertex) = self.get_vertex_from_label(
-                    snapshot_id,
-                    vertex_id,
-                    info.get_label() as LabelId,
-                    property_ids,
-                )? {
+                if let Some(vertex) =
+                    self.get_vertex_from_label(si, vertex_id, info.get_label() as LabelId, property_ids)?
+                {
                     return Ok(Some(vertex));
                 }
             }
@@ -94,22 +91,20 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn get_edge(
-        &self, snapshot_id: SnapshotId, edge_id: EdgeId, edge_relation: Option<&EdgeKind>,
+        &self, si: SnapshotId, edge_id: EdgeId, edge_relation: Option<&EdgeKind>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>> {
         debug!("get_edge {:?}", edge_id);
         if let Some(relation) = edge_relation {
-            self.get_edge_from_relation(snapshot_id, edge_id, relation, property_ids)
+            self.get_edge_from_relation(si, edge_id, relation, property_ids)
         } else {
-            let mut iter = self
-                .edge_manager
-                .get_all_edges(snapshot_id as i64);
+            let mut iter = self.edge_manager.get_all_edges(si as i64);
             while let Some(info) = iter.next() {
                 let edge_kinds = info.lock();
                 let mut edge_kind_iter = edge_kinds.iter_kinds();
                 while let Some(edge_kind_info) = edge_kind_iter.next() {
                     if let Some(edge) = self.get_edge_from_relation(
-                        snapshot_id,
+                        si,
                         edge_id,
                         &edge_kind_info.get_type().into(),
                         property_ids,
@@ -123,18 +118,20 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn scan_vertex(
-        &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
+        &self, si: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>> {
-        debug!("scan_vertex {:?}, {:?}", label_id, condition);
+        debug!("scan_vertex {:?}, {:?}, {:?}", label_id, condition, property_ids);
+        let with_prop = property_ids.is_some();
         let mut iter = match label_id {
             Some(label_id) => {
                 match self
                     .vertex_manager
-                    .get_type_info(snapshot_id as i64, label_id as i32)
+                    .get_type_info(si as i64, label_id as i32)
                 {
                     Ok(vertex_type_info) => {
-                        let scan = VertexTypeScan::new(self.storage.clone(), snapshot_id, vertex_type_info);
+                        let scan =
+                            VertexTypeScan::new(self.storage.clone(), si, vertex_type_info, with_prop);
                         scan.into_iter()
                     }
                     Err(e) => {
@@ -147,11 +144,11 @@ impl MultiVersionGraph for GraphStore {
                 }
             }
             None => {
-                let mut vertex_type_info_iter = self.vertex_manager.get_all(snapshot_id as i64);
+                let mut vertex_type_info_iter = self.vertex_manager.get_all(si as i64);
                 let mut res: Records<Self::V> = Box::new(::std::iter::empty());
                 while let Some(info) = vertex_type_info_iter.next_info() {
                     let label_iter =
-                        VertexTypeScan::new(self.storage.clone(), snapshot_id, info).into_iter();
+                        VertexTypeScan::new(self.storage.clone(), si, info, with_prop).into_iter();
                     res = Box::new(res.chain(label_iter));
                 }
                 res
@@ -177,81 +174,61 @@ impl MultiVersionGraph for GraphStore {
     }
 
     fn scan_edge(
-        &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
+        &self, si: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>> {
         debug!("scan_edge {:?}", label_id);
-        self.query_edges(snapshot_id, None, EdgeDirection::Both, label_id, condition, property_ids)
+        self.query_edges(si, None, EdgeDirection::Both, label_id, condition, property_ids)
     }
-
     fn get_out_edges(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
+        &self, si: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>> {
         debug!("get_out_edges {:?}, {:?}", vertex_id, label_id);
-        self.query_edges(
-            snapshot_id,
-            Some(vertex_id),
-            EdgeDirection::Out,
-            label_id,
-            condition,
-            property_ids,
-        )
+        self.query_edges(si, Some(vertex_id), EdgeDirection::Out, label_id, condition, property_ids)
     }
 
     fn get_in_edges(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
+        &self, si: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::E>> {
         debug!("get_in_edges {:?}, {:?}", vertex_id, label_id);
-        self.query_edges(snapshot_id, Some(vertex_id), EdgeDirection::In, label_id, condition, property_ids)
+        self.query_edges(si, Some(vertex_id), EdgeDirection::In, label_id, condition, property_ids)
     }
 
     fn get_out_degree(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
+        &self, si: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
     ) -> GraphResult<usize> {
         debug!("get_out_degree {:?}, {:?}", vertex_id, label_id);
-        let edges_iter =
-            self.get_out_edges(snapshot_id, vertex_id, label_id, None, Some(vec![]).as_ref())?;
+        let edges_iter = self.get_out_edges(si, vertex_id, label_id, None, Some(vec![]).as_ref())?;
         Ok(edges_iter.count())
     }
 
     fn get_in_degree(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
+        &self, si: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
     ) -> GraphResult<usize> {
         debug!("get_in_degree {:?}, {:?}", vertex_id, label_id);
-        let edges_iter =
-            self.get_in_edges(snapshot_id, vertex_id, label_id, None, Some(vec![]).as_ref())?;
+        let edges_iter = self.get_in_edges(si, vertex_id, label_id, None, Some(vec![]).as_ref())?;
         Ok(edges_iter.count())
     }
 
     fn get_kth_out_edge(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
+        &self, si: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>> {
         debug!("get_kth_out_edge");
-        let mut edges_iter = self.get_out_edges(
-            snapshot_id,
-            vertex_id,
-            Some(edge_relation.get_edge_label_id()),
-            None,
-            property_ids,
-        )?;
+        let mut edges_iter =
+            self.get_out_edges(si, vertex_id, Some(edge_relation.get_edge_label_id()), None, property_ids)?;
         edges_iter.nth(k as usize).transpose()
     }
 
     fn get_kth_in_edge(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
+        &self, si: SnapshotId, vertex_id: VertexId, edge_relation: &EdgeKind, k: SerialId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>> {
         debug!("get_kth_in_edge");
-        let mut edges_iter = self.get_in_edges(
-            snapshot_id,
-            vertex_id,
-            Some(edge_relation.get_edge_label_id()),
-            None,
-            property_ids,
-        )?;
+        let mut edges_iter =
+            self.get_in_edges(si, vertex_id, Some(edge_relation.get_edge_label_id()), None, property_ids)?;
         edges_iter.nth(k as usize).transpose()
     }
 
@@ -798,21 +775,21 @@ impl GraphStore {
     }
 
     fn get_vertex_from_label(
-        &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: LabelId,
+        &self, si: SnapshotId, vertex_id: VertexId, label_id: LabelId,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<RocksVertexImpl>> {
         debug!("get_vertex_from_label {:?}, {:?}, {:?}", vertex_id, label_id, property_ids);
-        let snapshot_id = snapshot_id as i64;
+        let si = si as i64;
         let vertex_type_info = self
             .vertex_manager
-            .get_type_info(snapshot_id, label_id as i32)?;
-        if let Some(table) = vertex_type_info.get_table(snapshot_id) {
-            let key = vertex_key(table.id, vertex_id as i64, snapshot_id - table.start_si);
+            .get_type_info(si, label_id as i32)?;
+        if let Some(table) = vertex_type_info.get_table(si) {
+            let key = vertex_key(table.id, vertex_id as i64, si - table.start_si);
             let mut iter = self.storage.scan_from(&key)?;
             if let Some((k, v)) = iter.next() {
                 if k[0..16] == key[0..16] && v.len() > 4 {
                     let codec_version = get_codec_version(v);
-                    let decoder = vertex_type_info.get_decoder(snapshot_id, codec_version)?;
+                    let decoder = vertex_type_info.get_decoder(si, codec_version)?;
                     let columns = Self::parse_columns(property_ids);
                     let vertex = RocksVertexImpl::with_columns(
                         vertex_id,
@@ -829,21 +806,21 @@ impl GraphStore {
     }
 
     fn get_edge_from_relation(
-        &self, snapshot_id: SnapshotId, edge_id: EdgeId, edge_relation: &EdgeKind,
+        &self, si: SnapshotId, edge_id: EdgeId, edge_relation: &EdgeKind,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<RocksEdgeImpl>> {
         debug!("get_edge_from_relation, {:?}, {:?}", edge_id, edge_relation);
-        let snapshot_id = snapshot_id as i64;
+        let si = si as i64;
         let info = self
             .edge_manager
-            .get_edge_kind(snapshot_id, &edge_relation.into())?;
-        if let Some(table) = info.get_table(snapshot_id) {
-            let key = edge_key(table.id, edge_id.into(), EdgeDirection::Out, snapshot_id - table.start_si);
+            .get_edge_kind(si, &edge_relation.into())?;
+        if let Some(table) = info.get_table(si) {
+            let key = edge_key(table.id, edge_id.into(), EdgeDirection::Out, si - table.start_si);
             let mut iter = self.storage.scan_from(&key)?;
             if let Some((k, v)) = iter.next() {
                 if k[0..32] == key[0..32] && v.len() >= 4 {
                     let codec_version = get_codec_version(v);
-                    let decoder = info.get_decoder(snapshot_id, codec_version)?;
+                    let decoder = info.get_decoder(si, codec_version)?;
                     let columns = Self::parse_columns(property_ids);
                     let edge = RocksEdgeImpl::with_columns(
                         edge_id,
@@ -860,23 +837,25 @@ impl GraphStore {
     }
 
     fn query_edges(
-        &self, snapshot_id: SnapshotId, vertex_id: Option<VertexId>, direction: EdgeDirection,
+        &self, si: SnapshotId, vertex_id: Option<VertexId>, direction: EdgeDirection,
         label_id: Option<LabelId>, condition: Option<&Condition>, property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<RocksEdgeImpl>> {
         debug!("query_edges {:?}, {:?}, {:?} {:?}", vertex_id, label_id, property_ids, direction);
+        let with_prop = property_ids.is_some();
         let mut iter = match label_id {
             Some(label_id) => {
                 match self
                     .edge_manager
-                    .get_edge_info(snapshot_id as i64, label_id as i32)
+                    .get_edge_info(si as i64, label_id as i32)
                 {
                     Ok(edge_info) => {
                         let scan = EdgeTypeScan::new(
                             self.storage.clone(),
-                            snapshot_id,
+                            si,
                             edge_info,
                             vertex_id,
                             direction,
+                            with_prop,
                         );
                         scan.into_iter()
                     }
@@ -890,13 +869,11 @@ impl GraphStore {
                 }
             }
             None => {
-                let mut edge_info_iter = self
-                    .edge_manager
-                    .get_all_edges(snapshot_id as i64);
+                let mut edge_info_iter = self.edge_manager.get_all_edges(si as i64);
                 let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
                 while let Some(info) = edge_info_iter.next_info() {
                     let label_iter =
-                        EdgeTypeScan::new(self.storage.clone(), snapshot_id, info, vertex_id, direction)
+                        EdgeTypeScan::new(self.storage.clone(), si, info, vertex_id, direction, with_prop)
                             .into_iter();
                     res = Box::new(res.chain(label_iter));
                 }
