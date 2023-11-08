@@ -6,6 +6,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersec
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
+
 import org.javatuples.Pair;
 
 import java.util.*;
@@ -76,7 +77,6 @@ public class FuzzyPatternProcessor {
             return fuzzyVerticesWeight * fuzzyEdgesWeight;
         }
 
-
         public void updateFuzzyVerticesWeight(Double fuzzyVertexWeight) {
             this.fuzzyVerticesWeight *= fuzzyVertexWeight;
         }
@@ -85,18 +85,20 @@ public class FuzzyPatternProcessor {
             this.fuzzyEdgesWeight *= fuzzyEdgeWeight;
         }
 
-        public void updateFuzzyVertexOrderToTypeMap(Integer fuzzyVertexOrder, List<Integer> singleVertexTypes) {
+        public void updateFuzzyVertexOrderToTypeMap(
+                Integer fuzzyVertexOrder, List<Integer> singleVertexTypes) {
             this.fuzzyVertexOrderToTypesMap.put(fuzzyVertexOrder, singleVertexTypes);
         }
 
-        public void updateFuzzyVertexIdToTypeMap(Integer fuzzyVertexId, List<Integer> singleVertexTypes) {
+        public void updateFuzzyVertexIdToTypeMap(
+                Integer fuzzyVertexId, List<Integer> singleVertexTypes) {
             this.fuzzyVertexIdToTypesMap.put(fuzzyVertexId, singleVertexTypes);
         }
 
-        public void updateFuzzyEdgeIdToTypeMap(Integer fuzzyEdgeId, List<EdgeTypeId> singleEdgeTypes) {
+        public void updateFuzzyEdgeIdToTypeMap(
+                Integer fuzzyEdgeId, List<EdgeTypeId> singleEdgeTypes) {
             this.fuzzyEdgeIdToTypesMap.put(fuzzyEdgeId, singleEdgeTypes);
         }
-
     }
 
     public FuzzyPatternProcessor(GlogueSchema schema) {
@@ -121,8 +123,7 @@ public class FuzzyPatternProcessor {
         return isFuzzy;
     }
 
-    public Pair<Pattern, FuzzyInfo> processFuzzyPatternAndGetFuzzyInfo(
-            Pattern p) {
+    public Pair<Pattern, FuzzyInfo> processFuzzyPatternAndGetFuzzyInfo(Pattern p) {
         Pattern newPattern = new Pattern();
         FuzzyInfo fuzzyInfo = new FuzzyInfo();
         for (PatternVertex v : p.getVertexSet()) {
@@ -164,7 +165,9 @@ public class FuzzyPatternProcessor {
     // replace fuzzy edge type ids with single type id
     // the logic is, if there is only one edge type id, then return it.
     // otherwise, we need to infer the edge type id from the schema.
-    private EdgeTypeId replaceWithSingleType(PatternVertex srcVertex, PatternVertex dstVertex,
+    private EdgeTypeId replaceWithSingleType(
+            PatternVertex srcVertex,
+            PatternVertex dstVertex,
             List<EdgeTypeId> edgeTypeIds,
             GlogueSchema schema) {
         if (edgeTypeIds.size() == 1) {
@@ -173,7 +176,8 @@ public class FuzzyPatternProcessor {
             Integer srcType = srcVertex.getVertexTypeIds().get(0);
             Integer dstType = dstVertex.getVertexTypeIds().get(0);
             List<Integer> inferredEdgeTypes = new ArrayList<>();
-            schema.getEdgeTypes(srcType, dstType).forEach(edgeType -> inferredEdgeTypes.add(edgeType.getEdgeLabelId()));
+            schema.getEdgeTypes(srcType, dstType)
+                    .forEach(edgeType -> inferredEdgeTypes.add(edgeType.getEdgeLabelId()));
             List<Integer> queryEdgeTypes = new ArrayList<>();
             edgeTypeIds.forEach(edgeType -> queryEdgeTypes.add(edgeType.getEdgeLabelId()));
             inferredEdgeTypes.retainAll(queryEdgeTypes);
@@ -184,7 +188,8 @@ public class FuzzyPatternProcessor {
                 // be knows.
                 // if we pick software as the dst vertex type, then the inferred edge type
                 // should be creates.
-                throw new UnsupportedOperationException("no edge type found for " + srcType + "->" + dstType);
+                throw new UnsupportedOperationException(
+                        "no edge type found for " + srcType + "->" + dstType);
             }
             return new EdgeTypeId(srcType, dstType, inferredEdgeTypes.get(0));
         }
@@ -210,8 +215,9 @@ public class FuzzyPatternProcessor {
 
     public Double estimateCountWithFuzzyInfo(Double count, FuzzyInfo info) {
         System.out.println("fuzzy info: " + info.toString());
-        System.out.println("count: "+ count);
-        // TODO: confirm multiplying the fuzzy ratio? or either fuzzyVerticesWeight or fuzzyEdgesWeight is enough?
+        System.out.println("count: " + count);
+        // TODO: confirm multiplying the fuzzy ratio? or either fuzzyVerticesWeight or
+        // fuzzyEdgesWeight is enough?
         return count * info.getFuzzyRatio();
     }
 
@@ -229,23 +235,24 @@ public class FuzzyPatternProcessor {
         info.setSingleToFuzzyOrderMapping(newToOriOrderMapping);
     }
 
-    private void computeOrderMappingAfterIsomorphic(PatternMapping mapping) {
-
-    }
+    private void computeOrderMappingAfterIsomorphic(PatternMapping mapping) {}
 
     // In Glogue Edges
-    public Set<GlogueEdge> processGlogueEdgesWithFuzzyInfo(Set<GlogueEdge> glogueEdges, FuzzyInfo info, boolean isOut) {
+    public Set<GlogueEdge> processGlogueEdgesWithFuzzyInfo(
+            Set<GlogueEdge> glogueEdges, FuzzyInfo info, boolean isOut) {
         // TODO: mapping back into fuzzy edges
         for (GlogueEdge glogueEdge : glogueEdges) {
             if (glogueEdge instanceof GlogueExtendIntersectEdge) {
-                GlogueExtendIntersectEdge extendIntersectEdge = (GlogueExtendIntersectEdge) glogueEdge;
+                GlogueExtendIntersectEdge extendIntersectEdge =
+                        (GlogueExtendIntersectEdge) glogueEdge;
                 // remap the src order to the target order in the ori pattern
-                Map<Integer, Integer> glogueSrcToTargetOrderMapping = extendIntersectEdge.getSrcToTargetOrderMapping();
-                Map<Integer, Integer> processedSrcToTargetOrderMapping = processGlogueEdgeSrcToTargetOrderMapping(
-                        glogueSrcToTargetOrderMapping, info);
+                Map<Integer, Integer> glogueSrcToTargetOrderMapping =
+                        extendIntersectEdge.getSrcToTargetOrderMapping();
+                Map<Integer, Integer> processedSrcToTargetOrderMapping =
+                        processGlogueEdgeSrcToTargetOrderMapping(
+                                glogueSrcToTargetOrderMapping, info);
 
                 ExtendStep extendStep = extendIntersectEdge.getExtendStep();
-
             }
         }
         return glogueEdges;
@@ -263,17 +270,17 @@ public class FuzzyPatternProcessor {
         return processedSrcToTargetOrderMapping;
     }
 
-//    private ExtendStep processGlogueEdgeExtendStep(ExtendStep extendStep, FuzzyInfo info) {
-//        Integer targetOrder = extendStep.getTargetVertexOrder();
-//        Integer mappedTargetOrder = info.singleToFuzzyOrderMapping.get(targetOrder);
-//        for (ExtendEdge extendEdge : extendStep.getExtendEdges()) {
-//            Integer srcVertexOrder = extendEdge.getSrcVertexOrder();
-//            Integer mappedSrcOrder = processedSrcToTargetOrderMapping.get(srcVertexOrder);
-//            extendEdge.setSrcVertexOrder(mappedOriOrder);
-//        }
-//    }
-//
-//    private ExtendEdge processGlogueEdgeExtendEdge(ExtendEdge extendEdge, FuzzyInfo info) {
-//
-//    }
+    //    private ExtendStep processGlogueEdgeExtendStep(ExtendStep extendStep, FuzzyInfo info) {
+    //        Integer targetOrder = extendStep.getTargetVertexOrder();
+    //        Integer mappedTargetOrder = info.singleToFuzzyOrderMapping.get(targetOrder);
+    //        for (ExtendEdge extendEdge : extendStep.getExtendEdges()) {
+    //            Integer srcVertexOrder = extendEdge.getSrcVertexOrder();
+    //            Integer mappedSrcOrder = processedSrcToTargetOrderMapping.get(srcVertexOrder);
+    //            extendEdge.setSrcVertexOrder(mappedOriOrder);
+    //        }
+    //    }
+    //
+    //    private ExtendEdge processGlogueEdgeExtendEdge(ExtendEdge extendEdge, FuzzyInfo info) {
+    //
+    //    }
 }

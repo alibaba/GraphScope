@@ -11,17 +11,22 @@ public class Combinations {
         return results;
     }
 
-    private static <T> void getCombinationsHelper(List<T> elements, int k, int startIndex, List<T> currentCombination,
+    private static <T> void getCombinationsHelper(
+            List<T> elements,
+            int k,
+            int startIndex,
+            List<T> currentCombination,
             List<List<T>> results) {
         if (currentCombination.size() == k) {
             results.add(new ArrayList<>(currentCombination));
             return;
         }
-        if (startIndex >= elements.size() || elements.size() - startIndex < k - currentCombination.size()) {
+        if (startIndex >= elements.size()
+                || elements.size() - startIndex < k - currentCombination.size()) {
             return;
         }
         // notice that we do not allow duplicates within the combination
-       // if (currentCombination.contains(elements.get(startIndex) )) return;
+        // if (currentCombination.contains(elements.get(startIndex) )) return;
         currentCombination.add(elements.get(startIndex));
         getCombinationsHelper(elements, k, startIndex + 1, currentCombination, results);
         currentCombination.remove(currentCombination.size() - 1);

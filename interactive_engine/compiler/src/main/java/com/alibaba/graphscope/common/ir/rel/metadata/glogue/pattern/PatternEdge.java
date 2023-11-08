@@ -9,7 +9,8 @@ public abstract class PatternEdge {
     private final ElementDetails elementDetails;
     private final IsomorphismChecker isomorphismChecker;
 
-    protected PatternEdge(boolean isBoth, ElementDetails elementDetails, IsomorphismChecker isomorphismChecker) {
+    protected PatternEdge(
+            boolean isBoth, ElementDetails elementDetails, IsomorphismChecker isomorphismChecker) {
         this.isBoth = isBoth;
         this.elementDetails = elementDetails;
         this.isomorphismChecker = isomorphismChecker;
@@ -39,7 +40,12 @@ public abstract class PatternEdge {
 
     @Override
     public String toString() {
-        return getSrcVertex().getId() + "->" + getDstVertex().getId() + "[" + getEdgeTypeIds().toString() + "]";
+        return getSrcVertex().getId()
+                + "->"
+                + getDstVertex().getId()
+                + "["
+                + getEdgeTypeIds().toString()
+                + "]";
     }
 
     @Override
@@ -48,12 +54,13 @@ public abstract class PatternEdge {
     }
 
     @Override
-    public boolean equals(Object o){
+    public boolean equals(Object o) {
         if (!(o instanceof PatternEdge)) {
             return false;
         }
         PatternEdge other = (PatternEdge) o;
-        return this.getSrcVertex().equals(other.getSrcVertex()) && this.getDstVertex().equals(other.getDstVertex()) && this.getEdgeTypeIds().equals(other.getEdgeTypeIds());
+        return this.getSrcVertex().equals(other.getSrcVertex())
+                && this.getDstVertex().equals(other.getDstVertex())
+                && this.getEdgeTypeIds().equals(other.getEdgeTypeIds());
     }
-
 }

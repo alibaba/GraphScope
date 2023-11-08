@@ -16,8 +16,17 @@ public class SinglePatternEdge extends PatternEdge {
         this(src, dst, edgeTypeId, id, false, new ElementDetails());
     }
 
-    public SinglePatternEdge(PatternVertex src, PatternVertex dst, EdgeTypeId edgeTypeId, int id, boolean isBoth, ElementDetails details) {
-        super(isBoth, details, new EdgeIsomorphismChecker(Lists.newArrayList(edgeTypeId), isBoth, details));
+    public SinglePatternEdge(
+            PatternVertex src,
+            PatternVertex dst,
+            EdgeTypeId edgeTypeId,
+            int id,
+            boolean isBoth,
+            ElementDetails details) {
+        super(
+                isBoth,
+                details,
+                new EdgeIsomorphismChecker(Lists.newArrayList(edgeTypeId), isBoth, details));
         this.edgeTypeId = edgeTypeId;
         this.id = id;
         this.srcVertex = src;

@@ -26,9 +26,10 @@ public class ExtendStep {
     }
 
     public void sortExtendEdges() {
-        extendEdges.sort((o1, o2) -> {
-            return o1.getWeight().compareTo(o2.getWeight());
-        });
+        extendEdges.sort(
+                (o1, o2) -> {
+                    return o1.getWeight().compareTo(o2.getWeight());
+                });
     }
 
     public void setTargetVertexOrder(Integer targetVertexOrder) {
@@ -49,11 +50,15 @@ public class ExtendStep {
 
     @Override
     public String toString() {
-        return "ExtendStep{" +
-                "targetType=" + targetVertexType +
-                ", targetOrder=" + targetVertexOrder +
-                ", weight=" + weight +
-                ", extendEdges=" + extendEdges +
-                '}';
+        return "ExtendStep{"
+                + "targetType="
+                + targetVertexType
+                + ", targetOrder="
+                + targetVertexOrder
+                + ", weight="
+                + weight
+                + ", extendEdges="
+                + extendEdges
+                + '}';
     }
 }

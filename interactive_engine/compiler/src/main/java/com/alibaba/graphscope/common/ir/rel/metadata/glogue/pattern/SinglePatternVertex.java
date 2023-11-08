@@ -5,7 +5,6 @@ import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.List;
 
-
 public class SinglePatternVertex extends PatternVertex {
     private Integer vertexTypeId;
     private Integer id;

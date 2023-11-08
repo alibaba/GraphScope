@@ -28,7 +28,7 @@ public abstract class PatternVertex {
 
     @Override
     public String toString() {
-     return getId().toString() + "[" + getVertexTypeIds().toString() + "]";
+        return getId().toString() + "[" + getVertexTypeIds().toString() + "]";
     }
 
     @Override
@@ -37,11 +37,12 @@ public abstract class PatternVertex {
     }
 
     @Override
-    public boolean equals(Object o){
+    public boolean equals(Object o) {
         if (!(o instanceof PatternVertex)) {
             return false;
         }
         PatternVertex other = (PatternVertex) o;
-        return this.getId().equals(other.getId()) && this.getVertexTypeIds().equals(other.getVertexTypeIds());
+        return this.getId().equals(other.getId())
+                && this.getVertexTypeIds().equals(other.getVertexTypeIds());
     }
 }

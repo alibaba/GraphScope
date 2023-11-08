@@ -16,5 +16,4 @@
 
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
-public interface IsomorphismChecker<T> extends Comparable<T> {
-}
+public interface IsomorphismChecker<T> extends Comparable<T> {}

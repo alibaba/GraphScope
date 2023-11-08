@@ -1,8 +1,8 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
-import java.util.Map;
-
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
+
+import java.util.Map;
 
 public class GlogueExtendIntersectEdge extends GlogueEdge {
     /// a mapping from src pattern vertex order to target pattern vertex order
@@ -14,7 +14,10 @@ public class GlogueExtendIntersectEdge extends GlogueEdge {
     /// the target pattern
     private Pattern dstPattern;
 
-    public GlogueExtendIntersectEdge(Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep,
+    public GlogueExtendIntersectEdge(
+            Pattern srcPattern,
+            Pattern dstPattern,
+            ExtendStep extendStep,
             Map<Integer, Integer> srcToTargetOrderMapping) {
         this.extendStep = extendStep;
         this.srcPattern = srcPattern;
@@ -42,12 +45,15 @@ public class GlogueExtendIntersectEdge extends GlogueEdge {
 
     @Override
     public String toString() {
-        return "ExtendIntersectEdge{" +
-                "srcPattern=" + srcPattern.getPatternId() +
-                ", dstPattern=" + dstPattern.getPatternId() +
-                ", extendStep=" + extendStep +
-                ", srcToTargetIdMapping=" + srcToTargetOrderMapping +
-
-                '}';
+        return "ExtendIntersectEdge{"
+                + "srcPattern="
+                + srcPattern.getPatternId()
+                + ", dstPattern="
+                + dstPattern.getPatternId()
+                + ", extendStep="
+                + extendStep
+                + ", srcToTargetIdMapping="
+                + srcToTargetOrderMapping
+                + '}';
     }
 }

@@ -49,13 +49,16 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
         // then, assign the color id to each vertex
         for (PatternVertex patternVertex : patternGraph.vertexSet()) {
-            initialColors.put(patternVertex, initialMapCheckerToColor.get(patternVertex.getIsomorphismChecker()));
+            initialColors.put(
+                    patternVertex,
+                    initialMapCheckerToColor.get(patternVertex.getIsomorphismChecker()));
         }
 
-        ColoringImpl<PatternVertex> initialColoringImpl = new ColoringImpl<PatternVertex>(initialColors, colorId);
-        ColorRefinementAlgorithm<PatternVertex, PatternEdge> colorRefinementAlgorithm = new ColorRefinementAlgorithm<PatternVertex, PatternEdge>(
-                patternGraph,
-                initialColoringImpl);
+        ColoringImpl<PatternVertex> initialColoringImpl =
+                new ColoringImpl<PatternVertex>(initialColors, colorId);
+        ColorRefinementAlgorithm<PatternVertex, PatternEdge> colorRefinementAlgorithm =
+                new ColorRefinementAlgorithm<PatternVertex, PatternEdge>(
+                        patternGraph, initialColoringImpl);
         Coloring<PatternVertex> initColoring = colorRefinementAlgorithm.getColoring();
         setTypeGroupMapping(initColoring);
         this.initColoring = initColoring;
@@ -85,7 +88,8 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
     }
 
     // recolor if the current color is not unique
-    private Coloring<PatternVertex> recolor(Graph<PatternVertex, PatternEdge> patternGraph,
+    private Coloring<PatternVertex> recolor(
+            Graph<PatternVertex, PatternEdge> patternGraph,
             Coloring<PatternVertex> patternColoring) {
         Map<PatternVertex, Integer> initialColors = patternColoring.getColors();
         int maxColorId = patternColoring.getColorClasses().size();
@@ -97,8 +101,8 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             }
         }
         ColoringImpl initialColoringImpl = new ColoringImpl(initialColors, maxColorId);
-        ColorRefinementAlgorithm colorRefinementAlgorithm = new ColorRefinementAlgorithm(patternGraph,
-                initialColoringImpl);
+        ColorRefinementAlgorithm colorRefinementAlgorithm =
+                new ColorRefinementAlgorithm(patternGraph, initialColoringImpl);
         Coloring<PatternVertex> newColor = colorRefinementAlgorithm.getColoring();
         return newColor;
     }
@@ -107,12 +111,12 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
         mapCheckerToGroup = new TreeMap();
         Integer groupId = 0;
         for (Set<PatternVertex> coloredPatternVertices : color.getColorClasses()) {
-            IsomorphismChecker checker = coloredPatternVertices.iterator().next().getIsomorphismChecker();
+            IsomorphismChecker checker =
+                    coloredPatternVertices.iterator().next().getIsomorphismChecker();
             if (mapCheckerToGroup.containsKey(checker)) {
                 mapCheckerToGroup.get(checker).add(groupId);
             } else {
-                mapCheckerToGroup.put(checker,
-                        new ArrayList<Integer>(Arrays.asList(groupId)));
+                mapCheckerToGroup.put(checker, new ArrayList<Integer>(Arrays.asList(groupId)));
             }
             groupId++;
         }
@@ -135,7 +139,9 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
     @Override
     public String toString() {
-        return "uniqueColoring :" + this.uniqueColoring.toString() + ", groupColoring: "
+        return "uniqueColoring :"
+                + this.uniqueColoring.toString()
+                + ", groupColoring: "
                 + this.initColoring.toString();
     }
 
@@ -145,28 +151,39 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             PatternOrderCanonicalLabelingImpl other = (PatternOrderCanonicalLabelingImpl) obj;
             // should have the same number of types and groups
             if (this.mapCheckerToGroup.size() != other.mapCheckerToGroup.size()
-                    || this.initColoring.getColorClasses().size() != other.initColoring.getColorClasses().size()) {
-                logger.debug("In color comparing, numbers of types / colors not equal: "
-                        + this.mapCheckerToGroup.size() + " vs " + other.mapCheckerToGroup.size() + " / "
-                        + this.initColoring.getColorClasses().size() + " vs "
-                        + other.initColoring.getColorClasses().size());
+                    || this.initColoring.getColorClasses().size()
+                            != other.initColoring.getColorClasses().size()) {
+                logger.debug(
+                        "In color comparing, numbers of types / colors not equal: "
+                                + this.mapCheckerToGroup.size()
+                                + " vs "
+                                + other.mapCheckerToGroup.size()
+                                + " / "
+                                + this.initColoring.getColorClasses().size()
+                                + " vs "
+                                + other.initColoring.getColorClasses().size());
                 return false;
             }
             // each type should have the same number of groups
             else {
                 // first compare if types are the same
-                List<IsomorphismChecker> thisTypeList = new ArrayList<>(this.mapCheckerToGroup.keySet());
-                List<IsomorphismChecker> otherTypeList = new ArrayList<>(other.mapCheckerToGroup.keySet());
+                List<IsomorphismChecker> thisTypeList =
+                        new ArrayList<>(this.mapCheckerToGroup.keySet());
+                List<IsomorphismChecker> otherTypeList =
+                        new ArrayList<>(other.mapCheckerToGroup.keySet());
                 if (!thisTypeList.equals(otherTypeList)) {
                     return false;
                 }
                 // then compare the number of groups for each type
                 for (IsomorphismChecker checker : this.mapCheckerToGroup.keySet()) {
-                    if (this.mapCheckerToGroup.get(checker).size() != other.mapCheckerToGroup.get(checker)
-                            .size()) {
+                    if (this.mapCheckerToGroup.get(checker).size()
+                            != other.mapCheckerToGroup.get(checker).size()) {
                         logger.debug(
-                                "In color comparing, numbers of groups for type " + checker + " not equal: "
-                                        + this.mapCheckerToGroup.get(checker).size() + " vs "
+                                "In color comparing, numbers of groups for type "
+                                        + checker
+                                        + " not equal: "
+                                        + this.mapCheckerToGroup.get(checker).size()
+                                        + " vs "
                                         + other.mapCheckerToGroup.get(checker).size());
                         return false;
                     } else {
@@ -175,8 +192,13 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
                         List<Integer> colors2 = other.mapCheckerToGroup.get(checker);
                         colors2.sort(Comparator.naturalOrder());
                         if (!colors1.equals(colors2)) {
-                            logger.debug("In groups comparing, groups for type " + checker + " not equal: "
-                                    + colors1.toString() + " vs " + colors2.toString());
+                            logger.debug(
+                                    "In groups comparing, groups for type "
+                                            + checker
+                                            + " not equal: "
+                                            + colors1.toString()
+                                            + " vs "
+                                            + colors2.toString());
                             return false;
                         }
                     }
@@ -186,5 +208,4 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
         // TODO: more filtering conditions?
         return true;
     }
-
 }

@@ -1,12 +1,12 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern;
 
+import org.jgrapht.Graph;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.jgrapht.Graph;
 
 // PatternOrdering, preserves the order of vertices in a pattern
 // It is used for determining pattern mappings
@@ -20,8 +20,8 @@ public class PatternOrderGraphOrderingImpl extends PatternOrder {
         this(graph, new PatternVertexDegreeComparator(graph));
     }
 
-    public PatternOrderGraphOrderingImpl(Graph<PatternVertex, PatternEdge> graph,
-            Comparator<PatternVertex> comparator) {
+    public PatternOrderGraphOrderingImpl(
+            Graph<PatternVertex, PatternEdge> graph, Comparator<PatternVertex> comparator) {
 
         List<PatternVertex> vertexSet = new ArrayList<>(graph.vertexSet());
 
@@ -66,9 +66,7 @@ public class PatternOrderGraphOrderingImpl extends PatternOrder {
         return mapVertexToOrder.toString();
     }
 
-    private static class PatternVertexDegreeComparator
-            implements
-            Comparator<PatternVertex> {
+    private static class PatternVertexDegreeComparator implements Comparator<PatternVertex> {
         private Graph<PatternVertex, ?> graph;
 
         PatternVertexDegreeComparator(Graph<PatternVertex, ?> graph) {
@@ -98,5 +96,4 @@ public class PatternOrderGraphOrderingImpl extends PatternOrder {
             return v1.getId() - v2.getId();
         }
     }
-
 }
