@@ -116,7 +116,7 @@ pub fn connect<A: ToSocketAddrs>(
     debug!("connect to server {:?};", addr);
     let hb_sec = params.get_hb_interval_sec();
     super::setup_connection(local_id, hb_sec, &mut conn)?;
-    debug!("setup connection to {:?} success;", addr);
+    info!("setup connection to {:?} success;", addr);
     if let Some((id, hb_sec)) = super::check_connection(&mut conn)? {
         if id == remote_id {
             info!("connect server {} on {:?} success;", remote_id, addr);
