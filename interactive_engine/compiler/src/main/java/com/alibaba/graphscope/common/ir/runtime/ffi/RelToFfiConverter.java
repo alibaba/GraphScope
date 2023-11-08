@@ -120,6 +120,29 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     @Override
+    public RelNode visit(GraphLogicalExpandDegree expandCount) {
+        GraphLogicalExpand fusedExpand = expandCount.getFusedExpand();
+        Pointer ptrExpandCount =
+                LIB.initEdgexpdOperator(
+                        FfiExpandOpt.Degree, Utils.ffiDirection(fusedExpand.getOpt()));
+        checkFfiResult(LIB.setEdgexpdParams(ptrExpandCount, ffiQueryParams(fusedExpand)));
+        if (expandCount.getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setEdgexpdAlias(
+                            ptrExpandCount, ArgUtils.asAlias(expandCount.getAliasId())));
+        }
+        checkFfiResult(
+                LIB.setEdgexpdMeta(
+                        ptrExpandCount,
+                        new FfiPbPointer.ByValue(
+                                com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                                                expandCount.getRowType(), isColumnId)
+                                        .get(0)
+                                        .toByteArray())));
+        return new PhysicalNode(expandCount, ptrExpandCount);
+    }
+
+    @Override
     public RelNode visit(GraphLogicalGetV getV) {
         Pointer ptrGetV = LIB.initGetvOperator(Utils.ffiVOpt(getV.getOpt()));
         checkFfiResult(LIB.setGetvParams(ptrGetV, ffiQueryParams(getV)));

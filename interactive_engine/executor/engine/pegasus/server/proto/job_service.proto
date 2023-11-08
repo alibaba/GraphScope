@@ -62,11 +62,17 @@ message JobResponse {
   bytes  resp  = 2;
 }
 
+message CancelRequest {
+  uint64  job_id = 1;
+}
+
 service JobService {
 
   rpc AddLibrary(BinaryResource) returns(Empty) {}
 
   rpc RemoveLibrary(Name) returns(Empty) {}
+
+  rpc Cancel(CancelRequest) returns(Empty) {}
 
   rpc Submit(JobRequest) returns(stream JobResponse) {}
 }

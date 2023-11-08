@@ -1115,6 +1115,27 @@ public class GraphBuilder extends RelBuilder {
         return collect(false, null, operands);
     }
 
+    /**
+     *  {@code sum0} is an aggregator which returns the sum of the values which
+     *  go into it like {@code sum}. It differs in that return zero for the null values instead of null.
+     */
+    public AggCall sum0(RexNode operand) {
+        return this.sum(false, null, operand);
+    }
+
+    public AggCall sum0(boolean distinct, @Nullable String alias, RexNode operand) {
+        return aggregateCall(
+                GraphStdOperatorTable.SUM0,
+                distinct,
+                false,
+                false,
+                null,
+                null,
+                ImmutableList.of(),
+                alias,
+                ImmutableList.of(operand));
+    }
+
     @Override
     protected AggCall aggregateCall(
             SqlAggFunction aggFunction,
