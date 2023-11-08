@@ -2,7 +2,6 @@ package com.alibaba.graphscope.common.ir.rel.metadata;
 
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.metadata.GlogueRowCountArbitraryImpl;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -30,7 +29,7 @@ public class GlogueTest {
         // System.out.println(mq.getRowCount(rel));
         System.out.println("try to get row count...");
 
-        GlogueRowCountArbitraryImpl glogueRowCountArbitrary = new GlogueRowCountArbitraryImpl();
-        System.out.println(glogueRowCountArbitrary.getRowCount(rel));
+//        GlogueRowCountArbitraryImpl glogueRowCountArbitrary = new GlogueRowCountArbitraryImpl();
+//        System.out.println(glogueRowCountArbitrary.getRowCount(rel));
     }
 }

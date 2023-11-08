@@ -39,40 +39,8 @@ public class Pattern {
 
     // vertex type comparator and edge type comparator are used for isomorphism
     // inspector
-    final static Comparator<PatternVertex> vertexTypeComparator = (o1, o2) -> {
-        if (o1.getVertexTypeIds().size() != o2.getVertexTypeIds().size()) {
-            return o1.getVertexTypeIds().size() - o2.getVertexTypeIds().size();
-        } else {
-            ArrayList<Integer> o1List = new ArrayList<>(o1.getVertexTypeIds());
-            o1List.sort(Integer::compareTo);
-            ArrayList<Integer> o2List = new ArrayList<>(o2.getVertexTypeIds());
-            o2List.sort(Integer::compareTo);
-            for (int i = 0; i < o1List.size(); i++) {
-                if (!o1List.get(i).equals(o2List.get(i))) {
-                    return o1List.get(i) - o2List.get(i);
-                }
-            }
-            return 0;
-        }
-    };
-    final static Comparator<PatternEdge> edgeTypeComparator = (o1, o2) -> {
-        if (o1.getEdgeTypeIds().size() != o2.getEdgeTypeIds().size()) {
-            return o1.getEdgeTypeIds().size() - o2.getEdgeTypeIds().size();
-        } else {
-            ArrayList<EdgeTypeId> o1List = new ArrayList<>(o1.getEdgeTypeIds());
-            o1List.sort(Comparator.comparingInt(EdgeTypeId::getSrcLabelId).thenComparingInt(EdgeTypeId::getDstLabelId)
-                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
-            ArrayList<EdgeTypeId> o2List = new ArrayList<>(o2.getEdgeTypeIds());
-            o2List.sort(Comparator.comparingInt(EdgeTypeId::getSrcLabelId).thenComparingInt(EdgeTypeId::getDstLabelId)
-                    .thenComparingInt(EdgeTypeId::getEdgeLabelId));
-            for (int i = 0; i < o1List.size(); i++) {
-                if (!o1List.get(i).equals(o2List.get(i))) {
-                    return o1List.get(i).compareTo(o2List.get(i));
-                }
-            }
-            return 0;
-        }
-    };
+    final static Comparator<PatternVertex> vertexTypeComparator = Comparator.comparing(o -> o.getIsomorphismChecker());
+    final static Comparator<PatternEdge> edgeTypeComparator = Comparator.comparing(o -> o.getIsomorphismChecker());
 
     // by default, simple directed graph is used for pattern representation.
     public Pattern() {

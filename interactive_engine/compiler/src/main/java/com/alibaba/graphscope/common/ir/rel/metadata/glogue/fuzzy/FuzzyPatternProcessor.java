@@ -1,26 +1,14 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue.fuzzy;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.javatuples.Pair;
-
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersectEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternMapping;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
-import com.alibaba.graphscope.gaia.proto.GraphAlgebra.EdgeExpand.Direction;
+import org.javatuples.Pair;
+
+import java.util.*;
 
 public class FuzzyPatternProcessor {
     private GlogueSchema schema;
@@ -275,17 +263,17 @@ public class FuzzyPatternProcessor {
         return processedSrcToTargetOrderMapping;
     }
 
-    private ExtendStep processGlogueEdgeExtendStep(ExtendStep extendStep, FuzzyInfo info) {
-        Integer targetOrder = extendStep.getTargetVertexOrder();
-        Integer mappedTargetOrder = info.singleToFuzzyOrderMapping.get(targetOrder);
-        for (ExtendEdge extendEdge : extendStep.getExtendEdges()) {
-            Integer srcVertexOrder = extendEdge.getSrcVertexOrder();
-            Integer mappedSrcOrder = processedSrcToTargetOrderMapping.get(srcVertexOrder);
-            extendEdge.setSrcVertexOrder(mappedOriOrder);
-        }
-    }
-
-    private ExtendEdge processGlogueEdgeExtendEdge(ExtendEdge extendEdge, FuzzyInfo info) {
-
-    }
+//    private ExtendStep processGlogueEdgeExtendStep(ExtendStep extendStep, FuzzyInfo info) {
+//        Integer targetOrder = extendStep.getTargetVertexOrder();
+//        Integer mappedTargetOrder = info.singleToFuzzyOrderMapping.get(targetOrder);
+//        for (ExtendEdge extendEdge : extendStep.getExtendEdges()) {
+//            Integer srcVertexOrder = extendEdge.getSrcVertexOrder();
+//            Integer mappedSrcOrder = processedSrcToTargetOrderMapping.get(srcVertexOrder);
+//            extendEdge.setSrcVertexOrder(mappedOriOrder);
+//        }
+//    }
+//
+//    private ExtendEdge processGlogueEdgeExtendEdge(ExtendEdge extendEdge, FuzzyInfo info) {
+//
+//    }
 }
