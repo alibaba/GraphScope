@@ -18,38 +18,29 @@
 
 namespace gs {
 
-static void preprocess_line(char* line) {
-  size_t len = strlen(line);
-  while (len >= 0) {
-    if (line[len] != '\0' && line[len] != '\n' && line[len] != '\r' &&
-        line[len] != ' ' && line[len] != '\t') {
-      break;
-    } else {
-      --len;
-    }
-  }
-  line[len + 1] = '\0';
-}
 
 static std::vector<std::string> read_header(const std::string& file_name,
                                             char delimiter) {
-  char line_buf[4096];
-  FILE* fin = fopen(file_name.c_str(), "r");
-  if (fgets(line_buf, 4096, fin) == NULL) {
-    LOG(FATAL) << "Failed to read header from file: " << file_name;
-  }
-  preprocess_line(line_buf);
-  const char* cur = line_buf;
+ // read the header line of the file, and split into vector to string by delimiter
   std::vector<std::string> res_vec;
-  while (*cur != '\0') {
-    const char* tmp = cur;
-    while (*tmp != '\0' && *tmp != delimiter) {
-      ++tmp;
+  std::ifstream file(file_name);
+  std::string line;
+  if (file.is_open()) {
+    if (std::getline(file, line)) {
+      std::stringstream ss(line);
+      std::string token;
+      while (std::getline(ss, token, delimiter)) {
+        //trim the token
+        token.erase(token.find_last_not_of(" \n\r\t") + 1);
+        res_vec.push_back(token);
+      }
     }
-
-    std::string_view sv(cur, tmp - cur);
-    res_vec.emplace_back(sv);
-    cur = tmp + 1;
+    else {
+      LOG(FATAL) << "Fail to read header line of file: " << file_name;
+    }
+    file.close();
+  } else {
+    LOG(FATAL) << "Fail to open file: " << file_name;
   }
   return res_vec;
 }
