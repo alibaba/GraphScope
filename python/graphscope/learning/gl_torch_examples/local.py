@@ -86,7 +86,7 @@ device = torch.device("cpu")
 print("-- Creating training dataloader ...")
 train_loader = glt.distributed.DistNeighborLoader(
     data=None,
-    num_neighbors=[10, 5],
+    num_neighbors=[10, 5, 3],
     input_nodes=Split.train,
     batch_size=256,
     shuffle=True,
