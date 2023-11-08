@@ -222,6 +222,38 @@ fn fold_by_key_test() {
 }
 
 #[test]
+fn fold_partition_by_key_test() {
+    let mut conf = JobConf::new("fold_partition_by_key");
+    conf.set_workers(2);
+    let num = 1000u32;
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        let src = index * num..(index + 1) * num;
+        move |input, output| {
+            input
+                .input_from(src)?
+                .key_by(|x| Ok((x % 4, x)))?
+                .fold_partition_by_key(0u32, || |a, _| Ok(a + 1))?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure:");
+    let groups_1 = result.next().unwrap().unwrap();
+    let groups_2 = result.next().unwrap().unwrap();
+    println!("groups 1: {:?}\n groups 2: {:?}", groups_1, groups_2);
+
+    assert_eq!(groups_1.len(), 2);
+    let cnt_0 = groups_1.get(&0).unwrap();
+    assert_eq!(*cnt_0, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    let cnt_1 = groups_2.get(&1).unwrap();
+    assert_eq!(*cnt_1, (0..num * 2).filter(|x| x % 4 == 1).count() as u32);
+    let cnt_2 = groups_1.get(&2).unwrap();
+    assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 2).count() as u32);
+    let cnt_3 = groups_2.get(&3).unwrap();
+    assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 3).count() as u32);
+}
+
+#[test]
 fn fold_partition_test() {
     let mut conf = JobConf::new("fold_partition_test");
     conf.set_workers(2);
