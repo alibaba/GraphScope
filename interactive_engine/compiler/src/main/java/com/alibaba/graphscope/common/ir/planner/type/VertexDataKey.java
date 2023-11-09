@@ -44,8 +44,6 @@ public class VertexDataKey implements DataKey {
 
     @Override
     public String toString() {
-        return "VertexDataKey{" +
-                "orderId=" + orderId +
-                '}';
+        return "VertexDataKey{" + "orderId=" + orderId + '}';
     }
 }

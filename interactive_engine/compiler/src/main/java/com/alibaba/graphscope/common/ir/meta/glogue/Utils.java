@@ -16,9 +16,21 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue;
 
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
+import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
+import com.google.common.base.Preconditions;
+
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataTypeField;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Utils {
     public static PatternVertex getExtendFromVertex(PatternEdge edge, PatternVertex target) {
@@ -36,8 +48,9 @@ public class Utils {
     }
 
     public static PatternDirection getExtendDirection(PatternEdge edge, PatternVertex target) {
-        // todo: support both direction
-        if (edge.getSrcVertex().equals(target)) {
+        if (edge.isBoth()) {
+            return PatternDirection.BOTH;
+        } else if (edge.getSrcVertex().equals(target)) {
             return PatternDirection.IN;
         } else if (edge.getDstVertex().equals(target)) {
             return PatternDirection.OUT;
@@ -48,5 +61,46 @@ public class Utils {
                             + ", edge: "
                             + edge);
         }
+    }
+
+    public static Double getSelectivityCount(double originalCount, Pattern pattern) {
+        if (Double.compare(originalCount, 0.0d) == 0) return originalCount;
+        double selectivityCount = originalCount;
+        for (PatternVertex vertex : pattern.getVertexSet()) {
+            selectivityCount *= vertex.getDetails().getSelectivity();
+        }
+        for (PatternEdge edge : pattern.getEdgeSet()) {
+            selectivityCount *= edge.getDetails().getSelectivity();
+        }
+        return selectivityCount;
+    }
+
+    public static List<Integer> getVertexTypeIds(RelNode rel) {
+        List<RelDataTypeField> fields = rel.getRowType().getFieldList();
+        Preconditions.checkArgument(
+                !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
+                "graph operator should have graph schema type");
+        GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
+        GraphLabelType labelType = schemaType.getLabelType();
+        return labelType.getLabelsEntry().stream()
+                .map(k -> k.getLabelId())
+                .collect(Collectors.toList());
+    }
+
+    public static List<EdgeTypeId> getEdgeTypeIds(RelNode rel) {
+        List<RelDataTypeField> fields = rel.getRowType().getFieldList();
+        Preconditions.checkArgument(
+                !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
+                "graph operator should have graph schema type");
+        GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
+        GraphLabelType labelType = schemaType.getLabelType();
+        return labelType.getLabelsEntry().stream()
+                .map(
+                        k ->
+                                new EdgeTypeId(
+                                        Objects.requireNonNull(k.getSrcLabelId()),
+                                        Objects.requireNonNull(k.getDstLabelId()),
+                                        k.getLabelId()))
+                .collect(Collectors.toList());
     }
 }

@@ -50,8 +50,8 @@ public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulat
             double weight = glogueEdge.getExtendStep().getWeight();
             RelNode input = node.getInput(0);
             double srcPatternCount =
-                    mq.getRowCount
-                            (input instanceof RelSubset ? ((RelSubset) input).getOriginal() : input);
+                    mq.getRowCount(
+                            input instanceof RelSubset ? ((RelSubset) input).getOriginal() : input);
             double dRows = weight * srcPatternCount;
             double dCpu = dRows + 1;
             double dIo = 0;
@@ -73,8 +73,7 @@ public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulat
             return costFactory.makeInfiniteCost();
         } else {
             // todo: estimate the row count of GraphBinaryJoin
-            throw new IllegalArgumentException(
-                    "can not estimate the row count for the node=" + node.getClass());
+            return node.computeSelfCost(node.getCluster().getPlanner(), mq);
         }
     }
 }

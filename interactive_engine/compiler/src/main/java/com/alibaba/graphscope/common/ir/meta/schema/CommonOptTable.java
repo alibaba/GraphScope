@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.meta.schema;
 
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;

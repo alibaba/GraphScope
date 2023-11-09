@@ -36,12 +36,12 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.google.common.collect.ImmutableMap;
+
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.junit.Test;
 
 import java.io.FileOutputStream;
@@ -59,14 +59,23 @@ public class RelMetadataQueryTest {
         Glogue gl = new Glogue().create(g, 3);
         GlogueQuery gq = new GlogueQuery(gl, g);
         GraphRelMetadataQuery mq =
-                new GraphRelMetadataQuery(
-                        new GraphMetadataHandlerProvider(planner, new RelMdRowCount(), gq));
+                new GraphRelMetadataQuery(new GraphMetadataHandlerProvider(planner, gq));
 
         optCluster.setMetadataQuerySupplier(() -> mq);
 
-        GraphBuilder builder = (GraphBuilder) GraphPlanner.relBuilderFactory.create(optCluster, new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
-        RelNode node = com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                "Match (p1:person)-[:knows]->(p2:person), (p2:person)-[:knows]->(p3:person), (p3:person)-[:knows]->(p4:person), (p4:person)-[:created]->(s:software) Return p1", builder).build();
+        GraphBuilder builder =
+                (GraphBuilder)
+                        GraphPlanner.relBuilderFactory.create(
+                                optCluster,
+                                new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
+        RelNode node =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (p1:person)-[:knows]->(p2:person),"
+                                    + " (p2:person)-[:knows]->(p3:person),"
+                                    + " (p3:person)-[:knows]->(p4:person),"
+                                    + " (p4:person)-[:created]->(s:software) Return p1",
+                                builder)
+                        .build();
         RelNode match = node.getInput(0);
         System.out.println(match.explain());
 
@@ -86,10 +95,12 @@ public class RelMetadataQueryTest {
         planner.dump(new PrintWriter(new FileOutputStream("set1.out"), true));
         System.out.println(after.explain());
 
-        Map<Integer, Pattern> patterns = com.alibaba.graphscope.common.ir.tools.Utils.getAllPatterns(after);
-        patterns.forEach((k, v) -> {
-            System.out.println(v);
-        });
+        Map<Integer, Pattern> patterns =
+                com.alibaba.graphscope.common.ir.tools.Utils.getAllPatterns(after);
+        patterns.forEach(
+                (k, v) -> {
+                    System.out.println(v);
+                });
     }
 
     @Test
@@ -124,18 +135,32 @@ public class RelMetadataQueryTest {
 
     @Test
     public void test_3() {
-        PlannerConfig plannerConfig = PlannerConfig.create(
-                new Configs(ImmutableMap.of(
-                        "graph.planner.is.on", "true",
-                        "graph.planner.opt", "CBO",
-                        "graph.planner.rules", "ExtendIntersectRule")));
+        PlannerConfig plannerConfig =
+                PlannerConfig.create(
+                        new Configs(
+                                ImmutableMap.of(
+                                        "graph.planner.is.on", "true",
+                                        "graph.planner.opt", "CBO",
+                                        "graph.planner.rules", "ExtendIntersectRule")));
         GraphOptimizer optimizer = new GraphOptimizer(plannerConfig);
-        RelOptCluster optCluster = GraphOptCluster.create(optimizer.getGraphOptPlanner(), Utils.rexBuilder);
+        RelOptCluster optCluster =
+                GraphOptCluster.create(optimizer.getGraphOptPlanner(), Utils.rexBuilder);
         optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
-        GraphBuilder builder = (GraphBuilder) GraphPlanner.relBuilderFactory.create(optCluster, new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
-        RelNode node = com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                "Match (p1:person)-[:knows]->(p2:person), (p2:person)-[:knows]->(p3:person), (p1:person)-[:knows]->(p3:person), " +
-                        "(p1:person)-[:created]->(s:software), (p2:person)-[:created]->(s:software), (p3:person)-[:created]->(s:software) Return p1, p2, p3", builder).build();
+        GraphBuilder builder =
+                (GraphBuilder)
+                        GraphPlanner.relBuilderFactory.create(
+                                optCluster,
+                                new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
+        RelNode node =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (p1:person)-[:knows]->(p2:person),"
+                                    + " (p2:person)-[:knows]->(p3:person),"
+                                    + " (p1:person)-[:knows]->(p3:person),"
+                                    + " (p1:person)-[:created]->(s:software),"
+                                    + " (p2:person)-[:created]->(s:software),"
+                                    + " (p3:person)-[:created]->(s:software) Return p1, p2, p3",
+                                builder)
+                        .build();
         RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, Utils.schemaMeta));
         System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(after));
     }

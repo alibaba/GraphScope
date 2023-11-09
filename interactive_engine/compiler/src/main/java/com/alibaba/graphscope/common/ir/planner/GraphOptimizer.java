@@ -28,6 +28,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelRule;
@@ -35,7 +36,6 @@ import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.metadata.RelMdRowCount;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -59,9 +59,8 @@ public class GraphOptimizer {
             GlogueSchema g = new GlogueSchema().DefaultGraphSchema();
             Glogue gl = new Glogue().create(g, config.getGlogueSize());
             GlogueQuery gq = new GlogueQuery(gl, g);
-            return
-                    new GraphRelMetadataQuery(
-                            new GraphMetadataHandlerProvider(this.graphOptPlanner, new RelMdRowCount(), gq));
+            return new GraphRelMetadataQuery(
+                    new GraphMetadataHandlerProvider(this.graphOptPlanner, gq));
         }
         return null;
     }
@@ -99,17 +98,26 @@ public class GraphOptimizer {
                     planner.addRelTraitDef(ConventionTraitDef.INSTANCE);
                     planner.setTopDownOpt(true);
                     planner.setNoneConventionHasInfiniteCost(false);
-                    config.getRules().forEach(k -> {
-                        RelRule.Config ruleConfig = null;
-                        if (k.equals(ExtendIntersectRule.class.getSimpleName())) {
-                            ruleConfig = ExtendIntersectRule.Config.DEFAULT.withMaxPatternSizeInGlogue(config.getGlogueSize());
-                        } else {
-                            // todo: add JoinRule
-                        }
-                        if (ruleConfig != null) {
-                            planner.addRule(ruleConfig.withRelBuilderFactory(GraphPlanner.relBuilderFactory).toRule());
-                        }
-                    });
+                    config.getRules()
+                            .forEach(
+                                    k -> {
+                                        RelRule.Config ruleConfig = null;
+                                        if (k.equals(ExtendIntersectRule.class.getSimpleName())) {
+                                            ruleConfig =
+                                                    ExtendIntersectRule.Config.DEFAULT
+                                                            .withMaxPatternSizeInGlogue(
+                                                                    config.getGlogueSize());
+                                        } else {
+                                            // todo: add JoinRule
+                                        }
+                                        if (ruleConfig != null) {
+                                            planner.addRule(
+                                                    ruleConfig
+                                                            .withRelBuilderFactory(
+                                                                    GraphPlanner.relBuilderFactory)
+                                                            .toRule());
+                                        }
+                                    });
                     return planner;
                 case RBO:
                 default:

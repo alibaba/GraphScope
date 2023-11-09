@@ -41,21 +41,20 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
-import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
 import org.apache.calcite.rex.RexVariable;
@@ -71,11 +70,13 @@ import java.util.stream.Stream;
 public class GraphIOProcessor {
     private final GraphBuilder builder;
     private final IrMeta irMeta;
+    private final RelMetadataQuery mq;
     private final Map<DataKey, DataValue> graphDetails;
 
-    public GraphIOProcessor(GraphBuilder builder, IrMeta irMeta) {
+    public GraphIOProcessor(GraphBuilder builder, IrMeta irMeta, RelMetadataQuery mq) {
         this.builder = Objects.requireNonNull(builder);
         this.irMeta = Objects.requireNonNull(irMeta);
+        this.mq = Objects.requireNonNull(mq);
         this.graphDetails = Maps.newHashMap();
     }
 
@@ -145,10 +146,17 @@ public class GraphIOProcessor {
                                 lastVisited = vertex;
                             }
                             if (parent != null
-                                    && (node instanceof GraphLogicalSource || node instanceof GraphLogicalGetV)) {
+                                    && (node instanceof GraphLogicalSource
+                                            || node instanceof GraphLogicalGetV)) {
                                 DataValue value = vertexOrEdgeDetails.get(lastVisited);
-                                if (value != null && (value.getAlias() == null || value.getAlias() == AliasInference.DEFAULT_NAME)) {
-                                    vertexOrEdgeDetails.put(lastVisited, new DataValue(generateAlias(lastVisited), value.getFilter()));
+                                if (value != null
+                                        && (value.getAlias() == null
+                                                || value.getAlias()
+                                                        == AliasInference.DEFAULT_NAME)) {
+                                    vertexOrEdgeDetails.put(
+                                            lastVisited,
+                                            new DataValue(
+                                                    generateAlias(lastVisited), value.getFilter()));
                                 }
                             }
                         }
@@ -163,11 +171,14 @@ public class GraphIOProcessor {
                             PatternVertex existVertex = aliasNameToVertex.get(alias);
                             if (existVertex == null) {
                                 int vertexId = idGenerator.getAndIncrement();
-                                List<Integer> typeIds = getTypeIds(tableScan);
+                                List<Integer> typeIds =
+                                        com.alibaba.graphscope.common.ir.meta.glogue.Utils
+                                                .getVertexTypeIds(tableScan);
+                                double selectivity = mq.getSelectivity(tableScan, getFilters(tableScan));
                                 existVertex =
                                         (typeIds.size() == 1)
-                                                ? new SinglePatternVertex(typeIds.get(0), vertexId)
-                                                : new FuzzyPatternVertex(typeIds, vertexId);
+                                                ? new SinglePatternVertex(typeIds.get(0), vertexId, new ElementDetails(selectivity))
+                                                : new FuzzyPatternVertex(typeIds, vertexId, new ElementDetails(selectivity));
                                 pattern.addVertex(existVertex);
                                 if (alias != AliasInference.DEFAULT_NAME) {
                                     aliasNameToVertex.put(alias, existVertex);
@@ -194,22 +205,17 @@ public class GraphIOProcessor {
                                     src = right;
                                     dst = left;
                             }
-                            List<Integer> typeIds = getTypeIds(expand);
-                            List<Integer> srcTypeIds = src.getVertexTypeIds();
-                            List<Integer> dstTypeIds = dst.getVertexTypeIds();
-                            List<EdgeTypeId> edgeTypeIds = Lists.newArrayList();
-                            for (Integer srcType : srcTypeIds) {
-                                for (Integer dstType : dstTypeIds) {
-                                    for (Integer type : typeIds) {
-                                        edgeTypeIds.add(new EdgeTypeId(srcType, dstType, type));
-                                    }
-                                }
-                            }
+                            boolean isBoth = expand.getOpt() == GraphOpt.Expand.BOTH;
+                            List<EdgeTypeId> edgeTypeIds =
+                                    com.alibaba.graphscope.common.ir.meta.glogue.Utils
+                                            .getEdgeTypeIds(expand);
                             int edgeId = idGenerator.getAndIncrement();
+                            double selectivity = mq.getSelectivity(expand, getFilters(expand));
                             PatternEdge edge =
                                     (edgeTypeIds.size() == 1)
-                                            ? new SinglePatternEdge(src, dst, edgeTypeIds.get(0), edgeId)
-                                            : new FuzzyPatternEdge(src, dst, edgeTypeIds, edgeId);
+                                            ? new SinglePatternEdge(
+                                                    src, dst, edgeTypeIds.get(0), edgeId, isBoth, new ElementDetails(selectivity))
+                                            : new FuzzyPatternEdge(src, dst, edgeTypeIds, edgeId, isBoth, new ElementDetails(selectivity));
                             pattern.addEdge(src, dst, edge);
                             vertexOrEdgeDetails.put(
                                     edge, new DataValue(expand.getAliasName(), getFilters(expand)));
@@ -230,8 +236,8 @@ public class GraphIOProcessor {
                                     pattern.getVertexOrder(((PatternEdge) k).getSrcVertex());
                             int dstOrderId =
                                     pattern.getVertexOrder(((PatternEdge) k).getDstVertex());
-                            // todo: support both
-                            key = new EdgeDataKey(srcOrderId, dstOrderId, PatternDirection.OUT);
+                            PatternDirection direction = ((PatternEdge) k).isBoth() ? PatternDirection.BOTH : PatternDirection.OUT;
+                            key = new EdgeDataKey(srcOrderId, dstOrderId, direction);
                         }
                         graphDetails.put(key, v);
                     });
@@ -252,18 +258,6 @@ public class GraphIOProcessor {
             return filters.isEmpty()
                     ? null
                     : RexUtil.composeConjunction(builder.getRexBuilder(), filters);
-        }
-
-        private List<Integer> getTypeIds(RelNode rel) {
-            List<RelDataTypeField> fields = rel.getRowType().getFieldList();
-            Preconditions.checkArgument(
-                    !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
-                    "graph operator should have graph schema type");
-            GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
-            GraphLabelType labelType = schemaType.getLabelType();
-            return labelType.getLabelsEntry().stream()
-                    .map(k -> k.getLabelId())
-                    .collect(Collectors.toList());
         }
     }
 
@@ -327,9 +321,15 @@ public class GraphIOProcessor {
                     createIntersectFilter(glogueEdge, edgeDetails, inputs),
                     deriveIntersectType(inputs),
                     false,
-                    Stream.generate(() -> (RexNode) null).limit(inputs.size()).collect(Collectors.toList()),
-                    Stream.generate(() -> JoinRelType.INNER).limit(inputs.size()).collect(Collectors.toList()),
-                    Stream.generate(() -> (ImmutableBitSet) null).limit(inputs.size()).collect(Collectors.toList()),
+                    Stream.generate(() -> (RexNode) null)
+                            .limit(inputs.size())
+                            .collect(Collectors.toList()),
+                    Stream.generate(() -> JoinRelType.INNER)
+                            .limit(inputs.size())
+                            .collect(Collectors.toList()),
+                    Stream.generate(() -> (ImmutableBitSet) null)
+                            .limit(inputs.size())
+                            .collect(Collectors.toList()),
                     ImmutableMap.of(),
                     null);
         }
@@ -376,7 +376,11 @@ public class GraphIOProcessor {
             Map<Integer, Integer> srcToTargetMap = glogueEdge.getSrcToTargetOrderMapping();
             VertexDataKey srcKey = new VertexDataKey(srcToTargetMap.get(edge.getSrcVertexOrder()));
             DataValue srcValue;
-            Preconditions.checkArgument((srcValue = edgeDetails.get(srcKey)) != null, "can not find src vertex key %s in details map %s", srcKey, edgeDetails);
+            Preconditions.checkArgument(
+                    (srcValue = edgeDetails.get(srcKey)) != null,
+                    "can not find src vertex key %s in details map %s",
+                    srcKey,
+                    edgeDetails);
             // todo: support fuzzy edge labels in ExtendEdge
             builder.expand(
                     new ExpandConfig(
@@ -438,8 +442,8 @@ public class GraphIOProcessor {
                     return GraphOpt.GetV.START;
                 case OUT:
                     return GraphOpt.GetV.END;
+                case BOTH:
                 default:
-                    // todo: support both
                     return GraphOpt.GetV.OTHER;
             }
         }
@@ -468,9 +472,15 @@ public class GraphIOProcessor {
                                         key,
                                         details);
                                 edgeDetails.put(key, value);
-                                VertexDataKey key2 = new VertexDataKey(srcToTargetMap.get(k.getSrcVertexOrder()));
+                                VertexDataKey key2 =
+                                        new VertexDataKey(
+                                                srcToTargetMap.get(k.getSrcVertexOrder()));
                                 DataValue value2;
-                                Preconditions.checkArgument((value2 = details.get(key2)) != null, "can not find vertex key %s in details map %s", key2, details);
+                                Preconditions.checkArgument(
+                                        (value2 = details.get(key2)) != null,
+                                        "can not find vertex key %s in details map %s",
+                                        key2,
+                                        details);
                                 edgeDetails.put(key2, value2);
                             });
             // update details for the recursive invocation
@@ -496,15 +506,15 @@ public class GraphIOProcessor {
                             k -> {
                                 int newSrcOrderId = src.getVertexOrder(k.getSrcVertex());
                                 int newDstOrderId = src.getVertexOrder(k.getDstVertex());
-                                // todo: support both
+                                PatternDirection direction = k.isBoth() ? PatternDirection.BOTH : PatternDirection.OUT;
                                 EdgeDataKey oldKey =
                                         new EdgeDataKey(
                                                 srcToTargetMap.get(newSrcOrderId),
                                                 srcToTargetMap.get(newDstOrderId),
-                                                PatternDirection.OUT);
+                                                direction);
                                 EdgeDataKey newKey =
                                         new EdgeDataKey(
-                                                newSrcOrderId, newDstOrderId, PatternDirection.OUT);
+                                                newSrcOrderId, newDstOrderId, direction);
                                 DataValue value = details.get(oldKey);
                                 Preconditions.checkArgument(
                                         value != null,

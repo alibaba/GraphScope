@@ -38,9 +38,6 @@ public class DataValue {
 
     @Override
     public String toString() {
-        return "DataValue{" +
-                "alias='" + alias + '\'' +
-                ", filter=" + filter +
-                '}';
+        return "DataValue{" + "alias='" + alias + '\'' + ", filter=" + filter + '}';
     }
 }

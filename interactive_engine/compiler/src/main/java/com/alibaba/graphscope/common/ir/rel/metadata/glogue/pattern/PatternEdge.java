@@ -6,13 +6,13 @@ import java.util.List;
 
 public abstract class PatternEdge {
     private final boolean isBoth;
-    private final ElementDetails elementDetails;
+    private final ElementDetails details;
     private final IsomorphismChecker isomorphismChecker;
 
     protected PatternEdge(
-            boolean isBoth, ElementDetails elementDetails, IsomorphismChecker isomorphismChecker) {
+            boolean isBoth, ElementDetails details, IsomorphismChecker isomorphismChecker) {
         this.isBoth = isBoth;
-        this.elementDetails = elementDetails;
+        this.details = details;
         this.isomorphismChecker = isomorphismChecker;
     }
 
@@ -30,8 +30,8 @@ public abstract class PatternEdge {
         return this.isBoth;
     }
 
-    public ElementDetails getElementDetails() {
-        return elementDetails;
+    public ElementDetails getDetails() {
+        return details;
     }
 
     public IsomorphismChecker getIsomorphismChecker() {

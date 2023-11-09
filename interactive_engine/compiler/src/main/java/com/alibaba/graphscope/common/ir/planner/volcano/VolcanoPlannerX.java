@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.planner.volcano;
 
 import com.alibaba.graphscope.gremlin.Utils;
 import com.google.common.base.Preconditions;
+
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.ConventionTraitDef;
 import org.apache.calcite.plan.RelOptCost;
@@ -30,29 +31,33 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class VolcanoPlannerX extends VolcanoPlanner {
     @Override
     protected RelOptCost upperBoundForInputs(RelNode mExpr, RelOptCost upperBound) {
-//        RelSubset group = getSubset(mExpr);
-//        RelOptCost bestCost =
-//                (group != null) ? Utils.getFieldValue(RelSubset.class, group, "bestCost") : null;
-//        RelOptCost currentUpperBound =
-//                (bestCost == null || upperBound != null && upperBound.isLt(bestCost))
-//                        ? upperBound
-//                        : bestCost;
-//        if (currentUpperBound != null && !currentUpperBound.isInfinite()) {
-//            RelOptCost rootCost = mExpr.getCluster().getMetadataQuery().getNonCumulativeCost(mExpr);
-//            if (rootCost != null && !rootCost.isInfinite()) {
-//                return currentUpperBound.minus(rootCost);
-//            }
-//        }
-//        return upperBound;
+        //        RelSubset group = getSubset(mExpr);
+        //        RelOptCost bestCost =
+        //                (group != null) ? Utils.getFieldValue(RelSubset.class, group, "bestCost")
+        // : null;
+        //        RelOptCost currentUpperBound =
+        //                (bestCost == null || upperBound != null && upperBound.isLt(bestCost))
+        //                        ? upperBound
+        //                        : bestCost;
+        //        if (currentUpperBound != null && !currentUpperBound.isInfinite()) {
+        //            RelOptCost rootCost =
+        // mExpr.getCluster().getMetadataQuery().getNonCumulativeCost(mExpr);
+        //            if (rootCost != null && !rootCost.isInfinite()) {
+        //                return currentUpperBound.minus(rootCost);
+        //            }
+        //        }
+        //        return upperBound;
         return upperBound;
     }
 
-    @Override public @Nullable RelOptCost getCost(RelNode rel, RelMetadataQuery mq) {
+    @Override
+    public @Nullable RelOptCost getCost(RelNode rel, RelMetadataQuery mq) {
         Preconditions.checkArgument(rel != null, "rel is null");
         if (rel instanceof RelSubset) {
             return Utils.getFieldValue(RelSubset.class, rel, "bestCost");
         }
-        boolean noneConventionHasInfiniteCost = Utils.getFieldValue(VolcanoPlanner.class, this, "noneConventionHasInfiniteCost");
+        boolean noneConventionHasInfiniteCost =
+                Utils.getFieldValue(VolcanoPlanner.class, this, "noneConventionHasInfiniteCost");
         if (noneConventionHasInfiniteCost
                 && rel.getTraitSet().getTrait(ConventionTraitDef.INSTANCE) == Convention.NONE) {
             return costFactory.makeInfiniteCost();

@@ -109,7 +109,7 @@ public class Utils {
     public static Map<Integer, Pattern> getAllPatterns(RelNode rel) {
         List<RelNode> queue = Lists.newArrayList(rel);
         Map<Integer, Pattern> patterns = Maps.newLinkedHashMap();
-        while(!queue.isEmpty()) {
+        while (!queue.isEmpty()) {
             RelNode cur = queue.remove(0);
             if (cur instanceof GraphExtendIntersect) {
                 Pattern src = ((GraphExtendIntersect) cur).getGlogueEdge().getSrcPattern();

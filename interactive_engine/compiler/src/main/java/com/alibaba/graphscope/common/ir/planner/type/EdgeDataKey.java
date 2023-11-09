@@ -23,7 +23,6 @@ import java.util.Objects;
 public class EdgeDataKey implements DataKey {
     private final int lowOrderId;
     private final int highOrderId;
-    // indicates direction between orderId1 and orderId2, todo: support both
     private final PatternDirection direction;
 
     public EdgeDataKey(int orderId1, int orderId2, PatternDirection direction) {
@@ -79,10 +78,13 @@ public class EdgeDataKey implements DataKey {
 
     @Override
     public String toString() {
-        return "EdgeDataKey{" +
-                "lowOrderId=" + lowOrderId +
-                ", highOrderId=" + highOrderId +
-                ", direction=" + direction +
-                '}';
+        return "EdgeDataKey{"
+                + "lowOrderId="
+                + lowOrderId
+                + ", highOrderId="
+                + highOrderId
+                + ", direction="
+                + direction
+                + '}';
     }
 }

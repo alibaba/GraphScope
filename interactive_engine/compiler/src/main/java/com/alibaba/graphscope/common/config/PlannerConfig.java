@@ -31,7 +31,8 @@ public class PlannerConfig {
             boolean isOn = GRAPH_PLANNER_IS_ON.get(configs);
             Opt type = Opt.valueOf(GRAPH_PLANNER_OPT.get(configs));
             List<String> ruleList = Utils.convertDotString(GRAPH_PLANNER_RULES.get(configs));
-            return new PlannerConfig(isOn, type, ruleList, GRAPH_PLANNER_CBO_GLOGUE_SIZE.get(configs));
+            return new PlannerConfig(
+                    isOn, type, ruleList, GRAPH_PLANNER_CBO_GLOGUE_SIZE.get(configs));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -60,11 +61,15 @@ public class PlannerConfig {
 
     @Override
     public String toString() {
-        return "PlannerConfig{" +
-                "isOn=" + isOn +
-                ", opt=" + opt +
-                ", rules=" + rules +
-                ", glogueSize=" + glogueSize +
-                '}';
+        return "PlannerConfig{"
+                + "isOn="
+                + isOn
+                + ", opt="
+                + opt
+                + ", rules="
+                + rules
+                + ", glogueSize="
+                + glogueSize
+                + '}';
     }
 }

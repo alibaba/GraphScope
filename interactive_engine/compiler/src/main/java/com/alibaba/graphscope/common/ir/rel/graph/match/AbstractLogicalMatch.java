@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.rel.graph.match;
 
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.plan.Convention;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;

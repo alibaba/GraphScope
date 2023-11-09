@@ -31,20 +31,17 @@ import java.util.Objects;
 
 public class GraphMetadataHandlerProvider implements MetadataHandlerProvider {
     private final RelOptPlanner optPlanner;
-    private final RelMdRowCount rowCount;
     private final GlogueQuery glogueQuery;
 
-    public GraphMetadataHandlerProvider(
-            RelOptPlanner optPlanner, RelMdRowCount rowCount, GlogueQuery glogueQuery) {
+    public GraphMetadataHandlerProvider(RelOptPlanner optPlanner, GlogueQuery glogueQuery) {
         this.optPlanner = optPlanner;
-        this.rowCount = rowCount;
         this.glogueQuery = glogueQuery;
     }
 
     @Override
     public MetadataHandler handler(Class handlerClass) {
         if (handlerClass.equals(BuiltInMetadata.RowCount.Handler.class)) {
-            return new GraphRowCountHandler(this.optPlanner, this.rowCount, this.glogueQuery);
+            return new GraphRowCountHandler(this.optPlanner, this.glogueQuery);
         } else if (handlerClass.equals(ExternalMetaData.GlogueEdges.Handler.class)) {
             return new GraphGlogueEdgesHandler(this.glogueQuery);
         } else if (handlerClass.equals(BuiltInMetadata.NonCumulativeCost.Handler.class)) {
@@ -78,7 +75,9 @@ public class GraphMetadataHandlerProvider implements MetadataHandlerProvider {
                     RelNode rel = Objects.requireNonNull((RelNode) args[0], "rel must not be null");
                     for (Method method1 : first.getClass().getMethods()) {
                         Class<?>[] types = method1.getParameterTypes();
-                        if (method.getName().equals(method1.getName()) && types.length > 0 && types[0].isAssignableFrom(rel.getClass())) {
+                        if (method.getName().equals(method1.getName())
+                                && types.length > 0
+                                && types[0].isAssignableFrom(rel.getClass())) {
                             return method1.invoke(first, args);
                         }
                     }
