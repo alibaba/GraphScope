@@ -154,42 +154,37 @@ where
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
-        // To guarantee the correctness (i.e., avoid duplication results), only one worker (for now, it is worker 0) is going to search for it.
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        let mut ret = None;
-        if worker_id == 0 {
-            let store_label_id = encode_storage_label(label_id)?;
-            let store_indexed_values = match primary_key {
-                OneOrMany::One(pkv) => {
-                    vec![encode_store_prop_val(pkv[0].1.clone())]
-                }
-                OneOrMany::Many(pkvs) => pkvs
-                    .iter()
-                    .map(|(_pk, value)| encode_store_prop_val(value.clone()))
-                    .collect(),
-            };
-            debug!("index_scan_vertex store_indexed_values {:?}", store_indexed_values);
-            if let Some(vid) = self
-                .partition_manager
-                .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
-            {
-                debug!("index_scan_vertex vid {:?}", vid);
-                let si = get_snapshot_id(_params);
-                let ids = get_partition_label_vertex_ids(&vec![vid], self.partition_manager.clone());
-                let prop_ids: Vec<u32> = vec![];
-                if self
-                    .store
-                    .get_vertex_properties(si, ids, Some(&prop_ids))
-                    .next()
-                    .is_some()
-                {
-                    ret = Some(Vertex::new(vid, Some(label_id), DynDetails::default()));
-                }
+        // To guarantee the correctness,
+        // 1. all workers are going to search for gid, and compute  which partition this vertex belongs;
+        // 2. the worker assigned for this partition will further confirm the result by calling get_vertex() to see if this vertex exists
+        let store_label_id = encode_storage_label(label_id)?;
+        let store_indexed_values = match primary_key {
+            OneOrMany::One(pkv) => {
+                vec![encode_store_prop_val(pkv[0].1.clone())]
             }
+            OneOrMany::Many(pkvs) => pkvs
+                .iter()
+                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                .collect(),
+        };
+        debug!("index_scan_vertex store_indexed_values {:?}", store_indexed_values);
+        if let Some(vid) = self
+            .partition_manager
+            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+        {
+            debug!("index_scan_vertex vid {:?}", vid);
+            let partition_id = self
+                .partition_manager
+                .get_partition_id(vid as VertexId) as PartitionId;
+            let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+            if worker_partitions.contains(&partition_id) {
+                Ok(self.get_vertex(&[vid as ID], _params)?.next())
+            } else {
+                Ok(None)
+            }
+        } else {
+            Ok(None)
         }
-        Ok(ret)
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
