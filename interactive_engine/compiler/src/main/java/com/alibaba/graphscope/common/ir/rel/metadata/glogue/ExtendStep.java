@@ -1,10 +1,13 @@
 package com.alibaba.graphscope.common.ir.rel.metadata.glogue;
 
+import com.google.common.collect.ImmutableList;
+
+import java.util.Collections;
 import java.util.List;
 
 public class ExtendStep {
     // The dst vertex (type) that will be added in the pattern expansion.
-    private Integer targetVertexType;
+    private List<Integer> targetVertexTypes;
     // the dst vertex order that will be added in the pattern expansion.
     private Integer targetVertexOrder;
     // The edges that will be extended in the pattern expansion.
@@ -13,7 +16,12 @@ public class ExtendStep {
     private Double weight;
 
     public ExtendStep(Integer targetVertexType, List<ExtendEdge> extendEdges) {
-        this.targetVertexType = targetVertexType;
+        this.targetVertexTypes = ImmutableList.of(targetVertexType);
+        this.extendEdges = extendEdges;
+    }
+
+    public ExtendStep(List<Integer> targetVertexTypes, List<ExtendEdge> extendEdges) {
+        this.targetVertexTypes = targetVertexTypes;
         this.extendEdges = extendEdges;
     }
 
@@ -29,7 +37,11 @@ public class ExtendStep {
     }
 
     public Integer getTargetVertexType() {
-        return targetVertexType;
+        return targetVertexTypes.get(0);
+    }
+
+    public List<Integer> getTargetVertexTypes() {
+        return Collections.unmodifiableList(targetVertexTypes);
     }
 
     public List<ExtendEdge> getExtendEdges() {
@@ -63,7 +75,7 @@ public class ExtendStep {
     public String toString() {
         return "ExtendStep{"
                 + "targetType="
-                + targetVertexType
+                + (targetVertexTypes.size() == 1 ? targetVertexTypes.get(0) : targetVertexTypes)
                 + ", targetOrder="
                 + targetVertexOrder
                 + ", weight="
