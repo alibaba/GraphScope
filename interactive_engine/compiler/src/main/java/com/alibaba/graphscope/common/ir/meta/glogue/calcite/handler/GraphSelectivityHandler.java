@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.*;
@@ -83,9 +84,10 @@ public class GraphSelectivityHandler extends RelMdSelectivity
 
     private double guessSelectivity(TableScan tableScan, RelMetadataQuery mq, RexNode condition) {
         if (condition.isA(SqlKind.EQUALS)) {
-            // return the table scan tagged by the alias id in the variable if the variable is a unique key
+            // return the table scan tagged by the alias id in the variable if the variable is a
+            // unique key
             RexVariableAliasCollector<Optional<RelNode>> uniqueKeyTableScans =
-                    new RexVariableAliasCollector(
+                    new RexVariableAliasCollector<Optional<RelNode>>(
                             true,
                             (RexGraphVariable var) -> {
                                 if (var.getProperty() == null) return Optional.empty();
@@ -96,7 +98,7 @@ public class GraphSelectivityHandler extends RelMdSelectivity
                                         "can not find table scan for aliasId=" + var.getAliasId());
                                 switch (var.getProperty().getOpt()) {
                                     case ID:
-                                        return scanByAlias;
+                                        return Optional.of(tableScan);
                                     case KEY:
                                         GraphSchemaType schemaType =
                                                 (GraphSchemaType)

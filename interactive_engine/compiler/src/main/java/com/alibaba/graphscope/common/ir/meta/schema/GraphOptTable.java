@@ -16,11 +16,14 @@
 
 package com.alibaba.graphscope.common.ir.meta.schema;
 
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.plan.RelOptTable;
@@ -42,8 +45,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
-import static java.util.Objects.requireNonNull;
 
 /**
  * Maintain {@link RelDataType} and {@link Statistic} per entity or per relation
@@ -109,7 +110,8 @@ public class GraphOptTable implements RelOptTable {
         }
     }
 
-    private List<ImmutableBitSet> getUniqueKeys(GraphElement element, RelDataType schemaType, RelOptSchema schema) {
+    private List<ImmutableBitSet> getUniqueKeys(
+            GraphElement element, RelDataType schemaType, RelOptSchema schema) {
         boolean isColumnId =
                 (schema instanceof GraphOptSchema)
                         ? ((GraphOptSchema) schema).getRootSchema().isColumnId()

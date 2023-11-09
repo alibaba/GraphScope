@@ -73,10 +73,10 @@ public class GraphIOProcessor {
     private final RelMetadataQuery mq;
     private final Map<DataKey, DataValue> graphDetails;
 
-    public GraphIOProcessor(GraphBuilder builder, IrMeta irMeta, RelMetadataQuery mq) {
+    public GraphIOProcessor(GraphBuilder builder, IrMeta irMeta) {
         this.builder = Objects.requireNonNull(builder);
         this.irMeta = Objects.requireNonNull(irMeta);
-        this.mq = Objects.requireNonNull(mq);
+        this.mq = builder.getCluster().getMetadataQuery();
         this.graphDetails = Maps.newHashMap();
     }
 
@@ -174,11 +174,18 @@ public class GraphIOProcessor {
                                 List<Integer> typeIds =
                                         com.alibaba.graphscope.common.ir.meta.glogue.Utils
                                                 .getVertexTypeIds(tableScan);
-                                double selectivity = mq.getSelectivity(tableScan, getFilters(tableScan));
+                                double selectivity =
+                                        mq.getSelectivity(tableScan, getFilters(tableScan));
                                 existVertex =
                                         (typeIds.size() == 1)
-                                                ? new SinglePatternVertex(typeIds.get(0), vertexId, new ElementDetails(selectivity))
-                                                : new FuzzyPatternVertex(typeIds, vertexId, new ElementDetails(selectivity));
+                                                ? new SinglePatternVertex(
+                                                        typeIds.get(0),
+                                                        vertexId,
+                                                        new ElementDetails(selectivity))
+                                                : new FuzzyPatternVertex(
+                                                        typeIds,
+                                                        vertexId,
+                                                        new ElementDetails(selectivity));
                                 pattern.addVertex(existVertex);
                                 if (alias != AliasInference.DEFAULT_NAME) {
                                     aliasNameToVertex.put(alias, existVertex);
@@ -214,8 +221,19 @@ public class GraphIOProcessor {
                             PatternEdge edge =
                                     (edgeTypeIds.size() == 1)
                                             ? new SinglePatternEdge(
-                                                    src, dst, edgeTypeIds.get(0), edgeId, isBoth, new ElementDetails(selectivity))
-                                            : new FuzzyPatternEdge(src, dst, edgeTypeIds, edgeId, isBoth, new ElementDetails(selectivity));
+                                                    src,
+                                                    dst,
+                                                    edgeTypeIds.get(0),
+                                                    edgeId,
+                                                    isBoth,
+                                                    new ElementDetails(selectivity))
+                                            : new FuzzyPatternEdge(
+                                                    src,
+                                                    dst,
+                                                    edgeTypeIds,
+                                                    edgeId,
+                                                    isBoth,
+                                                    new ElementDetails(selectivity));
                             pattern.addEdge(src, dst, edge);
                             vertexOrEdgeDetails.put(
                                     edge, new DataValue(expand.getAliasName(), getFilters(expand)));
@@ -236,7 +254,10 @@ public class GraphIOProcessor {
                                     pattern.getVertexOrder(((PatternEdge) k).getSrcVertex());
                             int dstOrderId =
                                     pattern.getVertexOrder(((PatternEdge) k).getDstVertex());
-                            PatternDirection direction = ((PatternEdge) k).isBoth() ? PatternDirection.BOTH : PatternDirection.OUT;
+                            PatternDirection direction =
+                                    ((PatternEdge) k).isBoth()
+                                            ? PatternDirection.BOTH
+                                            : PatternDirection.OUT;
                             key = new EdgeDataKey(srcOrderId, dstOrderId, direction);
                         }
                         graphDetails.put(key, v);
@@ -381,12 +402,14 @@ public class GraphIOProcessor {
                     "can not find src vertex key %s in details map %s",
                     srcKey,
                     edgeDetails);
-            // todo: support fuzzy edge labels in ExtendEdge
             builder.expand(
                     new ExpandConfig(
                             createExpandOpt(edge.getDirection()),
                             createLabels(
-                                    ImmutableList.of(edge.getEdgeTypeId().getEdgeLabelId()), false),
+                                    edge.getEdgeTypeIds().stream()
+                                            .map(k -> k.getEdgeLabelId())
+                                            .collect(Collectors.toList()),
+                                    false),
                             value.getAlias(),
                             srcValue.getAlias()));
             if (value.getFilter() != null) {
@@ -506,15 +529,15 @@ public class GraphIOProcessor {
                             k -> {
                                 int newSrcOrderId = src.getVertexOrder(k.getSrcVertex());
                                 int newDstOrderId = src.getVertexOrder(k.getDstVertex());
-                                PatternDirection direction = k.isBoth() ? PatternDirection.BOTH : PatternDirection.OUT;
+                                PatternDirection direction =
+                                        k.isBoth() ? PatternDirection.BOTH : PatternDirection.OUT;
                                 EdgeDataKey oldKey =
                                         new EdgeDataKey(
                                                 srcToTargetMap.get(newSrcOrderId),
                                                 srcToTargetMap.get(newDstOrderId),
                                                 direction);
                                 EdgeDataKey newKey =
-                                        new EdgeDataKey(
-                                                newSrcOrderId, newDstOrderId, direction);
+                                        new EdgeDataKey(newSrcOrderId, newDstOrderId, direction);
                                 DataValue value = details.get(oldKey);
                                 Preconditions.checkArgument(
                                         value != null,

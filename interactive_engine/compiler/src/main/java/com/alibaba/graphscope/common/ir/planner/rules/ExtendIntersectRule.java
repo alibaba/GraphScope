@@ -28,7 +28,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersec
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -115,21 +114,20 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                 adjacentEdges.stream()
                         .map(
                                 k -> {
-                                    List<EdgeTypeId> edgeTypeIds = k.getEdgeTypeIds();
-                                    Preconditions.checkArgument(
-                                            edgeTypeIds.size() == 1,
-                                            "union types is unsupported yet in edge");
                                     PatternVertex extendFrom = Utils.getExtendFromVertex(k, target);
                                     return new ExtendEdge(
                                             src.getVertexOrder(extendFrom),
-                                            edgeTypeIds.get(0),
+                                            k.getEdgeTypeIds(),
                                             Utils.getExtendDirection(k, target),
                                             estimator.estimate(k, target));
                                 })
                         .collect(Collectors.toList());
         ExtendStep extendStep =
                 new ExtendStep(
-                        target.getVertexTypeIds(), dst.getVertexOrder(target), extendEdges, totalWeight);
+                        target.getVertexTypeIds(),
+                        dst.getVertexOrder(target),
+                        extendEdges,
+                        totalWeight);
         GlogueExtendIntersectEdge glogueEdge =
                 new GlogueExtendIntersectEdge(src, dst, extendStep, getOrderMapping(src, dst));
         return new GraphExtendIntersect(

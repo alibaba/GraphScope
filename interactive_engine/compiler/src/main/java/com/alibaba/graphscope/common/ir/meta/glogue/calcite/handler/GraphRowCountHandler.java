@@ -168,19 +168,19 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
             PatternEdge edge =
                     (edgeTypeIds.size() == 1)
                             ? new SinglePatternEdge(
-                            srcVertex,
-                            dstVertex,
-                            edgeTypeIds.get(0),
-                            0,
-                            isBoth,
-                            new ElementDetails())
+                                    srcVertex,
+                                    dstVertex,
+                                    edgeTypeIds.get(0),
+                                    0,
+                                    isBoth,
+                                    new ElementDetails())
                             : new FuzzyPatternEdge(
-                            srcVertex,
-                            dstVertex,
-                            edgeTypeIds,
-                            0,
-                            isBoth,
-                            new ElementDetails());
+                                    srcVertex,
+                                    dstVertex,
+                                    edgeTypeIds,
+                                    0,
+                                    isBoth,
+                                    new ElementDetails());
             Pattern pattern = new Pattern();
             pattern.addVertex(srcVertex);
             pattern.addVertex(dstVertex);

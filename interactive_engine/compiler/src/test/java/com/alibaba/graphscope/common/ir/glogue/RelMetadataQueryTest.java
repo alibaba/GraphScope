@@ -71,9 +71,9 @@ public class RelMetadataQueryTest {
         RelNode node =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
                                 "Match (p1:person)-[:knows]->(p2:person),"
-                                    + " (p2:person)-[:knows]->(p3:person),"
-                                    + " (p3:person)-[:knows]->(p4:person),"
-                                    + " (p4:person)-[:created]->(s:software) Return p1",
+                                        + " (p2:person)-[:knows]->(p3:person),"
+                                        + " (p3:person)-[:knows]->(p4:person),"
+                                        + " (p4:person)-[:created]->(s:software) Return p1",
                                 builder)
                         .build();
         RelNode match = node.getInput(0);
@@ -154,11 +154,11 @@ public class RelMetadataQueryTest {
         RelNode node =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
                                 "Match (p1:person)-[:knows]->(p2:person),"
-                                    + " (p2:person)-[:knows]->(p3:person),"
-                                    + " (p1:person)-[:knows]->(p3:person),"
-                                    + " (p1:person)-[:created]->(s:software),"
-                                    + " (p2:person)-[:created]->(s:software),"
-                                    + " (p3:person)-[:created]->(s:software) Return p1, p2, p3",
+                                        + " (p2:person)-[:knows]->(p3:person),"
+                                        + " (p1:person)-[:knows]->(p3:person),"
+                                        + " (p1:person)-[:created]->(s:software),"
+                                        + " (p2:person)-[:created]->(s:software),"
+                                        + " (p3:person)-[:created]->(s:software) Return p1, p2, p3",
                                 builder)
                         .build();
         RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, Utils.schemaMeta));
