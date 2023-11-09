@@ -436,7 +436,7 @@ impl GraphPartitionManager for GlobalGraph {
 
     fn get_vertex_id_by_primary_key(&self, _label_id: u32, _key: &String) -> Option<(u32, i64)> {
         // TODO check
-        None
+        unimplemented!("get vertex id by primary key is not implemented")
     }
 
     fn get_vertex_id_by_primary_keys(&self, label_id: LabelId, pks: &[Property]) -> Option<VertexId> {

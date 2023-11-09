@@ -96,13 +96,7 @@ where
         debug!("scan_vertex worker_partitions: {:?}", worker_partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
-            let si = params
-                .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
-                .unwrap_or(DEFAULT_SNAPSHOT_ID);
+            let si = get_snapshot_id(params);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let row_filter = params.filter.clone();
 
@@ -164,6 +158,7 @@ where
         let worker_id = pegasus::get_current_worker_checked()
             .map(|worker| worker.index)
             .unwrap_or(0);
+        let mut ret = None;
         if worker_id == 0 {
             let store_label_id = encode_storage_label(label_id)?;
             let store_indexed_values = match primary_key {
@@ -181,26 +176,27 @@ where
                 .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
             {
                 debug!("index_scan_vertex vid {:?}", vid);
-                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
-            } else {
-                Ok(None)
+                let si = get_snapshot_id(_params);
+                let ids = get_partition_label_vertex_ids(&vec![vid], self.partition_manager.clone());
+                let prop_ids: Vec<u32> = vec![];
+                if self
+                    .store
+                    .get_vertex_properties(si, ids, Some(&prop_ids))
+                    .next()
+                    .is_some()
+                {
+                    ret = Some(Vertex::new(vid, Some(label_id), DynDetails::default()));
+                }
             }
-        } else {
-            Ok(None)
         }
+        Ok(ret)
     }
 
     fn scan_edge(&self, params: &QueryParams) -> GraphProxyResult<Box<dyn Iterator<Item = Edge> + Send>> {
         let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
-            let si = params
-                .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
-                .unwrap_or(DEFAULT_SNAPSHOT_ID);
+            let si = get_snapshot_id(params);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let row_filter = params.filter.clone();
 
@@ -245,13 +241,7 @@ where
         &self, ids: &[ID], params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let store = self.store.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
-            .unwrap_or(DEFAULT_SNAPSHOT_ID);
+        let si = get_snapshot_id(params);
 
         let column_filter_pushdown = self.column_filter_pushdown;
         // also need props in filter, because `filter_limit!`
@@ -294,13 +284,7 @@ where
         let limit = params.limit.clone();
         let store = self.store.clone();
         let partition_manager = self.partition_manager.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
-            .unwrap_or(DEFAULT_SNAPSHOT_ID);
+        let si = get_snapshot_id(params);
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
@@ -361,13 +345,7 @@ where
         &self, direction: Direction, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Statement<ID, Edge>>> {
         let store = self.store.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
-            .unwrap_or(DEFAULT_SNAPSHOT_ID);
+        let si = get_snapshot_id(params);
 
         let partition_manager = self.partition_manager.clone();
         let row_filter = params.filter.clone();
@@ -486,13 +464,7 @@ where
             let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
             if !worker_partitions.is_empty() {
                 let store = self.store.clone();
-                let si = params
-                    .get_extra_param(SNAPSHOT_ID)
-                    .map(|s| {
-                        s.parse::<SnapshotId>()
-                            .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                    })
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID);
+                let si = get_snapshot_id(params);
                 let label_ids = encode_storage_labels(params.labels.as_ref())?;
                 let count =
                     store.count_all_vertices(si, label_ids.as_ref(), None, worker_partitions.as_ref());
@@ -510,13 +482,7 @@ where
             let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
             if !worker_partitions.is_empty() {
                 let store = self.store.clone();
-                let si = params
-                    .get_extra_param(SNAPSHOT_ID)
-                    .map(|s| {
-                        s.parse::<SnapshotId>()
-                            .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                    })
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID);
+                let si = get_snapshot_id(params);
                 let label_ids = encode_storage_labels(params.labels.as_ref())?;
                 let count = store.count_all_edges(si, label_ids.as_ref(), None, worker_partitions.as_ref());
                 Ok(count)
@@ -525,6 +491,17 @@ where
             }
         }
     }
+}
+
+fn get_snapshot_id(params: &QueryParams) -> SnapshotId {
+    let si = params
+        .get_extra_param(SNAPSHOT_ID)
+        .map(|s| {
+            s.parse::<SnapshotId>()
+                .unwrap_or(DEFAULT_SNAPSHOT_ID)
+        })
+        .unwrap_or(DEFAULT_SNAPSHOT_ID);
+    si
 }
 
 #[inline]
