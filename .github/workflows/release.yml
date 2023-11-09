@@ -157,6 +157,11 @@ jobs:
       with:
         submodules: true
 
+    - name: Extract Tag Name
+      if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+      id: tag
+      run: echo "TAG=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
     - name: Create and Push Docker Manifest
       env:
         docker_password: ${{ secrets.DOCKER_PASSWORD }}
