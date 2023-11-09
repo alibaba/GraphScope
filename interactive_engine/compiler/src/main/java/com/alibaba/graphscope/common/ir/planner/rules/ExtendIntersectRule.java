@@ -127,12 +127,9 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                             estimator.estimate(k, target));
                                 })
                         .collect(Collectors.toList());
-        List<Integer> vertexTypeIds = target.getVertexTypeIds();
-        Preconditions.checkArgument(
-                vertexTypeIds.size() == 1, "union types is unsupported yet in vertex");
         ExtendStep extendStep =
                 new ExtendStep(
-                        vertexTypeIds.get(0), dst.getVertexOrder(target), extendEdges, totalWeight);
+                        target.getVertexTypeIds(), dst.getVertexOrder(target), extendEdges, totalWeight);
         GlogueExtendIntersectEdge glogueEdge =
                 new GlogueExtendIntersectEdge(src, dst, extendStep, getOrderMapping(src, dst));
         return new GraphExtendIntersect(
