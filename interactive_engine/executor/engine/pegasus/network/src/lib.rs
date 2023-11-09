@@ -221,7 +221,12 @@ pub fn ipc_channel_recv<T: Codec + 'static>(
 }
 
 pub fn check_ipc_ready(local: u64, remotes: &[u64]) -> bool {
-    crate::state::check_connect(local, remotes)
-        && crate::send::check_remotes_send_ready(local, remotes)
-        && crate::receive::check_remotes_read_ready(local, remotes)
+    let f1 = crate::state::check_connect(local, remotes);
+    let f2 = crate::send::check_remotes_send_ready(local, remotes);
+    let f3 = crate::receive::check_remotes_read_ready(local, remotes);
+    let ret = f1 && f2 && f3;
+    if !ret {
+        warn!("IPC not ready {}, {}, {}", f1, f2, f3);
+    }
+    ret
 }

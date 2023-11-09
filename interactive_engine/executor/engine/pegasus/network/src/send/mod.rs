@@ -143,6 +143,7 @@ pub fn check_remotes_send_ready(local: u64, remotes: &[u64]) -> bool {
     for id in remotes {
         if *id != local {
             if !lock.contains_key(&(local, *id)) {
+                warn!("remote {} is not ready.", *id);
                 return false;
             }
         }
@@ -216,6 +217,7 @@ pub(crate) fn start_net_sender(
             .name(format!("net-sender-{}", remote.id))
             .spawn(move || {
                 busy_send(&mut net_tx, is_block, timeout, local_id, remote.id, recv_poisoned);
+                error!("Connection to server {} lost", remote.id);
                 disconnected.store(true, Ordering::SeqCst);
                 net_tx
                     .take_writer()
@@ -233,6 +235,7 @@ pub(crate) fn start_net_sender(
             .name(format!("net-sender-{}", remote.id))
             .spawn(move || {
                 busy_send(&mut net_tx, is_block, timeout, local_id, remote.id, recv_poisoned);
+                error!("Connection to server {} lost", remote.id);
                 disconnected.store(true, Ordering::SeqCst);
                 net_tx
                     .take_writer()

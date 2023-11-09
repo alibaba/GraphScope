@@ -67,6 +67,7 @@ pub fn check_remotes_read_ready(local: u64, remotes: &[u64]) -> bool {
     for id in remotes.iter() {
         if *id != local {
             if !lock.contains_key(&(local, *id)) {
+                warn!("remote {} is not ready.", *id);
                 return false;
             }
         }
