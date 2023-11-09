@@ -18,22 +18,29 @@ public class ExtendEdge {
     private Double weight;
 
     public ExtendEdge(int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction) {
-        this.srcVertexOrder = srcVertexOrder;
-        this.edgeTypeIds = ImmutableList.of(edgeTypeId);
-        this.direction = direction;
+        this(srcVertexOrder, edgeTypeId, direction, null);
     }
 
     public ExtendEdge(
             int srcVertexOrder, List<EdgeTypeId> edgeTypeIds, PatternDirection direction) {
-        this.srcVertexOrder = srcVertexOrder;
-        this.edgeTypeIds = edgeTypeIds;
-        this.direction = direction;
+        this(srcVertexOrder, edgeTypeIds, direction, null);
     }
 
     public ExtendEdge(
             int srcVertexOrder, EdgeTypeId edgeTypeId, PatternDirection direction, Double weight) {
         this.srcVertexOrder = srcVertexOrder;
-        this.edgeTypeId = edgeTypeId;
+        this.edgeTypeIds = ImmutableList.of(edgeTypeId);
+        this.direction = direction;
+        this.weight = weight;
+    }
+
+    public ExtendEdge(
+            int srcVertexOrder,
+            List<EdgeTypeId> edgeTypeIds,
+            PatternDirection direction,
+            Double weight) {
+        this.srcVertexOrder = srcVertexOrder;
+        this.edgeTypeIds = edgeTypeIds;
         this.direction = direction;
         this.weight = weight;
     }
