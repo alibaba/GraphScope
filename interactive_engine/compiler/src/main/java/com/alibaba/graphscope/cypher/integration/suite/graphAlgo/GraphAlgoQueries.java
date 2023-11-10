@@ -33,7 +33,7 @@ public class GraphAlgoQueries {
                 Arrays.asList(
                         "Record<{category: \"Traversal\", paperCount: 28}>",
                         "Record<{category: \"Cohesive_Subgraph/Community_Search\", paperCount:"
-                            + " 18}>",
+                                + " 18}>",
                         "Record<{category: \"Centrality\", paperCount: 18}>",
                         "Record<{category: \"Clustering/Community_Detection\", paperCount: 17}>",
                         "Record<{category: \"Pattern Matching\", paperCount: 11}>",
@@ -53,14 +53,14 @@ public class GraphAlgoQueries {
         List<String> expected =
                 Arrays.asList(
                         "Record<{category: \"Cohesive_Subgraph/Community_Search\", challenge:"
-                            + " \"Communication Overhead\", num: 8}>",
+                                + " \"Communication Overhead\", num: 8}>",
                         "Record<{category: \"Traversal\", challenge: \"Load Balance\", num: 8}>",
                         "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
-                            + " num: 7}>",
+                                + " num: 7}>",
                         "Record<{category: \"Cohesive_Subgraph/Community_Search\", challenge:"
-                            + " \"Parallelism\", num: 5}>",
+                                + " \"Parallelism\", num: 5}>",
                         "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\", num:"
-                            + " 3}>");
+                                + " 3}>");
         return new QueryContext(query, expected);
     }
 }
