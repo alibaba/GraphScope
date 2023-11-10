@@ -34,4 +34,5 @@ CURRENT=$(pwd)
 for dir in "${directories[@]}"; do
   cd "${CURRENT}/${dir}"
   cargo +nightly fmt -- --check
+  #cargo +nightly fmt
 done

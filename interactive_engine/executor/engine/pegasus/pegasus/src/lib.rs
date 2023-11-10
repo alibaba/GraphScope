@@ -51,9 +51,10 @@ pub mod stream;
 pub mod utils;
 mod worker;
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::net::SocketAddr;
+use std::sync::atomic::{AtomicBool, Ordering};
 
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
@@ -65,7 +66,7 @@ pub use worker::Worker;
 pub use worker_id::{get_current_worker, get_current_worker_checked, set_current_worker, WorkerId};
 
 use crate::api::Source;
-pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
+pub use crate::errors::{BuildJobError, CancelError, JobSubmitError, SpawnJobError, StartupError};
 use crate::resource::PartitionedResource;
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
@@ -73,6 +74,7 @@ use crate::worker_id::WorkerIdIter;
 lazy_static! {
     static ref SERVER_ID: Mutex<Option<u64>> = Mutex::new(None);
     static ref SERVERS: RwLock<Vec<u64>> = RwLock::new(vec![]);
+    static ref JOB_CANCEL_MAP: RwLock<HashMap<u64, Arc<AtomicBool>>> = RwLock::new(HashMap::new());
     pub static ref PROFILE_TIME_FLAG: bool = configure_with_default!(bool, "PROFILE_TIME_FLAG", false);
     pub static ref PROFILE_COMM_FLAG: bool = configure_with_default!(bool, "PROFILE_COMM_FLAG", false);
 }
@@ -132,7 +134,7 @@ pub fn wait_servers_ready(server_conf: &ServerConf) {
         };
         if !remotes.is_empty() {
             while !pegasus_network::check_ipc_ready(local, &remotes) {
-                std::thread::sleep(std::time::Duration::from_millis(100));
+                std::thread::sleep(std::time::Duration::from_millis(1000));
                 info!("waiting remote servers connect ...");
             }
         }
@@ -261,6 +263,9 @@ where
     F: FnMut(&mut Worker<DI, DO>) -> Result<(), BuildJobError>,
 {
     init_env();
+    let cancel_hook = sink.get_cancel_hook().clone();
+    let mut lock = JOB_CANCEL_MAP.write().expect("lock poisoned");
+    lock.insert(conf.job_id, cancel_hook);
     let peer_guard = Arc::new(AtomicUsize::new(0));
     let conf = Arc::new(conf);
     let workers = allocate_local_worker(&conf)?;
@@ -291,6 +296,16 @@ where
             }
         }
     }
+}
+
+pub fn cancel_job(job_id: u64) -> Result<(), CancelError> {
+    let mut hook = JOB_CANCEL_MAP.write().expect("lock poisoned");
+    if let Some(cancel_hook) = hook.get_mut(&job_id) {
+        cancel_hook.store(true, Ordering::SeqCst);
+    } else {
+        return Err(CancelError::JobNotFoundError(job_id));
+    }
+    Ok(())
 }
 
 #[inline]
