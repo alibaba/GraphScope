@@ -34,7 +34,7 @@ if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   exit 1
 fi
 # check graph is ldbc or movies
-if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ]; then
+if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ] && [ ${GRAPH_NAME} != "graph_algo" ]; then
   echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies or ldbc"
   exit 1
 fi
@@ -152,6 +152,16 @@ run_movie_test(){
   popd
 }
 
+run_graph_algo_test(){
+  echo "run graph_algo test"
+  pushd ${GIE_HOME}/compiler
+  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.graphAlgo.GraphAlgoTest"
+  echo "Start graph_algo test: ${cmd}"
+  ${cmd}
+  info "Finish graph_algo test"
+  popd
+}
+
 kill_service
 start_engine_service
 start_compiler_service
@@ -159,12 +169,12 @@ start_compiler_service
 if [ "${GRAPH_NAME}" == "ldbc" ]; then
   run_ldbc_test
   run_simple_test
-else
+elif [ "${GRAPH_NAME}" == "movies" ]; then
   run_movie_test
+elif [ "${GRAPH_NAME}" == "graph_algo" ]; then
+  run_graph_algo_test
+else
+  echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies, ldbc or graph_algo"
 fi
 
 kill_service
-
-
-
-

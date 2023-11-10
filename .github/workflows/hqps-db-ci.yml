@@ -93,6 +93,8 @@ jobs:
         cp ${GRAPH_SCHEMA_YAML} ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/movies
         cp ${GS_TEST_DIR}/flex/movies/movies_schema.yaml ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/graph_algo
+        cp ${GITHUB_WORKSPACE}/flex/tests/interactive/graph_algo_test.yaml ${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml
 
     - name: Sample Query test
       env:
@@ -169,6 +171,20 @@ jobs:
         # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to movies
         sed -i 's/default_graph: ldbc/default_graph: movies/g' ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
         bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} movies ${GS_TEST_DIR}/flex/movies/movies_import.yaml \
+          ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
+
+    - name: Run End-to-End cypher adhoc graph_algo query test
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        HOME : /home/graphscope/
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export FLEX_DATA_DIR=../../interactive/examples/graph_algo/
+        export ENGINE_TYPE=hiactor
+        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to graph_algo
+        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
+        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} graph_algo ../../interactive/examples/graph_algo/import.yaml \
           ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml
 
 

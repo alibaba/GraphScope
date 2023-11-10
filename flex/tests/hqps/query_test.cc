@@ -237,7 +237,7 @@ int main(int argc, char** argv) {
 
     gs::MutableCSRInterface graph(sess);
     query.Query(graph, input);
-    LOG(INFO) << "Finish MatchQuery12 test";
+    LOG(INFO) << "Finish MatchQuery14 test";
   }
 
   LOG(INFO) << "Finish context test.";
