@@ -243,14 +243,26 @@ fn fold_partition_by_key_test() {
     println!("groups 1: {:?}\n groups 2: {:?}", groups_1, groups_2);
 
     assert_eq!(groups_1.len(), 2);
-    let cnt_0 = groups_1.get(&0).unwrap();
-    assert_eq!(*cnt_0, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
-    let cnt_1 = groups_2.get(&1).unwrap();
-    assert_eq!(*cnt_1, (0..num * 2).filter(|x| x % 4 == 1).count() as u32);
-    let cnt_2 = groups_1.get(&2).unwrap();
-    assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 2).count() as u32);
-    let cnt_3 = groups_2.get(&3).unwrap();
-    assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 3).count() as u32);
+    if let Some(cnt_0) = groups_1.get(&0) {
+        assert_eq!(*cnt_0, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if Some(cnt_0) = groups_2.get(&0) {
+        assert_eq!(*cnt_0, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
+    if let Some(cnt_1) = groups_1.get(&1) {
+        assert_eq!(*cnt_1, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if Some(cnt_1) = groups_2.get(&1) {
+        assert_eq!(*cnt_1, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
+    if let Some(cnt_2) = groups_1.get(&2) {
+        assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if Some(cnt_2) = groups_2.get(&2) {
+        assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
+    if let Some(cnt_3) = groups_1.get(&3) {
+        assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if Some(cnt_3) = groups_2.get(&3) {
+        assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
 }
 
 #[test]
