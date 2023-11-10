@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.cypher.integration.graphAlgo;
 
-import static org.junit.Assume.assumeTrue;
 
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 import com.alibaba.graphscope.cypher.integration.suite.graphAlgo.GraphAlgoQueries;
