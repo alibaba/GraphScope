@@ -371,6 +371,10 @@ namespace config_parsing {
 static PropertyType StringToPropertyType(const std::string& str) {
   if (str == "int32" || str == DT_SIGNED_INT32) {
     return PropertyType::kInt32;
+  } else if (str == "uint32" || str == DT_UNSIGNED_INT32) {
+    return PropertyType::kUInt32;
+  } else if (str == "bool" || str == DT_BOOL) {
+    return PropertyType::kBool;
   } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
   } else if (str == "String" || str == DT_STRING) {
@@ -379,6 +383,10 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kEmpty;
   } else if (str == "int64" || str == DT_SIGNED_INT64) {
     return PropertyType::kInt64;
+  } else if (str == "uint64" || str == DT_UNSIGNED_INT64) {
+    return PropertyType::kUInt64;
+  } else if (str == "float" || str == DT_FLOAT) {
+    return PropertyType::kFloat;
   } else if (str == "double" || str == DT_DOUBLE) {
     return PropertyType::kDouble;
   } else {

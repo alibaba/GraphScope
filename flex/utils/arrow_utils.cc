@@ -17,12 +17,20 @@
 namespace gs {
 std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
   switch (type) {
+  case PropertyType::kBool:
+    return arrow::boolean();
   case PropertyType::kInt32:
     return arrow::int32();
   case PropertyType::kInt64:
     return arrow::int64();
+  case PropertyType::kUInt32:
+    return arrow::uint32();
+  case PropertyType::kUInt64:
+    return arrow::uint64();
   case PropertyType::kDouble:
     return arrow::float64();
+  case PropertyType::kFloat:
+    return arrow::float32();
   case PropertyType::kDate:
     return arrow::timestamp(arrow::TimeUnit::MILLI);
   case PropertyType::kString:

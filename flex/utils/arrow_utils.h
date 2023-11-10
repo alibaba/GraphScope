@@ -183,10 +183,28 @@ template <typename T>
 struct CppTypeToArrowType {};
 
 template <>
+struct CppTypeToArrowType<bool> {
+  using Type = arrow::BooleanType;
+  using ArrayType = arrow::BooleanArray;
+  static std::shared_ptr<arrow::DataType> TypeValue() {
+    return arrow::boolean();
+  }
+};
+
+template <>
 struct CppTypeToArrowType<int64_t> {
   using Type = arrow::Int64Type;
   using ArrayType = arrow::Int64Array;
   static std::shared_ptr<arrow::DataType> TypeValue() { return arrow::int64(); }
+};
+
+template <>
+struct CppTypeToArrowType<uint64_t> {
+  using Type = arrow::UInt64Type;
+  using ArrayType = arrow::UInt64Array;
+  static std::shared_ptr<arrow::DataType> TypeValue() {
+    return arrow::uint64();
+  }
 };
 
 template <>
@@ -197,11 +215,29 @@ struct CppTypeToArrowType<int32_t> {
 };
 
 template <>
+struct CppTypeToArrowType<uint32_t> {
+  using Type = arrow::UInt32Type;
+  using ArrayType = arrow::UInt32Array;
+  static std::shared_ptr<arrow::DataType> TypeValue() {
+    return arrow::uint32();
+  }
+};
+
+template <>
 struct CppTypeToArrowType<double> {
   using Type = arrow::DoubleType;
   using ArrayType = arrow::DoubleArray;
   static std::shared_ptr<arrow::DataType> TypeValue() {
     return arrow::float64();
+  }
+};
+
+template <>
+struct CppTypeToArrowType<float> {
+  using Type = arrow::FloatType;
+  using ArrayType = arrow::FloatArray;
+  static std::shared_ptr<arrow::DataType> TypeValue() {
+    return arrow::float32();
   }
 };
 
@@ -218,8 +254,18 @@ template <typename T>
 struct CppTypeToPropertyType;
 
 template <>
+struct CppTypeToPropertyType<bool> {
+  static constexpr PropertyType value = PropertyType::kBool;
+};
+
+template <>
 struct CppTypeToPropertyType<int32_t> {
   static constexpr PropertyType value = PropertyType::kInt32;
+};
+
+template <>
+struct CppTypeToPropertyType<uint32_t> {
+  static constexpr PropertyType value = PropertyType::kUInt32;
 };
 
 template <>
@@ -228,10 +274,19 @@ struct CppTypeToPropertyType<int64_t> {
 };
 
 template <>
+struct CppTypeToPropertyType<uint64_t> {
+  static constexpr PropertyType value = PropertyType::kUInt64;
+};
+
+template <>
 struct CppTypeToPropertyType<double> {
   static constexpr PropertyType value = PropertyType::kDouble;
 };
 
+template <>
+struct CppTypeToPropertyType<float> {
+  static constexpr PropertyType value = PropertyType::kFloat;
+};
 template <>
 struct CppTypeToPropertyType<std::string> {
   static constexpr PropertyType value = PropertyType::kString;

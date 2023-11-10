@@ -26,8 +26,14 @@ namespace gs {
 
 inline void serialize_field(grape::InArchive& arc, const Any& prop) {
   switch (prop.type) {
+  case PropertyType::kBool:
+    arc << prop.value.b;
+    break;
   case PropertyType::kInt32:
     arc << prop.value.i;
+    break;
+  case PropertyType::kUInt32:
+    arc << prop.value.ui;
     break;
   case PropertyType::kDate:
     arc << prop.value.d.milli_second;
@@ -40,8 +46,14 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
   case PropertyType::kInt64:
     arc << prop.value.l;
     break;
+  case PropertyType::kUInt64:
+    arc << prop.value.ul;
+    break;
   case PropertyType::kDouble:
     arc << prop.value.db;
+    break;
+  case PropertyType::kFloat:
+    arc << prop.value.f;
     break;
   default:
     LOG(FATAL) << "Unexpected property type";
@@ -50,8 +62,14 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
 
 inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   switch (prop.type) {
+  case PropertyType::kBool:
+    arc >> prop.value.b;
+    break;
   case PropertyType::kInt32:
     arc >> prop.value.i;
+    break;
+  case PropertyType::kUInt32:
+    arc >> prop.value.ui;
     break;
   case PropertyType::kDate:
     arc >> prop.value.d.milli_second;
@@ -64,8 +82,14 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   case PropertyType::kInt64:
     arc >> prop.value.l;
     break;
+  case PropertyType::kUInt64:
+    arc >> prop.value.ul;
+    break;
   case PropertyType::kDouble:
     arc >> prop.value.db;
+    break;
+  case PropertyType::kFloat:
+    arc >> prop.value.f;
     break;
   default:
     LOG(FATAL) << "Unexpected property type";

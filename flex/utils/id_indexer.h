@@ -161,6 +161,12 @@ struct GHash<Any> {
   size_t operator()(const Any& val) const {
     if (val.type == PropertyType::kInt64) {
       return GHash<int64_t>()(val.AsInt64());
+    } else if (val.type == PropertyType::kInt32) {
+      return GHash<int32_t>()(val.AsInt32());
+    } else if (val.type == PropertyType::kUInt64) {
+      return GHash<uint64_t>()(val.AsUInt64());
+    } else if (val.type == PropertyType::kUInt32) {
+      return GHash<uint32_t>()(val.AsUInt32());
     } else {
       return GHash<std::string_view>()(val.AsString());
     }
@@ -204,6 +210,12 @@ class LFIndexer {
     keys_ = nullptr;
     if (type == PropertyType::kInt64) {
       keys_ = new TypedColumn<int64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kInt32) {
+      keys_ = new TypedColumn<int32_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kUInt64) {
+      keys_ = new TypedColumn<uint64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kUInt32) {
+      keys_ = new TypedColumn<uint32_t>(StorageStrategy::kMem);
     } else if (type == PropertyType::kString) {
       keys_ = new TypedColumn<std::string_view>(StorageStrategy::kMem);
     } else {
