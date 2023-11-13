@@ -11,17 +11,17 @@ The graph data encompasses two fundamental elements:
 
 Note: This graph model aligns with the property graph model, which offers a detailed explanation [here](https://subscription.packtpub.com/book/data/9781784393441/1/ch01lvl1sec09/the-property-graph-model). However, it's essential to note our terminology: we use "vertex" instead of "node" and "edge" instead of "relationship", and we only support **directed** edge instead of both directed and undirected edge. 
 
-Within the `gs_interactive_image.yaml` file, vertices are delineated under the `vertex_types` section. Each vertex type is structured with mandatory fields: `type_name`, `properties`, and `primary_keys`. For instance:
+Within the `graph.yaml` file, vertices are delineated under the `vertex_types` section. Each vertex type is structured with mandatory fields: `type_name`, `properties`, and `primary_keys`. For instance:
 
 ```yaml
 - type_name: person
   properties:
     - property_name: id
-      property_data_type:
-        primitive_type: DT_SIGNED_INT64
+      property_type:
+            primitive_type: DT_SIGNED_INT64
     - property_name: name
-      property_data_type:
-        primitive_type: DT_STRING
+      property_type:
+            primitive_type: DT_STRING
   primary_keys: # these must also be listed in the properties
     - id  
 ```
@@ -41,6 +41,7 @@ vertex_type_pair_relations:
 Note: 
 - A single edge type can have multiple `vertex_type_pair_relations`. For instance, a "knows" edge might connect one person to another, symbolizing their friendship. Alternatively, it could associate a person with a skill, indicating their proficiency in that skill.
 - The permissible relations include: `ONE_TO_ONE`, `ONE_TO_MANY`, `MANY_TO_ONE`, and `MANY_TO_MANY`. These relations can be utilized by the optimizer to generate more efficient execution plans.
+- Currently we only support at most one property for each edge triplet.
  
 
 ## Entity Data
@@ -58,24 +59,28 @@ Entity data pertains to the properties associated with vertices and edges. In Gr
 - DT_STRING
 - DT_DATE32
 
-In the `gs_interactive_image.yaml`, a primitive type, such as `DT_STRING`, can be written as:
+In the `graph.yaml`, a primitive type, such as `DT_STRING`, can be written as:
 ```yaml
-property_data_type:
+property_type:
   primitive_type: DT_STRING
 ```
 
-Currently, we only support using attribute columns with a data type of `DT_SIGNED_INT32`, `DT_UNSIGNED_INT32`, `DT_SIGNED_INT64` or `DT_UNSIGNED_INT64` as the primary key column, and there can be only one primary key column.
+Please note that we currently do not support the use of string data type for properties on edges.
 
 ### Array Types
 
 Array types are currently not supported, but are planned to be supported in the near future.
 Once supported, albeit requiring that every element within the array adheres to one of the previously mentioned primitive types. 
-It's crucial that all elements within a single array share the same type. In `gs_interactive_image.yaml`, user can describe designating a property as an array of the `DT_STRING` type as:
+It's crucial that all elements within a single array share the same type. In `graph.yaml`, user can describe designating a property as an array of the `DT_STRING` type as:
 
 ```yaml
-property_data_type:
+property_type:
   array:
     component_type: 
       primitive_type: DT_UNSIGNED_INT64
       max_length: 10  # overflowed elements will be truncated
 ```
+
+## Primary Key for Vertex
+
+Currently, we only support using attribute columns with a data type of `DT_SIGNED_INT32`, `DT_UNSIGNED_INT32`, `DT_SIGNED_INT64` or `DT_UNSIGNED_INT64` as the primary key column, and there can be only one primary key column.
