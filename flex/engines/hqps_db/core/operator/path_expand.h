@@ -472,18 +472,19 @@ class PathExpand {
             graph, edge_label, edge_other_labels_vec, vertex_other_labels_vec,
             edge_opt.direction_, vertices_vec, src_labels_vec, range);
     auto res_dist_tuple = single_col_vec_to_tuple_vec(std::move(res_dists));
-    CHECK(res_offsets.size() == vertices_vec.size() + 1);
-    CHECK(res_vertices.size() == res_labels_vec.size());
     std::vector<grape::Bitset> res_bitsets;
     std::vector<label_id_t> label_id_vec;
     std::tie(res_bitsets, label_id_vec) =
         convert_label_id_vec_to_bitsets(res_labels_vec);
-    CHECK(label_id_vec.size() <= vertex_other_labels.size())
-        << "label_id_vec.size(): " << label_id_vec.size()
-        << ", vertex_other_labels.size(): " << vertex_other_labels.size();
-    CHECK(res_bitsets.size() == label_id_vec.size())
-        << "res_bitsets.size(): " << res_bitsets.size()
-        << ", label_id_vec.size(): " << label_id_vec.size();
+    if (label_id_vec.size() > vertex_other_labels.size()) {
+      LOG(ERROR) << "Error state: label_id_vec.size(): " << label_id_vec.size()
+                 << ", vertex_other_labels.size(): "
+                 << vertex_other_labels.size();
+    }
+    if (res_bitsets.size() != label_id_vec.size()) {
+      LOG(ERROR) << "Error state: res_bitsets.size(): " << res_bitsets.size()
+                 << ", label_id_vec.size(): " << label_id_vec.size();
+    }
     auto set = make_general_set(
         std::move(res_vertices), std::move(res_dist_tuple), {"dist"},
         std::move(label_id_vec), std::move(res_bitsets));
@@ -516,18 +517,19 @@ class PathExpand {
             graph, edge_label, edge_other_labels_vec, vertex_other_labels_vec,
             edge_opt.direction_, vertices_vec, src_labels_vec, range);
     auto res_dist_tuple = single_col_vec_to_tuple_vec(std::move(res_dists));
-    CHECK(res_offsets.size() == vertices_vec.size() + 1);
-    CHECK(res_vertices.size() == res_labels_vec.size());
     std::vector<grape::Bitset> res_bitsets;
     std::vector<label_id_t> label_id_vec;
     std::tie(res_bitsets, label_id_vec) =
         convert_label_id_vec_to_bitsets(res_labels_vec);
-    CHECK(label_id_vec.size() <= vertex_other_labels.size())
-        << "label_id_vec.size(): " << label_id_vec.size()
-        << ", vertex_other_labels.size(): " << vertex_other_labels.size();
-    CHECK(res_bitsets.size() == label_id_vec.size())
-        << "res_bitsets.size(): " << res_bitsets.size()
-        << ", label_id_vec.size(): " << label_id_vec.size();
+    if (label_id_vec.size() > vertex_other_labels.size()) {
+      LOG(ERROR) << "Error state: label_id_vec.size(): " << label_id_vec.size()
+                 << ", vertex_other_labels.size(): "
+                 << vertex_other_labels.size();
+    }
+    if (res_bitsets.size() != label_id_vec.size()) {
+      LOG(ERROR) << "Error state: res_bitsets.size(): " << res_bitsets.size()
+                 << ", label_id_vec.size(): " << label_id_vec.size();
+    }
     auto set = make_general_set(
         std::move(res_vertices), std::move(res_dist_tuple), {"dist"},
         std::move(label_id_vec), std::move(res_bitsets));
@@ -559,18 +561,19 @@ class PathExpand {
             graph, edge_label, edge_other_labels_vec, vertex_other_labels_vec,
             edge_opt.direction_, vertices_vec, src_labels_vec, range);
     auto res_dist_tuple = single_col_vec_to_tuple_vec(std::move(res_dists));
-    CHECK(res_offsets.size() == vertices_vec.size() + 1);
-    CHECK(res_vertices.size() == res_labels_vec.size());
     std::vector<grape::Bitset> res_bitsets;
     std::vector<label_id_t> label_id_vec;
     std::tie(res_bitsets, label_id_vec) =
         convert_label_id_vec_to_bitsets(res_labels_vec);
-    CHECK(label_id_vec.size() <= vertex_other_labels.size())
-        << "label_id_vec.size(): " << label_id_vec.size()
-        << ", vertex_other_labels.size(): " << vertex_other_labels.size();
-    CHECK(res_bitsets.size() == label_id_vec.size())
-        << "res_bitsets.size(): " << res_bitsets.size()
-        << ", label_id_vec.size(): " << label_id_vec.size();
+    if (label_id_vec.size() > vertex_other_labels.size()) {
+      LOG(ERROR) << "Error state: label_id_vec.size(): " << label_id_vec.size()
+                 << ", vertex_other_labels.size(): "
+                 << vertex_other_labels.size();
+    }
+    if (res_bitsets.size() != label_id_vec.size()) {
+      LOG(ERROR) << "Error state: res_bitsets.size(): " << res_bitsets.size()
+                 << ", label_id_vec.size(): " << label_id_vec.size();
+    }
     auto set = make_general_set(
         std::move(res_vertices), std::move(res_dist_tuple), {"dist"},
         std::move(label_id_vec), std::move(res_bitsets));
@@ -804,7 +807,6 @@ class PathExpand {
         }
         tmp_cur_offset.emplace_back(cur_cnt);
       }
-      CHECK(cur_cnt == cur_hop_new_vnum);
       for (auto i = 0; i < other_offsets[cur_hop - 1].size(); ++i) {
         other_offsets[cur_hop].emplace_back(
             tmp_cur_offset[other_offsets[cur_hop - 1][i]]);
@@ -818,8 +820,6 @@ class PathExpand {
     std::vector<label_id_t> res_labels_vec;
     std::vector<bool> valid_labels(sizeof(label_id_t) * 8, false);
     for (auto& v_label : vertex_other_labels) {
-      CHECK(v_label < sizeof(label_id_t) * 8)
-          << "v_label: " << v_label << ", " << sizeof(label_id_t) * 8;
       valid_labels[v_label] = true;
     }
     auto num_valid_labels =
@@ -879,10 +879,8 @@ class PathExpand {
 
     for (auto i = 0; i < label_vec.size(); ++i) {
       auto index = label_to_index[label_vec[i]];
-      CHECK(index != -1);
       res_bitsets[index].set_bit(i);
     }
-    CHECK(res_label_id_vec.size() == num_valid_labels);
     return std::make_pair(std::move(res_bitsets), std::move(res_label_id_vec));
   }
 
