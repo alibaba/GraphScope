@@ -134,7 +134,7 @@ pub fn wait_servers_ready(server_conf: &ServerConf) {
         };
         if !remotes.is_empty() {
             while !pegasus_network::check_ipc_ready(local, &remotes) {
-                std::thread::sleep(std::time::Duration::from_millis(100));
+                std::thread::sleep(std::time::Duration::from_millis(1000));
                 info!("waiting remote servers connect ...");
             }
         }

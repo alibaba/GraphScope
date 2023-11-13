@@ -80,6 +80,8 @@ pub fn is_connected(local_id: u64, remote_id: u64) -> bool {
 
 pub fn check_connect(local: u64, remotes: &[u64]) -> bool {
     let states = CONNECTION_STATES.read().expect("lock poisoned");
+    let mut connect_status = true;
+    let mut disconnected_servers = vec![];
     for id in remotes {
         if *id != local
             && !states
@@ -87,8 +89,12 @@ pub fn check_connect(local: u64, remotes: &[u64]) -> bool {
                 .map(|s| s.is_connected())
                 .unwrap_or(false)
         {
-            return false;
+            connect_status = false;
+            disconnected_servers.push(*id);
         }
     }
-    true
+    if !connect_status {
+        error!("Servers {:?} are not connected", disconnected_servers);
+    }
+    connect_status
 }
