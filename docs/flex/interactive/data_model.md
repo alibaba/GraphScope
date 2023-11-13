@@ -26,7 +26,9 @@ Within the `graph.yaml` file, vertices are delineated under the `vertex_types` s
     - id  
 ```
 
-Note: In the current version, only one single primary key can be specified, but we plan to support multiple primary keys in the future. 
+Note:
+- In the current version, only one single primary key can be specified, but we plan to support multiple primary keys in the future. 
+- The data type of primary key column must be one of `DT_SIGNED_INT32`, `DT_UNSIGNED_INT32`, `DT_SIGNED_INT64` or `DT_UNSIGNED_INT64`.
 
 Edges are defined within the `edge_types` section, characterized by the mandatory fields: `type_name`, `vertex_type_pair_relations`, and `properties`. The type_name and properties fields function similarly to those in vertices. However, the vertex_type_pair_relations field is exclusive to edges, specifying the permissible source and destination vertex types, as well as the relationship detailing how many source and destination vertices can be linked by this edge. Here's an illustrative example:
 ```yaml
@@ -80,7 +82,3 @@ property_type:
       primitive_type: DT_UNSIGNED_INT64
       max_length: 10  # overflowed elements will be truncated
 ```
-
-## Primary Key for Vertex
-
-Currently, we only support using attribute columns with a data type of `DT_SIGNED_INT32`, `DT_UNSIGNED_INT32`, `DT_SIGNED_INT64` or `DT_UNSIGNED_INT64` as the primary key column, and there can be only one primary key column.
