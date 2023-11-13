@@ -582,9 +582,7 @@ static void append_edges(
     }
   };
   auto src_col_thread = std::thread([&]() { _append(false); });
-  src_col_thread.join();
   auto dst_col_thread = std::thread([&]() { _append(true); });
-  dst_col_thread.join();
 
   // if EDATA_T is grape::EmptyType, no need to read columns
   auto edata_col_thread = std::thread([&]() {
@@ -626,8 +624,8 @@ static void append_edges(
       }
     }
   });
-  // src_col_thread.join();
-  // dst_col_thread.join();
+  src_col_thread.join();
+  dst_col_thread.join();
   edata_col_thread.join();
   VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
 }
@@ -743,117 +741,49 @@ template <typename KEY_T>
 struct _add_vertex {
   void operator()(const std::shared_ptr<arrow::Array>& col,
                   IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {
-    LOG(FATAL) << "Not implemented";
-  }
-};
-
-template <>
-struct _add_vertex<int64_t> {
-  void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<int64_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::int64());
     size_t row_num = col->length();
-
-    auto casted_array = std::static_pointer_cast<arrow::Int64Array>(col);
     vid_t vid;
-    for (auto i = 0; i < row_num; ++i) {
-      if (!indexer.add(casted_array->Value(i), vid)) {
-        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
+    if constexpr (!std::is_same<std::string_view, KEY_T>::value) {
+      // for non-string value
+      auto expected_type = gs::CppTypeToArrowType<KEY_T>::TypeValue();
+      using arrow_array_t = typename gs::CppTypeToArrowType<KEY_T>::ArrayType;
+      if (col->type() != expected_type) {
+        LOG(FATAL) << "Inconsistent data type, expect "
+                   << expected_type->ToString() << ", but got "
+                   << col->type()->ToString();
       }
-      vids.emplace_back(vid);
-    }
-  }
-};
-
-template <>
-struct _add_vertex<uint64_t> {
-  void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<uint64_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::uint64());
-    size_t row_num = col->length();
-
-    auto casted_array = std::static_pointer_cast<arrow::UInt64Array>(col);
-    vid_t vid;
-    for (auto i = 0; i < row_num; ++i) {
-      if (!indexer.add(casted_array->Value(i), vid)) {
-        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
-      }
-      vids.emplace_back(vid);
-    }
-  }
-};
-
-template <>
-struct _add_vertex<int32_t> {
-  void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<int32_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::int32());
-    size_t row_num = col->length();
-
-    auto casted_array = std::static_pointer_cast<arrow::Int32Array>(col);
-    vid_t vid;
-    for (auto i = 0; i < row_num; ++i) {
-      if (!indexer.add(casted_array->Value(i), vid)) {
-        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
-      }
-      vids.emplace_back(vid);
-    }
-  }
-};
-
-template <>
-struct _add_vertex<uint32_t> {
-  void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<uint32_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::uint32());
-    size_t row_num = col->length();
-
-    auto casted_array = std::static_pointer_cast<arrow::UInt32Array>(col);
-    vid_t vid;
-    for (auto i = 0; i < row_num; ++i) {
-      if (!indexer.add(casted_array->Value(i), vid)) {
-        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
-      }
-      vids.emplace_back(vid);
-    }
-  }
-};
-
-template <>
-struct _add_vertex<std::string_view> {
-  void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<std::string_view, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    size_t row_num = col->length();
-    CHECK(col->type() == arrow::utf8() || col->type() == arrow::large_utf8());
-    if (col->type() == arrow::utf8()) {
-      auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
-      vid_t vid;
+      auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
       for (auto i = 0; i < row_num; ++i) {
-        auto str = casted_array->GetView(i);
-        std::string_view str_view(str.data(), str.size());
-
-        if (!indexer.add(str_view, vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+        if (!indexer.add(casted_array->Value(i), vid)) {
+          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i)
+                     << "..";
         }
         vids.emplace_back(vid);
       }
     } else {
-      auto casted_array =
-          std::static_pointer_cast<arrow::LargeStringArray>(col);
-      vid_t vid;
-      for (auto i = 0; i < row_num; ++i) {
-        auto str = casted_array->GetView(i);
-        std::string_view str_view(str.data(), str.size());
-
-        if (!indexer.add(str_view, vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+      if (col->type() == arrow::utf8()) {
+        auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
+        for (auto i = 0; i < row_num; ++i) {
+          auto str = casted_array->GetView(i);
+          std::string_view str_view(str.data(), str.size());
+          if (!indexer.add(str_view, vid)) {
+            LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+          }
+          vids.emplace_back(vid);
         }
-        vids.emplace_back(vid);
+      } else if (col->type() == arrow::large_utf8()) {
+        auto casted_array =
+            std::static_pointer_cast<arrow::LargeStringArray>(col);
+        for (auto i = 0; i < row_num; ++i) {
+          auto str = casted_array->GetView(i);
+          std::string_view str_view(str.data(), str.size());
+          if (!indexer.add(str_view, vid)) {
+            LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+          }
+          vids.emplace_back(vid);
+        }
+      } else {
+        LOG(FATAL) << "Not support type: " << col->type()->ToString();
       }
     }
   }
@@ -900,137 +830,60 @@ template <typename KEY_T>
 struct _add_vertex_chunk {
   void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
                   IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {
-    LOG(FATAL) << "Not implemented";
-  }
-};
-
-template <>
-struct _add_vertex_chunk<int64_t> {
-  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
-                  IdIndexer<int64_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::int64());
     size_t row_num = col->length();
-    for (auto i = 0; i < col->num_chunks(); ++i) {
-      auto chunk = col->chunk(i);
-      auto casted_array = std::static_pointer_cast<arrow::Int64Array>(chunk);
-      for (auto j = 0; j < casted_array->length(); ++j) {
-        vid_t vid;
-        if (!indexer.add(casted_array->Value(j), vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
-                     << " .. ";
-        }
-        vids.emplace_back(vid);
+    vid_t vid;
+
+    if constexpr (!std::is_same<std::string_view, KEY_T>::value) {
+      auto expected_type = gs::CppTypeToArrowType<KEY_T>::TypeValue();
+      using arrow_array_type =
+          typename gs::CppTypeToArrowType<KEY_T>::ArrayType;
+      if (col->type() != expected_type) {
+        LOG(FATAL) << "Inconsistent data type, expect "
+                   << expected_type->ToString() << ", but got "
+                   << col->type()->ToString();
       }
-    }
-  }
-};
-
-template <>
-struct _add_vertex_chunk<uint64_t> {
-  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
-                  IdIndexer<uint64_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::uint64());
-    size_t row_num = col->length();
-    for (auto i = 0; i < col->num_chunks(); ++i) {
-      auto chunk = col->chunk(i);
-      auto casted_array = std::static_pointer_cast<arrow::UInt64Array>(chunk);
-      for (auto j = 0; j < casted_array->length(); ++j) {
-        vid_t vid;
-
-        if (!indexer.add(casted_array->Value(j), vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
-                     << " .. ";
-        }
-        vids.emplace_back(vid);
-      }
-    }
-  }
-};
-
-template <>
-struct _add_vertex_chunk<int32_t> {
-  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
-                  IdIndexer<int32_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::int32());
-    size_t row_num = col->length();
-    for (auto i = 0; i < col->num_chunks(); ++i) {
-      auto chunk = col->chunk(i);
-      auto casted_array = std::static_pointer_cast<arrow::Int32Array>(chunk);
-      for (auto j = 0; j < casted_array->length(); ++j) {
-        vid_t vid;
-        if (!indexer.add(casted_array->Value(j), vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
-                     << " .. ";
-        }
-        vids.emplace_back(vid);
-      }
-    }
-  }
-};
-
-template <>
-struct _add_vertex_chunk<uint32_t> {
-  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
-                  IdIndexer<uint32_t, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::uint32());
-    size_t row_num = col->length();
-    for (auto i = 0; i < col->num_chunks(); ++i) {
-      auto chunk = col->chunk(i);
-      auto casted_array = std::static_pointer_cast<arrow::UInt32Array>(chunk);
-      for (auto j = 0; j < casted_array->length(); ++j) {
-        vid_t vid;
-        if (!indexer.add(casted_array->Value(j), vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
-                     << " .. ";
-        }
-        vids.emplace_back(vid);
-      }
-    }
-  }
-};
-
-template <>
-struct _add_vertex_chunk<std::string_view> {
-  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
-                  IdIndexer<std::string_view, vid_t>& indexer,
-                  std::vector<vid_t>& vids) {
-    CHECK(col->type() == arrow::utf8() || col->type() == arrow::large_utf8());
-    size_t row_num = col->length();
-
-    if (col->type() == arrow::utf8()) {
       for (auto i = 0; i < col->num_chunks(); ++i) {
         auto chunk = col->chunk(i);
-        auto casted_array = std::static_pointer_cast<arrow::StringArray>(chunk);
+        auto casted_array = std::static_pointer_cast<arrow_array_type>(chunk);
         for (auto j = 0; j < casted_array->length(); ++j) {
-          vid_t vid;
-          auto str = casted_array->GetView(j);
-          std::string_view str_view(str.data(), str.size());
-
-          if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
+          if (!indexer.add(casted_array->Value(j), vid)) {
+            LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
+                       << " .. ";
           }
           vids.emplace_back(vid);
         }
       }
     } else {
-      for (auto i = 0; i < col->num_chunks(); ++i) {
-        auto chunk = col->chunk(i);
-        auto casted_array =
-            std::static_pointer_cast<arrow::LargeStringArray>(chunk);
-        for (auto j = 0; j < casted_array->length(); ++j) {
-          vid_t vid;
-          auto str = casted_array->GetView(j);
-          std::string_view str_view(str.data(), str.size());
-
-          if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
+      if (col->type() == arrow::utf8()) {
+        for (auto i = 0; i < col->num_chunks(); ++i) {
+          auto chunk = col->chunk(i);
+          auto casted_array =
+              std::static_pointer_cast<arrow::StringArray>(chunk);
+          for (auto j = 0; j < casted_array->length(); ++j) {
+            auto str = casted_array->GetView(j);
+            std::string_view str_view(str.data(), str.size());
+            if (!indexer.add(str_view, vid)) {
+              LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
+            }
+            vids.emplace_back(vid);
           }
-          vids.emplace_back(vid);
         }
+      } else if (col->type() == arrow::large_utf8()) {
+        for (auto i = 0; i < col->num_chunks(); ++i) {
+          auto chunk = col->chunk(i);
+          auto casted_array =
+              std::static_pointer_cast<arrow::LargeStringArray>(chunk);
+          for (auto j = 0; j < casted_array->length(); ++j) {
+            auto str = casted_array->GetView(j);
+            std::string_view str_view(str.data(), str.size());
+            if (!indexer.add(str_view, vid)) {
+              LOG(FATAL) << "Duplicate vertex id: " << str_view << " .. ";
+            }
+            vids.emplace_back(vid);
+          }
+        }
+      } else {
+        LOG(FATAL) << "Not support type: " << col->type()->ToString();
       }
     }
   }

@@ -774,55 +774,27 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
 template <typename KEY_T, typename INDEX_T>
 struct _move_data {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& lf, size_t size) {
-    LOG(FATAL) << "Not implemented";
-  }
-};
-
-template <typename INDEX_T>
-struct _move_data<int64_t, INDEX_T> {
-  using key_buffer_t = typename id_indexer_impl::KeyBuffer<int64_t>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    auto& buffer = dynamic_cast<TypedColumn<int64_t>&>(col);
-    memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
-  }
-};
-
-template <typename INDEX_T>
-struct _move_data<uint64_t, INDEX_T> {
-  using key_buffer_t = typename id_indexer_impl::KeyBuffer<uint64_t>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    auto& buffer = dynamic_cast<TypedColumn<uint64_t>&>(col);
-    memcpy(buffer.buffer().data(), input.data(), sizeof(uint64_t) * size);
-  }
-};
-
-template <typename INDEX_T>
-struct _move_data<int32_t, INDEX_T> {
-  using key_buffer_t = typename id_indexer_impl::KeyBuffer<int32_t>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    auto& buffer = dynamic_cast<TypedColumn<int32_t>&>(col);
-    memcpy(buffer.buffer().data(), input.data(), sizeof(int32_t) * size);
-  }
-};
-
-template <typename INDEX_T>
-struct _move_data<uint32_t, INDEX_T> {
-  using key_buffer_t = typename id_indexer_impl::KeyBuffer<uint32_t>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    auto& buffer = dynamic_cast<TypedColumn<uint32_t>&>(col);
-    memcpy(buffer.buffer().data(), input.data(), sizeof(uint32_t) * size);
-  }
-};
-
-template <typename INDEX_T>
-struct _move_data<std::string_view, INDEX_T> {
-  using key_buffer_t =
-      typename id_indexer_impl::KeyBuffer<std::string_view>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    auto& keys = dynamic_cast<TypedColumn<std::string_view>&>(col);
-    for (size_t idx = 0; idx < size; ++idx) {
-      keys.set_value(idx, input[idx]);
+    if constexpr (std::is_same<KEY_T, int64_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<int64_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
+    } else if constexpr (std::is_same<KEY_T, uint64_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<uint64_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(uint64_t) * size);
+    } else if constexpr (std::is_same<KEY_T, int32_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<int32_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(int32_t) * size);
+    } else if constexpr (std::is_same<KEY_T, uint32_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<uint32_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(uint32_t) * size);
+    } else if constexpr (std::is_same<KEY_T, std::string_view>::value) {
+      auto& keys = dynamic_cast<TypedColumn<std::string_view>&>(col);
+      for (size_t idx = 0; idx < size; ++idx) {
+        keys.set_value(idx, input[idx]);
+      }
+    } else {
+      LOG(FATAL) << "Not support type [" << AnyConverter<KEY_T>::type
+                 << "] as pk type ..";
     }
   }
 };
