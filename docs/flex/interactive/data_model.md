@@ -64,6 +64,8 @@ property_data_type:
   primitive_type: DT_STRING
 ```
 
+Currently, we only support using attribute columns with a data type of `DT_SIGNED_INT32`, `DT_UNSIGNED_INT32`, `DT_SIGNED_INT64` or `DT_UNSIGNED_INT64` as the primary key column, and there can be only one primary key column.
+
 ### Array Types
 
 Array types are currently not supported, but are planned to be supported in the near future.
