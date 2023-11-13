@@ -783,7 +783,6 @@ template <typename INDEX_T>
 struct _move_data<int64_t, INDEX_T> {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<int64_t>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    // size_t size = input.keys_.size();
     auto& buffer = dynamic_cast<TypedColumn<int64_t>&>(col);
     memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
   }
@@ -793,7 +792,6 @@ template <typename INDEX_T>
 struct _move_data<uint64_t, INDEX_T> {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<uint64_t>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    // size_t size = input.keys_.size();
     auto& buffer = dynamic_cast<TypedColumn<uint64_t>&>(col);
     memcpy(buffer.buffer().data(), input.data(), sizeof(uint64_t) * size);
   }
@@ -803,7 +801,6 @@ template <typename INDEX_T>
 struct _move_data<int32_t, INDEX_T> {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<int32_t>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    // size_t size = input.keys_.size();
     auto& buffer = dynamic_cast<TypedColumn<int32_t>&>(col);
     memcpy(buffer.buffer().data(), input.data(), sizeof(int32_t) * size);
   }
@@ -813,7 +810,6 @@ template <typename INDEX_T>
 struct _move_data<uint32_t, INDEX_T> {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<uint32_t>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    // size_t size = input.keys_.size();
     auto& buffer = dynamic_cast<TypedColumn<uint32_t>&>(col);
     memcpy(buffer.buffer().data(), input.data(), sizeof(uint32_t) * size);
   }
@@ -824,7 +820,6 @@ struct _move_data<std::string_view, INDEX_T> {
   using key_buffer_t =
       typename id_indexer_impl::KeyBuffer<std::string_view>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    // size_t size = input.keys_.size();
     auto& keys = dynamic_cast<TypedColumn<std::string_view>&>(col);
     for (size_t idx = 0; idx < size; ++idx) {
       keys.set_value(idx, input[idx]);
