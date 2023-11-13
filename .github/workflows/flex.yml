@@ -57,6 +57,12 @@ jobs:
         export FLEX_DATA_DIR=../../../../interactive/examples/modern_graph/
         ./run_grin_test 'flex://schema_file=../../../../interactive/examples/modern_graph/modern_graph.yaml&bulk_load_file=../../../../interactive/examples/modern_graph/bulk_load.yaml'
 
+    - name: Prepare test dataset
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+      run: |
+        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
+
     - name: Test Graph Loading on modern graph
       env:
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
@@ -67,15 +73,26 @@ jobs:
         BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
         GLOG_v=10 ./bin/graph_loader  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
 
+    - name: Test Graph Loading on type_test graph
+    env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest/
+        FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/type_test/
+    run: |
+        # remove modern graph indices
+        rm -rf /tmp/csr-data-dir/
+
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GS_TEST_DIR}/type_test/graph.yaml
+        BULK_LOAD_FILE=${GS_TEST_DIR}/type_test/import.yaml
+        GLOG_v=10 ./bin/graph_loader  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/ 2
+
     - name: Test Graph Loading on LDBC SNB sf0.1
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest/
         FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/ldbc-sf01-long-date/
       run: |
-        # remove modern graph indices
+        # remove previous graph indices
         rm -rf /tmp/csr-data-dir/
-
-        git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
 
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=${FLEX_DATA_DIR}/audit_graph_schema.yaml

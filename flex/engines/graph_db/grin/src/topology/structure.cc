@@ -144,14 +144,26 @@ const void* grin_get_edge_data_value(GRIN_GRAPH, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   auto type = _e->data.type;
   switch (_get_data_type(type)) {
+  case GRIN_DATATYPE::Bool: {
+    return new bool(_e->data.value.b);
+  }
   case GRIN_DATATYPE::Int32: {
     return new int32_t(_e->data.value.i);
   }
   case GRIN_DATATYPE::Int64: {
     return new int64_t(_e->data.value.l);
   }
+  case GRIN_DATATYPE::UInt32: {
+    return new uint32_t(_e->data.value.ui);
+  }
+  case GRIN_DATATYPE::UInt64: {
+    return new uint64_t(_e->data.value.ul);
+  }
   case GRIN_DATATYPE::Double: {
     return new double(_e->data.value.db);
+  }
+  case GRIN_DATATYPE::Float: {
+    return new float(_e->data.value.f);
   }
   case GRIN_DATATYPE::String: {
     auto s = _e->data.value.s;

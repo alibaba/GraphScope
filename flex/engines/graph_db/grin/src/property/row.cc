@@ -147,6 +147,8 @@ const void* grin_get_value_from_row(GRIN_GRAPH g, GRIN_ROW r, GRIN_DATATYPE dt,
                                     size_t idx) {
   auto _r = static_cast<GRIN_ROW_T*>(r);
   switch (dt) {
+  case GRIN_DATATYPE::Bool:
+    return static_cast<const bool*>((*_r)[idx]);
   case GRIN_DATATYPE::Int32:
     return static_cast<const int32_t*>((*_r)[idx]);
   case GRIN_DATATYPE::UInt32:
@@ -192,6 +194,11 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
     auto col = _g->vproperties[label][prop_id];
     auto type = _get_data_type(types[prop_id]);
     switch (type) {
+    case GRIN_DATATYPE::Bool: {
+      auto _col = static_cast<const gs::BoolColumn*>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
     case GRIN_DATATYPE::Int32: {
       auto _col = static_cast<const gs::IntColumn*>(col);
       r->emplace_back(_col->buffer().data() + vid);
@@ -199,6 +206,16 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
     }
     case GRIN_DATATYPE::Int64: {
       auto _col = static_cast<const gs::LongColumn*>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
+    case GRIN_DATATYPE::UInt32: {
+      auto _col = static_cast<const gs::UIntColumn*>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
+    case GRIN_DATATYPE::UInt64: {
+      auto _col = static_cast<const gs::ULongColumn*>(col);
       r->emplace_back(_col->buffer().data() + vid);
       break;
     }
@@ -221,6 +238,11 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
       r->emplace_back(_col->buffer().data() + vid);
       break;
     }
+    case GRIN_DATATYPE::Float: {
+      auto _col = static_cast<const gs::FloatColumn*>(col);
+      r->emplace_back(_col->buffer().data() + vid);
+      break;
+    }
     default:
       r->emplace_back(static_cast<const void*>(NULL));
     }
@@ -235,12 +257,24 @@ GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
   auto type = _get_data_type(_e->data.type);
   GRIN_ROW_T* r = new GRIN_ROW_T();
   switch (type) {
+  case GRIN_DATATYPE::Bool: {
+    r->emplace_back(new bool(_e->data.value.b));
+    break;
+  }
   case GRIN_DATATYPE::Int32: {
     r->emplace_back(new int(_e->data.value.i));
     break;
   }
   case GRIN_DATATYPE::Int64: {
     r->emplace_back(new int64_t(_e->data.value.l));
+    break;
+  }
+  case GRIN_DATATYPE::UInt32: {
+    r->emplace_back(new uint32_t(_e->data.value.ui));
+    break;
+  }
+  case GRIN_DATATYPE::UInt64: {
+    r->emplace_back(new uint64_t(_e->data.value.ul));
     break;
   }
   case GRIN_DATATYPE::String: {
@@ -258,6 +292,10 @@ GRIN_ROW grin_get_edge_row(GRIN_GRAPH g, GRIN_EDGE e) {
   }
   case GRIN_DATATYPE::Double: {
     r->emplace_back(new double(_e->data.value.db));
+    break;
+  }
+  case GRIN_DATATYPE::Float: {
+    r->emplace_back(new float(_e->data.value.f));
     break;
   }
   default:

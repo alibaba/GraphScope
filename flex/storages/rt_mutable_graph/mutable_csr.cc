@@ -158,8 +158,14 @@ void SingleMutableCsr<EDATA_T>::Deserialize(const std::string& path) {
 template class SingleMutableCsr<grape::EmptyType>;
 template class MutableCsr<grape::EmptyType>;
 
-template class SingleMutableCsr<int>;
-template class MutableCsr<int>;
+template class SingleMutableCsr<bool>;
+template class MutableCsr<bool>;
+
+template class SingleMutableCsr<int32_t>;
+template class MutableCsr<int32_t>;
+
+template class SingleMutableCsr<uint32_t>;
+template class MutableCsr<uint32_t>;
 
 template class SingleMutableCsr<Date>;
 template class MutableCsr<Date>;
@@ -170,7 +176,12 @@ template class MutableCsr<std::string>;
 template class SingleMutableCsr<int64_t>;
 template class MutableCsr<int64_t>;
 
+template class SingleMutableCsr<uint64_t>;
+template class MutableCsr<uint64_t>;
+
 template class SingleMutableCsr<double>;
 template class MutableCsr<double>;
 
+template class SingleMutableCsr<float>;
+template class MutableCsr<float>;
 }  // namespace gs

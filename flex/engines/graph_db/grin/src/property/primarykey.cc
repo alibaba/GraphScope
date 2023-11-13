@@ -36,6 +36,12 @@ GRIN_VERTEX_PROPERTY_LIST grin_get_primary_keys_by_vertex_type(
   vp += (label * 1u) << 8;
   if (type == gs::PropertyType::kInt64) {
     vp += (GRIN_DATATYPE::Int64 * 1u) << 16;
+  } else if (type == gs::PropertyType::kInt32) {
+    vp += (GRIN_DATATYPE::Int32 * 1u) << 16;
+  } else if (type == gs::PropertyType::kUInt64) {
+    vp += (GRIN_DATATYPE::UInt64 * 1u) << 16;
+  } else if (type == gs::PropertyType::kUInt32) {
+    vp += (GRIN_DATATYPE::UInt32 * 1u) << 16;
   } else if (type == gs::PropertyType::kString) {
     vp += (GRIN_DATATYPE::String * 1u) << 16;
   } else {
