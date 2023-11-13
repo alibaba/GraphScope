@@ -180,121 +180,105 @@ class LDBCLongDateParser : public arrow::TimestampParser {
 
 // convert c++ type to arrow type. support other types likes emptyType, Date
 template <typename T>
-struct CppTypeToArrowType {};
+struct TypeConverter;
 
 template <>
-struct CppTypeToArrowType<bool> {
-  using Type = arrow::BooleanType;
-  using ArrayType = arrow::BooleanArray;
-  static std::shared_ptr<arrow::DataType> TypeValue() {
+struct TypeConverter<bool> {
+  static constexpr PropertyType property_type = PropertyType::kBool;
+  using ArrowType = arrow::BooleanType;
+  using ArrowArrayType = arrow::BooleanArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
     return arrow::boolean();
   }
 };
 
 template <>
-struct CppTypeToArrowType<int64_t> {
-  using Type = arrow::Int64Type;
-  using ArrayType = arrow::Int64Array;
-  static std::shared_ptr<arrow::DataType> TypeValue() { return arrow::int64(); }
-};
-
-template <>
-struct CppTypeToArrowType<uint64_t> {
-  using Type = arrow::UInt64Type;
-  using ArrayType = arrow::UInt64Array;
-  static std::shared_ptr<arrow::DataType> TypeValue() {
-    return arrow::uint64();
+struct TypeConverter<int32_t> {
+  static constexpr PropertyType property_type = PropertyType::kInt32;
+  using ArrowType = arrow::Int32Type;
+  using ArrowArrayType = arrow::Int32Array;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::int32();
   }
 };
 
 template <>
-struct CppTypeToArrowType<int32_t> {
-  using Type = arrow::Int32Type;
-  using ArrayType = arrow::Int32Array;
-  static std::shared_ptr<arrow::DataType> TypeValue() { return arrow::int32(); }
-};
-
-template <>
-struct CppTypeToArrowType<uint32_t> {
-  using Type = arrow::UInt32Type;
-  using ArrayType = arrow::UInt32Array;
-  static std::shared_ptr<arrow::DataType> TypeValue() {
+struct TypeConverter<uint32_t> {
+  static constexpr PropertyType property_type = PropertyType::kUInt32;
+  using ArrowType = arrow::UInt32Type;
+  using ArrowArrayType = arrow::UInt32Array;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
     return arrow::uint32();
   }
 };
 
 template <>
-struct CppTypeToArrowType<double> {
-  using Type = arrow::DoubleType;
-  using ArrayType = arrow::DoubleArray;
-  static std::shared_ptr<arrow::DataType> TypeValue() {
+struct TypeConverter<int64_t> {
+  static constexpr PropertyType property_type = PropertyType::kInt64;
+  using ArrowType = arrow::Int64Type;
+  using ArrowArrayType = arrow::Int64Array;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::int64();
+  }
+};
+
+template <>
+struct TypeConverter<uint64_t> {
+  static constexpr PropertyType property_type = PropertyType::kUInt64;
+  using ArrowType = arrow::UInt64Type;
+  using ArrowArrayType = arrow::UInt64Array;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::uint64();
+  }
+};
+
+template <>
+struct TypeConverter<double> {
+  static constexpr PropertyType property_type = PropertyType::kDouble;
+  using ArrowType = arrow::DoubleType;
+  using ArrowArrayType = arrow::DoubleArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
     return arrow::float64();
   }
 };
 
 template <>
-struct CppTypeToArrowType<float> {
-  using Type = arrow::FloatType;
-  using ArrayType = arrow::FloatArray;
-  static std::shared_ptr<arrow::DataType> TypeValue() {
+struct TypeConverter<float> {
+  static constexpr PropertyType property_type = PropertyType::kFloat;
+  using ArrowType = arrow::FloatType;
+  using ArrowArrayType = arrow::FloatArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
     return arrow::float32();
   }
 };
-
 template <>
-struct CppTypeToArrowType<Date> {
-  using Type = arrow::TimestampType;
-  using ArrayType = arrow::TimestampArray;
-  static std::shared_ptr<arrow::DataType> TypeValue() {
-    return arrow::timestamp(arrow::TimeUnit::MILLI);
+struct TypeConverter<std::string> {
+  static constexpr PropertyType property_type = PropertyType::kString;
+  using ArrowType = arrow::LargeStringType;
+  using ArrowArrayType = arrow::LargeStringArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::large_utf8();
   }
 };
 
-template <typename T>
-struct CppTypeToPropertyType;
-
 template <>
-struct CppTypeToPropertyType<bool> {
-  static constexpr PropertyType value = PropertyType::kBool;
+struct TypeConverter<std::string_view> {
+  static constexpr PropertyType property_type = PropertyType::kString;
+  using ArrowType = arrow::LargeStringType;
+  using ArrowArrayType = arrow::LargeStringArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::large_utf8();
+  }
 };
 
 template <>
-struct CppTypeToPropertyType<int32_t> {
-  static constexpr PropertyType value = PropertyType::kInt32;
-};
-
-template <>
-struct CppTypeToPropertyType<uint32_t> {
-  static constexpr PropertyType value = PropertyType::kUInt32;
-};
-
-template <>
-struct CppTypeToPropertyType<int64_t> {
-  static constexpr PropertyType value = PropertyType::kInt64;
-};
-
-template <>
-struct CppTypeToPropertyType<uint64_t> {
-  static constexpr PropertyType value = PropertyType::kUInt64;
-};
-
-template <>
-struct CppTypeToPropertyType<double> {
-  static constexpr PropertyType value = PropertyType::kDouble;
-};
-
-template <>
-struct CppTypeToPropertyType<float> {
-  static constexpr PropertyType value = PropertyType::kFloat;
-};
-template <>
-struct CppTypeToPropertyType<std::string> {
-  static constexpr PropertyType value = PropertyType::kString;
-};
-
-template <>
-struct CppTypeToPropertyType<std::string_view> {
-  static constexpr PropertyType value = PropertyType::kString;
+struct TypeConverter<Date> {
+  static constexpr PropertyType property_type = PropertyType::kDate;
+  using ArrowType = arrow::TimestampType;
+  using ArrowArrayType = arrow::TimestampArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::timestamp(arrow::TimeUnit::MILLI);
+  }
 };
 
 std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type);

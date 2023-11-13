@@ -403,6 +403,7 @@ unsigned long long int grin_get_edge_property_value_of_uint64(
     grin_error_code = INVALID_VALUE;
     return 0;
   }
+  return _e->data.value.ul;
 }
 
 float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e,
@@ -413,6 +414,7 @@ float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e,
     grin_error_code = INVALID_VALUE;
     return 0.0f;
   }
+  return _e->data.value.f;
 }
 double grin_get_edge_property_value_of_double(GRIN_GRAPH g, GRIN_EDGE e,
                                               GRIN_EDGE_PROPERTY ep) {

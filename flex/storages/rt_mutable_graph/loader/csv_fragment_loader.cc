@@ -443,14 +443,14 @@ static void append_edges(
     CHECK(src_col->length() == edata_col->length());
     size_t cur_ind = old_size;
     auto type = edata_col->type();
-    if (type != CppTypeToArrowType<EDATA_T>::TypeValue()) {
+    if (type != TypeConverter<EDATA_T>::ArrowTypeValue()) {
       LOG(FATAL) << "Inconsistent data type, expect "
-                 << CppTypeToArrowType<EDATA_T>::TypeValue()->ToString()
+                 << TypeConverter<EDATA_T>::ArrowTypeValue()->ToString()
                  << ", but got " << type->ToString();
     }
 
     using arrow_array_type =
-        typename gs::CppTypeToArrowType<EDATA_T>::ArrayType;
+        typename gs::TypeConverter<EDATA_T>::ArrowArrayType;
     // cast chunk to EDATA_T array
     auto data = std::static_pointer_cast<arrow_array_type>(edata_col);
     for (auto j = 0; j < edata_col->length(); ++j) {
@@ -595,7 +595,7 @@ static void append_edges(
       auto type = edata_col->type();
 
       using arrow_array_type =
-          typename gs::CppTypeToArrowType<EDATA_T>::ArrayType;
+          typename gs::TypeConverter<EDATA_T>::ArrowArrayType;
       if (type->Equals(arrow::timestamp(arrow::TimeUnit::MILLI))) {
         for (auto i = 0; i < edata_col->num_chunks(); ++i) {
           auto chunk = edata_col->chunk(i);
@@ -745,8 +745,8 @@ struct _add_vertex {
     vid_t vid;
     if constexpr (!std::is_same<std::string_view, KEY_T>::value) {
       // for non-string value
-      auto expected_type = gs::CppTypeToArrowType<KEY_T>::TypeValue();
-      using arrow_array_t = typename gs::CppTypeToArrowType<KEY_T>::ArrayType;
+      auto expected_type = gs::TypeConverter<KEY_T>::ArrowTypeValue();
+      using arrow_array_t = typename gs::TypeConverter<KEY_T>::ArrowArrayType;
       if (col->type() != expected_type) {
         LOG(FATAL) << "Inconsistent data type, expect "
                    << expected_type->ToString() << ", but got "
@@ -834,9 +834,9 @@ struct _add_vertex_chunk {
     vid_t vid;
 
     if constexpr (!std::is_same<std::string_view, KEY_T>::value) {
-      auto expected_type = gs::CppTypeToArrowType<KEY_T>::TypeValue();
+      auto expected_type = gs::TypeConverter<KEY_T>::ArrowTypeValue();
       using arrow_array_type =
-          typename gs::CppTypeToArrowType<KEY_T>::ArrayType;
+          typename gs::TypeConverter<KEY_T>::ArrowArrayType;
       if (col->type() != expected_type) {
         LOG(FATAL) << "Inconsistent data type, expect "
                    << expected_type->ToString() << ", but got "
