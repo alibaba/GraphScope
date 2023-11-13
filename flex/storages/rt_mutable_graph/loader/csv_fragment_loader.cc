@@ -94,6 +94,15 @@ static void put_quote_char_option(const LoadingConfig& loading_config,
   parse_options.double_quote = loading_config.GetIsDoubleQuoting();
 }
 
+static void put_boolean_option(arrow::csv::ConvertOptions& convert_options) {
+  convert_options.true_values.emplace_back("True");
+  convert_options.true_values.emplace_back("true");
+  convert_options.true_values.emplace_back("TRUE");
+  convert_options.false_values.emplace_back("False");
+  convert_options.false_values.emplace_back("false");
+  convert_options.false_values.emplace_back("FALSE");
+}
+
 static void put_column_names_option(const LoadingConfig& loading_config,
                                     bool header_row,
                                     const std::string& file_path,
@@ -357,6 +366,39 @@ static void append_edges(
         }
         is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
       }
+    } else if (col->type() == arrow::uint64()) {
+      auto casted = std::static_pointer_cast<arrow::UInt64Array>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto vid = indexer.get_index(Any::From(casted->Value(j)));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
+    } else if (col->type() == arrow::int32()) {
+      auto casted = std::static_pointer_cast<arrow::Int32Array>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto vid = indexer.get_index(Any::From(casted->Value(j)));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
+    } else if (col->type() == arrow::uint32()) {
+      auto casted = std::static_pointer_cast<arrow::UInt32Array>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto vid = indexer.get_index(Any::From(casted->Value(j)));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
     } else if (col->type() == arrow::utf8()) {
       auto casted = std::static_pointer_cast<arrow::StringArray>(col);
       for (auto j = 0; j < casted->length(); ++j) {
@@ -384,6 +426,8 @@ static void append_edges(
         }
         is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
       }
+    } else {
+      LOG(FATAL) << "Not support type: " << col->type()->ToString();
     }
   };
 
@@ -471,6 +515,40 @@ static void append_edges(
           }
           is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
         }
+      } else if (col->type() == arrow::uint64()) {
+        auto casted_chunk = std::static_pointer_cast<arrow::UInt64Array>(chunk);
+        for (auto j = 0; j < casted_chunk->length(); ++j) {
+          auto any = Any::From(casted_chunk->Value(j));
+          auto vid = indexer.get_index(any);
+          if (is_dst) {
+            std::get<1>(parsed_edges[cur_ind++]) = vid;
+          } else {
+            std::get<0>(parsed_edges[cur_ind++]) = vid;
+          }
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
+      } else if (col->type() == arrow::int32()) {
+        auto casted_chunk = std::static_pointer_cast<arrow::Int32Array>(chunk);
+        for (auto j = 0; j < casted_chunk->length(); ++j) {
+          auto vid = indexer.get_index(Any::From(casted_chunk->Value(j)));
+          if (is_dst) {
+            std::get<1>(parsed_edges[cur_ind++]) = vid;
+          } else {
+            std::get<0>(parsed_edges[cur_ind++]) = vid;
+          }
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
+      } else if (col->type() == arrow::uint32()) {
+        auto casted_chunk = std::static_pointer_cast<arrow::UInt32Array>(chunk);
+        for (auto j = 0; j < casted_chunk->length(); ++j) {
+          auto vid = indexer.get_index(Any::From(casted_chunk->Value(j)));
+          if (is_dst) {
+            std::get<1>(parsed_edges[cur_ind++]) = vid;
+          } else {
+            std::get<0>(parsed_edges[cur_ind++]) = vid;
+          }
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
       } else if (col->type() == arrow::utf8()) {
         auto casted_chunk = std::static_pointer_cast<arrow::StringArray>(chunk);
         for (auto j = 0; j < casted_chunk->length(); ++j) {
@@ -498,11 +576,15 @@ static void append_edges(
           }
           is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
         }
+      } else {
+        LOG(FATAL) << "Not support type: " << col->type()->ToString();
       }
     }
   };
   auto src_col_thread = std::thread([&]() { _append(false); });
+  src_col_thread.join();
   auto dst_col_thread = std::thread([&]() { _append(true); });
+  dst_col_thread.join();
 
   // if EDATA_T is grape::EmptyType, no need to read columns
   auto edata_col_thread = std::thread([&]() {
@@ -544,8 +626,8 @@ static void append_edges(
       }
     }
   });
-  src_col_thread.join();
-  dst_col_thread.join();
+  // src_col_thread.join();
+  // dst_col_thread.join();
   edata_col_thread.join();
   VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
 }
@@ -660,7 +742,9 @@ CSVFragmentLoader::createEdgeTableReader(label_t src_label_id,
 template <typename KEY_T>
 struct _add_vertex {
   void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {}
+                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {
+    LOG(FATAL) << "Not implemented";
+  }
 };
 
 template <>
@@ -672,6 +756,63 @@ struct _add_vertex<int64_t> {
     size_t row_num = col->length();
 
     auto casted_array = std::static_pointer_cast<arrow::Int64Array>(col);
+    vid_t vid;
+    for (auto i = 0; i < row_num; ++i) {
+      if (!indexer.add(casted_array->Value(i), vid)) {
+        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
+      }
+      vids.emplace_back(vid);
+    }
+  }
+};
+
+template <>
+struct _add_vertex<uint64_t> {
+  void operator()(const std::shared_ptr<arrow::Array>& col,
+                  IdIndexer<uint64_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::uint64());
+    size_t row_num = col->length();
+
+    auto casted_array = std::static_pointer_cast<arrow::UInt64Array>(col);
+    vid_t vid;
+    for (auto i = 0; i < row_num; ++i) {
+      if (!indexer.add(casted_array->Value(i), vid)) {
+        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
+      }
+      vids.emplace_back(vid);
+    }
+  }
+};
+
+template <>
+struct _add_vertex<int32_t> {
+  void operator()(const std::shared_ptr<arrow::Array>& col,
+                  IdIndexer<int32_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::int32());
+    size_t row_num = col->length();
+
+    auto casted_array = std::static_pointer_cast<arrow::Int32Array>(col);
+    vid_t vid;
+    for (auto i = 0; i < row_num; ++i) {
+      if (!indexer.add(casted_array->Value(i), vid)) {
+        LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
+      }
+      vids.emplace_back(vid);
+    }
+  }
+};
+
+template <>
+struct _add_vertex<uint32_t> {
+  void operator()(const std::shared_ptr<arrow::Array>& col,
+                  IdIndexer<uint32_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::uint32());
+    size_t row_num = col->length();
+
+    auto casted_array = std::static_pointer_cast<arrow::UInt32Array>(col);
     vid_t vid;
     for (auto i = 0; i < row_num; ++i) {
       if (!indexer.add(casted_array->Value(i), vid)) {
@@ -758,7 +899,9 @@ void CSVFragmentLoader::addVertexBatch(
 template <typename KEY_T>
 struct _add_vertex_chunk {
   void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
-                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {}
+                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {
+    LOG(FATAL) << "Not implemented";
+  }
 };
 
 template <>
@@ -768,10 +911,76 @@ struct _add_vertex_chunk<int64_t> {
                   std::vector<vid_t>& vids) {
     CHECK(col->type() == arrow::int64());
     size_t row_num = col->length();
-
     for (auto i = 0; i < col->num_chunks(); ++i) {
       auto chunk = col->chunk(i);
       auto casted_array = std::static_pointer_cast<arrow::Int64Array>(chunk);
+      for (auto j = 0; j < casted_array->length(); ++j) {
+        vid_t vid;
+        if (!indexer.add(casted_array->Value(j), vid)) {
+          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
+                     << " .. ";
+        }
+        vids.emplace_back(vid);
+      }
+    }
+  }
+};
+
+template <>
+struct _add_vertex_chunk<uint64_t> {
+  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
+                  IdIndexer<uint64_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::uint64());
+    size_t row_num = col->length();
+    for (auto i = 0; i < col->num_chunks(); ++i) {
+      auto chunk = col->chunk(i);
+      auto casted_array = std::static_pointer_cast<arrow::UInt64Array>(chunk);
+      for (auto j = 0; j < casted_array->length(); ++j) {
+        vid_t vid;
+
+        if (!indexer.add(casted_array->Value(j), vid)) {
+          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
+                     << " .. ";
+        }
+        vids.emplace_back(vid);
+      }
+    }
+  }
+};
+
+template <>
+struct _add_vertex_chunk<int32_t> {
+  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
+                  IdIndexer<int32_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::int32());
+    size_t row_num = col->length();
+    for (auto i = 0; i < col->num_chunks(); ++i) {
+      auto chunk = col->chunk(i);
+      auto casted_array = std::static_pointer_cast<arrow::Int32Array>(chunk);
+      for (auto j = 0; j < casted_array->length(); ++j) {
+        vid_t vid;
+        if (!indexer.add(casted_array->Value(j), vid)) {
+          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(j)
+                     << " .. ";
+        }
+        vids.emplace_back(vid);
+      }
+    }
+  }
+};
+
+template <>
+struct _add_vertex_chunk<uint32_t> {
+  void operator()(const std::shared_ptr<arrow::ChunkedArray>& col,
+                  IdIndexer<uint32_t, vid_t>& indexer,
+                  std::vector<vid_t>& vids) {
+    CHECK(col->type() == arrow::uint32());
+    size_t row_num = col->length();
+    for (auto i = 0; i < col->num_chunks(); ++i) {
+      auto chunk = col->chunk(i);
+      auto casted_array = std::static_pointer_cast<arrow::UInt32Array>(chunk);
       for (auto j = 0; j < casted_array->length(); ++j) {
         vid_t vid;
         if (!indexer.add(casted_array->Value(j), vid)) {
@@ -1066,12 +1275,16 @@ void CSVFragmentLoader::addEdgesImplWithTableReader(
   CHECK(columns.size() >= 2);
   auto src_col = columns[0];
   auto dst_col = columns[1];
-  CHECK(src_col->type() == arrow::int64() || src_col->type() == arrow::utf8() ||
-        src_col->type() == arrow::large_utf8())
-      << "src_col type: " << src_col->type()->ToString();
-  CHECK(dst_col->type() == arrow::int64() || dst_col->type() == arrow::utf8() ||
-        dst_col->type() == arrow::large_utf8())
-      << "dst_col type: " << dst_col->type()->ToString();
+  auto src_col_type = src_col->type();
+  auto dst_col_type = dst_col->type();
+  CHECK(src_col_type == arrow::int64() || src_col_type == arrow::uint64() ||
+        src_col_type == arrow::int32() || src_col_type == arrow::uint32() ||
+        src_col_type == arrow::utf8() || src_col_type == arrow::large_utf8())
+      << "unsupported src_col type: " << src_col_type->ToString();
+  CHECK(dst_col_type == arrow::int64() || dst_col_type == arrow::uint64() ||
+        dst_col_type == arrow::int32() || dst_col_type == arrow::uint32() ||
+        dst_col_type == arrow::utf8() || dst_col_type == arrow::large_utf8())
+      << "unsupported dst_col type: " << dst_col_type->ToString();
 
   std::vector<std::shared_ptr<arrow::ChunkedArray>> property_cols;
   for (auto i = 2; i < columns.size(); ++i) {
@@ -1139,14 +1352,16 @@ void CSVFragmentLoader::addEdgesImplWithStreamReader(
     CHECK(columns.size() >= 2);
     auto src_col = columns[0];
     auto dst_col = columns[1];
-    CHECK(src_col->type() == arrow::int64() ||
-          src_col->type() == arrow::utf8() ||
-          src_col->type() == arrow::large_utf8())
-        << "src_col type: " << src_col->type()->ToString();
-    CHECK(dst_col->type() == arrow::int64() ||
-          dst_col->type() == arrow::utf8() ||
-          dst_col->type() == arrow::large_utf8())
-        << "dst_col type: " << dst_col->type()->ToString();
+    auto src_col_type = src_col->type();
+    auto dst_col_type = dst_col->type();
+    CHECK(src_col_type == arrow::int64() || src_col_type == arrow::uint64() ||
+          src_col_type == arrow::int32() || src_col_type == arrow::uint32() ||
+          src_col_type == arrow::utf8() || src_col_type == arrow::large_utf8())
+        << "unsupported src_col type: " << src_col_type->ToString();
+    CHECK(dst_col_type == arrow::int64() || dst_col_type == arrow::uint64() ||
+          dst_col_type == arrow::int32() || dst_col_type == arrow::uint32() ||
+          dst_col_type == arrow::utf8() || dst_col_type == arrow::large_utf8())
+        << "unsupported dst_col type: " << dst_col_type->ToString();
 
     std::vector<std::shared_ptr<arrow::Array>> property_cols;
     for (auto i = 2; i < columns.size(); ++i) {
@@ -1381,6 +1596,8 @@ void CSVFragmentLoader::fillVertexReaderMeta(
       std::make_shared<LDBCLongDateParser>());
   convert_options.timestamp_parsers.emplace_back(
       arrow::TimestampParser::MakeISO8601());
+  // BOOLEAN parser
+  put_boolean_option(convert_options);
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
@@ -1511,6 +1728,7 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
       std::make_shared<LDBCLongDateParser>());
   convert_options.timestamp_parsers.emplace_back(
       arrow::TimestampParser::MakeISO8601());
+  put_boolean_option(convert_options);
 
   put_delimiter_option(loading_config_, parse_options);
   bool header_row = put_skip_rows_option(loading_config_, read_options);
@@ -1596,7 +1814,7 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
                    << " does not exist in the vertex column mapping, please "
                       "check your configuration";
       }
-      VLOG(10) << "vertex_label: " << schema_.get_edge_label_name(label_id)
+      VLOG(10) << "edge_label: " << schema_.get_edge_label_name(label_id)
                << " property_name: " << property_name
                << " property_type: " << property_type << " ind: " << ind;
       arrow_types.insert({included_col_names[ind + 2],

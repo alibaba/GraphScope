@@ -572,7 +572,10 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
       return false;
     }
     if (property_types[primary_key_inds[i]] != PropertyType::kInt64 &&
-        property_types[primary_key_inds[i]] != PropertyType::kString) {
+        property_types[primary_key_inds[i]] != PropertyType::kString &&
+        property_types[primary_key_inds[i]] != PropertyType::kUInt64 &&
+        property_types[primary_key_inds[i]] != PropertyType::kInt32 &&
+        property_types[primary_key_inds[i]] != PropertyType::kUInt32) {
       LOG(ERROR) << "Primary key " << primary_key_name
                  << " should be int64 or string";
       return false;

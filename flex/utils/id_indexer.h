@@ -157,6 +157,17 @@ struct GHash<int64_t> {
 };
 
 template <>
+struct GHash<uint64_t> {
+  size_t operator()(const uint64_t& val) const {
+    uint64_t x = static_cast<uint64_t>(val);
+    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
+    x = x ^ (x >> 31);
+    return x;
+  }
+};
+
+template <>
 struct GHash<Any> {
   size_t operator()(const Any& val) const {
     if (val.type == PropertyType::kInt64) {
@@ -763,7 +774,9 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
 template <typename KEY_T, typename INDEX_T>
 struct _move_data {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& lf, size_t size) {}
+  void operator()(const key_buffer_t& input, ColumnBase& lf, size_t size) {
+    LOG(FATAL) << "Not implemented";
+  }
 };
 
 template <typename INDEX_T>
@@ -773,6 +786,36 @@ struct _move_data<int64_t, INDEX_T> {
     // size_t size = input.keys_.size();
     auto& buffer = dynamic_cast<TypedColumn<int64_t>&>(col);
     memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
+  }
+};
+
+template <typename INDEX_T>
+struct _move_data<uint64_t, INDEX_T> {
+  using key_buffer_t = typename id_indexer_impl::KeyBuffer<uint64_t>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
+    // size_t size = input.keys_.size();
+    auto& buffer = dynamic_cast<TypedColumn<uint64_t>&>(col);
+    memcpy(buffer.buffer().data(), input.data(), sizeof(uint64_t) * size);
+  }
+};
+
+template <typename INDEX_T>
+struct _move_data<int32_t, INDEX_T> {
+  using key_buffer_t = typename id_indexer_impl::KeyBuffer<int32_t>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
+    // size_t size = input.keys_.size();
+    auto& buffer = dynamic_cast<TypedColumn<int32_t>&>(col);
+    memcpy(buffer.buffer().data(), input.data(), sizeof(int32_t) * size);
+  }
+};
+
+template <typename INDEX_T>
+struct _move_data<uint32_t, INDEX_T> {
+  using key_buffer_t = typename id_indexer_impl::KeyBuffer<uint32_t>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
+    // size_t size = input.keys_.size();
+    auto& buffer = dynamic_cast<TypedColumn<uint32_t>&>(col);
+    memcpy(buffer.buffer().data(), input.data(), sizeof(uint32_t) * size);
   }
 };
 
