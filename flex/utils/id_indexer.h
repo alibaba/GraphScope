@@ -255,21 +255,17 @@ class LFIndexer {
     }
     num_slots_minus_one_ = size - 1;
     for (INDEX_T idx = 0; idx < num_elements; ++idx) {
-      emplace(idx);
-    }
-  }
-
-  void emplace(INDEX_T lid) {
-    const auto& oid = keys_->get(lid);
-    size_t index =
-        hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
-    static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
-    while (true) {
-      if (indices_[index] == sentinel) {
-        indices_[index] = lid;
-        break;
+      const auto& oid = keys_->get(idx);
+      size_t index =
+          hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
+      static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
+      while (true) {
+        if (indices_[index] == sentinel) {
+          indices_[index] = idx;
+          break;
+        }
+        index = (index + 1) % (num_slots_minus_one_ + 1);
       }
-      index = (index + 1) % (num_slots_minus_one_ + 1);
     }
   }
 
