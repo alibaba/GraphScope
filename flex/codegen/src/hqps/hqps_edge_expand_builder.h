@@ -37,10 +37,15 @@ static constexpr const char* EDGE_EXPAND_V_OPT_FILTER_TEMPLATE_STR =
 static constexpr const char* EDGE_EXPAND_V_OPT_NO_FILTER_TEMPLATE_STR =
     "auto %1% = gs::make_edge_expandv_opt(%2%, %3%, %4%);\n";
 
-// This opt can be used by both edge expande and edge expandv.
+// This opt can only be used by both edge expande, with multiple edge triplet.
 static constexpr const char*
     EDGE_EXPAND_E_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR =
         "auto %1% = gs::make_edge_expand_multie_opt<%2%>(%3%, %4%, %5%);\n";
+
+// This opt can only be used by both edge expandv, with multiplet edge triplet,
+static constexpr const char*
+    EDGE_EXPAND_V_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR =
+        "auto %1% = gs::make_edge_expand_multiv_opt(%2%, %3%);\n";
 
 // Expand to Edges with Filter.
 // propNames, direction, edge_label, vertex_label, filter
@@ -104,6 +109,28 @@ std::string edge_label_triplet_to_array_str(
   std::stringstream ss;
   ss << "std::array<std::array<label_id_t, 3>, " << edge_label_triplet.size()
      << ">{";
+  for (int i = 0; i < edge_label_triplet.size(); ++i) {
+    ss << "std::array<label_id_t, 3>{";
+    CHECK(edge_label_triplet[i].size() == 3);
+    for (int j = 0; j < edge_label_triplet[i].size(); ++j) {
+      ss << edge_label_triplet[i][j];
+      if (j != edge_label_triplet[i].size() - 1) {
+        ss << ", ";
+      }
+    }
+    ss << "}";
+    if (i != edge_label_triplet.size() - 1) {
+      ss << ", ";
+    }
+  }
+  ss << "}";
+  return ss.str();
+}
+
+std::string edge_label_triplet_to_vector_str(
+    const std::vector<std::vector<int32_t>>& edge_label_triplet) {
+  std::stringstream ss;
+  ss << "std::vector<std::array<label_id_t, 3>>{";
   for (int i = 0; i < edge_label_triplet.size(); ++i) {
     ss << "std::array<label_id_t, 3>{";
     CHECK(edge_label_triplet[i].size() == 3);
@@ -364,22 +391,38 @@ static std::pair<std::string, std::string> BuildMultiLabelEdgeExpandOpt(
       parse_prop_names_and_prop_types_from_ir_data_type(meta_data.type());
   CHECK(prop_names.size() == prop_types.size());
 
+  LOG(INFO) << "meta data: " << meta_data.DebugString();
   std::vector<std::vector<int32_t>> edge_label_triplet =
       parse_edge_label_triplet_from_ir_data_type(meta_data.type());
   CHECK(edge_label_triplet.size() == prop_names.size());
   LOG(INFO) << "Find multiple edge triplet: " << edge_label_triplet.size();
 
   auto func_template_str = make_edge_expand_e_func_template_str(prop_types);
-  auto edge_triplet_2d_array =
-      edge_label_triplet_to_array_str(edge_label_triplet);
   auto edge_named_prop_array =
       make_prop_tuple_array_tuple(prop_names, prop_types);
 
-  boost::format formater(EDGE_EXPAND_E_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR);
+  boost::format formater;
+  if (expand_opt ==
+      physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_EDGE) {
+    auto edge_triplet_2d_array =
+        edge_label_triplet_to_array_str(edge_label_triplet);
+    formater =
+        boost::format(EDGE_EXPAND_E_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR);
+    formater % opt_var_name % func_template_str %
+        gs::direction_pb_to_str(direction) % edge_triplet_2d_array %
+        edge_named_prop_array;
+  } else if (expand_opt ==
+             physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
+    auto edge_triplet_2d_vector =
+        edge_label_triplet_to_vector_str(edge_label_triplet);
+    formater =
+        boost::format(EDGE_EXPAND_V_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR);
+    formater % opt_var_name % gs::direction_pb_to_str(direction) %
+        edge_triplet_2d_vector;
+  } else {
+    throw std::runtime_error("Unknown expand opt");
+  }
 
-  formater % opt_var_name % func_template_str %
-      gs::direction_pb_to_str(direction) % edge_triplet_2d_array %
-      edge_named_prop_array;
   return std::make_pair(opt_var_name, formater.str());
 }
 

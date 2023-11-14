@@ -869,5 +869,82 @@ class MatchQuery14 : public HqpsAppBase<gs::MutableCSRInterface> {
   }
 };
 
+class MatchQuery15 : public HqpsAppBase<gs::MutableCSRInterface> {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  // Query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+    auto expr0 = gs::make_filter(Query0expr0());
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, std::array<label_id_t, 8>{0, 1, 2, 3, 4, 5, 6, 7},
+        std::move(expr0));
+
+    auto edge_expand_opt1 = gs::make_edge_expand_multiv_opt(
+        gs::Direction::Out, std::vector<std::array<label_id_t, 3>>{
+                                std::array<label_id_t, 3>{2, 2, 2},
+                                std::array<label_id_t, 3>{2, 3, 2},
+                                std::array<label_id_t, 3>{1, 7, 6},
+                                std::array<label_id_t, 3>{6, 6, 13},
+                                std::array<label_id_t, 3>{4, 3, 3},
+                                std::array<label_id_t, 3>{2, 0, 7},
+                                std::array<label_id_t, 3>{1, 0, 7},
+                                std::array<label_id_t, 3>{3, 0, 7},
+                                std::array<label_id_t, 3>{5, 0, 7},
+                                std::array<label_id_t, 3>{1, 1, 8},
+                                std::array<label_id_t, 3>{1, 2, 9},
+                                std::array<label_id_t, 3>{1, 3, 9},
+                                std::array<label_id_t, 3>{0, 0, 11},
+                                std::array<label_id_t, 3>{7, 6, 12},
+                                std::array<label_id_t, 3>{2, 1, 0},
+                                std::array<label_id_t, 3>{3, 1, 0},
+                                std::array<label_id_t, 3>{1, 5, 10},
+                                std::array<label_id_t, 3>{4, 1, 4},
+                                std::array<label_id_t, 3>{1, 5, 14},
+                                std::array<label_id_t, 3>{3, 7, 1},
+                                std::array<label_id_t, 3>{4, 1, 5}});
+
+    auto get_v_opt0 = make_getv_opt(
+        gs::VOpt::Itself,
+        std::array<label_id_t, 21>{
+            (label_id_t) 2, (label_id_t) 3, (label_id_t) 7, (label_id_t) 6,
+            (label_id_t) 3, (label_id_t) 0, (label_id_t) 0, (label_id_t) 0,
+            (label_id_t) 0, (label_id_t) 1, (label_id_t) 2, (label_id_t) 3,
+            (label_id_t) 0, (label_id_t) 6, (label_id_t) 1, (label_id_t) 1,
+            (label_id_t) 5, (label_id_t) 1, (label_id_t) 5, (label_id_t) 7,
+            (label_id_t) 1});
+
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(0, 2));
+    auto ctx1 = Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+    auto ctx2 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx1),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<int64_t>("id")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<int64_t>("id"))});
+    auto ctx3 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx2),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<grape::EmptyType>("")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<grape::EmptyType>(""))});
+    auto ctx4 = Engine::Sort(
+        graph, std::move(ctx3), gs::Range(0, 10),
+        std::tuple{gs::OrderingPropPair<gs::SortOrder::ASC, 0, int64_t>(""),
+                   gs::OrderingPropPair<gs::SortOrder::ASC, 1, int64_t>("")});
+    return Engine::Sink(graph, ctx4, std::array<int32_t, 2>{2, 3});
+  }
+  // Wrapper query function for query class
+  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
+                                   Decoder& decoder) const override {
+    // decoding params from decoder, and call real query func
+
+    return Query(graph);
+  }
+};
+
 }  // namespace gs
 #endif  // TESTS_HQPS_MATCH_QUERY_H_

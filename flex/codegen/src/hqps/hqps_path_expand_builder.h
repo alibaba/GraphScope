@@ -196,12 +196,26 @@ class PathExpandOpBuilder {
       auto expand_opt = edge_expand_pb.expand_opt();
       CHECK(dst_vertex_labels_.size() > 0) << "no dst lables found";
 
-      physical::PhysicalOpr::MetaData meta_data;
-      // pass an empty meta_data, since we need no meta_data for
-      // edge_expand_opt.
-      std::tie(edge_expand_opt_name_, edge_expand_opt_) =
-          BuildOneLabelEdgeExpandOpt(ctx_, direction_, params,
-                                     dst_vertex_labels_, expand_opt, meta_data);
+      if (params.tables().size() < 1) {
+        throw std::runtime_error("no edge labels found");
+      } else if (params.tables().size() == 1) {
+        physical::PhysicalOpr::MetaData meta_data;
+        // pass an empty meta_data, since we need no meta_data for
+        std::tie(edge_expand_opt_name_, edge_expand_opt_) =
+            BuildOneLabelEdgeExpandOpt(ctx_, direction_, params,
+                                       dst_vertex_labels_, expand_opt,
+                                       meta_data);
+      } else {
+        // get the first meta_data
+        if (meta_data_pb.size() < 1) {
+          throw std::runtime_error("no meta_data found");
+        }
+        auto& meta_data = meta_data_pb[0];
+        std::tie(edge_expand_opt_name_, edge_expand_opt_) =
+            BuildMultiLabelEdgeExpandOpt(ctx_, direction_, params, expand_opt,
+                                         meta_data);
+      }
+
       VLOG(10) << "edge_expand_opt_name_: " << edge_expand_opt_name_;
       VLOG(10) << "edge_expand_opt_: " << edge_expand_opt_;
     }

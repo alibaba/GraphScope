@@ -166,4 +166,18 @@ public class SimpleMatchQueries {
                         "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54974}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_13_test() {
+        String query =
+                "MATCH(a)-[*1..2]->(b) WITH a.id AS aId, b.id AS bId RETURN aId, bId ORDER BY aId"
+                        + " ASC, bId ASC LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{aId: 0, bId: 3>",
+                        "Record<{aId: 0, bId: 59>",
+                        "Record<{aId: 0, bId: 349>",
+                        "Record<{aId: 0, bId: 933>",
+                        "Record<{aId: 0, bId: 1454>");
+        return new QueryContext(query, expected);
+    }
 }

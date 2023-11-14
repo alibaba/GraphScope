@@ -549,6 +549,7 @@ class GeneralVertexSet {
   static constexpr bool is_general_set = true;
   static constexpr bool is_collection = false;
   static constexpr bool is_multi_label = false;
+  static constexpr bool is_row_vertex_set = false;
   GeneralVertexSet(std::vector<VID_T>&& vec,
                    std::vector<std::tuple<T...>>&& data_vec,
                    std::vector<std::string>&& prop_names,
@@ -928,6 +929,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
   static constexpr bool is_general_set = true;
   static constexpr bool is_collection = false;
   static constexpr bool is_multi_label = false;
+  static constexpr bool is_row_vertex_set = false;
   GeneralVertexSet(std::vector<VID_T>&& vec, std::vector<LabelT>&& label_names,
                    std::vector<grape::Bitset>&& bitsets)
       : vec_(std::move(vec)), label_names_(std::move(label_names)) {

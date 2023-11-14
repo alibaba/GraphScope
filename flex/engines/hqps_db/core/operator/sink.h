@@ -745,7 +745,7 @@ class SinkOp {
     auto& schema = graph.schema();
     auto vertices_vec = vertex_set.GetVertices();
     auto labels_vec = vertex_set.GetLabels();
-    auto bitsets = vertex_set.GetBitsets();
+    auto& bitsets = vertex_set.GetBitsets();
     CHECK(vertices_vec.size() == labels_vec.size());
     std::vector<std::vector<std::string>> prop_names;
     for (auto i = 0; i < labels_vec.size(); ++i) {
@@ -791,9 +791,9 @@ class SinkOp {
         }
         mutable_vertex->mutable_label()->set_id(label);
         // label must be set
-        auto column_ptrs = column_ptrs[label];
-        for (auto j = 0; j < column_ptrs.size(); ++j) {
-          auto& column_ptr = column_ptrs[j];
+        auto cur_column_ptr = column_ptrs[label];
+        for (auto j = 0; j < cur_column_ptr.size(); ++j) {
+          auto& column_ptr = cur_column_ptr[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = mutable_vertex->add_properties();
@@ -823,9 +823,9 @@ class SinkOp {
           }
           mutable_vertex->mutable_label()->set_id(label);
           // label must be set
-          auto column_ptrs = column_ptrs[label];
-          for (auto j = 0; j < column_ptrs.size(); ++j) {
-            auto& column_ptr = column_ptrs[j];
+          auto cur_column_ptr = column_ptrs[label];
+          for (auto j = 0; j < cur_column_ptr.size(); ++j) {
+            auto& column_ptr = cur_column_ptr[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = mutable_vertex->add_properties();
