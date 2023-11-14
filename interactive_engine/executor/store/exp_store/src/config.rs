@@ -195,9 +195,9 @@ impl GraphDBConfig {
             let curr_path = entry?.path();
             let path_str = curr_path
                 .file_name()
-                .ok_or(GDBError::UnknownError)?
+                .ok_or_else(|| GDBError::UnknownError)?
                 .to_str()
-                .ok_or(GDBError::UnknownError)?
+                .ok_or_else(|| GDBError::UnknownError)?
                 .to_string();
 
             if !path_str.starts_with(PARTITION_PREFIX) {

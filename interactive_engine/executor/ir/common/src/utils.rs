@@ -394,14 +394,16 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
             let predicate = and_predicate
                 .predicates
                 .get(0)
-                .ok_or(ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
+                .ok_or_else(|| ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
 
             let (key, value) = (predicate.key.as_ref(), predicate.value.as_ref());
-            let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
+            let key = key.ok_or_else(|| {
+                ParsePbError::EmptyFieldError("key is empty in kv_pair in indexed_scan".to_string())
+            })?;
             if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
-                let value_item = value.ok_or(ParsePbError::EmptyFieldError(
-                    "`Value` is empty in kv_pair in indexed_scan".to_string(),
-                ))?;
+                let value_item = value.ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("`Value` is empty in kv_pair in indexed_scan".to_string())
+                })?;
 
                 match value_item {
                     pb::index_predicate::triplet::Value::Const(value) => match value.item.as_ref() {
@@ -440,14 +442,12 @@ impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
             // PkValue can be one-column or multi-columns, which is a set of and_conditions.
             let mut primary_key_value = Vec::with_capacity(and_predicates.predicates.len());
             for predicate in &and_predicates.predicates {
-                let key_pb = predicate
-                    .key
-                    .clone()
-                    .ok_or("key is empty in kv_pair in indexed_scan")?;
-                let value_pb = predicate
-                    .value
-                    .clone()
-                    .ok_or("value is empty in kv_pair in indexed_scan")?;
+                let key_pb = predicate.key.clone().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("key is empty in kv_pair in indexed_scan".to_string())
+                })?;
+                let value_pb = predicate.value.clone().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("value is empty in kv_pair in indexed_scan".to_string())
+                })?;
                 let key = match key_pb.item {
                     Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
                     _ => Err(ParsePbError::Unsupported(
@@ -909,9 +909,9 @@ impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::
     fn try_from(op: PhysicalOpr) -> Result<Self, Self::Error> {
         let op_kind = op
             .opr
-            .ok_or(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            .ok_or_else(|| ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
             .op_kind
-            .ok_or(ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
+            .ok_or_else(|| ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
         Ok(op_kind)
     }
 }

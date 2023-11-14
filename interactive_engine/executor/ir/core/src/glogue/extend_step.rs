@@ -69,10 +69,10 @@ impl ExactExtendEdge {
         path_opr
             .base
             .as_mut()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
+            .ok_or_else(|| ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
             .edge_expand
             .as_mut()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
+            .ok_or_else(|| ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
             .direction = self.dir as i32;
         Ok(path_opr.into())
     }

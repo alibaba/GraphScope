@@ -449,7 +449,7 @@ impl LogicalPlan {
                             id_map
                                 .get(&old)
                                 .cloned()
-                                .ok_or(IrError::ParentNodeNotExist(old))
+                                .ok_or_else(|| IrError::ParentNodeNotExist(old))
                         })
                         .collect::<IrResult<Vec<NodeId>>>()?
                 };
@@ -473,7 +473,7 @@ impl LogicalPlan {
         let inner_opr = opr
             .opr
             .as_ref()
-            .ok_or(IrError::MissingData("Operator::opr".to_string()))?;
+            .ok_or_else(|| IrError::MissingData("Operator::opr".to_string()))?;
 
         let is_sink = if let pb::logical_plan::operator::Opr::Sink(_) = inner_opr { true } else { false };
 
@@ -508,7 +508,7 @@ impl LogicalPlan {
                     let is_pattern_source_whole_graph = self
                         .get_opr(parent_ids[0])
                         .map(|pattern_source| is_whole_graph(&pattern_source))
-                        .ok_or(IrError::ParentNodeNotExist(parent_ids[0]))?;
+                        .ok_or_else(|| IrError::ParentNodeNotExist(parent_ids[0]))?;
                     let extend_strategy = if is_pattern_source_whole_graph {
                         ExtendStrategy::init(&pattern, &self.meta)
                     } else {
@@ -1028,7 +1028,7 @@ fn preprocess_label(
                         let new_item = common_pb::value::Item::I32(
                             schema
                                 .get_table_id(name)
-                                .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
+                                .ok_or_else(|| IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -1039,9 +1039,9 @@ fn preprocess_label(
                                 .item
                                 .iter()
                                 .map(|name| {
-                                    schema
-                                        .get_table_id(name)
-                                        .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))
+                                    schema.get_table_id(name).ok_or_else(|| {
+                                        IrError::TableNotExist(NameOrId::Str(name.to_string()))
+                                    })
                                 })
                                 .collect::<IrResult<Vec<_>>>()?,
                         });
@@ -1123,11 +1123,12 @@ fn preprocess_params(
     if let Some(schema) = &meta.schema {
         if schema.is_table_id() {
             for table in params.tables.iter_mut() {
-                let new_table = get_table_id_from_pb(schema, table)
-                    .ok_or(IrError::TableNotExist(table.clone().try_into()?))?
-                    .into();
-                debug!("table: {:?} -> {:?}", table, new_table);
-                *table = new_table;
+                if let Some(new_table) = get_table_id_from_pb(schema, table) {
+                    debug!("table: {:?} -> {:?}", table, new_table);
+                    *table = new_table.into();
+                } else {
+                    return Err(IrError::TableNotExist(table.clone().try_into()?));
+                }
             }
         }
     }
