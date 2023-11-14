@@ -178,37 +178,42 @@ pub(crate) fn apply_function<'a>(
             Interval::Year => Ok(a
                 .as_date_format()?
                 .year()
-                .ok_or(ExprEvalError::GetNoneFromContext)?
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
                 .into()),
             Interval::Month => Ok((a
                 .as_date_format()?
                 .month()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Day => Ok((a
                 .as_date_format()?
                 .day()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Hour => Ok((a
                 .as_date_format()?
                 .hour()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Minute => Ok((a
                 .as_date_format()?
                 .minute()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Second => Ok((a
                 .as_date_format()?
                 .second()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Millisecond => Ok((a
                 .as_date_format()?
                 .millisecond()
-                .ok_or(ExprEvalError::GetNoneFromContext)?
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
                 as i32)
                 .into()),
         },
@@ -605,13 +610,13 @@ impl Evaluate for Operand {
                             } else {
                                 let graph_element = element
                                     .as_graph_element()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
+                                    .ok_or_else(|| ExprEvalError::UnexpectedDataType(self.into()))?;
                                 match property {
                                     PropKey::Id => graph_element.id().into(),
                                     PropKey::Label => graph_element
                                         .label()
                                         .map(|label| label.into())
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Len => unreachable!(),
                                     PropKey::All => graph_element
                                         .get_all_properties()
@@ -627,23 +632,27 @@ impl Evaluate for Operand {
                                                 .collect::<Vec<(Object, Object)>>()
                                                 .into()
                                         })
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Key(key) => graph_element
                                         .get_property(key)
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
                                         .try_to_owned()
-                                        .ok_or(ExprEvalError::OtherErr(
-                                            "cannot get `Object` from `BorrowObject`".to_string(),
-                                        ))?,
+                                        .ok_or_else(|| {
+                                            ExprEvalError::OtherErr(
+                                                "cannot get `Object` from `BorrowObject`".to_string(),
+                                            )
+                                        })?,
                                 }
                             }
                         } else {
                             element
                                 .as_borrow_object()
                                 .try_to_owned()
-                                .ok_or(ExprEvalError::OtherErr(
-                                    "cannot get `Object` from `BorrowObject`".to_string(),
-                                ))?
+                                .ok_or_else(|| {
+                                    ExprEvalError::OtherErr(
+                                        "cannot get `Object` from `BorrowObject`".to_string(),
+                                    )
+                                })?
                         };
 
                         Ok(result)

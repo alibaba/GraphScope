@@ -35,7 +35,7 @@ pub struct PlanBuilder {
 
 impl Default for PlanBuilder {
     fn default() -> Self {
-        PlanBuilder {id: DEFAULT_PLAN_ID, plan: vec![] }
+        PlanBuilder { id: DEFAULT_PLAN_ID, plan: vec![] }
     }
 }
 
@@ -165,7 +165,7 @@ impl PlanBuilder {
         let apply = pb::Apply {
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
             keys: vec![],
-            sub_plan: Some(pb::PhysicalPlan {  plan: sub_plan.take(), plan_id: DEFAULT_PLAN_ID }),
+            sub_plan: Some(pb::PhysicalPlan { plan: sub_plan.take(), plan_id: DEFAULT_PLAN_ID }),
             alias,
         };
         let op = pb::physical_opr::operator::OpKind::Apply(apply);
@@ -221,7 +221,7 @@ impl PlanBuilder {
             left_keys,
             right_keys,
             join_kind: unsafe { ::std::mem::transmute(join_kind) },
-            left_plan: Some(pb::PhysicalPlan { plan: left_plan.take() , plan_id: DEFAULT_PLAN_ID}),
+            left_plan: Some(pb::PhysicalPlan { plan: left_plan.take(), plan_id: DEFAULT_PLAN_ID }),
             right_plan: Some(pb::PhysicalPlan { plan: right_plan.take(), plan_id: DEFAULT_PLAN_ID }),
         };
         let op = pb::physical_opr::operator::OpKind::Join(join);
@@ -247,7 +247,7 @@ impl PlanBuilder {
     pub fn union(&mut self, mut plans: Vec<PlanBuilder>) -> &mut Self {
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(pb::PhysicalPlan { plan: plan.take() , plan_id: DEFAULT_PLAN_ID});
+            sub_plans.push(pb::PhysicalPlan { plan: plan.take(), plan_id: DEFAULT_PLAN_ID });
         }
         let union = pb::Union { sub_plans };
         let op = pb::physical_opr::operator::OpKind::Union(union);
@@ -259,7 +259,7 @@ impl PlanBuilder {
         let key = key.try_into().unwrap();
         let mut sub_plans = vec![];
         for plan in plans.drain(..) {
-            sub_plans.push(pb::PhysicalPlan { plan: plan.take() , plan_id: DEFAULT_PLAN_ID});
+            sub_plans.push(pb::PhysicalPlan { plan: plan.take(), plan_id: DEFAULT_PLAN_ID });
         }
         let intersect = pb::Intersect { sub_plans, key };
         let op = pb::physical_opr::operator::OpKind::Intersect(intersect);
@@ -331,7 +331,7 @@ impl PlanBuilder {
     }
 
     pub fn build(self) -> pb::PhysicalPlan {
-        pb::PhysicalPlan { plan: self.plan , plan_id: self.id}
+        pb::PhysicalPlan { plan: self.plan, plan_id: self.id }
     }
 }
 
