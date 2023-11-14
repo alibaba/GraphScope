@@ -148,12 +148,12 @@ impl Element for IntersectionEntry {
 
 impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect<E> {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
-        let entry = input
-            .get(self.start_v_tag)
-            .ok_or(FnExecError::get_tag_error(&format!(
+        let entry = input.get(self.start_v_tag).ok_or_else(|| {
+            FnExecError::get_tag_error(&format!(
                 "get start_v_tag {:?} from record in `ExpandOrIntersect` operator, the record is {:?}",
                 self.start_v_tag, input
-            )))?;
+            ))
+        })?;
         match entry.get_type() {
             EntryType::Vertex => {
                 let id = entry.id();
@@ -171,9 +171,11 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
                     let pre_intersection = pre_entry
                         .as_any_mut()
                         .downcast_mut::<IntersectionEntry>()
-                        .ok_or(FnExecError::unexpected_data_error(&format!(
-                            "entry  is not a intersection in ExpandOrIntersect"
-                        )))?;
+                        .ok_or_else(|| {
+                            FnExecError::unexpected_data_error(&format!(
+                                "entry  is not a intersection in ExpandOrIntersect"
+                            ))
+                        })?;
                     pre_intersection.intersect(iter);
                     if pre_intersection.is_empty() {
                         Ok(None)
@@ -204,11 +206,11 @@ impl<E: Entry + 'static> FilterMapFunction<Record, Record> for ExpandOrIntersect
 
 impl FilterMapFuncGen for pb::EdgeExpand {
     fn gen_filter_map(self) -> FnGenResult<Box<dyn FilterMapFunction<Record, Record>>> {
-        let graph = graph_proxy::apis::get_graph().ok_or(FnGenError::NullGraphError)?;
+        let graph = graph_proxy::apis::get_graph().ok_or_else(|| FnGenError::NullGraphError)?;
         let start_v_tag = self.v_tag;
         let edge_or_end_v_tag = self
             .alias
-            .ok_or(ParsePbError::from("`EdgeExpand::alias` cannot be empty for intersection"))?;
+            .ok_or_else(|| ParsePbError::from("`EdgeExpand::alias` cannot be empty for intersection"))?;
         let direction_pb: pb::edge_expand::Direction = unsafe { ::std::mem::transmute(self.direction) };
         let direction = Direction::from(direction_pb);
         let query_params: QueryParams = self.params.try_into()?;

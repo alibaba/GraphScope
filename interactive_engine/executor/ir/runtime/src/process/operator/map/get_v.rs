@@ -79,21 +79,26 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     VOpt::Other => {
                         let graph_path = input
                             .get_mut(self.start_tag)
-                            .ok_or(FnExecError::unexpected_data_error(&format!(
-                                "get_mut of GraphPath failed in {:?}",
-                                self
-                            )))?
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!(
+                                    "get_mut of GraphPath failed in {:?}",
+                                    self
+                                ))
+                            })?
                             .as_any_mut()
                             .downcast_mut::<GraphPath>()
-                            .ok_or(FnExecError::unexpected_data_error(&format!(
-                                "entry is not a path in GetV"
-                            )))?;
-                        let path_end_edge = graph_path.get_path_end().as_edge().ok_or(
-                            FnExecError::unexpected_data_error(&format!(
-                                "GetOtherVertex on a path entry with input: {:?}",
-                                graph_path.get_path_end()
-                            )),
-                        )?;
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!("entry is not a path in GetV"))
+                            })?;
+                        let path_end_edge = graph_path
+                            .get_path_end()
+                            .as_edge()
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!(
+                                    "GetOtherVertex on a path entry with input: {:?}",
+                                    graph_path.get_path_end()
+                                ))
+                            })?;
                         let label = path_end_edge.get_other_label();
                         if self.contains_label(label)? {
                             let vertex = Vertex::new(
@@ -111,7 +116,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                         let path_end_vertex = graph_path
                             .get_path_end()
                             .as_vertex()
-                            .ok_or(FnExecError::unsupported_error("Get end edge on a path entry"))?
+                            .ok_or_else(|| FnExecError::unsupported_error("Get end edge on a path entry"))?
                             .clone();
                         let label = path_end_vertex.label();
                         if self.contains_label(label.as_ref())? {
@@ -167,7 +172,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // 2. further fetch properties, e.g., filter by columns.
             match entry.get_type() {
                 EntryType::Vertex => {
-                    let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+                    let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
                     let id = entry.id();
                     if let Some(vertex) = graph
                         .get_vertex(&[id], &self.query_params)?
@@ -209,9 +214,9 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     // Auxilia for vertices in Path is for filtering.
                     let graph_path = entry
                         .as_graph_path()
-                        .ok_or(FnExecError::Unreachable)?;
+                        .ok_or_else(|| FnExecError::Unreachable)?;
                     let path_end = graph_path.get_path_end();
-                    let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+                    let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
                     let id = path_end.id();
                     if graph
                         .get_vertex(&[id], &self.query_params)?

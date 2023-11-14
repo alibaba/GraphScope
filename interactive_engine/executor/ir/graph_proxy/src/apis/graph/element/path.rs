@@ -429,7 +429,7 @@ impl TryFrom<result_pb::graph_path::VertexOrEdge> for VertexOrEdge {
     fn try_from(e: result_pb::graph_path::VertexOrEdge) -> Result<Self, Self::Error> {
         let vertex_or_edge = e
             .inner
-            .ok_or(ParsePbError::EmptyFieldError("empty field of VertexOrEdge".to_string()))?;
+            .ok_or_else(|| (ParsePbError::EmptyFieldError("empty field of VertexOrEdge".to_string())))?;
         match vertex_or_edge {
             result_pb::graph_path::vertex_or_edge::Inner::Vertex(v) => {
                 let vertex = v.try_into()?;

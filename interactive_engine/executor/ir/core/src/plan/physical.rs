@@ -232,7 +232,7 @@ impl AsPhysical for pb::PathExpand {
         let range = self
             .hop_range
             .as_ref()
-            .ok_or(IrError::MissingData("PathExpand::hop_range".to_string()))?;
+            .ok_or_else(|| IrError::MissingData("PathExpand::hop_range".to_string()))?;
         if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
             Err(IrError::InvalidRange(range.lower, range.upper))?
         }
@@ -336,12 +336,12 @@ impl AsPhysical for pb::PathExpand {
                     let expand_base = self
                         .base
                         .as_mut()
-                        .ok_or(IrError::MissingData("PathExpand::base".to_string()))?;
+                        .ok_or_else(|| IrError::MissingData("PathExpand::base".to_string()))?;
                     let getv = expand_base.get_v.as_mut();
                     let edge_expand = expand_base
                         .edge_expand
                         .as_mut()
-                        .ok_or(IrError::MissingData("PathExpand::base.edge_expand".to_string()))?;
+                        .ok_or_else(|| IrError::MissingData("PathExpand::base.edge_expand".to_string()))?;
                     match result_opt {
                         pb::path_expand::ResultOpt::EndV => {
                             // do nothing
@@ -461,10 +461,10 @@ fn build_and_try_fuse_get_v(builder: &mut PlanBuilder, mut get_v: pb::GetV) -> I
         let op_kind = last_op
             .opr
             .as_mut()
-            .ok_or(IrError::MissingData(format!("PhysicalOpr")))?
+            .ok_or_else(|| IrError::MissingData(format!("PhysicalOpr")))?
             .op_kind
             .as_mut()
-            .ok_or(IrError::MissingData(format!("PhysicalOpr OpKind")))?;
+            .ok_or_else(|| IrError::MissingData(format!("PhysicalOpr OpKind")))?;
         if let physical_pb::physical_opr::operator::OpKind::Edge(ref mut edge) = op_kind {
             if edge.alias.is_none() {
                 // outE + inV || inE + outV || bothE + otherV
@@ -551,7 +551,7 @@ impl AsPhysical for pb::Limit {
         let range = self
             .range
             .as_ref()
-            .ok_or(IrError::MissingData("Limit::range".to_string()))?;
+            .ok_or_else(|| IrError::MissingData("Limit::range".to_string()))?;
         if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
             Err(IrError::InvalidRange(range.lower, range.upper))?
         }
@@ -619,7 +619,7 @@ impl AsPhysical for pb::Sample {
             let sample_type = sample_type
                 .inner
                 .as_ref()
-                .ok_or(IrError::MissingData("Sample::sample_type".to_string()))?;
+                .ok_or_else(|| IrError::MissingData("Sample::sample_type".to_string()))?;
             match sample_type {
                 pb::sample::sample_type::Inner::SampleByNum(num) => {
                     if num.num <= 0 {
@@ -650,11 +650,11 @@ impl AsPhysical for pb::Sink {
         let target = self
             .sink_target
             .as_ref()
-            .ok_or(IrError::MissingData("Sink::sink_target".to_string()))?;
+            .ok_or_else(|| IrError::MissingData("Sink::sink_target".to_string()))?;
         match target
             .inner
             .as_ref()
-            .ok_or(IrError::MissingData("Sink::sink_target::Inner".to_string()))?
+            .ok_or_else(|| IrError::MissingData("Sink::sink_target::Inner".to_string()))?
         {
             pb::sink::sink_target::Inner::SinkDefault(_) => {
                 let tag_id_mapping = plan_meta
@@ -876,7 +876,7 @@ impl AsPhysical for LogicalPlan {
             } else if curr_node.borrow().children.len() >= 2 {
                 let (merge_node, subplans) = self
                     .get_branch_plans(curr_node.clone())
-                    .ok_or(IrError::MissingData("Branch::merge_node and subplans".to_string()))?;
+                    .ok_or_else(|| IrError::MissingData("Branch::merge_node and subplans".to_string()))?;
                 let mut plans: Vec<PlanBuilder> = vec![];
                 for subplan in &subplans {
                     let mut sub_bldr = PlanBuilder::default();
@@ -964,7 +964,7 @@ fn add_intersect_job_builder(
     let intersect_tag = intersect_opr
         .key
         .as_ref()
-        .ok_or(IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
+        .ok_or_else(|| IrError::ParsePbError("Empty tag in `Intersect` opr".into()))?;
     let mut auxilia: Option<pb::GetV> = None;
     let mut intersect_plans: Vec<PlanBuilder> = vec![];
     for subplan in subplans {
@@ -978,12 +978,12 @@ fn add_intersect_job_builder(
             )))?
         }
         let mut sub_bldr = PlanBuilder::default();
-        let first_opr = subplan
-            .get_first_node()
-            .ok_or(IrError::InvalidPattern("First node missing for Intersection's subplan".to_string()))?;
-        let last_opr = subplan
-            .get_last_node()
-            .ok_or(IrError::InvalidPattern("Last node Missing for Intersection's subplan".to_string()))?;
+        let first_opr = subplan.get_first_node().ok_or_else(|| {
+            IrError::InvalidPattern("First node missing for Intersection's subplan".to_string())
+        })?;
+        let last_opr = subplan.get_last_node().ok_or_else(|| {
+            IrError::InvalidPattern("Last node Missing for Intersection's subplan".to_string())
+        })?;
         if let Some(Vertex(get_v)) = last_opr.borrow().opr.opr.as_ref() {
             let mut get_v = get_v.clone();
             if get_v.alias.is_none() || !get_v.alias.as_ref().unwrap().eq(intersect_tag) {
@@ -1003,18 +1003,18 @@ fn add_intersect_job_builder(
                 // TODO: there might be a bug here:
                 // if path_expand has an alias which indicates that the path would be referred later, it may not as expected.
                 let mut path_expand = path_expand.clone();
-                let path_expand_base = path_expand
-                    .base
-                    .as_ref()
-                    .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
+                let path_expand_base = path_expand.base.as_ref().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string())
+                })?;
                 let path_get_v_opt = path_expand_base.get_v.clone();
-                let base_edge_expand =
-                    path_expand_base
-                        .edge_expand
-                        .as_ref()
-                        .ok_or(ParsePbError::EmptyFieldError(
+                let base_edge_expand = path_expand_base
+                    .edge_expand
+                    .as_ref()
+                    .ok_or_else(|| {
+                        ParsePbError::EmptyFieldError(
                             "PathExpand::base::edge_expand in Pattern".to_string(),
-                        ))?;
+                        )
+                    })?;
                 // Ensure the base is ExpandV or ExpandE + GetV
                 if path_get_v_opt == None
                     && base_edge_expand.expand_opt == pb::edge_expand::ExpandOpt::Edge as i32
@@ -1033,10 +1033,9 @@ fn add_intersect_job_builder(
                 // pick the last edge expand out from the path expand
                 let mut last_edge_expand = base_edge_expand.clone();
                 last_edge_expand.v_tag = None;
-                let hop_range = path_expand
-                    .hop_range
-                    .as_mut()
-                    .ok_or(ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string()))?;
+                let hop_range = path_expand.hop_range.as_mut().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("pb::PathExpand::hop_range".to_string())
+                })?;
                 if hop_range.lower < 1 {
                     Err(IrError::Unsupported(format!(
                         "PathExpand in Intersection with lower range of {:?}",

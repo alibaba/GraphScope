@@ -189,7 +189,7 @@ impl TryFrom<pb::index_predicate::Triplet> for Predicates {
         };
 
         Option::<Predicates>::from(partial)
-            .ok_or(ParsePbError::ParseError("invalid `Triplet` in `IndexPredicate`".to_string()))
+            .ok_or_else(|| (ParsePbError::ParseError("invalid `Triplet` in `IndexPredicate`".to_string())))
     }
 }
 
@@ -209,7 +209,9 @@ impl TryFrom<pb::index_predicate::AndPredicate> for Predicates {
             }
         }
 
-        predicates.ok_or(ParsePbError::ParseError("invalid `AndPredicate` in `IndexPredicate`".to_string()))
+        predicates.ok_or_else(|| {
+            (ParsePbError::ParseError("invalid `AndPredicate` in `IndexPredicate`".to_string()))
+        })
     }
 }
 
@@ -229,7 +231,7 @@ impl TryFrom<pb::IndexPredicate> for Predicates {
             }
         }
 
-        predicates.ok_or(ParsePbError::ParseError("invalid `IndexPredicate`".to_string()))
+        predicates.ok_or_else(|| (ParsePbError::ParseError("invalid `IndexPredicate`".to_string())))
     }
 }
 
