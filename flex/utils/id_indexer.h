@@ -157,10 +157,27 @@ struct GHash<int64_t> {
 };
 
 template <>
+struct GHash<uint64_t> {
+  size_t operator()(const uint64_t& val) const {
+    uint64_t x = static_cast<uint64_t>(val);
+    x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
+    x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
+    x = x ^ (x >> 31);
+    return x;
+  }
+};
+
+template <>
 struct GHash<Any> {
   size_t operator()(const Any& val) const {
     if (val.type == PropertyType::kInt64) {
       return GHash<int64_t>()(val.AsInt64());
+    } else if (val.type == PropertyType::kInt32) {
+      return GHash<int32_t>()(val.AsInt32());
+    } else if (val.type == PropertyType::kUInt64) {
+      return GHash<uint64_t>()(val.AsUInt64());
+    } else if (val.type == PropertyType::kUInt32) {
+      return GHash<uint32_t>()(val.AsUInt32());
     } else {
       return GHash<std::string_view>()(val.AsString());
     }
@@ -204,6 +221,12 @@ class LFIndexer {
     keys_ = nullptr;
     if (type == PropertyType::kInt64) {
       keys_ = new TypedColumn<int64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kInt32) {
+      keys_ = new TypedColumn<int32_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kUInt64) {
+      keys_ = new TypedColumn<uint64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kUInt32) {
+      keys_ = new TypedColumn<uint32_t>(StorageStrategy::kMem);
     } else if (type == PropertyType::kString) {
       keys_ = new TypedColumn<std::string_view>(StorageStrategy::kMem);
     } else {
@@ -751,28 +774,27 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
 template <typename KEY_T, typename INDEX_T>
 struct _move_data {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& lf, size_t size) {}
-};
-
-template <typename INDEX_T>
-struct _move_data<int64_t, INDEX_T> {
-  using key_buffer_t = typename id_indexer_impl::KeyBuffer<int64_t>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    // size_t size = input.keys_.size();
-    auto& buffer = dynamic_cast<TypedColumn<int64_t>&>(col);
-    memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
-  }
-};
-
-template <typename INDEX_T>
-struct _move_data<std::string_view, INDEX_T> {
-  using key_buffer_t =
-      typename id_indexer_impl::KeyBuffer<std::string_view>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    // size_t size = input.keys_.size();
-    auto& keys = dynamic_cast<TypedColumn<std::string_view>&>(col);
-    for (size_t idx = 0; idx < size; ++idx) {
-      keys.set_value(idx, input[idx]);
+    if constexpr (std::is_same<KEY_T, int64_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<int64_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
+    } else if constexpr (std::is_same<KEY_T, uint64_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<uint64_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(uint64_t) * size);
+    } else if constexpr (std::is_same<KEY_T, int32_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<int32_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(int32_t) * size);
+    } else if constexpr (std::is_same<KEY_T, uint32_t>::value) {
+      auto& buffer = dynamic_cast<TypedColumn<uint32_t>&>(col);
+      memcpy(buffer.buffer().data(), input.data(), sizeof(uint32_t) * size);
+    } else if constexpr (std::is_same<KEY_T, std::string_view>::value) {
+      auto& keys = dynamic_cast<TypedColumn<std::string_view>&>(col);
+      for (size_t idx = 0; idx < size; ++idx) {
+        keys.set_value(idx, input[idx]);
+      }
+    } else {
+      LOG(FATAL) << "Not support type [" << AnyConverter<KEY_T>::type
+                 << "] as pk type ..";
     }
   }
 };

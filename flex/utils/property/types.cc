@@ -22,11 +22,20 @@ namespace gs {
 
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
   switch (value.type) {
+  case PropertyType::kBool:
+    in_archive << value.type << value.value.b;
+    break;
   case PropertyType::kInt32:
     in_archive << value.type << value.value.i;
     break;
   case PropertyType::kInt64:
     in_archive << value.type << value.value.l;
+    break;
+  case PropertyType::kUInt32:
+    in_archive << value.type << value.value.ui;
+    break;
+  case PropertyType::kUInt64:
+    in_archive << value.type << value.value.ul;
     break;
   case PropertyType::kDate:
     in_archive << value.type << value.value.d.milli_second;
@@ -36,6 +45,9 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     break;
   case PropertyType::kDouble:
     in_archive << value.type << value.value.db;
+    break;
+  case PropertyType::kFloat:
+    in_archive << value.type << value.value.f;
     break;
   default:
     in_archive << PropertyType::kEmpty;
@@ -48,11 +60,20 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
   out_archive >> value.type;
   switch (value.type) {
+  case PropertyType::kBool:
+    out_archive >> value.value.b;
+    break;
   case PropertyType::kInt32:
     out_archive >> value.value.i;
     break;
   case PropertyType::kInt64:
     out_archive >> value.value.l;
+    break;
+  case PropertyType::kUInt32:
+    out_archive >> value.value.ui;
+    break;
+  case PropertyType::kUInt64:
+    out_archive >> value.value.ul;
     break;
   case PropertyType::kDate:
     out_archive >> value.value.d.milli_second;
@@ -62,6 +83,9 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     break;
   case PropertyType::kDouble:
     out_archive >> value.value.db;
+    break;
+  case PropertyType::kFloat:
+    out_archive >> value.value.f;
     break;
   default:
     break;

@@ -104,6 +104,14 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
     } else if (es == EdgeStrategy::kNone) {
       return new EmptyCsr<grape::EmptyType>();
     }
+  } else if (properties[0] == PropertyType::kBool) {
+    if (es == EdgeStrategy::kSingle) {
+      return new SingleMutableCsr<bool>();
+    } else if (es == EdgeStrategy::kMultiple) {
+      return new MutableCsr<bool>();
+    } else if (es == EdgeStrategy::kNone) {
+      return new EmptyCsr<bool>();
+    }
   } else if (properties[0] == PropertyType::kInt32) {
     if (es == EdgeStrategy::kSingle) {
       return new SingleMutableCsr<int>();
@@ -111,6 +119,14 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
       return new MutableCsr<int>();
     } else if (es == EdgeStrategy::kNone) {
       return new EmptyCsr<int>();
+    }
+  } else if (properties[0] == PropertyType::kUInt32) {
+    if (es == EdgeStrategy::kSingle) {
+      return new SingleMutableCsr<unsigned int>();
+    } else if (es == EdgeStrategy::kMultiple) {
+      return new MutableCsr<unsigned int>();
+    } else if (es == EdgeStrategy::kNone) {
+      return new EmptyCsr<unsigned int>();
     }
   } else if (properties[0] == PropertyType::kDate) {
     if (es == EdgeStrategy::kSingle) {
@@ -128,6 +144,14 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
     } else if (es == EdgeStrategy::kNone) {
       return new EmptyCsr<int64_t>();
     }
+  } else if (properties[0] == PropertyType::kUInt64) {
+    if (es == EdgeStrategy::kSingle) {
+      return new SingleMutableCsr<uint64_t>();
+    } else if (es == EdgeStrategy::kMultiple) {
+      return new MutableCsr<uint64_t>();
+    } else if (es == EdgeStrategy::kNone) {
+      return new EmptyCsr<uint64_t>();
+    }
   } else if (properties[0] == PropertyType::kDouble) {
     if (es == EdgeStrategy::kSingle) {
       return new SingleMutableCsr<double>();
@@ -136,7 +160,16 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
     } else if (es == EdgeStrategy::kNone) {
       return new EmptyCsr<double>();
     }
+  } else if (properties[0] == PropertyType::kFloat) {
+    if (es == EdgeStrategy::kSingle) {
+      return new SingleMutableCsr<float>();
+    } else if (es == EdgeStrategy::kMultiple) {
+      return new MutableCsr<float>();
+    } else if (es == EdgeStrategy::kNone) {
+      return new EmptyCsr<float>();
+    }
   }
+
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;
 }

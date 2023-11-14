@@ -103,11 +103,15 @@ class TypedColumn : public ColumnBase {
   StorageStrategy strategy_;
 };
 
-using IntColumn = TypedColumn<int>;
+using BoolColumn = TypedColumn<bool>;
+using IntColumn = TypedColumn<int32_t>;
+using UIntColumn = TypedColumn<uint32_t>;
 using LongColumn = TypedColumn<int64_t>;
+using ULongColumn = TypedColumn<uint64_t>;
 using DateColumn = TypedColumn<Date>;
 using StringColumn = TypedColumn<std::string_view>;
 using DoubleColumn = TypedColumn<double>;
+using FloatColumn = TypedColumn<float>;
 
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);
