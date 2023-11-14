@@ -173,11 +173,11 @@ public class SimpleMatchQueries {
                         + " ASC, bId ASC LIMIT 5;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{aId: 0, bId: 3>",
-                        "Record<{aId: 0, bId: 59>",
-                        "Record<{aId: 0, bId: 349>",
-                        "Record<{aId: 0, bId: 933>",
-                        "Record<{aId: 0, bId: 1454>");
+                        "Record<{aId: 0, bId: 3}>",
+                        "Record<{aId: 0, bId: 59}>",
+                        "Record<{aId: 0, bId: 349}>",
+                        "Record<{aId: 0, bId: 933}>",
+                        "Record<{aId: 0, bId: 1454}>");
         return new QueryContext(query, expected);
     }
 }
