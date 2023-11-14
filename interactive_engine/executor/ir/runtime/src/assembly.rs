@@ -281,7 +281,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         let group_map = group.gen_group_map()?;
                         stream = stream
                             .key_by(move |record| group_key.get_kv(record))?
-                            .fold_by_key(group_accum, || {
+                            .fold_partition_by_key(group_accum, || {
                                 |mut accumulator, next| {
                                     accumulator.accum(next)?;
                                     Ok(accumulator)
