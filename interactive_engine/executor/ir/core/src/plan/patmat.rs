@@ -118,7 +118,7 @@ impl TryFrom<pb::pattern::Sentence> for BaseSentence {
             let start_tag: NameOrId = pb
                 .start
                 .clone()
-                .ok_or(ParsePbError::EmptyFieldError("Pattern::Sentence::start".to_string()))?
+                .ok_or_else(|| ParsePbError::EmptyFieldError("Pattern::Sentence::start".to_string()))?
                 .try_into()?;
 
             let end_tag: Option<NameOrId> = pb

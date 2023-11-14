@@ -35,27 +35,27 @@ impl ClusterInfo for PegasusClusterInfo {
         pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.servers)
-            .ok_or(GraphProxyError::cluster_info_missing("server number"))
+            .ok_or_else(|| (GraphProxyError::cluster_info_missing("server number")))
     }
 
     fn get_server_index(&self) -> GraphProxyResult<u32> {
         pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.server_index)
-            .ok_or(GraphProxyError::cluster_info_missing("server index"))
+            .ok_or_else(|| (GraphProxyError::cluster_info_missing("server index")))
     }
 
     fn get_local_worker_num(&self) -> GraphProxyResult<u32> {
         pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.local_peers)
-            .ok_or(GraphProxyError::cluster_info_missing("local worker number"))
+            .ok_or_else(|| (GraphProxyError::cluster_info_missing("local worker number")))
     }
 
     fn get_worker_index(&self) -> GraphProxyResult<u32> {
         pegasus::get_current_worker_checked()
             .as_ref()
             .map(|info| info.index)
-            .ok_or(GraphProxyError::cluster_info_missing("worker index"))
+            .ok_or_else(|| (GraphProxyError::cluster_info_missing("worker index")))
     }
 }

@@ -40,10 +40,12 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
     fn exec(&self, mut input: Record) -> FnResult<Self::Target> {
         let entry_type = input
             .get(self.tag)
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "get tag {:?} from record in `Unfold` operator, the record is {:?}",
-                self.tag, input
-            )))?
+            .ok_or_else(|| {
+                FnExecError::get_tag_error(&format!(
+                    "get tag {:?} from record in `Unfold` operator, the record is {:?}",
+                    self.tag, input
+                ))
+            })?
             .get_type();
         match entry_type {
             EntryType::Intersection => {
@@ -54,9 +56,9 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                 let intersection = entry
                     .as_any_ref()
                     .downcast_ref::<IntersectionEntry>()
-                    .ok_or(FnExecError::unexpected_data_error(
-                        "downcast intersection entry in UnfoldOperator",
-                    ))?;
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error("downcast intersection entry in UnfoldOperator")
+                    })?;
                 let mut res = Vec::with_capacity(intersection.len());
                 for item in intersection.iter().cloned() {
                     let mut new_entry = input.clone();
@@ -70,9 +72,9 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
                 let collection = entry
                     .as_any_ref()
                     .downcast_ref::<CollectionEntry>()
-                    .ok_or(FnExecError::unexpected_data_error(
-                        "downcast collection entry in UnfoldOperator",
-                    ))?;
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error("downcast collection entry in UnfoldOperator")
+                    })?;
                 let mut res = Vec::with_capacity(collection.len());
                 for item in collection.inner.iter().cloned() {
                     let mut new_entry = input.clone();
@@ -83,9 +85,9 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
             }
             EntryType::Path => {
                 let entry = input.get(self.tag).unwrap();
-                let path = entry
-                    .as_graph_path()
-                    .ok_or(FnExecError::unexpected_data_error("downcast path entry in UnfoldOperatro"))?;
+                let path = entry.as_graph_path().ok_or_else(|| {
+                    FnExecError::unexpected_data_error("downcast path entry in UnfoldOperatro")
+                })?;
                 let path_vec = if let Some(path) = path.get_path() {
                     path.clone()
                 } else {

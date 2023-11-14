@@ -43,28 +43,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let config_map: HashMap<_, _> = parsed.into_iter().collect();
     let rpc_port: u16 = config_map
         .get("rpc.port")
-        .ok_or(StartServerError::empty_config_error("rpc.port"))?
+        .ok_or_else(|| StartServerError::empty_config_error("rpc.port"))?
         .parse()?;
     let server_id: u64 = config_map
         .get("server.id")
-        .ok_or(StartServerError::empty_config_error("server.id"))?
+        .ok_or_else(|| StartServerError::empty_config_error("server.id"))?
         .parse()?;
     let server_size: usize = config_map
         .get("server.size")
-        .ok_or(StartServerError::empty_config_error("server.size"))?
+        .ok_or_else(|| StartServerError::empty_config_error("server.size"))?
         .parse()?;
     let hosts: Vec<&str> = config_map
         .get("network.servers")
-        .ok_or(StartServerError::empty_config_error("network.servers"))?
+        .ok_or_else(|| StartServerError::empty_config_error("network.servers"))?
         .split(",")
         .collect();
     let worker_thread_num: i32 = config_map
         .get("pegasus.worker.num")
-        .ok_or(StartServerError::empty_config_error("pegasus.worker.num"))?
+        .ok_or_else(|| StartServerError::empty_config_error("pegasus.worker.num"))?
         .parse()?;
     let vineyard_graph_id: i64 = config_map
         .get("graph.vineyard.object.id")
-        .ok_or(StartServerError::empty_config_error("graph.vineyard.object.id"))?
+        .ok_or_else(|| StartServerError::empty_config_error("graph.vineyard.object.id"))?
         .parse()?;
 
     assert_eq!(server_size, hosts.len());

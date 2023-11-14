@@ -42,10 +42,12 @@ impl PartitionInfo for GrootMultiPartition {
     fn get_server_id(&self, partition_id: PartitionId) -> GraphProxyResult<ServerId> {
         self.graph_partition_manager
             .get_server_id(partition_id)
-            .ok_or(GraphProxyError::query_store_error(&format!(
-                "get server id failed on Groot with partition_id of {:?}",
-                partition_id
-            )))
+            .ok_or_else(|| {
+                GraphProxyError::query_store_error(&format!(
+                    "get server id failed on Groot with partition_id of {:?}",
+                    partition_id
+                ))
+            })
     }
 }
 
@@ -91,9 +93,11 @@ impl PartitionInfo for VineyardMultiPartition {
         self.partition_server_index_mapping
             .get(&partition_id)
             .cloned()
-            .ok_or(GraphProxyError::query_store_error(&format!(
-                "get server id failed on Vineyard with partition_id of {:?}",
-                partition_id
-            )))
+            .ok_or_else(|| {
+                GraphProxyError::query_store_error(&format!(
+                    "get server id failed on Vineyard with partition_id of {:?}",
+                    partition_id
+                ))
+            })
     }
 }
