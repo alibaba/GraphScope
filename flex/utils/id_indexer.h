@@ -197,7 +197,7 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
 template <typename INDEX_T>
 class LFIndexer {
  public:
-  LFIndexer() : num_elements_(0), hasher_(), keys_(nullptr) {}
+  LFIndexer() : num_elements_(0), hasher_(), indices_size_(0), keys_(nullptr) {}
   LFIndexer(LFIndexer&& rhs)
       : keys_(rhs.keys_),
         indices_(rhs.indices_),
@@ -231,6 +231,45 @@ class LFIndexer {
       keys_ = new TypedColumn<std::string_view>(StorageStrategy::kMem);
     } else {
       LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
+    }
+  }
+  void resize(size_t size) { rehash(std::max(size, num_elements_.load())); }
+
+  void rehash(size_t size) {
+    size = std::max(size, 4ul);
+    keys_->resize(size);
+    size =
+        static_cast<size_t>(std::ceil(size / id_indexer_impl::max_load_factor));
+    if (size == indices_size_) {
+      return;
+    }
+
+    auto new_prime_index = hash_policy_.next_size_over(size);
+    hash_policy_.commit(new_prime_index);
+    size_t num_elements = num_elements_.load();
+
+    indices_.resize(size);
+    indices_size_ = size;
+    for (size_t k = 0; k != size; ++k) {
+      indices_[k] = std::numeric_limits<INDEX_T>::max();
+    }
+    num_slots_minus_one_ = size - 1;
+    for (INDEX_T idx = 0; idx < num_elements; ++idx) {
+      emplace(idx);
+    }
+  }
+
+  void emplace(INDEX_T lid) {
+    const auto& oid = keys_->get(lid);
+    size_t index =
+        hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
+    static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
+    while (true) {
+      if (indices_[index] == sentinel) {
+        indices_[index] = lid;
+        break;
+      }
+      index = (index + 1) % (num_slots_minus_one_ + 1);
     }
   }
 
