@@ -180,11 +180,24 @@ void template_set_tuple_value(results::Collection* collection,
 
 void set_any_to_common_value(const Any& any, common::Value* value) {
   switch (any.type) {
+  case gs::PropertyType::kBool:
+    value->set_boolean(any.value.b);
+    break;
   case gs::PropertyType::kInt32:
-    value->set_i64(any.value.i);
+    value->set_i32(any.value.i);
     break;
   case gs::PropertyType::kInt64:
     value->set_i64(any.value.l);
+    break;
+  case gs::PropertyType::kUInt32:
+    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+    // changed
+    value->set_i32(any.value.ui);
+    break;
+  case gs::PropertyType::kUInt64:
+    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+    // changed
+    value->set_i64(any.value.ul);
     break;
   case gs::PropertyType::kDate:
     value->set_i64(any.value.d.milli_second);
@@ -194,6 +207,9 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
     break;
   case gs::PropertyType::kDouble:
     value->set_f64(any.value.db);
+    break;
+  case gs::PropertyType::kFloat:
+    value->set_f64(any.value.f);
     break;
   default:
     LOG(WARNING) << "Unsupported type: " << any.type;
