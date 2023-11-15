@@ -22,7 +22,7 @@ use std::str::FromStr;
 use clap::{App, Arg};
 use mcsr::columns::DataType;
 use mcsr::graph_db::GlobalCsrTrait;
-use mcsr::graph_db_impl::CsrDB;
+use mcsr::graph_db_impl::{CsrDB, SingleSubGraph, SubGraph};
 use mcsr::ldbc_parser::LDBCVertexParser;
 use mcsr::schema::Schema;
 use mcsr::types::{DefaultId, LabelId, DIR_BINARY_DATA, NAME, VERSION};
@@ -87,43 +87,121 @@ fn output_edges(
     graph: &CsrDB, output_dir: &String, files: &mut HashMap<(LabelId, LabelId, LabelId), File>,
 ) {
     let output_dir_path = PathBuf::from_str(output_dir.as_str()).unwrap();
-    for e in graph.get_all_edges(None) {
-        let src = e.get_src_id();
-        let dst = e.get_dst_id();
-        let src_label = LDBCVertexParser::<DefaultId>::get_label_id(src);
-        let dst_label = LDBCVertexParser::<DefaultId>::get_label_id(dst);
-        let src_oid = LDBCVertexParser::<DefaultId>::get_original_id(src);
-        let dst_oid = LDBCVertexParser::<DefaultId>::get_original_id(dst);
-        let e_label = e.get_label();
-        let label_tuple = (src_label, e_label, dst_label);
-        let header = graph
-            .graph_schema
-            .get_edge_header(src_label, e_label, dst_label)
-            .unwrap();
-        if !files.contains_key(&label_tuple) {
-            let src_label_name = graph.graph_schema.vertex_label_names()[src_label as usize].clone();
-            let dst_label_name = graph.graph_schema.vertex_label_names()[dst_label as usize].clone();
-            let edge_label_name = graph.graph_schema.edge_label_names()[e_label as usize].clone();
-            let filename =
-                src_label_name.clone() + "_" + &*edge_label_name.clone() + "_" + &*dst_label_name.clone();
-            let file = File::create(output_dir_path.join(filename.as_str())).unwrap();
-            files.insert(label_tuple.clone(), file);
-        }
-        let file = files.get_mut(&label_tuple).unwrap();
-        write!(file, "\"{}\"|\"{}\"", src_oid, dst_oid).unwrap();
-        for c in header {
-            if c.1 != DataType::ID {
-                write!(
-                    file,
-                    "|\"{}\"",
-                    e.get_property(c.0.as_str())
-                        .unwrap()
-                        .to_string()
-                )
-                .unwrap();
+    let vertex_label_num = graph.vertex_label_num;
+    let edge_label_num = graph.edge_label_num;
+    for src_label in 0..vertex_label_num {
+        for edge_label in 0..edge_label_num {
+            for dst_label in 0..vertex_label_num {
+                if let Some(header) = graph.graph_schema.get_edge_header(
+                    src_label as LabelId,
+                    edge_label as LabelId,
+                    dst_label as LabelId,
+                ) {
+                    println!("{}_{}_{}", src_label, edge_label, dst_label);
+                    let src_label_name =
+                        graph.graph_schema.vertex_label_names()[src_label as usize].clone();
+                    let dst_label_name =
+                        graph.graph_schema.vertex_label_names()[dst_label as usize].clone();
+                    let edge_label_name =
+                        graph.graph_schema.edge_label_names()[edge_label as usize].clone();
+                    let filename = src_label_name.clone()
+                        + "_"
+                        + &*edge_label_name.clone()
+                        + "_"
+                        + &*dst_label_name.clone();
+                    let mut file = File::create(output_dir_path.join(filename.as_str())).unwrap();
+                    if !graph.graph_schema.is_single_oe(
+                        src_label as LabelId,
+                        edge_label as LabelId,
+                        dst_label as LabelId,
+                    ) {
+                        let subgraph = graph.get_sub_graph(
+                            src_label as LabelId,
+                            edge_label as LabelId,
+                            dst_label as LabelId,
+                            mcsr::graph::Direction::Outgoing,
+                        );
+                        for vertex_id in 0..subgraph.get_vertex_num() {
+                            let src_global_id = graph
+                                .get_global_id(vertex_id, src_label as LabelId)
+                                .unwrap();
+                            let src_oid =
+                                LDBCVertexParser::<usize>::get_original_id(src_global_id as usize) as u64;
+                            if let Some(edges) = subgraph.get_adj_list(vertex_id) {
+                                for e in edges {
+                                    let dst_global_id = graph
+                                        .get_global_id(e.0.neighbor, dst_label as LabelId)
+                                        .unwrap();
+                                    let dst_oid =
+                                        LDBCVertexParser::<usize>::get_original_id(dst_global_id as usize)
+                                            as u64;
+                                    write!(file, "\"{}\"|\"{}\"", src_oid, dst_oid).unwrap();
+                                    if let Some(properties) = subgraph.get_properties() {
+                                        for c in header {
+                                            if c.1 != DataType::ID {
+                                                write!(
+                                                    file,
+                                                    "|\"{}\"",
+                                                    properties
+                                                        .get_column_by_name(c.0.as_str())
+                                                        .get(*e.1.unwrap())
+                                                        .unwrap()
+                                                        .to_string()
+                                                )
+                                                .unwrap();
+                                            }
+                                        }
+                                    }
+                                    writeln!(file).unwrap();
+                                }
+                            }
+                        }
+                    } else {
+                        let subgraph = graph.get_single_sub_graph(
+                            src_label as LabelId,
+                            edge_label as LabelId,
+                            dst_label as LabelId,
+                            mcsr::graph::Direction::Outgoing,
+                        );
+                        for vertex_id in 0..subgraph.get_vertex_num() {
+                            let src_global_id = graph
+                                .get_global_id(vertex_id, src_label as LabelId)
+                                .unwrap();
+                            let src_oid =
+                                LDBCVertexParser::<usize>::get_original_id(src_global_id as usize) as u64;
+                            if let Some(edges) = subgraph.get_adj_list(vertex_id) {
+                                for e in edges {
+                                    let dst_global_id = graph
+                                        .get_global_id(e.0.neighbor, dst_label as LabelId)
+                                        .unwrap();
+                                    let dst_oid =
+                                        LDBCVertexParser::<usize>::get_original_id(dst_global_id as usize)
+                                            as u64;
+                                    write!(file, "\"{}\"|\"{}\"", src_oid, dst_oid).unwrap();
+                                    if let Some(properties) = subgraph.get_properties() {
+                                        for c in header {
+                                            if c.1 != DataType::ID {
+                                                write!(
+                                                    file,
+                                                    "|\"{}\"",
+                                                    properties
+                                                        .get_column_by_name(c.0.as_str())
+                                                        .get(*e.1.unwrap())
+                                                        .unwrap()
+                                                        .to_string()
+                                                )
+                                                .unwrap();
+                                            }
+                                        }
+                                    }
+                                    writeln!(file).unwrap();
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
-        writeln!(file).unwrap();
     }
 }
 
@@ -133,7 +211,7 @@ fn traverse_partition(
 ) {
     let graph = CsrDB::deserialize(graph_data_dir.as_str(), partition).unwrap();
 
-    output_vertices(&graph, output_dir, v_files);
+    // output_vertices(&graph, output_dir, v_files);
     println!("start output edges");
     output_edges(&graph, output_dir, e_files);
 }
