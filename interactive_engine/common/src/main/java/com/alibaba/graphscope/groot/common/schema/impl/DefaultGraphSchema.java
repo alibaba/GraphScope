@@ -187,22 +187,15 @@ public class DefaultGraphSchema implements GraphSchema {
                     }
 
                     if (type.equalsIgnoreCase("VERTEX")) {
-                        List<String> primaryKeyList = Lists.newArrayList();
-
-                        JsonNode indexArray = typeObject.get("indexes");
-                        if (indexArray != null) {
-                            for (JsonNode indexObject : indexArray) {
-                                JsonNode priNameList = indexObject.get("propertyNames");
-                                for (JsonNode pri : priNameList) {
-                                    primaryKeyList.add(pri.asText());
-                                }
-                            }
-                        }
+                        List<String> primaryKeyList = getPrimaryKeyList(typeObject.get("indexes"));
                         DefaultGraphVertex graphVertex =
                                 new DefaultGraphVertex(
                                         labelId, label, propertyList, primaryKeyList);
                         vertexList.put(label, graphVertex);
                     } else {
+                        // get edge pk name list
+                        List<String> primaryKeyList = getPrimaryKeyList(typeObject.get("indexes"));
+
                         List<EdgeRelation> relationList = Lists.newArrayList();
                         JsonNode relationArray = typeObject.get("rawRelationShips");
                         if (null != relationArray) {
@@ -218,7 +211,7 @@ public class DefaultGraphSchema implements GraphSchema {
                             logger.warn("There's no relation def in edge " + label);
                         }
                         DefaultGraphEdge graphEdge =
-                                new DefaultGraphEdge(labelId, label, propertyList, relationList);
+                                new DefaultGraphEdge(labelId, label, propertyList, relationList, primaryKeyList);
                         edgeList.put(label, graphEdge);
                     }
                 }
@@ -231,6 +224,19 @@ public class DefaultGraphSchema implements GraphSchema {
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static List<String> getPrimaryKeyList(JsonNode indexArray) {
+        List<String> primaryKeyList = Lists.newArrayList();
+        if (indexArray != null) {
+            for (JsonNode indexObject : indexArray) {
+                JsonNode priNameList = indexObject.get("propertyNames");
+                for (JsonNode pri : priNameList) {
+                    primaryKeyList.add(pri.asText());
+                }
+            }
+        }
+        return primaryKeyList;
     }
 
     public static void main(String[] args) throws JsonProcessingException {
