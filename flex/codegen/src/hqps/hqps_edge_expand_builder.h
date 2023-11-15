@@ -133,7 +133,9 @@ std::string edge_label_triplet_to_vector_str(
   ss << "std::vector<std::array<label_id_t, 3>>{";
   for (int i = 0; i < edge_label_triplet.size(); ++i) {
     ss << "std::array<label_id_t, 3>{";
-    CHECK(edge_label_triplet[i].size() == 3);
+    if (edge_label_triplet[i].size() != 3) {
+      throw std::runtime_error("edge label triplet size must be 3");
+    }
     for (int j = 0; j < edge_label_triplet[i].size(); ++j) {
       ss << edge_label_triplet[i][j];
       if (j != edge_label_triplet[i].size() - 1) {
@@ -391,7 +393,6 @@ static std::pair<std::string, std::string> BuildMultiLabelEdgeExpandOpt(
       parse_prop_names_and_prop_types_from_ir_data_type(meta_data.type());
   CHECK(prop_names.size() == prop_types.size());
 
-  LOG(INFO) << "meta data: " << meta_data.DebugString();
   std::vector<std::vector<int32_t>> edge_label_triplet =
       parse_edge_label_triplet_from_ir_data_type(meta_data.type());
   CHECK(edge_label_triplet.size() == prop_names.size());
