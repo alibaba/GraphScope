@@ -763,14 +763,15 @@ where
         }
         Iter::from_iter(LabeledIterator::new(got_labels, iters).map(
             move |((src_label, dst_label, edge_label), (src_lid, e))| {
+                let offset = if let Some(offset) = e.1 { *offset } else { 0 };
                 self.edge_ref_to_local_edge(
                     src_label,
                     src_lid,
                     dst_label,
-                    e.neighbor,
+                    e.0.neighbor,
                     edge_label,
                     Direction::Outgoing,
-                    e.offset,
+                    offset,
                 )
             },
         ))
@@ -801,7 +802,7 @@ where
         } else {
             Iter::from_iter(
                 LabeledIterator::new(labels, iters)
-                    .map(move |(label, e)| self.index_to_local_vertex(label, e.neighbor, false)),
+                    .map(move |(label, e)| self.index_to_local_vertex(label, e.0.neighbor, false)),
             )
         }
     }
@@ -812,8 +813,15 @@ where
         if let Some(src_lid) = self.vertex_map.get_internal_id(src_id) {
             let (labels, iters) = self._get_adj_lists_edges(src_lid.0, src_lid.1, edge_labels, dir);
             Iter::from_iter(LabeledIterator::new(labels, iters).map(move |((dst_label, edge_label), e)| {
+                let offset = if let Some(offset) = e.1 { *offset } else { 0 };
                 self.edge_ref_to_local_edge(
-                    src_lid.0, src_lid.1, dst_label, e.neighbor, edge_label, dir, e.offset,
+                    src_lid.0,
+                    src_lid.1,
+                    dst_label,
+                    e.0.neighbor,
+                    edge_label,
+                    dir,
+                    offset,
                 )
             }))
         } else {
@@ -911,14 +919,15 @@ where
         }
         Iter::from_iter(LabeledIterator::new(got_labels, iters).map(
             move |((src_label, dst_label, edge_label), (src_lid, e))| {
+                let offset = if let Some(offset) = e.1 { *offset } else { 0 };
                 self.edge_ref_to_local_edge(
                     src_label,
                     src_lid,
                     dst_label,
-                    e.neighbor,
+                    e.0.neighbor,
                     edge_label,
                     Direction::Outgoing,
-                    e.offset,
+                    offset,
                 )
             },
         ))
