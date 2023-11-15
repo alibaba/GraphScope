@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: interactive-pv
+  name: graphscope-interactive-pv
   namespace: default
 spec:
   capacity:
@@ -12,13 +12,13 @@ spec:
   hostPath:
     path: /tmp/data
   claimRef:
-    name: test-graphscope-store-pvc
+    name: graphscope-interactive-pvc
     namespace: default
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: interactive-pv
+  name: graphscope-interactive-pvc
   namespace: default
 spec:
   resources:
