@@ -232,6 +232,9 @@ impl<I: IndexType> MutableCsr<I> {
                     }
                     self.adj_lists[i].set(begin, offset_begin, old_degree, cap);
                     begin = unsafe { begin.add(cap as usize) };
+                    if self.has_offset {
+                        offset_begin = unsafe { offset_begin.add(cap as usize) };
+                    }
                 }
             }
             if p != <I as IndexType>::max() {
