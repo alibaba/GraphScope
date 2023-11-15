@@ -1,0 +1,1 @@
+MATCH(a)-[*1..2]->(b) WITH a.id AS aId, b.id AS bId RETURN aId, bId ORDER BY aId ASC, bId ASC LIMIT 10;
