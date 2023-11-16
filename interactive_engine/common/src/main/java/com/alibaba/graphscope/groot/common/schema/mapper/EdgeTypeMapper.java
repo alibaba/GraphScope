@@ -93,7 +93,8 @@ public class EdgeTypeMapper extends SchemaElementMapper {
         List<String> primaryKeyList = new ArrayList<>();
         if (indexes != null && indexes.size() > 0) {
             if (indexes.size() > 1) {
-                throw new IllegalArgumentException("Only support primary key now for " + this.indexes);
+                throw new IllegalArgumentException(
+                        "Only support primary key now for " + this.indexes);
             }
             primaryKeyList = indexes.get(0).getPropertyNames();
         }

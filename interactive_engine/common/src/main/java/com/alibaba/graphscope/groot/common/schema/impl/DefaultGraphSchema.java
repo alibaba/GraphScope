@@ -211,7 +211,8 @@ public class DefaultGraphSchema implements GraphSchema {
                             logger.warn("There's no relation def in edge " + label);
                         }
                         DefaultGraphEdge graphEdge =
-                                new DefaultGraphEdge(labelId, label, propertyList, relationList, primaryKeyList);
+                                new DefaultGraphEdge(
+                                        labelId, label, propertyList, relationList, primaryKeyList);
                         edgeList.put(label, graphEdge);
                     }
                 }

@@ -27,6 +27,7 @@ import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -386,10 +387,17 @@ public class GraphWriter implements MetricsAgent {
                     parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
             long dstVertexHashId =
                     getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
-//            long edgeInnerId =
-//                    overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
+            //            long edgeInnerId =
+            //                    overwrite ? edgeIdGenerator.getNextId() :
+            // edgeRecordKey.getEdgeInnerId();
             long edgeInnerId =
-                    getEdgeInnerId(srcVertexHashId, dstVertexHashId, overwrite, edgeRecordKey, schema, dataRecord);
+                    getEdgeInnerId(
+                            srcVertexHashId,
+                            dstVertexHashId,
+                            overwrite,
+                            edgeRecordKey,
+                            schema,
+                            dataRecord);
             return new EdgeId(
                     new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
         }
@@ -407,16 +415,26 @@ public class GraphWriter implements MetricsAgent {
      * @return eid
      */
     private long getEdgeInnerId(
-            long srcId, long dstId, boolean overwrite,
-            EdgeRecordKey edgeRecordKey, GraphSchema schema, DataRecord dataRecord) {
+            long srcId,
+            long dstId,
+            boolean overwrite,
+            EdgeRecordKey edgeRecordKey,
+            GraphSchema schema,
+            DataRecord dataRecord) {
         long edgeInnerId;
         if (this.enableHashEid) {
             GraphElement edgeDef = schema.getElement(edgeRecordKey.getLabel());
-            Map<Integer, PropertyValue> edgePkVals = parseRawProperties(edgeDef, dataRecord.getProperties());
+            Map<Integer, PropertyValue> edgePkVals =
+                    parseRawProperties(edgeDef, dataRecord.getProperties());
             List<byte[]> edgePkBytes = getPkBytes(edgePkVals, edgeDef);
             int edgeLabelId = edgeDef.getLabelId();
             long eid = edgeIdGenerator.getHashId(srcId, dstId, edgeLabelId, edgePkBytes);
-            edgeInnerId = overwrite ? eid : (edgeRecordKey.getEdgeInnerId() == 0 ? eid : edgeRecordKey.getEdgeInnerId());
+            edgeInnerId =
+                    overwrite
+                            ? eid
+                            : (edgeRecordKey.getEdgeInnerId() == 0
+                                    ? eid
+                                    : edgeRecordKey.getEdgeInnerId());
         } else {
             edgeInnerId = overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
         }
@@ -452,7 +470,8 @@ public class GraphWriter implements MetricsAgent {
         return PkHashUtils.hash(labelId, getPkBytes(properties, graphElement));
     }
 
-    public static List<byte[]> getPkBytes(Map<Integer, PropertyValue> properties, GraphElement graphElement) {
+    public static List<byte[]> getPkBytes(
+            Map<Integer, PropertyValue> properties, GraphElement graphElement) {
         List<GraphProperty> pklist = graphElement.getPrimaryKeyList();
         List<byte[]> pks = new ArrayList<>(pklist.size());
         for (GraphProperty pk : pklist) {
