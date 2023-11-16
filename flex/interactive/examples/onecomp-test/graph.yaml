@@ -1,0 +1,36 @@
+name: onecompany_group # then must have a modern dir under ${data} directory
+store_type: mutable_csr  # v6d, groot, gart
+stored_procedures:
+  directory: /home/graphscope/gs/flex/interactive/examples/onecomp-test/plugins/
+  enable_lists:
+    - libgroup.so
+schema:
+  vertex_types:
+    - type_id: 0
+      type_name: company
+      properties:
+        - property_id: 0
+          property_name: vertex_id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_id: 1
+          property_name: vertex_name
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - vertex_id
+  edge_types:
+    - type_id: 0
+      type_name: invest
+      vertex_type_pair_relations:
+        - source_vertex: company
+          destination_vertex: company
+          relation: MANY_TO_MANY
+          x_csr_params:
+            incoming_edge_strategy: Multiple
+            outgoing_edge_strategy: Multiple
+      properties:
+        - property_id: 0
+          property_name: rel_type 
+          property_type:
+            primitive_type: DT_SIGNED_INT64

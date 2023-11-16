@@ -1,0 +1,40 @@
+graph: onecompany
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    location: /home/graphscope/data/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      batch_reader: false
+      quoting: true
+      delimiter: ","
+vertex_mappings:
+  - type_name: company  # must align with the schema
+    inputs:
+      - vertex.csv 
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+          name: vertex_id  # can be omitted if the name is not known
+        property: vertex_id
+edge_mappings:
+  - type_triplet:
+      edge: invest
+      source_vertex:  company
+      destination_vertex:  company
+    inputs:
+      - edge.csv 
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: vertex_id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: vertex_id
+    column_mappings:
+      - column:
+          index: 2
+        property: ctrl_weight

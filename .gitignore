@@ -138,3 +138,6 @@ flex/interactive/sdk/python/interactive_sdk/openapi/
 
 
 **/.cache/
+
+# .so
+**/*.so

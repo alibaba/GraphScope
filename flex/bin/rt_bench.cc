@@ -25,6 +25,13 @@
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 #include "flex/engines/http_server/service/graph_db_service.h"
+#include "flex/utils/app_utils.h"
+
+#include <arrow/api.h>
+#include <arrow/csv/api.h>
+#include <arrow/io/api.h>
+
+static constexpr int32_t REL_TYPE_MAX = 19;
 
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
@@ -38,41 +45,97 @@ class Req {
     warmup_num_ = warmup_num;
     num_of_reqs_ = warmup_num + benchmark_num;
 
-    if (num_of_reqs_ == warmup_num_ || num_of_reqs_ >= reqs_.size()) {
-      num_of_reqs_ = reqs_.size();
-    }
     std::cout << "warmup count: " << warmup_num_
               << "; benchmark count: " << num_of_reqs_ << "\n";
+    start_.resize(num_of_reqs_);
+    end_.resize(num_of_reqs_);
   }
-  void load(const std::string& file) {
-    std::cout << "load queries from " << file << "\n";
-    std::ifstream fi(file, std::ios::binary);
-    const size_t size = 4096;
-    std::vector<char> buffer(size);
-    std::vector<char> tmp(size);
-    size_t index = 0;
-    while (fi.read(buffer.data(), size)) {
-      std::streamsize len = fi.gcount();
-      for (std::streamsize i = 0; i < len; ++i) {
-        if (index >= 4 && tmp[index - 1] == '#') {
-          if (tmp[index - 4] == 'e' && tmp[index - 3] == 'o' &&
-              tmp[index - 2] == 'r') {
-            reqs_.emplace_back(
-                std::string(tmp.begin(), tmp.begin() + index - 4));
+  // void load(const std::string& file) {
+  //   std::cout << "load queries from " << file << "\n";
+  //   std::ifstream fi(file, std::ios::binary);
+  //   const size_t size = 4096;
+  //   std::vector<char> buffer(size);
+  //   std::vector<char> tmp(size);
+  //   size_t index = 0;
+  //   while (fi.read(buffer.data(), size)) {
+  //     std::streamsize len = fi.gcount();
+  //     for (std::streamsize i = 0; i < len; ++i) {
+  //       if (index >= 4 && tmp[index - 1] == '#') {
+  //         if (tmp[index - 4] == 'e' && tmp[index - 3] == 'o' &&
+  //             tmp[index - 2] == 'r') {
+  //           reqs_.emplace_back(
+  //               std::string(tmp.begin(), tmp.begin() + index - 4));
 
-            index = 0;
-          }
-        }
-        tmp[index++] = buffer[i];
-      }
-      buffer.clear();
+  //           index = 0;
+  //         }
+  //       }
+  //       tmp[index++] = buffer[i];
+  //     }
+  //     buffer.clear();
+  //   }
+  //   fi.close();
+  //   std::cout << "load " << reqs_.size() << " queries\n";
+  //   num_of_reqs_ = reqs_.size();
+  //   // reqs_.resize(100000);
+  //   start_.resize(reqs_.size());
+  //   end_.resize(reqs_.size());
+  // }
+
+  // Load a csv file with input oids and names,
+  void load(const std::string& file) {
+    std::cout << "load input from " << file << "\n";
+    // use csv arrow reader to read the csv file
+
+    auto read_result = arrow::io::ReadableFile::Open(file);
+    if (!read_result.ok()) {
+      LOG(FATAL) << "Failed to open file: " << file
+                 << " error: " << read_result.status().message();
     }
-    fi.close();
-    std::cout << "load " << reqs_.size() << " queries\n";
-    num_of_reqs_ = reqs_.size();
-    // reqs_.resize(100000);
-    start_.resize(reqs_.size());
-    end_.resize(reqs_.size());
+    std::shared_ptr<arrow::io::ReadableFile> file_ = read_result.ValueOrDie();
+    arrow::csv::ReadOptions read_options;
+    arrow::csv::ParseOptions parse_options;
+    arrow::csv::ConvertOptions convert_options;
+    auto reader_res = arrow::csv::TableReader::Make(
+        arrow::io::default_io_context(), file_, read_options, parse_options,
+        convert_options);
+    if (!reader_res.ok()) {
+      LOG(FATAL) << "Failed to create table reader: "
+                 << reader_res.status().message();
+    }
+
+    auto reader = reader_res.ValueOrDie();
+    auto read_res = reader->Read();
+    if (!read_res.ok()) {
+      LOG(FATAL) << "Failed to read table: " << read_res.status().message();
+    }
+    auto table = read_res.ValueOrDie();
+    std::shared_ptr<arrow::Array> oid_array = table->column(0)->chunk(0);
+    // set to oids_
+    std::vector<int64_t> oids;
+    auto i64_array = std::static_pointer_cast<arrow::Int64Array>(oid_array);
+    for (int64_t i = 0; i < i64_array->length(); i++) {
+      oids.emplace_back(i64_array->Value(i));
+    }
+    std::vector<char> query_char;
+    gs::Encoder encoder(query_char);
+    encoder.put_int(5);             // hop_limit
+    encoder.put_int(200);           // result limit
+    encoder.put_int(REL_TYPE_MAX);  // rel_type_max
+    for (int i = 0; i < REL_TYPE_MAX; i++) {
+      encoder.put_int(i);  // rel_type_limit
+    }
+    encoder.put_int(oids.size());
+    for (auto oid : oids) {
+      encoder.put_long(oid);
+    }
+    encoder.put_byte(1);
+
+    LOG(INFO) << "load " << oid_array->length()
+              << " oids, size: " << query_char.size();
+    query_ = std::string(query_char.begin(), query_char.end());
+    num_of_reqs_ = 1;
+    start_.resize(num_of_reqs_);
+    end_.resize(num_of_reqs_);
   }
 
   seastar::future<> do_query(server::executor_ref& ref) {
@@ -81,10 +144,14 @@ class Req {
       return seastar::make_ready_future<>();
     }
     start_[id] = std::chrono::system_clock::now();
-    return ref.run_graph_db_query(server::query_param{reqs_[id]})
+    LOG(INFO) << "query: " << query_.size();
+    return ref.run_graph_db_query(server::query_param{query_})
         .then_wrapped(
             [&, id](seastar::future<server::query_result>&& fut) mutable {
-              auto result = fut.get0();
+              auto result = fut.get0().content;
+              gs::Decoder decoder(result.begin(), result.size());
+              int32_t size = decoder.get_int();
+              LOG(INFO) << "result size: " << size;
               end_[id] = std::chrono::system_clock::now();
             })
         .then([&] { return do_query(ref); });
@@ -100,12 +167,11 @@ class Req {
   }
 
   void output() {
-    std::vector<long long> vec(29, 0);
-    std::vector<int> count(29, 0);
-    std::vector<std::vector<long long>> ts(29);
+    std::vector<long long> vec(1, 0);
+    std::vector<int> count(1, 0);
+    std::vector<std::vector<long long>> ts(1);
     for (size_t idx = warmup_num_; idx < num_of_reqs_; idx++) {
-      auto& s = reqs_[idx];
-      size_t id = static_cast<size_t>(s.back()) - 1;
+      size_t id = 0;
       auto tmp = std::chrono::duration_cast<std::chrono::microseconds>(
                      end_[idx] - start_[idx])
                      .count();
@@ -113,11 +179,7 @@ class Req {
       vec[id] += tmp;
       count[id] += 1;
     }
-    std::vector<std::string> queries = {
-        "IC1", "IC2",  "IC3",  "IC4",  "IC5",  "IC6",  "IC7", "IC8",
-        "IC9", "IC10", "IC11", "IC12", "IC13", "IC14", "IS1", "IS2",
-        "IS3", "IS4",  "IS5",  "IS6",  "IS7",  "IU1",  "IU2", "IU3",
-        "IU4", "IU5",  "IU6",  "IU7",  "IU8"};
+    std::vector<std::string> queries = {"HuoYan"};
     for (size_t i = 0; i < vec.size(); ++i) {
       size_t sz = ts[i].size();
       if (sz > 0) {
@@ -142,9 +204,11 @@ class Req {
   std::atomic<uint32_t> cur_;
   uint32_t warmup_num_;
   uint32_t num_of_reqs_;
-  std::vector<std::string> reqs_;
   std::vector<std::chrono::system_clock::time_point> start_;
   std::vector<std::chrono::system_clock::time_point> end_;
+
+  // std::vector<char> query_;
+  std::string query_;
 
   // std::vector<executor_ref> executor_refs_;
 };
