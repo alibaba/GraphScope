@@ -127,7 +127,7 @@ fn output_edges(
                                 .unwrap();
                             let src_oid =
                                 LDBCVertexParser::<usize>::get_original_id(src_global_id as usize) as u64;
-                            if let Some(edges) = subgraph.get_adj_list(vertex_id) {
+                            if let Some(edges) = subgraph.get_adj_list_with_offset(vertex_id) {
                                 for e in edges {
                                     let dst_global_id = graph
                                         .get_global_id(e.0.neighbor, dst_label as LabelId)
@@ -169,7 +169,7 @@ fn output_edges(
                                 .unwrap();
                             let src_oid =
                                 LDBCVertexParser::<usize>::get_original_id(src_global_id as usize) as u64;
-                            if let Some(edges) = subgraph.get_adj_list(vertex_id) {
+                            if let Some(edges) = subgraph.get_adj_list_with_offset(vertex_id) {
                                 for e in edges {
                                     let dst_global_id = graph
                                         .get_global_id(e.0.neighbor, dst_label as LabelId)

@@ -22,7 +22,7 @@ use std::ptr;
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::graph::IndexType;
-use crate::graph_db::{CsrTrait, Nbr, NbrIter};
+use crate::graph_db::{CsrTrait, Nbr, NbrIter, NbrOffsetIter};
 
 pub struct SingleCsrEdgeIter<'a, I: IndexType> {
     cur_vertex: usize,
@@ -204,12 +204,25 @@ impl<I: IndexType> CsrTrait<I> for SingleCsr<I> {
             if !self.nbr_exist[src.index()] {
                 Some(NbrIter::new_empty())
             } else {
+                Some(NbrIter::new_single(unsafe { self.nbr_list.as_ptr().add(src.index()) }))
+            }
+        } else {
+            None
+        }
+    }
+
+    fn get_edges_with_offset(&self, src: I) -> Option<NbrOffsetIter<'_, I>> {
+        if src.index() < self.nbr_list.len() {
+            if !self.nbr_exist[src.index()] {
+                Some(NbrOffsetIter::new_empty())
+            } else {
                 if self.has_offset {
-                    Some(NbrIter::new_single(unsafe { self.nbr_list.as_ptr().add(src.index()) }, unsafe {
-                        self.offset_list.as_ptr().add(src.index())
-                    }))
+                    Some(NbrOffsetIter::new_single(
+                        unsafe { self.nbr_list.as_ptr().add(src.index()) },
+                        unsafe { self.offset_list.as_ptr().add(src.index()) },
+                    ))
                 } else {
-                    Some(NbrIter::new_single(
+                    Some(NbrOffsetIter::new_single(
                         unsafe { self.nbr_list.as_ptr().add(src.index()) },
                         ptr::null(),
                     ))
