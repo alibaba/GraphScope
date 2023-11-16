@@ -264,7 +264,7 @@ pub trait BasicOps<G: IndexType + Sync + Send, I: IndexType + Sync + Send> {
     ) -> usize;
     fn get_adj_list(
         &self, src_index: I, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, dir: Direction,
-    ) -> Option<NbrIter<I>>;
+    ) -> Option<NbrOffsetIter<I>>;
 
     fn index_to_local_vertex(&self, label: LabelId, index: I, with_property: bool) -> LocalVertex<G, I>;
     fn edge_ref_to_local_edge(
@@ -544,7 +544,7 @@ where
 
                     let oe_path = &partition_dir
                         .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
-                    if Path::exists(oe_path) && (trim_json_path.is_none() || oe_enable.contains(&index)){
+                    if Path::exists(oe_path) && (trim_json_path.is_none() || oe_enable.contains(&index)) {
                         info!("importing {}", oe_path.as_os_str().to_str().unwrap());
                         let path_str = oe_path.to_str().unwrap().to_string();
                         if graph_schema.is_single_oe(

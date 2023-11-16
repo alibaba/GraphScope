@@ -22,7 +22,7 @@ use std::str::FromStr;
 use clap::{App, Arg};
 use mcsr::columns::DataType;
 use mcsr::graph_db::GlobalCsrTrait;
-use mcsr::graph_db_impl::{CsrDB, SingleSubGraph, SubGraph};
+use mcsr::graph_db_impl::{BasicSubgraphOps, CsrDB, SingleSubGraph, SubGraph};
 use mcsr::ldbc_parser::LDBCVertexParser;
 use mcsr::schema::Schema;
 use mcsr::types::{DefaultId, LabelId, DIR_BINARY_DATA, NAME, VERSION};
