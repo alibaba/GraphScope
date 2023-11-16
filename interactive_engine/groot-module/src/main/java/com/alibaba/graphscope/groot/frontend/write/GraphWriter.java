@@ -134,7 +134,6 @@ public class GraphWriter implements MetricsAgent {
         for (WriteRequest writeRequest : writeRequests) {
             OperationType operationType = writeRequest.getOperationType();
             DataRecord dataRecord = writeRequest.getDataRecord();
-            logger.info("WriteRequest is {}", writeRequest);
             switch (operationType) {
                 case OVERWRITE_VERTEX:
                     addOverwriteVertexOperation(batchBuilder, schema, dataRecord);
@@ -238,7 +237,6 @@ public class GraphWriter implements MetricsAgent {
             // such a edge
             edgeId.id = edgeIdGenerator.getNextId();
         }
-        logger.info("get eid is {} ", edgeId.id);
         EdgeKind edgeKind = getEdgeKind(schema, dataRecord);
         GraphElement edgeDef = schema.getElement(edgeKind.getEdgeLabelId().getId());
 
@@ -412,14 +410,12 @@ public class GraphWriter implements MetricsAgent {
             long srcId, long dstId, boolean overwrite,
             EdgeRecordKey edgeRecordKey, GraphSchema schema, DataRecord dataRecord) {
         long edgeInnerId;
-        logger.info("enableHashEid is : {}, overwrite is : {}", this.enableHashEid, overwrite);
         if (this.enableHashEid) {
             GraphElement edgeDef = schema.getElement(edgeRecordKey.getLabel());
             Map<Integer, PropertyValue> edgePkVals = parseRawProperties(edgeDef, dataRecord.getProperties());
             List<byte[]> edgePkBytes = getPkBytes(edgePkVals, edgeDef);
             int edgeLabelId = edgeDef.getLabelId();
             long eid = edgeIdGenerator.getHashId(srcId, dstId, edgeLabelId, edgePkBytes);
-            logger.info("eid = {}: srcId:{}, dstId:{}, edgeLabelId:{}, edgePkBytes:{}", eid, srcId, dstId, edgeLabelId, edgePkBytes);
             edgeInnerId = overwrite ? eid : (edgeRecordKey.getEdgeInnerId() == 0 ? eid : edgeRecordKey.getEdgeInnerId());
         } else {
             edgeInnerId = overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();

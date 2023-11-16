@@ -139,8 +139,10 @@ public class DefaultGraphEdge implements GraphEdge {
     @Override
     public List<GraphProperty> getPrimaryKeyList() {
         List<GraphProperty> props = new ArrayList<>();
-        for (String name : primaryKeyList) {
-            props.add(getProperty(name));
+        if (this.primaryKeyList != null) {
+            for (String name : primaryKeyList) {
+                props.add(getProperty(name));
+            }
         }
         return props;
     }

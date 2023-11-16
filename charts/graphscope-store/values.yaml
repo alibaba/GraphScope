@@ -522,6 +522,7 @@ kafkaTopic: "graphscope"
 kafkaProducerCustomConfigs: ""
 
 ## Frontend Config
+enableHashGenerateEid: false
 # gremlinServerPort: 12312
 
 executorWorkerPerProcess: 2

@@ -128,7 +128,6 @@ public class OfflineBuildOdps {
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
         System.out.println("schemaJson is :" + schemaJson);
         Map<String, ColumnMappingInfo> info = Utils.getMappingInfo(odps, schema, mappingConfig);
-        System.out.println(JSON.toJson(info));
         ObjectMapper mapper = new ObjectMapper();
 
         Map<String, String> outputMeta = new HashMap<>();
