@@ -1089,6 +1089,9 @@ fn add_intersect_job_builder(
     // add vertex filters
     if let Some(mut auxilia) = auxilia {
         auxilia.tag = Some(intersect_tag.clone());
+        if plan_meta.is_partition() {
+            builder.shuffle(Some(intersect_tag.clone()));
+        }
         builder.get_v(auxilia);
     }
     Ok(())
