@@ -26,6 +26,7 @@ import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
 import com.alibaba.graphscope.common.ir.planner.GraphOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.ExtendIntersectRule;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
+import com.alibaba.graphscope.common.ir.rel.GraphPattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
@@ -58,26 +59,11 @@ public class RelMetadataQueryTest {
         GlogueSchema g = new GlogueSchema().DefaultGraphSchema();
         Glogue gl = new Glogue().create(g, 3);
         GlogueQuery gq = new GlogueQuery(gl, g);
+
         GraphRelMetadataQuery mq =
                 new GraphRelMetadataQuery(new GraphMetadataHandlerProvider(planner, gq));
 
         optCluster.setMetadataQuerySupplier(() -> mq);
-
-        GraphBuilder builder =
-                (GraphBuilder)
-                        GraphPlanner.relBuilderFactory.create(
-                                optCluster,
-                                new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
-        RelNode node =
-                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "Match (p1:person)-[:knows]->(p2:person),"
-                                        + " (p2:person)-[:knows]->(p3:person),"
-                                        + " (p3:person)-[:knows]->(p4:person),"
-                                        + " (p4:person)-[:created]->(s:software) Return p1",
-                                builder)
-                        .build();
-        RelNode match = node.getInput(0);
-        System.out.println(match.explain());
 
         planner.setTopDownOpt(true);
         planner.setNoneConventionHasInfiniteCost(false);
@@ -87,11 +73,27 @@ public class RelMetadataQueryTest {
                         .withMaxPatternSizeInGlogue(gq.getMaxPatternSize())
                         .toRule());
 
-        GraphIOProcessor ioProcessor = new GraphIOProcessor(builder, Utils.schemaMeta);
-        planner.setRoot(ioProcessor.processInput(match));
-        RelNode after = planner.findBestExp();
-        // RelNode output = ioProcessor.processOutput(after);
+        Pattern p = new Pattern();
+        // p1 -> s0 <- p2 + p1 -> p2
+        PatternVertex v0 = new SinglePatternVertex(1, 0);
+        PatternVertex v1 = new SinglePatternVertex(0, 1);
+        PatternVertex v2 = new SinglePatternVertex(0, 2);
+        // p -> s
+        EdgeTypeId e = new EdgeTypeId(0, 1, 1);
+        // p -> p
+        EdgeTypeId e1 = new EdgeTypeId(0, 0, 0);
+        p.addVertex(v0);
+        p.addVertex(v1);
+        p.addVertex(v2);
+        p.addEdge(v1, v0, e);
+        p.addEdge(v2, v0, e);
+        p.addEdge(v1, v2, e1);
+        p.reordering();
 
+        GraphPattern graphPattern = new GraphPattern(optCluster, planner.emptyTraitSet(), p);
+        planner.setRoot(graphPattern);
+
+        RelNode after = planner.findBestExp();
         planner.dump(new PrintWriter(new FileOutputStream("set1.out"), true));
         System.out.println(after.explain());
 
@@ -134,7 +136,7 @@ public class RelMetadataQueryTest {
     }
 
     @Test
-    public void test_3() {
+    public void test_3() throws Exception {
         PlannerConfig plannerConfig =
                 PlannerConfig.create(
                         new Configs(
@@ -153,15 +155,16 @@ public class RelMetadataQueryTest {
                                 new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
         RelNode node =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "Match (p1:person)-[:knows]->(p2:person),"
-                                        + " (p2:person)-[:knows]->(p3:person),"
-                                        + " (p1:person)-[:knows]->(p3:person),"
-                                        + " (p1:person)-[:created]->(s:software),"
-                                        + " (p2:person)-[:created]->(s:software),"
-                                        + " (p3:person)-[:created]->(s:software) Return p1, p2, p3",
+                                "Match (p1:person {id: 1})-[:knows]-(p2:person {name: 'marko'})"
+                                        + " Return p1, p2",
                                 builder)
                         .build();
+        System.out.println(node.explain());
         RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, Utils.schemaMeta));
         System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(after));
+
+        VolcanoPlanner planner = (VolcanoPlanner) optimizer.getGraphOptPlanner();
+        planner.dump(new PrintWriter(new FileOutputStream("set1.out"), true));
+        System.out.println(after.explain());
     }
 }

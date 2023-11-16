@@ -16,10 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue;
 
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternDirection;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
@@ -63,18 +60,6 @@ public class Utils {
         }
     }
 
-    public static Double getSelectivityCount(double originalCount, Pattern pattern) {
-        if (Double.compare(originalCount, 0.0d) == 0) return originalCount;
-        double selectivityCount = originalCount;
-        for (PatternVertex vertex : pattern.getVertexSet()) {
-            selectivityCount *= vertex.getDetails().getSelectivity();
-        }
-        for (PatternEdge edge : pattern.getEdgeSet()) {
-            selectivityCount *= edge.getDetails().getSelectivity();
-        }
-        return selectivityCount;
-    }
-
     public static List<Integer> getVertexTypeIds(RelNode rel) {
         List<RelDataTypeField> fields = rel.getRowType().getFieldList();
         Preconditions.checkArgument(
@@ -102,5 +87,40 @@ public class Utils {
                                         Objects.requireNonNull(k.getDstLabelId()),
                                         k.getLabelId()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * The pattern should satisfy the following conditions simultaneously:
+     * 1. patternSize <= maxPatternSizeInGlogue
+     * 2. no both directions for each edge
+     * 3. no fuzzy types in each vertex or edge
+     * 4. no filter conditions in each vertex or edge
+     * @param pattern
+     * @return
+     */
+    public static boolean canLookUpFromGlogue(Pattern pattern, int maxPatternSizeInGlogue) {
+        if (pattern.getVertexNumber() > maxPatternSizeInGlogue) {
+            return false;
+        }
+        for (PatternVertex vertex : pattern.getVertexSet()) {
+            if (vertex.getVertexTypeIds().size() != 1) {
+                return false;
+            }
+            ElementDetails details = vertex.getDetails();
+            if (details != null && Double.compare(details.getSelectivity(), 1.0d) != 0) {
+                return false;
+            }
+        }
+        for (PatternEdge edge : pattern.getEdgeSet()) {
+            if (edge.getEdgeTypeIds().size() != 1) {
+                return false;
+            }
+            if (edge.isBoth()) return false;
+            ElementDetails details = edge.getDetails();
+            if (details != null && Double.compare(details.getSelectivity(), 1.0d) != 0) {
+                return false;
+            }
+        }
+        return true;
     }
 }

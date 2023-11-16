@@ -117,16 +117,19 @@ public class GraphOptTable implements RelOptTable {
                         ? ((GraphOptSchema) schema).getRootSchema().isColumnId()
                         : false;
         ImmutableBitSet.Builder builder = ImmutableBitSet.builder();
-        for (GraphProperty property : element.getPropertyList()) {
-            for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
-                RelDataTypeField field = schemaType.getFieldList().get(i);
-                if (field.getName().equals(property.getName())) {
-                    if (isColumnId) {
-                        builder.set(field.getIndex());
-                    } else {
-                        builder.set(i);
+        List<GraphProperty> primaryKeyList = element.getPrimaryKeyList();
+        if (ObjectUtils.isNotEmpty(primaryKeyList)) {
+            for (GraphProperty property : primaryKeyList) {
+                for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
+                    RelDataTypeField field = schemaType.getFieldList().get(i);
+                    if (field.getName().equals(property.getName())) {
+                        if (isColumnId) {
+                            builder.set(field.getIndex());
+                        } else {
+                            builder.set(i);
+                        }
+                        break;
                     }
-                    break;
                 }
             }
         }

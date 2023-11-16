@@ -69,12 +69,11 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                                 pattern)));
         Pattern pattern = graphPattern.getPattern();
         int patternSize = pattern.getVertexNumber();
-        int maxPatternSize = config.getMaxPatternSizeInGlogue();
         List<GraphExtendIntersect> edges = Lists.newArrayList();
         if (patternSize <= 1) {
             return edges;
         }
-        if (patternSize <= maxPatternSize) {
+        if (Utils.canLookUpFromGlogue(pattern, config.getMaxPatternSizeInGlogue())) {
             Set<GlogueEdge> glogueEdges = mq.getGlogueEdges(graphPattern);
             glogueEdges.forEach(
                     k ->

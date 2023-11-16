@@ -55,9 +55,9 @@ public class EdgeDataKey implements DataKey {
                 return PatternDirection.OUT;
             case OUT:
                 return PatternDirection.IN;
+            case BOTH:
             default:
-                throw new UnsupportedOperationException(
-                        "direction: " + direction + " is unsupported yet");
+                return PatternDirection.BOTH;
         }
     }
 

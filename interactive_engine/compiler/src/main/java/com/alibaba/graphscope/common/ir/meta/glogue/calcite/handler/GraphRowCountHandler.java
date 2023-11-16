@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 
+import com.alibaba.graphscope.common.ir.meta.glogue.PrimitiveCountEstimator;
 import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
@@ -27,7 +28,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.RelOptPlanner;
@@ -45,13 +45,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
-    private final GlogueQuery glogueQuery;
+    private final PrimitiveCountEstimator countEstimator;
     private final RelOptPlanner optPlanner;
     private final RelMdRowCount mdRowCount;
 
     public GraphRowCountHandler(RelOptPlanner optPlanner, GlogueQuery glogueQuery) {
         this.optPlanner = optPlanner;
-        this.glogueQuery = glogueQuery;
+        this.countEstimator = new PrimitiveCountEstimator(glogueQuery);
         this.mdRowCount = new RelMdRowCount();
     }
 
@@ -59,70 +59,46 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
     public Double getRowCount(RelNode node, RelMetadataQuery mq) {
         if (node instanceof GraphPattern) {
             Pattern pattern = ((GraphPattern) node).getPattern();
-            int patternSize = pattern.getVertexNumber();
-            // todo: estimate the pattern graph with filter conditions
-            if (patternSize <= glogueQuery.getMaxPatternSize()) {
-                return Utils.getSelectivityCount(
-                        glogueQuery.getRowCount(((GraphPattern) node).getPattern()), pattern);
+            Double countEstimate = countEstimator.estimate(pattern);
+            if (countEstimate != null) {
+                return countEstimate;
             }
-            // estimate the pattern graph with intersect, i.e. a->b, c->b, d->b
-            PatternVertex intersect = getIntersectVertex(pattern);
-            if (intersect != null) {
-                Set<PatternEdge> edges = pattern.getEdgesOf(intersect);
-                Preconditions.checkArgument(
-                        !edges.isEmpty(), "intersect vertex should have at least one edge");
-                double count = 1.0;
-                for (PatternEdge edge : edges) {
-                    Pattern edgePattern = new Pattern();
-                    edgePattern.addVertex(edge.getSrcVertex());
-                    edgePattern.addVertex(edge.getDstVertex());
-                    edgePattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
-                    count *= glogueQuery.getRowCount(edgePattern);
-                }
-                double intersectCount = glogueQuery.getRowCount(new Pattern(intersect));
-                count /= Math.pow(intersectCount, edges.size() - 1);
-                return Utils.getSelectivityCount(count, pattern);
-            } else {
-                // try to estimate count based on existed partitions by rules
-                if (optPlanner instanceof VolcanoPlanner) {
-                    RelSubset subset = ((VolcanoPlanner) optPlanner).getSubset(node);
-                    if (subset != null) {
-                        GraphExtendIntersect extendIntersect =
-                                (GraphExtendIntersect) feasibleIntersects(subset);
-                        ExtendStep extendStep = extendIntersect.getGlogueEdge().getExtendStep();
-                        int targetOrder = extendStep.getTargetVertexOrder();
-                        PatternVertex target = pattern.getVertexByOrder(targetOrder);
-                        Set<PatternEdge> adjacentEdges = pattern.getEdgesOf(target);
-                        Pattern extendPattern = new Pattern();
-                        List<PatternVertex> extendFromVertices = Lists.newArrayList();
-                        for (PatternEdge edge : adjacentEdges) {
-                            extendPattern.addVertex(edge.getSrcVertex());
-                            extendPattern.addVertex(edge.getDstVertex());
-                            extendPattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
-                            extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
-                        }
-                        double count =
-                                getRowCount(subGraphPattern(extendIntersect), mq)
-                                        * getRowCount(
-                                                new GraphPattern(
-                                                        node.getCluster(),
-                                                        node.getTraitSet(),
-                                                        extendPattern),
-                                                mq);
-                        for (PatternVertex vertex : extendFromVertices) {
-                            Pattern vertexPattern = new Pattern(vertex);
-                            count /=
-                                    Utils.getSelectivityCount(
-                                            glogueQuery.getRowCount(vertexPattern), vertexPattern);
-                        }
-                        return count;
+            // try to estimate count based on existed partitions by rules
+            if (optPlanner instanceof VolcanoPlanner) {
+                RelSubset subset = ((VolcanoPlanner) optPlanner).getSubset(node);
+                if (subset != null) {
+                    GraphExtendIntersect extendIntersect =
+                            (GraphExtendIntersect) feasibleIntersects(subset);
+                    ExtendStep extendStep = extendIntersect.getGlogueEdge().getExtendStep();
+                    int targetOrder = extendStep.getTargetVertexOrder();
+                    PatternVertex target = pattern.getVertexByOrder(targetOrder);
+                    Set<PatternEdge> adjacentEdges = pattern.getEdgesOf(target);
+                    Pattern extendPattern = new Pattern();
+                    List<PatternVertex> extendFromVertices = Lists.newArrayList();
+                    for (PatternEdge edge : adjacentEdges) {
+                        extendPattern.addVertex(edge.getSrcVertex());
+                        extendPattern.addVertex(edge.getDstVertex());
+                        extendPattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
+                        extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
                     }
+                    double count =
+                            getRowCount(subGraphPattern(extendIntersect), mq)
+                                    * getRowCount(
+                                            new GraphPattern(
+                                                    node.getCluster(),
+                                                    node.getTraitSet(),
+                                                    extendPattern),
+                                            mq);
+                    for (PatternVertex vertex : extendFromVertices) {
+                        count /= countEstimator.estimate(vertex);
+                    }
+                    return count;
                 }
             }
             throw new UnsupportedOperationException(
                     "estimate count for pattern " + pattern + " is unsupported yet");
         } else if (node instanceof TableScan) {
-            getRowCount((TableScan) node, mq);
+            return getRowCount((TableScan) node, mq);
         } else if (node instanceof Filter) {
             return mdRowCount.getRowCount((Filter) node, mq);
         } else if (node instanceof Aggregate) {
@@ -133,6 +109,14 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
             return mdRowCount.getRowCount((Project) node, mq);
         } else if (node instanceof RelSubset) {
             return mdRowCount.getRowCount(((RelSubset) node).getOriginal(), mq);
+        } else if (node instanceof GraphExtendIntersect) {
+            if (optPlanner instanceof VolcanoPlanner) {
+                RelSubset subset = ((VolcanoPlanner) optPlanner).getSubset(node);
+                if (subset != null) {
+                    // use the row count of the current pattern to estimate the communication cost
+                    return mq.getRowCount(subset);
+                }
+            }
         } else if (node instanceof Join) {
             return mdRowCount.getRowCount((Join) node, mq);
         } else if (node instanceof Union) {
@@ -201,17 +185,6 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                         return rel;
                     }
                 }
-            }
-        }
-        return null;
-    }
-
-    private @Nullable PatternVertex getIntersectVertex(Pattern pattern) {
-        int edgeNum = pattern.getEdgeNumber();
-        if (edgeNum == 0) return null;
-        for (PatternVertex vertex : pattern.getVertexSet()) {
-            if (pattern.getDegree(vertex) == edgeNum) {
-                return vertex;
             }
         }
         return null;

@@ -43,10 +43,7 @@ import com.alibaba.graphscope.common.ir.tools.Utils;
 import com.alibaba.graphscope.common.ir.tools.config.*;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import com.google.common.collect.*;
 
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -262,6 +259,7 @@ public class GraphIOProcessor {
                         }
                         graphDetails.put(key, v);
                     });
+            checkPattern(pattern);
             return pattern;
         }
 
@@ -279,6 +277,31 @@ public class GraphIOProcessor {
             return filters.isEmpty()
                     ? null
                     : RexUtil.composeConjunction(builder.getRexBuilder(), filters);
+        }
+
+        private void checkPattern(Pattern pattern) {
+            for (PatternEdge edge : pattern.getEdgeSet()) {
+                PatternVertex src = edge.getSrcVertex();
+                PatternVertex dst = edge.getDstVertex();
+                Set<Integer> expectedSrcIds = Sets.newHashSet();
+                Set<Integer> expectedDstIds = Sets.newHashSet();
+                edge.getEdgeTypeIds()
+                        .forEach(
+                                k -> {
+                                    expectedSrcIds.add(k.getSrcLabelId());
+                                    expectedDstIds.add(k.getDstLabelId());
+                                });
+                Preconditions.checkArgument(
+                        Sets.newHashSet(src.getVertexTypeIds()).equals(expectedSrcIds),
+                        "src vertex types %s not consistent with edge types %s",
+                        src.getVertexTypeIds(),
+                        edge.getEdgeTypeIds());
+                Preconditions.checkArgument(
+                        Sets.newHashSet(dst.getVertexTypeIds()).equals(expectedDstIds),
+                        "dst vertex types %s not consistent with edge types %s",
+                        dst.getVertexTypeIds(),
+                        edge.getEdgeTypeIds());
+            }
         }
     }
 
@@ -300,12 +323,15 @@ public class GraphIOProcessor {
                     "can not find vertex key %s in details map %s",
                     key,
                     details);
-            return builder.source(
-                            new SourceConfig(
-                                    GraphOpt.Source.VERTEX,
-                                    createLabels(vertex.getVertexTypeIds(), true),
-                                    value.getAlias()))
-                    .build();
+            builder.source(
+                    new SourceConfig(
+                            GraphOpt.Source.VERTEX,
+                            createLabels(vertex.getVertexTypeIds(), true),
+                            value.getAlias()));
+            if (value.getFilter() != null) {
+                builder.filter(value.getFilter());
+            }
+            return builder.build();
         }
 
         @Override

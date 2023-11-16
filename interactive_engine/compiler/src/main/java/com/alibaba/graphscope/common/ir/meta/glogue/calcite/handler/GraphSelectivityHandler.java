@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
@@ -36,14 +37,14 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.ImmutableBitSet;
+import org.apache.calcite.util.Pair;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class GraphSelectivityHandler extends RelMdSelectivity
         implements BuiltInMetadata.Selectivity.Handler {
+    private static final double FACTOR = 1.2d;
 
     @Override
     public @Nullable Double getSelectivity(
@@ -70,8 +71,8 @@ public class GraphSelectivityHandler extends RelMdSelectivity
 
     @Override
     public Double getSelectivity(TableScan tableScan, RelMetadataQuery mq, RexNode condition) {
-        if (condition == null || condition.isAlwaysTrue()) return 1.0d;
         double total = 1.0d;
+        if (condition == null || condition.isAlwaysTrue()) return total;
         for (RexNode conjunction : RelOptUtil.conjunctions(condition)) {
             double perSelectivity = 0.0d;
             for (RexNode disjunction : RelOptUtil.disjunctions(conjunction)) {
@@ -83,62 +84,60 @@ public class GraphSelectivityHandler extends RelMdSelectivity
     }
 
     private double guessSelectivity(TableScan tableScan, RelMetadataQuery mq, RexNode condition) {
-        if (condition.isA(SqlKind.EQUALS)) {
-            // return the table scan tagged by the alias id in the variable if the variable is a
-            // unique key
-            RexVariableAliasCollector<Optional<RelNode>> uniqueKeyTableScans =
-                    new RexVariableAliasCollector<Optional<RelNode>>(
-                            true,
-                            (RexGraphVariable var) -> {
-                                if (var.getProperty() == null) return Optional.empty();
-                                TableScan scanByAlias =
-                                        getTableScanByAlias(tableScan, var.getAliasId());
-                                Preconditions.checkArgument(
-                                        scanByAlias != null,
-                                        "can not find table scan for aliasId=" + var.getAliasId());
-                                switch (var.getProperty().getOpt()) {
-                                    case ID:
-                                        return Optional.of(tableScan);
-                                    case KEY:
-                                        GraphSchemaType schemaType =
-                                                (GraphSchemaType)
-                                                        scanByAlias
-                                                                .getRowType()
-                                                                .getFieldList()
-                                                                .get(0)
-                                                                .getType();
-                                        ImmutableBitSet propertyIds =
-                                                getPropertyIds(var.getProperty(), schemaType);
-                                        if (!propertyIds.isEmpty()
-                                                && scanByAlias.getTable().isKey(propertyIds)) {
-                                            return Optional.of(scanByAlias);
-                                        }
-                                    case LABEL:
-                                    case ALL:
-                                    case LEN:
-                                    default:
-                                        return Optional.empty();
-                                }
-                            });
-            List<RelNode> tableScanNotNull =
-                    condition.accept(uniqueKeyTableScans).stream()
-                            .filter(Optional::isPresent)
-                            .map(Optional::get)
-                            .collect(Collectors.toList());
-            if (!tableScanNotNull.isEmpty()) {
-                double maxCount = 0.0d;
-                for (RelNode rel : tableScanNotNull) {
-                    double count = mq.getRowCount(rel);
-                    if (count > maxCount) {
-                        maxCount = count;
-                    }
-                }
-                Preconditions.checkArgument(
-                        Double.compare(maxCount, 0.0d) != 0, "maxCount should not be 0");
-                return 1.0d / maxCount;
+        // return the table scan tagged by the alias id in the variable
+        RexVariableAliasCollector<Pair> varTableScanCollector =
+                new RexVariableAliasCollector<Pair>(
+                        true,
+                        (RexGraphVariable var) -> {
+                            TableScan scanByAlias =
+                                    getTableScanByAlias(tableScan, var.getAliasId());
+                            Preconditions.checkArgument(
+                                    scanByAlias != null,
+                                    "can not find table scan for aliasId=" + var.getAliasId());
+                            return Pair.of(var, scanByAlias);
+                        });
+        double maxCountForUniqueKeys = 0.0d;
+        double maxCount = 0.0d;
+        for (Pair varTableScan : condition.accept(varTableScanCollector)) {
+            RexGraphVariable var = (RexGraphVariable) varTableScan.left;
+            TableScan scan = (TableScan) varTableScan.right;
+            double count = mq.getRowCount(scan);
+            if (isUniqueKey(var, scan) && count > maxCountForUniqueKeys) {
+                maxCountForUniqueKeys = count;
+            }
+            if (count > maxCount) {
+                maxCount = count;
             }
         }
-        return RelMdUtil.guessSelectivity(condition);
+        if (condition.isA(SqlKind.EQUALS) && Double.compare(maxCountForUniqueKeys, 0.0d) != 0) {
+            return 1.0d / maxCountForUniqueKeys;
+        }
+        return Math.max(RelMdUtil.guessSelectivity(condition), relax(1.0d / maxCount));
+    }
+
+    private double relax(double value) {
+        double relaxValue = value * FACTOR;
+        return Double.compare(relaxValue, 1.0d) > 0 ? 1.0d : relaxValue;
+    }
+
+    private boolean isUniqueKey(RexGraphVariable var, RelNode tableScan) {
+        if (var.getProperty() == null) return false;
+        switch (var.getProperty().getOpt()) {
+            case ID:
+                return true;
+            case KEY:
+                GraphSchemaType schemaType =
+                        (GraphSchemaType) tableScan.getRowType().getFieldList().get(0).getType();
+                ImmutableBitSet propertyIds = getPropertyIds(var.getProperty(), schemaType);
+                if (!propertyIds.isEmpty() && tableScan.getTable().isKey(propertyIds)) {
+                    return true;
+                }
+            case LABEL:
+            case ALL:
+            case LEN:
+            default:
+                return false;
+        }
     }
 
     private ImmutableBitSet getPropertyIds(GraphProperty property, GraphSchemaType schemaType) {
@@ -158,10 +157,11 @@ public class GraphSelectivityHandler extends RelMdSelectivity
 
     private TableScan getTableScanByAlias(RelNode top, int aliasId) {
         List<RelNode> queue = Lists.newArrayList(top);
-        while (queue.isEmpty()) {
+        while (!queue.isEmpty()) {
             RelNode cur = queue.remove(0);
             if (cur instanceof AbstractBindableTableScan
-                    && ((AbstractBindableTableScan) cur).getAliasId() == aliasId) {
+                    && (aliasId == AliasInference.DEFAULT_ID
+                            || ((AbstractBindableTableScan) cur).getAliasId() == aliasId)) {
                 return (AbstractBindableTableScan) cur;
             }
             queue.addAll(cur.getInputs());
