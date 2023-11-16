@@ -22,7 +22,7 @@ use std::sync::Arc;
 use crate::col_table::ColTable;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
-use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter};
+use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter, NbrOffsetIter};
 use crate::mcsr::MutableCsr;
 use crate::schema::{CsrGraphSchema, Schema};
 use crate::scsr::SingleCsr;
@@ -79,6 +79,10 @@ where
 
     pub fn get_adj_list(&self, src_id: I) -> Option<NbrIter<I>> {
         self.csr.get_edges(src_id)
+    }
+
+    pub fn get_adj_list_with_offset(&self, src_id: I) -> Option<NbrOffsetIter<I>> {
+        self.csr.get_edges_with_offset(src_id)
     }
 
     pub fn get_internal_id(&self, id: G) -> Option<(LabelId, I)> {
@@ -153,6 +157,10 @@ where
         self.csr.get_edges(src_id)
     }
 
+    pub fn get_adj_list_with_offset(&self, src_id: I) -> Option<NbrOffsetIter<I>> {
+        self.csr.get_edges_with_offset(src_id)
+    }
+
     pub fn get_internal_id(&self, id: G) -> Option<(LabelId, I)> {
         self.vm.get_internal_id(id)
     }
@@ -199,7 +207,7 @@ pub trait BasicOps<G: IndexType + Sync + Send, I: IndexType + Sync + Send> {
     ) -> usize;
     fn get_adj_list(
         &self, src_index: I, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, dir: Direction,
-    ) -> Option<NbrIter<I>>;
+    ) -> Option<NbrOffsetIter<I>>;
     fn index_to_local_vertex(&self, label: LabelId, index: I, with_property: bool) -> LocalVertex<G, I>;
     fn edge_ref_to_local_edge(
         &self, src_label: LabelId, src_lid: I, dst_label: LabelId, dst_lid: I, label: LabelId,
@@ -231,11 +239,11 @@ where
 
     fn get_adj_list(
         &self, src_index: I, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, dir: Direction,
-    ) -> Option<NbrIter<I>> {
+    ) -> Option<NbrOffsetIter<I>> {
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
         match dir {
-            Direction::Incoming => self.ie[index].get_edges(src_index),
-            Direction::Outgoing => self.oe[index].get_edges(src_index),
+            Direction::Incoming => self.ie[index].get_edges_with_offset(src_index),
+            Direction::Outgoing => self.oe[index].get_edges_with_offset(src_index),
         }
     }
 
@@ -296,7 +304,7 @@ where
 {
     fn _get_adj_lists_vertices(
         &self, src_id: G, edge_labels: Option<&Vec<LabelId>>, dir: Direction,
-    ) -> (Vec<LabelId>, Vec<NbrIter<I>>) {
+    ) -> (Vec<LabelId>, Vec<NbrOffsetIter<I>>) {
         let mut iters = vec![];
         let mut labels = vec![];
         if let Some(index) = self.vertex_map.get_internal_id(src_id) {
@@ -334,7 +342,7 @@ where
 
     fn _get_adj_lists_edges(
         &self, src_label: LabelId, src_lid: I, edge_labels: Option<&Vec<LabelId>>, dir: Direction,
-    ) -> (Vec<(LabelId, LabelId)>, Vec<NbrIter<I>>) {
+    ) -> (Vec<(LabelId, LabelId)>, Vec<NbrOffsetIter<I>>) {
         let mut iters = vec![];
         let mut labels = vec![];
         if edge_labels.is_none() {

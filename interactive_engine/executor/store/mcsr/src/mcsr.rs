@@ -24,7 +24,7 @@ use std::{alloc, ptr};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::graph::IndexType;
-use crate::graph_db::{CsrTrait, Nbr, NbrIter};
+use crate::graph_db::{CsrTrait, Nbr, NbrIter, NbrOffsetIter};
 
 pub struct AdjList<I> {
     nbr_ptr: *mut Nbr<I>,
@@ -81,15 +81,21 @@ impl<I: IndexType> AdjList<I> {
     }
 
     pub fn iter(&self) -> NbrIter<'_, I> {
+        NbrIter::new(self.nbr_ptr as *const Nbr<I>, unsafe {
+            (self.nbr_ptr as *const Nbr<I>).add(self.deg as usize)
+        })
+    }
+
+    pub fn iter_offset(&self) -> NbrOffsetIter<'_, I> {
         if self.offset_ptr.is_null() {
-            NbrIter::new(
+            NbrOffsetIter::new(
                 self.nbr_ptr as *const Nbr<I>,
                 unsafe { (self.nbr_ptr as *const Nbr<I>).add(self.deg as usize) },
                 ptr::null(),
                 ptr::null(),
             )
         } else {
-            NbrIter::new(
+            NbrOffsetIter::new(
                 self.nbr_ptr as *const Nbr<I>,
                 unsafe { (self.nbr_ptr as *const Nbr<I>).add(self.deg as usize) },
                 self.offset_ptr as *const usize,
@@ -121,16 +127,16 @@ pub struct MutableCsr<I> {
 pub struct MutableCsrEdgeIter<'a, I: IndexType> {
     cur_vertex: usize,
     adj_list_iter: Iter<'a, AdjList<I>>,
-    nbr_iter: NbrIter<'a, I>,
+    nbr_iter: NbrOffsetIter<'a, I>,
 }
 
 impl<'a, I: IndexType> MutableCsrEdgeIter<'a, I> {
     pub fn new(adj_list: &'a Vec<AdjList<I>>, cur_vertex: usize) -> Self {
         let mut adj_list_iter = adj_list.iter();
         if let Some(adj_list) = adj_list_iter.next() {
-            Self { cur_vertex, adj_list_iter, nbr_iter: adj_list.iter() }
+            Self { cur_vertex, adj_list_iter, nbr_iter: adj_list.iter_offset() }
         } else {
-            Self { cur_vertex, adj_list_iter, nbr_iter: NbrIter::<'a, I>::new_empty() }
+            Self { cur_vertex, adj_list_iter, nbr_iter: NbrOffsetIter::<'a, I>::new_empty() }
         }
     }
 }
@@ -145,9 +151,9 @@ impl<'a, I: IndexType> Iterator for MutableCsrEdgeIter<'a, I> {
             } else {
                 if let Some(adj_list) = self.adj_list_iter.next() {
                     self.cur_vertex += 1;
-                    self.nbr_iter = adj_list.iter();
+                    self.nbr_iter = adj_list.iter_offset();
                 } else {
-                    self.nbr_iter = NbrIter::new_empty();
+                    self.nbr_iter = NbrOffsetIter::new_empty();
                     return None;
                 }
             }
@@ -339,8 +345,8 @@ impl<I: IndexType> MutableCsr<I> {
                 return false;
             }
             let deg = self.adj_lists[i].degree();
-            let mut iter1 = self.adj_lists[i].iter();
-            let mut iter2 = other.adj_lists[i].iter();
+            let mut iter1 = self.adj_lists[i].iter_offset();
+            let mut iter2 = other.adj_lists[i].iter_offset();
             for _ in 0..deg {
                 let v1 = iter1.next().unwrap();
                 let v2 = iter2.next().unwrap();
@@ -376,6 +382,14 @@ impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
     fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>> {
         if src.index() < self.adj_lists.len() {
             Some(self.adj_lists[src.index()].iter())
+        } else {
+            None
+        }
+    }
+
+    fn get_edges_with_offset(&self, src: I) -> Option<NbrOffsetIter<'_, I>> {
+        if src.index() < self.adj_lists.len() {
+            Some(self.adj_lists[src.index()].iter_offset())
         } else {
             None
         }
@@ -480,7 +494,7 @@ impl<I: IndexType> Encode for MutableCsr<I> {
         }
         let mut nbr_num = 0_usize;
         for i in 0..vnum {
-            if let Some(edges) = self.get_edges(I::new(i)) {
+            if let Some(edges) = self.get_edges_with_offset(I::new(i)) {
                 for e in edges {
                     e.0.neighbor.write_to(writer)?;
                     if self.has_offset {

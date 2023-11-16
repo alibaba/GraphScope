@@ -187,12 +187,68 @@ impl<I: IndexType> Clone for Nbr<I> {
 pub struct NbrIter<'a, I> {
     begin: *const Nbr<I>,
     end: *const Nbr<I>,
+    _marker: PhantomData<&'a Nbr<I>>,
+}
+
+impl<'a, I: IndexType> NbrIter<'a, I> {
+    pub fn new(begin: *const Nbr<I>, end: *const Nbr<I>) -> Self {
+        Self { begin, end, _marker: PhantomData }
+    }
+
+    pub fn new_empty() -> Self {
+        Self { begin: ptr::null(), end: ptr::null(), _marker: PhantomData }
+    }
+
+    #[inline]
+    pub fn empty(&self) -> bool {
+        self.begin == self.end
+    }
+
+    pub fn new_single(begin: *const Nbr<I>) -> Self {
+        Self { begin, end: unsafe { begin.add(1) }, _marker: PhantomData }
+    }
+
+    pub fn slice(self, from: usize, to: usize) -> Self {
+        let begin = unsafe { self.begin.offset(from as isize) };
+        let end = unsafe { self.begin.offset(to as isize) };
+        Self { begin, end, _marker: PhantomData }
+    }
+}
+
+impl<'a, I: IndexType> Iterator for NbrIter<'a, I> {
+    type Item = &'a Nbr<I>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.begin >= self.end {
+            None
+        } else {
+            unsafe {
+                let cur = self.begin;
+                self.begin = self.begin.offset(1);
+                Some(&*cur)
+            }
+        }
+    }
+
+    fn nth(&mut self, n: usize) -> Option<Self::Item> {
+        self.begin = unsafe { self.begin.offset(n as isize) };
+        self.next()
+    }
+}
+
+unsafe impl<'a, I: IndexType> Send for NbrIter<'a, I> {}
+
+unsafe impl<'a, I: IndexType> Sync for NbrIter<'a, I> {}
+
+pub struct NbrOffsetIter<'a, I> {
+    begin: *const Nbr<I>,
+    end: *const Nbr<I>,
     offset_begin: *const usize,
     offset_end: *const usize,
     _marker: PhantomData<&'a Nbr<I>>,
 }
 
-impl<'a, I: IndexType> NbrIter<'a, I> {
+impl<'a, I: IndexType> NbrOffsetIter<'a, I> {
     pub fn new(
         begin: *const Nbr<I>, end: *const Nbr<I>, offset_begin: *const usize, offset_end: *const usize,
     ) -> Self {
@@ -247,7 +303,7 @@ impl<'a, I: IndexType> NbrIter<'a, I> {
     }
 }
 
-impl<'a, I: IndexType> Iterator for NbrIter<'a, I> {
+impl<'a, I: IndexType> Iterator for NbrOffsetIter<'a, I> {
     type Item = (&'a Nbr<I>, Option<&'a usize>);
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -274,9 +330,9 @@ impl<'a, I: IndexType> Iterator for NbrIter<'a, I> {
     }
 }
 
-unsafe impl<'a, I: IndexType> Send for NbrIter<'a, I> {}
+unsafe impl<'a, I: IndexType> Send for NbrOffsetIter<'a, I> {}
 
-unsafe impl<'a, I: IndexType> Sync for NbrIter<'a, I> {}
+unsafe impl<'a, I: IndexType> Sync for NbrOffsetIter<'a, I> {}
 
 pub trait CsrTrait<I: IndexType>: Send + Sync {
     fn vertex_num(&self) -> I;
@@ -286,6 +342,8 @@ pub trait CsrTrait<I: IndexType>: Send + Sync {
     fn degree(&self, src: I) -> i64;
 
     fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>>;
+
+    fn get_edges_with_offset(&self, src: I) -> Option<NbrOffsetIter<'_, I>>;
 
     fn get_all_edges<'a>(
         &'a self,
