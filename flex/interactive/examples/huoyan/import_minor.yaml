@@ -1,0 +1,25 @@
+graph: onecompany
+loading_config:
+  data_source:
+    scheme: odps  # file, oss, s3, hdfs; only file is supported now
+    #location: /home/graphscope/data/group-filter-csv/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: arrow
+    metadata:
+      batch_reader: false
+      quoting: true
+      delimiter: ","
+vertex_mappings:
+  - type_name: company  # must align with the schema
+    inputs:
+      - onecomp/dwi_oc_rel_vertex_comp_interactive_d/ds=20240130
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+          name: vertex_id  # can be omitted if the name is not known
+        property: vertex_id
+      - column:
+          index: 1
+          name: vertex_name
+        property: vertex_name

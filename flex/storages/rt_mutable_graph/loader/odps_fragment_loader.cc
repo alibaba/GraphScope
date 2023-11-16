@@ -117,14 +117,18 @@ void ODPSReadClient::CreateReadSession(
     const std::vector<std::string>& selected_partitions) {
   auto resp = createReadSession(table_identifier, selected_cols, partition_cols,
                                 selected_partitions);
-  if (resp.status_ != apsara::odps::sdk::storage_api::Status::OK &&
+  while (resp.status_ != apsara::odps::sdk::storage_api::Status::OK &&
       resp.status_ != apsara::odps::sdk::storage_api::Status::WAIT) {
-    LOG(FATAL) << "CreateReadSession failed" << resp.error_message_;
+    LOG(INFO) << "CreateReadSession failed" <<resp.status_ << " " << resp.error_message_; 
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    resp = createReadSession(table_identifier, selected_cols, partition_cols,
+		                                    selected_partitions);
   }
   *session_id = resp.session_id_;
 
   getReadSessionStatus(*session_id, split_count, table_identifier);
   VLOG(1) << "Got split_count: " << *split_count;
+//  *split_count = std::min(*split_count,8);
 }
 
 void ODPSReadClient::getReadSessionStatus(
@@ -317,6 +321,10 @@ ODPSTableRecordBatchSupplier::ODPSTableRecordBatchSupplier(
   // Read the table.
   table_ = odps_read_client_.ReadTable(session_id, split_count,
                                        table_identifier, thread_num);
+
+  LOG(INFO) << "Successfully read table: " << table_identifier.table_
+            << " with " << table_->num_rows() << " rows, "
+            << table_->num_columns() << " columns";
   reader_ = std::make_shared<arrow::TableBatchReader>(*table_);
 }
 

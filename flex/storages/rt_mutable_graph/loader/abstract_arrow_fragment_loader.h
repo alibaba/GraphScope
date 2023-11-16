@@ -181,7 +181,8 @@ template <typename PK_T, typename EDATA_T>
 void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
              const IndexerType& indexer,
              std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
-             std::vector<int32_t>& degree) {
+             std::vector<int32_t>& ie_degree, std::vector<int32_t>& oe_degree) {
+  auto invalid_vid = std::numeric_limits<vid_t>::max();
   if constexpr (std::is_same_v<PK_T, std::string_view>) {
     if (col->type()->Equals(arrow::utf8())) {
       auto casted = std::static_pointer_cast<arrow::StringArray>(col);
@@ -194,7 +195,9 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
         } else {
           std::get<0>(parsed_edges[cur_ind++]) = vid;
         }
-        degree[vid]++;
+        if (vid != invalid_vid) {
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
       }
     } else {
       // must be large utf8
@@ -208,7 +211,9 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
         } else {
           std::get<0>(parsed_edges[cur_ind++]) = vid;
         }
-        degree[vid]++;
+        if (vid != invalid_vid) {
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
       }
     }
   } else {
@@ -221,7 +226,9 @@ void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
       } else {
         std::get<0>(parsed_edges[cur_ind++]) = vid;
       }
-      degree[vid]++;
+      if (vid != invalid_vid) {
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
     }
   }
 }
@@ -295,11 +302,11 @@ static void append_edges(
   size_t cur_ind = old_size;
   auto src_col_thread = std::thread([&]() {
     _append<SRC_PK_T, EDATA_T>(false, cur_ind, src_col, src_indexer,
-                               parsed_edges, oe_degree);
+                               parsed_edges, ie_degree, oe_degree);
   });
   auto dst_col_thread = std::thread([&]() {
     _append<DST_PK_T, EDATA_T>(true, cur_ind, dst_col, dst_indexer,
-                               parsed_edges, ie_degree);
+                               parsed_edges, ie_degree, oe_degree);
   });
   src_col_thread.join();
   dst_col_thread.join();
@@ -381,6 +388,9 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     size_t primary_key_ind = std::get<2>(primary_key);
     IdIndexer<KEY_T, vid_t> indexer;
 
+    // use a temp vector of chunked string array to hold the string columns
+    std::vector<std::shared_ptr<arrow::Array>> string_cols;
+
     for (auto& v_file : v_files) {
       VLOG(10) << "Parsing vertex file:" << v_file << " for label "
                << v_label_name;
@@ -409,6 +419,12 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         auto other_columns_array = columns;
         other_columns_array.erase(other_columns_array.begin() +
                                   primary_key_ind);
+        for (size_t i = 0; i < other_columns_array.size(); ++i) {
+          if (other_columns_array[i]->type()->Equals(arrow::utf8()) ||
+              other_columns_array[i]->type()->Equals(arrow::large_utf8())) {
+            string_cols.emplace_back(other_columns_array[i]);
+          }
+        }
         addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
                                 other_columns_array);
       }

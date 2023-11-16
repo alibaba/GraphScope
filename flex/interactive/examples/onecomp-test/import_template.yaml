@@ -1,0 +1,43 @@
+graph: onecompany
+loading_config:
+  data_source:
+    scheme: odps  # file, oss, s3, hdfs; only file is supported now
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: arrow
+    metadata:
+      batch_reader: false
+      batch_size: 16MB
+vertex_mappings:
+  - type_name: company  # must align with the schema
+    inputs:
+      - grape_dev/lei_oc_vertex/ds=bizdate 
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+          name: vertex_id  # can be omitted if the name is not known
+        property: vertex_id
+      - column:
+          index: 1
+          name: vertex_name
+        property: vertex_name
+edge_mappings:
+  - type_triplet:
+      edge: invest
+      source_vertex:  company
+      destination_vertex:  company
+    inputs:
+      - grape_dev/lei_oc_edge/ds=bizdate
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: vertex_id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: rel_vertex_id
+    column_mappings:
+      - column:
+          index: 2
+          name: rel_type
+        property: rel_type 
