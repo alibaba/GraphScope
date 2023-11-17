@@ -59,10 +59,11 @@ gs::Result<seastar::sstring> HQPSService::service_status() {
 }
 
 gs::Result<bool> HQPSService::start_service(const gs::Schema& schema,
-                                            const std::string& data_dir) {
+                                            const std::string& data_dir,
+                                            int32_t thread_num) {
   // Use graph_name to update the graph, and then start the service.
   auto& db = gs::GraphDB::get();
-  auto result = db.LoadFromDataDirectory(data_dir);
+  auto result = db.LoadFromDataDirectory(schema, data_dir, thread_num);
   if (!result.ok()) {
     return result;
   }

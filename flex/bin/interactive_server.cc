@@ -138,7 +138,7 @@ void parse_args(bpo::variables_map& vm, int32_t& admin_port,
   }
 }
 
-void initWorkspace(const std::string workspace) {
+void initWorkspace(const std::string workspace, int32_t thread_num) {
   // If workspace directory not exists, create.
   if (!std::filesystem::exists(workspace)) {
     std::filesystem::create_directory(workspace);
@@ -203,7 +203,7 @@ void initWorkspace(const std::string workspace) {
   auto& db = gs::GraphDB::get();
   auto codegen_bin = gs::find_codegen_bin();
   workspace_manager.Init(workspace, codegen_bin,
-                         server::HQPSService::DEFAULT_GRAPH_NAME);
+                         server::HQPSService::DEFAULT_GRAPH_NAME, thread_num);
 }
 
 }  // namespace gs
@@ -271,7 +271,7 @@ int main(int argc, char** argv) {
       LOG(FATAL) << "To start admin service, graph-config, bulk-load and "
                     "data-path should NOT be specified";
     }
-    gs::initWorkspace(workspace);  // the default graph is loaded.
+    gs::initWorkspace(workspace, shard_num);  // the default graph is loaded.
     LOG(INFO) << "Finish init workspace";
 
     server::InteractiveAdminService::get().init(
@@ -311,12 +311,8 @@ int main(int argc, char** argv) {
       auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
       // Ths schema is loaded just to get the plugin dir and plugin list
       gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
-      if (!db.LoadFromDataDirectory(data_path).ok()) {
+      if (!db.LoadFromDataDirectory(schema, data_path, shard_num).ok()) {
         LOG(FATAL) << "Failed to load graph from data directory";
-      }
-      if (!schema.Equals(db.schema())) {
-        LOG(FATAL) << "Schema in graph config file is not consistent with "
-                      "existing graph";
       }
     } else {
       LOG(INFO) << "Loading graph from bulk load config";

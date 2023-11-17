@@ -33,6 +33,9 @@ GS_TEST_DIR=$3
 if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} not exists"
   mkdir -p ${INTERACTIVE_WORKSPACE}
+else 
+  echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} exists"
+  rm -rf ${INTERACTIVE_WORKSPACE}/
 fi
 if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
   echo "ENGINE_CONFIG: ${ENGINE_CONFIG_PATH} not exists"
@@ -102,7 +105,7 @@ run_movie_test(){
   pushd ${FLEX_HOME}/build/
   cmd="GLOG_v=10 ./tests/hqps/admin_http_test ${ADMIN_PORT} ${QUERY_PORT} ${GRAPH_SCHEMA_YAML} ${GRAPH_BULK_LOAD_YAML} ${RAW_CSV_FILES} ${TEST_CYPHER_QUERIES}"
   echo "Start movie test: ${cmd}"
-  eval ${cmd} || (err "movie test failed"; exit 1)
+  eval ${cmd} || (err "movie test failed" &&  exit 1)
   info "Finish movie test"
   popd
 }

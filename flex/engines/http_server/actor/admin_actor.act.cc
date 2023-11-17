@@ -286,24 +286,30 @@ seastar::future<query_result> admin_actor::start_service(
     query_param&& query_param) {
   // parse query_param.content as json and get graph_name
   auto& content = query_param.content;
-
+  auto& workspace_manager = server::WorkspaceManager::Get();
+  std::string graph_name;
   try {
-    nlohmann::json json = nlohmann::json::parse(content);
-    std::string graph_name;
-    if (json.contains("graph_name")) {
-      graph_name = json["graph_name"].get<std::string>();
+    if (!content.empty()) {
+      nlohmann::json json = nlohmann::json::parse(content);
+      if (json.contains("graph_name")) {
+        graph_name = json["graph_name"].get<std::string>();
+      }
     } else {
-      graph_name = server::HQPSService::DEFAULT_GRAPH_NAME;
-      LOG(WARNING) << "Starting service with default graph: " << graph_name;
+      LOG(WARNING)
+          << "Request payload is empty, will restart on current graph: "
+          << workspace_manager.GetRunningGraph();
+      graph_name = workspace_manager.GetRunningGraph();
     }
-    auto& workspace_manager = server::WorkspaceManager::Get();
+    LOG(WARNING) << "Starting service with graph: " << graph_name;
+
     auto schema_result = workspace_manager.GetGraphSchema(graph_name);
     if (!schema_result.ok()) {
       LOG(ERROR) << "Fail to get graph schema: "
-                 << schema_result.status().error_message();
-      return seastar::make_exception_future<query_result>(
-          std::runtime_error("Fail to get graph schema: " +
-                             schema_result.status().error_message()));
+                 << schema_result.status().error_message() << ", "
+                 << graph_name;
+      return seastar::make_exception_future<query_result>(std::runtime_error(
+          "Fail to get graph schema: " +
+          schema_result.status().error_message() + ", " + graph_name));
     }
     auto data_dir = workspace_manager.GetDataDirectory(graph_name);
     if (!data_dir.ok()) {
@@ -316,26 +322,20 @@ seastar::future<query_result> admin_actor::start_service(
       std::lock_guard<std::mutex> lock(mtx_);
       auto& db = gs::GraphDB::get();
       LOG(INFO) << "Update service running on graph:" << graph_name;
-      if (!db.LoadFromDataDirectory(data_dir.value()).ok()) {
+      auto& schema_value = schema_result.value();
+      // use the previous thread num
+      auto thread_num = db.SessionNum();
+      if (!db.LoadFromDataDirectory(schema_value, data_dir.value(), thread_num)
+               .ok()) {
         LOG(ERROR) << "Fail to load graph from data directory: "
                    << data_dir.value();
         return seastar::make_exception_future<query_result>(std::runtime_error(
             "Fail to load graph from data directory: " + data_dir.value()));
       }
-      auto& schema_value = schema_result.value();
-      if (!db.schema().Equals(schema_value)) {
-        LOG(ERROR) << "Schema in graph config file is not consistent with "
-                      "existing graph: "
-                   << graph_name;
-        return seastar::make_exception_future<query_result>(std::runtime_error(
-            "Schema in graph config file is not consistent with existing "
-            "graph: " +
-            graph_name));
-      }
       workspace_manager.SetRunningGraph(graph_name);
     }
 
-    LOG(INFO) << "Starting service with graph: " << graph_name;
+    LOG(INFO) << "Successfully started service with graph: " << graph_name;
 
     return seastar::make_ready_future<query_result>(
         "Successfully start service");

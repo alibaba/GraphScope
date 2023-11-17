@@ -44,7 +44,7 @@ seastar::future<query_result> executor::run_graph_db_query(
                  .Eval(param.content);
   if (!ret.ok()) {
     LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-    return seastar::make_ready_future<query_result>(
+    return seastar::make_exception_future<query_result>(
         seastar::sstring(ret.status().error_message()));
   }
   auto result = ret.value();
@@ -72,7 +72,7 @@ seastar::future<query_result> executor::run_hqps_procedure_query(
                  .EvalHqpsProcedure(cur_query);
   if (!ret.ok()) {
     LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-    return seastar::make_ready_future<query_result>(
+    return seastar::make_exception_future<query_result>(
         seastar::sstring(ret.status().error_message()));
   }
   auto result = ret.value();
@@ -96,7 +96,7 @@ seastar::future<query_result> executor::run_hqps_adhoc_query(
                  .EvalAdhoc(content.second);
   if (!ret.ok()) {
     LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-    return seastar::make_ready_future<query_result>(
+    return seastar::make_exception_future<query_result>(
         seastar::sstring(ret.status().error_message()));
   }
   auto ret_value = ret.value();

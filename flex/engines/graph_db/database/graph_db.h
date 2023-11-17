@@ -52,9 +52,14 @@ class GraphDB {
 
   /**
    * @brief Load the graph from data directory.
+   * @param schema The schema of graph. It should be the same as the schema,
+   * except that the procedure enable_lists changes.
    * @param data_dir The directory of graph data.
+   * @param thread_num The number of threads for graph db concurrency
    */
-  Result<bool> LoadFromDataDirectory(const std::string& data_dir);
+  Result<bool> LoadFromDataDirectory(const Schema& schema,
+                                     const std::string& data_dir,
+                                     int32_t thread_num);
 
   /** @brief Create a transaction to read vertices and edges.
    *
@@ -108,11 +113,15 @@ class GraphDB {
   int SessionNum() const;
 
  private:
-  void registerApp(const std::unordered_map<std::string, uint8_t>& plugins);
+  bool registerApp(const std::string& path, uint8_t app_type);
 
   void ingestWals(const std::vector<std::string>& wals, int thread_num);
 
-  void initApps(const std::unordered_map<std::string, uint8_t>& plugins);
+  void initApps(
+      const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
+          plugins);
+
+  void openWalAndCreateContexts(const std::filesystem::path& data_dir_path);
 
   friend class GraphDBSession;
 

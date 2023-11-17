@@ -214,16 +214,29 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
     return Result<std::vector<char>>(StatusCode::InValidArgument,
                                      "Query name is empty", {});
   }
-  auto& app_name_to_index = schema().GetPlugins();
+  // auto& db = gs::GraphDB::get();
+  auto& app_name_to_path_index = db_.schema().GetPlugins();
+  // for (auto pair : app_name_to_path_index) {
+  //   VLOG(10) << "Query name: " << pair.first << ", path: " <<
+  //   pair.second.first
+  //            << ", type: " << pair.second.second;
+  // }
   // get procedure id from name.
-  if (app_name_to_index.find(query_name) == app_name_to_index.end()) {
+  if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
     return Result<std::vector<char>>(
         StatusCode::NotExists, "Query name is not registered: " + query_name,
         {});
   }
+
   // get app
-  auto type = app_name_to_index.at(query_name);
+  auto type = app_name_to_path_index.at(query_name).second;
+  if (type >= apps_.size()) {
+    LOG(ERROR) << "Query type is not registered: " << type;
+    return Result<std::vector<char>>(
+        StatusCode::NotExists,
+        "Query type is not registered: " + std::to_string(type), {});
+  }
   AppBase* app = nullptr;
   if (likely(apps_[type] != nullptr)) {
     app = apps_[type];
@@ -234,11 +247,19 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
                  << "] is not registered...";
       return Result<std::vector<char>>(
           StatusCode::NotExists,
-          "Query:" + std::to_string((int) type) + " is not registere", {});
+          "Query:" + std::to_string((int) type) + " is not registered", {});
     } else {
       apps_[type] = app_wrappers_[type].app();
       app = apps_[type];
     }
+  }
+
+  if (app == nullptr) {
+    LOG(ERROR) << "Query type is not registered: " << type
+               << ", query name: " << query_name;
+    return Result<std::vector<char>>(
+        StatusCode::NotExists,
+        "Query type is not registered: " + std::to_string(type), {});
   }
 
   std::vector<char> input_buffer;
@@ -251,10 +272,10 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
   const char* str_data = input_buffer.data();
   size_t str_len = input_buffer.size();
   gs::Decoder input_decoder(input_buffer.data(), input_buffer.size());
-  std::vector<char> result_buffer;
-  gs::Encoder result_encoder(result_buffer);
 
-  for (auto i = 0; i < 3; ++i) {
+  for (auto i = 0; i < MAX_RETRY; ++i) {
+    std::vector<char> result_buffer;
+    gs::Encoder result_encoder(result_buffer);
     if (app->Query(input_decoder, result_encoder)) {
       return Result<std::vector<char>>(std::move(result_buffer));
     }
@@ -262,11 +283,9 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
               << "] retry - " << i << " / " << MAX_RETRY;
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     input_decoder.reset(str_data, str_len);
-    result_buffer.clear();
   }
-  return Result<std::vector<char>>(StatusCode::QueryFailed,
-                                   "Query failed for procedure: " + query_name,
-                                   result_buffer);
+  return Result<std::vector<char>>(
+      StatusCode::QueryFailed, "Query failed for procedure: " + query_name, {});
 }
 
 #undef likely

@@ -22,7 +22,7 @@ WorkspaceManager& WorkspaceManager::Get() {
 WorkspaceManager::~WorkspaceManager() {}
 void WorkspaceManager::Init(const std::string& workspace,
                             const std::string& codegen_bin,
-                            const std::string& graph_name) {
+                            const std::string& graph_name, int32_t thread_num) {
   workspace_ = workspace;
   codegen_bin_ = codegen_bin;
   data_workspace_ = workspace_ + "/" + DATA_DIR_NAME;
@@ -32,12 +32,8 @@ void WorkspaceManager::Init(const std::string& workspace,
     auto schema_path = get_graph_schema_path(graph_name);
     auto data_dir = get_graph_indices_dir(graph_name);
     gs::Schema schema = gs::Schema::LoadFromYaml(schema_path);
-    if (!db.LoadFromDataDirectory(data_dir).ok()) {
+    if (!db.LoadFromDataDirectory(schema, data_dir, thread_num).ok()) {
       LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
-    }
-    if (!schema.Equals(db.schema())) {
-      LOG(FATAL) << "Schema in graph config file is not consistent with "
-                    "existing graph";
     }
     LOG(INFO) << "Successfully init graph db for default graph: " << graph_name;
     //  set running graph
@@ -429,7 +425,7 @@ seastar::future<seastar::sstring> WorkspaceManager::CreateProcedure(
   // check whether procedure already exists.
   auto plugin_file = plugin_dir + "/" + procedure_name + ".yaml";
   if (std::filesystem::exists(plugin_file)) {
-    return seastar::make_ready_future<seastar::sstring>(
+    return seastar::make_exception_future<seastar::sstring>(
         "Procedure already exists: " + procedure_name);
   }
   std::lock_guard<std::mutex> lock(mtx_);
@@ -873,12 +869,7 @@ seastar::future<seastar::sstring> WorkspaceManager::generate_procedure(
                                       codegen_bin)
       .then_wrapped([name, output_dir](auto&& f) {
         try {
-          LOG(INFO) << "here";
           auto res = f.get();
-          LOG(INFO) << "here2: " << res;
-          // the output yaml and so file is in output_dir, in format
-          // "${output_dir}/${procedure_name}.yaml" and
-          // "${output_dir}/lib${procedure_name}.so", check whether exists
           std::string so_file;
           {
             std::stringstream ss;

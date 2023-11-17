@@ -52,7 +52,7 @@ class WorkspaceManager {
   ~WorkspaceManager();
   WorkspaceManager(const WorkspaceManager&) = delete;
   void Init(const std::string& workspace, const std::string& codegen_bin,
-            const std::string& running_graph);
+            const std::string& running_graph, int32_t thread_num);
 
   void SetRunningGraph(const std::string& graph_name);
 

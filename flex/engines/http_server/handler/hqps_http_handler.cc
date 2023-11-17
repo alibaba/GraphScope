@@ -196,7 +196,6 @@ void hqps_http_handler::stop() {
 
 seastar::future<> hqps_http_handler::set_routes() {
   return server_.set_routes([this](seastar::httpd::routes& r) {
-    // To be removed.
     auto procedure_handler =
         new hqps_ic_handler(ic_query_group_id, shard_query_concurrency);
     r.add(seastar::httpd::operation_type::POST,

@@ -68,6 +68,8 @@ void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
 
 const Schema& MutablePropertyFragment::schema() const { return schema_; }
 
+Schema& MutablePropertyFragment::mutable_schema() { return schema_; }
+
 void MutablePropertyFragment::Serialize(const std::string& prefix) {
   std::string data_dir = prefix + "/data";
   if (!std::filesystem::exists(data_dir)) {

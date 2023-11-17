@@ -41,7 +41,8 @@ class HQPSService {
   gs::Result<seastar::sstring> service_status();
 
   gs::Result<bool> start_service(const gs::Schema& schema,
-                                 const std::string& graph_dir);
+                                 const std::string& graph_dir,
+                                 int32_t thread_num);
 
   void run_and_wait_for_exit();
 

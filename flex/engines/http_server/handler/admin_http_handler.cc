@@ -393,7 +393,7 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
       action.erase(std::remove(action.begin(), action.end(), '/'),
                    action.end());
 
-      if (action == "start") {
+      if (action == "start" || action == "restart") {
         return admin_actor_refs_[dst_executor]
             .start_service(query_param{std::move(req->content)})
             .then_wrapped([rep = std::move(rep)](
@@ -413,10 +413,6 @@ class admin_http_service_handler_impl : public seastar::httpd::handler_base {
         return seastar::make_exception_future<
             std::unique_ptr<seastar::httpd::reply>>(
             std::runtime_error("Stopping service not supported."));
-      } else if (action == "restart") {
-        return seastar::make_exception_future<
-            std::unique_ptr<seastar::httpd::reply>>(
-            std::runtime_error("Restarting service not supported."));
       } else {
         return seastar::make_exception_future<
             std::unique_ptr<seastar::httpd::reply>>(

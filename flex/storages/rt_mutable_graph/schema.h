@@ -154,9 +154,10 @@ class Schema {
   bool Equals(const Schema& other) const;
 
   // Return the map from plugin name to plugin id
-  const std::unordered_map<std::string, uint8_t>& GetPlugins() const;
+  const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
+  GetPlugins() const;
 
-  bool EmplacePlugin(const std::string& plugin_name);
+  bool EmplacePlugins(const std::vector<std::string>& plugin_paths_or_names);
 
   void SetPluginDir(const std::string& plugin_dir);
 
@@ -182,7 +183,9 @@ class Schema {
   std::map<uint32_t, EdgeStrategy> oe_strategy_;
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
   std::vector<size_t> max_vnum_;
-  std::unordered_map<std::string, uint8_t> plugin_name_to_id_;
+  std::unordered_map<std::string, std::pair<std::string, uint8_t>>
+      plugin_name_to_path_and_id_;  // key is plugin name, value is plugin path
+                                    // and plugin id
   std::string plugin_dir_;
 };
 
