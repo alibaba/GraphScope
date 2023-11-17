@@ -199,7 +199,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
   auto col_type = col->type();
   size_t cur_ind = 0;
   if (col_type == PropertyType::kBool) {
-    CHECK(type == arrow::boolean())
+    CHECK(type->Equals(arrow::boolean()))
         << "Inconsistent data type, expect bool, but got " << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
@@ -210,7 +210,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
       }
     }
   } else if (col_type == PropertyType::kInt64) {
-    CHECK(type == arrow::int64())
+    CHECK(type->Equals(arrow::int64()))
         << "Inconsistent data type, expect int64, but got " << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
@@ -222,7 +222,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
       }
     }
   } else if (col_type == PropertyType::kInt32) {
-    CHECK(type == arrow::int32())
+    CHECK(type->Equals(arrow::int32()))
         << "Inconsistent data type, expect int32, but got " << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
@@ -234,7 +234,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
       }
     }
   } else if (col_type == PropertyType::kUInt64) {
-    CHECK(type == arrow::uint64())
+    CHECK(type->Equals(arrow::uint64()))
         << "Inconsistent data type, expect uint64, but got "
         << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
@@ -247,7 +247,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
       }
     }
   } else if (col_type == PropertyType::kUInt32) {
-    CHECK(type == arrow::uint32())
+    CHECK(type->Equals(arrow::uint32()))
         << "Inconsistent data type, expect uint32, but got "
         << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
@@ -260,7 +260,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
       }
     }
   } else if (col_type == PropertyType::kDouble) {
-    CHECK(type == arrow::float64())
+    CHECK(type->Equals(arrow::float64()))
         << "Inconsistent data type, expect double, but got "
         << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
@@ -272,7 +272,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
       }
     }
   } else if (col_type == PropertyType::kFloat) {
-    CHECK(type == arrow::float32())
+    CHECK(type->Equals(arrow::float32()))
         << "Inconsistent data type, expect float, but got " << type->ToString();
     for (auto j = 0; j < array->num_chunks(); ++j) {
       auto casted =
@@ -283,10 +283,10 @@ static void set_vertex_properties(gs::ColumnBase* col,
       }
     }
   } else if (col_type == PropertyType::kString) {
-    CHECK(type == arrow::large_utf8() || type == arrow::utf8())
+    CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
         << "Inconsistent data type, expect string, but got "
         << type->ToString();
-    if (type == arrow::large_utf8()) {
+    if (type->Equals(arrow::large_utf8())) {
       for (auto j = 0; j < array->num_chunks(); ++j) {
         auto casted =
             std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
@@ -342,16 +342,16 @@ static void append_edges(
   auto indexer_check_lambda = [](const LFIndexer<vid_t>& cur_indexer,
                                  const std::shared_ptr<arrow::Array>& cur_col) {
     if (cur_indexer.get_type() == PropertyType::kInt64) {
-      CHECK(cur_col->type() == arrow::int64());
+      CHECK(cur_col->type()->Equals(arrow::int64()));
     } else if (cur_indexer.get_type() == PropertyType::kString) {
-      CHECK(cur_col->type() == arrow::utf8() ||
-            cur_col->type() == arrow::large_utf8());
+      CHECK(cur_col->type()->Equals(arrow::utf8()) ||
+            cur_col->type()->Equals(arrow::large_utf8()));
     } else if (cur_indexer.get_type() == PropertyType::kInt32) {
-      CHECK(cur_col->type() == arrow::int32());
+      CHECK(cur_col->type()->Equals(arrow::int32()));
     } else if (cur_indexer.get_type() == PropertyType::kUInt32) {
-      CHECK(cur_col->type() == arrow::uint32());
+      CHECK(cur_col->type()->Equals(arrow::uint32()));
     } else if (cur_indexer.get_type() == PropertyType::kUInt64) {
-      CHECK(cur_col->type() == arrow::uint64());
+      CHECK(cur_col->type()->Equals(arrow::uint64()));
     }
   };
 
@@ -367,7 +367,7 @@ static void append_edges(
     const auto& col = is_dst ? dst_col : src_col;
     const auto& indexer = is_dst ? dst_indexer : src_indexer;
     if constexpr (std::is_same_v<PK_T, std::string_view>) {
-      if (col->type() == arrow::utf8()) {
+      if (col->type()->Equals(arrow::utf8())) {
         auto casted = std::static_pointer_cast<arrow::StringArray>(col);
         for (auto j = 0; j < casted->length(); ++j) {
           auto str = casted->GetView(j);
@@ -418,7 +418,7 @@ static void append_edges(
       CHECK(src_col->length() == edata_col->length());
       size_t cur_ind = old_size;
       auto type = edata_col->type();
-      if (type != TypeConverter<EDATA_T>::ArrowTypeValue()) {
+      if (!type->Equals(TypeConverter<EDATA_T>::ArrowTypeValue())) {
         LOG(FATAL) << "Inconsistent data type, expect "
                    << TypeConverter<EDATA_T>::ArrowTypeValue()->ToString()
                    << ", but got " << type->ToString();
@@ -458,7 +458,7 @@ struct _add_vertex {
       // for non-string value
       auto expected_type = gs::TypeConverter<KEY_T>::ArrowTypeValue();
       using arrow_array_t = typename gs::TypeConverter<KEY_T>::ArrowArrayType;
-      if (col->type() != expected_type) {
+      if (!col->type()->Equals(expected_type)) {
         LOG(FATAL) << "Inconsistent data type, expect "
                    << expected_type->ToString() << ", but got "
                    << col->type()->ToString();
@@ -472,7 +472,7 @@ struct _add_vertex {
         vids.emplace_back(vid);
       }
     } else {
-      if (col->type() == arrow::utf8()) {
+      if (col->type()->Equals(arrow::utf8())) {
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
         for (auto i = 0; i < row_num; ++i) {
           auto str = casted_array->GetView(i);
@@ -482,7 +482,7 @@ struct _add_vertex {
           }
           vids.emplace_back(vid);
         }
-      } else if (col->type() == arrow::large_utf8()) {
+      } else if (col->type()->Equals(arrow::large_utf8())) {
         auto casted_array =
             std::static_pointer_cast<arrow::LargeStringArray>(col);
         for (auto i = 0; i < row_num; ++i) {
@@ -770,7 +770,7 @@ void CSVFragmentLoader::addEdgesImpl(label_t src_label_id, label_t dst_label_id,
               << "unsupported src_col type: " << src_col_type->ToString();
           CHECK(check_primary_key_type(dst_col_type))
               << "unsupported dst_col type: " << dst_col_type->ToString();
-          CHECK(src_col_type == dst_col_type)
+          CHECK(src_col_type->Equals(dst_col_type))
               << "src_col type: " << src_col_type->ToString()
               << " neq dst_col type: " << dst_col_type->ToString();
 
