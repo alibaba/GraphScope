@@ -31,6 +31,7 @@ data:
 
     ## Frontend Config
     frontend.server.num=1
+    enable.hash.generate.eid={{ .Values.enableHashGenerateEid }}
 
     ## Ingestor Config
     ingestor.queue.buffer.size={{ .Values.ingestorQueueBufferSize }}

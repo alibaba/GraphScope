@@ -74,9 +74,10 @@ public class DataEncoder {
                 labelPkIds.computeIfAbsent(type, k -> SchemaUtils.getEdgePrimaryKeyList(type));
         long eid;
         if (edgePkIds != null && edgePkIds.size() > 0) {
-            eid = getHashId(type.getLabelId(), propertiesMap, edgePkIds);
+            List<byte[]> pkBytes = getPkBytes(type.getLabelId(), propertiesMap, edgePkIds);
+            eid = PkHashUtils.hash(srcId, dstId, type.getLabelId(), pkBytes);
         } else {
-            eid = System.nanoTime();
+            eid = PkHashUtils.hash(srcId, dstId, type.getLabelId(), System.nanoTime());
         }
 
         if (outEdge) {
@@ -102,7 +103,7 @@ public class DataEncoder {
         return new BytesRef(scratch.array(), 0, scratch.limit());
     }
 
-    private static long getHashId(
+    private static List<byte[]> getPkBytes(
             int labelId, Map<Integer, PropertyValue> operationProperties, List<Integer> pkIds) {
         List<byte[]> pks = new ArrayList<>(pkIds.size());
         for (int pkId : pkIds) {
@@ -114,6 +115,12 @@ public class DataEncoder {
             byte[] valBytes = propertyValue.getValBytes();
             pks.add(valBytes);
         }
+        return pks;
+    }
+
+    private static long getHashId(
+            int labelId, Map<Integer, PropertyValue> operationProperties, List<Integer> pkIds) {
+        List<byte[]> pks = getPkBytes(labelId, operationProperties, pkIds);
         return PkHashUtils.hash(labelId, pks);
     }
 

@@ -30,12 +30,21 @@ import java.util.stream.Collectors;
 public class EdgeTypeMapper extends SchemaElementMapper {
     private List<EdgeRelationMapper> relationShips;
 
+    private List<ElementIndexMapper> indexes;
+
     public static SchemaElementMapper parseFromEdgeType(GraphEdge graphEdge) {
         EdgeTypeMapper edgeTypeMapper = new EdgeTypeMapper();
         edgeTypeMapper.setId(graphEdge.getLabelId());
         edgeTypeMapper.setLabel(graphEdge.getLabel());
         edgeTypeMapper.setType(TypeEnum.EDGE.toString());
 
+        ElementIndexMapper elementIndexMapper = new ElementIndexMapper();
+        elementIndexMapper.setName("primary_key");
+        elementIndexMapper.setIndexType("PRIMARY_KEY");
+        elementIndexMapper.setPropertyNames(graphEdge.getPrimaryKeyNameList());
+        ArrayList<ElementIndexMapper> elementIndexMapperList = new ArrayList<>();
+        elementIndexMapperList.add(elementIndexMapper);
+        edgeTypeMapper.setIndexes(elementIndexMapperList);
         List<EdgeRelationMapper> relationMapperList = new ArrayList<>();
         for (EdgeRelation edgeRelation : graphEdge.getRelationList()) {
             relationMapperList.add(
@@ -56,6 +65,14 @@ public class EdgeTypeMapper extends SchemaElementMapper {
         return relationShips;
     }
 
+    public List<ElementIndexMapper> getIndexes() {
+        return indexes;
+    }
+
+    public void setIndexes(List<ElementIndexMapper> indexes) {
+        this.indexes = indexes;
+    }
+
     public void setRelationShips(List<EdgeRelationMapper> relationShips) {
         this.relationShips = relationShips;
     }
@@ -73,11 +90,21 @@ public class EdgeTypeMapper extends SchemaElementMapper {
                 relationList.add(relationMapper.toEdgeRelation(vertexTypeMap));
             }
         }
+        List<String> primaryKeyList = new ArrayList<>();
+        if (indexes != null && indexes.size() > 0) {
+            if (indexes.size() > 1) {
+                throw new IllegalArgumentException(
+                        "Only support primary key now for " + this.indexes);
+            }
+            primaryKeyList = indexes.get(0).getPropertyNames();
+        }
+
         return new DefaultGraphEdge(
                 this.getId(),
                 this.getLabel(),
                 graphPropertyList,
                 relationList,
+                primaryKeyList,
                 this.getVersionId());
     }
 }

@@ -42,6 +42,31 @@ public final class PkHashUtils {
         return hash64(buffer.array(), buffer.limit());
     }
 
+    public static long hash(long srcId, long dstId, int labelId, List<byte[]> pks) {
+        ByteBuffer buffer = THREAD_BUFFER.get();
+        clear(buffer);
+        buffer.putLong(srcId);
+        buffer.putLong(dstId);
+        buffer.putInt(labelId);
+        for (byte[] pk : pks) {
+            buffer.putInt(pk.length);
+            buffer.put(pk);
+        }
+        flip(buffer);
+        return hash64(buffer.array(), buffer.limit());
+    }
+
+    public static long hash(long srcId, long dstId, int labelId, long nanoTime) {
+        ByteBuffer buffer = THREAD_BUFFER.get();
+        clear(buffer);
+        buffer.putLong(srcId);
+        buffer.putLong(dstId);
+        buffer.putInt(labelId);
+        buffer.putLong(nanoTime);
+        flip(buffer);
+        return hash64(buffer.array(), buffer.limit());
+    }
+
     /**
      * Generates 64-bit hash from byte array of the given length and seed.
      *
