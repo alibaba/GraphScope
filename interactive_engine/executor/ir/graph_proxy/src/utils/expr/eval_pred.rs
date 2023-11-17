@@ -210,7 +210,7 @@ impl TryFrom<pb::index_predicate::AndPredicate> for Predicates {
         }
 
         predicates.ok_or_else(|| {
-            (ParsePbError::ParseError("invalid `AndPredicate` in `IndexPredicate`".to_string()))
+            ParsePbError::ParseError("invalid `AndPredicate` in `IndexPredicate`".to_string())
         })
     }
 }

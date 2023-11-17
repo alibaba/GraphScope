@@ -130,7 +130,7 @@ impl TaskMemoryTrace {
     }
 
     pub fn remove_task(&self, task_id: usize) {
-        let _s = ShadeMemTrace::new();
+        // let _s = ShadeMemTrace::new();
         let index = task_id & self.mask;
         let mut w = self.shards[index]
             .write()
