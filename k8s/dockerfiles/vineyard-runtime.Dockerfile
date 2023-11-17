@@ -10,15 +10,17 @@ FROM ubuntu:22.04 AS runtime
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64:/opt/graphscope/lib:/opt/graphscope/lib64
 
 RUN apt-get update -y && \
-    apt-get install --no-install-recommends -y sudo \
-                       libunwind-dev \
-                       libgomp1 \
-                       openmpi-bin \
-                       libgflags-dev \
-                       libgoogle-glog-dev \
-                       libboost-filesystem-dev \
-                       wget \
-                       ca-certificates && \
+    apt-get install --no-install-recommends -y \
+        sudo \
+        libunwind-dev \
+        libgomp1 \
+        openmpi-bin \
+        libgflags-dev \
+        libgoogle-glog-dev \
+        libboost-filesystem-dev \
+        wget \
+        ca-certificates \
+        tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

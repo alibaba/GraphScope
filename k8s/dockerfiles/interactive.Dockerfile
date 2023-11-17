@@ -27,7 +27,7 @@ ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk && \
+    apt-get install -y sudo default-jdk tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
