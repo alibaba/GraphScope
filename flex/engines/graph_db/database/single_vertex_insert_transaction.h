@@ -23,14 +23,14 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class ArenaAllocator;
+class MMapAllocator;
 class WalWriter;
 class VersionManager;
 
 class SingleVertexInsertTransaction {
  public:
   SingleVertexInsertTransaction(MutablePropertyFragment& graph,
-                                ArenaAllocator& alloc, WalWriter& logger,
+                                MMapAllocator& alloc, WalWriter& logger,
                                 VersionManager& vm, timestamp_t timestamp);
   ~SingleVertexInsertTransaction();
 
@@ -58,7 +58,7 @@ class SingleVertexInsertTransaction {
   std::vector<vid_t> parsed_endpoints_;
 
   MutablePropertyFragment& graph_;
-  ArenaAllocator& alloc_;
+  MMapAllocator& alloc_;
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

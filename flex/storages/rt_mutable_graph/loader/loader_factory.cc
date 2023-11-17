@@ -18,9 +18,10 @@
 namespace gs {
 
 std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
-    const Schema& schema, const LoadingConfig& loading_config, int thread_num) {
+    const std::string& work_dir, const Schema& schema,
+    const LoadingConfig& loading_config, int thread_num) {
   if (loading_config.GetFormat() == "csv") {
-    return std::make_shared<CSVFragmentLoader>(schema, loading_config,
+    return std::make_shared<CSVFragmentLoader>(work_dir, schema, loading_config,
                                                thread_num);
   } else {
     LOG(FATAL) << "Unsupported format: " << loading_config.GetFormat();

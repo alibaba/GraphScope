@@ -41,13 +41,13 @@ class MutablePropertyFragment {
 
   void IngestEdge(label_t src_label, vid_t src_lid, label_t dst_label,
                   vid_t dst_lid, label_t edge_label, timestamp_t ts,
-                  grape::OutArchive& arc, ArenaAllocator& alloc);
+                  grape::OutArchive& arc, MMapAllocator& alloc);
+
+  void Open(const std::string& work_dir);
+  void Dump(const std::string& work_dir, uint32_t version);
+  void DumpSchema(const std::string& filename);
 
   const Schema& schema() const;
-
-  void Serialize(const std::string& prefix);
-
-  void Deserialize(const std::string& prefix);
 
   Table& get_vertex_table(label_t vertex_label);
 
@@ -91,6 +91,8 @@ class MutablePropertyFragment {
 
   const MutableCsrBase* get_ie_csr(label_t label, label_t neighbor_label,
                                    label_t edge_label) const;
+
+  void loadSchema(const std::string& filename);
 
   Schema schema_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;

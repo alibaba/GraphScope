@@ -14,7 +14,6 @@
  */
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/engines/hqps_db/database/mutable_csr_interface.h"
-#include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/tests/hqps/match_query.h"
 #include "flex/tests/hqps/sample_query.h"
 
@@ -24,18 +23,15 @@ int main(int argc, char** argv) {
   // <oid> <label_name>
   if (argc != 4) {
     LOG(ERROR) << "Usage: ./query_test <graph_schema> "
-                  "<bulk_load_yaml> <data_dir>";
+                  "<data_dir>";
     return 1;
   }
   auto graph_schema = std::string(argv[1]);
-  auto bulk_load_yaml = std::string(argv[2]);
-  auto data_dir = std::string(argv[3]);
+  auto data_dir = std::string(argv[2]);
 
   auto& db = gs::GraphDB::get();
   auto schema = gs::Schema::LoadFromYaml(graph_schema);
-  auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_yaml);
-  db.Init(schema, loading_config, data_dir, 1);
+  db.Init(schema, data_dir, 1);
   auto& sess = gs::GraphDB::get().GetSession(0);
 
   {

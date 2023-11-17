@@ -33,9 +33,13 @@ class ArenaAllocator;
 
 class GraphDBSession {
  public:
-  GraphDBSession(GraphDB& db, ArenaAllocator& alloc, WalWriter& logger,
-                 int thread_id)
-      : db_(db), alloc_(alloc), logger_(logger), thread_id_(thread_id) {
+  GraphDBSession(GraphDB& db, MMapAllocator& alloc, WalWriter& logger,
+                 const std::string& work_dir, int thread_id)
+      : db_(db),
+        alloc_(alloc),
+        logger_(logger),
+        work_dir_(work_dir),
+        thread_id_(thread_id) {
     for (auto& app : apps_) {
       app = nullptr;
     }
@@ -50,7 +54,7 @@ class GraphDBSession {
 
   SingleEdgeInsertTransaction GetSingleEdgeInsertTransaction();
 
-  UpdateTransaction GetUpdateTransaction();
+  UpdateTransaction GetUpdateTransaction(bool flag = true);
 
   const MutablePropertyFragment& graph() const;
   MutablePropertyFragment& graph();
@@ -71,8 +75,9 @@ class GraphDBSession {
 
  private:
   GraphDB& db_;
-  ArenaAllocator& alloc_;
+  MMapAllocator& alloc_;
   WalWriter& logger_;
+  std::string work_dir_;
   int thread_id_;
 
   std::array<AppWrapper, 256> app_wrappers_;

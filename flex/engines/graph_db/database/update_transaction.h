@@ -30,21 +30,36 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class ArenaAllocator;
+class MMapAllocator;
 class WalWriter;
 class VersionManager;
 
 class UpdateTransaction {
  public:
-  UpdateTransaction(MutablePropertyFragment& graph, ArenaAllocator& alloc,
+  UpdateTransaction(MutablePropertyFragment& graph, MMapAllocator& alloc,
                     WalWriter& logger, VersionManager& vm,
                     timestamp_t timestamp);
+
+  UpdateTransaction(MutablePropertyFragment& graph, MMapAllocator& alloc,
+                    const std::string& work_dir, WalWriter& logger,
+                    VersionManager& vm, timestamp_t timestamp);
 
   ~UpdateTransaction();
 
   timestamp_t timestamp() const;
 
   void Commit();
+
+  void BatchCommit(
+      std::vector<std::tuple<label_t, vid_t, std::vector<Any>>>&&
+          update_vertices,
+      std::vector<std::tuple<std::shared_ptr<MutableCsrEdgeIterBase>,
+                             std::shared_ptr<MutableCsrEdgeIterBase>, Any>>&&
+          update_edges,
+      std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insert_vertices,
+      std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
+          insert_edges,
+      grape::InArchive& arc);
 
   void Abort();
 
@@ -136,8 +151,9 @@ class UpdateTransaction {
                           label_t neighbor_label, vid_t nbr, label_t edge_label,
                           Any& ret) const;
 
-  static void IngestWal(MutablePropertyFragment& graph, uint32_t timestamp,
-                        char* data, size_t length, ArenaAllocator& alloc);
+  static void IngestWal(MutablePropertyFragment& graph,
+                        const std::string& work_dir, uint32_t timestamp,
+                        char* data, size_t length, MMapAllocator& alloc);
 
  private:
   size_t get_in_csr_index(label_t src_label, label_t dst_label,
@@ -157,7 +173,7 @@ class UpdateTransaction {
   void applyEdgesUpdates();
 
   MutablePropertyFragment& graph_;
-  ArenaAllocator& alloc_;
+  MMapAllocator& alloc_;
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

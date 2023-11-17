@@ -20,13 +20,25 @@
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
 #include "flex/engines/graph_db/database/wal.h"
+#include "flex/storages/rt_mutable_graph/file_names.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
 namespace gs {
 
 UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
-                                     ArenaAllocator& alloc, WalWriter& logger,
+                                     MMapAllocator& alloc, WalWriter& logger,
                                      VersionManager& vm, timestamp_t timestamp)
+    : graph_(graph),
+      alloc_(alloc),
+      logger_(logger),
+      vm_(vm),
+      timestamp_(timestamp) {}
+
+UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
+                                     MMapAllocator& alloc,
+                                     const std::string& work_dir,
+                                     WalWriter& logger, VersionManager& vm,
+                                     timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),
       logger_(logger),
@@ -65,10 +77,19 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
   }
   vertex_offsets_.resize(vertex_label_num_);
   extra_vertex_properties_.resize(vertex_label_num_);
+  std::string txn_work_dir = update_txn_dir(work_dir, 0);
+  if (std::filesystem::exists(txn_work_dir)) {
+    std::filesystem::remove_all(txn_work_dir);
+  }
+  std::filesystem::create_directories(txn_work_dir);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     const Table& table = graph_.get_vertex_table(i);
-    extra_vertex_properties_[i].init(table.column_names(), table.column_types(),
-                                     {}, 4096);
+    std::string v_label = graph_.schema().get_vertex_label_name(i);
+    std::string table_prefix = vertex_table_prefix(v_label);
+    extra_vertex_properties_[i].init(table_prefix, txn_work_dir,
+                                     table.column_names(), table.column_types(),
+                                     {});
+    extra_vertex_properties_[i].resize(4096);
   }
 
   size_t csr_num = 2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_;
@@ -100,6 +121,91 @@ void UpdateTransaction::Commit() {
   release();
 }
 
+template <class Fn, class T>
+void applyBatchUpdate(Fn&& fn, std::vector<T>&& vec) {
+  static constexpr int commit_thread_num = 8;
+  static constexpr int multi_thread_limit = 1024;
+  int num = vec.size();
+  if (num < multi_thread_limit) {
+    for (auto& e : vec) {
+      fn(std::forward<T>(e));
+    }
+  } else {
+    std::vector<std::thread> threads;
+    num /= commit_thread_num;
+    for (int i = 0; i < commit_thread_num; ++i) {
+      threads.emplace_back([&, i, num] {
+        for (size_t idx = i * num; idx < (i + 1) * num && idx < vec.size();
+             ++idx) {
+          fn(std::move(vec[idx]));
+        }
+      });
+    }
+    for (auto& t : threads) {
+      t.join();
+    }
+  }
+}
+
+void UpdateTransaction::BatchCommit(
+    std::vector<std::tuple<label_t, vid_t, std::vector<Any>>>&& update_vertices,
+    std::vector<std::tuple<std::shared_ptr<MutableCsrEdgeIterBase>,
+                           std::shared_ptr<MutableCsrEdgeIterBase>, Any>>&&
+        update_edges,
+    std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insert_vertices,
+    std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
+        insert_edges,
+    grape::InArchive& arc) {
+  if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
+    return;
+  }
+  auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
+  header->length = arc.GetSize() - sizeof(WalHeader);
+  header->type = 1;
+  header->timestamp = timestamp_;
+  logger_.append(arc.GetBuffer(), arc.GetSize());
+  applyBatchUpdate(
+      [&](std::tuple<label_t, vid_t, std::vector<Any>>&& v) {
+        const auto& [label, vid, prop] = v;
+        graph_.get_vertex_table(label).insert(vid, prop);
+      },
+      std::move(update_vertices));
+  applyBatchUpdate(
+      [&](std::tuple<label_t, Any, std::vector<Any>>&& v) {
+        const auto& [label, oid, prop] = v;
+        vid_t lid = graph_.add_vertex(label, oid);
+        graph_.get_vertex_table(label).insert(lid, prop);
+      },
+      std::move(insert_vertices));
+  applyBatchUpdate(
+      [&](std::tuple<std::shared_ptr<MutableCsrEdgeIterBase>,
+                     std::shared_ptr<MutableCsrEdgeIterBase>, Any>&& e) {
+        const auto& [in_iter, out_iter, prop] = e;
+        if (in_iter != nullptr) {
+          in_iter->set_data(prop, timestamp_);
+        }
+        if (out_iter != nullptr) {
+          out_iter->set_data(prop, timestamp_);
+        }
+      },
+      std::move(update_edges));
+  applyBatchUpdate(
+      [&](std::tuple<label_t, Any, label_t, Any, label_t, Any>&& e) {
+        const auto& [src_label, src, dst_label, dst, edge_label, prop] = e;
+        grape::InArchive arc;
+        arc << prop;
+        vid_t src_lid, dst_lid;
+
+        graph_.get_lid(src_label, src, src_lid);
+        graph_.get_lid(dst_label, dst, dst_lid);
+        grape::OutArchive out_arc(std::move(arc));
+        graph_.IngestEdge(src_label, src_lid, dst_label, dst_lid, edge_label,
+                          timestamp_, out_arc, alloc_);
+      },
+      std::move(insert_edges));
+  release();
+}
+
 void UpdateTransaction::Abort() { release(); }
 
 bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
@@ -113,6 +219,10 @@ bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
   int col_num = types.size();
   for (int col_i = 0; col_i != col_num; ++col_i) {
     if (props[col_i].type != types[col_i]) {
+      if (types[col_i] == PropertyType::kStringMap &&
+          props[col_i].type == PropertyType::kString) {
+        continue;
+      }
       return false;
     }
   }
@@ -421,8 +531,9 @@ bool UpdateTransaction::GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
 }
 
 void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
+                                  const std::string& work_dir,
                                   uint32_t timestamp, char* data, size_t length,
-                                  ArenaAllocator& alloc) {
+                                  MMapAllocator& alloc) {
   std::vector<std::shared_ptr<IdIndexerBase<vid_t>>> added_vertices;
   std::vector<vid_t> added_vertices_base;
   std::vector<vid_t> vertex_nums;
@@ -465,10 +576,15 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
   }
   vertex_offsets.resize(vertex_label_num);
   extra_vertex_properties.resize(vertex_label_num);
+  std::string txn_work_dir = update_txn_dir(work_dir, timestamp);
+  std::filesystem::create_directories(txn_work_dir);
   for (size_t i = 0; i < vertex_label_num; ++i) {
     const Table& table = graph.get_vertex_table(i);
-    extra_vertex_properties[i].init(table.column_names(), table.column_types(),
-                                    {}, 4096);
+    std::string v_label = graph.schema().get_vertex_label_name(i);
+    std::string table_prefix = vertex_table_prefix(v_label);
+    extra_vertex_properties[i].init(
+        table_prefix, work_dir, table.column_names(), table.column_types(), {});
+    extra_vertex_properties[i].resize(4096);
   }
 
   size_t csr_num = 2 * vertex_label_num * vertex_label_num * edge_label_num;

@@ -271,7 +271,8 @@ static void set_vertex_properties(gs::ColumnBase* col,
                      std::move(AnyConverter<float>::to_any(casted->Value(k))));
       }
     }
-  } else if (col_type == PropertyType::kString) {
+  } else if (col_type == PropertyType::kString ||
+             col_type == PropertyType::kStringMap) {
     CHECK(type == arrow::large_utf8() || type == arrow::utf8())
         << "Inconsistent data type, expect string, but got "
         << type->ToString();
@@ -443,11 +444,11 @@ static void append_edges(
     CHECK(src_col->length() == edata_col->length());
     size_t cur_ind = old_size;
     auto type = edata_col->type();
-    if (type != TypeConverter<EDATA_T>::ArrowTypeValue()) {
-      LOG(FATAL) << "Inconsistent data type, expect "
-                 << TypeConverter<EDATA_T>::ArrowTypeValue()->ToString()
-                 << ", but got " << type->ToString();
-    }
+    // if (type != TypeConverter<EDATA_T>::ArrowTypeValue()) {
+    // LOG(FATAL) << "Inconsistent data type, expect "
+    //          << TypeConverter<EDATA_T>::ArrowTypeValue()->ToString()
+    //        << ", but got " << type->ToString();
+    //}
 
     using arrow_array_type =
         typename gs::TypeConverter<EDATA_T>::ArrowArrayType;
@@ -1760,11 +1761,11 @@ void CSVFragmentLoader::loadEdges() {
   }
 }
 
-void CSVFragmentLoader::LoadFragment(MutablePropertyFragment& fragment) {
+void CSVFragmentLoader::LoadFragment() {
   loadVertices();
   loadEdges();
 
-  return basic_fragment_loader_.LoadFragment(fragment);
+  return basic_fragment_loader_.LoadFragment();
 }
 
 }  // namespace gs

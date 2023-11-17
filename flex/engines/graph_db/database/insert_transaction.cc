@@ -18,11 +18,12 @@
 #include "flex/engines/graph_db/database/version_manager.h"
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
+#include "flex/utils/allocators.h"
 
 namespace gs {
 
 InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
-                                     ArenaAllocator& alloc, WalWriter& logger,
+                                     MMapAllocator& alloc, WalWriter& logger,
                                      VersionManager& vm, timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),
@@ -139,7 +140,7 @@ timestamp_t InsertTransaction::timestamp() const { return timestamp_; }
 
 void InsertTransaction::IngestWal(MutablePropertyFragment& graph,
                                   uint32_t timestamp, char* data, size_t length,
-                                  ArenaAllocator& alloc) {
+                                  MMapAllocator& alloc) {
   grape::OutArchive arc;
   arc.SetSlice(data, length);
   while (!arc.Empty()) {

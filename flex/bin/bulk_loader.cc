@@ -13,30 +13,27 @@
  * limitations under the License.
  */
 
-#include "grape/util.h"
-
-#include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/http_server/graph_db_service.h"
-#include "flex/engines/http_server/options.h"
-
-#include <boost/program_options.hpp>
-#include <seastar/core/alien.hh>
+#include <filesystem>
+#include <iostream>
 
 #include <glog/logging.h>
 
-using namespace server;
+#include <boost/program_options.hpp>
+
+#include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/http_server/options.h"
+
 namespace bpo = boost::program_options;
 
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
   desc.add_options()("help", "Display help message")(
-      "version,v", "Display version")("shard-num,s",
+      "version,v", "Display version")("parallelism,p",
                                       bpo::value<uint32_t>()->default_value(1),
-                                      "shard number of actor system")(
-      "http-port,p", bpo::value<uint16_t>()->default_value(10000),
-      "http port of query handler")("graph-config,g", bpo::value<std::string>(),
-                                    "graph schema config file")(
-      "data-path,d", bpo::value<std::string>(), "data directory path");
+                                      "parallelism of bulk loader")(
+      "data-path,d", bpo::value<std::string>(), "data directory path")(
+      "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -48,17 +45,16 @@ int main(int argc, char** argv) {
     std::cout << desc << std::endl;
     return 0;
   }
+
   if (vm.count("version")) {
     std::cout << "GraphScope/Flex version " << FLEX_VERSION << std::endl;
     return 0;
   }
 
-  bool enable_dpdk = false;
-  uint32_t shard_num = vm["shard-num"].as<uint32_t>();
-  uint16_t http_port = vm["http-port"].as<uint16_t>();
-
-  std::string graph_schema_path = "";
+  uint32_t parallelism = vm["parallelism"].as<uint32_t>();
   std::string data_path = "";
+  std::string bulk_load_config_path = "";
+  std::string graph_schema_path = "";
 
   if (!vm.count("graph-config")) {
     LOG(ERROR) << "graph-config is required";
@@ -70,24 +66,32 @@ int main(int argc, char** argv) {
     return -1;
   }
   data_path = vm["data-path"].as<std::string>();
+  if (!vm.count("bulk-load")) {
+    LOG(ERROR) << "bulk-load-config is required";
+    return -1;
+  }
+  bulk_load_config_path = vm["bulk-load"].as<std::string>();
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
 
-  double t0 = -grape::GetCurrentTime();
-  auto& db = gs::GraphDB::get();
-
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  db.Init(schema, data_path, shard_num);
+  auto loading_config =
+      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
 
-  t0 += grape::GetCurrentTime();
+  std::filesystem::path data_dir_path(data_path);
+  if (!std::filesystem::exists(data_dir_path)) {
+    std::filesystem::create_directory(data_dir_path);
+  }
+  std::filesystem::path serial_path = data_dir_path / "schema";
+  if (std::filesystem::exists(serial_path)) {
+    LOG(ERROR) << "data directory is not empty";
+    return -1;
+  }
 
-  LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
-
-  // start service
-  LOG(INFO) << "GraphScope http server start to listen on port " << http_port;
-  server::GraphDBService::get().init(shard_num, http_port, enable_dpdk);
-  server::GraphDBService::get().run_and_wait_for_exit();
+  auto loader = gs::LoaderFactory::CreateFragmentLoader(
+      data_dir_path.string(), schema, loading_config, parallelism);
+  loader->LoadFragment();
 
   return 0;
 }

@@ -14,6 +14,7 @@
  */
 
 #include "flex/utils/property/column.h"
+#include "flex/utils/id_indexer.h"
 #include "flex/utils/property/types.h"
 
 #include "grape/serialization/out_archive.h"
@@ -26,7 +27,18 @@ class TypedEmptyColumn : public ColumnBase {
   TypedEmptyColumn() {}
   ~TypedEmptyColumn() {}
 
-  void init(size_t max_size) override {}
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {}
+  void touch(const std::string& filename) override {}
+  void dump(const std::string& filename) override {}
+  void copy_to_tmp(const std::string& cur_path,
+                   const std::string& tmp_path) override {}
+  // void clear() override {}
+  void close() override {}
+  size_t size() const override { return 0; }
+  void resize(size_t size) override {}
+
+  PropertyType type() const override { return AnyConverter<T>::type; }
 
   void set_value(size_t index, const T& val) {}
 
@@ -34,19 +46,7 @@ class TypedEmptyColumn : public ColumnBase {
 
   T get_view(size_t index) const { T{}; }
 
-  PropertyType type() const override { return AnyConverter<T>::type; }
-
   Any get(size_t index) const override { return Any(); }
-
-  size_t size() const override { return 0; }
-
-  void clear() override {}
-
-  void resize(size_t) override {}
-
-  void Serialize(const std::string& path, size_t size) override {}
-
-  void Deserialize(const std::string& path) override {}
 
   void ingest(uint32_t index, grape::OutArchive& arc) override {
     T val;
@@ -89,6 +89,8 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<DateEmptyColumn>();
     } else if (type == PropertyType::kString) {
       return std::make_shared<StringEmptyColumn>();
+    } else if (type == PropertyType::kStringMap) {
+      return std::make_shared<StringEmptyColumn>();
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type);
@@ -113,6 +115,8 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<DateColumn>(strategy);
     } else if (type == PropertyType::kString) {
       return std::make_shared<StringColumn>(strategy);
+    } else if (type == PropertyType::kStringMap) {
+      return std::make_shared<StringMapColumn<uint8_t>>(strategy);
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type);

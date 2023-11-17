@@ -16,6 +16,7 @@
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
+#include "flex/storages/rt_mutable_graph/file_names.h"
 #include "flex/utils/property/types.h"
 
 namespace gs {
@@ -23,74 +24,41 @@ namespace gs {
 MutablePropertyFragment::MutablePropertyFragment() {}
 
 MutablePropertyFragment::~MutablePropertyFragment() {
-  for (auto ptr : ie_) {
-    if (ptr != NULL) {
-      delete ptr;
-    }
-  }
-  for (auto ptr : oe_) {
-    if (ptr != NULL) {
-      delete ptr;
-    }
-  }
-}
-
-void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
-                                         label_t dst_label, vid_t dst_lid,
-                                         label_t edge_label, timestamp_t ts,
-                                         grape::OutArchive& arc,
-                                         ArenaAllocator& alloc) {
-  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
-                 dst_label * edge_label_num_ + edge_label;
-  ie_[index]->peek_ingest_edge(dst_lid, src_lid, arc, ts, alloc);
-  oe_[index]->ingest_edge(src_lid, dst_lid, arc, ts, alloc);
-}
-
-const Schema& MutablePropertyFragment::schema() const { return schema_; }
-
-void MutablePropertyFragment::Serialize(const std::string& prefix) {
-  std::string data_dir = prefix + "/data";
-  if (!std::filesystem::exists(data_dir)) {
-    std::filesystem::create_directory(data_dir);
-  }
-  auto io_adaptor = std::unique_ptr<grape::LocalIOAdaptor>(
-      new grape::LocalIOAdaptor(prefix + "/init_snapshot.bin"));
-  io_adaptor->Open("wb");
-  schema_.Serialize(io_adaptor);
+  std::vector<size_t> degree_list(vertex_label_num_, 0);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
-    lf_indexers_[i].Serialize(data_dir + "/indexer_" + std::to_string(i));
+    degree_list[i] = lf_indexers_[i].size();
+    vertex_data_[i].resize(degree_list[i]);
   }
-  label_t cur_index = 0;
-  for (auto& table : vertex_data_) {
-    table.Serialize(io_adaptor,
-                    data_dir + "/vtable_" + std::to_string(cur_index),
-                    vertex_num(cur_index));
-    ++cur_index;
-  }
-  for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
-       ++src_label_i) {
-    std::string src_label =
-        schema_.get_vertex_label_name(static_cast<label_t>(src_label_i));
-    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
-         ++dst_label_i) {
-      std::string dst_label =
-          schema_.get_vertex_label_name(static_cast<label_t>(dst_label_i));
-      for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
-        std::string edge_label =
-            schema_.get_edge_label_name(static_cast<label_t>(e_label_i));
-        if (!schema_.exist(src_label, dst_label, edge_label)) {
-          continue;
+  for (size_t src_label = 0; src_label != vertex_label_num_; ++src_label) {
+    for (size_t dst_label = 0; dst_label != vertex_label_num_; ++dst_label) {
+      for (size_t e_label = 0; e_label != edge_label_num_; ++e_label) {
+        size_t index = src_label * vertex_label_num_ * edge_label_num_ +
+                       dst_label * edge_label_num_ + e_label;
+        if (ie_[index] != NULL) {
+          ie_[index]->resize(degree_list[dst_label]);
+          delete ie_[index];
         }
-        size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
-                       dst_label_i * edge_label_num_ + e_label_i;
-        ie_[index]->Serialize(data_dir + "/ie_" + src_label + "_" + dst_label +
-                              "_" + edge_label);
-        oe_[index]->Serialize(data_dir + "/oe_" + src_label + "_" + dst_label +
-                              "_" + edge_label);
+        if (oe_[index] != NULL) {
+          oe_[index]->resize(degree_list[src_label]);
+          delete oe_[index];
+        }
       }
     }
   }
+}
 
+void MutablePropertyFragment::loadSchema(const std::string& schema_path) {
+  auto io_adaptor = std::unique_ptr<grape::LocalIOAdaptor>(
+      new grape::LocalIOAdaptor(schema_path));
+  io_adaptor->Open();
+  schema_.Deserialize(io_adaptor);
+}
+
+void MutablePropertyFragment::DumpSchema(const std::string& schema_path) {
+  auto io_adaptor = std::unique_ptr<grape::LocalIOAdaptor>(
+      new grape::LocalIOAdaptor(schema_path));
+  io_adaptor->Open("wb");
+  schema_.Serialize(io_adaptor);
   io_adaptor->Close();
 }
 
@@ -169,34 +137,68 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
       return new EmptyCsr<float>();
     }
   }
-
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;
 }
 
-void MutablePropertyFragment::Deserialize(const std::string& prefix) {
-  std::string data_dir = prefix + "/data";
-  auto io_adaptor = std::unique_ptr<grape::LocalIOAdaptor>(
-      new grape::LocalIOAdaptor(prefix + "/init_snapshot.bin"));
-  io_adaptor->Open();
-  schema_.Deserialize(io_adaptor);
+std::string get_latest_snapshot(const std::string& work_dir) {
+  std::string snapshots_dir = work_dir + "/snapshots";
+  uint32_t version;
+  {
+    FILE* fin = fopen((snapshots_dir + "/VERSION").c_str(), "r");
+    fread(&version, sizeof(uint32_t), 1, fin);
+  }
+  return snapshots_dir + "/" + std::to_string(version);
+}
 
+void copy_files_to_tmp(const std::string& snapshot_dir,
+                       const std::string& tmp_dir) {
+  std::vector<std::string> files_to_copy;
+  for (const auto& entry : std::filesystem::directory_iterator(snapshot_dir)) {
+    std::string filename = entry.path().filename().string();
+    if (filename.substr(0, 11) == "vertex_map_") {
+      files_to_copy.push_back(filename);
+    } else if (filename.substr(filename.size() - 5, 5) == ".snbr") {
+      files_to_copy.push_back(filename);
+    }
+  }
+  for (auto& filename : files_to_copy) {
+    copy_file(snapshot_dir + "/" + filename, tmp_dir + "/" + filename);
+  }
+}
+
+void MutablePropertyFragment::Open(const std::string& work_dir) {
+  loadSchema(schema_path(work_dir));
   vertex_label_num_ = schema_.vertex_label_num();
   edge_label_num_ = schema_.edge_label_num();
+
   lf_indexers_.resize(vertex_label_num_);
   vertex_data_.resize(vertex_label_num_);
+  std::string snapshot_dir = get_latest_snapshot(work_dir);
+  std::string tmp_dir_path = tmp_dir(work_dir);
+  std::filesystem::create_directory(tmp_dir_path);
+  // copy_files_to_tmp(snapshot_dir, tmp_dir_path);
+  std::vector<size_t> vertex_capacities(vertex_label_num_, 0);
+  for (size_t i = 0; i < vertex_label_num_; ++i) {
+    std::string v_label_name = schema_.get_vertex_label_name(i);
+    lf_indexers_[i].open(vertex_map_prefix(v_label_name), snapshot_dir,
+                         tmp_dir_path);
+
+    vertex_data_[i].open(vertex_table_prefix(v_label_name), snapshot_dir,
+                         tmp_dir_path, schema_.get_vertex_property_names(i),
+                         schema_.get_vertex_properties(i),
+                         schema_.get_vertex_storage_strategies(v_label_name));
+    vertex_data_[i].touch(vertex_table_prefix(v_label_name), tmp_dir_path);
+    size_t vertex_capacity = lf_indexers_[i].capacity();
+    // LOG(INFO) << vertex_num << " " << vertex_capacity << " cap\n";
+    vertex_data_[i].resize(vertex_capacity);
+    // lf_indexers_[i].resize_keys(vertex_capacity);
+    vertex_capacities[i] = vertex_capacity;
+  }
+
   ie_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
   oe_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
 
-  for (size_t i = 0; i < vertex_label_num_; ++i) {
-    lf_indexers_[i].Deserialize(data_dir + "/indexer_" + std::to_string(i));
-  }
-  label_t cur_index = 0;
-  for (auto& table : vertex_data_) {
-    table.Deserialize(io_adaptor,
-                      data_dir + "/vtable_" + std::to_string(cur_index));
-    cur_index += 1;
-  }
   for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
        ++src_label_i) {
     std::string src_label =
@@ -221,14 +223,75 @@ void MutablePropertyFragment::Deserialize(const std::string& prefix) {
             src_label, dst_label, edge_label);
         ie_[index] = create_csr(ie_strategy, properties);
         oe_[index] = create_csr(oe_strategy, properties);
-        ie_[index]->Deserialize(data_dir + "/ie_" + src_label + "_" +
-                                dst_label + "_" + edge_label);
-        oe_[index]->Deserialize(data_dir + "/oe_" + src_label + "_" +
-                                dst_label + "_" + edge_label);
+        ie_[index]->open(ie_prefix(src_label, dst_label, edge_label),
+                         snapshot_dir, tmp_dir_path);
+        ie_[index]->resize(vertex_capacities[dst_label_i]);
+        oe_[index]->open(oe_prefix(src_label, dst_label, edge_label),
+                         snapshot_dir, tmp_dir_path);
+        oe_[index]->resize(vertex_capacities[src_label_i]);
       }
     }
   }
 }
+
+void MutablePropertyFragment::Dump(const std::string& work_dir,
+                                   uint32_t version) {
+  std::string snapshot_dir_path = snapshot_dir(work_dir, version);
+  std::filesystem::create_directories(snapshot_dir_path);
+  std::vector<size_t> vertex_num(vertex_label_num_, 0);
+  for (size_t i = 0; i < vertex_label_num_; ++i) {
+    vertex_num[i] = lf_indexers_[i].size();
+    lf_indexers_[i].dump(vertex_map_prefix(schema_.get_vertex_label_name(i)),
+                         snapshot_dir_path);
+    vertex_data_[i].resize(vertex_num[i]);
+    vertex_data_[i].dump(vertex_table_prefix(schema_.get_vertex_label_name(i)),
+                         snapshot_dir_path);
+  }
+
+  for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
+       ++src_label_i) {
+    std::string src_label =
+        schema_.get_vertex_label_name(static_cast<label_t>(src_label_i));
+    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
+         ++dst_label_i) {
+      std::string dst_label =
+          schema_.get_vertex_label_name(static_cast<label_t>(dst_label_i));
+      for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
+        std::string edge_label =
+            schema_.get_edge_label_name(static_cast<label_t>(e_label_i));
+        if (!schema_.exist(src_label, dst_label, edge_label)) {
+          continue;
+        }
+        size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
+                       dst_label_i * edge_label_num_ + e_label_i;
+        if (ie_[index] != NULL) {
+          ie_[index]->resize(vertex_num[dst_label_i]);
+          ie_[index]->dump(ie_prefix(src_label, dst_label, edge_label),
+                           snapshot_dir_path);
+        }
+        if (oe_[index] != NULL) {
+          oe_[index]->resize(vertex_num[src_label_i]);
+          oe_[index]->dump(oe_prefix(src_label, dst_label, edge_label),
+                           snapshot_dir_path);
+        }
+      }
+    }
+  }
+  set_snapshot_version(work_dir, version);
+}
+
+void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
+                                         label_t dst_label, vid_t dst_lid,
+                                         label_t edge_label, timestamp_t ts,
+                                         grape::OutArchive& arc,
+                                         MMapAllocator& alloc) {
+  size_t index = src_label * vertex_label_num_ * edge_label_num_ +
+                 dst_label * edge_label_num_ + edge_label;
+  ie_[index]->peek_ingest_edge(dst_lid, src_lid, arc, ts, alloc);
+  oe_[index]->ingest_edge(src_lid, dst_lid, arc, ts, alloc);
+}
+
+const Schema& MutablePropertyFragment::schema() const { return schema_; }
 
 Table& MutablePropertyFragment::get_vertex_table(label_t vertex_label) {
   return vertex_data_[vertex_label];

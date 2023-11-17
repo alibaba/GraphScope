@@ -155,7 +155,6 @@ int main(int argc, char** argv) {
       "version,v", "Display version")("shard-num,s",
                                       bpo::value<uint32_t>()->default_value(1),
                                       "shard number of actor system")(
-      "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
       "warmup-num,w", bpo::value<uint32_t>()->default_value(0),
@@ -187,11 +186,6 @@ int main(int argc, char** argv) {
   std::string data_path = "";
   std::string bulk_load_config_path = "";
 
-  if (!vm.count("graph-config")) {
-    LOG(ERROR) << "graph-config is required";
-    return -1;
-  }
-  graph_schema_path = vm["graph-config"].as<std::string>();
   if (!vm.count("data-path")) {
     LOG(ERROR) << "data-path is required";
     return -1;
@@ -208,9 +202,7 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
-  db.Init(schema, loading_config, data_path, shard_num);
+  db.Init(schema, data_path, shard_num);
 
   t0 += grape::GetCurrentTime();
   uint32_t warmup_num = vm["warmup-num"].as<uint32_t>();
