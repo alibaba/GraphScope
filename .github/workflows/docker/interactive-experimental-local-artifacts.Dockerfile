@@ -5,7 +5,7 @@ FROM ubuntu:22.04
 ADD artifacts/artifacts.tar.gz /opt/graphscope/
 
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk && \
+    apt-get install -y sudo default-jdk tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

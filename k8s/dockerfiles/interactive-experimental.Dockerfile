@@ -21,7 +21,7 @@ COPY --from=builder /home/graphscope/GraphScope/interactive_engine/executor/ir/t
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/executor/ir/target/release/start_rpc_server_k8s /opt/graphscope/interactive_engine/executor/ir/target/release/start_rpc_server_k8s
 
 RUN sudo apt-get update -y && \
-    sudo apt-get install -y default-jdk && \
+    sudo apt-get install -y default-jdk tzdata && \
     sudo apt-get clean -y && \
     sudo rm -rf /var/lib/apt/lists/*
 
