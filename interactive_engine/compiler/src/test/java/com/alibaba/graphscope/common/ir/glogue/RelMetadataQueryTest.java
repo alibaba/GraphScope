@@ -155,8 +155,8 @@ public class RelMetadataQueryTest {
                                 new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
         RelNode node =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "Match (p1:person {id: 1})-[:knows]-(p2:person {name: 'marko'})"
-                                        + " Return p1, p2",
+                                "Match (p1:person)-[:knows]-(p2:person)-[:knows]-(p3:person) Return"
+                                    + " p1, p2",
                                 builder)
                         .build();
         System.out.println(node.explain());

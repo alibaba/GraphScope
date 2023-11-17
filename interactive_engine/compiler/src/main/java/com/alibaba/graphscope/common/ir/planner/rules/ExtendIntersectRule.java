@@ -161,10 +161,25 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                     pattern.getDegree(v2) - pattern.getDegree(v1);
         }
 
-        // order edge by weight in ascending way
+        // order edge by weight in ascending way and then by target vertex id in descending way
         public Comparator<GraphExtendIntersect> getEdgeComparator() {
-            return Comparator.comparingDouble(
-                    (GraphExtendIntersect i) -> i.getGlogueEdge().getExtendStep().getWeight());
+            return (GraphExtendIntersect e1, GraphExtendIntersect e2) -> {
+                ExtendStep step1 = e1.getGlogueEdge().getExtendStep();
+                ExtendStep step2 = e2.getGlogueEdge().getExtendStep();
+                int compareWeight = Double.compare(step1.getWeight(), step2.getWeight());
+                if (compareWeight != 0) {
+                    return compareWeight;
+                }
+                PatternVertex targetVertex1 =
+                        e1.getGlogueEdge()
+                                .getDstPattern()
+                                .getVertexByOrder(step1.getTargetVertexOrder());
+                PatternVertex targetVertex2 =
+                        e2.getGlogueEdge()
+                                .getDstPattern()
+                                .getVertexByOrder(step2.getTargetVertexOrder());
+                return targetVertex2.getId() - targetVertex1.getId();
+            };
         }
     }
 

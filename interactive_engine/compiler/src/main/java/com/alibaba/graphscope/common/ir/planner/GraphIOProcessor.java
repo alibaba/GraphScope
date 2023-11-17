@@ -46,6 +46,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 
 import org.apache.calcite.plan.RelOptTable;
+import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
@@ -166,13 +167,13 @@ public class GraphIOProcessor {
                                 AbstractBindableTableScan tableScan) {
                             String alias = tableScan.getAliasName();
                             PatternVertex existVertex = aliasNameToVertex.get(alias);
+                            RexNode filters = getFilters(tableScan);
                             if (existVertex == null) {
                                 int vertexId = idGenerator.getAndIncrement();
                                 List<Integer> typeIds =
                                         com.alibaba.graphscope.common.ir.meta.glogue.Utils
                                                 .getVertexTypeIds(tableScan);
-                                double selectivity =
-                                        mq.getSelectivity(tableScan, getFilters(tableScan));
+                                double selectivity = mq.getSelectivity(tableScan, filters);
                                 existVertex =
                                         (typeIds.size() == 1)
                                                 ? new SinglePatternVertex(
@@ -187,8 +188,18 @@ public class GraphIOProcessor {
                                 if (alias != AliasInference.DEFAULT_NAME) {
                                     aliasNameToVertex.put(alias, existVertex);
                                 }
-                                vertexOrEdgeDetails.put(
-                                        existVertex, new DataValue(alias, getFilters(tableScan)));
+                                vertexOrEdgeDetails.put(existVertex, new DataValue(alias, filters));
+                            } else if (filters != null) {
+                                DataValue value = vertexOrEdgeDetails.get(existVertex);
+                                if (value.getFilter() == null
+                                        || !RelOptUtil.conjunctions(value.getFilter())
+                                                .contains(filters)) {
+                                    throw new IllegalArgumentException(
+                                            "filters "
+                                                    + filters
+                                                    + " not exist in the previous vertex filters "
+                                                    + value.getFilter());
+                                }
                             }
                             return existVertex;
                         }
