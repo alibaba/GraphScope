@@ -418,7 +418,7 @@ static void append_edges(
       CHECK(src_col->length() == edata_col->length());
       size_t cur_ind = old_size;
       auto type = edata_col->type();
-      if (type->Equals(TypeConverter<EDATA_T>::ArrowTypeValue())) {
+      if (!type->Equals(TypeConverter<EDATA_T>::ArrowTypeValue())) {
         LOG(FATAL) << "Inconsistent data type, expect "
                    << TypeConverter<EDATA_T>::ArrowTypeValue()->ToString()
                    << ", but got " << type->ToString();
