@@ -31,6 +31,8 @@ RUN cd /home/graphscope/GraphScope/ && \
 
 FROM ubuntu:22.04 AS coordinator
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update -y && \
     apt-get install -y sudo python3-pip openmpi-bin curl tzdata && \
     apt-get clean -y && \

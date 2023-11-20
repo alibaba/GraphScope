@@ -13,6 +13,8 @@ RUN cd /home/graphscope/GraphScope/interactive_engine/compiler \
 ############### RUNTIME: frontend && executor #######################
 FROM ubuntu:22.04 AS experimental
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/compiler/target/libs /opt/graphscope/interactive_engine/compiler/target/libs
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar /opt/graphscope/interactive_engine/compiler/target/compiler-1.0-SNAPSHOT.jar
 COPY --from=builder /home/graphscope/GraphScope/interactive_engine/compiler/conf /opt/graphscope/interactive_engine/compiler/conf

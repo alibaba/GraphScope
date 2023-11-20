@@ -4,6 +4,8 @@ ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 FROM $REGISTRY/graphscope/manylinux2014:ext AS ext
 FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
