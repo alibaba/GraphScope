@@ -45,4 +45,7 @@ public class FrontendConfig {
 
     public static final Config<Integer> QUERY_CACHE_SIZE =
             Config.intConfig("query.cache.size", 100);
+
+    public static final Config<Integer> QUERY_PER_SECOND_LIMIT =
+            Config.intConfig("query.per.second.limit", 100);
 }

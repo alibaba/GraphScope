@@ -245,10 +245,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         return null;
                     });
         } catch (RejectedExecutionException var17) {
+            statusCallback.getQueryLogger().error(var17.getMessage());
             ctx.writeAndFlush(
                     ResponseMessage.build(msg)
                             .code(ResponseStatusCode.TOO_MANY_REQUESTS)
-                            .statusMessage("Rate limiting")
+                            .statusMessage(var17.getMessage())
                             .create());
         }
     }
