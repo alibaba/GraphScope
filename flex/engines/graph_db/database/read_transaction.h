@@ -112,6 +112,15 @@ class SingleGraphView {
     return (csr_.get_edge(v).timestamp.load() <= timestamp_);
   }
 
+  bool exist2(vid_t v) const {
+    if ((csr_.get_edge(v).timestamp.load() <= timestamp_)) {
+      return true;
+    }
+    LOG(INFO) << "timestamp: " << csr_.get_edge(v).timestamp.load() << " "
+              << timestamp_ << "\n\n";
+    return false;
+  }
+
   const MutableNbr<EDATA_T>& get_edge(vid_t v) const {
     return csr_.get_edge(v);
   }

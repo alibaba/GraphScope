@@ -232,9 +232,10 @@ class LFIndexer {
   void build_empty_LFIndexer(const std::string& filename,
                              const std::string& snapshot_dir,
                              const std::string& work_dir, size_t size) {
-    keys_->open(filename + ".keys", snapshot_dir, work_dir);
+    keys_->open(filename + ".keys", "", work_dir);
     indices_.open(work_dir + "/" + filename + ".indices", false);
-    rehash(std::max(size, num_elements_.load()));
+    num_elements_.store(0);
+    indices_size_ = 0;
   }
 
   void reserve(size_t size) { rehash(std::max(size, num_elements_.load())); }
@@ -349,12 +350,10 @@ class LFIndexer {
         indices_.reset();
         keys_->close();
         keys_->open(name + ".keys", "", work_dir);
-
         dump_meta(work_dir + "/" + name + ".meta");
         keys_->close();
       } else {
-        build_empty_LFIndexer(name, work_dir, work_dir,
-                              std::numeric_limits<INDEX_T>::max());
+        build_empty_LFIndexer(name, work_dir, work_dir, 0);
         num_elements_.store(0);
         indices_.open(work_dir + "/" + name + ".indices", false);
         indices_size_ = indices_.size();
@@ -407,7 +406,7 @@ class LFIndexer {
     arc >> type;
     size_t num_elements;
     arc >> num_elements;
-    LOG(INFO) << num_elements << "num_elements 414\n";
+
     num_elements_.store(num_elements);
     arc >> num_slots_minus_one_ >> mod_function_index;
     init(type);
@@ -946,8 +945,6 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
   std::filesystem::remove(work_dir + "/" + filename + ".meta");
   lf.keys_->close();
   lf.keys_->open(filename + ".keys", snapshot_dir, "");
-
-  LOG(INFO) << "size: " << lf.keys_->size() << "\n";
 }
 
 }  // namespace gs

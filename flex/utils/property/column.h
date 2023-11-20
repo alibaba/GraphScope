@@ -72,8 +72,12 @@ class TypedColumn : public ColumnBase {
     } else {
       basic_size_ = 0;
     }
-    extra_buffer_.open(work_dir + "/" + name, false);
-    extra_size_ = extra_buffer_.size();
+    if (work_dir == "") {
+      extra_size_ = 0;
+    } else {
+      extra_buffer_.open(work_dir + "/" + name, false);
+      extra_size_ = extra_buffer_.size();
+    }
   }
   void touch(const std::string& filename) override {
     mmap_array<T> tmp;
@@ -207,9 +211,15 @@ class TypedColumn<std::string_view> : public ColumnBase {
     } else {
       basic_size_ = 0;
     }
-    extra_buffer_.open(work_dir + "/" + name, false);
-    extra_size_ = extra_buffer_.size();
-    pos_.store(extra_buffer_.data_size());
+    if (work_dir == "") {
+      extra_size_ = 0;
+      pos_.store(0);
+    } else {
+      extra_buffer_.open(work_dir + "/" + name, false);
+      extra_size_ = extra_buffer_.size();
+
+      pos_.store(extra_buffer_.data_size());
+    }
   }
 
   void touch(const std::string& filename) override {
@@ -295,7 +305,6 @@ class TypedColumn<std::string_view> : public ColumnBase {
       extra_size_ = 0;
     } else {
       basic_size_ = basic_buffer_.size();
-
       extra_size_ = size - basic_size_;
       extra_buffer_.resize(extra_size_, extra_size_ * width_);
     }
@@ -401,7 +410,7 @@ class StringMapColumn : public ColumnBase {
 
   void set_value(size_t idx, const std::string_view& val);
 
-  void set_any(size_t idx, const Any& value) {
+  void set_any(size_t idx, const Any& value) override {
     set_value(idx, AnyConverter<std::string_view>::from_any(value));
   }
 
@@ -435,6 +444,7 @@ void StringMapColumn<INDEX_T>::open(const std::string& name,
                                     const std::string& work_dir) {
   index_col_.open(name, snapshot_dir, work_dir);
   meta_map_->open(name + ".map_meta", snapshot_dir, work_dir);
+  meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
 }
 
 template <typename INDEX_T>

@@ -59,7 +59,7 @@ void VersionManager::release_read_timestamp() { pending_reqs_.fetch_sub(1); }
 uint32_t VersionManager::acquire_insert_timestamp() {
   int pr = pending_reqs_.fetch_add(1);
   if (likely(pr >= 0)) {
-    return read_ts_.load();
+    return write_ts_.fetch_add(1);
   } else {
     --pending_reqs_;
     while (true) {
@@ -67,7 +67,7 @@ uint32_t VersionManager::acquire_insert_timestamp() {
       if (pending_reqs_.load() >= 0) {
         pr = pending_reqs_.fetch_add(1);
         if (pr >= 0) {
-          return read_ts_.load();
+          return write_ts_.fetch_add(1);
         } else {
           --pending_reqs_;
         }

@@ -55,12 +55,15 @@ bool SingleVertexInsertTransaction::AddVertex(label_t label, const Any& id,
   for (int col_i = 0; col_i != col_num; ++col_i) {
     auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
-      arc_.Resize(arc_size);
-      std::string label_name = graph_.schema().get_vertex_label_name(label);
-      LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
-                 << "] property type not match, expected " << types[col_i]
-                 << ", but got " << prop.type;
-      return false;
+      if (!(prop.type == PropertyType::kString &&
+            types[col_i] == PropertyType::kStringMap)) {
+        arc_.Resize(arc_size);
+        std::string label_name = graph_.schema().get_vertex_label_name(label);
+        LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
+                   << "] property type not match, expected " << types[col_i]
+                   << ", but got " << prop.type;
+        return false;
+      }
     }
     serialize_field(arc_, prop);
   }

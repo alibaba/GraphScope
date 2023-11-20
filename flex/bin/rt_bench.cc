@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
                                       bpo::value<uint32_t>()->default_value(1),
                                       "shard number of actor system")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
+      "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "warmup-num,w", bpo::value<uint32_t>()->default_value(0),
       "num of warmup reqs")("benchmark-num,b",
                             bpo::value<uint32_t>()->default_value(0),
@@ -184,16 +184,17 @@ int main(int argc, char** argv) {
 
   std::string graph_schema_path = "";
   std::string data_path = "";
-  std::string bulk_load_config_path = "";
 
+  if (!vm.count("graph-config")) {
+    LOG(ERROR) << "graph-config is required";
+    return -1;
+  }
+  graph_schema_path = vm["graph-config"].as<std::string>();
   if (!vm.count("data-path")) {
     LOG(ERROR) << "data-path is required";
     return -1;
   }
   data_path = vm["data-path"].as<std::string>();
-  if (vm.count("bulk-load")) {
-    bulk_load_config_path = vm["bulk-load"].as<std::string>();
-  }
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
