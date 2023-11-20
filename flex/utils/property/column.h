@@ -385,7 +385,10 @@ class StringMapColumn : public ColumnBase {
   }
 
   void copy_to_tmp(const std::string& cur_path,
-                   const std::string& tmp_path) override {}
+                   const std::string& tmp_path) override {
+    meta_map_->copy_to_tmp(cur_path + ".map_meta", tmp_path + ".map_meta");
+    index_col_.copy_to_tmp(cur_path, tmp_path);
+  }
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override;
   void dump(const std::string& filename) override;

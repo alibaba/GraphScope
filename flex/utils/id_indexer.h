@@ -334,24 +334,18 @@ class LFIndexer {
 
   Any get_key(const INDEX_T& index) const { return keys_->get(index); }
 
+  void copy_to_tmp(const std::string& cur_path, const std::string& tmp_path) {
+    copy_file(cur_path + ".meta", tmp_path + ".meta");
+    copy_file(cur_path + ".keys", tmp_path + ".keys");
+    copy_file(cur_path + ".indices", tmp_path + ".indices");
+  }
+
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) {
     if (!std::filesystem::exists(work_dir + "/" + name + ".meta")) {
       if (std::filesystem::exists(snapshot_dir + "/" + name + ".meta")) {
-        load_meta(snapshot_dir + "/" + name + ".meta");
-        keys_->open(name + ".keys", snapshot_dir, work_dir);
-        keys_->copy_to_tmp(snapshot_dir + "/" + name + ".keys",
-                           work_dir + "/" + name + ".keys");
+        copy_to_tmp(snapshot_dir + "/" + name, work_dir + "/" + name);
 
-        indices_.open(snapshot_dir + "/" + name + ".indices", true);
-        indices_.touch(work_dir + "/" + name + ".indices");
-        indices_size_ = indices_.size();
-
-        indices_.reset();
-        keys_->close();
-        keys_->open(name + ".keys", "", work_dir);
-        dump_meta(work_dir + "/" + name + ".meta");
-        keys_->close();
       } else {
         build_empty_LFIndexer(name, work_dir, work_dir, 0);
         num_elements_.store(0);

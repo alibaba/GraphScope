@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <filesystem>
+#include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -354,11 +355,47 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     adj_lists_.resize(degree_list.size());
     locks_ = new grape::SpinLock[degree_list.size()];
 
-    nbr_t* ptr = nbr_list_.data();
-    for (size_t i = 0; i < degree_list.size(); ++i) {
-      int degree = degree_list[i];
-      adj_lists_[i].init(ptr, degree, degree);
-      ptr += degree;
+    std::string degree_list_idx_file = snapshot_dir + "/" + name + ".deg.idx";
+    if (std::filesystem::exists(degree_list_idx_file)) {
+      mmap_array<uint64_t> degree_list_idx;
+      degree_list_idx.open(degree_list_idx_file, true);
+      uint64_t chunk_size = degree_list_idx[0];
+      uint64_t chunk_num = degree_list_idx.size();
+      int concurrency = std::thread::hardware_concurrency();
+      std::vector<std::thread> threads;
+      std::atomic<uint64_t> chunk_i(0);
+      for (int i = 0; i < concurrency; ++i) {
+        threads.emplace_back([&]() {
+          while (true) {
+            uint64_t cur_chunk = chunk_i.fetch_add(1);
+            if (cur_chunk >= chunk_num) {
+              break;
+            }
+            uint64_t begin = cur_chunk * chunk_size;
+            uint64_t end = std::min(begin + chunk_size, degree_list.size());
+
+            uint64_t offset = cur_chunk == 0 ? 0 : degree_list_idx[cur_chunk];
+            nbr_t* ptr = nbr_list_.data() + offset;
+            while (begin < end) {
+              int degree = degree_list[begin];
+              adj_lists_[begin].init(ptr, degree, degree);
+              ptr += degree;
+              ++begin;
+            }
+          }
+        });
+      }
+      for (auto& thrd : threads) {
+        thrd.join();
+      }
+
+    } else {
+      nbr_t* ptr = nbr_list_.data();
+      for (size_t i = 0; i < degree_list.size(); ++i) {
+        int degree = degree_list[i];
+        adj_lists_[i].init(ptr, degree, degree);
+        ptr += degree;
+      }
     }
   }
 
@@ -379,6 +416,31 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       }
       degree_list[i] = adj_lists_[i].size();
       offset += degree_list[i];
+    }
+
+    {
+      size_t input_size = degree_list.size();
+      std::string degree_list_idx_file =
+          new_spanshot_dir + "/" + name + ".deg.idx";
+      if (input_size > 128 * 1024 &&
+          !std::filesystem::exists(degree_list_idx_file)) {
+        mmap_array<uint64_t> degree_list_idx;
+        degree_list_idx.open(degree_list_idx_file, false);
+
+        const uint64_t chunk_num = 128;
+        degree_list_idx.resize(chunk_num);
+
+        uint64_t chunk_size = (input_size + chunk_num - 1) / chunk_num;
+        uint64_t sum = 0;
+        for (size_t i = 0; i < input_size; ++i) {
+          // sum += degree_list[i];
+          if (i % chunk_size == 0) {
+            degree_list_idx[i / chunk_size] = sum;
+          }
+          sum += degree_list[i];
+        }
+        degree_list_idx[0] = chunk_size;
+      }
     }
 
     if (reuse_nbr_list && !nbr_list_.filename().empty() &&

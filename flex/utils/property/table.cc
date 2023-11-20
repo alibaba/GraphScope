@@ -75,6 +75,16 @@ void Table::touch(const std::string& name, const std::string& work_dir) {
   touched_ = true;
 }
 
+void Table::copy_to_tmp(const std::string& name,
+                        const std::string& snapshot_dir,
+                        const std::string& work_dir) {
+  int i = 0;
+  for (auto& col : columns_) {
+       col->copy_to_tmp(snapshot_dir + "/" + name + ".col_" + std::to_string(i),
+                     work_dir + "/" + name + ".col_" + std::to_string(i));
+    ++i;
+  }
+}
 void Table::dump(const std::string& name, const std::string& snapshot_dir) {
   int i = 0;
   for (auto col : columns_) {

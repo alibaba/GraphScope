@@ -188,11 +188,10 @@ void MutablePropertyFragment::Open(const std::string& work_dir) {
                          tmp_dir_path, schema_.get_vertex_property_names(i),
                          schema_.get_vertex_properties(i),
                          schema_.get_vertex_storage_strategies(v_label_name));
-    vertex_data_[i].touch(vertex_table_prefix(v_label_name), tmp_dir_path);
+    vertex_data_[i].copy_to_tmp(vertex_table_prefix(v_label_name), snapshot_dir,
+                                tmp_dir_path);
     size_t vertex_capacity = lf_indexers_[i].capacity();
-    // LOG(INFO) << vertex_num << " " << vertex_capacity << " cap\n";
     vertex_data_[i].resize(vertex_capacity);
-    // lf_indexers_[i].resize_keys(vertex_capacity);
     vertex_capacities[i] = vertex_capacity;
   }
 
