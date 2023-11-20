@@ -97,7 +97,10 @@ impl<T: std::fmt::Debug> std::fmt::Debug for RcPointer<T> {
 impl<T: ?Sized> Drop for RcPointer<T> {
     fn drop(&mut self) {
         if self.count.fetch_sub(1, Ordering::SeqCst) == 1 {
-            unsafe { std::ptr::drop_in_place(self.ptr.as_ptr()) }
+            //unsafe { std::ptr::drop_in_place(self.ptr.as_ptr()) }
+            unsafe {
+                let _ = Box::from_raw(self.ptr.as_ptr());
+            }
         }
     }
 }
