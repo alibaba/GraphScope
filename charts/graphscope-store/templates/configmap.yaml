@@ -129,5 +129,13 @@ data:
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
-    ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}
+
+    # For core and heap profiling
+    # ulimit -c unlimited
+    # sudo mkdir -p /apsara/cloud/data/corefile/ && sudo chown -R graphscope:graphscope /apsara/cloud/data/corefile/
+    # export _RJEM_MALLOC_CONF=prof:true,lg_prof_interval:32,lg_prof_sample:19
+    # export MALLOC_CONF=prof:true,lg_prof_interval:32
+
+    export RUST_BACKTRACE=1
+    ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}  # || sleep infinity
 {{- end -}}
