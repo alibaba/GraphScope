@@ -18,7 +18,7 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class VertexIndexMapper {
+public class ElementIndexMapper {
     private String name;
     private String indexType;
     private List<String> propertyNames;

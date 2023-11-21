@@ -343,6 +343,7 @@ impl From<std::io::Error> for StartupError {
 #[derive(Debug)]
 pub enum CancelError {
     JobNotFoundError(u64),
+    CancelMapPoisonedError,
 }
 
 impl Display for CancelError {
@@ -350,6 +351,9 @@ impl Display for CancelError {
         match self {
             CancelError::JobNotFoundError(e) => {
                 write!(f, "fail to find job, job id: {};", e)
+            }
+            CancelError::CancelMapPoisonedError => {
+                write!(f, "JOB_CANCEL_MAP is poisoned!;")
             }
         }
     }

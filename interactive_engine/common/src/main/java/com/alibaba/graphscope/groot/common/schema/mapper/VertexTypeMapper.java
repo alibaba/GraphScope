@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VertexTypeMapper extends SchemaElementMapper {
-    private List<VertexIndexMapper> indexes;
+    private List<ElementIndexMapper> indexes;
     private long tableId;
 
     public static VertexTypeMapper parseFromVertexType(GraphVertex graphVertex) {
@@ -34,13 +34,13 @@ public class VertexTypeMapper extends SchemaElementMapper {
         vertexTypeMapper.setLabel(graphVertex.getLabel());
         vertexTypeMapper.setType(TypeEnum.VERTEX.toString());
 
-        VertexIndexMapper vertexIndexMapper = new VertexIndexMapper();
-        vertexIndexMapper.setName("primary_key");
-        vertexIndexMapper.setIndexType("PRIMARY_KEY");
-        vertexIndexMapper.setPropertyNames(graphVertex.getPrimaryKeyNameList());
-        ArrayList<VertexIndexMapper> vertexIndexMapperList = new ArrayList<>();
-        vertexIndexMapperList.add(vertexIndexMapper);
-        vertexTypeMapper.setIndexes(vertexIndexMapperList);
+        ElementIndexMapper elementIndexMapper = new ElementIndexMapper();
+        elementIndexMapper.setName("primary_key");
+        elementIndexMapper.setIndexType("PRIMARY_KEY");
+        elementIndexMapper.setPropertyNames(graphVertex.getPrimaryKeyNameList());
+        ArrayList<ElementIndexMapper> elementIndexMapperList = new ArrayList<>();
+        elementIndexMapperList.add(elementIndexMapper);
+        vertexTypeMapper.setIndexes(elementIndexMapperList);
         List<GraphPropertyMapper> propertyMapperList = new ArrayList<>();
         for (GraphProperty graphProperty : graphVertex.getPropertyList()) {
             propertyMapperList.add(GraphPropertyMapper.parseFromGraphProperty(graphProperty));
@@ -51,11 +51,11 @@ public class VertexTypeMapper extends SchemaElementMapper {
         return vertexTypeMapper;
     }
 
-    public List<VertexIndexMapper> getIndexes() {
+    public List<ElementIndexMapper> getIndexes() {
         return indexes;
     }
 
-    public void setIndexes(List<VertexIndexMapper> indexes) {
+    public void setIndexes(List<ElementIndexMapper> indexes) {
         this.indexes = indexes;
     }
 
