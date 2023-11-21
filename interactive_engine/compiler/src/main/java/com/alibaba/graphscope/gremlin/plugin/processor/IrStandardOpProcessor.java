@@ -144,7 +144,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                     (v, t) -> {
                         metaQueryCallback.afterExec(irMeta);
                         if (t != null) {
-                            statusCallback.onEnd(false);
+                            statusCallback.onEnd(false, null);
                             if (v instanceof AbstractResultProcessor) {
                                 ((AbstractResultProcessor) v).cancel();
                             }
