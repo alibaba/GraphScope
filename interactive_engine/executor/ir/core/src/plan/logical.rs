@@ -1477,7 +1477,12 @@ fn is_whole_graph(operator: &pb::logical_plan::Operator) -> bool {
                     && scan
                         .params
                         .as_ref()
-                        .map(|params| !params.is_queryable() && is_params_all_labels(params))
+                        .map(|params| {
+                            params.predicate.is_none()
+                                && is_params_all_labels(params)
+                                && params.limit.is_none()
+                                && params.sample_ratio == 1.0
+                        })
                         .unwrap_or(true)
             }
             pb::logical_plan::operator::Opr::Root(_) => true,

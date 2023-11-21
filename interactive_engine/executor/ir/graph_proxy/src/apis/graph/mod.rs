@@ -174,12 +174,4 @@ impl QueryParams {
             None
         }
     }
-
-    // is_queryable doesn't consider tables as we assume that the table info can be inferred directly from current data.
-    pub fn is_queryable(&self) -> bool {
-        !(self.filter.is_none()
-            && self.limit.is_none()
-            && self.sample_ratio.is_none()
-            && self.columns.is_none())
-    }
 }

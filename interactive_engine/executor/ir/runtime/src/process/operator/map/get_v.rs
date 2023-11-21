@@ -169,7 +169,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 {
                     // pruning by labels
                     return Ok(None);
-                } else if !self.query_params.is_queryable() {
+                } else if self.query_params.filter.is_none() && self.query_params.columns.is_none() {
                     // if only filter by labels, directly return the results.
                     return Ok(Some(input));
                 }
@@ -253,7 +253,7 @@ impl FilterMapFuncGen for pb::GetV {
             VOpt::Start | VOpt::End | VOpt::Other => {
                 let mut tables_condition: Vec<LabelId> = vec![];
                 if let Some(params) = self.params {
-                    if params.is_queryable() {
+                    if params.predicate.is_some() || !params.columns.is_empty() || params.is_all_columns {
                         Err(FnGenError::unsupported_error(&format!("QueryParams in GetV {:?}", params)))?
                     } else {
                         tables_condition = params

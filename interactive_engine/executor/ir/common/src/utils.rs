@@ -687,15 +687,6 @@ impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
 }
 
 impl pb::QueryParams {
-    // is_queryable doesn't consider tables as we assume that the table info can be inferred directly from current data.
-    pub fn is_queryable(&self) -> bool {
-        !(self.predicate.is_none()
-            && self.limit.is_none()
-            && self.sample_ratio == 1.0
-            && self.columns.is_empty()
-            && !self.is_all_columns)
-    }
-
     pub fn is_empty(&self) -> bool {
         self.eq(&pb::QueryParams {
             tables: vec![],
