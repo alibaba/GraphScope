@@ -265,10 +265,7 @@ impl AsPhysical for pb::PathExpand {
                         // In RBO, sample_ratio and limit would be fused into EdgeExpand(Opt=Edge), rather than GetV,
                         // thus we do not consider them here.
                         // TODO: Notice that we consider table here since we cannot specify vertex labels in ExpandV
-                        params.predicate.is_some()
-                            || !params.columns.is_empty()
-                            || params.is_all_columns
-                            || !params.tables.is_empty()
+                        params.has_predicates() || params.has_columns() || params.has_labels()
                     } else {
                         false
                     };
@@ -454,9 +451,9 @@ fn build_and_try_fuse_get_v(builder: &mut PlanBuilder, mut get_v: pb::GetV) -> I
         return Err(IrError::Unsupported("Try to fuse GetV with Opt=Self into ExpandE".to_string()));
     }
     if let Some(params) = get_v.params.as_mut() {
-        if params.predicate.is_some() || !params.columns.is_empty() || params.is_all_columns {
+        if params.has_predicates() || params.has_columns() {
             return Err(IrError::Unsupported("Try to fuse GetV with predicates into ExpandE".to_string()));
-        } else if !params.tables.is_empty() {
+        } else if params.has_labels() {
             // although this doesn't need query, it cannot be fused into ExpandExpand since we cannot specify vertex labels in ExpandV
             builder.get_v(get_v);
             return Ok(());
@@ -508,7 +505,7 @@ impl AsPhysical for pb::GetV {
         let mut getv = self.clone();
         // If GetV(Adj) with filter, translate GetV into GetV(GetAdj) + Shuffle (if on distributed storage) + GetV(Self)
         if let Some(params) = getv.params.as_mut() {
-            if params.predicate.is_some() || !params.columns.is_empty() || params.is_all_columns {
+            if params.has_predicates() || params.has_columns() {
                 let auxilia = pb::GetV {
                     tag: None,
                     opt: 4, //ItSelf
@@ -1074,11 +1071,7 @@ fn add_intersect_job_builder(
             // vertex parameter after the intersection
             if let Some(params) = get_v.params.as_ref() {
                 // the case that we need to further process getV's filter.
-                if params.predicate.is_some()
-                    || !params.columns.is_empty()
-                    || params.is_all_columns
-                    || !params.tables.is_empty()
-                {
+                if params.has_predicates() || params.has_columns() || params.has_labels() {
                     get_v.opt = 4;
                     auxilia = Some(get_v.clone());
                 }

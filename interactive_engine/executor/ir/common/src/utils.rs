@@ -687,6 +687,26 @@ impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
 }
 
 impl pb::QueryParams {
+    pub fn has_labels(&self) -> bool {
+        !self.tables.is_empty()
+    }
+
+    pub fn has_columns(&self) -> bool {
+        !self.columns.is_empty() || self.is_all_columns
+    }
+
+    pub fn has_predicates(&self) -> bool {
+        self.predicate.is_some()
+    }
+
+    pub fn has_sample(&self) -> bool {
+        self.sample_ratio != 1.0
+    }
+
+    pub fn has_limit(&self) -> bool {
+        self.limit.is_some()
+    }
+
     pub fn is_empty(&self) -> bool {
         self.eq(&pb::QueryParams {
             tables: vec![],

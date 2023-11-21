@@ -1478,10 +1478,11 @@ fn is_whole_graph(operator: &pb::logical_plan::Operator) -> bool {
                         .params
                         .as_ref()
                         .map(|params| {
-                            params.predicate.is_none()
-                                && is_params_all_labels(params)
-                                && params.limit.is_none()
-                                && params.sample_ratio == 1.0
+                            !(params.has_labels()
+                                || params.has_columns()
+                                || params.has_predicate()
+                                || params.has_sample()
+                                || params.has_limit())
                         })
                         .unwrap_or(true)
             }
