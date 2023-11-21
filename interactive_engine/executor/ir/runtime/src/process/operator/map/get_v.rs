@@ -253,7 +253,7 @@ impl FilterMapFuncGen for pb::GetV {
             VOpt::Start | VOpt::End | VOpt::Other => {
                 let mut tables_condition: Vec<LabelId> = vec![];
                 if let Some(params) = self.params {
-                    if params.predicate.is_some() || !params.columns.is_empty() || params.is_all_columns {
+                    if params.has_predicates() || params.has_columns() {
                         Err(FnGenError::unsupported_error(&format!("QueryParams in GetV {:?}", params)))?
                     } else {
                         tables_condition = params
