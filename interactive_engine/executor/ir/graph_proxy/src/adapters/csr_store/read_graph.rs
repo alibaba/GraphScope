@@ -18,7 +18,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use ahash::HashMap;
-use dyn_type::{BorrowObject, Object, Primitives};
+use dyn_type::{BorrowObject, DateTimeFormats, Object, Primitives};
 use ir_common::{KeyId, LabelId, NameOrId};
 use mcsr::columns::RefItem;
 use mcsr::date::Date;
@@ -172,6 +172,42 @@ impl ReadGraph for CSRStore {
         let pk_val = Object::from(outer_id);
         Ok(Some((CSR_STORE_PK.into(), pk_val).into()))
     }
+
+    fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        if params.filter.is_some() {
+            // the filter can not be pushed down to store,
+            // so we need to scan all vertices with filter and then count
+            Ok(self.scan_vertex(params)?.count() as u64)
+        } else {
+            let worker_index = self.cluster_info.get_worker_index()?;
+            let workers_num = self.cluster_info.get_local_worker_num()?;
+            if worker_index % workers_num == 0 {
+                let label_ids = encode_storage_label(&params.labels);
+                let count = self
+                    .store
+                    .count_all_vertices(label_ids.as_ref());
+                Ok(count as u64)
+            } else {
+                Ok(0)
+            }
+        }
+    }
+
+    fn count_edge(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        if params.filter.is_some() {
+            Ok(self.scan_edge(params)?.count() as u64)
+        } else {
+            let worker_index = self.cluster_info.get_worker_index()?;
+            let workers_num = self.cluster_info.get_local_worker_num()?;
+            if worker_index % workers_num == 0 {
+                let label_ids = encode_storage_label(&params.labels);
+                let count = self.store.count_all_edges(label_ids.as_ref());
+                Ok(count as u64)
+            } else {
+                Ok(0)
+            }
+        }
+    }
 }
 
 #[inline]
@@ -270,7 +306,7 @@ impl Details for LazyVertexDetails {
             } else {
                 self.inner
                     .get_property(key)
-                    .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
+                    .map(|prop| to_property_value(prop))
             }
         } else {
             info!("Have not support getting property by prop_id in exp_store yet");
@@ -334,7 +370,7 @@ impl Details for LazyEdgeDetails {
         if let NameOrId::Str(key) = key {
             self.inner
                 .get_property(key)
-                .map(|prop| PropertyValue::Borrowed(to_borrow_object(prop)))
+                .map(|prop| to_property_value(prop))
         } else {
             info!("Have not support getting property by prop_id in experiments store yet");
             None
@@ -366,44 +402,62 @@ fn to_object<'a>(ref_item: RefItem<'a>) -> Object {
         RefItem::Int64(v) => Object::Primitive(Primitives::Long(*v)),
         RefItem::UInt64(v) => Object::Primitive(Primitives::Long(i64::try_from(*v).unwrap())),
         RefItem::Double(v) => Object::Primitive(Primitives::Float(*v)),
-        RefItem::Date(v) => Object::Primitive(Primitives::Long(encode_date(v))),
-        RefItem::DateTime(v) => Object::Primitive(Primitives::Long(encode_datetime(v))),
+        RefItem::Date(v) => {
+            if let Some(date) = encode_date(v) {
+                Object::DateFormat(DateTimeFormats::Date(date))
+            } else {
+                Object::None
+            }
+        }
+        RefItem::DateTime(v) => {
+            if let Some(date_time) = encode_datetime(v) {
+                Object::DateFormat(DateTimeFormats::DateTime(date_time))
+            } else {
+                Object::None
+            }
+        }
         RefItem::String(v) => Object::String(v.clone()),
         _ => Object::None,
     }
 }
 
 #[inline]
-fn to_borrow_object<'a>(ref_item: RefItem<'a>) -> BorrowObject<'a> {
+fn to_property_value<'a>(ref_item: RefItem<'a>) -> PropertyValue {
     match ref_item {
-        RefItem::Int32(v) => BorrowObject::Primitive(Primitives::Integer(*v)),
-        RefItem::UInt32(v) => BorrowObject::Primitive(Primitives::Integer(i32::try_from(*v).unwrap())),
-        RefItem::Int64(v) => BorrowObject::Primitive(Primitives::Long(*v)),
-        RefItem::UInt64(v) => BorrowObject::Primitive(Primitives::Long(i64::try_from(*v).unwrap())),
-        RefItem::Double(v) => BorrowObject::Primitive(Primitives::Float(*v)),
-        RefItem::Date(v) => BorrowObject::Primitive(Primitives::Long(encode_date(v))),
-        RefItem::DateTime(v) => BorrowObject::Primitive(Primitives::Long(encode_datetime(v))),
-        RefItem::String(v) => BorrowObject::String(v),
-        _ => BorrowObject::None,
+        RefItem::Int32(v) => BorrowObject::Primitive(Primitives::Integer(*v)).into(),
+        RefItem::UInt32(v) => {
+            BorrowObject::Primitive(Primitives::Integer(i32::try_from(*v).unwrap())).into()
+        }
+        RefItem::Int64(v) => BorrowObject::Primitive(Primitives::Long(*v)).into(),
+        RefItem::UInt64(v) => BorrowObject::Primitive(Primitives::Long(i64::try_from(*v).unwrap())).into(),
+        RefItem::Double(v) => BorrowObject::Primitive(Primitives::Float(*v)).into(),
+        RefItem::Date(v) => {
+            if let Some(date) = encode_date(v) {
+                Object::DateFormat(DateTimeFormats::Date(date)).into()
+            } else {
+                BorrowObject::None.into()
+            }
+        }
+        RefItem::DateTime(v) => {
+            if let Some(date_time) = encode_datetime(v) {
+                Object::DateFormat(DateTimeFormats::DateTime(date_time)).into()
+            } else {
+                BorrowObject::None.into()
+            }
+        }
+        RefItem::String(v) => BorrowObject::String(v).into(),
+        _ => BorrowObject::None.into(),
     }
 }
 
 #[inline]
-fn encode_date(date: &Date) -> i64 {
-    date.year() as i64 * 10000000000000
-        + date.month() as i64 * 100000000000
-        + date.day() as i64 * 1000000000
+fn encode_date(date: &Date) -> Option<chrono::NaiveDate> {
+    chrono::NaiveDate::from_ymd_opt(date.year(), date.month(), date.day())
 }
 
 #[inline]
-fn encode_datetime(datetime: &DateTime) -> i64 {
-    datetime.year() as i64 * 10000000000000
-        + datetime.month() as i64 * 100000000000
-        + datetime.day() as i64 * 1000000000
-        + datetime.hour() as i64 * 10000000
-        + datetime.minute() as i64 * 100000
-        + datetime.second() as i64 * 1000
-        + datetime.millisecond() as i64
+fn encode_datetime(datetime: &DateTime) -> Option<chrono::NaiveDateTime> {
+    chrono::NaiveDateTime::from_timestamp_millis(datetime.to_i64())
 }
 
 #[inline]

@@ -62,11 +62,11 @@ static bool fetch_src_dst_column_mapping(const Schema& schema, YAML::Node node,
         return false;
       }
     }
-
+    return true;
   } else {
-    LOG(ERROR) << "No primary key column mapping for [" << key << "]";
+    LOG(WARNING) << "No primary key column mapping for [" << key << "]";
+    return false;
   }
-  return true;
 }
 
 // Function to parse memory size represented as a string
@@ -124,7 +124,10 @@ static bool parse_column_mappings(
 
     std::string property_name;  // property name is optional.
     if (!get_scalar(node[i], "property", property_name)) {
-      LOG(ERROR) << "Expect property name for column mapping";
+      LOG(ERROR) << "Expect property name for column mapping, when parsing "
+                    "column mapping for label: "
+                 << label_name << ", column_id: " << column_id
+                 << ", column_name: " << column_name;
       return false;
     }
     if (!condition(label_name, property_name)) {
@@ -301,17 +304,18 @@ static bool parse_edge_files(
 
     if (!fetch_src_dst_column_mapping(schema, node, src_label_id,
                                       "source_vertex_mappings", src_columns)) {
-      LOG(ERROR) << "Field [source_vertex_mappings] is not set for edge ["
-                 << src_label << "->[" << edge_label << "]->" << dst_label
-                 << "]";
-      return false;
+      LOG(WARNING) << "Field [source_vertex_mappings] is not set for edge ["
+                   << src_label << "->[" << edge_label << "]->" << dst_label
+                   << "], using default choice: column_id 0";
+      src_columns.push_back(0);
     }
     if (!fetch_src_dst_column_mapping(schema, node, dst_label_id,
                                       "destination_vertex_mappings",
                                       dst_columns)) {
-      LOG(ERROR) << "Field [destination_vertex_mappings] is not set for edge["
-                 << src_label << "->[" << edge_label << "]->" << dst_label;
-      return false;
+      LOG(WARNING) << "Field [destination_vertex_mappings] is not set for edge["
+                   << src_label << "->[" << edge_label << "]->" << dst_label
+                   << "], using default choice: column_id 1";
+      dst_columns.push_back(1);
     }
 
     VLOG(10) << "src: " << src_label << ", dst: " << dst_label
@@ -414,52 +418,56 @@ static bool parse_bulk_load_config_file(const std::string& config_file,
     }
     get_scalar(loading_config_node, "import_option", load_config.method_);
     auto format_node = loading_config_node["format"];
+    // default format is csv
     if (format_node) {
       get_scalar(format_node, "type", load_config.format_);
-      if (load_config.format_ == "csv") {
-        // set default delimiter before we parsing meta_data
-        load_config.metadata_[reader_options::DELIMITER] = "|";
-        load_config.metadata_[reader_options::HEADER_ROW] = "true";
-        load_config.metadata_[reader_options::QUOTING] = "false";
-        load_config.metadata_[reader_options::QUOTE_CHAR] = "\"";
-        load_config.metadata_[reader_options::DOUBLE_QUOTE] = "false";
-        load_config.metadata_[reader_options::ESCAPE_CHAR] = "\\";
-        load_config.metadata_[reader_options::ESCAPING] = "false";
-        load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
-            std::to_string(reader_options::DEFAULT_BLOCK_SIZE);
-        load_config.metadata_[reader_options::BATCH_READER] = "false";
-        // put all key values in meta_data into metadata_
-        if (format_node["metadata"]) {
-          auto meta_data_node = format_node["metadata"];
-          if (!meta_data_node.IsMap()) {
-            LOG(ERROR) << "metadata should be a map";
-            return false;
-          }
-          for (auto it = meta_data_node.begin(); it != meta_data_node.end();
-               ++it) {
-            // override previous settings.
-            auto key = it->first.as<std::string>();
-            VLOG(1) << "Got metadata key: " << key
-                    << " value: " << it->second.as<std::string>();
-            if (reader_options::CSV_META_KEY_WORDS.find(key) !=
-                reader_options::CSV_META_KEY_WORDS.end()) {
-              if (key == reader_options::BATCH_SIZE_KEY) {
-                // special case for block size
-                // parse block size (MB, b, KB, B) to bytes
-                auto block_size_str = it->second.as<std::string>();
-                auto block_size = parse_block_size(block_size_str);
-                load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
-                    std::to_string(block_size);
-              } else {
-                load_config.metadata_[key] = it->second.as<std::string>();
-              }
+    } else {
+      LOG(WARNING) << "No format is set, use default csv format";
+      load_config.format_ = "csv";
+    }
+    if (load_config.format_ == "csv") {
+      // set default delimiter before we parsing meta_data
+      load_config.metadata_[reader_options::DELIMITER] = "|";
+      load_config.metadata_[reader_options::HEADER_ROW] = "true";
+      load_config.metadata_[reader_options::QUOTING] = "false";
+      load_config.metadata_[reader_options::QUOTE_CHAR] = "\"";
+      load_config.metadata_[reader_options::DOUBLE_QUOTE] = "false";
+      load_config.metadata_[reader_options::ESCAPE_CHAR] = "\\";
+      load_config.metadata_[reader_options::ESCAPING] = "false";
+      load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
+          std::to_string(reader_options::DEFAULT_BLOCK_SIZE);
+      load_config.metadata_[reader_options::BATCH_READER] = "false";
+      // put all key values in meta_data into metadata_
+      if (format_node["metadata"]) {
+        auto meta_data_node = format_node["metadata"];
+        if (!meta_data_node.IsMap()) {
+          LOG(ERROR) << "metadata should be a map";
+          return false;
+        }
+        for (auto it = meta_data_node.begin(); it != meta_data_node.end();
+             ++it) {
+          // override previous settings.
+          auto key = it->first.as<std::string>();
+          VLOG(1) << "Got metadata key: " << key
+                  << " value: " << it->second.as<std::string>();
+          if (reader_options::CSV_META_KEY_WORDS.find(key) !=
+              reader_options::CSV_META_KEY_WORDS.end()) {
+            if (key == reader_options::BATCH_SIZE_KEY) {
+              // special case for block size
+              // parse block size (MB, b, KB, B) to bytes
+              auto block_size_str = it->second.as<std::string>();
+              auto block_size = parse_block_size(block_size_str);
+              load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
+                  std::to_string(block_size);
+            } else {
+              load_config.metadata_[key] = it->second.as<std::string>();
             }
           }
         }
-      } else {
-        LOG(ERROR) << "Only support csv format now";
-        return false;
       }
+    } else {
+      LOG(ERROR) << "Only support csv format now";
+      return false;
     }
   }
   if (load_config.method_ != "init") {

@@ -2,7 +2,7 @@
 # only_if: $CIRRUS_TAG != ''
 
 env:
-  MACOSX_DEPLOYMENT_TARGET: "11"
+  MACOSX_DEPLOYMENT_TARGET: "12"
 
 macosx_arm64_wheel_task:
   macos_instance:
@@ -75,6 +75,9 @@ macosx_arm64_wheel_task:
     # for building GLE
     git config --global --add safe.directory .
 
+    # make sure the python's local bin is in PATH (by `pip install --user`)
+    export PATH=$HOME/.local/bin:$PATH
+
     # prepare
     pushd ./python
     python3 setup.py build_proto
@@ -99,6 +102,9 @@ macosx_arm64_wheel_task:
 
   build_graphscope_client_script: |
     . ~/.graphscope_env
+
+    # make sure the python's local bin is in PATH (by `pip install --user`)
+    export PATH=$HOME/.local/bin:$PATH
 
     for py in 3.8.16 3.9.16 3.10.10 3.11.2; do
       current_python=$(pyenv root)/versions/$py/bin/python

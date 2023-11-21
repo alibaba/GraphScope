@@ -83,22 +83,10 @@ void close_lib(void* handle, const char* lib_path) {
   }
 }
 
-std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
-  std::filesystem::path dir_path = plugin_dir;
-  std::string suffix = ".yaml";
-  std::vector<std::string> res_yaml_files;
-
-  for (auto& entry : std::filesystem::directory_iterator(dir_path)) {
-    if (entry.is_regular_file() && entry.path().extension() == suffix) {
-      res_yaml_files.emplace_back(entry.path());
-    }
-  }
-  return res_yaml_files;
-}
-
 std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
-  const std::string& plugin_dir,
-    const std::vector<std::string>& stored_procedure_yamls) {
+    const std::string& plugin_dir,
+    const std::vector<std::string>& stored_procedure_yamls,
+    const std::vector<std::string>& valid_procedure_names) {
   std::vector<StoredProcedureMeta> stored_procedures;
   for (auto cur_yaml : stored_procedure_yamls) {
     LOG(INFO) << "Loading for: " << cur_yaml;
@@ -109,18 +97,21 @@ std::vector<StoredProcedureMeta> parse_from_multiple_yamls(
       LOG(ERROR) << "Expect path in pre_installed procedure";
     } else {
       std::string name = root["name"].as<std::string>();
-      std::string path = root["library"].as<std::string>();
-      if (!std::filesystem::exists(path)) {
-        // in case the path is relative to plugin_dir, prepend plugin_dir
-        path = plugin_dir + "/"  +path;
+      if (find(valid_procedure_names.begin(), valid_procedure_names.end(),
+               name) != valid_procedure_names.end()) {
+        VLOG(10) << "Find valid procedure: " << name;
+        std::string path = root["library"].as<std::string>();
         if (!std::filesystem::exists(path)) {
-          LOG(ERROR) << "plugin - " << path << " file not found...";
-        }
-        else {
+          // in case the path is relative to plugin_dir, prepend plugin_dir
+          path = plugin_dir + "/" + path;
+          if (!std::filesystem::exists(path)) {
+            LOG(ERROR) << "plugin - " << path << " file not found...";
+          } else {
+            stored_procedures.push_back({name, path});
+          }
+        } else {
           stored_procedures.push_back({name, path});
         }
-      } else {
-        stored_procedures.push_back({name, path});
       }
     }
   }
@@ -152,7 +143,7 @@ std::vector<StoredProcedureMeta> parse_stored_procedures(
       }
     }
   } else {
-    LOG(WARNING) << "Expect ntry <pre_installed>: " << stored_procedure_yaml;
+    LOG(WARNING) << "Expect entry <pre_installed>: " << stored_procedure_yaml;
   }
   return stored_procedures;
 }
@@ -177,7 +168,7 @@ std::string load_and_run(int32_t job_id, const std::string& lib_path) {
   gs::Decoder input_decoder(empty.data(), empty.size());
   auto res = temp_stored_procedure->Query(input_decoder);
   LOG(INFO) << "Finish running";
-  LOG(INFO) << res.DebugString();
+  VLOG(10) << res.DebugString();
   std::string res_str;
   res.SerializeToString(&res_str);
   return res_str;

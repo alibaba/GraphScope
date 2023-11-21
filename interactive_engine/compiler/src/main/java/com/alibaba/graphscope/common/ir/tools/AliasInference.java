@@ -65,7 +65,7 @@ public abstract class AliasInference {
      */
     public static final String inferDefault(@Nullable String fieldName, Set<String> uniqueNameList)
             throws IllegalArgumentException {
-        if (fieldName == null) return DEFAULT_NAME;
+        if (fieldName == null || fieldName == DEFAULT_NAME) return DEFAULT_NAME;
         if (uniqueNameList.contains(fieldName)) {
             throw new IllegalArgumentException(
                     "alias=" + fieldName + " exists in " + uniqueNameList);
@@ -176,7 +176,9 @@ public abstract class AliasInference {
         while (!inputsQueue.isEmpty()) {
             RelNode cur = inputsQueue.remove(0);
             for (RelDataTypeField field : cur.getRowType().getFieldList()) {
-                uniqueNames.add(field.getName());
+                if (field.getName() != null && field.getName() != DEFAULT_NAME) {
+                    uniqueNames.add(field.getName());
+                }
             }
             if (removeAlias(cur)) {
                 break;

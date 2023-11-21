@@ -437,6 +437,53 @@ impl DateTimeFormats {
         }
     }
 
+    // the date32 is stored as YYYYMMDD, e.g., 20100102
+    pub fn from_date32(date32: i32) -> Result<Self, CastError> {
+        NaiveDate::from_ymd_opt(date32 / 10000, ((date32 % 10000) / 100) as u32, (date32 % 100) as u32)
+            .map(|d| DateTimeFormats::Date(d))
+            .ok_or_else(|| CastError::new::<DateTimeFormats>(RawType::Integer))
+    }
+
+    // the time32 is stored HHMMSSsss, e.g., 121314100
+    pub fn from_time32(time32: i32) -> Result<Self, CastError> {
+        NaiveTime::from_hms_milli_opt(
+            (time32 / 10000000) as u32,
+            ((time32 % 10000000) / 100000) as u32,
+            ((time32 % 100000) / 1000) as u32,
+            (time32 % 1000) as u32,
+        )
+        .map(|t| DateTimeFormats::Time(t))
+        .ok_or_else(|| CastError::new::<DateTimeFormats>(RawType::Integer))
+    }
+
+    pub fn from_timestamp_millis(timestamp: i64) -> Result<Self, CastError> {
+        NaiveDateTime::from_timestamp_millis(timestamp)
+            .map(|dt| DateTimeFormats::DateTime(dt))
+            .ok_or_else(|| CastError::new::<DateTimeFormats>(RawType::Long))
+    }
+
+    // we pre-assume some date/time/datetime formats according to ISO formats.
+    pub fn from_str(str: &str) -> Result<Self, CastError> {
+        // `1996-12-19`
+        if let Ok(date) = NaiveDate::parse_from_str(str, "%Y-%m-%d") {
+            Ok(DateTimeFormats::Date(date))
+        }
+        // `16:39:57.123`
+        else if let Ok(time) = NaiveTime::parse_from_str(str, "%H:%M:%S%.f") {
+            Ok(DateTimeFormats::Time(time))
+        }
+        // `1996-12-19 16:39:57.123`
+        else if let Ok(dt) = NaiveDateTime::parse_from_str(str, "%Y-%m-%d %H:%M:%S%.f") {
+            Ok(DateTimeFormats::DateTime(dt))
+        }
+        // `1996-12-19T16:39:57.123+08:00`
+        else if let Ok(dt) = DateTime::parse_from_rfc3339(str) {
+            Ok(DateTimeFormats::DateTimeWithTz(dt))
+        } else {
+            Err(CastError::new::<DateTimeFormats>(RawType::String))
+        }
+    }
+
     #[inline]
     pub fn as_date(&self) -> Result<NaiveDate, CastError> {
         match self {
@@ -475,7 +522,7 @@ impl DateTimeFormats {
             DateTimeFormats::DateTime(dt) => dt
                 .and_local_timezone(FixedOffset::east_opt(0).unwrap())
                 .single()
-                .ok_or(CastError::new::<NaiveDateTime>(RawType::DateTimeWithTz)),
+                .ok_or_else(|| CastError::new::<NaiveDateTime>(RawType::DateTimeWithTz)),
             DateTimeFormats::DateTimeWithTz(dt) => Ok(*dt),
         }
     }
@@ -1523,6 +1570,12 @@ impl From<NaiveTime> for Object {
 impl From<DateTime<FixedOffset>> for Object {
     fn from(date_time_with_tz: DateTime<FixedOffset>) -> Self {
         Object::DateFormat(DateTimeFormats::DateTimeWithTz(date_time_with_tz))
+    }
+}
+
+impl From<DateTimeFormats> for Object {
+    fn from(date_time_formats: DateTimeFormats) -> Self {
+        Object::DateFormat(date_time_formats)
     }
 }
 

@@ -151,6 +151,8 @@ message Scan {
   algebra.QueryParams params = 3;
   // The optional filtering predicate for the field that have been indexed
   algebra.IndexPredicate idx_predicate = 4;
+  // The flag that indicates to SCAN + COUNT
+  bool is_count_only = 5;
 }
 
 // It is typical to use the operator when:
@@ -305,5 +307,6 @@ message PhysicalOpr {
 }
 
 message PhysicalPlan {
-  repeated PhysicalOpr plan = 1;
+  int32 plan_id = 1;
+  repeated PhysicalOpr plan = 2;
 }

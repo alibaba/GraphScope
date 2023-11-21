@@ -22,8 +22,7 @@ ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin:$HADOOP_HOME/bin:/home/graphscope/.local/bin
 COPY --from=ext /opt/hadoop-3.3.0 /opt/hadoop-3.3.0
 
 RUN apt-get update && \
-    apt-get install python3-pip -y && \
-    apt-get install -y sudo default-jre && \
+    apt-get install -y sudo default-jre python3-pip tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

@@ -72,56 +72,16 @@ seastar::future<query_result> executor::run_hqps_procedure_query(
 }
 
 seastar::future<query_result> executor::run_hqps_adhoc_query(
-    query_param&& param) {
+    adhoc_result&& param) {
   LOG(INFO) << "Run adhoc query";
   // The received query's pay load shoud be able to deserialze to physical plan
-  auto& str = param.content;
-  if (str.size() <= 0) {
-    LOG(INFO) << "Empty query";
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Empty query string"));
-  }
-
-  const char* str_data = str.data();
-  size_t str_length = str.size();
-  LOG(INFO) << "Deserialize physical job request" << str_length;
-
-  physical::PhysicalPlan plan;
-  bool ret = plan.ParseFromArray(str_data, str_length);
-  if (ret) {
-    LOG(INFO) << "Parse physical plan: " << plan.DebugString();
-  } else {
-    LOG(ERROR) << "Fail to parse physical plan";
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to parse physical plan"));
-  }
-
-  // 0. do codegen gen.
-  std::string lib_path = "";
-  int32_t job_id = -1;
-  auto& codegen_proxy = server::CodegenProxy::get();
-  if (codegen_proxy.Initialized()) {
-    auto ret = codegen_proxy.do_gen(plan);
-    if (ret.has_value()) {
-      auto& v = ret.value();
-      job_id = v.first;
-      lib_path = v.second;
-    }
-  } else {
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Codegen proxy not initialized"));
-  }
-  if (job_id == -1) {
-    return seastar::make_exception_future<query_result>(
-        std::runtime_error("Fail to parse job id from codegen proxy"));
-  }
   // 1. load and run.
-  LOG(INFO) << "Okay, try to run the query of lib path: " << lib_path
-            << ", job id: " << job_id
+  auto& content = param.content;
+  LOG(INFO) << "Okay, try to run the query of lib path: " << content.second
+            << ", job id: " << content.first
             << "local shard id: " << hiactor::local_shard_id();
-
-  seastar::sstring content = server::load_and_run(job_id, lib_path);
-  return seastar::make_ready_future<query_result>(std::move(content));
+  seastar::sstring result = server::load_and_run(content.first, content.second);
+  return seastar::make_ready_future<query_result>(std::move(result));
 }
 
 }  // namespace server

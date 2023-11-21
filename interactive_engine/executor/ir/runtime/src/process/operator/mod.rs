@@ -92,11 +92,9 @@ impl TagKey {
                     }
                     PropKey::Key(key) => {
                         if let Some(properties) = element.get_property(key) {
-                            properties
-                                .try_to_owned()
-                                .ok_or(FnExecError::unexpected_data_error(
-                                    "unable to own the `BorrowObject`",
-                                ))?
+                            properties.try_to_owned().ok_or_else(|| {
+                                FnExecError::unexpected_data_error("unable to own the `BorrowObject`")
+                            })?
                         } else {
                             Object::None
                         }
@@ -187,6 +185,8 @@ pub(crate) mod tests {
     pub const TAG_C: KeyId = 2;
     pub const TAG_D: KeyId = 3;
     pub const TAG_E: KeyId = 4;
+    pub const TAG_F: KeyId = 5;
+    pub const TAG_G: KeyId = 6;
 
     pub const PERSON_LABEL: LabelId = 0;
 
@@ -278,6 +278,24 @@ pub(crate) mod tests {
                 } else {
                     Some(common_pb::expr_opr::Item::Vars(common_pb::VariableKeys { keys: vars }))
                 },
+            }],
+        }
+    }
+
+    pub fn to_expr_map_pb(
+        key_values: Vec<(String, (Option<NameOrId>, Option<NameOrId>))>,
+    ) -> common_pb::Expression {
+        let key_vals = key_values
+            .into_iter()
+            .map(|(key, value)| common_pb::VariableKeyValue {
+                key: Some(common_pb::Value::from(key)),
+                value: Some(to_var_pb(value.0, value.1)),
+            })
+            .collect();
+        common_pb::Expression {
+            operators: vec![common_pb::ExprOpr {
+                node_type: None,
+                item: Some(common_pb::expr_opr::Item::Map(common_pb::VariableKeyValues { key_vals })),
             }],
         }
     }

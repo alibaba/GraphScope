@@ -159,6 +159,13 @@ impl GraphPath {
         }
     }
 
+    pub fn get_path(&self) -> Option<&Vec<VertexOrEdge>> {
+        match self {
+            GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
+            GraphPath::EndV(_) | GraphPath::SimpleEndV(_) => None,
+        }
+    }
+
     pub fn take_path(self) -> Option<Vec<VertexOrEdge>> {
         match self {
             GraphPath::AllPath(p) | GraphPath::SimpleAllPath(p) => Some(p),
@@ -360,6 +367,8 @@ impl Decode for VertexOrEdge {
     }
 }
 
+impl_as_any!(VertexOrEdge);
+
 impl Encode for GraphPath {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> std::io::Result<()> {
         match self {
@@ -420,7 +429,7 @@ impl TryFrom<result_pb::graph_path::VertexOrEdge> for VertexOrEdge {
     fn try_from(e: result_pb::graph_path::VertexOrEdge) -> Result<Self, Self::Error> {
         let vertex_or_edge = e
             .inner
-            .ok_or(ParsePbError::EmptyFieldError("empty field of VertexOrEdge".to_string()))?;
+            .ok_or_else(|| (ParsePbError::EmptyFieldError("empty field of VertexOrEdge".to_string())))?;
         match vertex_or_edge {
             result_pb::graph_path::vertex_or_edge::Inner::Vertex(v) => {
                 let vertex = v.try_into()?;

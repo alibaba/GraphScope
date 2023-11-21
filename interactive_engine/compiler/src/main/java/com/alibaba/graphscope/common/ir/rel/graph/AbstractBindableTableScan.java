@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -30,9 +29,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
-import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.commons.lang3.ObjectUtils;
@@ -51,7 +48,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     // for field trimmer
     protected @Nullable ImmutableIntList project;
 
-    protected final @Nullable RelNode input;
+    protected @Nullable RelNode input;
 
     protected final TableConfig tableConfig;
 
@@ -96,25 +93,29 @@ public abstract class AbstractBindableTableScan extends TableScan {
     public RelDataType deriveRowType() {
         List<GraphSchemaType> tableTypes = new ArrayList<>();
         List<RelOptTable> tables = ObjectUtils.requireNonEmpty(this.tableConfig.getTables());
+        RelDataTypeFactory typeFactory = tables.get(0).getRelOptSchema().getTypeFactory();
         for (RelOptTable table : tables) {
             GraphSchemaType type = (GraphSchemaType) table.getRowType();
             // flat fuzzy labels to the list
-            if (type instanceof GraphSchemaTypeList) {
-                tableTypes.addAll((GraphSchemaTypeList) type);
-            } else {
-                tableTypes.add(type);
-            }
+            tableTypes.addAll(type.getSchemaTypeAsList());
         }
         ObjectUtils.requireNonEmpty(tableTypes);
         GraphSchemaType graphType =
                 (tableTypes.size() == 1)
                         ? tableTypes.get(0)
-                        : GraphSchemaTypeList.create(tableTypes);
+                        : GraphSchemaType.create(tableTypes, typeFactory);
         RelRecordType rowType =
                 new RelRecordType(
                         ImmutableList.of(
                                 new RelDataTypeFieldImpl(getAliasName(), getAliasId(), graphType)));
         return rowType;
+    }
+
+    public void setRowType(GraphSchemaType graphType) {
+        rowType =
+                new RelRecordType(
+                        ImmutableList.of(
+                                new RelDataTypeFieldImpl(getAliasName(), getAliasId(), graphType)));
     }
 
     public String getAliasName() {
@@ -123,6 +124,10 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     public int getAliasId() {
         return this.aliasId;
+    }
+
+    public TableConfig getTableConfig() {
+        return this.tableConfig;
     }
 
     // toString
@@ -143,6 +148,14 @@ public abstract class AbstractBindableTableScan extends TableScan {
     @Override
     public List<RelNode> getInputs() {
         return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
+    }
+
+    @Override
+    public void replaceInput(int ordinalInParent, RelNode p) {
+        if (this.input == null) return;
+        assert ordinalInParent == 0;
+        this.input = p;
+        this.recomputeDigest();
     }
 
     public void setFilters(ImmutableList<RexNode> filters) {

@@ -340,6 +340,23 @@ impl From<std::io::Error> for StartupError {
     }
 }
 
+#[derive(Debug)]
+pub enum CancelError {
+    JobNotFoundError(u64),
+}
+
+impl Display for CancelError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            CancelError::JobNotFoundError(e) => {
+                write!(f, "fail to find job, job id: {};", e)
+            }
+        }
+    }
+}
+
+impl Error for CancelError {}
+
 #[macro_export]
 macro_rules! throw_io_error {
     () => {{

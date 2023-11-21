@@ -34,8 +34,8 @@ class SingleEdgeInsertTransaction {
                               VersionManager& vm, timestamp_t timestamp);
   ~SingleEdgeInsertTransaction();
 
-  bool AddEdge(label_t src_label, oid_t src, label_t dst_label, oid_t dst,
-               label_t edge_label, const Any& prop);
+  bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
+               const Any& dst, label_t edge_label, const Any& prop);
 
   void Abort();
 

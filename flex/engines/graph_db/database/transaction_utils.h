@@ -16,6 +16,7 @@
 #ifndef GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 #define GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 
+#include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/types.h"
 #include "glog/logging.h"
 #include "grape/serialization/in_archive.h"
@@ -25,8 +26,14 @@ namespace gs {
 
 inline void serialize_field(grape::InArchive& arc, const Any& prop) {
   switch (prop.type) {
+  case PropertyType::kBool:
+    arc << prop.value.b;
+    break;
   case PropertyType::kInt32:
     arc << prop.value.i;
+    break;
+  case PropertyType::kUInt32:
+    arc << prop.value.ui;
     break;
   case PropertyType::kDate:
     arc << prop.value.d.milli_second;
@@ -39,8 +46,14 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
   case PropertyType::kInt64:
     arc << prop.value.l;
     break;
+  case PropertyType::kUInt64:
+    arc << prop.value.ul;
+    break;
   case PropertyType::kDouble:
     arc << prop.value.db;
+    break;
+  case PropertyType::kFloat:
+    arc << prop.value.f;
     break;
   default:
     LOG(FATAL) << "Unexpected property type";
@@ -49,8 +62,14 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
 
 inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   switch (prop.type) {
+  case PropertyType::kBool:
+    arc >> prop.value.b;
+    break;
   case PropertyType::kInt32:
     arc >> prop.value.i;
+    break;
+  case PropertyType::kUInt32:
+    arc >> prop.value.ui;
     break;
   case PropertyType::kDate:
     arc >> prop.value.d.milli_second;
@@ -63,12 +82,27 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   case PropertyType::kInt64:
     arc >> prop.value.l;
     break;
+  case PropertyType::kUInt64:
+    arc >> prop.value.ul;
+    break;
   case PropertyType::kDouble:
     arc >> prop.value.db;
+    break;
+  case PropertyType::kFloat:
+    arc >> prop.value.f;
     break;
   default:
     LOG(FATAL) << "Unexpected property type";
   }
+}
+
+inline label_t deserialize_oid(const MutablePropertyFragment& graph,
+                               grape::OutArchive& arc, Any& oid) {
+  label_t label;
+  arc >> label;
+  oid.type = std::get<0>(graph.schema_.get_vertex_primary_key(label).at(0));
+  deserialize_field(arc, oid);
+  return label;
 }
 
 }  // namespace gs

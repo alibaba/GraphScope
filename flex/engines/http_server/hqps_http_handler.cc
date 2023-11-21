@@ -19,6 +19,7 @@
 #include <seastar/core/alien.hh>
 #include <seastar/core/print.hh>
 #include <seastar/http/handlers.hh>
+#include "flex/engines/http_server/generated/codegen_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/generated/executor_ref.act.autogen.h"
 #include "flex/engines/http_server/types.h"
 
@@ -79,15 +80,26 @@ class hqps_ic_handler : public seastar::httpd::handler_base {
 // a handler for handl adhoc query.
 class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
  public:
-  hqps_adhoc_query_handler(uint32_t group_id, uint32_t shard_concurrency)
+  hqps_adhoc_query_handler(uint32_t group_id, uint32_t codegen_actor_group_id,
+                           uint32_t shard_concurrency)
       : shard_concurrency_(shard_concurrency), executor_idx_(0) {
     executor_refs_.reserve(shard_concurrency_);
-    hiactor::scope_builder builder;
-    builder.set_shard(hiactor::local_shard_id())
-        .enter_sub_scope(hiactor::scope<executor_group>(0))
-        .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
-    for (unsigned i = 0; i < shard_concurrency_; ++i) {
-      executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
+    {
+      hiactor::scope_builder builder;
+      builder.set_shard(hiactor::local_shard_id())
+          .enter_sub_scope(hiactor::scope<executor_group>(0))
+          .enter_sub_scope(hiactor::scope<hiactor::actor_group>(group_id));
+      for (unsigned i = 0; i < shard_concurrency_; ++i) {
+        executor_refs_.emplace_back(builder.build_ref<executor_ref>(i));
+      }
+    }
+    {
+      hiactor::scope_builder builder;
+      builder.set_shard(hiactor::local_shard_id())
+          .enter_sub_scope(hiactor::scope<executor_group>(0))
+          .enter_sub_scope(
+              hiactor::scope<hiactor::actor_group>(codegen_actor_group_id));
+      codegen_actor_ref_ = builder.build_ref<codegen_actor_ref>(0);
     }
   }
   ~hqps_adhoc_query_handler() override = default;
@@ -99,8 +111,11 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
     auto dst_executor = executor_idx_;
     executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
 
-    return executor_refs_[dst_executor]
-        .run_hqps_adhoc_query(query_param{std::move(req->content)})
+    return codegen_actor_ref_.do_codegen(query_param{std::move(req->content)})
+        .then([this, dst_executor](auto&& param) {
+          return executor_refs_[dst_executor].run_hqps_adhoc_query(
+              std::move(param));
+        })
         .then_wrapped([rep = std::move(rep)](
                           seastar::future<query_result>&& fut) mutable {
           if (__builtin_expect(fut.failed(), false)) {
@@ -127,6 +142,7 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
   const uint32_t shard_concurrency_;
   uint32_t executor_idx_;
   std::vector<executor_ref> executor_refs_;
+  codegen_actor_ref codegen_actor_ref_;
 };
 
 class hqps_exit_handler : public seastar::httpd::handler_base {
@@ -177,7 +193,7 @@ seastar::future<> hqps_http_handler::set_routes() {
           new hqps_ic_handler(ic_query_group_id, shard_query_concurrency));
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/adhoc_query"),
-          new hqps_adhoc_query_handler(ic_adhoc_group_id,
+          new hqps_adhoc_query_handler(ic_adhoc_group_id, codegen_group_id,
                                        shard_adhoc_concurrency));
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/exit"), new hqps_exit_handler());

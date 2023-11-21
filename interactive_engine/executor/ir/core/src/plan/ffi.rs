@@ -529,33 +529,32 @@ impl From<FfiKeyType> for KeyType {
     }
 }
 
-/// Query prop_name by given prop_id
+/// Query entity/relation/property name by given id
 #[no_mangle]
 pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiResult {
     use super::meta::STORE_META;
     if let Ok(meta) = STORE_META.read() {
         if let Some(schema) = &meta.schema {
             let key_name = match key_type {
-                FfiKeyType::Entity => schema
-                    .get_entity_name(key_id)
-                    .ok_or(FfiResult::new(
+                FfiKeyType::Entity => schema.get_entity_name(key_id).ok_or_else(|| {
+                    FfiResult::new(
                         ResultCode::TableNotExistError,
                         format!("entity label_id {:?} is not found", key_id),
-                    )),
-                FfiKeyType::Relation => schema
-                    .get_relation_name(key_id)
-                    .ok_or(FfiResult::new(
+                    )
+                }),
+                FfiKeyType::Relation => schema.get_relation_name(key_id).ok_or_else(|| {
+                    FfiResult::new(
                         ResultCode::TableNotExistError,
                         format!("relation label_id {:?} is not found", key_id),
-                    )),
-                FfiKeyType::Column => schema
-                    .get_column_name(key_id)
-                    .ok_or(FfiResult::new(
+                    )
+                }),
+                FfiKeyType::Column => schema.get_column_name(key_id).ok_or_else(|| {
+                    FfiResult::new(
                         ResultCode::ColumnNotExistError,
                         format!("prop_id {:?} is not found", key_id),
-                    )),
+                    )
+                }),
             };
-
             match key_name {
                 Ok(key_name) => {
                     let key_name_cstr = string_to_cstr(key_name.clone());
@@ -613,17 +612,26 @@ pub extern "C" fn destroy_ffi_data(data: FfiData) {
     }
 }
 
+// To release a cstr pointer
+#[no_mangle]
+pub extern "C" fn destroy_cstr_pointer(cstr: *const c_char) {
+    if !cstr.is_null() {
+        let _ = unsafe { std::ffi::CString::from_raw(cstr as *mut c_char) };
+    }
+}
+
 /// To build a physical plan from the logical plan.
 #[no_mangle]
 pub extern "C" fn build_physical_plan(
-    ptr_plan: *const c_void, num_workers: u32, num_servers: u32,
+    ptr_plan: *const c_void, num_workers: u32, num_servers: u32, plan_id: i32,
 ) -> FfiData {
     let mut plan = unsafe { Box::from_raw(ptr_plan as *mut LogicalPlan) };
     if num_workers > 1 || num_servers > 1 {
         plan.meta = plan.meta.with_partition();
     }
     let mut plan_meta = plan.meta.clone();
-    let mut builder = PlanBuilder::default();
+    let mut builder = PlanBuilder::new(plan_id);
+    // let mut builder = PlanBuilder::default();
     let build_result = plan.add_job_builder(&mut builder, &mut plan_meta);
     let result = match build_result {
         Ok(_) => {
@@ -1015,6 +1023,11 @@ mod params {
         std::mem::forget(params);
 
         result
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_query_params(ptr: *const c_void) {
+        destroy_ptr::<pb::QueryParams>(ptr)
     }
 }
 
@@ -1740,6 +1753,7 @@ mod scan {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         });
         Box::into_raw(scan) as *const c_void
@@ -1754,7 +1768,11 @@ mod scan {
     fn parse_equiv_predicate(
         key: FfiProperty, value: FfiConst,
     ) -> Result<pb::index_predicate::Triplet, FfiResult> {
-        Ok(pb::index_predicate::Triplet { key: key.try_into()?, value: Some(value.try_into()?), cmp: None })
+        Ok(pb::index_predicate::Triplet {
+            key: key.try_into()?,
+            value: Some(pb::index_predicate::triplet::Value::Const(value.try_into()?)),
+            cmp: None,
+        })
     }
 
     #[no_mangle]
@@ -1841,6 +1859,14 @@ mod scan {
     #[no_mangle]
     pub extern "C" fn set_scan_alias(ptr_scan: *const c_void, alias: FfiAlias) -> FfiResult {
         set_alias(ptr_scan, alias, InnerOpt::Scan)
+    }
+
+    #[no_mangle]
+    pub extern "C" fn set_count_only(ptr: *const c_void, is_count_only: i32) -> FfiResult {
+        let mut scan = unsafe { Box::from_raw(ptr as *mut pb::Scan) };
+        scan.is_count_only = is_count_only != 0;
+        std::mem::forget(scan);
+        FfiResult::success()
     }
 
     /// Append a scan operator to the logical plan

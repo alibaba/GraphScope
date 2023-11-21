@@ -38,7 +38,11 @@ public interface IrCoreLibrary extends Library {
 
     void destroyLogicalPlan(Pointer plan);
 
-    FfiData.ByValue buildPhysicalPlan(Pointer plan, int workers, int servers);
+    default FfiData.ByValue buildPhysicalPlan(Pointer plan, int workers, int servers) {
+        return buildPhysicalPlan(plan, workers, servers, 0);
+    }
+
+    FfiData.ByValue buildPhysicalPlan(Pointer plan, int workers, int servers, int planId);
 
     Pointer initScanOperator(FfiScanOpt opt);
 
@@ -59,6 +63,8 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue setScanParams(Pointer scan, Pointer params);
 
     FfiResult.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
+
+    FfiResult.ByValue setCountOnly(Pointer scan, boolean countOnly);
 
     Pointer initEdgexpdOperator(FfiExpandOpt expandOpt, FfiDirection direction);
 
@@ -276,4 +282,6 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue appendSampleOperator(
             Pointer plan, Pointer sample, int parent, IntByReference oprIdx);
+
+    void destroyCstrPointer(Pointer cstr);
 }

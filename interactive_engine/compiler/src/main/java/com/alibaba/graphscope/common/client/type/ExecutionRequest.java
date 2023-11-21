@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.client.type;
 
-import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 
 /**
@@ -26,13 +26,13 @@ public class ExecutionRequest {
     private final long requestId;
     private final String requestName;
     private final LogicalPlan requestLogical;
-    private final PhysicalBuilder requestPhysical;
+    private final PhysicalPlan requestPhysical;
 
     public ExecutionRequest(
             long requestId,
             String requestName,
             LogicalPlan requestLogical,
-            PhysicalBuilder requestPhysical) {
+            PhysicalPlan requestPhysical) {
         this.requestId = requestId;
         this.requestName = requestName;
         this.requestLogical = requestLogical;
@@ -51,7 +51,7 @@ public class ExecutionRequest {
         return requestLogical;
     }
 
-    public PhysicalBuilder getRequestPhysical() {
+    public PhysicalPlan getRequestPhysical() {
         return requestPhysical;
     }
 }

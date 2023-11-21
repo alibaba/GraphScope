@@ -37,8 +37,27 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
 
   vertex_label_num_ = graph_.schema().vertex_label_num();
   edge_label_num_ = graph_.schema().edge_label_num();
+  for (auto idx = 0; idx < vertex_label_num_; ++idx) {
+    if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<int64_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt64) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<uint64_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt32) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<int32_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<uint32_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kString) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<std::string_view, vid_t>>());
+    } else {
+      LOG(FATAL) << "Only int64 and string_view types for pk are supported..";
+    }
+  }
 
-  added_vertices_.resize(vertex_label_num_);
   added_vertices_base_.resize(vertex_label_num_);
   vertex_nums_.resize(vertex_label_num_);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
@@ -83,7 +102,7 @@ void UpdateTransaction::Commit() {
 
 void UpdateTransaction::Abort() { release(); }
 
-bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
+bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
                                   const std::vector<Any>& props) {
   vid_t id;
   const std::vector<PropertyType>& types =
@@ -98,7 +117,7 @@ bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
     }
   }
   if (!oid_to_lid(label, oid, id)) {
-    added_vertices_[label]._add(oid);
+    added_vertices_[label]->_add(oid);
     id = vertex_nums_[label]++;
   }
 
@@ -113,14 +132,15 @@ bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
   extra_vertex_properties_[label].ingest(row_num, oarc);
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(0) << label << oid;
+  arc_ << static_cast<uint8_t>(0) << label;
+  serialize_field(arc_, oid);
   arc_.AddBytes(arc.GetBuffer(), arc.GetSize());
   return true;
 }
 
-bool UpdateTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
-                                oid_t dst, label_t edge_label,
-                                const Any& value) {
+bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
+                                label_t dst_label, const Any& dst,
+                                label_t edge_label, const Any& value) {
   vid_t src_lid, dst_lid;
   if (!oid_to_lid(src_label, src, src_lid)) {
     return false;
@@ -142,8 +162,11 @@ bool UpdateTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
   updated_edge_data_[out_csr_index][src_lid].emplace(dst_lid, value);
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
-       << edge_label;
+  arc_ << static_cast<uint8_t>(1) << src_label;
+  serialize_field(arc_, src);
+  arc_ << dst_label;
+  serialize_field(arc_, dst);
+  arc_ << edge_label;
   serialize_field(arc_, value);
 
   return true;
@@ -160,7 +183,7 @@ void UpdateTransaction::vertex_iterator::Goto(vid_t target) {
   cur_ = std::min(target, num_);
 }
 
-oid_t UpdateTransaction::vertex_iterator::GetId() const {
+Any UpdateTransaction::vertex_iterator::GetId() const {
   return txn_->lid_to_oid(label_, cur_);
 }
 
@@ -346,7 +369,9 @@ bool UpdateTransaction::SetVertexField(label_t label, vid_t lid, int col_id,
   }
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(2) << label << lid_to_oid(label, lid) << col_id;
+  arc_ << static_cast<uint8_t>(2) << label;
+  serialize_field(arc_, lid_to_oid(label, lid));
+  arc_ << col_id;
   serialize_field(arc_, value);
   return true;
 }
@@ -367,9 +392,11 @@ void UpdateTransaction::SetEdgeData(bool dir, label_t label, vid_t v,
   }
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(3) << static_cast<uint8_t>(dir ? 1 : 0) << label
-       << lid_to_oid(label, v) << neighbor_label
-       << lid_to_oid(neighbor_label, nbr) << edge_label;
+  arc_ << static_cast<uint8_t>(3) << static_cast<uint8_t>(dir ? 1 : 0) << label;
+  serialize_field(arc_, lid_to_oid(label, v));
+  arc_ << neighbor_label;
+  serialize_field(arc_, lid_to_oid(neighbor_label, nbr));
+  arc_ << edge_label;
   serialize_field(arc_, value);
 }
 
@@ -396,7 +423,7 @@ bool UpdateTransaction::GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
 void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
                                   uint32_t timestamp, char* data, size_t length,
                                   ArenaAllocator& alloc) {
-  std::vector<IdIndexer<oid_t, vid_t>> added_vertices;
+  std::vector<std::shared_ptr<IdIndexerBase<vid_t>>> added_vertices;
   std::vector<vid_t> added_vertices_base;
   std::vector<vid_t> vertex_nums;
   std::vector<ska::flat_hash_map<vid_t, vid_t>> vertex_offsets;
@@ -409,7 +436,28 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
   size_t vertex_label_num = graph.schema().vertex_label_num();
   size_t edge_label_num = graph.schema().edge_label_num();
 
-  added_vertices.resize(vertex_label_num);
+  for (auto idx = 0; idx < vertex_label_num; ++idx) {
+    if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<int64_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt64) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<uint64_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt32) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<int32_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<uint32_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kString) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<std::string_view, vid_t>>());
+    } else {
+      LOG(FATAL) << "Only int64, uint64, int32, uint32 and string_view types "
+                    "for pk are supported..";
+    }
+  }
+
   added_vertices_base.resize(vertex_label_num);
   vertex_nums.resize(vertex_label_num);
   for (size_t i = 0; i < vertex_label_num; ++i) {
@@ -434,9 +482,8 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     arc >> op_type;
     if (op_type == 0) {
       label_t label;
-      oid_t oid;
-
-      arc >> label >> oid;
+      Any oid;
+      label = deserialize_oid(graph, arc, oid);
       vid_t vid;
       if (!graph.get_lid(label, oid, vid)) {
         vid = graph.add_vertex(label, oid);
@@ -444,30 +491,33 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       graph.get_vertex_table(label).ingest(vid, arc);
     } else if (op_type == 1) {
       label_t src_label, dst_label, edge_label;
-      oid_t src, dst;
+      Any src, dst;
       vid_t src_vid, dst_vid;
-
-      arc >> src_label >> src >> dst_label >> dst >> edge_label;
+      src_label = deserialize_oid(graph, arc, src);
+      dst_label = deserialize_oid(graph, arc, dst);
+      arc >> edge_label;
       CHECK(graph.get_lid(src_label, src, src_vid));
       CHECK(graph.get_lid(dst_label, dst, dst_vid));
       graph.IngestEdge(src_label, src_vid, dst_label, dst_vid, edge_label,
                        timestamp, arc, alloc);
     } else if (op_type == 2) {
       label_t label;
-      oid_t oid;
+      Any oid;
       int col_id;
-
-      arc >> label >> oid >> col_id;
+      label = deserialize_oid(graph, arc, oid);
+      arc >> col_id;
       vid_t vid;
       CHECK(graph.get_lid(label, oid, vid));
       graph.get_vertex_table(label).get_column_by_id(col_id)->ingest(vid, arc);
     } else if (op_type == 3) {
       uint8_t dir;
       label_t label, neighbor_label, edge_label;
-      oid_t v, nbr;
+      Any v, nbr;
       vid_t v_lid, nbr_lid;
-
-      arc >> dir >> label >> v >> neighbor_label >> nbr >> edge_label;
+      arc >> dir;
+      label = deserialize_oid(graph, arc, v);
+      neighbor_label = deserialize_oid(graph, arc, nbr);
+      arc >> edge_label;
       CHECK(graph.get_lid(label, v, v_lid));
       CHECK(graph.get_lid(neighbor_label, nbr, nbr_lid));
 
@@ -511,11 +561,12 @@ size_t UpdateTransaction::get_out_csr_index(label_t src_label,
          vertex_label_num_ * vertex_label_num_ * edge_label_num_;
 }
 
-bool UpdateTransaction::oid_to_lid(label_t label, oid_t oid, vid_t& lid) const {
+bool UpdateTransaction::oid_to_lid(label_t label, const Any& oid,
+                                   vid_t& lid) const {
   if (graph_.get_lid(label, oid, lid)) {
     return true;
   } else {
-    if (added_vertices_[label].get_index(oid, lid)) {
+    if (added_vertices_[label]->get_index(oid, lid)) {
       lid += added_vertices_base_[label];
       return true;
     }
@@ -523,13 +574,13 @@ bool UpdateTransaction::oid_to_lid(label_t label, oid_t oid, vid_t& lid) const {
   return false;
 }
 
-oid_t UpdateTransaction::lid_to_oid(label_t label, vid_t lid) const {
+Any UpdateTransaction::lid_to_oid(label_t label, vid_t lid) const {
   if (graph_.vertex_num(label) > lid) {
     return graph_.get_oid(label, lid);
   } else {
-    oid_t ret;
-    CHECK(
-        added_vertices_[label].get_key(lid - added_vertices_base_[label], ret));
+    Any ret;
+    CHECK(added_vertices_[label]->get_key(lid - added_vertices_base_[label],
+                                          ret));
     return ret;
   }
 }
@@ -553,19 +604,19 @@ void UpdateTransaction::release() {
 
 void UpdateTransaction::applyVerticesUpdates() {
   for (label_t label = 0; label < vertex_label_num_; ++label) {
-    std::vector<std::pair<vid_t, oid_t>> added_vertices;
-    vid_t added_vertices_num = added_vertices_[label].size();
+    std::vector<std::pair<vid_t, Any>> added_vertices;
+    vid_t added_vertices_num = added_vertices_[label]->size();
     for (vid_t v = 0; v < added_vertices_num; ++v) {
       vid_t lid = v + added_vertices_base_[label];
-      oid_t oid;
-      CHECK(added_vertices_[label].get_key(v, oid));
+      Any oid;
+      CHECK(added_vertices_[label]->get_key(v, oid));
       added_vertices.emplace_back(lid, oid);
     }
-    std::sort(added_vertices.begin(), added_vertices.end(),
-              [](const std::pair<vid_t, oid_t>& lhs,
-                 const std::pair<vid_t, oid_t>& rhs) {
-                return lhs.first < rhs.first;
-              });
+    std::sort(
+        added_vertices.begin(), added_vertices.end(),
+        [](const std::pair<vid_t, Any>& lhs, const std::pair<vid_t, Any>& rhs) {
+          return lhs.first < rhs.first;
+        });
 
     auto& table = extra_vertex_properties_[label];
     auto& vertex_offset = vertex_offsets_[label];

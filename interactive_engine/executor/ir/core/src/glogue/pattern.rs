@@ -334,12 +334,9 @@ impl Pattern {
                 return Err(IrPatternError::Unsupported(format!("Only support join_kind of `InnerJoin` in ExtendStrategy in Pattern Match, while the join_kind is {:?}", sentence.join_kind)).into());
             }
             // pb pattern sentence must have start tag
-            let start_tag = pb_name_or_id_to_id(
-                sentence
-                    .start
-                    .as_ref()
-                    .ok_or(ParsePbError::EmptyFieldError("pb::Pattern::Sentence::start".to_string()))?,
-            )?;
+            let start_tag = pb_name_or_id_to_id(sentence.start.as_ref().ok_or_else(|| {
+                ParsePbError::EmptyFieldError("pb::Pattern::Sentence::start".to_string())
+            })?)?;
             // just use the start tag id as its pattern vertex id
             let start_tag_v_id = start_tag as PatternId;
             // check whether the start tag label is already determined or not
@@ -568,11 +565,11 @@ fn build_logical_plan(
     origin_pattern: &Pattern, mut exact_extend_steps: Vec<ExactExtendStep>,
 ) -> IrPatternResult<pb::LogicalPlan> {
     let mut match_plan = pb::LogicalPlan::default();
-    let source_extend = exact_extend_steps
-        .pop()
-        .ok_or(IrPatternError::InvalidExtendPattern(
+    let source_extend = exact_extend_steps.pop().ok_or_else(|| {
+        IrPatternError::InvalidExtendPattern(
             "Build logical plan error: from empty extend steps!".to_string(),
-        ))?;
+        )
+    })?;
     append_opr(&mut match_plan, generate_source_operator(origin_pattern, &source_extend)?)?;
     for exact_extend_step in exact_extend_steps.into_iter().rev() {
         let edge_expands_num = exact_extend_step.len();
@@ -678,6 +675,7 @@ fn generate_source_operator(
         alias: Some((source_vertex_id as KeyId).into()),
         params: Some(source_vertex_param),
         idx_predicate: None,
+        is_count_only: false,
         meta_data: None,
     };
     Ok(source_scan.into())
@@ -692,7 +690,7 @@ fn generate_project_operator(pattern: &Pattern) -> IrPatternResult<Option<pb::lo
     let max_tag_id = pattern.get_max_tag_id() as KeyId;
     let max_vertex_id = pattern
         .get_max_vertex_id()
-        .ok_or(IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", pattern)))?
+        .ok_or_else(|| (IrPatternError::InvalidExtendPattern(format!("Empty pattern {:?}", pattern))))?
         as KeyId;
     if max_vertex_id >= max_tag_id {
         let mut mappings = Vec::with_capacity(max_tag_id as usize);
@@ -892,11 +890,13 @@ fn get_edge_expand_from_binder<'a, 'b>(
         let expand_base = path_expand
             .base
             .as_ref()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?;
+            .ok_or_else(|| (ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string())))?;
         let edge_expand = expand_base
             .edge_expand
             .as_ref()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base::EdgeExpand in Pattern".to_string()))?;
+            .ok_or_else(|| {
+                ParsePbError::EmptyFieldError("PathExpand::base::EdgeExpand in Pattern".to_string())
+            })?;
         edge_data_map.insert(edge_id, PbEdgeOrPath::from(path_expand.clone()));
         Ok(edge_expand)
     } else if let Some(BinderItem::Edge(edge_expand)) = binder.item.as_ref() {
@@ -1176,7 +1176,7 @@ impl Pattern {
     pub fn get_edge(&self, edge_id: PatternId) -> IrPatternResult<&PatternEdge> {
         self.edges
             .get(edge_id)
-            .ok_or(IrPatternError::MissingPatternEdge(edge_id))
+            .ok_or_else(|| (IrPatternError::MissingPatternEdge(edge_id)))
     }
 
     /// Get the total number of edges in the pattern
@@ -1208,7 +1208,7 @@ impl Pattern {
     pub fn get_edge_tag(&self, edge_id: PatternId) -> IrPatternResult<Option<TagId>> {
         self.edges_data
             .get(edge_id)
-            .ok_or(IrPatternError::MissingPatternEdge(edge_id))
+            .ok_or_else(|| (IrPatternError::MissingPatternEdge(edge_id)))
             .map(|edge_data| edge_data.tag)
     }
 
@@ -1217,7 +1217,7 @@ impl Pattern {
     pub fn get_edge_data(&self, edge_id: PatternId) -> IrPatternResult<&PbEdgeOrPath> {
         self.edges_data
             .get(edge_id)
-            .ok_or(IrPatternError::MissingPatternEdge(edge_id))
+            .ok_or_else(|| (IrPatternError::MissingPatternEdge(edge_id)))
             .map(|edge_data| &edge_data.data)
     }
 
@@ -1235,7 +1235,7 @@ impl Pattern {
     pub fn get_vertex(&self, vertex_id: PatternId) -> IrPatternResult<&PatternVertex> {
         self.vertices
             .get(vertex_id)
-            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
+            .ok_or_else(|| (IrPatternError::MissingPatternVertex(vertex_id)))
     }
 
     /// Get the total number of vertices in the pattern
@@ -1265,7 +1265,7 @@ impl Pattern {
     pub fn get_vertex_tag(&self, vertex_id: PatternId) -> IrPatternResult<Option<TagId>> {
         self.vertices_data
             .get(vertex_id)
-            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
+            .ok_or_else(|| (IrPatternError::MissingPatternVertex(vertex_id)))
             .map(|vertex_data| vertex_data.tag)
     }
 
@@ -1274,7 +1274,7 @@ impl Pattern {
     pub fn get_vertex_parameters(&self, vertex_id: PatternId) -> IrPatternResult<Option<&pb::QueryParams>> {
         self.vertices_data
             .get(vertex_id)
-            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
+            .ok_or_else(|| (IrPatternError::MissingPatternVertex(vertex_id)))
             .map(|vertex_data| vertex_data.parameters.as_ref())
     }
 
@@ -1284,7 +1284,7 @@ impl Pattern {
         let vertex_data = self
             .vertices_data
             .get(vertex_id)
-            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))?;
+            .ok_or_else(|| (IrPatternError::MissingPatternVertex(vertex_id)))?;
         Ok(vertex_data
             .adjacencies
             .iter()
@@ -1297,7 +1297,7 @@ impl Pattern {
     pub fn get_vertex_degree(&self, vertex_id: PatternId) -> IrPatternResult<usize> {
         self.vertices_data
             .get(vertex_id)
-            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))
+            .ok_or_else(|| (IrPatternError::MissingPatternVertex(vertex_id)))
             .map(|vertex_data| vertex_data.adjacencies.len())
     }
 
@@ -1355,7 +1355,7 @@ impl Pattern {
         let edge_data = self
             .edges_data
             .get_mut(edge_id)
-            .ok_or(IrPatternError::MissingPatternEdge(edge_id))?;
+            .ok_or_else(|| (IrPatternError::MissingPatternEdge(edge_id)))?;
         edge_data.data = opr;
         Ok(())
     }
@@ -1372,7 +1372,7 @@ impl Pattern {
         let mut vertex_data = self
             .vertices_data
             .remove(vertex_id)
-            .ok_or(IrPatternError::MissingPatternVertex(vertex_id))?;
+            .ok_or_else(|| (IrPatternError::MissingPatternVertex(vertex_id)))?;
         if let Some(existed_params) = vertex_data.parameters {
             vertex_data.parameters = Some(combine_query_params(existed_params, params));
         } else {
@@ -1409,7 +1409,7 @@ impl Pattern {
             // update adjacent vertices' info
             self.vertices_data
                 .get_mut(adjacent_vertex_id)
-                .ok_or(IrPatternError::MissingPatternVertex(adjacent_vertex_id))?
+                .ok_or_else(|| (IrPatternError::MissingPatternVertex(adjacent_vertex_id)))?
                 .remove_adjacency(adjacent_edge_id)
         }
 

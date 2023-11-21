@@ -52,7 +52,7 @@ impl SinkGen for pb::Sink {
         if let Some(sink_target) = self.sink_target {
             let inner = sink_target
                 .inner
-                .ok_or(ParsePbError::EmptyFieldError("sink_target inner is missing".to_string()))?;
+                .ok_or_else(|| ParsePbError::EmptyFieldError("sink_target inner is missing".to_string()))?;
             let tags = self
                 .tags
                 .into_iter()

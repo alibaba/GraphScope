@@ -401,17 +401,13 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         private String getMapKey(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue keyAlias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
-            return keyAlias.alias.name;
+            return AliasManager.getAliasName(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
         }
 
         private String getMapValue(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue valueAlias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
-            return valueAlias.alias.name;
+            return AliasManager.getAliasName(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
         }
 
         private Step getPreviousGroupStep(Step step) {

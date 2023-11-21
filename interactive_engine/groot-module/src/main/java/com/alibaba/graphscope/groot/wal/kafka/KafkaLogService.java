@@ -134,12 +134,29 @@ public class KafkaLogService implements LogService {
         if (this.adminClient == null) {
             synchronized (this) {
                 if (this.adminClient == null) {
-                    Map<String, Object> adminConfig = new HashMap<>();
-                    adminConfig.put("bootstrap.servers", this.servers);
-                    this.adminClient = AdminClient.create(adminConfig);
+                    try {
+                        this.adminClient = createAdminWithRetry();
+                    } catch (InterruptedException e) {
+                        logger.error("Create Kafka Client interrupted");
+                    }
                 }
             }
         }
         return this.adminClient;
+    }
+
+    private AdminClient createAdminWithRetry() throws InterruptedException {
+        Map<String, Object> adminConfig = new HashMap<>();
+        adminConfig.put("bootstrap.servers", this.servers);
+
+        for (int i = 0; i < 10; ++i) {
+            try {
+                return AdminClient.create(adminConfig);
+            } catch (Exception e) {
+                logger.warn("Error creating Kafka AdminClient", e);
+                Thread.sleep(5000);
+            }
+        }
+        throw new RuntimeException("Create Kafka Client failed");
     }
 }

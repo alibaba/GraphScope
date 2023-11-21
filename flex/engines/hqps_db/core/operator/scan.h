@@ -50,10 +50,10 @@ class Scan {
   }
 
   template <typename EXPR, typename... SELECTOR, size_t num_labels>
-  static GeneralVertexSet<vertex_id_t, label_id_t> ScanMultiLabelVertex(
-      const GRAPH_INTERFACE& graph,
-      const std::array<label_id_t, num_labels>& labels,
-      Filter<EXPR, SELECTOR...>&& filter) {
+  static GeneralVertexSet<vertex_id_t, label_id_t, grape::EmptyType>
+  ScanMultiLabelVertex(const GRAPH_INTERFACE& graph,
+                       const std::array<label_id_t, num_labels>& labels,
+                       Filter<EXPR, SELECTOR...>&& filter) {
     auto expr = filter.expr_;
     auto selectors = filter.selectors_;
     return scan_multi_label_vertex_with_selector(graph, labels, expr,
@@ -96,17 +96,50 @@ class Scan {
   /// @param v_label_id
   /// @param oid
   /// @return
+  template <typename OID_T>
   static vertex_set_t ScanVertexWithOid(const GRAPH_INTERFACE& graph,
                                         const label_id_t& v_label_id,
-                                        int64_t oid) {
+                                        OID_T oid) {
     std::vector<vertex_id_t> gids;
-    gids.emplace_back(graph.ScanVerticesWithOid(v_label_id, oid));
+    vertex_id_t vid;
+    if (graph.ScanVerticesWithOid(v_label_id, oid, vid)) {
+      gids.emplace_back(vid);
+    }
     return make_default_row_vertex_set(std::move(gids), v_label_id);
+  }
+
+  /// @brief Scan vertex with oid
+  /// @param graph
+  /// @param v_label_ids
+  /// @param oid
+  /// @return
+  template <typename OID_T, size_t num_labels>
+  static auto ScanVertexWithOid(
+      const GRAPH_INTERFACE& graph,
+      const std::array<label_id_t, num_labels>& v_label_ids, OID_T oid) {
+    std::vector<vertex_id_t> gids;
+    std::vector<label_id_t> labels_vec;
+    std::vector<grape::Bitset> bitsets;
+    vertex_id_t vid;
+    for (auto i = 0; i < num_labels; ++i) {
+      if (graph.ScanVerticesWithOid(v_label_ids[i], oid, vid)) {
+        labels_vec.emplace_back(v_label_ids[i]);
+        gids.emplace_back(vid);
+      }
+    }
+    bitsets.resize(labels_vec.size());
+    for (auto i = 0; i < bitsets.size(); ++i) {
+      bitsets[i].init(gids.size());
+      bitsets[i].set_bit(i);
+    }
+
+    return make_general_set(std::move(gids), std::move(labels_vec),
+                            std::move(bitsets));
   }
 
  private:
   template <typename EXPR, typename... SELECTOR, size_t num_labels>
-  static GeneralVertexSet<vertex_id_t, label_id_t>
+  static GeneralVertexSet<vertex_id_t, label_id_t, grape::EmptyType>
   scan_multi_label_vertex_with_selector(
       const GRAPH_INTERFACE& graph,
       const std::array<label_id_t, num_labels>& labels, const EXPR& expr,

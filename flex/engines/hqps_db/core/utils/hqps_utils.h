@@ -848,6 +848,13 @@ struct to_string_impl<std::string> {
 };
 
 template <>
+struct to_string_impl<LabelKey> {
+  static inline std::string to_string(const LabelKey& label_key) {
+    return std::to_string(label_key.label_id);
+  }
+};
+
+template <>
 struct to_string_impl<Direction> {
   static inline std::string to_string(const Direction& opt) {
     if (opt == Direction::In) {
@@ -970,6 +977,9 @@ struct Edge<VID_T, grape::EmptyType> {
     return std::to_string(src) + "->" + std::to_string(dst) + "(" + ")";
   }
 };
+
+template <typename VID_T>
+using DefaultEdge = Edge<VID_T, grape::EmptyType>;
 
 struct QPSError {
   std::string message;

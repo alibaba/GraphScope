@@ -41,7 +41,7 @@ def configure_environ():
     if os.path.isdir(os.path.join(GRAPHSCOPE_HOME, "open-mpi")):
         opal_prefix = os.path.join(GRAPHSCOPE_HOME, "open-mpi")
     if opal_prefix is None:
-        logger.warning(
+        logger.info(
             "Failed to resolve the openmpi path, moving towards the system-wide one"
         )
     else:
@@ -95,7 +95,9 @@ class AbstractLauncher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def create_learning_instance(self, object_id: int, handle: str, config: str):
+    def create_learning_instance(
+        self, object_id: int, handle: str, config: str, learning_backend: int
+    ):
         pass
 
     @abstractmethod

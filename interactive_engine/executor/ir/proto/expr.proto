@@ -79,6 +79,8 @@ enum Logical {
   NOT = 12;
   // A unary logical isnull operator
   ISNULL = 13;
+  // A binary operator to verify whether a string matches a regular expression
+  REGEX = 14;
 }
 
 enum Arithmetic {
@@ -119,6 +121,15 @@ message VariableKeys {
   repeated Variable keys = 1;
 }
 
+message VariableKeyValue {
+  common.Value key = 1;
+  Variable value = 2;
+}
+
+message VariableKeyValues {
+  repeated VariableKeyValue key_vals = 1;
+}
+
 // dynamic param
 message DynamicParam {
   string name = 1;
@@ -149,10 +160,9 @@ message Extract {
     HOUR = 3;
     MINUTE = 4;
     SECOND = 5;
+    MILLISECOND = 6;
   }
-
   Interval interval = 1;
-  Expression data_time = 2;
 }
 
 // An operator of expression is one of Logical, Arithmetic, Const and Variable.
@@ -173,6 +183,8 @@ message ExprOpr {
     DynamicParam param = 9;
     Case case = 10;
     Extract extract = 11;
+    // TODO: the new definition for var_map, that allows user-given key name. Will remove the old var_map soon.
+    VariableKeyValues map = 13;
   }
   // The data of type of ExprOpr
   common.IrDataType node_type = 12;

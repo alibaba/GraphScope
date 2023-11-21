@@ -72,7 +72,7 @@ class TwoLabelVertexSetImplBuilder {
   }
 
   res_t Build() {
-    VLOG(10) << "Try to resize from " << bitset_.size_ << ", to "
+    VLOG(10) << "Try to resize from " << bitset_.cardinality() << ", to "
              << vec_.size();
     bitset_.resize(vec_.size());
     return res_t(std::move(vec_), std::move(data_), std::move(labels_),
@@ -744,6 +744,19 @@ class TwoLabelVertexSetImpl {
 
   const std::array<LabelT, 2>& GetLabels() const { return label_names_; }
 
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    // fill with each vertex's label
+    for (auto i = 0; i < vec_.size(); ++i) {
+      if (bitset_.get_bit(i)) {
+        res.emplace_back(label_names_[0]);
+      } else {
+        res.emplace_back(label_names_[1]);
+      }
+    }
+    return res;
+  }
+
   LabelT GetLabel(size_t i) const { return label_names_[i]; }
 
   const grape::Bitset& GetBitset() const { return bitset_; }
@@ -1005,6 +1018,19 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
   }
 
   const std::array<LabelT, 2>& GetLabels() const { return label_names_; }
+
+  std::vector<LabelKey> GetLabelVec() const {
+    std::vector<LabelKey> res;
+    // fill with each vertex's label
+    for (auto i = 0; i < vec_.size(); ++i) {
+      if (bitset_.get_bit(i)) {
+        res.emplace_back(label_names_[0]);
+      } else {
+        res.emplace_back(label_names_[1]);
+      }
+    }
+    return res;
+  }
 
   LabelT GetLabel(size_t i) const { return label_names_[i]; }
 

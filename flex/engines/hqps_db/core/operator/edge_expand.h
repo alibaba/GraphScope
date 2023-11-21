@@ -309,11 +309,11 @@ class EdgeExpand {
   /// @param v_sets
   /// @param edge_expand_opt
   /// @return
-  template <typename... SELECTOR,
+  template <typename... SELECTOR, typename... SET_T,
             typename RES_T = std::pair<vertex_set_t, std::vector<offset_t>>>
   static RES_T EdgeExpandV(
       const GRAPH_INTERFACE& graph,
-      const GeneralVertexSet<vertex_id_t, label_id_t>& cur_vertex_set,
+      const GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>& cur_vertex_set,
       Direction direction, label_id_t edge_label, label_id_t other_label,
       Filter<TruePredicate, SELECTOR...>&& edge_filter,
       size_t limit = INT_MAX) {
@@ -440,11 +440,12 @@ class EdgeExpand {
   /// @param v_sets
   /// @param edge_expand_opt
   /// @return
-  template <
-      typename VERTEX_SET_T, size_t num_labels, typename EDGE_FILTER_T,
-      size_t... Is, typename std::enable_if<(num_labels != 2)>::type* = nullptr,
-      typename RES_T = std::pair<GeneralVertexSet<vertex_id_t, label_id_t>,
-                                 std::vector<offset_t>>>
+  template <typename VERTEX_SET_T, size_t num_labels, typename EDGE_FILTER_T,
+            typename... SET_T, size_t... Is,
+            typename std::enable_if<(num_labels != 2)>::type* = nullptr,
+            typename RES_T =
+                std::pair<GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>,
+                          std::vector<offset_t>>>
   static RES_T EdgeExpandV(const GRAPH_INTERFACE& graph,
                            const VERTEX_SET_T& cur_vertex_set,
                            Direction direction, label_id_t edge_label,
@@ -499,7 +500,7 @@ class EdgeExpand {
     }
     CHECK(cur_ind == total_size);
     auto copied_labels(other_labels);
-    GeneralVertexSet<vertex_id_t, label_id_t> res_set(
+    GeneralVertexSet<vertex_id_t, label_id_t, SET_T...> res_set(
         std::move(res_vids), std::move(copied_labels), std::move(res_bitset));
 
     return std::make_pair(std::move(res_set), std::move(res_offset));
@@ -602,10 +603,10 @@ class EdgeExpand {
   /// @param edge_filter
   /// @param limit
   /// @return /
-  template <size_t num_pairs, typename... PropTuple>
+  template <size_t num_pairs, typename... PropTuple, typename... SET_T>
   static auto EdgeExpandVMultiTriplet(
       const GRAPH_INTERFACE& graph,
-      const GeneralVertexSet<vertex_id_t, label_id_t>& cur_vertex_set,
+      const GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>& cur_vertex_set,
       Direction& direction,
       std::array<std::array<label_id_t, 3>, num_pairs>& edge_labels,
       std::tuple<PropTupleArrayT<PropTuple>...>& prop_names,
@@ -731,20 +732,25 @@ class EdgeExpand {
     // Expand from multi label vertices and though multi edge labels.
     // result in general edge set.
     auto src_label = cur_vertex_set.GetLabel();
-    LOG(INFO) << "[EdgeExpandEMultiTriplet] real labels: "
-              << gs::to_string(edge_labels);
+    LOG(INFO) << "[EdgeExpandEMultiTriplet] real labels: ";
+    for (auto i = 0; i < edge_labels.size(); ++i) {
+      LOG(INFO) << std::to_string(edge_labels[i][0]) << " "
+                << std::to_string(edge_labels[i][1]) << " "
+                << std::to_string(edge_labels[i][2]);
+    }
 
     // for each triplet, returns a vector of edge iters.
     auto& vertices = cur_vertex_set.GetVertices();
     using sub_graph_t = typename GRAPH_INTERFACE::sub_graph_t;
     using edge_iter_t = typename sub_graph_t::iterator;
     std::vector<sub_graph_t> sub_graphs;
+    auto prop_names_vec = prop_names_to_vec<PropTuple...>(prop_names);
     for (auto i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
       // return a hanlder to get edges
-      auto sub_graph_vec =
-          graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
-                            edge_labels[i][2], gs::to_string(direction));
+      auto sub_graph_vec = graph.GetSubGraph(
+          edge_labels[i][0], edge_labels[i][1], edge_labels[i][2],
+          gs::to_string(direction), prop_names_vec[i]);
       for (auto sub_graph : sub_graph_vec) {
         sub_graphs.emplace_back(sub_graph);
       }
@@ -811,7 +817,8 @@ class EdgeExpand {
     }
 
     auto set = UnTypedEdgeSet<vertex_id_t, label_id_t, sub_graph_t>(
-        vertices, label_indices, label_vec, std::move(label_to_subgraphs));
+        vertices, label_indices, label_vec, std::move(label_to_subgraphs),
+        direction);
     return std::make_pair(std::move(set), std::move(offsets));
   }
 
@@ -827,10 +834,10 @@ class EdgeExpand {
   /// @param edge_filter
   /// @param limit
   /// @return /
-  template <size_t num_pairs, typename... PropTuple>
+  template <size_t num_pairs, typename... PropTuple, typename... SET_T>
   static auto EdgeExpandEMultiTriplet(
       const GRAPH_INTERFACE& graph,
-      const GeneralVertexSet<vertex_id_t, label_id_t>& cur_vertex_set,
+      const GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>& cur_vertex_set,
       Direction& direction,
       std::array<std::array<label_id_t, 3>, num_pairs>& edge_labels,
       std::tuple<PropTupleArrayT<PropTuple>...>& prop_names,
@@ -854,12 +861,13 @@ class EdgeExpand {
     using sub_graph_t = typename GRAPH_INTERFACE::sub_graph_t;
     using edge_iter_t = typename sub_graph_t::iterator;
     std::vector<sub_graph_t> sub_graphs;
+    auto prop_names_vec = prop_names_to_vec<PropTuple...>(prop_names);
     for (auto i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
       // return a hanlder to get edges
-      auto sub_graph_vec =
-          graph.GetSubGraph(edge_labels[i][0], edge_labels[i][1],
-                            edge_labels[i][2], gs::to_string(direction));
+      auto sub_graph_vec = graph.GetSubGraph(
+          edge_labels[i][0], edge_labels[i][1], edge_labels[i][2],
+          gs::to_string(direction), prop_names_vec[i]);
       for (auto sub_graph : sub_graph_vec) {
         sub_graphs.emplace_back(sub_graph);
       }
@@ -936,7 +944,8 @@ class EdgeExpand {
     }
 
     auto set = UnTypedEdgeSet<vertex_id_t, label_id_t, sub_graph_t>(
-        vertices, label_indices, label_vec, std::move(label_to_subgraphs));
+        vertices, label_indices, label_vec, std::move(label_to_subgraphs),
+        direction);
     return std::make_pair(std::move(set), std::move(offsets));
   }
 
@@ -1410,7 +1419,7 @@ class EdgeExpand {
         AdjEdgeSet<GRAPH_INTERFACE, vertex_id_t, label_id_t, grape::EmptyType>(
             std::move(copied_vids), std::move(adj_list_array),
             state.edge_label_, state.cur_vertex_set_.GetLabel(),
-            state.other_label_, state.direction_);
+            state.other_label_, array_to_vec(prop_names), state.direction_);
     return std::make_pair(std::move(edge_set), std::move(offset));
   }
 
@@ -1490,7 +1499,26 @@ class EdgeExpand {
              << gs::to_string(edge_label_id)
              << ", new vertices count: " << tmp_offset.back();
   }
-};  // namespace gs
+
+  template <typename... PropTuple, size_t... Is>
+  static void emplace_prop_names_to_vec(
+      std::vector<std::vector<std::string>>& vec_vec_prop_names,
+      std::tuple<PropTupleArrayT<PropTuple>...>& prop_names,
+      std::index_sequence<Is...>) {
+    (vec_vec_prop_names.emplace_back(array_to_vec(std::get<Is>(prop_names))),
+     ...);
+  }
+  template <typename... PropTuple>
+  static std::vector<std::vector<std::string>> prop_names_to_vec(
+      std::tuple<PropTupleArrayT<PropTuple>...>& prop_names) {
+    std::vector<std::vector<std::string>> vec_vec_prop_names;
+    vec_vec_prop_names.reserve(sizeof...(PropTuple));
+    emplace_prop_names_to_vec<PropTuple...>(
+        vec_vec_prop_names, prop_names,
+        std::make_index_sequence<sizeof...(PropTuple)>());
+    return vec_vec_prop_names;
+  }
+};
 
 }  // namespace gs
 

@@ -60,12 +60,9 @@ impl Accumulator<Record, DynIter<Record>> for SampleAccum {
 impl SampleAccumFactoryGen for algebra_pb::Sample {
     fn gen_accum(self) -> FnGenResult<SampleAccum> {
         if let Some(sample_type) = self.sample_type {
-            let sample_type =
-                sample_type
-                    .inner
-                    .ok_or(FnGenError::ParseError(ParsePbError::EmptyFieldError(
-                        "sample_type.inner".to_owned(),
-                    )))?;
+            let sample_type = sample_type.inner.ok_or_else(|| {
+                FnGenError::ParseError(ParsePbError::EmptyFieldError("sample_type.inner".to_owned()))
+            })?;
             match sample_type {
                 algebra_pb::sample::sample_type::Inner::SampleByNum(num) => {
                     let sample = SampleAccum {

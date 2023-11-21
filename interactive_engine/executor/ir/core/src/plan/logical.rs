@@ -20,13 +20,12 @@ use std::fmt;
 use std::iter::FromIterator;
 use std::rc::Rc;
 
+use fraction::Fraction;
 use ir_common::error::ParsePbError;
 use ir_common::generated::algebra as pb;
 use ir_common::generated::algebra::pattern::binder::Item;
 use ir_common::generated::common as common_pb;
 use ir_common::{KeyId, LabelId, NameOrId};
-
-use fraction::Fraction;
 use vec_map::VecMap;
 
 use crate::error::{IrError, IrResult};
@@ -450,7 +449,7 @@ impl LogicalPlan {
                             id_map
                                 .get(&old)
                                 .cloned()
-                                .ok_or(IrError::ParentNodeNotExist(old))
+                                .ok_or_else(|| IrError::ParentNodeNotExist(old))
                         })
                         .collect::<IrResult<Vec<NodeId>>>()?
                 };
@@ -474,7 +473,7 @@ impl LogicalPlan {
         let inner_opr = opr
             .opr
             .as_ref()
-            .ok_or(IrError::MissingData("Operator::opr".to_string()))?;
+            .ok_or_else(|| IrError::MissingData("Operator::opr".to_string()))?;
 
         let is_sink = if let pb::logical_plan::operator::Opr::Sink(_) = inner_opr { true } else { false };
 
@@ -509,7 +508,7 @@ impl LogicalPlan {
                     let is_pattern_source_whole_graph = self
                         .get_opr(parent_ids[0])
                         .map(|pattern_source| is_whole_graph(&pattern_source))
-                        .ok_or(IrError::ParentNodeNotExist(parent_ids[0]))?;
+                        .ok_or_else(|| IrError::ParentNodeNotExist(parent_ids[0]))?;
                     let extend_strategy = if is_pattern_source_whole_graph {
                         ExtendStrategy::init(&pattern, &self.meta)
                     } else {
@@ -848,7 +847,7 @@ fn triplet_to_index_predicate(
     let schema = meta.schema.as_ref().unwrap();
     let mut key = None;
     let mut is_eq = false;
-    let mut value = None;
+    let mut is_within = false;
     if let Some(item) = &operators.get(0).unwrap().item {
         match item {
             common_pb::expr_opr::Item::Var(var) => {
@@ -888,35 +887,83 @@ fn triplet_to_index_predicate(
                 if *l == 0 {
                     // Eq
                     is_eq = true;
+                } else if *l == 6 {
+                    // Within
+                    is_within = true;
                 }
             }
             _ => { /*do nothing*/ }
         }
     };
 
-    if !is_eq {
+    if !is_eq && !is_within {
         return Ok(None);
     }
 
     if let Some(item) = &operators.get(2).unwrap().item {
         match item {
             common_pb::expr_opr::Item::Const(c) => {
-                value = Some(c.clone());
+                if is_within {
+                    let or_predicates = match c.item.clone().unwrap() {
+                        common_pb::value::Item::I32Array(array) => array
+                            .item
+                            .into_iter()
+                            .map(|val| build_and_predicate(key.clone(), val.into()))
+                            .collect(),
+                        common_pb::value::Item::I64Array(array) => array
+                            .item
+                            .into_iter()
+                            .map(|val| build_and_predicate(key.clone(), val.into()))
+                            .collect(),
+                        common_pb::value::Item::F64Array(array) => array
+                            .item
+                            .into_iter()
+                            .map(|val| build_and_predicate(key.clone(), val.into()))
+                            .collect(),
+                        common_pb::value::Item::StrArray(array) => array
+                            .item
+                            .into_iter()
+                            .map(|val| build_and_predicate(key.clone(), val.into()))
+                            .collect(),
+                        _ => Err(IrError::Unsupported(format!(
+                            "unsupported value type for within: {:?}",
+                            c
+                        )))?,
+                    };
+                    return Ok(Some(pb::IndexPredicate { or_predicates }));
+                } else {
+                    let idx_pred =
+                        pb::IndexPredicate { or_predicates: vec![build_and_predicate(key, c.clone())] };
+                    return Ok(Some(idx_pred));
+                }
+            }
+
+            common_pb::expr_opr::Item::Param(param) => {
+                let idx_pred = pb::IndexPredicate {
+                    or_predicates: vec![pb::index_predicate::AndPredicate {
+                        predicates: vec![pb::index_predicate::Triplet {
+                            key,
+                            value: Some(param.clone().into()),
+                            cmp: None,
+                        }],
+                    }],
+                };
+
+                return Ok(Some(idx_pred));
             }
             _ => { /*do nothing*/ }
         }
-    };
-    if value.is_none() {
-        return Ok(None);
     }
 
-    let idx_pred = pb::IndexPredicate {
-        or_predicates: vec![pb::index_predicate::AndPredicate {
-            predicates: vec![pb::index_predicate::Triplet { key, value, cmp: None }],
-        }],
-    };
+    Ok(None)
+}
 
-    Ok(Some(idx_pred))
+fn build_and_predicate(
+    key: Option<common_pb::Property>, value: common_pb::Value,
+) -> pb::index_predicate::AndPredicate {
+    pb::index_predicate::AndPredicate {
+        predicates: vec![pb::index_predicate::Triplet { key, value: Some(value.into()), cmp: None }],
+    }
 }
 
 fn get_table_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<KeyId> {
@@ -981,7 +1028,7 @@ fn preprocess_label(
                         let new_item = common_pb::value::Item::I32(
                             schema
                                 .get_table_id(name)
-                                .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
+                                .ok_or_else(|| IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -992,9 +1039,9 @@ fn preprocess_label(
                                 .item
                                 .iter()
                                 .map(|name| {
-                                    schema
-                                        .get_table_id(name)
-                                        .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))
+                                    schema.get_table_id(name).ok_or_else(|| {
+                                        IrError::TableNotExist(NameOrId::Str(name.to_string()))
+                                    })
                                 })
                                 .collect::<IrResult<Vec<_>>>()?,
                         });
@@ -1051,6 +1098,14 @@ fn preprocess_expression(
                     }
                     count = 0;
                 }
+                common_pb::expr_opr::Item::Map(key_values) => {
+                    for key_val in &mut key_values.key_vals {
+                        if let Some(value) = key_val.value.as_mut() {
+                            preprocess_var(value, meta, plan_meta, false)?;
+                        }
+                    }
+                    count = 0;
+                }
                 _ => count = 0,
             }
         }
@@ -1068,11 +1123,12 @@ fn preprocess_params(
     if let Some(schema) = &meta.schema {
         if schema.is_table_id() {
             for table in params.tables.iter_mut() {
-                let new_table = get_table_id_from_pb(schema, table)
-                    .ok_or(IrError::TableNotExist(table.clone().try_into()?))?
-                    .into();
-                debug!("table: {:?} -> {:?}", table, new_table);
-                *table = new_table;
+                if let Some(new_table) = get_table_id_from_pb(schema, table) {
+                    debug!("table: {:?} -> {:?}", table, new_table);
+                    *table = new_table.into();
+                } else {
+                    return Err(IrError::TableNotExist(table.clone().try_into()?));
+                }
             }
         }
     }
@@ -1393,7 +1449,12 @@ impl AsLogical for pb::IndexPredicate {
                             }
                             common_pb::property::Item::Label(_) => {
                                 if let Some(val) = pred.value.as_mut() {
-                                    preprocess_label(val, meta, plan_meta)?;
+                                    match val {
+                                        pb::index_predicate::triplet::Value::Const(val) => {
+                                            preprocess_label(val, meta, plan_meta)?
+                                        }
+                                        pb::index_predicate::triplet::Value::Param(_) => {}
+                                    }
                                 }
                             }
                             _ => {}
@@ -1580,7 +1641,7 @@ impl AsLogical for pb::Unfold {
             let curr_node = plan_meta.get_curr_node();
             let tag_id = get_or_set_tag_id(tag, plan_meta)?;
             // plan_meta.set_tag_nodes(tag_id, plan_meta.get_curr_referred_nodes().to_vec());
-            
+
             let tag_nodes = plan_meta.get_tag_nodes(tag_id).to_vec();
             plan_meta.refer_to_nodes(curr_node, tag_nodes.clone());
         }
@@ -2073,6 +2134,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: Some(vec!["software".to_string()].into()),
+            is_count_only: false,
             meta_data: None,
         };
         scan.preprocess(&meta, &mut plan_meta).unwrap();
@@ -2152,6 +2214,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2198,6 +2261,7 @@ mod test {
                 extra: HashMap::new(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2220,6 +2284,118 @@ mod test {
     }
 
     #[test]
+    fn scan_pred_to_idx_pred_with_dyn_param() {
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_curr_node(0);
+        plan_meta.curr_node_meta_mut();
+        plan_meta.refer_to_nodes(0, vec![0]);
+        let meta = StoreMeta {
+            schema: Some(
+                Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
+            ),
+        };
+        // predicate: @.name == $person_name
+        let dyn_param =
+            common_pb::DynamicParam { name: "person_name".to_string(), index: 0, data_type: None };
+        let dyn_param_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Param(dyn_param.clone())),
+        };
+        let mut predicate = str_to_expr_pb("@.name == ".to_string()).unwrap();
+        predicate.operators.push(dyn_param_opr);
+
+        let mut scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                tables: vec!["person".into()],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: Some(predicate),
+                sample_ratio: 1.0,
+                extra: HashMap::new(),
+            }),
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        scan.preprocess(&meta, &mut plan_meta).unwrap();
+        assert!(scan.params.unwrap().predicate.is_none());
+        assert_eq!(
+            scan.idx_predicate.unwrap(),
+            pb::IndexPredicate {
+                or_predicates: vec![pb::index_predicate::AndPredicate {
+                    predicates: vec![pb::index_predicate::Triplet {
+                        key: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Key("name".into())),
+                        }),
+                        value: Some(dyn_param.into()),
+                        cmp: None,
+                    }]
+                }]
+            }
+        );
+    }
+
+    #[test]
+    fn scan_pred_to_idx_pred_with_within() {
+        let mut plan_meta = PlanMeta::default();
+        plan_meta.set_curr_node(0);
+        plan_meta.curr_node_meta_mut();
+        plan_meta.refer_to_nodes(0, vec![0]);
+        let meta = StoreMeta {
+            schema: Some(
+                Schema::from_json(std::fs::File::open("resource/modern_schema_pk.json").unwrap()).unwrap(),
+            ),
+        };
+        let mut scan = pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(pb::QueryParams {
+                tables: vec!["person".into()],
+                columns: vec![],
+                is_all_columns: false,
+                limit: None,
+                predicate: Some(str_to_expr_pb("@.name within [\"John\", \"Josh\"]".to_string()).unwrap()),
+                sample_ratio: 1.0,
+                extra: HashMap::new(),
+            }),
+            idx_predicate: None,
+            is_count_only: false,
+            meta_data: None,
+        };
+
+        scan.preprocess(&meta, &mut plan_meta).unwrap();
+        assert!(scan.params.unwrap().predicate.is_none());
+        assert_eq!(
+            scan.idx_predicate.unwrap(),
+            pb::IndexPredicate {
+                or_predicates: vec![
+                    pb::index_predicate::AndPredicate {
+                        predicates: vec![pb::index_predicate::Triplet {
+                            key: Some(common_pb::Property {
+                                item: Some(common_pb::property::Item::Key("name".into())),
+                            }),
+                            value: Some("John".to_string().into()),
+                            cmp: None,
+                        }]
+                    },
+                    pb::index_predicate::AndPredicate {
+                        predicates: vec![pb::index_predicate::Triplet {
+                            key: Some(common_pb::Property {
+                                item: Some(common_pb::property::Item::Key("name".into())),
+                            }),
+                            value: Some("Josh".to_string().into()),
+                            cmp: None,
+                        }]
+                    }
+                ]
+            }
+        );
+    }
+    #[test]
     fn column_maintain_case1() {
         let mut plan = LogicalPlan::with_root();
         // g.V().hasLabel("person").has("age", 27).valueMap("age", "name", "id")
@@ -2230,6 +2406,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2285,6 +2462,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2362,6 +2540,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2483,6 +2662,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec!["person".into()], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         let mut opr_id = plan
@@ -2621,6 +2801,7 @@ mod test {
                 extra: Default::default(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2649,6 +2830,7 @@ mod test {
                 extra: Default::default(),
             }),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -2686,6 +2868,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2763,6 +2946,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2826,6 +3010,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2884,6 +3069,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2931,6 +3117,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -2990,6 +3177,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -3081,6 +3269,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -3127,6 +3316,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
         plan.append_operator_as_node(scan.into(), vec![0])
@@ -3223,6 +3413,7 @@ mod test {
             alias: Some("v".into()),
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -3302,6 +3493,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![])),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 

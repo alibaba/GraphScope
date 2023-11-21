@@ -365,6 +365,40 @@ impl ReadGraph for ExpStore {
         let pk_val = Object::from(outer_id);
         Ok(Some((EXP_STORE_PK.into(), pk_val).into()))
     }
+
+    fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        if params.filter.is_some() {
+            // the filter can not be pushed down to exp_store,
+            // so we need to scan all vertices with filter and then count
+            Ok(self.scan_vertex(params)?.count() as u64)
+        } else {
+            let worker_idx = self.cluster_info.get_worker_index()?;
+            let workers_num = self.cluster_info.get_local_worker_num()?;
+            if worker_idx % workers_num == 0 {
+                let label_ids = encode_storage_label(&params.labels);
+                Ok(self
+                    .store
+                    .count_all_vertices(label_ids.as_ref()) as u64)
+            } else {
+                Ok(0)
+            }
+        }
+    }
+
+    fn count_edge(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        if params.filter.is_some() {
+            Ok(self.scan_edge(params)?.count() as u64)
+        } else {
+            let worker_idx = self.cluster_info.get_worker_index()?;
+            let workers_num = self.cluster_info.get_local_worker_num()?;
+            if worker_idx % workers_num == 0 {
+                let label_ids = encode_storage_label(&params.labels);
+                Ok(self.store.count_all_edges(label_ids.as_ref()) as u64)
+            } else {
+                Ok(0)
+            }
+        }
+    }
 }
 
 #[inline]

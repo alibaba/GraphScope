@@ -22,7 +22,7 @@ RUN cd /home/graphscope/graphscope \
 FROM ubuntu:22.04
 
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk && \
+    apt-get install -y sudo default-jdk dnsutils tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

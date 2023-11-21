@@ -17,10 +17,10 @@ use std::any::TypeId;
 use std::collections::BTreeMap;
 use std::io;
 
+use chrono::{Datelike, Timelike};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
 use crate::{de_dyn_obj, DateTimeFormats, Object, Primitives};
-use chrono::{Datelike, Timelike};
 
 impl Encode for Primitives {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
@@ -133,12 +133,13 @@ impl Decode for DateTimeFormats {
                 let year = <i16>::read_from(reader)?;
                 let month = <u8>::read_from(reader)?;
                 let day = <u8>::read_from(reader)?;
-                let date = chrono::NaiveDate::from_ymd_opt(year as i32, month as u32, day as u32).ok_or(
-                    io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("invalid date {:?}-{:?}-{:?}", year, month, day),
-                    ),
-                )?;
+                let date = chrono::NaiveDate::from_ymd_opt(year as i32, month as u32, day as u32)
+                    .ok_or_else(|| {
+                        io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("invalid date {:?}-{:?}-{:?}", year, month, day),
+                        )
+                    })?;
                 Ok(DateTimeFormats::Date(date))
             }
             1 => {
@@ -148,41 +149,55 @@ impl Decode for DateTimeFormats {
                 let nano = <u32>::read_from(reader)?;
                 let time =
                     chrono::NaiveTime::from_hms_nano_opt(hour as u32, minute as u32, second as u32, nano)
-                        .ok_or(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("invalid time {:?}:{:?}:{:?}.{:?}", hour, minute, second, nano / 1000_000),
-                    ))?;
+                        .ok_or_else(|| {
+                        io::Error::new(
+                            io::ErrorKind::Other,
+                            format!(
+                                "invalid time {:?}:{:?}:{:?}.{:?}",
+                                hour,
+                                minute,
+                                second,
+                                nano / 1000_000
+                            ),
+                        )
+                    })?;
                 Ok(DateTimeFormats::Time(time))
             }
             2 => {
                 let timestamp_millis = <i64>::read_from(reader)?;
-                let date_time = chrono::NaiveDateTime::from_timestamp_millis(timestamp_millis).ok_or(
-                    io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("invalid datetime {:?}", timestamp_millis),
-                    ),
-                )?;
+                let date_time =
+                    chrono::NaiveDateTime::from_timestamp_millis(timestamp_millis).ok_or_else(|| {
+                        io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("invalid datetime {:?}", timestamp_millis),
+                        )
+                    })?;
                 Ok(DateTimeFormats::DateTime(date_time))
             }
             3 => {
                 let native_local_timestamp_millis = <i64>::read_from(reader)?;
                 let offset = <i32>::read_from(reader)?;
-                let tz = chrono::FixedOffset::east_opt(offset)
-                    .ok_or(io::Error::new(io::ErrorKind::Other, format!("invalid offset {:?}", offset)))?;
+                let tz = chrono::FixedOffset::east_opt(offset).ok_or_else(|| {
+                    io::Error::new(io::ErrorKind::Other, format!("invalid offset {:?}", offset))
+                })?;
                 let date_time = chrono::NaiveDateTime::from_timestamp_millis(native_local_timestamp_millis)
-                    .ok_or(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!("invalid datetime {:?}", native_local_timestamp_millis),
-                    ))?
+                    .ok_or_else(|| {
+                        io::Error::new(
+                            io::ErrorKind::Other,
+                            format!("invalid datetime {:?}", native_local_timestamp_millis),
+                        )
+                    })?
                     .and_local_timezone(tz)
                     .single()
-                    .ok_or(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!(
-                            "invalid datetime with timezone {:?} {:?}",
-                            native_local_timestamp_millis, tz
-                        ),
-                    ))?;
+                    .ok_or_else(|| {
+                        io::Error::new(
+                            io::ErrorKind::Other,
+                            format!(
+                                "invalid datetime with timezone {:?} {:?}",
+                                native_local_timestamp_millis, tz
+                            ),
+                        )
+                    })?;
 
                 Ok(DateTimeFormats::DateTimeWithTz(date_time))
             }

@@ -32,6 +32,9 @@ class Context;
 template <typename VID_T, typename LabelT, typename T>
 class FlatEdgeSet;
 
+template <typename VID_T, typename LabelT, typename EDATA_T>
+class SingleLabelEdgeSet;
+
 // forward declare general_edge_set
 template <size_t N, typename GI, typename VID_T, typename LabelT, typename... T>
 class GeneralEdgeSet;
@@ -48,7 +51,7 @@ class RowVertexSetImpl;
 template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImpl;
 
-template <typename VID_T, typename LabelT>
+template <typename VID_T, typename LabelT, typename... SET_T>
 class GeneralVertexSet;
 
 template <typename GI, typename PropTupleT>
@@ -238,6 +241,7 @@ class GeneralVertexSetPropGetter {
   const std::vector<grape::Bitset>& bitset_;
 };
 
+// For EdgeSetInnerIdGetter, we return a wrapped EdgeObject.
 template <int tag_id, typename VID_T, typename EDATA_T>
 class EdgeSetInnerIdGetter {
  public:
@@ -245,7 +249,10 @@ class EdgeSetInnerIdGetter {
 
   template <typename ALL_ELE_T>
   inline auto get_from_all_element(const ALL_ELE_T& all_ele) const {
-    return gs::get_from_tuple<tag_id>(all_ele);
+    auto tuple = gs::get_from_tuple<tag_id>(all_ele);
+    auto src_vid = std::get<0>(tuple);
+    auto dst_vid = std::get<1>(tuple);
+    return Edge<VID_T, grape::EmptyType>(src_vid, dst_vid);
   }
 };
 
@@ -646,10 +653,10 @@ static auto create_prop_getter_impl(
 
 // get for common properties for keyed_row_vertex_set
 template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
-          typename LabelT, typename VID_T>
-static auto create_prop_getter_impl(const GeneralVertexSet<VID_T, LabelT>& set,
-                                    const GRAPH_INTERFACE& graph,
-                                    const std::string& prop_name) {
+          typename LabelT, typename VID_T, typename... SET_T>
+static auto create_prop_getter_impl(
+    const GeneralVertexSet<VID_T, LabelT, SET_T...>& set,
+    const GRAPH_INTERFACE& graph, const std::string& prop_name) {
   using prop_getter_t =
       typename GRAPH_INTERFACE::template single_prop_getter_t<prop_t>;
   // const std::array<std::string, 2>& labels = set.GetLabels();
@@ -662,7 +669,7 @@ static auto create_prop_getter_impl(const GeneralVertexSet<VID_T, LabelT>& set,
 
   return GeneralVertexSetPropGetter<
       tag_id, prop_getter_t,
-      typename GeneralVertexSet<VID_T, LabelT>::index_ele_tuple_t>(
+      typename GeneralVertexSet<VID_T, LabelT, SET_T...>::index_ele_tuple_t>(
       std::move(prop_getters), set.GetBitsets());
 }
 
@@ -675,6 +682,18 @@ static auto create_prop_getter_impl(
   return FlatEdgeSetPropGetter<
       tag_id,
       typename FlatEdgeSet<VID_T, LabelT, EDATA_T>::index_ele_tuple_t>();
+}
+
+// get for common properties for Single label edge set.
+template <int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename VID_T,
+          typename LabelT, typename EDATA_T>
+static auto create_prop_getter_impl(
+    const SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>& set,
+    const GRAPH_INTERFACE& graph, const std::string& prop_name) {
+  // single label edge set is a special kind of flat edge set.
+  return FlatEdgeSetPropGetter<
+      tag_id,
+      typename SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>::index_ele_tuple_t>();
 }
 
 // get for common properties for GeneralEdgeSet
@@ -743,6 +762,16 @@ template <typename GRAPH_INTERFACE, typename VID_T, typename LabelT,
 static auto create_prop_getter_from_prop_desc(
     const GRAPH_INTERFACE& graph,
     const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set,
+    const InnerIdProperty<tag_id>& inner_id_prop) {
+  return EdgeSetInnerIdGetter<tag_id, VID_T, EDATA_T>();
+}
+
+// create inner id getter for single_label_edge_set.
+template <typename GRAPH_INTERFACE, typename VID_T, typename LabelT,
+          typename EDATA_T, int tag_id>
+static auto create_prop_getter_from_prop_desc(
+    const GRAPH_INTERFACE& graph,
+    const SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>& set,
     const InnerIdProperty<tag_id>& inner_id_prop) {
   return EdgeSetInnerIdGetter<tag_id, VID_T, EDATA_T>();
 }

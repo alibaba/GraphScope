@@ -6,8 +6,8 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${log_dir}/${log_name}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>60</maxHistory>
-            <totalSizeCap>10GB</totalSizeCap>
+            <maxHistory>10</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>[%d{ISO8601}][%p][%t][%c:%L] %m%n</pattern>
@@ -23,8 +23,8 @@
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <fileNamePattern>${log_dir}/metric.log.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
             <maxFileSize>100MB</maxFileSize>
-            <maxHistory>60</maxHistory>
-            <totalSizeCap>10GB</totalSizeCap>
+            <maxHistory>5</maxHistory>
+            <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>%m%n</pattern>

@@ -29,7 +29,7 @@ query
 // g.with(Tokens.ARGS_EVAL_TIMEOUT, 2000L)
 // g.with('evaluationTimeout', 2000L)
 traversalSource
-    : TRAVERSAL_ROOT (DOT traversalMethod_with) ?
+    : TRAVERSAL_ROOT (DOT traversalMethod_with) *
     ;
 
 // g.rootTraversal()

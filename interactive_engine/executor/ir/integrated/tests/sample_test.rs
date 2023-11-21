@@ -56,6 +56,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 
@@ -74,6 +75,7 @@ mod test {
             alias: None,
             params: Some(query_params(vec![], vec![], None)),
             idx_predicate: None,
+            is_count_only: false,
             meta_data: None,
         };
 

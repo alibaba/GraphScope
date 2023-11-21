@@ -96,13 +96,7 @@ where
         debug!("scan_vertex worker_partitions: {:?}", worker_partitions);
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
-            let si = params
-                .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
-                .unwrap_or(DEFAULT_SNAPSHOT_ID);
+            let si = get_snapshot_id(params);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let row_filter = params.filter.clone();
 
@@ -160,28 +154,31 @@ where
     ) -> GraphProxyResult<Option<Vertex>> {
         // get_vertex_id_by_primary_keys() is a global query function, that is,
         // you can query vertices (with only vertex id) by pks on any graph partitions (not matter locally or remotely).
-        // To guarantee the correctness (i.e., avoid duplication results), only one worker (for now, it is worker 0) is going to search for it.
-        let worker_id = pegasus::get_current_worker_checked()
-            .map(|worker| worker.index)
-            .unwrap_or(0);
-        if worker_id == 0 {
-            let store_label_id = encode_storage_label(label_id)?;
-            let store_indexed_values = match primary_key {
-                OneOrMany::One(pkv) => {
-                    vec![encode_store_prop_val(pkv[0].1.clone())]
-                }
-                OneOrMany::Many(pkvs) => pkvs
-                    .iter()
-                    .map(|(_pk, value)| encode_store_prop_val(value.clone()))
-                    .collect(),
-            };
-            debug!("index_scan_vertex store_indexed_values {:?}", store_indexed_values);
-            if let Some(vid) = self
+        // To guarantee the correctness,
+        // 1. all workers are going to search for gid, and compute  which partition this vertex belongs;
+        // 2. the worker assigned for this partition will further confirm the result by calling get_vertex() to see if this vertex exists
+        let store_label_id = encode_storage_label(label_id)?;
+        let store_indexed_values = match primary_key {
+            OneOrMany::One(pkv) => {
+                vec![encode_store_prop_val(pkv[0].1.clone())]
+            }
+            OneOrMany::Many(pkvs) => pkvs
+                .iter()
+                .map(|(_pk, value)| encode_store_prop_val(value.clone()))
+                .collect(),
+        };
+        debug!("index_scan_vertex store_indexed_values {:?}", store_indexed_values);
+        if let Some(vid) = self
+            .partition_manager
+            .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
+        {
+            debug!("index_scan_vertex vid {:?}", vid);
+            let partition_id = self
                 .partition_manager
-                .get_vertex_id_by_primary_keys(store_label_id, store_indexed_values.as_ref())
-            {
-                debug!("index_scan_vertex vid {:?}", vid);
-                Ok(Some(Vertex::new(vid as ID, Some(label_id.clone()), DynDetails::default())))
+                .get_partition_id(vid as VertexId) as PartitionId;
+            let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+            if worker_partitions.contains(&partition_id) {
+                Ok(self.get_vertex(&[vid as ID], _params)?.next())
             } else {
                 Ok(None)
             }
@@ -194,13 +191,7 @@ where
         let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
         if !worker_partitions.is_empty() {
             let store = self.store.clone();
-            let si = params
-                .get_extra_param(SNAPSHOT_ID)
-                .map(|s| {
-                    s.parse::<SnapshotId>()
-                        .unwrap_or(DEFAULT_SNAPSHOT_ID)
-                })
-                .unwrap_or(DEFAULT_SNAPSHOT_ID);
+            let si = get_snapshot_id(params);
             let label_ids = encode_storage_labels(params.labels.as_ref())?;
             let row_filter = params.filter.clone();
 
@@ -245,13 +236,7 @@ where
         &self, ids: &[ID], params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Iterator<Item = Vertex> + Send>> {
         let store = self.store.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
-            .unwrap_or(DEFAULT_SNAPSHOT_ID);
+        let si = get_snapshot_id(params);
 
         let column_filter_pushdown = self.column_filter_pushdown;
         // also need props in filter, because `filter_limit!`
@@ -294,13 +279,7 @@ where
         let limit = params.limit.clone();
         let store = self.store.clone();
         let partition_manager = self.partition_manager.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
-            .unwrap_or(DEFAULT_SNAPSHOT_ID);
+        let si = get_snapshot_id(params);
         let edge_label_ids = encode_storage_labels(params.labels.as_ref())?;
 
         let stmt = from_fn(move |v: ID| {
@@ -361,13 +340,7 @@ where
         &self, direction: Direction, params: &QueryParams,
     ) -> GraphProxyResult<Box<dyn Statement<ID, Edge>>> {
         let store = self.store.clone();
-        let si = params
-            .get_extra_param(SNAPSHOT_ID)
-            .map(|s| {
-                s.parse::<SnapshotId>()
-                    .unwrap_or(DEFAULT_SNAPSHOT_ID)
-            })
-            .unwrap_or(DEFAULT_SNAPSHOT_ID);
+        let si = get_snapshot_id(params);
 
         let partition_manager = self.partition_manager.clone();
         let row_filter = params.filter.clone();
@@ -476,6 +449,54 @@ where
         trace!("get_primary_key: id: {}, outer_id {:?}, pk_val: {:?}", id, outer_id, pk_val);
         Ok(Some((GS_STORE_PK.into(), pk_val).into()))
     }
+
+    fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        if params.filter.is_some() {
+            // the filter can not be pushed down to store,
+            // so we need to scan all vertices with filter and then count
+            Ok(self.scan_vertex(params)?.count() as u64)
+        } else {
+            let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+            if !worker_partitions.is_empty() {
+                let store = self.store.clone();
+                let si = get_snapshot_id(params);
+                let label_ids = encode_storage_labels(params.labels.as_ref())?;
+                let count =
+                    store.count_all_vertices(si, label_ids.as_ref(), None, worker_partitions.as_ref());
+                Ok(count)
+            } else {
+                Ok(0)
+            }
+        }
+    }
+
+    fn count_edge(&self, params: &QueryParams) -> GraphProxyResult<u64> {
+        if params.filter.is_some() {
+            Ok(self.scan_edge(params)?.count() as u64)
+        } else {
+            let worker_partitions = assign_worker_partitions(&self.server_partitions, &self.cluster_info)?;
+            if !worker_partitions.is_empty() {
+                let store = self.store.clone();
+                let si = get_snapshot_id(params);
+                let label_ids = encode_storage_labels(params.labels.as_ref())?;
+                let count = store.count_all_edges(si, label_ids.as_ref(), None, worker_partitions.as_ref());
+                Ok(count)
+            } else {
+                Ok(0)
+            }
+        }
+    }
+}
+
+fn get_snapshot_id(params: &QueryParams) -> SnapshotId {
+    let si = params
+        .get_extra_param(SNAPSHOT_ID)
+        .map(|s| {
+            s.parse::<SnapshotId>()
+                .unwrap_or(DEFAULT_SNAPSHOT_ID)
+        })
+        .unwrap_or(DEFAULT_SNAPSHOT_ID);
+    si
 }
 
 #[inline]
