@@ -38,8 +38,7 @@ if [ "$MODE" = "debug" ]; then
 elif [ "$MODE" = "release" ]; then
   cargo build --release $append
 else
-  echo "Invalid mode, choose from debug or release."
-  exit 1
+  cargo build --profile $MODE $append
 fi
 
 if [ "$TARGET" = "groot" ]; then
