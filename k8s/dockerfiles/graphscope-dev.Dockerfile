@@ -1,5 +1,7 @@
 FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
@@ -14,8 +16,7 @@ ENV JAVA_HOME=/usr/lib/jvm/default-java
 ENV RUST_BACKTRACE=1
 
 RUN apt-get update && \
-    apt-get install python3-pip -y && \
-    apt-get install -y sudo vim && \
+    apt-get install -y sudo vim python3-pip tzdata tmux && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -35,4 +36,4 @@ RUN cd /home/graphscope/gsctl && \
     rm -fr gsctl
 
 RUN echo ". /home/graphscope/.graphscope_env" >> ~/.bashrc
-RUN python3 -m pip --no-cache install pyyaml --user
+RUN python3 -m pip --no-cache install pyyaml ipython --user

@@ -27,6 +27,12 @@ public class AliasManager {
         return ArgUtils.asAlias(alias, false);
     }
 
+    public static String getAliasName(AliasArg prefix) {
+        int stepIdx = prefix.getStepIdx();
+        int subTraversalId = prefix.getSubTraversalIdx();
+        return prefix.getPrefix() + "_" + stepIdx + "_" + subTraversalId;
+    }
+
     // prefix is as the gremlin result key which is used to display
     public static String getPrefix(String aliasName) {
         String[] splits = aliasName.split("_");
