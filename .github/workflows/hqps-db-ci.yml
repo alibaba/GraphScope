@@ -100,8 +100,11 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/build
         export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        ./bin/bulk_loader -g ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml \
+        -l ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml -d /tmp/csr-data-dir/
+        rm -r /tmp/csr-data-dir/runtime/* 
+        rm -r /tmp/csr-data-dir/wal
         ./tests/hqps/query_test ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml \
-        ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml \
         /tmp/csr-data-dir/
 
     - name: Run codegen test.

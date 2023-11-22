@@ -21,7 +21,7 @@
 
 int main(int argc, char** argv) {
   // <oid> <label_name>
-  if (argc != 4) {
+  if (argc != 3) {
     LOG(ERROR) << "Usage: ./query_test <graph_schema> "
                   "<data_dir>";
     return 1;
