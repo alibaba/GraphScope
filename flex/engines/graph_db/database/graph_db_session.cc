@@ -173,9 +173,10 @@ Result<std::vector<char>> GraphDBSession::EvalAdhoc(
   Decoder decoder(input_buffer.data(), input_buffer.size());
   Encoder encoder(result_buffer);
 
-  AppWrapper app_wrapper;
   // the dynamic library will automatically be closed after the query
   auto app_factory = std::make_shared<SharedLibraryAppFactory>(input_lib_path);
+  AppWrapper app_wrapper;  // wrapper should be destroyed before the factory
+
   if (app_factory) {
     app_wrapper = app_factory->CreateApp(*this);
     if (app_wrapper.app() == NULL) {
