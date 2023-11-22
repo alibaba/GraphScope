@@ -427,7 +427,7 @@ class LFIndexer {
           if (begin == end) {
             break;
           }
-          while (begin != end) {
+          while (begin < end) {
             keys_->get(begin);
             ++begin;
           }
