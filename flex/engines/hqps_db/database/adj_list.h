@@ -114,12 +114,10 @@ class SinglePropGetter {
   using value_type = T;
   static constexpr size_t prop_num = 1;
   SinglePropGetter() {}
-  SinglePropGetter(std::shared_ptr<TypedRefColumn<T>> c) : column(c) {
-    CHECK(column.get() != nullptr);
-  }
+  SinglePropGetter(std::shared_ptr<TypedRefColumn<T>> c) : column(c) {}
 
   inline value_type get_view(vid_t vid) const {
-    if (vid == NONE) {
+    if (vid == NONE || column == nullptr) {
       return NullRecordCreator<value_type>::GetNull();
     }
     return column->get_view(vid);
@@ -149,15 +147,25 @@ class MultiPropGetter {
     if (vid == NONE) {
       return NullRecordCreator<result_tuple_t>::GetNull();
     }
-    return get_view(vid, std::make_index_sequence<sizeof...(T)>());
+    result_tuple_t ret;
+    fill_result_tuple(ret, vid);
+    return ret;
   }
 
-  template <size_t... Is>
-  inline result_tuple_t get_view(vid_t vid, std::index_sequence<Is...>) const {
-    if (vid == NONE) {
-      return NullRecordCreator<result_tuple_t>::GetNull();
+  template <size_t I = 0>
+  inline typename std::enable_if<I == sizeof...(T), void>::type
+  fill_result_tuple(result_tuple_t& ret, vid_t vid) const {}
+
+  template <size_t I = 0>
+  inline typename std::enable_if<(I < sizeof...(T)), void>::type
+  fill_result_tuple(result_tuple_t& ret, vid_t vid) const {
+    using cur_ele_t = typename std::tuple_element<I, result_tuple_t>::type;
+    if (std::get<I>(column) == nullptr) {
+      std::get<I>(ret) = NullRecordCreator<cur_ele_t>::GetNull();
+    } else {
+      std::get<I>(ret) = std::get<I>(column)->get_view(vid);
     }
-    return std::make_tuple(std::get<Is>(column)->get_view(vid)...);
+    fill_result_tuple<I + 1>(ret, vid);
   }
 
   inline MultiPropGetter<T...>& operator=(const MultiPropGetter<T...>& d) {
