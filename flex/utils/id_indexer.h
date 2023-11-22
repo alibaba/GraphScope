@@ -21,6 +21,7 @@ limitations under the License.
 #include <cmath>
 #include <memory>
 #include <string_view>
+#include <thread>
 #include <type_traits>
 #include <vector>
 
@@ -228,41 +229,6 @@ class LFIndexer {
       LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
     }
   }
-  void resize(size_t size) { rehash(std::max(size, num_elements_.load())); }
-
-  void rehash(size_t size) {
-    size = std::max(size, 4ul);
-    keys_->resize(size);
-    size =
-        static_cast<size_t>(std::ceil(size / id_indexer_impl::max_load_factor));
-    if (size == indices_size_) {
-      return;
-    }
-
-    auto new_prime_index = hash_policy_.next_size_over(size);
-    hash_policy_.commit(new_prime_index);
-    size_t num_elements = num_elements_.load();
-
-    indices_.resize(size);
-    indices_size_ = size;
-    for (size_t k = 0; k != size; ++k) {
-      indices_[k] = std::numeric_limits<INDEX_T>::max();
-    }
-    num_slots_minus_one_ = size - 1;
-    for (INDEX_T idx = 0; idx < num_elements; ++idx) {
-      const auto& oid = keys_->get(idx);
-      size_t index =
-          hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
-      static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
-      while (true) {
-        if (indices_[index] == sentinel) {
-          indices_[index] = idx;
-          break;
-        }
-        index = (index + 1) % (num_slots_minus_one_ + 1);
-      }
-    }
-  }
 
   void build_empty_LFIndexer(const std::string& filename,
                              const std::string& snapshot_dir,
@@ -445,6 +411,46 @@ class LFIndexer {
 
   // get keys
   const ColumnBase& get_keys() const { return *keys_; }
+  void warmup(int thread_num) const {
+    size_t keys_size = num_elements_.load();
+    size_t indices_size = indices_.size();
+    std::atomic<size_t> k_i(0), i_i(0);
+    std::atomic<size_t> output(0);
+    size_t chunk = 4096;
+    std::vector<std::thread> threads;
+    for (int i = 0; i < thread_num; ++i) {
+      threads.emplace_back([&]() {
+        size_t ret = 0;
+        while (true) {
+          size_t begin = std::min(k_i.fetch_add(chunk), keys_size);
+          size_t end = std::min(begin + chunk, keys_size);
+          if (begin == end) {
+            break;
+          }
+          while (begin != end) {
+            keys_->get(begin);
+            ++begin;
+          }
+        }
+        while (true) {
+          size_t begin = std::min(i_i.fetch_add(chunk), indices_size);
+          size_t end = std::min(begin + chunk, indices_size);
+          if (begin >= end) {
+            break;
+          }
+          while (begin < end) {
+            ret += indices_.get(begin);
+            ++begin;
+          }
+        }
+        output.fetch_add(ret);
+      });
+    }
+    for (auto& thrd : threads) {
+      thrd.join();
+    }
+    (void) output.load();
+  }
 
  private:
   ColumnBase* keys_;

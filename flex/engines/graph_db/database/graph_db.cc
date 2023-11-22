@@ -50,7 +50,7 @@ GraphDB& GraphDB::get() {
 }
 
 void GraphDB::Init(const Schema& schema, const std::string& data_dir,
-                   int thread_num) {
+                   int thread_num, bool warmup) {
   if (!std::filesystem::exists(data_dir)) {
     LOG(FATAL) << "Data directory does not exist";
   }
@@ -86,6 +86,9 @@ void GraphDB::Init(const Schema& schema, const std::string& data_dir,
   }
 
   initApps(schema.GetPluginsList());
+  if (warmup) {
+    graph_.Warmup(thread_num_);
+  }
 }
 
 void GraphDB::Checkpoint() {

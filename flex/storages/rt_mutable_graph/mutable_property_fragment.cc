@@ -279,6 +279,25 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
   set_snapshot_version(work_dir, version);
 }
 
+void MutablePropertyFragment::Warmup(int thread_num) {
+  double t = -grape::GetCurrentTime();
+  for (auto ptr : ie_) {
+    if (ptr != NULL) {
+      ptr->warmup(thread_num);
+    }
+  }
+  for (auto ptr : oe_) {
+    if (ptr != NULL) {
+      ptr->warmup(thread_num);
+    }
+  }
+  for (auto& indexer : lf_indexers_) {
+    indexer.warmup(thread_num);
+  }
+  t += grape::GetCurrentTime();
+  LOG(INFO) << "Warmup takes: " << t << " s";
+}
+
 void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
                                          label_t dst_label, vid_t dst_lid,
                                          label_t edge_label, timestamp_t ts,

@@ -284,7 +284,7 @@ static void set_vertex_properties(gs::ColumnBase* col,
     }
   } else if (col_type == PropertyType::kString ||
              col_type == PropertyType::kStringMap) {
-    CHECK(type == arrow::large_utf8() || type == arrow::utf8())
+    CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
         << "Inconsistent data type, expect string, but got "
         << type->ToString();
     if (type->Equals(arrow::large_utf8())) {

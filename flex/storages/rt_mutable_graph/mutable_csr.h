@@ -229,6 +229,8 @@ class MutableCsrBase {
   virtual void dump(const std::string& name,
                     const std::string& new_spanshot_dir) = 0;
 
+  virtual void warmup(int thread_num) const = 0;
+
   virtual void resize(vid_t vnum) = 0;
   virtual size_t size() const = 0;
 
@@ -397,6 +399,40 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
         ptr += degree;
       }
     }
+  }
+
+  void warmup(int thread_num) const override {
+    size_t vnum = adj_lists_.size();
+    std::vector<std::thread> threads;
+    std::atomic<size_t> v_i(0);
+    const size_t chunk = 4096;
+    std::atomic<size_t> output(0);
+    for (int i = 0; i < thread_num; ++i) {
+      threads.emplace_back([&]() {
+        size_t ret = 0;
+        while (true) {
+          size_t begin = std::min(v_i.fetch_add(chunk), vnum);
+          size_t end = std::min(begin + chunk, vnum);
+
+          if (begin == end) {
+            break;
+          }
+
+          while (begin < end) {
+            auto adj_list = get_edges(begin);
+            for (auto& nbr : adj_list) {
+              ret += nbr.neighbor;
+            }
+            ++begin;
+          }
+        }
+        output.fetch_add(ret);
+      });
+    }
+    for (auto& thrd : threads) {
+      thrd.join();
+    }
+    (void) output.load();
   }
 
   void dump(const std::string& name,
@@ -667,6 +703,36 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v));
   }
 
+  void warmup(int thread_num) const override {
+    size_t vnum = nbr_list_.size();
+    std::vector<std::thread> threads;
+    std::atomic<size_t> v_i(0);
+    std::atomic<size_t> output(0);
+    const size_t chunk = 4096;
+    for (int i = 0; i < thread_num; ++i) {
+      threads.emplace_back([&]() {
+        size_t ret = 0;
+        while (true) {
+          size_t begin = std::min(v_i.fetch_add(chunk), vnum);
+          size_t end = std::min(begin + chunk, vnum);
+          if (begin == end) {
+            break;
+          }
+          while (begin < end) {
+            auto& nbr = nbr_list_[begin];
+            ret += nbr.neighbor;
+            ++begin;
+          }
+        }
+        output.fetch_add(ret);
+      });
+    }
+    for (auto& thrd : threads) {
+      thrd.join();
+    }
+    (void) output.load();
+  }
+
  private:
   mmap_array<nbr_t> nbr_list_;
 };
@@ -687,6 +753,8 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}
+
+  void warmup(int thread_num) const override {}
 
   void resize(vid_t vnum) override {}
 

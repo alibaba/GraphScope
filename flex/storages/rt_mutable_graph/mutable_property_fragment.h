@@ -44,6 +44,7 @@ class MutablePropertyFragment {
                   grape::OutArchive& arc, MMapAllocator& alloc);
 
   void Open(const std::string& work_dir);
+  void Warmup(int thread_num);
   void Dump(const std::string& work_dir, uint32_t version);
   void DumpSchema(const std::string& filename);
 
