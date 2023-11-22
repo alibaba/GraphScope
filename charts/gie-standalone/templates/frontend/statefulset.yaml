@@ -123,6 +123,8 @@ spec:
               value: {{ .Values.pegasusBatchSize | quote }}
             - name: OUTPUT_CAPACITY
               value: {{ .Values.pegasusOutputCapacity | quote }}
+            - name: QUERY_PER_SECOND_LIMIT
+              value: {{ .Values.queryPerSecondLimit | quote }}
           ports:
             - name: gremlin
               containerPort: {{ .Values.frontend.service.gremlinPort }}

@@ -47,7 +47,6 @@ public class RateLimitExecutor extends ThreadPoolExecutor {
                 threadFactory,
                 handler);
         int permitsPerSecond = FrontendConfig.QUERY_PER_SECOND_LIMIT.get(configs);
-        logger.info("rate limit is {} per second", permitsPerSecond);
         this.rateLimiter = RateLimiter.create(permitsPerSecond);
     }
 
