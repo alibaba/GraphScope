@@ -43,6 +43,6 @@ else
 fi
 
 if [ "$TARGET" = "groot" ]; then
-  strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX}
+  # strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX}
   ln -sf $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX} $(pwd)/target/libgroot_ffi.${SUFFIX}
 fi

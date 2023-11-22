@@ -632,6 +632,7 @@ class Nbr {
 class NbrList {
  public:
   NbrList(const Nbr* b, const Nbr* e) : begin_(b), end_(e) {}
+  NbrList() : begin_(nullptr), end_(nullptr) {}
   ~NbrList() = default;
 
   const Nbr* begin() const { return begin_; }

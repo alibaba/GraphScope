@@ -49,12 +49,9 @@ impl FilterFunction<Record> for CoinOperator {
 impl FilterFuncGen for algebra_pb::Sample {
     fn gen_filter(self) -> FnGenResult<Box<dyn FilterFunction<Record>>> {
         if let Some(sample_type) = self.sample_type {
-            let sample_type =
-                sample_type
-                    .inner
-                    .ok_or(FnGenError::ParseError(ParsePbError::EmptyFieldError(
-                        "sample_type.inner".to_owned(),
-                    )))?;
+            let sample_type = sample_type.inner.ok_or_else(|| {
+                FnGenError::ParseError(ParsePbError::EmptyFieldError("sample_type.inner".to_owned()))
+            })?;
             match sample_type {
                 algebra_pb::sample::sample_type::Inner::SampleByRatio(ratio) => {
                     if ratio.ratio < 0.0 || ratio.ratio > 1.0 {

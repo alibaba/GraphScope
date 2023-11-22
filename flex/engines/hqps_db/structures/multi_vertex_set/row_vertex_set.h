@@ -950,7 +950,7 @@ class RowVertexSetImpl {
 
   const LabelT& GetLabel() const { return v_label_; }
 
-  const std::vector<LabelKey> GetLabelVec() {
+  std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     // fill res with v_label_
     res.reserve(vids_.size());
@@ -1254,7 +1254,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
 
   const LabelT& GetLabel() const { return v_label_; }
 
-  const std::vector<LabelKey> GetLabelVec() {
+  std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     // fill res with v_label_
     res.reserve(vids_.size());

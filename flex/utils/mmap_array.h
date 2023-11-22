@@ -162,15 +162,16 @@ class mmap_array<std::string_view> {
   ~mmap_array() { release(); }
 
   void resize(size_t size) {
+    static constexpr size_t width = 64;
     size_t old_size = string_items_.size();
     if (old_size == size) {
       return;
     }
     if (old_size == 0 && buffer_.size() == 0) {
       string_items_.resize(size);
-      buffer_.resize(size * 1024);
+      buffer_.resize(size * width);
       buffer_loc_.store(0);
-    } else if (buffer_.size() >= (size * 1024)) {
+    } else if (buffer_.size() >= (size * width)) {
       mmap_array<string_item> new_string_items;
       new_string_items.resize(size);
       size_t accum_length = 0;
@@ -186,7 +187,7 @@ class mmap_array<std::string_view> {
       buffer_loc_.store(accum_length);
     } else {
       mmap_array<char> new_buffer;
-      new_buffer.resize(size * 1024);
+      new_buffer.resize(size * width);
       memcpy(new_buffer.data(), buffer_.data(), buffer_loc_.load());
 
       mmap_array<string_item> new_string_items;
@@ -202,6 +203,7 @@ class mmap_array<std::string_view> {
         new_string_items[i] = string_items_[i];
         accum_length += string_items_[i].length;
       }
+      new_string_items.swap(string_items_);
       buffer_loc_.store(accum_length);
       buffer_.swap(new_buffer);
     }

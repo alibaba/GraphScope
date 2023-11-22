@@ -41,6 +41,15 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
     if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<int64_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt64) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<uint64_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt32) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<int32_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<uint32_t, vid_t>>());
     } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kString) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<std::string_view, vid_t>>());
@@ -431,11 +440,21 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<int64_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt64) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<uint64_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt32) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<int32_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<uint32_t, vid_t>>());
     } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kString) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<std::string_view, vid_t>>());
     } else {
-      LOG(FATAL) << "Only int64 and string_view types for pk are supported..";
+      LOG(FATAL) << "Only int64, uint64, int32, uint32 and string_view types "
+                    "for pk are supported..";
     }
   }
 

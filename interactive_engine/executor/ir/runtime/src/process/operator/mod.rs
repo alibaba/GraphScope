@@ -92,11 +92,9 @@ impl TagKey {
                     }
                     PropKey::Key(key) => {
                         if let Some(properties) = element.get_property(key) {
-                            properties
-                                .try_to_owned()
-                                .ok_or(FnExecError::unexpected_data_error(
-                                    "unable to own the `BorrowObject`",
-                                ))?
+                            properties.try_to_owned().ok_or_else(|| {
+                                FnExecError::unexpected_data_error("unable to own the `BorrowObject`")
+                            })?
                         } else {
                             Object::None
                         }

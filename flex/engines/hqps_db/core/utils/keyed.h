@@ -221,16 +221,16 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, T...>,
 };
 
 // general vertex set to_count
-template <typename GI, typename VID_T, typename LabelT, typename PropT,
-          int tag_id>
-struct KeyedAggT<GI, GeneralVertexSet<VID_T, LabelT>, AggFunc::COUNT,
+template <typename GI, typename VID_T, typename LabelT, typename... SET_T,
+          typename PropT, int tag_id>
+struct KeyedAggT<GI, GeneralVertexSet<VID_T, LabelT, SET_T...>, AggFunc::COUNT,
                  std::tuple<PropT>, std::integer_sequence<int32_t, tag_id>> {
   using agg_res_t = Collection<size_t>;
   // build a counter array.
   using aggregate_res_builder_t = CountBuilder<tag_id>;
 
   static aggregate_res_builder_t create_agg_builder(
-      const GeneralVertexSet<VID_T, LabelT>& set, const GI& graph,
+      const GeneralVertexSet<VID_T, LabelT, SET_T...>& set, const GI& graph,
       std::tuple<PropertySelector<PropT>>& selectors) {
     return CountBuilder<tag_id>();
   }

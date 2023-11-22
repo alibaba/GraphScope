@@ -138,7 +138,7 @@ impl FilterMapFuncGen for pb::Project {
         for expr_alias in self.mappings.into_iter() {
             let expr = expr_alias
                 .expr
-                .ok_or(ParsePbError::from("expr eval is missing in project"))?;
+                .ok_or_else(|| ParsePbError::from("expr eval is missing in project"))?;
             let projector = if expr.operators.len() == 1 {
                 match expr.operators.get(0).unwrap() {
                     common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Var(var)), .. } => {
@@ -159,21 +159,13 @@ impl FilterMapFuncGen for pb::Project {
                     common_pb::ExprOpr { item: Some(common_pb::expr_opr::Item::Map(key_vals)), .. } => {
                         let mut key_value_vec = Vec::with_capacity(key_vals.key_vals.len());
                         for key_val in key_vals.key_vals.iter() {
-                            let key = key_val
-                                .key
-                                .as_ref()
-                                .ok_or(ParsePbError::EmptyFieldError(format!(
-                                    "key in Map Expr {:?}",
-                                    key_val
-                                )))?;
+                            let key = key_val.key.as_ref().ok_or_else(|| {
+                                ParsePbError::EmptyFieldError(format!("key in Map Expr {:?}", key_val))
+                            })?;
                             let key_obj = Object::try_from(key.clone())?;
-                            let val = key_val
-                                .value
-                                .as_ref()
-                                .ok_or(ParsePbError::EmptyFieldError(format!(
-                                    "value in Map Expr {:?}",
-                                    key_val
-                                )))?;
+                            let val = key_val.value.as_ref().ok_or_else(|| {
+                                ParsePbError::EmptyFieldError(format!("value in Map Expr {:?}", key_val))
+                            })?;
                             let tag_key = TagKey::try_from(val.clone())?;
                             key_value_vec.push((Some(key_obj), tag_key));
                         }
@@ -215,8 +207,8 @@ mod tests {
     use crate::process::operator::map::FilterMapFuncGen;
     use crate::process::operator::tests::{
         init_source, init_source_with_multi_tags, init_source_with_tag, init_vertex1, init_vertex2,
-        to_expr_map_pb, to_expr_var_pb, to_expr_vars_pb, to_var_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C, TAG_D, TAG_E, TAG_F,
-        TAG_G,
+        to_expr_map_pb, to_expr_var_pb, to_expr_vars_pb, to_var_pb, PERSON_LABEL, TAG_A, TAG_B, TAG_C,
+        TAG_D, TAG_E, TAG_F, TAG_G,
     };
     use crate::process::record::Record;
 

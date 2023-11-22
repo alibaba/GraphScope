@@ -51,7 +51,7 @@ class RowVertexSetImpl;
 template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImpl;
 
-template <typename VID_T, typename LabelT>
+template <typename VID_T, typename LabelT, typename... SET_T>
 class GeneralVertexSet;
 
 template <typename GI, typename PropTupleT>
@@ -653,10 +653,10 @@ static auto create_prop_getter_impl(
 
 // get for common properties for keyed_row_vertex_set
 template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
-          typename LabelT, typename VID_T>
-static auto create_prop_getter_impl(const GeneralVertexSet<VID_T, LabelT>& set,
-                                    const GRAPH_INTERFACE& graph,
-                                    const std::string& prop_name) {
+          typename LabelT, typename VID_T, typename... SET_T>
+static auto create_prop_getter_impl(
+    const GeneralVertexSet<VID_T, LabelT, SET_T...>& set,
+    const GRAPH_INTERFACE& graph, const std::string& prop_name) {
   using prop_getter_t =
       typename GRAPH_INTERFACE::template single_prop_getter_t<prop_t>;
   // const std::array<std::string, 2>& labels = set.GetLabels();
@@ -669,7 +669,7 @@ static auto create_prop_getter_impl(const GeneralVertexSet<VID_T, LabelT>& set,
 
   return GeneralVertexSetPropGetter<
       tag_id, prop_getter_t,
-      typename GeneralVertexSet<VID_T, LabelT>::index_ele_tuple_t>(
+      typename GeneralVertexSet<VID_T, LabelT, SET_T...>::index_ele_tuple_t>(
       std::move(prop_getters), set.GetBitsets());
 }
 

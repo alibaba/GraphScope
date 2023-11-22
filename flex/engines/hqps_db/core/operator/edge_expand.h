@@ -309,11 +309,11 @@ class EdgeExpand {
   /// @param v_sets
   /// @param edge_expand_opt
   /// @return
-  template <typename... SELECTOR,
+  template <typename... SELECTOR, typename... SET_T,
             typename RES_T = std::pair<vertex_set_t, std::vector<offset_t>>>
   static RES_T EdgeExpandV(
       const GRAPH_INTERFACE& graph,
-      const GeneralVertexSet<vertex_id_t, label_id_t>& cur_vertex_set,
+      const GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>& cur_vertex_set,
       Direction direction, label_id_t edge_label, label_id_t other_label,
       Filter<TruePredicate, SELECTOR...>&& edge_filter,
       size_t limit = INT_MAX) {
@@ -440,11 +440,12 @@ class EdgeExpand {
   /// @param v_sets
   /// @param edge_expand_opt
   /// @return
-  template <
-      typename VERTEX_SET_T, size_t num_labels, typename EDGE_FILTER_T,
-      size_t... Is, typename std::enable_if<(num_labels != 2)>::type* = nullptr,
-      typename RES_T = std::pair<GeneralVertexSet<vertex_id_t, label_id_t>,
-                                 std::vector<offset_t>>>
+  template <typename VERTEX_SET_T, size_t num_labels, typename EDGE_FILTER_T,
+            typename... SET_T, size_t... Is,
+            typename std::enable_if<(num_labels != 2)>::type* = nullptr,
+            typename RES_T =
+                std::pair<GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>,
+                          std::vector<offset_t>>>
   static RES_T EdgeExpandV(const GRAPH_INTERFACE& graph,
                            const VERTEX_SET_T& cur_vertex_set,
                            Direction direction, label_id_t edge_label,
@@ -499,7 +500,7 @@ class EdgeExpand {
     }
     CHECK(cur_ind == total_size);
     auto copied_labels(other_labels);
-    GeneralVertexSet<vertex_id_t, label_id_t> res_set(
+    GeneralVertexSet<vertex_id_t, label_id_t, SET_T...> res_set(
         std::move(res_vids), std::move(copied_labels), std::move(res_bitset));
 
     return std::make_pair(std::move(res_set), std::move(res_offset));
@@ -602,10 +603,10 @@ class EdgeExpand {
   /// @param edge_filter
   /// @param limit
   /// @return /
-  template <size_t num_pairs, typename... PropTuple>
+  template <size_t num_pairs, typename... PropTuple, typename... SET_T>
   static auto EdgeExpandVMultiTriplet(
       const GRAPH_INTERFACE& graph,
-      const GeneralVertexSet<vertex_id_t, label_id_t>& cur_vertex_set,
+      const GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>& cur_vertex_set,
       Direction& direction,
       std::array<std::array<label_id_t, 3>, num_pairs>& edge_labels,
       std::tuple<PropTupleArrayT<PropTuple>...>& prop_names,
@@ -833,10 +834,10 @@ class EdgeExpand {
   /// @param edge_filter
   /// @param limit
   /// @return /
-  template <size_t num_pairs, typename... PropTuple>
+  template <size_t num_pairs, typename... PropTuple, typename... SET_T>
   static auto EdgeExpandEMultiTriplet(
       const GRAPH_INTERFACE& graph,
-      const GeneralVertexSet<vertex_id_t, label_id_t>& cur_vertex_set,
+      const GeneralVertexSet<vertex_id_t, label_id_t, SET_T...>& cur_vertex_set,
       Direction& direction,
       std::array<std::array<label_id_t, 3>, num_pairs>& edge_labels,
       std::tuple<PropTupleArrayT<PropTuple>...>& prop_names,

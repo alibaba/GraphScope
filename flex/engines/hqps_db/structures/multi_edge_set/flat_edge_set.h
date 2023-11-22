@@ -280,9 +280,10 @@ class FlatEdgeSet {
   size_t Size() const { return vec_.size(); }
 
   template <size_t num_labels, typename FILTER_T>
-  std::pair<GeneralVertexSet<VID_T, LabelT>, std::vector<size_t>> GetVertices(
-      VOpt v_opt, const std::array<LabelT, num_labels>& labels,
-      FILTER_T& expr) const {
+  std::pair<GeneralVertexSet<VID_T, LabelT, grape::EmptyType>,
+            std::vector<size_t>>
+  GetVertices(VOpt v_opt, const std::array<LabelT, num_labels>& labels,
+              FILTER_T& expr) const {
     std::vector<offset_t> offsets;
     std::vector<VID_T> vids;
     offsets.reserve(Size());
