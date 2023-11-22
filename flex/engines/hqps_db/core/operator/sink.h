@@ -402,7 +402,7 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        vertex->set_id(vids[i]);
+        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         if (bitset.get_bit(i)) {
           label = labels[0];
         } else {
@@ -447,8 +447,7 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          vertex->set_id(vids[i]);
-          vertex->mutable_label()->set_id(label);
+          vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
           // set properties.
           auto column_ptrs = column_ptrs[label];
@@ -797,8 +796,6 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto mutable_vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        mutable_vertex->set_id(vertices_vec[i]);
-
         // todo: set properties.
         for (auto j = 0; j < bitsets.size(); ++j) {
           if (bitsets[j].get_bit(i)) {
@@ -808,6 +805,7 @@ class SinkOp {
           }
         }
         mutable_vertex->mutable_label()->set_id(label);
+        mutable_vertex->set_id(encode_unique_vertex_id(label, vertices_vec[i]));
         // label must be set
         auto cur_column_ptrs = column_ptrs[label_vec_ind];
         for (auto j = 0; j < cur_column_ptrs.size(); ++j) {
@@ -832,7 +830,6 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          mutable_vertex->set_id(vertices_vec[i]);
           for (auto j = 0; j < bitsets.size(); ++j) {
             if (bitsets[j].get_bit(i)) {
               label = labels_vec[j];
@@ -841,6 +838,8 @@ class SinkOp {
             }
           }
           mutable_vertex->mutable_label()->set_id(label);
+          mutable_vertex->set_id(
+              encode_unique_vertex_id(label, vertices_vec[i]));
           // label must be set
           auto cur_column_ptrs = column_ptrs[label_vec_ind];
           for (auto j = 0; j < cur_column_ptrs.size(); ++j) {
@@ -882,14 +881,17 @@ class SinkOp {
         auto mutable_edge =
             new_col->mutable_entry()->mutable_element()->mutable_edge();
         CHECK(iter != end_iter);
-        mutable_edge->set_id(i);
+        auto unique_edge_label = generate_edge_label_id(
+            iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
+        mutable_edge->mutable_label()->set_id(unique_edge_label);
+        mutable_edge->set_id(encode_unique_edge_id(unique_edge_label, i));
         mutable_edge->set_src_id(
             encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
         mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
         mutable_edge->set_dst_id(
             encode_unique_vertex_id(iter.GetDstLabel(), iter.GetDst()));
         mutable_edge->mutable_dst_label()->set_id(iter.GetDstLabel());
-        mutable_edge->mutable_label()->set_id(iter.GetEdgeLabel());
+
         auto prop_names = iter.GetPropNames();
         if (prop_names.size() > 0) {
           set_edge_property(mutable_edge, prop_names[0], iter.GetData());
@@ -914,14 +916,17 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_edge =
               new_col->mutable_entry()->mutable_element()->mutable_edge();
-          mutable_edge->set_id(cur_ind - 1);
+          auto unique_edge_label = generate_edge_label_id(
+              iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
+          mutable_edge->mutable_label()->set_id(unique_edge_label);
+          mutable_edge->set_id(
+              encode_unique_edge_id(unique_edge_label, cur_ind - 1));
           mutable_edge->set_src_id(
               encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
           mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
           mutable_edge->set_dst_id(
               encode_unique_vertex_id(iter.GetDstLabel(), iter.GetDst()));
           mutable_edge->mutable_dst_label()->set_id(iter.GetDstLabel());
-          mutable_edge->mutable_label()->set_id(iter.GetEdgeLabel());
           auto prop_names = iter.GetPropNames();
           if (prop_names.size() > 0) {
             set_edge_property(mutable_edge, prop_names[0], iter.GetData());
@@ -1004,6 +1009,28 @@ class SinkOp {
     unique_vid = unique_vid << num_bits;
     unique_vid = unique_vid | vid;
     return unique_vid;
+  }
+
+  static int64_t encode_unique_edge_id(label_id_t label_id, size_t index) {
+    // encode label_id and vid to a unique vid
+    int64_t unique_edge_id = label_id;
+    static constexpr int num_bits =
+        sizeof(int64_t) * 8 - sizeof(label_id_t) * 8;
+    unique_edge_id = unique_edge_id << num_bits;
+    unique_edge_id = unique_edge_id | index;
+    return unique_edge_id;
+  }
+
+  static label_id_t generate_edge_label_id(label_id_t src_label_id,
+                                           label_id_t dst_label_id,
+                                           label_id_t edge_label_id) {
+    label_id_t unique_edge_label_id = src_label_id;
+    static constexpr int num_bits = sizeof(label_id_t) * 8;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | dst_label_id;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | edge_label_id;
+    return unique_edge_label_id;
   }
 };
 }  // namespace gs
