@@ -51,7 +51,7 @@ install(TARGETS flex_analytical_engine
 if(BUILD_HQPS)
         if(Hiactor_FOUND)
                 add_executable(sync_server sync_server.cc)
-                target_link_libraries(sync_server flex_utils flex_graph_db flex_server hqps_plan_proto ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES})
+                target_link_libraries(sync_server flex_utils flex_graph_db flex_server hqps_plan_proto ${GLOG_LIBRARIES})
 
                 install(TARGETS sync_server
                         RUNTIME DESTINATION bin
