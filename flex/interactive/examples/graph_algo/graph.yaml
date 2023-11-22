@@ -30,7 +30,7 @@ schema:
             primitive_type: DT_STRING
       primary_keys:
         - id
-    - type_name: Category
+    - type_name: Topic
       properties:
         - property_name: id
           property_type:
@@ -60,6 +60,16 @@ schema:
             primitive_type: DT_STRING
       primary_keys:
         - id
+    - type_name: CCFField
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: field
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
   edge_types:
     - type_name: WorkOn
       vertex_type_pair_relations:
@@ -83,7 +93,7 @@ schema:
     - type_name: Belong
       vertex_type_pair_relations:
         - source_vertex: Algorithm
-          destination_vertex: Category
+          destination_vertex: Topic
           relation: MANY_TO_ONE
     - type_name: Use
       vertex_type_pair_relations:
@@ -95,3 +105,8 @@ schema:
         - source_vertex: Strategy
           destination_vertex: Challenge
           relation: MANY_TO_ONE
+    - type_name: HasField
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: CCFField
+          relation: MANY_TO_MANY
