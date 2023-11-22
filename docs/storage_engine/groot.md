@@ -74,6 +74,7 @@ helm status demo
 | ingestor.replicaCount | Number of Ingestor Pod | 2 |
 | frontend.service.type | Kubernetes Service type of frontend | NodePort |
 | dataset.modern | Load [modern graph](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/) dataset at the start | false |
+| query.per.second.limit | the maximum qps can be handled by frontend service | 2147483647 |
 
 
 If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, one Ingestor Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.
