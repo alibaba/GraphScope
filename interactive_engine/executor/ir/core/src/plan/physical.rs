@@ -513,6 +513,7 @@ impl AsPhysical for pb::GetV {
                     alias: getv.alias,
                     meta_data: None,
                 };
+                params.tables.clear();
                 params.predicate.take();
                 params.is_all_columns = false;
                 params.columns.clear();
