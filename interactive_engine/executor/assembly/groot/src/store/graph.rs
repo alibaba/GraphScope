@@ -25,6 +25,10 @@ use crate::store::jna_response::JnaResponse;
 pub type GraphHandle = *const c_void;
 pub type PartitionGraphHandle = *const c_void;
 pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
+use tikv_jemallocator::Jemalloc;
+
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
 
 static INIT: Once = Once::new();
 

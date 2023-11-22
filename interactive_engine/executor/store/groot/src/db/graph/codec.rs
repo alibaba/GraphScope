@@ -191,8 +191,19 @@ impl Decoder {
         if idx > self.src.fixed_len_prop_count {
             start_off = bytes_to_len(reader.read_bytes(self.src.offsets[idx - 1], 3));
         }
+        if end_off <= start_off {
+            error!("fatal error! This codec cannot decode the bytes: idx {}, end_off: {}, start_off: {}, props: {:?}, ", idx, end_off, start_off, self.src.props);
+            return None;
+        }
         let len = end_off - start_off;
         let start_off = start_off + self.src.var_len_prop_start_offset;
+        if start_off + len > reader.len() {
+            error!(
+                "fatal error! This codec cannot decode the bytes: idx {}, len: {}, props: {:?}, ",
+                idx, len, self.src.props
+            );
+            return None;
+        }
         let bytes = reader.read_bytes(start_off, len);
         let info = &self.src.props[idx];
         let ret = ValueRef::new(info.r#type, bytes);
