@@ -161,7 +161,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             //     then we set tag=None and alias="a" in auxilia
 
             // 1. If to filter by labels, and the entry itself carries label information already, directly eval it without query the store
-            if !self.query_params.labels.is_empty() && entry.label().is_some() {
+            if self.query_params.has_labels() && entry.label().is_some() {
                 if !self
                     .query_params
                     .labels
@@ -169,7 +169,7 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                 {
                     // pruning by labels
                     return Ok(None);
-                } else if self.query_params.filter.is_none() && self.query_params.columns.is_none() {
+                } else if !self.query_params.has_predicates() && !self.query_params.has_columns() {
                     // if only filter by labels, directly return the results.
                     return Ok(Some(input));
                 }

@@ -174,4 +174,16 @@ impl QueryParams {
             None
         }
     }
+
+    pub fn has_labels(&self) -> bool {
+        !self.labels.is_empty()
+    }
+
+    pub fn has_predicates(&self) -> bool {
+        self.filter.is_some()
+    }
+
+    pub fn has_columns(&self) -> bool {
+        self.columns.is_some()
+    }
 }
