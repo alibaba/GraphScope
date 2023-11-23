@@ -727,7 +727,6 @@ jobs:
               --set executor.replicaCount=2 \
               --set frontend.service.type=NodePort
           # run failover test
-          sleep 100000
           cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_k8s_failover_ci.sh default test-gie-standalone 2 1
 
       - uses: dashanji/kubernetes-log-export-action@v5
