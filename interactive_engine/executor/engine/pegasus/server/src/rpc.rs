@@ -159,7 +159,7 @@ where
 
     async fn cancel(&self, req: Request<pb::CancelRequest>) -> Result<Response<Empty>, Status> {
         let pb::CancelRequest { job_id } = req.into_inner();
-        pegasus::cancel_job(job_id);
+        let _ = pegasus::cancel_job(job_id);
         Ok(Response::new(Empty {}))
     }
 
