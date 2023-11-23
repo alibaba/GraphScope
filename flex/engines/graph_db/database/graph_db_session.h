@@ -54,7 +54,7 @@ class GraphDBSession {
 
   SingleEdgeInsertTransaction GetSingleEdgeInsertTransaction();
 
-  UpdateTransaction GetUpdateTransaction(bool flag = true);
+  UpdateTransaction GetUpdateTransaction();
 
   const MutablePropertyFragment& graph() const;
   MutablePropertyFragment& graph();

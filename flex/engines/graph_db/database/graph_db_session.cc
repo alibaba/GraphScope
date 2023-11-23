@@ -44,15 +44,10 @@ SingleEdgeInsertTransaction GraphDBSession::GetSingleEdgeInsertTransaction() {
                                      db_.version_manager_, ts);
 }
 
-UpdateTransaction GraphDBSession::GetUpdateTransaction(bool flag) {
+UpdateTransaction GraphDBSession::GetUpdateTransaction() {
   uint32_t ts = db_.version_manager_.acquire_update_timestamp();
-  if (flag) {
-    return UpdateTransaction(db_.graph_, alloc_, work_dir_, logger_,
-                             db_.version_manager_, ts);
-  } else {
-    return UpdateTransaction(db_.graph_, alloc_, logger_, db_.version_manager_,
-                             ts);
-  }
+  return UpdateTransaction(db_.graph_, alloc_, work_dir_, logger_,
+                           db_.version_manager_, ts);
 }
 
 const MutablePropertyFragment& GraphDBSession::graph() const {

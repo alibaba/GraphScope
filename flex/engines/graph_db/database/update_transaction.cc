@@ -26,15 +26,6 @@
 namespace gs {
 
 UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
-                                     MMapAllocator& alloc, WalWriter& logger,
-                                     VersionManager& vm, timestamp_t timestamp)
-    : graph_(graph),
-      alloc_(alloc),
-      logger_(logger),
-      vm_(vm),
-      timestamp_(timestamp) {}
-
-UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
                                      MMapAllocator& alloc,
                                      const std::string& work_dir,
                                      WalWriter& logger, VersionManager& vm,

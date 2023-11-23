@@ -37,10 +37,6 @@ class VersionManager;
 class UpdateTransaction {
  public:
   UpdateTransaction(MutablePropertyFragment& graph, MMapAllocator& alloc,
-                    WalWriter& logger, VersionManager& vm,
-                    timestamp_t timestamp);
-
-  UpdateTransaction(MutablePropertyFragment& graph, MMapAllocator& alloc,
                     const std::string& work_dir, WalWriter& logger,
                     VersionManager& vm, timestamp_t timestamp);
 
