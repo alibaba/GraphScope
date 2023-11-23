@@ -975,7 +975,7 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
     }
   }
   lf.dump_meta(snapshot_dir + "/" + filename + ".meta");
-  // resize for string keys
+
   lf.keys_->dump(snapshot_dir + "/" + filename + ".keys");
   std::filesystem::remove(work_dir + "/" + filename + ".meta");
   lf.keys_->close();

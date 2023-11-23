@@ -197,6 +197,8 @@ class MutableCsrConstEdgeIterBase {
   virtual timestamp_t get_timestamp() const = 0;
   virtual size_t size() const = 0;
 
+  virtual MutableCsrConstEdgeIterBase& operator+=(size_t offset) = 0;
+
   virtual void next() = 0;
   virtual bool is_valid() const = 0;
 };
@@ -264,6 +266,14 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
   timestamp_t get_timestamp() const { return cur_->timestamp.load(); }
 
   void next() { ++cur_; }
+  TypedMutableCsrConstEdgeIter& operator+=(size_t offset) override {
+    if (cur_ + offset >= end_) {
+      cur_ = end_;
+    } else {
+      cur_ = cur_ + offset;
+    }
+    return *this;
+  }
   bool is_valid() const { return cur_ != end_; }
   size_t size() const { return end_ - cur_; }
 

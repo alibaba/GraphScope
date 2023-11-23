@@ -50,23 +50,15 @@ class UpdateTransaction {
 
   void Commit();
 
-  void BatchCommit(
-      std::vector<std::tuple<label_t, vid_t, std::vector<Any>>>&&
-          update_vertices,
-      // out offset, in offset, property
-      std::vector<std::tuple<label_t, vid_t, label_t, vid_t, label_t, size_t,
-                             size_t, Any>>&& update_edges,
-      std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insert_vertices,
-      std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
-          insert_edges,
-      grape::InArchive& arc);
-
   void Abort();
 
   bool AddVertex(label_t label, const Any& oid, const std::vector<Any>& props);
 
   bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
                const Any& dst, label_t edge_label, const Any& value);
+
+  bool AddOrUpdateEdge(label_t src_label, const Any& src, label_t dst_label,
+                       const Any& dst, label_t edge_label, const Any& value);
 
   class vertex_iterator {
    public:
@@ -109,6 +101,8 @@ class UpdateTransaction {
 
     void Next();
 
+    void Forward(size_t offset);
+
     vid_t GetNeighbor() const;
 
     label_t GetNeighborLabel() const;
@@ -128,6 +122,7 @@ class UpdateTransaction {
     const vid_t* added_edges_end_;
 
     std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter_;
+    size_t offset_;
 
     UpdateTransaction* txn_;
   };
@@ -145,7 +140,8 @@ class UpdateTransaction {
   bool SetVertexField(label_t label, vid_t lid, int col_id, const Any& value);
 
   void SetEdgeData(bool dir, label_t label, vid_t v, label_t neighbor_label,
-                   vid_t nbr, label_t edge_label, const Any& value);
+                   vid_t nbr, label_t edge_label, const Any& value,
+                   size_t offset = 0);
 
   bool GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
                           label_t neighbor_label, vid_t nbr, label_t edge_label,
@@ -191,7 +187,9 @@ class UpdateTransaction {
   std::vector<Table> extra_vertex_properties_;
 
   std::vector<ska::flat_hash_map<vid_t, std::vector<vid_t>>> added_edges_;
-  std::vector<ska::flat_hash_map<vid_t, ska::flat_hash_map<vid_t, Any>>>
+  // std::pair <prop, offset>
+  std::vector<ska::flat_hash_map<
+      vid_t, ska::flat_hash_map<vid_t, std::pair<Any, size_t>>>>
       updated_edge_data_;
 
   std::vector<std::string> sv_vec_;
