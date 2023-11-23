@@ -136,8 +136,12 @@ class UpdateTransaction {
   bool SetVertexField(label_t label, vid_t lid, int col_id, const Any& value);
 
   void SetEdgeData(bool dir, label_t label, vid_t v, label_t neighbor_label,
-                   vid_t nbr, label_t edge_label, const Any& value,
-                   size_t offset = 0);
+                   vid_t nbr, label_t edge_label, const Any& value);
+
+  void SetEdgeDataWithOffset(bool dir, label_t label, vid_t v,
+                             label_t neighbor_label, vid_t nbr,
+                             label_t edge_label, const Any& value,
+                             size_t offset);
 
   bool GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
                           label_t neighbor_label, vid_t nbr, label_t edge_label,

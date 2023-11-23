@@ -191,38 +191,31 @@ bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
 
   return true;
 }
-
+static size_t get_offset(
+    const std::shared_ptr<MutableCsrConstEdgeIterBase>& base, vid_t target) {
+  size_t offset = 0;
+  while (base != nullptr && base->is_valid()) {
+    if (base->get_neighbor() == target) {
+      return offset;
+    }
+    base->next();
+  }
+  return std::numeric_limits<size_t>::max();
+}
 bool UpdateTransaction::AddOrUpdateEdge(label_t src_label, const Any& src,
                                         label_t dst_label, const Any& dst,
                                         label_t edge_label, const Any& value) {
   vid_t src_lid, dst_lid;
   static constexpr size_t sentinel = std::numeric_limits<size_t>::max();
-  size_t offset_out = sentinel;
-  size_t offset_in = sentinel;
+  size_t offset_out, offset_in;
   if (graph_.get_lid(src_label, src, src_lid) &&
       graph_.get_lid(dst_label, dst, dst_lid)) {
     const auto& oe =
         graph_.get_outgoing_edges(src_label, src_lid, dst_label, edge_label);
-    size_t temp = 0;
-    while (oe && oe->is_valid()) {
-      if (oe->get_neighbor() == dst_lid) {
-        offset_out = temp;
-        break;
-      }
-      ++temp;
-      oe->next();
-    }
+    offset_out = get_offset(oe, dst_lid);
     const auto& ie =
         graph_.get_incoming_edges(dst_label, dst_lid, src_label, edge_label);
-    temp = 0;
-    while (ie && ie->is_valid()) {
-      if (ie->get_neighbor() == src_lid) {
-        offset_in = temp;
-        break;
-      }
-      ++temp;
-      ie->next();
-    }
+    offset_in = get_offset(ie, src_lid);
   }
 
   if (!oid_to_lid(src_label, src, src_lid)) {
@@ -326,12 +319,12 @@ Any UpdateTransaction::edge_iterator::GetData() const {
 void UpdateTransaction::edge_iterator::SetData(const Any& value) {
   if (init_iter_->is_valid()) {
     vid_t cur = init_iter_->get_neighbor();
-    txn_->SetEdgeData(dir_, label_, v_, neighbor_label_, cur, edge_label_,
-                      value, offset_);
+    txn_->SetEdgeDataWithOffset(dir_, label_, v_, neighbor_label_, cur,
+                                edge_label_, value, offset_);
   } else {
     vid_t cur = *added_edges_cur_;
-    txn_->SetEdgeData(dir_, label_, v_, neighbor_label_, cur, edge_label_,
-                      value, offset_);
+    txn_->SetEdgeDataWithOffset(dir_, label_, v_, neighbor_label_, cur,
+                                edge_label_, value, offset_);
   }
 }
 
@@ -487,8 +480,19 @@ bool UpdateTransaction::SetVertexField(label_t label, vid_t lid, int col_id,
 
 void UpdateTransaction::SetEdgeData(bool dir, label_t label, vid_t v,
                                     label_t neighbor_label, vid_t nbr,
-                                    label_t edge_label, const Any& value,
-                                    size_t offset) {
+                                    label_t edge_label, const Any& value) {
+  const auto& edges =
+      dir ? graph_.get_outgoing_edges(label, v, neighbor_label, edge_label)
+          : graph_.get_incoming_edges(label, v, neighbor_label, edge_label);
+  size_t offset = get_offset(edges, nbr);
+  SetEdgeDataWithOffset(dir, label, v, neighbor_label, nbr, edge_label, value,
+                        offset);
+}
+
+void UpdateTransaction::SetEdgeDataWithOffset(bool dir, label_t label, vid_t v,
+                                              label_t neighbor_label, vid_t nbr,
+                                              label_t edge_label,
+                                              const Any& value, size_t offset) {
   size_t csr_index = dir ? get_out_csr_index(label, neighbor_label, edge_label)
                          : get_in_csr_index(label, neighbor_label, edge_label);
   if (value.type == PropertyType::kString) {
