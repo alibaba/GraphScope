@@ -185,12 +185,12 @@ helm install [YOUR_RELEASE_NAME] graphscope/gie-standalone --set [key1]=[value1]
 ```
 We've listed useful configuration keys in the following:
 
-| Name                  | Description                                                           |          Default Value          |
-| :-------------------- | --------------------------------------------------------------------- | :-----------------------------: |
-| gremlinPort           | the port for accessing the Gremlin service                            |              8182               |
-| cypherPort            | the port for accessing the Cypher service                             |              7687               |
-| pegasusWorkerNum      | the number of working threads per each executor                       |                2                |
-| pegasusTimeout        | the maximum duration in `ms` you allow each query to run              |             24,000              |
-| pegasusBatchSize      | the maximum size of streaming records can be output for an operator   |              1024               |
-| pegasusOutputCapacity | the maximum number of streaming records can be output for an operator |               16                |
-| queryPerSecondLimit   | the maximum qps can be handled by frontend service                    | 2147483647 (without limitation) |
+| Name                        | Description                                                           |          Default Value          |
+| :-------------------------- | --------------------------------------------------------------------- | :-----------------------------: |
+| gremlinPort                 | the port for accessing the Gremlin service                            |              8182               |
+| cypherPort                  | the port for accessing the Cypher service                             |              7687               |
+| pegasusWorkerNum            | the number of working threads per each executor                       |                2                |
+| pegasusTimeout              | the maximum duration in `ms` you allow each query to run              |             24,000              |
+| pegasusBatchSize            | the maximum size of streaming records can be output for an operator   |              1024               |
+| pegasusOutputCapacity       | the maximum number of streaming records can be output for an operator |               16                |
+| frontendQueryPerSecondLimit | the maximum qps can be handled by frontend service                    | 2147483647 (without limitation) |
