@@ -159,17 +159,22 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
             // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
             //     then we set tag=None and alias="a" in auxilia
-            // 1. filter by labels.
-            if !self.query_params.labels.is_empty() && entry.label().is_some() {
+
+            // 1. If to filter by labels, and the entry itself carries label information already, directly eval it without query the store
+            if self.query_params.has_labels() && entry.label().is_some() {
                 if !self
                     .query_params
                     .labels
                     .contains(&entry.label().unwrap())
                 {
+                    // pruning by labels
                     return Ok(None);
+                } else if !self.query_params.has_predicates() && !self.query_params.has_columns() {
+                    // if only filter by labels, directly return the results.
+                    return Ok(Some(input));
                 }
             }
-            // 2. further fetch properties, e.g., filter by columns.
+            // 2. Otherwise, filter after query store, e.g., the case of filter by columns.
             match entry.get_type() {
                 EntryType::Vertex => {
                     let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
@@ -248,7 +253,7 @@ impl FilterMapFuncGen for pb::GetV {
             VOpt::Start | VOpt::End | VOpt::Other => {
                 let mut tables_condition: Vec<LabelId> = vec![];
                 if let Some(params) = self.params {
-                    if params.is_queryable() {
+                    if params.has_predicates() || params.has_columns() {
                         Err(FnGenError::unsupported_error(&format!("QueryParams in GetV {:?}", params)))?
                     } else {
                         tables_condition = params
