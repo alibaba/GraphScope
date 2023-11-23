@@ -121,32 +121,6 @@ void UpdateTransaction::Commit() {
   release();
 }
 
-template <class Fn, class T>
-void applyBatchUpdate(Fn&& fn, std::vector<T>&& vec) {
-  static constexpr int commit_thread_num = 8;
-  static constexpr int multi_thread_limit = 1024;
-  int num = vec.size();
-  if (num < multi_thread_limit) {
-    for (auto& e : vec) {
-      fn(std::forward<T>(e));
-    }
-  } else {
-    std::vector<std::thread> threads;
-    num /= commit_thread_num;
-    for (int i = 0; i < commit_thread_num; ++i) {
-      threads.emplace_back([&, i, num] {
-        for (size_t idx = i * num; idx < (i + 1) * num && idx < vec.size();
-             ++idx) {
-          fn(std::move(vec[idx]));
-        }
-      });
-    }
-    for (auto& t : threads) {
-      t.join();
-    }
-  }
-}
-
 void UpdateTransaction::Abort() { release(); }
 
 bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
