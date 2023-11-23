@@ -92,7 +92,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             statusCallback.getQueryLogger().error("process response from grpc fail", e);
             // cannot write to this context any more
             isContextWritable = false;
-            statusCallback.onEnd(false);
+            statusCallback.onEnd(false, null);
             writeResultList(
                     writeResult,
                     Collections.singletonList(e.getMessage()),
@@ -104,7 +104,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
     public synchronized void finish() {
         if (isContextWritable) {
             isContextWritable = false;
-            statusCallback.onEnd(true);
+            statusCallback.onEnd(true, null);
             aggregateResults();
             writeResultList(writeResult, resultCollectors, ResponseStatusCode.SUCCESS);
         }
@@ -115,7 +115,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
         logger.error("error return from grpc, status {}", status);
         if (isContextWritable) {
             isContextWritable = false;
-            statusCallback.onEnd(false);
+            statusCallback.onEnd(false, status.getDescription());
             writeResultList(
                     writeResult,
                     Collections.singletonList(status.toString()),
