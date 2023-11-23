@@ -1504,7 +1504,7 @@ fn is_params_all_labels(params: &pb::QueryParams) -> bool {
             .as_ref()
             .and_then(|store_meta| store_meta.schema.as_ref())
         {
-            let params_label_ids: Vec<LabelId> = params
+            let mut params_label_ids: Vec<LabelId> = params
                 .tables
                 .iter()
                 .filter_map(|name_or_id| {
@@ -1517,6 +1517,9 @@ fn is_params_all_labels(params: &pb::QueryParams) -> bool {
                     }
                 })
                 .collect();
+
+            params_label_ids.sort();
+            params_label_ids.dedup();
 
             schema.check_all_entity_labels(&params_label_ids)
         } else {
