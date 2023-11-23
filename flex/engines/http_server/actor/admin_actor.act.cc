@@ -15,12 +15,12 @@
 
 #include "flex/engines/http_server/actor/admin_actor.act.h"
 
+#include <nlohmann/json.hpp>
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/service/admin_service.h"
-#include "flex/engines/http_server/workspace_manager.h"
-#include "flex/third_party/nlohmann/json.hpp"
+#include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/utils/service_utils.h"
 
 #include <seastar/core/print.hh>
@@ -44,7 +44,6 @@ admin_actor::admin_actor(hiactor::actor_base* exec_ctx,
 seastar::future<query_result> admin_actor::run_create_graph(
     query_param&& query_param) {
   LOG(INFO) << "Creating Graph: " << query_param.content;
-  auto& workspace_manager = server::WorkspaceManager::Get();
 
   YAML::Node yaml;
 
@@ -63,7 +62,8 @@ seastar::future<query_result> admin_actor::run_create_graph(
         std::runtime_error("Fail to parse json: " + query_param.content));
   }
 
-  auto result = workspace_manager.CreateGraph(yaml);
+  auto result = server::WorkDirManipulator::CreateGraph(yaml);
+
   if (result.ok()) {
     VLOG(10) << "Successfully created graph";
     return seastar::make_ready_future<query_result>(std::move(result.value()));
@@ -80,9 +80,8 @@ seastar::future<query_result> admin_actor::run_get_graph_schema(
     query_param&& query_param) {
   LOG(INFO) << "Get Graph schema for graph: " << query_param.content;
 
-  auto& workspace_manager = server::WorkspaceManager::Get();
   auto schema_result =
-      workspace_manager.GetGraphSchemaString(query_param.content);
+      server::WorkDirManipulator::GetGraphSchemaString(query_param.content);
   if (schema_result.ok()) {
     return seastar::make_ready_future<query_result>(
         std::move(schema_result.value()));
@@ -98,8 +97,7 @@ seastar::future<query_result> admin_actor::run_get_graph_schema(
 seastar::future<query_result> admin_actor::run_list_graphs(
     query_param&& query_param) {
   LOG(INFO) << "List all graphs.";
-  auto& workspace_manager = server::WorkspaceManager::Get();
-  auto list_result = workspace_manager.ListGraphs();
+  auto list_result = server::WorkDirManipulator::ListGraphs();
   if (!list_result.ok()) {
     LOG(ERROR) << "Fail to list graphs: "
                << list_result.status().error_message();
@@ -117,8 +115,8 @@ seastar::future<query_result> admin_actor::run_delete_graph(
     query_param&& query_param) {
   LOG(INFO) << "Delete graph: " << query_param.content;
 
-  auto& workspace_manager = server::WorkspaceManager::Get();
-  auto delete_res = workspace_manager.DeleteGraph(query_param.content);
+  auto delete_res =
+      server::WorkDirManipulator::DeleteGraph(query_param.content);
   if (delete_res.ok()) {
     return seastar::make_ready_future<query_result>(
         std::move(delete_res.value()));
@@ -139,7 +137,6 @@ seastar::future<query_result> admin_actor::run_graph_loading(
   auto& graph_name = content.first;
   VLOG(1) << "Parse json payload for graph: " << graph_name;
   auto& graph_config = content.second;
-  auto& workspace_manager = server::WorkspaceManager::Get();
 
   YAML::Node yaml;
   try {
@@ -158,7 +155,8 @@ seastar::future<query_result> admin_actor::run_graph_loading(
         "Fail to parse json when running dataloading for : " + graph_name));
   }
 
-  auto graph_loading_res = workspace_manager.LoadGraph(graph_name, yaml);
+  auto graph_loading_res =
+      server::WorkDirManipulator::LoadGraph(graph_name, yaml);
 
   if (graph_loading_res.ok()) {
     VLOG(10) << "Successfully loaded graph";
@@ -179,10 +177,9 @@ seastar::future<query_result> admin_actor::get_procedure_by_procedure_name(
   auto& procedure_name = query_param.content.second;
   LOG(INFO) << "Get procedure: " << procedure_name
             << " for graph: " << graph_name;
-  auto& workspace_manager = server::WorkspaceManager::Get();
   auto get_procedure_res =
-      workspace_manager.GetProcedureByGraphAndProcedureName(graph_name,
-                                                            procedure_name);
+      server::WorkDirManipulator::GetProcedureByGraphAndProcedureName(
+          graph_name, procedure_name);
   if (get_procedure_res.ok()) {
     VLOG(10) << "Successfully get procedure procedures";
     return seastar::make_ready_future<query_result>(
@@ -201,9 +198,8 @@ seastar::future<query_result> admin_actor::get_procedure_by_procedure_name(
 seastar::future<query_result> admin_actor::get_procedures_by_graph_name(
     query_param&& query_param) {
   auto& graph_name = query_param.content;
-  auto& workspace_manager = server::WorkspaceManager::Get();
   auto get_all_procedure_res =
-      workspace_manager.GetProceduresByGraphName(graph_name);
+      server::WorkDirManipulator::GetProceduresByGraphName(graph_name);
   if (get_all_procedure_res.ok()) {
     VLOG(10) << "Successfully get all procedures: "
              << get_all_procedure_res.value();
@@ -222,8 +218,7 @@ seastar::future<query_result> admin_actor::create_procedure(
     create_procedure_query_param&& query_param) {
   auto& graph_name = query_param.content.first;
   auto& parameter = query_param.content.second;
-  auto& workspace_manager = server::WorkspaceManager::Get();
-  return workspace_manager.CreateProcedure(graph_name, parameter)
+  return server::WorkDirManipulator::CreateProcedure(graph_name, parameter)
       .then_wrapped([](auto&& f) {
         try {
           auto res = f.get();
@@ -243,9 +238,8 @@ seastar::future<query_result> admin_actor::delete_procedure(
     create_procedure_query_param&& query_param) {
   auto& graph_name = query_param.content.first;
   auto& procedure_name = query_param.content.second;
-  auto& workspace_manager = server::WorkspaceManager::Get();
   auto delete_procedure_res =
-      workspace_manager.DeleteProcedure(graph_name, procedure_name);
+      server::WorkDirManipulator::DeleteProcedure(graph_name, procedure_name);
   if (delete_procedure_res.ok()) {
     VLOG(10) << "Successfully get all procedures";
     return seastar::make_ready_future<query_result>(
@@ -265,9 +259,8 @@ seastar::future<query_result> admin_actor::update_procedure(
   auto& graph_name = std::get<0>(query_param.content);
   auto& procedure_name = std::get<1>(query_param.content);
   auto& parameter = std::get<2>(query_param.content);
-  auto& workspace_manager = server::WorkspaceManager::Get();
-  auto update_procedure_res =
-      workspace_manager.UpdateProcedure(graph_name, procedure_name, parameter);
+  auto update_procedure_res = server::WorkDirManipulator::UpdateProcedure(
+      graph_name, procedure_name, parameter);
   if (update_procedure_res.ok()) {
     VLOG(10) << "Successfully update procedure: " << procedure_name;
     return seastar::make_ready_future<query_result>(
@@ -286,7 +279,6 @@ seastar::future<query_result> admin_actor::start_service(
     query_param&& query_param) {
   // parse query_param.content as json and get graph_name
   auto& content = query_param.content;
-  auto& workspace_manager = server::WorkspaceManager::Get();
   std::string graph_name;
   try {
     if (!content.empty()) {
@@ -295,14 +287,14 @@ seastar::future<query_result> admin_actor::start_service(
         graph_name = json["graph_name"].get<std::string>();
       }
     } else {
+      graph_name = server::WorkDirManipulator::GetRunningGraph();
       LOG(WARNING)
           << "Request payload is empty, will restart on current graph: "
-          << workspace_manager.GetRunningGraph();
-      graph_name = workspace_manager.GetRunningGraph();
+          << server::WorkDirManipulator::GetRunningGraph();
     }
     LOG(WARNING) << "Starting service with graph: " << graph_name;
 
-    auto schema_result = workspace_manager.GetGraphSchema(graph_name);
+    auto schema_result = server::WorkDirManipulator::GetGraphSchema(graph_name);
     if (!schema_result.ok()) {
       LOG(ERROR) << "Fail to get graph schema: "
                  << schema_result.status().error_message() << ", "
@@ -311,7 +303,7 @@ seastar::future<query_result> admin_actor::start_service(
           "Fail to get graph schema: " +
           schema_result.status().error_message() + ", " + graph_name));
     }
-    auto data_dir = workspace_manager.GetDataDirectory(graph_name);
+    auto data_dir = server::WorkDirManipulator::GetDataDirectory(graph_name);
     if (!data_dir.ok()) {
       LOG(ERROR) << "Fail to get data directory: "
                  << data_dir.status().error_message();
@@ -332,7 +324,7 @@ seastar::future<query_result> admin_actor::start_service(
         return seastar::make_exception_future<query_result>(std::runtime_error(
             "Fail to load graph from data directory: " + data_dir.value()));
       }
-      workspace_manager.SetRunningGraph(graph_name);
+      server::WorkDirManipulator::SetRunningGraph(graph_name);
     }
 
     LOG(INFO) << "Successfully started service with graph: " << graph_name;
@@ -350,9 +342,17 @@ seastar::future<query_result> admin_actor::start_service(
 seastar::future<query_result> admin_actor::service_status(
     query_param&& query_param) {
   auto& admin_service = InteractiveAdminService::get();
-  auto result_str = admin_service.get_query_service_status();
-  LOG(INFO) << "Query service status: " << result_str;
-  return seastar::make_ready_future<query_result>(std::move(result_str));
+  auto query_port = admin_service.get_query_port();
+  nlohmann::json res;
+  if (query_port != 0) {
+    res["status"] = "running";
+    res["query_port"] = query_port;
+    res["graph_name"] = server::WorkDirManipulator::GetRunningGraph();
+  } else {
+    LOG(INFO) << "Query service has not been inited!";
+    res["status"] = "Query service has not been inited!";
+  }
+  return seastar::make_ready_future<query_result>(std::move(res.dump()));
 }
 
 // get node status.
@@ -380,7 +380,5 @@ seastar::future<query_result> admin_actor::node_status(
   }
   return seastar::make_ready_future<query_result>(json.dump());
 }
-
-std::mutex admin_actor::mtx_;
 
 }  // namespace server

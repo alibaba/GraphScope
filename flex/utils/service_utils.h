@@ -27,8 +27,10 @@
 #include <vector>
 
 #include "flex/utils/result.h"
+#include "flex/utils/yaml_utils.h"
 
-#include "glog/logging.h"
+#include <glog/logging.h>
+#include <nlohmann/json.hpp>
 
 namespace gs {
 
@@ -53,10 +55,11 @@ void run_graph_loading(const std::string& graph_schema_file,
                        const std::string& bulk_load_file,
                        const std::string& data_dir);
 
-std::string get_data_dir(const std::string& workspace,
-                         const std::string& graph_name);
+std::string get_graph_indices_dir(const std::string& workspace,
+                                  const std::string& graph_name);
 std::string get_graph_schema_file(const std::string& workspace,
                                   const std::string& graph_name);
+
 std::string find_codegen_bin();
 
 std::pair<uint64_t, uint64_t> get_total_physical_memory_usage();

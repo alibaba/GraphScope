@@ -93,8 +93,8 @@ void run_graph_loading(const std::string& graph_schema_file,
   VLOG(1) << "Finish run graph loading cmd: " << cmd;
 }
 
-std::string get_data_dir(const std::string& workspace,
-                         const std::string& graph_name) {
+std::string get_graph_indices_dir(const std::string& workspace,
+                                  const std::string& graph_name) {
   return workspace + "/data/" + graph_name + "/indices";
 }
 

@@ -62,8 +62,7 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
   ACTOR_DO_WORK()
 
  private:
-  int32_t your_private_members_ = 0;
-  static std::mutex mtx_;
+  std::mutex mtx_;
 };
 
 }  // namespace server

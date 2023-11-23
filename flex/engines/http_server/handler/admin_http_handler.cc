@@ -23,7 +23,7 @@
 #include "flex/engines/http_server/generated/actor/admin_actor_ref.act.autogen.h"
 #include "flex/engines/http_server/service/admin_service.h"
 #include "flex/engines/http_server/types.h"
-#include "flex/engines/http_server/workspace_manager.h"
+#include "flex/engines/http_server/workdir_manipulator.h"
 
 #include <glog/logging.h>
 

@@ -20,7 +20,7 @@
 #include "flex/engines/http_server/actor_system.h"
 #include "flex/engines/http_server/handler/admin_http_handler.h"
 #include "flex/engines/http_server/handler/hqps_http_handler.h"
-#include "flex/engines/http_server/workspace_manager.h"
+#include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/utils/service_utils.h"
 
 namespace server {
@@ -38,11 +38,15 @@ class InteractiveAdminService {
             bool dpdk_mode, bool enable_thread_resource_pool,
             unsigned external_thread_num);
 
+  // only start the query service.
+  void init(uint32_t num_shards, uint16_t query_port, bool dpdk_mode,
+            bool enable_thread_resource_pool, unsigned external_thread_num);
+
   void stop_query_service();
 
   void start_query_service();
 
-  seastar::sstring get_query_service_status();
+  uint16_t get_query_port() const;
 
   void run_and_wait_for_exit();
   void set_exit_state();

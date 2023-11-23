@@ -46,18 +46,11 @@ void InteractiveAdminService::start_query_service() {
   }
 }
 
-seastar::sstring InteractiveAdminService::get_query_service_status() {
-  nlohmann::json res;
+uint16_t InteractiveAdminService::get_query_port() const {
   if (query_handler_) {
-    auto& workspace_manager = server::WorkspaceManager::Get();
-    res["status"] = "running";
-    res["query_port"] = query_handler_->get_port();
-    res["graph_name"] = workspace_manager.GetRunningGraph();
-  } else {
-    LOG(INFO) << "Query service has not been inited!";
-    res["status"] = "Query service has not been inited!";
+    return query_handler_->get_port();
   }
-  return res.dump();
+  return 0;
 }
 
 void InteractiveAdminService::run_and_wait_for_exit() {

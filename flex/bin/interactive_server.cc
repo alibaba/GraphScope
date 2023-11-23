@@ -20,7 +20,7 @@
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/service/admin_service.h"
 #include "flex/engines/http_server/service/hqps_service.h"
-#include "flex/engines/http_server/workspace_manager.h"
+#include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/utils/service_utils.h"
 
@@ -145,7 +145,7 @@ void initWorkspace(const std::string workspace, int32_t thread_num) {
   }
   // Create subdirectories
   std::filesystem::create_directory(workspace + "/" +
-                                    server::WorkspaceManager::DATA_DIR_NAME);
+                                    server::WorkDirManipulator::DATA_DIR_NAME);
   std::filesystem::create_directory(workspace + "/conf");
   std::filesystem::create_directory(workspace + "/log");
 
@@ -164,9 +164,9 @@ void initWorkspace(const std::string workspace, int32_t thread_num) {
   // copy conf files
   std::filesystem::copy_file(
       interactive_home + "/conf/" +
-          server::WorkspaceManager::CONF_ENGINE_CONFIG_FILE_NAME,
+          server::WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME,
       workspace + "/conf/" +
-          server::WorkspaceManager::CONF_ENGINE_CONFIG_FILE_NAME,
+          server::WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME,
       std::filesystem::copy_options::overwrite_existing);
   std::filesystem::copy_file(interactive_home + "/conf/interactive.yaml",
                              workspace + "/conf/interactive.yaml",
@@ -195,14 +195,24 @@ void initWorkspace(const std::string workspace, int32_t thread_num) {
       gs::get_graph_schema_file(workspace,
                                 server::HQPSService::DEFAULT_GRAPH_NAME),
       bulk_loading_file,
-      gs::get_data_dir(workspace, server::HQPSService::DEFAULT_GRAPH_NAME));
+      gs::get_graph_indices_dir(workspace,
+                                server::HQPSService::DEFAULT_GRAPH_NAME));
   VLOG(1) << "Finish init workspace";
 
-  auto& workspace_manager = server::WorkspaceManager::Get();
   auto& db = gs::GraphDB::get();
-  auto codegen_bin = gs::find_codegen_bin();
-  workspace_manager.Init(workspace, codegen_bin,
-                         server::HQPSService::DEFAULT_GRAPH_NAME, thread_num);
+  auto schema_path = gs::get_graph_schema_file(
+      workspace, server::HQPSService::DEFAULT_GRAPH_NAME);
+  auto data_dir = gs::get_graph_indices_dir(
+      workspace, server::HQPSService::DEFAULT_GRAPH_NAME);
+  gs::Schema schema = gs::Schema::LoadFromYaml(schema_path);
+  if (!db.LoadFromDataDirectory(schema, data_dir, thread_num).ok()) {
+    LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
+  }
+  LOG(INFO) << "Successfully init graph db for default graph: "
+            << server::HQPSService::DEFAULT_GRAPH_NAME;
+  server::WorkDirManipulator::SetWorkspace(workspace);
+  server::WorkDirManipulator::SetRunningGraph(
+      server::HQPSService::DEFAULT_GRAPH_NAME);
 }
 
 }  // namespace gs

@@ -1,4 +1,4 @@
-#include "flex/engines/http_server/workspace_manager.h"
+#include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 
 // Write a macro to define the function, to check whether a filed presents in a
@@ -11,42 +11,15 @@
   }
 
 namespace server {
+std::string WorkDirManipulator::workspace = ".";  // default to .
 
-WorkspaceManager::WorkspaceManager() {}
-
-WorkspaceManager& WorkspaceManager::Get() {
-  static WorkspaceManager instance;
-  return instance;
+void WorkDirManipulator::SetWorkspace(const std::string& path) {
+  workspace = path;
 }
 
-WorkspaceManager::~WorkspaceManager() {}
-void WorkspaceManager::Init(const std::string& workspace,
-                            const std::string& codegen_bin,
-                            const std::string& graph_name, int32_t thread_num) {
-  workspace_ = workspace;
-  codegen_bin_ = codegen_bin;
-  data_workspace_ = workspace_ + "/" + DATA_DIR_NAME;
-
-  try {
-    auto& db = gs::GraphDB::get();
-    auto schema_path = get_graph_schema_path(graph_name);
-    auto data_dir = get_graph_indices_dir(graph_name);
-    gs::Schema schema = gs::Schema::LoadFromYaml(schema_path);
-    if (!db.LoadFromDataDirectory(schema, data_dir, thread_num).ok()) {
-      LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
-    }
-    LOG(INFO) << "Successfully init graph db for default graph: " << graph_name;
-    //  set running graph
-    SetRunningGraph(graph_name);
-  } catch (const std::exception& e) {
-    LOG(FATAL) << "Fail to init graph db for default graph: " << graph_name
-               << ", error: " << e.what();
-  }
-}
-
-void WorkspaceManager::SetRunningGraph(const std::string& name) {
+void WorkDirManipulator::SetRunningGraph(const std::string& name) {
   // clear the old RUNNING_GRAPH_FILE_NAME, and write the new one.
-  auto running_graph_file = workspace_ + "/" + RUNNING_GRAPH_FILE_NAME;
+  auto running_graph_file = workspace + "/" + RUNNING_GRAPH_FILE_NAME;
   try {
     std::ofstream ofs(running_graph_file,
                       std::ofstream::out | std::ofstream::trunc);
@@ -59,8 +32,8 @@ void WorkspaceManager::SetRunningGraph(const std::string& name) {
   }
 }
 
-std::string WorkspaceManager::GetRunningGraph() const {
-  auto running_graph_file = workspace_ + "/" + RUNNING_GRAPH_FILE_NAME;
+std::string WorkDirManipulator::GetRunningGraph() {
+  auto running_graph_file = workspace + "/" + RUNNING_GRAPH_FILE_NAME;
   std::ifstream ifs(running_graph_file);
   if (!ifs.is_open()) {
     LOG(ERROR) << "Fail to open running graph file: " << running_graph_file;
@@ -72,7 +45,7 @@ std::string WorkspaceManager::GetRunningGraph() const {
 }
 
 // GraphName can be specified in the config file or in the argument.
-gs::Result<seastar::sstring> WorkspaceManager::CreateGraph(
+gs::Result<seastar::sstring> WorkDirManipulator::CreateGraph(
     const YAML::Node& yaml_config) {
   // First check graph exits
   if (!yaml_config["name"]) {
@@ -82,39 +55,36 @@ gs::Result<seastar::sstring> WorkspaceManager::CreateGraph(
         seastar::sstring("Graph name is not specified"));
   }
   auto graph_name = yaml_config["name"].as<std::string>();
-  // lock and check
-  {
-    std::lock_guard<std::mutex> lock(mtx_);
-    if (is_graph_exist(graph_name)) {
-      return gs::Result<seastar::sstring>(
-          gs::Status(gs::StatusCode::AlreadyExists, "Graph already exists"),
-          seastar::sstring("graph " + graph_name + " already exists"));
-    }
 
-    // First check whether yaml is valid
-    auto schema_result = gs::Schema::LoadFromYamlNode(yaml_config);
-    if (!schema_result.ok()) {
-      return gs::Result<seastar::sstring>(
-          seastar::sstring(schema_result.status().error_message()));
-    }
-    auto& schema = schema_result.value();
-    // dump schema to file.
-    auto dump_res = dump_graph_schema(yaml_config, graph_name);
-    if (!dump_res.ok()) {
-      return gs::Result<seastar::sstring>(gs::Status(
-          gs::StatusCode::PermissionError,
-          "Fail to dump graph schema: " + dump_res.status().error_message()));
-    }
-    VLOG(10) << "Successfully dump graph schema to file: " << graph_name << ", "
-             << get_graph_schema_path(graph_name);
+  if (is_graph_exist(graph_name)) {
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::AlreadyExists, "Graph already exists"),
+        seastar::sstring("graph " + graph_name + " already exists"));
   }
+
+  // First check whether yaml is valid
+  auto schema_result = gs::Schema::LoadFromYamlNode(yaml_config);
+  if (!schema_result.ok()) {
+    return gs::Result<seastar::sstring>(
+        seastar::sstring(schema_result.status().error_message()));
+  }
+  auto& schema = schema_result.value();
+  // dump schema to file.
+  auto dump_res = dump_graph_schema(yaml_config, graph_name);
+  if (!dump_res.ok()) {
+    return gs::Result<seastar::sstring>(gs::Status(
+        gs::StatusCode::PermissionError,
+        "Fail to dump graph schema: " + dump_res.status().error_message()));
+  }
+  VLOG(10) << "Successfully dump graph schema to file: " << graph_name << ", "
+           << get_graph_schema_path(graph_name);
 
   return gs::Result<seastar::sstring>(
       seastar::sstring("successfuly created graph "));
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::GetGraphSchemaString(
-    const std::string& graph_name) const {
+gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
+    const std::string& graph_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
@@ -139,8 +109,8 @@ gs::Result<seastar::sstring> WorkspaceManager::GetGraphSchemaString(
   }
 }
 
-gs::Result<gs::Schema> WorkspaceManager::GetGraphSchema(
-    const std::string& graph_name) const {
+gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
+    const std::string& graph_name) {
   LOG(INFO) << "Get graph schema: " << graph_name;
   gs::Schema schema;
   if (!is_graph_exist(graph_name)) {
@@ -169,8 +139,8 @@ gs::Result<gs::Schema> WorkspaceManager::GetGraphSchema(
   return gs::Result<gs::Schema>(schema);
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::GetDataDirectory(
-    const std::string& graph_name) const {
+gs::Result<seastar::sstring> WorkDirManipulator::GetDataDirectory(
+    const std::string& graph_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
@@ -186,11 +156,12 @@ gs::Result<seastar::sstring> WorkspaceManager::GetDataDirectory(
   return gs::Result<seastar::sstring>(data_dir);
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::ListGraphs() const {
-  // list all graph schema files under data_workspace_
+gs::Result<seastar::sstring> WorkDirManipulator::ListGraphs() {
+  // list all graph schema files under data_workspace
   YAML::Node yaml_list;
+  auto data_workspace = workspace + "/" + DATA_DIR_NAME;
   for (const auto& entry :
-       std::filesystem::directory_iterator(data_workspace_)) {
+       std::filesystem::directory_iterator(data_workspace)) {
     if (entry.is_directory()) {
       auto graph_name = entry.path().filename().string();
       // visit graph.yaml under data/graph_name/graph.yaml
@@ -218,10 +189,8 @@ gs::Result<seastar::sstring> WorkspaceManager::ListGraphs() const {
   return gs::Result<seastar::sstring>(json_str.value());
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::DeleteGraph(
+gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
     const std::string& graph_name) {
-  // lock
-  std::lock_guard<std::mutex> lock(mtx_);
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
@@ -235,9 +204,17 @@ gs::Result<seastar::sstring> WorkspaceManager::DeleteGraph(
         seastar::sstring("graph " + graph_name +
                          " is running, can not be removed"));
   }
+  if (is_graph_locked(graph_name)) {
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::IllegalOperation,
+                   "Can not remove a locked " + graph_name),
+        seastar::sstring("graph " + graph_name +
+                         " is locked, can not be removed"));
+  }
   // remove the graph directory
   try {
-    std::filesystem::remove_all(data_workspace_ + "/" + graph_name);
+    auto graph_path = get_graph_dir(graph_name);
+    std::filesystem::remove_all(graph_path);
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,
@@ -248,14 +225,19 @@ gs::Result<seastar::sstring> WorkspaceManager::DeleteGraph(
       gs::Status::OK(), "Successfully delete graph: " + graph_name);
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::LoadGraph(
+gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
     const std::string& graph_name, const YAML::Node& yaml_node) {
   // First check whether graph exists
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
   }
-  std::lock_guard<std::mutex> lock(mtx_);
+  if (is_graph_locked(graph_name)) {
+    return gs::Result<seastar::sstring>(gs::Status(
+        gs::StatusCode::IllegalOperation,
+        "Graph is locked: " + graph_name +
+            ", either service is running on graph, or graph is loading"));
+  }
   // Then check graph is already loaded
   if (is_graph_loaded(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
@@ -273,8 +255,8 @@ gs::Result<seastar::sstring> WorkspaceManager::LoadGraph(
   return gs::Result<seastar::sstring>(res.status(), res.value());
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::GetProceduresByGraphName(
-    const std::string& graph_name) const {
+gs::Result<seastar::sstring> WorkDirManipulator::GetProceduresByGraphName(
+    const std::string& graph_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
@@ -317,8 +299,8 @@ gs::Result<seastar::sstring> WorkspaceManager::GetProceduresByGraphName(
 }
 
 gs::Result<seastar::sstring>
-WorkspaceManager::GetProcedureByGraphAndProcedureName(
-    const std::string& graph_name, const std::string& procedure_name) const {
+WorkDirManipulator::GetProcedureByGraphAndProcedureName(
+    const std::string& graph_name, const std::string& procedure_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
@@ -388,7 +370,7 @@ WorkspaceManager::GetProcedureByGraphAndProcedureName(
   return gs::Result<seastar::sstring>(std::move(str));
 }
 
-seastar::future<seastar::sstring> WorkspaceManager::CreateProcedure(
+seastar::future<seastar::sstring> WorkDirManipulator::CreateProcedure(
     const std::string& graph_name, const std::string& parameter) {
   if (!is_graph_exist(graph_name)) {
     return seastar::make_ready_future<seastar::sstring>("Graph not exists: " +
@@ -428,8 +410,7 @@ seastar::future<seastar::sstring> WorkspaceManager::CreateProcedure(
     return seastar::make_exception_future<seastar::sstring>(
         "Procedure already exists: " + procedure_name);
   }
-  std::lock_guard<std::mutex> lock(mtx_);
-  return generate_procedure(json).then_wrapped([this, json](auto&& fut) {
+  return generate_procedure(json).then_wrapped([json](auto&& fut) {
     try {
       auto res = fut.get();
       bool enable = true;  // default enable.
@@ -452,7 +433,8 @@ seastar::future<seastar::sstring> WorkspaceManager::CreateProcedure(
       LOG(INFO) << "Enable: " << std::to_string(enable);
 
       // If create procedure success, update graph schema (dump to file)
-      // and add to plugin list. this is critical, and should be transactional.
+      // and add to plugin list. this is critical, and should be
+      // transactional.
       if (enable) {
         LOG(INFO)
             << "Procedure is enabled, add to graph schema and plugin list.";
@@ -473,7 +455,7 @@ seastar::future<seastar::sstring> WorkspaceManager::CreateProcedure(
   });
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::DeleteProcedure(
+gs::Result<seastar::sstring> WorkDirManipulator::DeleteProcedure(
     const std::string& graph_name, const std::string& procedure_name) {
   LOG(INFO) << "Delete procedure: " << procedure_name
             << " on graph: " << graph_name;
@@ -497,7 +479,6 @@ gs::Result<seastar::sstring> WorkspaceManager::DeleteProcedure(
         "Fail to load graph schema: " + schema_file + ", error: " + e.what()));
   }
 
-  std::lock_guard<std::mutex> lock(mtx_);
   if (schema_node["stored_procedures"]) {
     auto procedure_node = schema_node["stored_procedures"];
     if (procedure_node["enable_lists"]) {
@@ -571,7 +552,7 @@ gs::Result<seastar::sstring> WorkspaceManager::DeleteProcedure(
 }
 
 // we only support update the description and enable status.
-gs::Result<seastar::sstring> WorkspaceManager::UpdateProcedure(
+gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
     const std::string& graph_name, const std::string& procedure_name,
     const std::string& parameters) {
   if (!is_graph_exist(graph_name)) {
@@ -647,7 +628,6 @@ gs::Result<seastar::sstring> WorkspaceManager::UpdateProcedure(
                        ", error: " + dump_res.status().error_message()));
   }
   VLOG(10) << "Dump plugin yaml to file: " << plugin_file;
-  std::lock_guard<std::mutex> lock(mtx_);
   // if enable is specified in the parameter, update graph schema file.
   if (enabled) {
     return enable_procedure_on_graph(graph_name, procedure_name);
@@ -656,8 +636,8 @@ gs::Result<seastar::sstring> WorkspaceManager::UpdateProcedure(
   }
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::GetProcedureLibPath(
-    const std::string& graph_name, const std::string& procedure_name) const {
+gs::Result<seastar::sstring> WorkDirManipulator::GetProcedureLibPath(
+    const std::string& graph_name, const std::string& procedure_name) {
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
@@ -678,64 +658,69 @@ gs::Result<seastar::sstring> WorkspaceManager::GetProcedureLibPath(
   return gs::Result<seastar::sstring>(plugin_so_path);
 }
 
-std::string WorkspaceManager::get_graph_schema_path(
-    const std::string& graph_name) const {
-  return data_workspace_ + "/" + graph_name + "/" + GRAPH_SCHEMA_FILE_NAME;
+std::string WorkDirManipulator::get_graph_schema_path(
+    const std::string& graph_name) {
+  return get_graph_dir(graph_name) + "/" + GRAPH_SCHEMA_FILE_NAME;
 }
 
-std::string WorkspaceManager::get_graph_lock_file(
-    const std::string& graph_name) const {
-  return data_workspace_ + "/" + graph_name + "/" + LOCK_FILE;
+std::string WorkDirManipulator::get_graph_lock_file(
+    const std::string& graph_name) {
+  return get_graph_dir(graph_name) + "/" + LOCK_FILE;
 }
 
-std::string WorkspaceManager::get_graph_indices_dir(
-    const std::string& graph_name) const {
-  return data_workspace_ + "/" + graph_name + "/" + GRAPH_INDICES_DIR_NAME;
+std::string WorkDirManipulator::get_graph_indices_dir(
+    const std::string& graph_name) {
+  return get_graph_dir(graph_name) + "/" + GRAPH_INDICES_DIR_NAME;
 }
 
-std::string WorkspaceManager::get_graph_indices_file(
-    const std::string& graph_name) const {
-  return data_workspace_ + "/" + graph_name + "/" + GRAPH_INDICES_DIR_NAME +
-         "/" + GRAPH_INDICES_FILE_NAME;
+std::string WorkDirManipulator::get_graph_indices_file(
+    const std::string& graph_name) {
+  return get_graph_dir(graph_name) + GRAPH_INDICES_DIR_NAME + "/" +
+         GRAPH_INDICES_FILE_NAME;
 }
 
-std::string WorkspaceManager::get_graph_plugin_dir(
-    const std::string& graph_name) const {
-  return data_workspace_ + "/" + graph_name + "/" + GRAPH_PLUGIN_DIR_NAME;
+std::string WorkDirManipulator::get_graph_plugin_dir(
+    const std::string& graph_name) {
+  return get_graph_dir(graph_name) + "/" + GRAPH_PLUGIN_DIR_NAME;
 }
 
-bool WorkspaceManager::is_graph_exist(const std::string& graph_name) const {
-  // check whether data_workspace_/graph_name/graph.yaml exists
+std::string WorkDirManipulator::get_graph_dir(const std::string& graph_name) {
+  return workspace + "/" + DATA_DIR_NAME + "/" + graph_name;
+}
+
+bool WorkDirManipulator::is_graph_exist(const std::string& graph_name) {
   auto graph_path = get_graph_schema_path(graph_name);
   return std::filesystem::exists(graph_path);
 }
 
-bool WorkspaceManager::is_graph_loaded(const std::string& graph_name) const {
-  // check whether data_workspace_/graph_name/lock exists
+bool WorkDirManipulator::is_graph_loaded(const std::string& graph_name) {
   return std::filesystem::exists(get_graph_indices_file(graph_name));
 }
 
-bool WorkspaceManager::is_graph_running(const std::string& graph_name) const {
-  // check whether data_workspace_/graph_name/lock exists
+bool WorkDirManipulator::is_graph_running(const std::string& graph_name) {
   return GetRunningGraph() == graph_name;
 }
 
-std::string WorkspaceManager::get_engine_config_path() const {
-  return workspace_ + "/conf/" + CONF_ENGINE_CONFIG_FILE_NAME;
+bool WorkDirManipulator::is_graph_locked(const std::string& graph_name) {
+  auto lock_file = get_graph_lock_file(graph_name);
+  return std::filesystem::exists(lock_file);
 }
 
-bool WorkspaceManager::ensure_graph_dir_exists(
-    const std::string& graph_name) const {
-  // check whether data_workspace_/graph_name exists
-  auto graph_path = data_workspace_ + "/" + graph_name;
+std::string WorkDirManipulator::get_engine_config_path() {
+  return workspace + "/conf/" + CONF_ENGINE_CONFIG_FILE_NAME;
+}
+
+bool WorkDirManipulator::ensure_graph_dir_exists(
+    const std::string& graph_name) {
+  auto graph_path = get_graph_dir(graph_name);
   if (!std::filesystem::exists(graph_path)) {
     std::filesystem::create_directory(graph_path);
   }
   return std::filesystem::exists(graph_path);
 }
 
-gs::Result<std::string> WorkspaceManager::dump_graph_schema(
-    const YAML::Node& yaml_config, const std::string& graph_name) const {
+gs::Result<std::string> WorkDirManipulator::dump_graph_schema(
+    const YAML::Node& yaml_config, const std::string& graph_name) {
   if (!ensure_graph_dir_exists(graph_name)) {
     return {gs::Status(gs::StatusCode::PermissionError,
                        "Fail to create graph directory")};
@@ -752,8 +737,8 @@ gs::Result<std::string> WorkspaceManager::dump_graph_schema(
   return gs::Result<std::string>(gs::Status::OK());
 }
 
-gs::Result<std::string> WorkspaceManager::load_graph(
-    const YAML::Node& yaml_config, const std::string& graph_name) const {
+gs::Result<std::string> WorkDirManipulator::load_graph(
+    const YAML::Node& yaml_config, const std::string& graph_name) {
   // No need to check whether graph exists, because it is checked in LoadGraph
   // First load schema
   auto schema_file = get_graph_schema_path(graph_name);
@@ -792,8 +777,8 @@ gs::Result<std::string> WorkspaceManager::load_graph(
       gs::Status::OK(), "Successfully load data to graph: " + graph_name);
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::create_procedure_sanity_check(
-    const nlohmann::json& json) const {
+gs::Result<seastar::sstring> WorkDirManipulator::create_procedure_sanity_check(
+    const nlohmann::json& json) {
   // check required fields is give.
   CHECK_JSON_FIELD(json, "bound_graph");
   CHECK_JSON_FIELD(json, "description");
@@ -819,7 +804,7 @@ gs::Result<seastar::sstring> WorkspaceManager::create_procedure_sanity_check(
   return gs::Result<seastar::sstring>(gs::Status::OK());
 }
 
-seastar::future<seastar::sstring> WorkspaceManager::generate_procedure(
+seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     const nlohmann::json& json) {
   LOG(INFO) << "Generate procedure: " << json.dump();
   auto codegen_bin = gs::find_codegen_bin();
@@ -908,7 +893,7 @@ seastar::future<seastar::sstring> WorkspaceManager::generate_procedure(
       });
 }
 
-seastar::future<seastar::sstring> WorkspaceManager::add_procedure_to_graph(
+seastar::future<seastar::sstring> WorkDirManipulator::add_procedure_to_graph(
     const nlohmann::json& json, const std::string& proc_yaml_config_file) {
   try {
     YAML::Node proc_config_node;
@@ -927,8 +912,7 @@ seastar::future<seastar::sstring> WorkspaceManager::add_procedure_to_graph(
         "Procedure name is empty, can not add to graph: " + graph_name);
   }
   // get graph schema file
-  auto graph_schema_file =
-      WorkspaceManager::Get().get_graph_schema_path(graph_name);
+  auto graph_schema_file = get_graph_schema_path(graph_name);
   // load graph schema
   YAML::Node schema_node;
   try {
@@ -978,9 +962,9 @@ seastar::future<seastar::sstring> WorkspaceManager::add_procedure_to_graph(
       seastar::sstring("Successfully create procedure"));
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::get_all_procedure_yamls(
+gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
     const std::string& graph_name,
-    const std::vector<std::string>& procedure_names) const {
+    const std::vector<std::string>& procedure_names) {
   YAML::Node yaml_list;
   auto plugin_dir = get_graph_plugin_dir(graph_name);
   // iterate all .yamls in plugin_dir
@@ -1029,8 +1013,8 @@ gs::Result<seastar::sstring> WorkspaceManager::get_all_procedure_yamls(
 }
 
 // get all procedures for graph, all set to disabled.
-gs::Result<seastar::sstring> WorkspaceManager::get_all_procedure_yamls(
-    const std::string& graph_name) const {
+gs::Result<seastar::sstring> WorkDirManipulator::get_all_procedure_yamls(
+    const std::string& graph_name) {
   YAML::Node yaml_list;
   auto plugin_dir = get_graph_plugin_dir(graph_name);
   // iterate all .yamls in plugin_dir
@@ -1064,8 +1048,8 @@ gs::Result<seastar::sstring> WorkspaceManager::get_all_procedure_yamls(
   return gs::Result<seastar::sstring>(std::move(res.value()));
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::get_procedure_yaml(
-    const std::string& graph_name, const std::string& procedure_name) const {
+gs::Result<seastar::sstring> WorkDirManipulator::get_procedure_yaml(
+    const std::string& graph_name, const std::string& procedure_name) {
   auto procedure_yaml_file =
       get_graph_plugin_dir(graph_name) + "/" + procedure_name + ".yaml";
   if (!std::filesystem::exists(procedure_yaml_file)) {
@@ -1093,7 +1077,7 @@ gs::Result<seastar::sstring> WorkspaceManager::get_procedure_yaml(
       gs::Status(gs::StatusCode::InternalError, "Unknown error"));
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::enable_procedure_on_graph(
+gs::Result<seastar::sstring> WorkDirManipulator::enable_procedure_on_graph(
     const std::string& graph_name, const std::string& procedure_name) {
   LOG(INFO) << "Enabling procedure " << procedure_name << " on graph "
             << graph_name;
@@ -1141,7 +1125,7 @@ gs::Result<seastar::sstring> WorkspaceManager::enable_procedure_on_graph(
   return gs::Result<seastar::sstring>(gs::Status::OK(), "Success");
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::disable_procedure_on_graph(
+gs::Result<seastar::sstring> WorkDirManipulator::disable_procedure_on_graph(
     const std::string& graph_name, const std::string& procedure_name) {
   LOG(INFO) << "Disabling procedure " << procedure_name << " on graph "
             << graph_name;
@@ -1197,8 +1181,8 @@ gs::Result<seastar::sstring> WorkspaceManager::disable_procedure_on_graph(
   return gs::Result<seastar::sstring>(gs::Status::OK(), "Success");
 }
 
-gs::Result<seastar::sstring> WorkspaceManager::dump_yaml_to_file(
-    const YAML::Node& yaml_node, const std::string& procedure_yaml_file) const {
+gs::Result<seastar::sstring> WorkDirManipulator::dump_yaml_to_file(
+    const YAML::Node& yaml_node, const std::string& procedure_yaml_file) {
   try {
     YAML::Emitter emitter;
     emitter << yaml_node;
@@ -1229,17 +1213,15 @@ gs::Result<seastar::sstring> WorkspaceManager::dump_yaml_to_file(
 
 // define LOCK_FILE
 // define DATA_DIR_NAME
-const std::string WorkspaceManager::LOCK_FILE = ".lock";
-const std::string WorkspaceManager::DATA_DIR_NAME = "data";
-const std::string WorkspaceManager::GRAPH_SCHEMA_FILE_NAME = "graph.yaml";
-const std::string WorkspaceManager::GRAPH_INDICES_FILE_NAME =
+const std::string WorkDirManipulator::LOCK_FILE = ".lock";
+const std::string WorkDirManipulator::DATA_DIR_NAME = "data";
+const std::string WorkDirManipulator::GRAPH_SCHEMA_FILE_NAME = "graph.yaml";
+const std::string WorkDirManipulator::GRAPH_INDICES_FILE_NAME =
     "init_snapshot.bin";
-const std::string WorkspaceManager::GRAPH_INDICES_DIR_NAME = "indices";
-const std::string WorkspaceManager::GRAPH_PLUGIN_DIR_NAME = "plugins";
-const std::string WorkspaceManager::CONF_ENGINE_CONFIG_FILE_NAME =
+const std::string WorkDirManipulator::GRAPH_INDICES_DIR_NAME = "indices";
+const std::string WorkDirManipulator::GRAPH_PLUGIN_DIR_NAME = "plugins";
+const std::string WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME =
     "engine_config.yaml";
-const std::string WorkspaceManager::RUNNING_GRAPH_FILE_NAME = "RUNNING";
-
-std::mutex WorkspaceManager::mtx_;
+const std::string WorkDirManipulator::RUNNING_GRAPH_FILE_NAME = "RUNNING";
 
 }  // namespace server
