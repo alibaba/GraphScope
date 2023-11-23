@@ -75,6 +75,13 @@ impl From<GraphProxyError> for FnGenError {
     }
 }
 
+impl From<FnGenError> for DynError {
+    fn from(e: FnGenError) -> Self {
+        let err: Box<dyn std::error::Error + Send + Sync> = e.into();
+        err
+    }
+}
+
 impl From<FnGenError> for BuildJobError {
     fn from(e: FnGenError) -> Self {
         match e {

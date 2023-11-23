@@ -58,6 +58,8 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Long> get_pattern_16_test();
 
+    public abstract Traversal<Vertex, Long> get_pattern_17_test();
+
     @Test
     public void run_pattern_1_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_1_test();
@@ -168,6 +170,13 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         Traversal<Vertex, Long> traversal = this.get_pattern_16_test();
         this.printTraversalForm(traversal);
         Assert.assertEquals(23286L, traversal.next().longValue());
+    }
+
+    @Test
+    public void run_pattern_17_test() {
+        Traversal<Vertex, Long> traversal = this.get_pattern_17_test();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(17367L, traversal.next().longValue());
     }
 
     public static class Traversals extends PatternQueryTest {
@@ -354,6 +363,27 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                     .select("a", "c")
                     .by("firstName")
                     .by("firstName")
+                    .count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_pattern_17_test() {
+            return g.V().match(
+                            __.as("a")
+                                    .hasLabel("PERSON")
+                                    .out("HASINTEREST")
+                                    .hasLabel("TAG")
+                                    .as("b"),
+                            __.as("a")
+                                    .hasLabel("PERSON")
+                                    .in("HASCREATOR")
+                                    .hasLabel("COMMENT", "POST")
+                                    .as("c"),
+                            __.as("c")
+                                    .hasLabel("COMMENT", "POST")
+                                    .out("HASTAG")
+                                    .hasLabel("TAG")
+                                    .as("b"))
                     .count();
         }
     }
