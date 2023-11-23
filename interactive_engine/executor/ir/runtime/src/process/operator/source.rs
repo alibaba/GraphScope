@@ -149,7 +149,7 @@ impl SourceOperator {
                         ));
                     }
                 } else if let Some(pkvs) = &self.primary_key_values {
-                    if self.query_params.labels.is_empty() {
+                    if !self.query_params.has_labels() {
                         Err(FnGenError::unsupported_error(
                             "Empty label in `IndexScan` self.query_params.labels",
                         ))?

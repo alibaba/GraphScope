@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import com.alibaba.graphscope.groot.sdk.api.Writer;
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.Schema;
 import com.alibaba.graphscope.groot.sdk.schema.Vertex;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class GrootClient {
+public class GrootClient implements Writer {
     private final ClientGrpc.ClientBlockingStub clientStub;
     private final ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private final ClientWriteGrpc.ClientWriteStub asyncWriteStub;

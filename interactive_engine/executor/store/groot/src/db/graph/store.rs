@@ -375,6 +375,7 @@ impl MultiVersionGraph for GraphStore {
         let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
         match res_unwrap!(self.get_vertex_data(si, id, &info), insert_update_vertex, si, id, label)? {
             Some(data) => {
+                let data = data.as_slice();
                 let version = get_codec_version(data);
                 let decoder = info.get_decoder(si, version)?;
                 let mut old = decoder.decode_all(data);
@@ -400,6 +401,7 @@ impl MultiVersionGraph for GraphStore {
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
         if let Some(data) = self.get_vertex_data(si, id, &info)? {
+            let data = data.as_slice();
             let version = get_codec_version(data);
             let decoder = info.get_decoder(si, version)?;
             let mut old = decoder.decode_all(data);
@@ -457,43 +459,23 @@ impl MultiVersionGraph for GraphStore {
         )?;
         let direction = if forward { EdgeDirection::Out } else { EdgeDirection::In };
 
-        let mut data_res = self.get_edge_data(si, id, &info, direction)?;
-        let mut complete_id = id;
-        match data_res {
-            Some(_) => {
-                debug!("Edge exists");
-            }
-            None => {
-                // inner_id != 0 && no edge found using this edge id. it may be next edge id, or an useless edge id to be discarded.
-                let edge_id =
-                    self.get_eid_by_vertex(si, edge_kind.edge_label_id, id.src_id, id.dst_id, forward);
-                match edge_id {
-                    Some(edge_id) => {
-                        complete_id = edge_id;
-                        data_res = self.get_edge_data(si, edge_id, &info, direction)?;
-                    }
-                    None => {
-                        // will create new edge
-                        warn!("Edge doesn't exists, will create new edge");
-                    }
-                }
-            }
-        }
+        let data_res = self.get_edge_data(si, id, &info, direction)?;
 
         match data_res {
             Some(data) => {
+                let data = data.as_slice();
                 let version = get_codec_version(data);
                 let decoder = info.get_decoder(si, version)?;
                 let mut old = decoder.decode_all(data);
                 merge_updates(&mut old, properties);
                 let res = self
-                    .do_insert_edge_data(si, complete_id, info, direction, &old)
+                    .do_insert_edge_data(si, id, info, direction, &old)
                     .map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_edge, si, id, edge_kind)
             }
             None => {
                 let res = self
-                    .do_insert_edge_data(si, complete_id, info, direction, properties)
+                    .do_insert_edge_data(si, id, info, direction, properties)
                     .map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_edge, si, id, edge_kind)
             }
@@ -529,6 +511,7 @@ impl MultiVersionGraph for GraphStore {
         )?;
         let direction = if forward { EdgeDirection::Out } else { EdgeDirection::In };
         if let Some(data) = self.get_edge_data(si, complete_id, &info, direction)? {
+            let data = data.as_slice();
             let version = get_codec_version(data);
             let decoder = info.get_decoder(si, version)?;
             let mut old = decoder.decode_all(data);
@@ -675,14 +658,14 @@ impl GraphStore {
 
     fn get_vertex_data(
         &self, si: SnapshotId, id: VertexId, info: &VertexTypeInfoRef,
-    ) -> GraphResult<Option<&[u8]>> {
+    ) -> GraphResult<Option<Vec<u8>>> {
         debug!("get_vertex_data");
         if let Some(table) = info.get_table(si) {
             let key = vertex_key(table.id, id, si - table.start_si);
             let mut iter = self.storage.scan_from(&key)?;
             if let Some((k, v)) = iter.next() {
                 if k.len() == key.len() && k[0..16] == key[0..16] && v.len() >= 4 {
-                    let ret = unsafe { std::mem::transmute(v) };
+                    let ret = v.to_vec();
                     return Ok(Some(ret));
                 }
             }
@@ -692,7 +675,7 @@ impl GraphStore {
 
     fn get_edge_data(
         &self, si: SnapshotId, id: EdgeId, info: &EdgeKindInfoRef, direction: EdgeDirection,
-    ) -> GraphResult<Option<&[u8]>> {
+    ) -> GraphResult<Option<Vec<u8>>> {
         debug!("get_edge_data");
         if let Some(table) = info.get_table(si) {
             let ts = si - table.start_si;
@@ -700,7 +683,7 @@ impl GraphStore {
             let mut iter = self.storage.scan_from(&key)?;
             if let Some((k, v)) = iter.next() {
                 if k.len() == key.len() && k[0..32] == key[0..32] && v.len() >= 4 {
-                    let ret = unsafe { std::mem::transmute(v) };
+                    let ret = v.to_vec();
                     return Ok(Some(ret));
                 }
             }
