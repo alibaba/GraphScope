@@ -73,20 +73,6 @@ public class GraphWriter implements MetricsAgent {
             EdgeIdGenerator edgeIdGenerator,
             MetaService metaService,
             RoleClients<IngestorWriteClient> ingestWriteClients,
-            MetricsCollector metricsCollector) {
-        this.snapshotCache = snapshotCache;
-        this.edgeIdGenerator = edgeIdGenerator;
-        this.metaService = metaService;
-        this.ingestWriteClients = ingestWriteClients;
-        initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
-    }
-
-    public GraphWriter(
-            SnapshotCache snapshotCache,
-            EdgeIdGenerator edgeIdGenerator,
-            MetaService metaService,
-            RoleClients<IngestorWriteClient> ingestWriteClients,
             MetricsCollector metricsCollector,
             Configs configs) {
         this.snapshotCache = snapshotCache;

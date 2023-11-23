@@ -299,11 +299,23 @@ where
 }
 
 pub fn cancel_job(job_id: u64) -> Result<(), CancelError> {
-    let mut hook = JOB_CANCEL_MAP.write().expect("lock poisoned");
-    if let Some(cancel_hook) = hook.get_mut(&job_id) {
-        cancel_hook.store(true, Ordering::SeqCst);
+    if let Ok(mut hook) = JOB_CANCEL_MAP.write() {
+        if let Some(cancel_hook) = hook.get_mut(&job_id) {
+            cancel_hook.store(true, Ordering::SeqCst);
+        } else {
+            return Err(CancelError::JobNotFoundError(job_id));
+        }
     } else {
-        return Err(CancelError::JobNotFoundError(job_id));
+        return Err(CancelError::CancelMapPoisonedError);
+    }
+    Ok(())
+}
+
+pub fn remove_cancel_hook(job_id: u64) -> Result<(), CancelError> {
+    if let Ok(mut hook) = JOB_CANCEL_MAP.write() {
+        hook.remove(&job_id);
+    } else {
+        return Err(CancelError::CancelMapPoisonedError);
     }
     Ok(())
 }

@@ -2,6 +2,8 @@
 ############### RUNTIME: frontend && executor #######################
 FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 ADD artifacts/artifacts.tar.gz /opt/graphscope/
 
 RUN apt-get update -y && \

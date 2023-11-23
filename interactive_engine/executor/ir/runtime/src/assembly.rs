@@ -627,8 +627,8 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                 OpKind::Scan(scan) => {
                     let udf_gen = self.udf_gen.clone();
                     stream = stream.flat_map(move |_| {
-                        let scan_iter = udf_gen.gen_source(scan.clone().into()).unwrap();
-                        Ok(scan_iter)
+                        let scan_iter = udf_gen.gen_source(scan.clone().into());
+                        Ok(scan_iter?)
                     })?;
                 }
                 OpKind::Sample(sample) => {

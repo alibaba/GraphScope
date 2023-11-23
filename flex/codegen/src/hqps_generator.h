@@ -146,7 +146,12 @@ void build_fused_edge_get_v(
   CHECK(vertex_labels.size() > 0);
   edge_expand_op.set_expand_opt(
       physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_VERTEX);
-  edge_expand_op.mutable_alias()->set_value(get_v_op.alias().value());
+  if (get_v_op.has_alias()) {
+    edge_expand_op.mutable_alias()->set_value(get_v_op.alias().value());
+  } else {
+    edge_expand_op.mutable_alias()->set_value(-1);
+  }
+
   ss << _4_SPACES
      << BuildEdgeExpandOp<LabelT>(ctx, edge_expand_op, edge_meta_data,
                                   vertex_labels)
