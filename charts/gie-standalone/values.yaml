@@ -42,7 +42,7 @@ pegasusBatchSize: 1024
 
 pegasusOutputCapacity: 16
 
-queryPerSecondLimit: 2147483647
+frontendQueryPerSecondLimit: 2147483647
 
 ## need by vineyard in distributed env
 etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"

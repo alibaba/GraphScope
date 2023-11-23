@@ -30,7 +30,7 @@ gremlin_server_port="gremlin.server.port: $GREMLIN_SERVER_PORT";
 
 cypher_server_port="neo4j.bolt.server.port: $CYPHER_SERVER_PORT";
 
-query_per_second="query.per.second.limit: $QUERY_PER_SECOND_LIMIT"
+frontend_query_per_second_limit="frontend.query.per.second.limit: $FRONTEND_QUERY_PER_SECOND_LIMIT"
 
 count=1;
 while (($count<$SERVERSSIZE))
@@ -43,6 +43,6 @@ done
 
 graph_schema="graph.schema: $GRAPH_SCHEMA"
 
-properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$query_per_second"
+properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$frontend_query_per_second_limit"
 
 echo -e $properties > ./conf/ir.compiler.properties
