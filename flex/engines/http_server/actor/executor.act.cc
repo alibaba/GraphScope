@@ -76,7 +76,7 @@ seastar::future<query_result> executor::run_hqps_procedure_query(
         seastar::sstring(ret.status().error_message()));
   }
   auto result = ret.value();
-  if (result.size() <= 4) {
+  if (result.size() < 4) {
     return seastar::make_exception_future<query_result>(seastar::sstring(
         "Internal Error, more than 4 bytes should be returned"));
   }
@@ -107,10 +107,12 @@ seastar::future<query_result> executor::run_hqps_adhoc_query(
         seastar::sstring(ret.status().error_message()));
   }
   auto ret_value = ret.value();
-  if (ret_value.size() <= 4) {
+  LOG(INFO) << "Adhoc query result size: " << ret_value.size();
+  if (ret_value.size() < 4) {
     return seastar::make_exception_future<query_result>(seastar::sstring(
         "Internal Error, more than 4 bytes should be returned"));
   }
+
   seastar::sstring result(
       ret_value.data() + 4,
       ret_value.size() - 4);  // skip 4 bytes, since the first 4

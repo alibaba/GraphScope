@@ -215,13 +215,7 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
     return Result<std::vector<char>>(StatusCode::InValidArgument,
                                      "Query name is empty", {});
   }
-  // auto& db = gs::GraphDB::get();
   auto& app_name_to_path_index = db_.schema().GetPlugins();
-  // for (auto pair : app_name_to_path_index) {
-  //   VLOG(10) << "Query name: " << pair.first << ", path: " <<
-  //   pair.second.first
-  //            << ", type: " << pair.second.second;
-  // }
   // get procedure id from name.
   if (app_name_to_path_index.count(query_name) <= 0) {
     LOG(ERROR) << "Query name is not registered: " << query_name;
