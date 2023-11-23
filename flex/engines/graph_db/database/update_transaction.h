@@ -53,9 +53,9 @@ class UpdateTransaction {
   void BatchCommit(
       std::vector<std::tuple<label_t, vid_t, std::vector<Any>>>&&
           update_vertices,
-      std::vector<std::tuple<std::shared_ptr<MutableCsrEdgeIterBase>,
-                             std::shared_ptr<MutableCsrEdgeIterBase>, Any>>&&
-          update_edges,
+      // out offset, in offset, property
+      std::vector<std::tuple<label_t, vid_t, label_t, vid_t, label_t, size_t,
+                             size_t, Any>>&& update_edges,
       std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insert_vertices,
       std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
           insert_edges,

@@ -149,9 +149,8 @@ void applyBatchUpdate(Fn&& fn, std::vector<T>&& vec) {
 
 void UpdateTransaction::BatchCommit(
     std::vector<std::tuple<label_t, vid_t, std::vector<Any>>>&& update_vertices,
-    std::vector<std::tuple<std::shared_ptr<MutableCsrEdgeIterBase>,
-                           std::shared_ptr<MutableCsrEdgeIterBase>, Any>>&&
-        update_edges,
+    std::vector<std::tuple<label_t, vid_t, label_t, vid_t, label_t, size_t,
+                           size_t, Any>>&& update_edges,
     std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insert_vertices,
     std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
         insert_edges,
@@ -178,14 +177,26 @@ void UpdateTransaction::BatchCommit(
       },
       std::move(insert_vertices));
   applyBatchUpdate(
-      [&](std::tuple<std::shared_ptr<MutableCsrEdgeIterBase>,
-                     std::shared_ptr<MutableCsrEdgeIterBase>, Any>&& e) {
-        const auto& [in_iter, out_iter, prop] = e;
-        if (in_iter != nullptr) {
-          in_iter->set_data(prop, timestamp_);
-        }
+      [&](std::tuple<label_t, vid_t, label_t, vid_t, label_t, size_t, size_t,
+                     Any>&& e) {
+        const auto& [src_label, src, dst_label, dst, edge_label, out_offset,
+                     in_offset, prop] = e;
+        auto out_iter = graph_.get_outgoing_edges_mut(src_label, src, dst_label,
+                                                      edge_label);
         if (out_iter != nullptr) {
-          out_iter->set_data(prop, timestamp_);
+          *out_iter += (out_offset);
+          if (out_iter->is_valid()) {
+            out_iter->set_data(prop, timestamp_);
+          }
+        }
+
+        auto in_iter = graph_.get_incoming_edges_mut(dst_label, dst, src_label,
+                                                     edge_label);
+        if (in_iter != nullptr) {
+          *in_iter += (in_offset);
+          if (in_iter->is_valid()) {
+            in_iter->set_data(prop, timestamp_);
+          }
         }
       },
       std::move(update_edges));
@@ -658,7 +669,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
         edge_iter->next();
       }
     } else {
-      LOG(FATAL) << "unexpected op_type";
+      LOG(FATAL) << "unexpected op_type " << static_cast<int>(op_type) << "..";
     }
   }
 }

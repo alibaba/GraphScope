@@ -210,7 +210,7 @@ class MutableCsrEdgeIterBase {
   virtual Any get_data() const = 0;
   virtual timestamp_t get_timestamp() const = 0;
   virtual void set_data(const Any& value, timestamp_t ts) = 0;
-
+  virtual MutableCsrEdgeIterBase& operator+=(size_t offset) = 0;
   virtual void next() = 0;
   virtual bool is_valid() const = 0;
 };
@@ -288,6 +288,15 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
   void set_data(const Any& value, timestamp_t ts) {
     ConvertAny<EDATA_T>::to(value, cur_->data);
     cur_->timestamp.store(ts);
+  }
+
+  MutableCsrEdgeIterBase& operator+=(size_t offset) override {
+    if (cur_ + offset >= end_) {
+      cur_ = end_;
+    } else {
+      cur_ += offset;
+    }
+    return *this;
   }
 
   void next() { ++cur_; }
