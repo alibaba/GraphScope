@@ -968,7 +968,7 @@ fn build_and_predicate(
 
 fn get_table_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<KeyId> {
     name.item.as_ref().and_then(|item| match item {
-        common_pb::name_or_id::Item::Name(name) => schema.get_table_id(name),
+        common_pb::name_or_id::Item::Name(name) => schema.get_entity_or_relation_id(name),
         common_pb::name_or_id::Item::Id(id) => Some(*id),
     })
 }
@@ -1027,7 +1027,7 @@ fn preprocess_label(
                     common_pb::value::Item::Str(name) => {
                         let new_item = common_pb::value::Item::I32(
                             schema
-                                .get_table_id(name)
+                                .get_entity_or_relation_id(name)
                                 .ok_or_else(|| IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
@@ -1039,9 +1039,11 @@ fn preprocess_label(
                                 .item
                                 .iter()
                                 .map(|name| {
-                                    schema.get_table_id(name).ok_or_else(|| {
-                                        IrError::TableNotExist(NameOrId::Str(name.to_string()))
-                                    })
+                                    schema
+                                        .get_entity_or_relation_id(name)
+                                        .ok_or_else(|| {
+                                            IrError::TableNotExist(NameOrId::Str(name.to_string()))
+                                        })
                                 })
                                 .collect::<IrResult<Vec<_>>>()?,
                         });
@@ -1502,7 +1504,7 @@ fn is_params_all_labels(params: &pb::QueryParams) -> bool {
             .as_ref()
             .and_then(|store_meta| store_meta.schema.as_ref())
         {
-            let params_label_ids: BTreeSet<LabelId> = params
+            let params_label_ids: Vec<LabelId> = params
                 .tables
                 .iter()
                 .filter_map(|name_or_id| {
@@ -1515,11 +1517,8 @@ fn is_params_all_labels(params: &pb::QueryParams) -> bool {
                     }
                 })
                 .collect();
-            let meta_label_ids: BTreeSet<LabelId> = schema
-                .entity_labels_iter()
-                .map(|(_, label_id)| label_id)
-                .collect();
-            params_label_ids.eq(&meta_label_ids)
+
+            schema.check_all_entity_labels(&params_label_ids)
         } else {
             false
         }
