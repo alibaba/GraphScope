@@ -154,7 +154,6 @@ void initWorkspace(const std::string workspace, int32_t thread_num) {
 
   std::string exe_dir = gs::get_current_dir();
   LOG(INFO) << "Executable directory: " << exe_dir;
-  // get ../../interactive as INTERACTIVE_HOME
   std::string interactive_home = exe_dir + "/../../interactive";
   // check exists
   if (!std::filesystem::exists(interactive_home)) {
