@@ -30,7 +30,7 @@
 #include "flex/utils/yaml_utils.h"
 
 #include <filesystem>
-#include <nlohmann/json.hpp>
+#include "nlohmann/json.hpp"
 
 namespace server {
 

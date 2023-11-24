@@ -30,9 +30,9 @@
 
 #include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
+#include "nlohmann/json.hpp"
 
 #include <glog/logging.h>
-#include <nlohmann/json.hpp>
 
 namespace gs {
 
