@@ -86,6 +86,17 @@ public class KafkaLogReader implements LogReader {
         logger.info("reader created. kafka offset range is [{}] ~ [{}]", earliestOffset, latestOffset);
     }
 
+    public void readFromTimeStamp() {
+        ZoneId zone = ZoneId.of("UTC+8");
+        LocalDate currentDate = LocalDate.now(zone);
+        LocalDateTime startOfDay = currentDate.atStartOfDay(zone).truncatedTo(ChronoUnit.DAYS).toLocalDateTime();
+        long timestamp = startOfDay.toEpochSecond(ZoneOffset.UTC) * 1000;
+
+        long ts = System.currentTimeMillis();
+        System.out.println("Timestamp of the start of the day in UTC+8: " + timestamp);
+        OffsetSpec spec = OffsetSpec.forTimestamp(timestamp);
+    }
+
     @Override
     public ReadLogEntry readNext() {
         if (nextReadOffset == latestOffset) {

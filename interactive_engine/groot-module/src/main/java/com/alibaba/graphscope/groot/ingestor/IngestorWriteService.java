@@ -14,9 +14,7 @@
 package com.alibaba.graphscope.groot.ingestor;
 
 import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.graphscope.proto.groot.IngestorWriteGrpc;
-import com.alibaba.graphscope.proto.groot.WriteIngestorRequest;
-import com.alibaba.graphscope.proto.groot.WriteIngestorResponse;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;
 
@@ -58,5 +56,15 @@ public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBas
         } catch (Exception e) {
             responseObserver.onError(e);
         }
+    }
+
+    @Override
+    public void replayWAL(ReplayWALRequest request, StreamObserver<ReplayWALResponse> responseObserver) {
+        try {
+            ingestService.replayWALFrom(request.getOffset());
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+        responseObserver.onCompleted();
     }
 }

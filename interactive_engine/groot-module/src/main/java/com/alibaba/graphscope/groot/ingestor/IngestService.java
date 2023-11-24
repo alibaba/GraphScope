@@ -30,6 +30,7 @@ import com.alibaba.graphscope.groot.wal.LogService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -185,6 +186,12 @@ public class IngestService implements NodeDiscovery.Listener {
             String requestId, int queueId, OperationBatch operationBatch, IngestCallback callback) {
         checkStarted();
         this.queueToProcessor.get(queueId).ingestBatch(requestId, operationBatch, callback);
+    }
+
+    public void replayWALFrom(long offset) throws IOException {
+        for (IngestProcessor processor : queueToProcessor.values()) {
+            processor.replayWAL(offset);
+        }
     }
 
     /**

@@ -48,7 +48,17 @@ message GetTailOffsetsResponse {
 
 service IngestorWrite {
   rpc writeIngestor(WriteIngestorRequest) returns (WriteIngestorResponse);
+  rpc replayWAL(ReplayWALRequest) returns (ReplayWALResponse);
 }
+
+message ReplayWALRequest {
+  int64 offset = 1;
+}
+
+message ReplayWALResponse {
+  int64 snapshotId = 1;
+}
+
 
 message WriteIngestorRequest {
   string requestId = 1;

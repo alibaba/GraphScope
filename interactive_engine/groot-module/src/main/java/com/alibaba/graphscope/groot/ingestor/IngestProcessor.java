@@ -99,17 +99,12 @@ public class IngestProcessor implements MetricsAgent {
         this.ingestThread =
                 new Thread(
                         () -> {
-                            LogWriter logWriter = null;
                             while (!shouldStop) {
                                 try {
                                     replayWAL(this.tailOffset);
-                                    logWriter = this.logService.createWriter(this.queueId);
                                     break;
                                 } catch (Exception e) {
-                                    logger.error(
-                                            "error occurred before ingest process, will retry after"
-                                                    + " 1s",
-                                            e);
+                                    logger.error("error occurred before ingest, retrying", e);
                                     try {
                                         Thread.sleep(1000L);
                                     } catch (InterruptedException ie) {
@@ -117,6 +112,7 @@ public class IngestProcessor implements MetricsAgent {
                                     }
                                 }
                             }
+                            LogWriter logWriter = this.logService.createWriter(this.queueId);
                             while (!shouldStop) {
                                 try {
                                     process(logWriter);
@@ -313,24 +309,20 @@ public class IngestProcessor implements MetricsAgent {
         this.tailOffset = offset;
     }
 
-    private void replayWAL(long tailOffset) throws IOException {
+    public void replayWAL(long tailOffset) throws IOException {
         long replayFrom = tailOffset + 1;
         logger.info("replay WAL of queue#[{}] from offset [{}]", queueId, replayFrom);
-        LogReader logReader = this.logService.createReader(queueId, replayFrom);
-        ReadLogEntry readLogEntry;
         int replayCount = 0;
-        while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
-            long offset = readLogEntry.getOffset();
-            LogEntry logEntry = readLogEntry.getLogEntry();
-            long snapshotId = logEntry.getSnapshotId();
-            OperationBatch batch = logEntry.getOperationBatch();
-            this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
-            replayCount++;
-        }
-        try {
-            logReader.close();
-        } catch (IOException e) {
-            logger.warn("close logReader failed", e);
+        try(LogReader logReader = this.logService.createReader(queueId, replayFrom)) {
+            ReadLogEntry readLogEntry;
+            while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
+                long offset = readLogEntry.getOffset();
+                LogEntry logEntry = readLogEntry.getLogEntry();
+                long snapshotId = logEntry.getSnapshotId();
+                OperationBatch batch = logEntry.getOperationBatch();
+                this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
+                replayCount++;
+            }
         }
         logger.info("replayWAL finished. total replayed [{}] records", replayCount);
     }
