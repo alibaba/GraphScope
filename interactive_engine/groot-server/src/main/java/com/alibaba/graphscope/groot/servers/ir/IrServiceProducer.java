@@ -122,6 +122,8 @@ public class IrServiceProducer implements ComputeServiceProducer {
         addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_ID.getKey(), configMap);
         // add frontend server num
         addToConfigMapIfExist(FrontendConfig.FRONTEND_SERVER_NUM.getKey(), configMap);
+        // add frontend qps limit
+        addToConfigMapIfExist(FrontendConfig.QUERY_PER_SECOND_LIMIT.getKey(), configMap);
         return new com.alibaba.graphscope.common.config.Configs(configMap);
     }
 
