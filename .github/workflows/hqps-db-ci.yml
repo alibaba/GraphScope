@@ -90,9 +90,19 @@ jobs:
         git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/ldbc
         GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
+        BUILD_LOAD_FILE=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml
         cp ${GRAPH_SCHEMA_YAML} ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
+        cp ${BUILD_LOAD_FILE} ${INTERACTIVE_WORKSPACE}/data/ldbc/import.yaml
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/movies
         cp ${GS_TEST_DIR}/flex/movies/movies_schema.yaml ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml
+        cp ${GS_TEST_DIR}/flex/movies/movies_import.yaml ${INTERACTIVE_WORKSPACE}/data/movies/import.yaml
+
+        # load graph
+        cd ${GITHUB_WORKSPACE}/flex/build
+        export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
+        GLOG_v=10 ./bin/graph_loader ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml ${INTERACTIVE_WORKSPACE}/data/ldbc/import.yaml ${INTERACTIVE_WORKSPACE}/data/ldbc/indices/
+        export FLEX_DATA_DIR=../interactive/examples/movies
+        GLOG_v=10 ./bin/graph_loader ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml ${INTERACTIVE_WORKSPACE}/data/movies/import.yaml ${INTERACTIVE_WORKSPACE}/data/movies/indices/
 
     - name: Test HQPS admin http service
       env: 
@@ -157,11 +167,10 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
-        export FLEX_DATA_DIR=${GS_TEST_DIR}/flex/ldbc-sf01-long-date
         export ENGINE_TYPE=hiactor
         # change the default_graph config in ./engine_config_test.yaml to ldbc
         sed -i 's/default_graph: movies/default_graph: ldbc/g' ./engine_config_test.yaml
-        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} ldbc ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml \
+        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} ldbc \
               ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
 
     - name: Run End-to-End cypher adhoc movie query test
@@ -171,11 +180,10 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
-        export FLEX_DATA_DIR=../../interactive/examples/movies/
         export ENGINE_TYPE=hiactor
         # change the default_graph config in ./engine_config_test.yaml to movies
         sed -i 's/default_graph: ldbc/default_graph: movies/g' ./engine_config_test.yaml
-        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} movies ${GS_TEST_DIR}/flex/movies/movies_import.yaml \
+        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} movies \
           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
 
 

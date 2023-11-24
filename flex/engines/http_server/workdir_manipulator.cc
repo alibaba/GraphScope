@@ -77,7 +77,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::CreateGraph(
         "Fail to dump graph schema: " + dump_res.status().error_message()));
   }
   VLOG(10) << "Successfully dump graph schema to file: " << graph_name << ", "
-           << get_graph_schema_path(graph_name);
+           << GetGraphSchemaPath(graph_name);
 
   return gs::Result<seastar::sstring>(
       seastar::sstring("successfuly created graph "));
@@ -91,7 +91,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
                    "Graph not exists: " + graph_name),
         seastar::sstring());
   }
-  auto schema_file = get_graph_schema_path(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -117,7 +117,7 @@ gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
     return gs::Result<gs::Schema>(gs::Status(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
   }
-  auto schema_file = get_graph_schema_path(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<gs::Schema>(gs::Status(
         gs::StatusCode::NotExists,
@@ -146,7 +146,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetDataDirectory(
                    "Graph not exists: " + graph_name),
         seastar::sstring());
   }
-  auto data_dir = get_graph_indices_dir(graph_name);
+  auto data_dir = GetGraphIndicesDir(graph_name);
   if (!std::filesystem::exists(data_dir)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -164,7 +164,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::ListGraphs() {
     if (entry.is_directory()) {
       auto graph_name = entry.path().filename().string();
       // visit graph.yaml under data/graph_name/graph.yaml
-      auto graph_path = get_graph_schema_path(graph_name);
+      auto graph_path = GetGraphSchemaPath(graph_name);
       VLOG(10) << "Check graph path: " << graph_path;
       if (!std::filesystem::exists(graph_path)) {
         continue;
@@ -255,7 +255,42 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::IllegalOperation, "Fail to lock graph: " + graph_name));
   }
-  auto res = load_graph(yaml_node, graph_name, loading_thread_num);
+
+  // No need to check whether graph exists, because it is checked in LoadGraph
+  // First load schema
+  auto schema_file = GetGraphSchemaPath(graph_name);
+  gs::Schema schema;
+  try {
+    schema = gs::Schema::LoadFromYaml(schema_file);
+  } catch (const std::exception& e) {
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to load graph schema: " + schema_file +
+                       ", for graph: " + graph_name));
+  }
+  VLOG(1) << "Loaded schema, vertex label num: " << schema.vertex_label_num()
+          << ", edge label num: " << schema.edge_label_num();
+
+  auto loading_config_res =
+      gs::LoadingConfig::ParseFromYamlNode(schema, yaml_node);
+  if (!loading_config_res.ok()) {
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   loading_config_res.status().error_message()));
+  }
+  // dump to file
+  auto loading_config = loading_config_res.value();
+  std::string temp_file_name = graph_name + "_bulk_loading_config.yaml";
+  auto temp_file_path = TMP_DIR + "/" + temp_file_name;
+  auto dump_res = dump_yaml_to_file(yaml_node, temp_file_path);
+  if (!dump_res.ok()) {
+    return gs::Result<seastar::sstring>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to dump loading config to file: " + temp_file_path +
+                       ", error: " + dump_res.status().error_message()));
+  }
+
+  auto res = LoadGraph(temp_file_path, graph_name, loading_thread_num);
   if (!res.ok()) {
     return gs::Result<seastar::sstring>(res.status());
   }
@@ -272,7 +307,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetProceduresByGraphName(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
   }
   // get graph schema file, and get procedure lists.
-  auto schema_file = get_graph_schema_path(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -316,7 +351,7 @@ WorkDirManipulator::GetProcedureByGraphAndProcedureName(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
   }
   // get graph schema file, and get procedure lists.
-  auto schema_file = get_graph_schema_path(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -474,7 +509,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteProcedure(
         gs::StatusCode::NotExists, "Graph not exists: " + graph_name));
   }
   // delete from graph schema
-  auto schema_file = get_graph_schema_path(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists,
@@ -668,7 +703,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetProcedureLibPath(
   return gs::Result<seastar::sstring>(plugin_so_path);
 }
 
-std::string WorkDirManipulator::get_graph_schema_path(
+std::string WorkDirManipulator::GetGraphSchemaPath(
     const std::string& graph_name) {
   return get_graph_dir(graph_name) + "/" + GRAPH_SCHEMA_FILE_NAME;
 }
@@ -678,7 +713,7 @@ std::string WorkDirManipulator::get_graph_lock_file(
   return get_graph_dir(graph_name) + "/" + LOCK_FILE;
 }
 
-std::string WorkDirManipulator::get_graph_indices_dir(
+std::string WorkDirManipulator::GetGraphIndicesDir(
     const std::string& graph_name) {
   return get_graph_dir(graph_name) + "/" + GRAPH_INDICES_DIR_NAME;
 }
@@ -699,7 +734,7 @@ std::string WorkDirManipulator::get_graph_dir(const std::string& graph_name) {
 }
 
 bool WorkDirManipulator::is_graph_exist(const std::string& graph_name) {
-  auto graph_path = get_graph_schema_path(graph_name);
+  auto graph_path = GetGraphSchemaPath(graph_name);
   return std::filesystem::exists(graph_path);
 }
 
@@ -755,7 +790,7 @@ gs::Result<std::string> WorkDirManipulator::dump_graph_schema(
     return {gs::Status(gs::StatusCode::PermissionError,
                        "Fail to create graph directory")};
   }
-  auto graph_path = get_graph_schema_path(graph_name);
+  auto graph_path = GetGraphSchemaPath(graph_name);
   VLOG(10) << "Dump graph schema to file: " << graph_path;
   std::ofstream fout(graph_path);
   if (!fout.is_open()) {
@@ -767,49 +802,15 @@ gs::Result<std::string> WorkDirManipulator::dump_graph_schema(
   return gs::Result<std::string>(gs::Status::OK());
 }
 
-gs::Result<std::string> WorkDirManipulator::load_graph(
-    const YAML::Node& yaml_config, const std::string& graph_name,
+gs::Result<std::string> WorkDirManipulator::LoadGraph(
+    const std::string& config_file_path, const std::string& graph_name,
     int32_t loading_thread_num) {
-  // No need to check whether graph exists, because it is checked in LoadGraph
-  // First load schema
-  auto schema_file = get_graph_schema_path(graph_name);
-  gs::Schema schema;
-  try {
-    schema = gs::Schema::LoadFromYaml(schema_file);
-  } catch (const std::exception& e) {
-    return gs::Result<std::string>(
-        gs::Status(gs::StatusCode::InternalError,
-                   "Fail to load graph schema: " + schema_file +
-                       ", for graph: " + graph_name));
-  }
-  VLOG(1) << "Loaded schema, vertex label num: " << schema.vertex_label_num()
-          << ", edge label num: " << schema.edge_label_num();
-
   // TODO: call graph_loader.
-
-  auto loading_config_res =
-      gs::LoadingConfig::ParseFromYamlNode(schema, yaml_config);
-  if (!loading_config_res.ok()) {
-    return gs::Result<std::string>(
-        gs::Status(gs::StatusCode::InternalError,
-                   loading_config_res.status().error_message()));
-  }
-  // dump to file
-  auto loading_config = loading_config_res.value();
-  std::string temp_file_name = graph_name + "_bulk_loading_config.yaml";
-  auto temp_file_path = TMP_DIR + "/" + temp_file_name;
-  auto dump_res = dump_yaml_to_file(yaml_config, temp_file_path);
-  if (!dump_res.ok()) {
-    return gs::Result<std::string>(
-        gs::Status(gs::StatusCode::InternalError,
-                   "Fail to dump loading config to file: " + temp_file_path +
-                       ", error: " + dump_res.status().error_message()));
-  }
-
-  auto cur_indices_dir = get_graph_indices_dir(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
+  auto cur_indices_dir = GetGraphIndicesDir(graph_name);
   // system call to graph_loader schema_file, loading_config, cur_indices_dir
   std::string cmd_string = "graph_loader " + schema_file + " " +
-                           temp_file_path + " " + cur_indices_dir + " " +
+                           config_file_path + " " + cur_indices_dir + " " +
                            std::to_string(loading_thread_num);
   LOG(INFO) << "Call graph_loader: " << cmd_string;
   auto res = std::system(cmd_string.c_str());
@@ -893,7 +894,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   if (!std::filesystem::exists(output_dir)) {
     std::filesystem::create_directory(output_dir);
   }
-  auto schema_path = get_graph_schema_path(bounded_graph);
+  auto schema_path = GetGraphSchemaPath(bounded_graph);
   auto engine_config = get_engine_config_path();
 
   return CodegenProxy::CallCodegenCmd(query_file, name, work_directory,
@@ -959,7 +960,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::add_procedure_to_graph(
         "Procedure name is empty, can not add to graph: " + graph_name);
   }
   // get graph schema file
-  auto graph_schema_file = get_graph_schema_path(graph_name);
+  auto graph_schema_file = GetGraphSchemaPath(graph_name);
   // load graph schema
   YAML::Node schema_node;
   try {
@@ -1129,7 +1130,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::enable_procedure_on_graph(
   LOG(INFO) << "Enabling procedure " << procedure_name << " on graph "
             << graph_name;
 
-  auto schema_file = get_graph_schema_path(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists, "Graph schema file not exists: " +
@@ -1177,7 +1178,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::disable_procedure_on_graph(
   LOG(INFO) << "Disabling procedure " << procedure_name << " on graph "
             << graph_name;
 
-  auto schema_file = get_graph_schema_path(graph_name);
+  auto schema_file = GetGraphSchemaPath(graph_name);
   if (!std::filesystem::exists(schema_file)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::NotExists, "Graph schema file not exists: " +

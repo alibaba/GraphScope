@@ -93,11 +93,22 @@ class WorkDirManipulator {
   /**
    * @brief Load a graph with a given name and config.
    * @param graph_name The name of the graph.
-   * @param boost_ptree The config of the graph.
+   * @param yaml_node The config of the graph.
+   * @param loading_thread_num The number of threads to load the graph.
    */
   static gs::Result<seastar::sstring> LoadGraph(const std::string& graph_name,
                                                 const YAML::Node& yaml_node,
                                                 int32_t loading_thread_num);
+
+  /**
+   * @brief Load a graph with a given name and config.
+   * @param yaml_config_file The config file of the graph.
+   * @param yaml_node The config of the graph.
+   * @param loading_thread_num The number of threads to load the graph.
+   */
+  static gs::Result<std::string> LoadGraph(const std::string& yaml_config_file,
+                                           const std::string& graph_name,
+                                           int32_t thread_num);
 
   /**
    * @brief Get all procedures bound to the graph.
@@ -128,17 +139,17 @@ class WorkDirManipulator {
   static gs::Result<seastar::sstring> GetProcedureLibPath(
       const std::string& graph_name, const std::string& procedure_name);
 
+  static std::string GetGraphSchemaPath(const std::string& graph_name);
+
+  static std::string GetGraphIndicesDir(const std::string& graph_name);
+
  private:
   static gs::Result<seastar::sstring> create_procedure_sanity_check(
       const nlohmann::json& json);
 
-  static std::string get_graph_schema_path(const std::string& graph_name);
-
-  static std::string get_graph_lock_file(const std::string& graph_name);
-
   static std::string get_graph_indices_file(const std::string& graph_name);
 
-  static std::string get_graph_indices_dir(const std::string& graph_name);
+  static std::string get_graph_lock_file(const std::string& graph_name);
 
   static std::string get_graph_plugin_dir(const std::string& graph_name);
 
@@ -162,10 +173,6 @@ class WorkDirManipulator {
 
   static gs::Result<std::string> dump_graph_schema(
       const YAML::Node& yaml_config, const std::string& graph_name);
-
-  static gs::Result<std::string> load_graph(const YAML::Node& yaml_config,
-                                            const std::string& graph_name,
-                                            int32_t thread_num);
 
   // Generate the procedure, return the generated yaml config.
   static seastar::future<seastar::sstring> generate_procedure(

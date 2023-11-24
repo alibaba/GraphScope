@@ -19,8 +19,10 @@
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/actor_system.h"
+#include "flex/engines/http_server/handler/admin_http_handler.h"
 #include "flex/engines/http_server/handler/hqps_http_handler.h"
 #include "flex/utils/result.h"
+#include "flex/utils/service_utils.h"
 
 namespace server {
 
@@ -30,19 +32,22 @@ class HQPSService {
   static HQPSService& get();
   ~HQPSService();
 
-  // the store procedure contains <query_id, query_name, store_path>
-  void init(uint32_t num_shards, uint16_t http_port, bool dpdk_mode,
+  // only start the query service.
+  void init(uint32_t num_shards, uint16_t query_port, bool dpdk_mode,
             bool enable_thread_resource_pool, unsigned external_thread_num);
+
+  // start both admin and query service.
+  void init(uint32_t num_shards, uint16_t admin_port, uint16_t query_port,
+            bool dpdk_mode, bool enable_thread_resource_pool,
+            unsigned external_thread_num);
 
   bool is_initialized() const;
 
   bool is_running() const;
 
-  gs::Result<seastar::sstring> service_status();
+  uint16_t get_query_port() const;
 
-  gs::Result<bool> start_service(const gs::Schema& schema,
-                                 const std::string& graph_dir,
-                                 int32_t thread_num);
+  gs::Result<seastar::sstring> service_status();
 
   void run_and_wait_for_exit();
 
@@ -53,7 +58,8 @@ class HQPSService {
 
  private:
   std::unique_ptr<actor_system> actor_sys_;
-  std::unique_ptr<hqps_http_handler> http_hdl_;
+  std::unique_ptr<admin_http_handler> admin_hdl_;
+  std::unique_ptr<hqps_http_handler> query_hdl_;
   std::atomic<bool> running_{false};
   std::atomic<bool> initialized_{false};
 };

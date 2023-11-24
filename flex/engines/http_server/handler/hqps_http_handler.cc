@@ -173,7 +173,7 @@ void hqps_http_handler::start() {
             .then([this] { return server_.listen(http_port_); })
             .then([this] {
               fmt::print(
-                  "HQPS http handler is listening on port {} "
+                  "HQPS Query http handler is listening on port {} "
                   "...\n",
                   http_port_);
             });

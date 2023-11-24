@@ -37,71 +37,6 @@ std::string get_current_dir() {
   return exe_path.substr(0, exe_path.rfind('/'));
 }
 
-void run_graph_loading(const std::string& graph_schema_file,
-                       const std::string& bulk_load_file,
-                       const std::string& data_dir) {
-  std::string graph_loader_bin = get_current_dir() + "/" + GRAPH_LOADER_BIN;
-  // if data_dir is not empty, throw exception
-  if (data_dir.empty()) {
-    throw FlexException("data_dir for " + graph_schema_file +
-                        "is not empty: " + data_dir);
-  }
-  // if bulk_load_file is empty, throw exception
-  if (bulk_load_file.empty()) {
-    throw FlexException("bulk_load_file for " + graph_schema_file + "is empty");
-  }
-  if (graph_schema_file.empty()) {
-    throw FlexException("graph_schema_file is empty");
-  }
-  // check bulk_load_file exists
-  if (!std::filesystem::exists(bulk_load_file)) {
-    throw FlexException("bulk_load_file " + bulk_load_file + " not exists");
-  }
-  // mkdir data_dir if not exists
-  if (!std::filesystem::exists(data_dir)) {
-    std::filesystem::create_directory(data_dir);
-  }
-  // check data_dir is empty
-  if (!std::filesystem::is_empty(data_dir)) {
-    LOG(WARNING) << "Graph : " << graph_schema_file << " data_dir: " << data_dir
-                 << " is not empty, skip loading";
-    return;
-  }
-  // check graph_schema_file exists
-  if (!std::filesystem::exists(graph_schema_file)) {
-    throw FlexException("graph_schema_file " + graph_schema_file +
-                        " not exists");
-  }
-  // check graph_loader bin exists
-  if (!std::filesystem::exists(graph_loader_bin)) {
-    throw FlexException("graph_loader_bin " + graph_loader_bin + " not exists");
-  }
-  // execute graph_loader with sub process, and check the return value
-  std::string cmd = graph_loader_bin + " " + graph_schema_file + " " +
-                    bulk_load_file + " " + data_dir;
-  VLOG(1) << "Start run graph loading cmd: " << cmd;
-  int ret = std::system(cmd.c_str());
-  if (ret != 0) {
-    throw FlexException("run graph loading cmd failed: " + cmd);
-  }
-  // check data_dir/init_snapshot.bin exists
-  std::string init_snapshot_file = data_dir + "/init_snapshot.bin";
-  if (!std::filesystem::exists(init_snapshot_file)) {
-    throw FlexException("init_snapshot_file " + init_snapshot_file +
-                        " not exists, loading failed");
-  }
-  VLOG(1) << "Finish run graph loading cmd: " << cmd;
-}
-
-std::string get_graph_indices_dir(const std::string& workspace,
-                                  const std::string& graph_name) {
-  return workspace + "/data/" + graph_name + "/indices";
-}
-
-std::string get_graph_schema_file(const std::string& workspace,
-                                  const std::string& graph_name) {
-  return workspace + "/data/" + graph_name + "/graph.yaml";
-}
 std::string find_codegen_bin() {
   // first check whether flex_home env exists
   std::string flex_home;
@@ -109,7 +44,12 @@ std::string find_codegen_bin() {
   char* flex_home_char = getenv("FLEX_HOME");
   if (flex_home_char == nullptr) {
     // infer flex_home from current binary' directory
-    char* bin_path = realpath("/proc/self/exe", NULL);
+    // get the path of current binary
+    char bin_path[1024];
+    ssize_t len = readlink("/proc/self/exe", bin_path, sizeof(bin_path) - 1);
+    CHECK_NE(len, -1) << "readlink failed";
+    bin_path[len] = '\0';
+
     std::string bin_path_str(bin_path);
     // flex home should be bin_path/../../
     std::string flex_home_str =

@@ -35,7 +35,7 @@ if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   mkdir -p ${INTERACTIVE_WORKSPACE}
 else 
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} exists"
-  rm -rf ${INTERACTIVE_WORKSPACE}/
+  rm -rf ${INTERACTIVE_WORKSPACE}
 fi
 if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
   echo "ENGINE_CONFIG: ${ENGINE_CONFIG_PATH} not exists"

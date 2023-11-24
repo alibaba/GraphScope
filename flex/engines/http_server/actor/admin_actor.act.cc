@@ -19,7 +19,6 @@
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/service/admin_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/utils/service_utils.h"
 
@@ -345,8 +344,8 @@ seastar::future<query_result> admin_actor::start_service(
 // get service status
 seastar::future<query_result> admin_actor::service_status(
     query_param&& query_param) {
-  auto& admin_service = InteractiveAdminService::get();
-  auto query_port = admin_service.get_query_port();
+  auto& hqps_service = HQPSService::get();
+  auto query_port = hqps_service.get_query_port();
   nlohmann::json res;
   if (query_port != 0) {
     res["status"] = "running";

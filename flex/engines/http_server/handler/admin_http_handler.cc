@@ -21,7 +21,6 @@
 #include <seastar/core/print.hh>
 #include <seastar/http/handlers.hh>
 #include "flex/engines/http_server/generated/actor/admin_actor_ref.act.autogen.h"
-#include "flex/engines/http_server/service/admin_service.h"
 #include "flex/engines/http_server/types.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 
@@ -509,7 +508,7 @@ void admin_http_handler::start() {
             .then([this] { return set_routes(); })
             .then([this] { return server_.listen(http_port_); })
             .then([this] {
-              fmt::print("Http handler is listening on port {} ...\n",
+              fmt::print("HQPS admin http handler is listening on port {} ...\n",
                          http_port_);
             });
       });

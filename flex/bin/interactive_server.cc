@@ -18,7 +18,6 @@
 #include "stdlib.h"
 
 #include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/service/admin_service.h"
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
@@ -140,6 +139,8 @@ void parse_args(bpo::variables_map& vm, int32_t& admin_port,
 
 void initWorkspace(const std::string workspace, int32_t thread_num) {
   // If workspace directory not exists, create.
+
+  auto default_graph = server::HQPSService::DEFAULT_GRAPH_NAME;
   if (!std::filesystem::exists(workspace)) {
     std::filesystem::create_directory(workspace);
   }
@@ -172,11 +173,9 @@ void initWorkspace(const std::string workspace, int32_t thread_num) {
                              workspace + "/conf/interactive.yaml",
                              std::filesystem::copy_options::overwrite_existing);
   // create modern_graph directory
-  std::filesystem::create_directory(workspace + "/data/" +
-                                    server::HQPSService::DEFAULT_GRAPH_NAME);
-  auto bulk_loading_file = interactive_home + "/examples/" +
-                           server::HQPSService::DEFAULT_GRAPH_NAME +
-                           "/bulk_load.yaml";
+  std::filesystem::create_directory(workspace + "/data/" + default_graph);
+  auto bulk_loading_file =
+      interactive_home + "/examples/" + default_graph + "/bulk_load.yaml";
   // copy modern_graph files
   if (!std::filesystem::exists(bulk_loading_file)) {
     LOG(FATAL) << "Bulk loading file " << bulk_loading_file
@@ -188,29 +187,36 @@ void initWorkspace(const std::string workspace, int32_t thread_num) {
       workspace + "/data/modern_graph/graph.yaml",
       std::filesystem::copy_options::overwrite_existing);
 
-  // get data path from FLEX_DATA_DIR
-  // Call graph_loader to load the graph
+  server::WorkDirManipulator::SetWorkspace(workspace);
 
-  gs::run_graph_loading(
-      gs::get_graph_schema_file(workspace,
-                                server::HQPSService::DEFAULT_GRAPH_NAME),
-      bulk_loading_file,
-      gs::get_graph_indices_dir(workspace,
-                                server::HQPSService::DEFAULT_GRAPH_NAME));
+  // gs::run_graph_loading(schema_path, bulk_loading_file, data_dir);
+  auto schema_path =
+      server::WorkDirManipulator::GetGraphSchemaPath(default_graph);
+
+  auto res = server::WorkDirManipulator::LoadGraph(bulk_loading_file,
+                                                   default_graph, 1);
+  if (!res.ok()) {
+    LOG(FATAL) << "Fail to load graph: " << res.status().error_message();
+  }
+
   VLOG(1) << "Finish init workspace";
 
   auto& db = gs::GraphDB::get();
-  auto schema_path = gs::get_graph_schema_file(
-      workspace, server::HQPSService::DEFAULT_GRAPH_NAME);
-  auto data_dir = gs::get_graph_indices_dir(
-      workspace, server::HQPSService::DEFAULT_GRAPH_NAME);
+
   gs::Schema schema = gs::Schema::LoadFromYaml(schema_path);
+  auto data_dir_res =
+      server::WorkDirManipulator::GetDataDirectory(default_graph);
+  if (!data_dir_res.ok()) {
+    LOG(FATAL) << "Fail to get data directory for default graph: "
+               << data_dir_res.status().error_message();
+  }
+  auto data_dir = data_dir_res.value();
   if (!db.LoadFromDataDirectory(schema, data_dir, thread_num).ok()) {
     LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
   }
   LOG(INFO) << "Successfully init graph db for default graph: "
             << server::HQPSService::DEFAULT_GRAPH_NAME;
-  server::WorkDirManipulator::SetWorkspace(workspace);
+
   server::WorkDirManipulator::SetRunningGraph(
       server::HQPSService::DEFAULT_GRAPH_NAME);
 }
@@ -231,11 +237,11 @@ int main(int argc, char** argv) {
       bpo::value<std::string>()->default_value("/tmp/codegen/"),
       "codegen working directory")("shard-num,s", bpo::value<int32_t>(),
                                    "shard number")(
-      "workspace,w", bpo::value<std::string>(),
+      "workspace,w",
+      bpo::value<std::string>()->default_value("/tmp/workspace/"),
       "directory to interactive workspace")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "data-path,a", bpo::value<std::string>(), "data directory path")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
       "open-thread-resource-pool", bpo::value<bool>()->default_value(true),
       "open thread resource pool")("worker-thread-number",
                                    bpo::value<unsigned>()->default_value(2),
@@ -272,24 +278,20 @@ int main(int argc, char** argv) {
   if (start_admin_service) {
     // When start admin service, we need a workspace to put all the meta data
     // and graph indices. We will initiate the query service with default graph.
-    CHECK(!workspace.empty())
-        << "To start admin service, workspace should be set";
-    // graph_config and bulk_load file , data_path should not be specified
-    if (vm.count("graph-config") || vm.count("bulk-load") ||
-        vm.count("data-path")) {
-      LOG(FATAL) << "To start admin service, graph-config, bulk-load and "
+    if (vm.count("graph-config") || vm.count("data-path")) {
+      LOG(FATAL) << "To start admin service, graph-config and "
                     "data-path should NOT be specified";
     }
     gs::initWorkspace(workspace, shard_num);  // the default graph is loaded.
     LOG(INFO) << "Finish init workspace";
 
-    server::InteractiveAdminService::get().init(
-        shard_num, admin_port, query_port, false,
-        vm["open-thread-resource-pool"].as<bool>(),
-        vm["worker-thread-number"].as<unsigned>());
-    server::InteractiveAdminService::get().run_and_wait_for_exit();
+    server::HQPSService::get().init(shard_num, admin_port, query_port, false,
+                                    vm["open-thread-resource-pool"].as<bool>(),
+                                    vm["worker-thread-number"].as<unsigned>());
+    server::HQPSService::get().run_and_wait_for_exit();
   } else {
-    std::string graph_schema_path, data_path, bulk_load_config_path;
+    LOG(INFO) << "Start query service only";
+    std::string graph_schema_path, data_path;
     if (!vm.count("server-config")) {
       LOG(FATAL) << "server-config is needed";
     }
@@ -310,26 +312,13 @@ int main(int argc, char** argv) {
     }
     data_path = vm["data-path"].as<std::string>();
 
-    if (vm.count("bulk-load")) {
-      bulk_load_config_path = vm["bulk-load"].as<std::string>();
-    }
-
-    if (bulk_load_config_path.empty()) {
-      LOG(INFO) << "Deserializing graph from data directory, since bulk load "
-                   "config is not specified";
-      auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-      // Ths schema is loaded just to get the plugin dir and plugin list
-      gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
-      if (!db.LoadFromDataDirectory(schema, data_path, shard_num).ok()) {
-        LOG(FATAL) << "Failed to load graph from data directory";
-      }
-    } else {
-      LOG(INFO) << "Loading graph from bulk load config";
-      auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-      auto loading_config =
-          gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_config_path);
-      db.Init(schema, loading_config, data_path, shard_num);
-      gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
+    auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
+    // Ths schema is loaded just to get the plugin dir and plugin list
+    gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
+    auto load_res = db.LoadFromDataDirectory(schema, data_path, shard_num);
+    if (!load_res.ok()) {
+      LOG(FATAL) << "Failed to load graph from data directory: "
+                 << load_res.status().error_message();
     }
 
     server::HQPSService::get().init(shard_num, query_port, false,
