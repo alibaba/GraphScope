@@ -30,9 +30,17 @@ const char* FlexException::what() const noexcept { return _err_msg.c_str(); }
 // get current executable's directory
 std::string get_current_dir() {
   char buf[1024];
-  ssize_t len = ::readlink("/proc/self/exe", buf, sizeof(buf) - 1);
-  CHECK_NE(len, -1) << "readlink failed";
+  int dirfd = open("/proc/self/", O_RDONLY | O_DIRECTORY);
+  if (dirfd == -1) {
+    // Handle error
+  }
+
+  ssize_t len = readlinkat(dirfd, "exe", buf, sizeof(buf) - 1);
+  if (len == -1) {
+    // Handle error
+  }
   buf[len] = '\0';
+  close(dirfd);
   std::string exe_path(buf);
   return exe_path.substr(0, exe_path.rfind('/'));
 }
@@ -45,15 +53,7 @@ std::string find_codegen_bin() {
   if (flex_home_char == nullptr) {
     // infer flex_home from current binary' directory
     // get the path of current binary
-    char bin_path[1024];
-    ssize_t len = readlink("/proc/self/exe", bin_path, sizeof(bin_path) - 1);
-    CHECK_NE(len, -1) << "readlink failed";
-    bin_path[len] = '\0';
-
-    std::string bin_path_str(bin_path);
-    // flex home should be bin_path/../../
-    std::string flex_home_str =
-        bin_path_str.substr(0, bin_path_str.find_last_of("/"));
+    std::string flex_home_str = get_current_dir();
     // usr/loca/bin/
     flex_home_str = flex_home_str.substr(0, flex_home_str.find_last_of("/"));
     // usr/local/

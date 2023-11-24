@@ -15,8 +15,10 @@
 #ifndef SERVICE_UTILS_H
 #define SERVICE_UTILS_H
 
+#include <fcntl.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

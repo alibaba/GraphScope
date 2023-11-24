@@ -113,7 +113,7 @@ class GraphDB {
   int SessionNum() const;
 
  private:
-  bool registerApp(const std::string& path, uint8_t app_type);
+  bool registerApp(const std::string& path, uint8_t index = 0);
 
   void ingestWals(const std::vector<std::string>& wals, int thread_num);
 
