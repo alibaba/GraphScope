@@ -64,7 +64,7 @@ use prost::Message;
 
 use crate::error::IrError;
 use crate::plan::logical::{LogicalPlan, NodeId};
-use crate::plan::meta::{set_schema_from_json, KeyType};
+use crate::plan::meta::set_schema_from_json;
 use crate::plan::physical::AsPhysical;
 
 #[repr(i32)]
@@ -517,16 +517,6 @@ pub enum FfiKeyType {
     Entity = 0,
     Relation = 1,
     Column = 2,
-}
-
-impl From<FfiKeyType> for KeyType {
-    fn from(t: FfiKeyType) -> Self {
-        match t {
-            FfiKeyType::Entity => KeyType::Entity,
-            FfiKeyType::Relation => KeyType::Relation,
-            FfiKeyType::Column => KeyType::Column,
-        }
-    }
 }
 
 /// Query entity/relation/property name by given id
