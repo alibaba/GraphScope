@@ -324,7 +324,8 @@ void UpdateTransaction::edge_iterator::SetData(const Any& value) {
   } else {
     vid_t cur = *added_edges_cur_;
     txn_->SetEdgeDataWithOffset(dir_, label_, v_, neighbor_label_, cur,
-                                edge_label_, value, offset_);
+                                edge_label_, value,
+                                std::numeric_limits<size_t>::max());
   }
 }
 
@@ -494,7 +495,7 @@ void UpdateTransaction::SetEdgeDataWithOffset(bool dir, label_t label, vid_t v,
                                               label_t edge_label,
                                               const Any& value, size_t offset) {
   size_t csr_index = dir ? get_out_csr_index(label, neighbor_label, edge_label)
-                         : get_in_csr_index(label, neighbor_label, edge_label);
+                         : get_in_csr_index(neighbor_label, label, edge_label);
   if (value.type == PropertyType::kString) {
     size_t loc = sv_vec_.size();
     sv_vec_.emplace_back(std::string(value.value.s));
@@ -776,6 +777,7 @@ void UpdateTransaction::applyEdgesUpdates() {
           if (updates.empty()) {
             continue;
           }
+
           std::shared_ptr<MutableCsrEdgeIterBase> edge_iter =
               graph_.get_outgoing_edges_mut(src_label, pair.first, dst_label,
                                             edge_label);
@@ -785,6 +787,12 @@ void UpdateTransaction::applyEdgesUpdates() {
               iter += edge.second.second;
               if (iter.is_valid() && iter.get_neighbor() == edge.first) {
                 iter.set_data(edge.second.first, timestamp_);
+              } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
+                LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
+                           << " " << edge.first << "\n";
+              } else {
+                LOG(FATAL) << "Illegal offset: " << edge.first << " "
+                           << edge.second.second << "\n";
               }
             }
           }
@@ -828,6 +836,12 @@ void UpdateTransaction::applyEdgesUpdates() {
               iter += edge.second.second;
               if (iter.is_valid() && iter.get_neighbor() == edge.first) {
                 iter.set_data(edge.second.first, timestamp_);
+              } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
+                LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
+                           << " " << edge.first << "\n";
+              } else {
+                LOG(FATAL) << "Illegal offset: " << edge.first << " "
+                           << edge.second.second << "\n";
               }
             }
           }

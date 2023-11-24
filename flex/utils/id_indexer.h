@@ -337,7 +337,9 @@ class LFIndexer {
 
   void copy_to_tmp(const std::string& cur_path, const std::string& tmp_path) {
     copy_file(cur_path + ".meta", tmp_path + ".meta");
-    copy_file(cur_path + ".keys", tmp_path + ".keys");
+    load_meta(tmp_path + ".meta");
+    keys_->copy_to_tmp(cur_path + ".keys", tmp_path + ".keys");
+    keys_->close();
     copy_file(cur_path + ".indices", tmp_path + ".indices");
   }
 

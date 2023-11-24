@@ -63,9 +63,6 @@ void BasicFragmentLoader::LoadFragment() {
     auto& v_data = vertex_data_[v_label];
 
     auto label_name = schema_.get_vertex_label_name(v_label);
-    // lf_indexers_[v_label].dump_keys(vertex_map_prefix(label_name) + ".keys",
-    //                                snapshot_dir(work_dir_, 0));
-
     v_data.resize(lf_indexers_[v_label].size());
     v_data.dump(vertex_table_prefix(label_name), snapshot_dir(work_dir_, 0));
   }
