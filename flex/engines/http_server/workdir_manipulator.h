@@ -51,6 +51,7 @@ class WorkDirManipulator {
   static const std::string GRAPH_PLUGIN_DIR_NAME;
   static const std::string CONF_ENGINE_CONFIG_FILE_NAME;
   static const std::string RUNNING_GRAPH_FILE_NAME;
+  static const std::string TMP_DIR;
 
   static void SetWorkspace(const std::string& workspace_path);
 
@@ -95,7 +96,8 @@ class WorkDirManipulator {
    * @param boost_ptree The config of the graph.
    */
   static gs::Result<seastar::sstring> LoadGraph(const std::string& graph_name,
-                                                const YAML::Node& yaml_node);
+                                                const YAML::Node& yaml_node,
+                                                int32_t loading_thread_num);
 
   /**
    * @brief Get all procedures bound to the graph.
@@ -152,13 +154,18 @@ class WorkDirManipulator {
 
   static bool is_graph_locked(const std::string& graph_name);
 
+  static bool try_lock_graph(const std::string& graph_name);
+
+  static void unlock_graph(const std::string& graph_name);
+
   static bool ensure_graph_dir_exists(const std::string& graph_name);
 
   static gs::Result<std::string> dump_graph_schema(
       const YAML::Node& yaml_config, const std::string& graph_name);
 
   static gs::Result<std::string> load_graph(const YAML::Node& yaml_config,
-                                            const std::string& graph_name);
+                                            const std::string& graph_name,
+                                            int32_t thread_num);
 
   // Generate the procedure, return the generated yaml config.
   static seastar::future<seastar::sstring> generate_procedure(

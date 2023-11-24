@@ -154,9 +154,13 @@ seastar::future<query_result> admin_actor::run_graph_loading(
     return seastar::make_exception_future<query_result>(std::runtime_error(
         "Fail to parse json when running dataloading for : " + graph_name));
   }
+  int32_t loading_thread_num = 1;
+  if (yaml["loading_thread_num"]) {
+    loading_thread_num = yaml["loading_thread_num"].as<int32_t>();
+  }
 
-  auto graph_loading_res =
-      server::WorkDirManipulator::LoadGraph(graph_name, yaml);
+  auto graph_loading_res = server::WorkDirManipulator::LoadGraph(
+      graph_name, yaml, loading_thread_num);
 
   if (graph_loading_res.ok()) {
     VLOG(10) << "Successfully loaded graph";

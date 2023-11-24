@@ -124,7 +124,6 @@ gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
         "Graph schema file is expected, but not exists: " + schema_file));
   }
   // Load schema from schema_file
-
   try {
     LOG(INFO) << "Load graph schema from file: " << schema_file;
     schema = gs::Schema::LoadFromYaml(schema_file);
@@ -207,9 +206,10 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
   if (is_graph_locked(graph_name)) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::IllegalOperation,
-                   "Can not remove a locked " + graph_name),
-        seastar::sstring("graph " + graph_name +
-                         " is locked, can not be removed"));
+                   "Can not remove graph " + graph_name +
+                       ", since data loading ongoing"),
+        seastar::sstring("Can not remove graph " + graph_name +
+                         ", since data loading ongoing"));
   }
   // remove the graph directory
   try {
@@ -226,7 +226,8 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
-    const std::string& graph_name, const YAML::Node& yaml_node) {
+    const std::string& graph_name, const YAML::Node& yaml_node,
+    int32_t loading_thread_num) {
   // First check whether graph exists
   if (!is_graph_exist(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
@@ -250,7 +251,16 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
         gs::StatusCode::IllegalOperation,
         "Graph is already running, can not be loaded: " + graph_name));
   }
-  auto res = load_graph(yaml_node, graph_name);
+  if (!try_lock_graph(graph_name)) {
+    return gs::Result<seastar::sstring>(gs::Status(
+        gs::StatusCode::IllegalOperation, "Fail to lock graph: " + graph_name));
+  }
+  auto res = load_graph(yaml_node, graph_name, loading_thread_num);
+  if (!res.ok()) {
+    return gs::Result<seastar::sstring>(res.status());
+  }
+  // unlock graph
+  unlock_graph(graph_name);
 
   return gs::Result<seastar::sstring>(res.status(), res.value());
 }
@@ -706,6 +716,26 @@ bool WorkDirManipulator::is_graph_locked(const std::string& graph_name) {
   return std::filesystem::exists(lock_file);
 }
 
+bool WorkDirManipulator::try_lock_graph(const std::string& graph_name) {
+  auto lock_file = get_graph_lock_file(graph_name);
+  if (std::filesystem::exists(lock_file)) {
+    return false;
+  }
+  std::ofstream fout(lock_file);
+  if (!fout.is_open()) {
+    return false;
+  }
+  fout.close();
+  return true;
+}
+
+void WorkDirManipulator::unlock_graph(const std::string& graph_name) {
+  auto lock_file = get_graph_lock_file(graph_name);
+  if (std::filesystem::exists(lock_file)) {
+    std::filesystem::remove(lock_file);
+  }
+}
+
 std::string WorkDirManipulator::get_engine_config_path() {
   return workspace + "/conf/" + CONF_ENGINE_CONFIG_FILE_NAME;
 }
@@ -738,7 +768,8 @@ gs::Result<std::string> WorkDirManipulator::dump_graph_schema(
 }
 
 gs::Result<std::string> WorkDirManipulator::load_graph(
-    const YAML::Node& yaml_config, const std::string& graph_name) {
+    const YAML::Node& yaml_config, const std::string& graph_name,
+    int32_t loading_thread_num) {
   // No need to check whether graph exists, because it is checked in LoadGraph
   // First load schema
   auto schema_file = get_graph_schema_path(graph_name);
@@ -754,6 +785,8 @@ gs::Result<std::string> WorkDirManipulator::load_graph(
   VLOG(1) << "Loaded schema, vertex label num: " << schema.vertex_label_num()
           << ", edge label num: " << schema.edge_label_num();
 
+  // TODO: call graph_loader.
+
   auto loading_config_res =
       gs::LoadingConfig::ParseFromYamlNode(schema, yaml_config);
   if (!loading_config_res.ok()) {
@@ -761,18 +794,32 @@ gs::Result<std::string> WorkDirManipulator::load_graph(
         gs::Status(gs::StatusCode::InternalError,
                    loading_config_res.status().error_message()));
   }
+  // dump to file
   auto loading_config = loading_config_res.value();
-  auto cur_indices_dir = get_graph_indices_dir(graph_name);
-
-  auto& db = gs::GraphDB::get();
-  try {
-    db.Init(schema, loading_config, cur_indices_dir, 1);
-  } catch (const std::exception& e) {
+  std::string temp_file_name = graph_name + "_bulk_loading_config.yaml";
+  auto temp_file_path = TMP_DIR + "/" + temp_file_name;
+  auto dump_res = dump_yaml_to_file(yaml_config, temp_file_path);
+  if (!dump_res.ok()) {
     return gs::Result<std::string>(
         gs::Status(gs::StatusCode::InternalError,
-                   "Fail to init graph db: " + std::string(e.what())));
+                   "Fail to dump loading config to file: " + temp_file_path +
+                       ", error: " + dump_res.status().error_message()));
   }
-  VLOG(1) << "Successfully init graph db";
+
+  auto cur_indices_dir = get_graph_indices_dir(graph_name);
+  // system call to graph_loader schema_file, loading_config, cur_indices_dir
+  std::string cmd_string = "graph_loader " + schema_file + " " +
+                           temp_file_path + " " + cur_indices_dir + " " +
+                           std::to_string(loading_thread_num);
+  LOG(INFO) << "Call graph_loader: " << cmd_string;
+  auto res = std::system(cmd_string.c_str());
+  if (res != 0) {
+    return gs::Result<std::string>(
+        gs::Status(gs::StatusCode::InternalError,
+                   "Fail to load graph: " + graph_name +
+                       ", error code: " + std::to_string(res)));
+  }
+
   return gs::Result<std::string>(
       gs::Status::OK(), "Successfully load data to graph: " + graph_name);
 }
@@ -1223,5 +1270,6 @@ const std::string WorkDirManipulator::GRAPH_PLUGIN_DIR_NAME = "plugins";
 const std::string WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME =
     "engine_config.yaml";
 const std::string WorkDirManipulator::RUNNING_GRAPH_FILE_NAME = "RUNNING";
+const std::string WorkDirManipulator::TMP_DIR = "/tmp";
 
 }  // namespace server
