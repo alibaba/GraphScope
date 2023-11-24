@@ -729,7 +729,12 @@ std::string WorkDirManipulator::get_graph_plugin_dir(
   return get_graph_dir(graph_name) + "/" + GRAPH_PLUGIN_DIR_NAME;
 }
 
+// graph_name can be a path, first try as it is absolute path, or
+// relative path
 std::string WorkDirManipulator::get_graph_dir(const std::string& graph_name) {
+  if (std::filesystem::exists(graph_name)) {
+    return graph_name;
+  }
   return workspace + "/" + DATA_DIR_NAME + "/" + graph_name;
 }
 
