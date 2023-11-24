@@ -52,16 +52,15 @@ public class IngestService implements NodeDiscovery.Listener {
             OperationBatch.newBuilder()
                     .addOperationBlob(OperationBlob.MARKER_OPERATION_BLOB)
                     .build();
+    private final Configs configs;
+    private final NodeDiscovery discovery;
+    private final MetaService metaService;
+    private final LogService logService;
+    private final IngestProgressFetcher ingestProgressFetcher;
+    private final StoreWriter storeWriter;
+    private final MetricsCollector metricsCollector;
 
-    private Configs configs;
-    private NodeDiscovery discovery;
-    private MetaService metaService;
-    private LogService logService;
-    private IngestProgressFetcher ingestProgressFetcher;
-    private StoreWriter storeWriter;
-    private MetricsCollector metricsCollector;
-
-    private int ingestorId;
+    private final int ingestorId;
     private List<Integer> queueIds;
     private Map<Integer, IngestProcessor> queueToProcessor;
     private AtomicLong ingestSnapshotId;
@@ -71,10 +70,9 @@ public class IngestService implements NodeDiscovery.Listener {
     private ScheduledExecutorService scheduler;
     private ExecutorService singleThreadExecutor;
     private volatile boolean started = false;
-    private int storeNodeCount;
-    private long checkProcessorIntervalMs;
+    private final int storeNodeCount;
 
-    private Set<Integer> availableNodes;
+    private final Set<Integer> availableNodes;
 
     public IngestService(
             Configs configs,
@@ -95,8 +93,6 @@ public class IngestService implements NodeDiscovery.Listener {
         this.ingestorId = CommonConfig.NODE_IDX.get(configs);
         this.storeNodeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.availableNodes = new HashSet<>();
-        this.checkProcessorIntervalMs =
-                IngestorConfig.INGESTOR_CHECK_PROCESSOR_INTERVAL_MS.get(configs);
     }
 
     public void start() {
@@ -136,11 +132,9 @@ public class IngestService implements NodeDiscovery.Listener {
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "ingest-try-start", logger));
-        this.scheduler.scheduleWithFixedDelay(
-                () -> tryStartProcessors(),
-                this.checkProcessorIntervalMs,
-                this.checkProcessorIntervalMs,
-                TimeUnit.MILLISECONDS);
+
+        long delay = IngestorConfig.INGESTOR_CHECK_PROCESSOR_INTERVAL_MS.get(configs);
+        this.scheduler.scheduleWithFixedDelay(this::tryStartProcessors, delay, delay, TimeUnit.MILLISECONDS);
         this.started = true;
         logger.info("IngestService started");
     }
@@ -178,7 +172,7 @@ public class IngestService implements NodeDiscovery.Listener {
             }
             this.singleThreadExecutor = null;
         }
-        logger.info("IngestService stopped");
+        logger.debug("IngestService stopped");
     }
 
     private void checkStarted() {
@@ -205,8 +199,7 @@ public class IngestService implements NodeDiscovery.Listener {
     public synchronized void advanceIngestSnapshotId(
             long snapshotId, CompletionCallback<Long> callback) {
         checkStarted();
-        long previousSnapshotId =
-                this.ingestSnapshotId.getAndUpdate(x -> x < snapshotId ? snapshotId : x);
+        long previousSnapshotId = this.ingestSnapshotId.getAndUpdate(x -> Math.max(x, snapshotId));
         if (previousSnapshotId >= snapshotId) {
             throw new IllegalStateException(
                     "current ingestSnapshotId ["
@@ -218,6 +211,7 @@ public class IngestService implements NodeDiscovery.Listener {
         AtomicInteger counter = new AtomicInteger(this.queueToProcessor.size());
         AtomicBoolean finished = new AtomicBoolean(false);
         for (IngestProcessor processor : this.queueToProcessor.values()) {
+            int queue = processor.getQueueId();
             try {
                 processor.ingestBatch(
                         "marker",
@@ -238,13 +232,7 @@ public class IngestService implements NodeDiscovery.Listener {
                                 if (finished.getAndSet(true)) {
                                     return;
                                 }
-                                logger.warn(
-                                        "ingest marker failed. queue#["
-                                                + processor.getQueueId()
-                                                + "], snapshotId ["
-                                                + snapshotId
-                                                + "]",
-                                        e);
+                                logger.warn("ingest marker failed. queue#{}, snapshotId {}", queue, snapshotId, e);
                                 callback.onError(e);
                             }
                         });
@@ -252,13 +240,7 @@ public class IngestService implements NodeDiscovery.Listener {
                 if (finished.getAndSet(true)) {
                     return;
                 }
-                logger.warn(
-                        "error in ingest marker. queue#["
-                                + processor.getQueueId()
-                                + "], snapshotId ["
-                                + snapshotId
-                                + "]",
-                        e);
+                logger.warn("ingest marker failed. queue#{}, snapshotId {}", queue, snapshotId, e);
                 callback.onError(e);
             }
         }
@@ -295,14 +277,13 @@ public class IngestService implements NodeDiscovery.Listener {
         }
         this.singleThreadExecutor.execute(
                 () -> {
-                    if (!processorStarted) {
-                        return;
+                    if (processorStarted) {
+                        for (IngestProcessor processor : this.queueToProcessor.values()) {
+                            processor.stop();
+                        }
+                        processorStarted = false;
+                        logger.info("processors stopped");
                     }
-                    for (IngestProcessor processor : this.queueToProcessor.values()) {
-                        processor.stop();
-                    }
-                    this.processorStarted = false;
-                    logger.info("processors stopped");
                 });
     }
 
@@ -329,21 +310,19 @@ public class IngestService implements NodeDiscovery.Listener {
 
     @Override
     public void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes) {
-        if (role != RoleType.STORE) {
-            return;
-        }
-        this.availableNodes.addAll(nodes.keySet());
-        if (this.availableNodes.size() == storeNodeCount) {
-            graphNodesReady();
+        if (role == RoleType.STORE) {
+            this.availableNodes.addAll(nodes.keySet());
+            if (this.availableNodes.size() == storeNodeCount) {
+                graphNodesReady();
+            }
         }
     }
 
     @Override
     public void nodesLeft(RoleType role, Map<Integer, GrootNode> nodes) {
         if (role != RoleType.STORE) {
-            return;
+            this.availableNodes.removeAll(nodes.keySet());
+            graphNodesLost();
         }
-        this.availableNodes.removeAll(nodes.keySet());
-        graphNodesLost();
     }
 }

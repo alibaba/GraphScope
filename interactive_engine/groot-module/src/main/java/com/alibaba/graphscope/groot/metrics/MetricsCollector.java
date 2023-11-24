@@ -26,11 +26,11 @@ import java.util.concurrent.TimeUnit;
 
 public class MetricsCollector {
 
-    private Set<String> registeredMetricKeys = new HashSet<>();
-    private List<MetricsAgent> metricsAgents = new CopyOnWriteArrayList<>();
-    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final Set<String> registeredMetricKeys = new HashSet<>();
+    private final List<MetricsAgent> metricsAgents = new CopyOnWriteArrayList<>();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
-    private long updateIntervalMs;
+    private final long updateIntervalMs;
 
     public MetricsCollector(Configs configs) {
         this.updateIntervalMs = CommonConfig.METRIC_UPDATE_INTERVAL_MS.get(configs);

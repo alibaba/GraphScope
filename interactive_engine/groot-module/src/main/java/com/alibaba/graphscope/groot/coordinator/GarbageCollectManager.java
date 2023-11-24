@@ -16,10 +16,10 @@ import java.util.concurrent.TimeUnit;
 
 public class GarbageCollectManager {
     private static final Logger logger = LoggerFactory.getLogger(GarbageCollectManager.class);
-    private Configs configs;
-    private ConcurrentHashMap<Integer, Long> hashMap;
-    private RoleClients<CoordinatorSnapshotClient> clients;
-    private ScheduledExecutorService updateStoreMinSnapshotScheduler;
+    private final Configs configs;
+    private final ConcurrentHashMap<Integer, Long> hashMap;
+    private final RoleClients<CoordinatorSnapshotClient> clients;
+    private ScheduledExecutorService updateScheduler;
 
     public GarbageCollectManager(Configs configs, RoleClients<CoordinatorSnapshotClient> clients) {
         this.configs = configs;
@@ -32,11 +32,11 @@ public class GarbageCollectManager {
     }
 
     public void start() {
-        this.updateStoreMinSnapshotScheduler =
+        this.updateScheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "update-store-min-snapshot-scheduler", logger));
-        this.updateStoreMinSnapshotScheduler.scheduleWithFixedDelay(
+        this.updateScheduler.scheduleWithFixedDelay(
                 () -> {
                     try {
                         if (!hashMap.isEmpty()) {
@@ -59,11 +59,10 @@ public class GarbageCollectManager {
     }
 
     public void stop() {
-        if (updateStoreMinSnapshotScheduler != null) {
-            updateStoreMinSnapshotScheduler.shutdownNow();
+        if (updateScheduler != null) {
+            updateScheduler.shutdownNow();
             try {
-                if (!updateStoreMinSnapshotScheduler.awaitTermination(
-                        1000, TimeUnit.MILLISECONDS)) {
+                if (!updateScheduler.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
                     logger.error("updateStoreMinSnapshotScheduler await timeout before shutdown");
                 }
             } catch (InterruptedException e) {

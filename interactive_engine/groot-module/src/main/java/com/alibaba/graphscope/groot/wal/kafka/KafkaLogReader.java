@@ -30,12 +30,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.time.*;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class KafkaLogReader implements LogReader {
@@ -43,9 +40,9 @@ public class KafkaLogReader implements LogReader {
     private static final Logger logger = LoggerFactory.getLogger(KafkaLogReader.class);
 
     private static final LogEntryDeserializer deSer = new LogEntryDeserializer();
-    private Consumer<LogEntry, LogEntry> consumer;
+    private final Consumer<LogEntry, LogEntry> consumer;
     private Iterator<ConsumerRecord<LogEntry, LogEntry>> iterator;
-    private long latestOffset;
+    private final long latestOffset;
     private long nextReadOffset;
 
     public KafkaLogReader(
@@ -82,43 +79,34 @@ public class KafkaLogReader implements LogReader {
                             + this.latestOffset
                             + "]");
         }
-        this.consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
-        this.consumer.assign(Arrays.asList(partition));
-        this.consumer.seek(partition, offset);
-        this.nextReadOffset = offset;
-        logger.info(
-                "reader created. kafka offset range is ["
-                        + earliestOffset
-                        + "] ~ ["
-                        + this.latestOffset
-                        + "]");
+        consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
+        consumer.assign(List.of(partition));
+        consumer.seek(partition, offset);
+        nextReadOffset = offset;
+        logger.info("reader created. kafka offset range is [{}] ~ [{}]", earliestOffset, latestOffset);
     }
 
     @Override
     public ReadLogEntry readNext() {
-        if (this.nextReadOffset == this.latestOffset) {
+        if (nextReadOffset == latestOffset) {
             return null;
         }
-        while (this.iterator == null || !this.iterator.hasNext()) {
-            ConsumerRecords<LogEntry, LogEntry> consumerRecords =
-                    this.consumer.poll(Duration.ofMillis(100L));
+        while (iterator == null || !iterator.hasNext()) {
+            ConsumerRecords<LogEntry, LogEntry> consumerRecords = consumer.poll(Duration.ofMillis(100L));
             if (consumerRecords == null || consumerRecords.isEmpty()) {
-                logger.info(
-                        "polled nothing from Kafka. nextReadOffset is ["
-                                + this.nextReadOffset
-                                + "]");
+                logger.info("polled nothing from Kafka. nextReadOffset is [{}]", nextReadOffset);
                 continue;
             }
-            this.iterator = consumerRecords.iterator();
+            iterator = consumerRecords.iterator();
         }
         ConsumerRecord<LogEntry, LogEntry> record = iterator.next();
-        this.nextReadOffset = record.offset() + 1;
+        nextReadOffset = record.offset() + 1;
         LogEntry v = record.value();
         return new ReadLogEntry(record.offset(), v);
     }
 
     @Override
     public void close() throws IOException {
-        this.consumer.close();
+        consumer.close();
     }
 }

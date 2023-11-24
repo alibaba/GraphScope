@@ -28,7 +28,7 @@ public class FrontendSnapshotService extends FrontendSnapshotGrpc.FrontendSnapsh
 
     private static final Logger logger = LoggerFactory.getLogger(FrontendSnapshotService.class);
 
-    private SnapshotCache snapshotCache;
+    private final SnapshotCache snapshotCache;
 
     public FrontendSnapshotService(SnapshotCache snapshotCache) {
         this.snapshotCache = snapshotCache;

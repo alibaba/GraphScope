@@ -26,7 +26,7 @@ import io.grpc.stub.StreamObserver;
 
 public class IngestorWriteClient extends RpcClient {
 
-    private IngestorWriteGrpc.IngestorWriteBlockingStub stub;
+    private final IngestorWriteGrpc.IngestorWriteBlockingStub stub;
     private IngestorWriteGrpc.IngestorWriteStub asyncStub;
 
     public IngestorWriteClient(ManagedChannel channel) {

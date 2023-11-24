@@ -147,7 +147,7 @@ public class ChannelManager {
             }
             this.roleToChannels = null;
         }
-        logger.info("ChannelManager stopped");
+        logger.debug("ChannelManager stopped");
     }
 
     public void registerRole(RoleType role) {

@@ -24,11 +24,11 @@ import java.util.concurrent.atomic.AtomicLong;
 public class NotifyFrontendListener implements QuerySnapshotListener {
     private static final Logger logger = LoggerFactory.getLogger(NotifyFrontendListener.class);
 
-    private int frontendId;
-    private FrontendSnapshotClient frontendSnapshotClient;
-    private SchemaManager schemaManager;
+    private final int frontendId;
+    private final FrontendSnapshotClient frontendSnapshotClient;
+    private final SchemaManager schemaManager;
 
-    private AtomicLong lastDdlSnapshotId;
+    private final AtomicLong lastDdlSnapshotId;
 
     public NotifyFrontendListener(
             int frontendId,
@@ -43,12 +43,7 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
 
     @Override
     public void snapshotAdvanced(long snapshotId, long ddlSnapshotId) {
-        logger.debug(
-                "snapshot advance to ["
-                        + snapshotId
-                        + "]-["
-                        + ddlSnapshotId
-                        + "], will notify frontend");
+        logger.debug("snapshot advanced to [{}]-[{}], will notify frontend", snapshotId, ddlSnapshotId);
         GraphDef graphDef = null;
         if (ddlSnapshotId > this.lastDdlSnapshotId.get()) {
             graphDef = this.schemaManager.getGraphDef();
@@ -60,31 +55,15 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
                     @Override
                     public void onCompleted(Long res) {
                         if (res >= snapshotId) {
-                            logger.warn(
-                                    "unexpected previousSnapshotId ["
-                                            + res
-                                            + "], should <= ["
-                                            + snapshotId
-                                            + "]. frontend ["
-                                            + frontendId
-                                            + "]");
+                            logger.warn("Unexpected previous snapshot id [{}], should <= [{}], frontend [{}]", res, snapshotId, frontendId);
                         } else {
-                            lastDdlSnapshotId.getAndUpdate(
-                                    x -> x < ddlSnapshotId ? ddlSnapshotId : x);
+                            lastDdlSnapshotId.getAndUpdate(x -> Math.max(x, ddlSnapshotId));
                         }
                     }
 
                     @Override
                     public void onError(Throwable t) {
-                        logger.error(
-                                "error in advanceQuerySnapshot ["
-                                        + snapshotId
-                                        + "], ddlSnapshotId ["
-                                        + ddlSnapshotId
-                                        + "], frontend ["
-                                        + frontendId
-                                        + "]",
-                                t);
+                        logger.error("error in advanceQuerySnapshot [{}]-[{}], frontend [{}]", snapshotId, ddlSnapshotId, frontendId, t);
                     }
                 });
     }

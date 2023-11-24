@@ -50,14 +50,14 @@ public class IngestProcessor implements MetricsAgent {
     private volatile boolean shouldStop = true;
     private volatile long tailOffset;
 
-    private int queueId;
-    private int bufferSize;
+    private final int queueId;
+    private final int bufferSize;
     private BlockingQueue<IngestTask> ingestBuffer;
     private Thread ingestThread;
-    private AtomicLong ingestSnapshotId;
+    private final AtomicLong ingestSnapshotId;
 
-    private LogService logService;
-    private BatchSender batchSender;
+    private final LogService logService;
+    private final BatchSender batchSender;
     private volatile boolean started;
 
     // For metrics
@@ -87,7 +87,7 @@ public class IngestProcessor implements MetricsAgent {
 
         this.bufferSize = IngestorConfig.INGESTOR_QUEUE_BUFFER_MAX_COUNT.get(configs);
         initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
+        metricsCollector.register(this, this::updateMetrics);
     }
 
     public void start() {
@@ -181,7 +181,7 @@ public class IngestProcessor implements MetricsAgent {
         try {
             task = this.ingestBuffer.poll(1000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            logger.warn("polling ingestBuffer interrupted", e);
+            logger.warn("polling ingestBuffer interrupted");
             return;
         }
         if (task == null) {
@@ -201,12 +201,7 @@ public class IngestProcessor implements MetricsAgent {
         if (batchSnapshotId == -1L) {
             throw new IllegalStateException("invalid ingestSnapshotId [" + batchSnapshotId + "]");
         }
-        logger.debug(
-                "append batch to WAL. requestId ["
-                        + task.requestId
-                        + "], snapshotId ["
-                        + batchSnapshotId
-                        + "]");
+        logger.debug("append batch to WAL. requestId [{}], snapshotId [{}]", task.requestId, batchSnapshotId);
         long latestSnapshotId = task.operationBatch.getLatestSnapshotId();
         if (latestSnapshotId > 0 && latestSnapshotId < batchSnapshotId) {
             throw new IllegalStateException(
@@ -218,10 +213,9 @@ public class IngestProcessor implements MetricsAgent {
         }
         long startTimeNano = System.nanoTime();
         long walOffset = -1L;
-        while (!shouldStop) {
+        if (!shouldStop) {
             try {
                 walOffset = logWriter.append(new LogEntry(batchSnapshotId, task.operationBatch));
-                break;
             } catch (Exception e) {
                 // write failed, just throw out to fail this task
                 logger.error("write WAL failed. requestId [" + task.requestId + "]", e);
@@ -277,7 +271,7 @@ public class IngestProcessor implements MetricsAgent {
 
     @Override
     public Map<String, String> getMetrics() {
-        return new HashMap<String, String>() {
+        return new HashMap<>() {
             {
                 put(WRITE_RECORDS_PER_SECOND, String.valueOf(writeRecordsPerSecond));
                 put(WRITE_RECORDS_TOTAL, String.valueOf(totalProcessed));
@@ -315,28 +309,22 @@ public class IngestProcessor implements MetricsAgent {
     }
 
     public void setTailOffset(long offset) {
-        logger.info(
-                "IngestProcessor of queue #["
-                        + this.queueId
-                        + "] set tail offset to ["
-                        + offset
-                        + "]");
+        logger.info("IngestProcessor of queue #[{}] set tail offset to [{}]", queueId, offset);
         this.tailOffset = offset;
     }
 
     private void replayWAL(long tailOffset) throws IOException {
         long replayFrom = tailOffset + 1;
-        logger.info("replay WAL of queue#[" + this.queueId + "] from offset [" + replayFrom + "]");
-        LogReader logReader = this.logService.createReader(this.queueId, replayFrom);
+        logger.info("replay WAL of queue#[{}] from offset [{}]", queueId, replayFrom);
+        LogReader logReader = this.logService.createReader(queueId, replayFrom);
         ReadLogEntry readLogEntry;
         int replayCount = 0;
         while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
             long offset = readLogEntry.getOffset();
             LogEntry logEntry = readLogEntry.getLogEntry();
             long snapshotId = logEntry.getSnapshotId();
-            OperationBatch operationBatch = logEntry.getOperationBatch();
-            this.batchSender.asyncSendWithRetry(
-                    "", this.queueId, snapshotId, offset, operationBatch);
+            OperationBatch batch = logEntry.getOperationBatch();
+            this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
             replayCount++;
         }
         try {
@@ -344,7 +332,7 @@ public class IngestProcessor implements MetricsAgent {
         } catch (IOException e) {
             logger.warn("close logReader failed", e);
         }
-        logger.info("replayWAL finished. total replayed [" + replayCount + "] records");
+        logger.info("replayWAL finished. total replayed [{}] records", replayCount);
     }
 
     public int getQueueId() {

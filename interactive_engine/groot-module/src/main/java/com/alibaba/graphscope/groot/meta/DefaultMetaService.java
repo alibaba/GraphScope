@@ -25,17 +25,15 @@ import java.util.Map;
 
 public class DefaultMetaService implements MetaService {
 
-    private Configs configs;
-    private int partitionCount;
-    private int queueCount;
+    private final int partitionCount;
+    private final int queueCount;
     private Map<Integer, List<Integer>> storeToPartitionIds;
     private Map<Integer, Integer> partitionToStore;
-    private int storeCount;
-    private String kafkaServers;
-    private String kafkaTopicName;
+    private final int storeCount;
+    private final String kafkaServers;
+    private final String kafkaTopicName;
 
     public DefaultMetaService(Configs configs) {
-        this.configs = configs;
         this.partitionCount = CommonConfig.PARTITION_COUNT.get(configs);
         this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
@@ -58,15 +56,14 @@ public class DefaultMetaService implements MetaService {
         this.partitionToStore = new HashMap<>();
         int avg = this.partitionCount / this.storeCount;
         int remainder = this.partitionCount % storeCount;
+
         for (int i = 0; i < storeCount; i++) {
             int startPartitionId = getStartPartition(avg, i, remainder);
             int nextStartPartitionId = getStartPartition(avg, i + 1, remainder);
             List<Integer> partitionIds = new ArrayList<>();
-            for (int partitionId = startPartitionId;
-                    partitionId < nextStartPartitionId;
-                    partitionId++) {
-                partitionIds.add(partitionId);
-                this.partitionToStore.put(partitionId, i);
+            for (int pid = startPartitionId; pid < nextStartPartitionId; pid++) {
+                partitionIds.add(pid);
+                this.partitionToStore.put(pid, i);
             }
             this.storeToPartitionIds.put(i, partitionIds);
         }
@@ -101,7 +98,7 @@ public class DefaultMetaService implements MetaService {
 
     @Override
     public List<Integer> getQueueIdsForIngestor(int ingestorId) {
-        return Arrays.asList(ingestorId);
+        return List.of(ingestorId);
     }
 
     @Override

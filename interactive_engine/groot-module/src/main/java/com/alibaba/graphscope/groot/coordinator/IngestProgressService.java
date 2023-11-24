@@ -27,7 +27,7 @@ import java.util.List;
 public class IngestProgressService extends IngestProgressGrpc.IngestProgressImplBase {
     private static final Logger logger = LoggerFactory.getLogger(IngestProgressService.class);
 
-    private SnapshotManager snapshotManager;
+    private final SnapshotManager snapshotManager;
 
     public IngestProgressService(SnapshotManager snapshotManager) {
         this.snapshotManager = snapshotManager;

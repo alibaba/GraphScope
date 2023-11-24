@@ -22,7 +22,7 @@ import io.grpc.stub.StreamObserver;
 
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {
 
-    private IngestService ingestService;
+    private final IngestService ingestService;
 
     public IngestorWriteService(IngestService ingestService) {
         this.ingestService = ingestService;

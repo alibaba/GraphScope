@@ -15,6 +15,8 @@ import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch.Builder;
 
+import com.alibaba.graphscope.groot.wal.LogEntry;
+import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +56,6 @@ public class BatchSender implements MetricsAgent {
     private volatile long lastUpdateTime;
     private AvgMetric sendBytesMetric;
     private AvgMetric sendRecordsMetric;
-    private List<AvgMetric> bufferBatchCountMetrics;
     private List<AvgMetric> callbackLatencyMetrics;
     private final int receiverQueueSize;
 
@@ -150,12 +151,12 @@ public class BatchSender implements MetricsAgent {
                         try {
                             BlockingQueue<StoreDataBatch> curBuffer = storeSendBuffer.get(storeId);
                             if (curBuffer.remainingCapacity() == 0) {
-                                logger.warn("Buffer of store [" + storeId + "] is full");
+                                logger.warn("Buffer of store [{}] is full", storeId);
                             }
                             curBuffer.put(batchBuilder.build());
                             break;
                         } catch (InterruptedException e) {
-                            logger.warn("send buffer interrupted", e);
+                            logger.warn("send buffer interrupted");
                         }
                     }
                 });
@@ -176,7 +177,7 @@ public class BatchSender implements MetricsAgent {
         try {
             sendTask = this.sendTasks.poll(1000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            logger.warn("polling send task interrupted", e);
+            logger.warn("polling send task interrupted");
             return;
         }
         if (sendTask == null) {
@@ -262,10 +263,8 @@ public class BatchSender implements MetricsAgent {
         this.lastUpdateTime = System.nanoTime();
         this.sendBytesMetric = new AvgMetric();
         this.sendRecordsMetric = new AvgMetric();
-        this.bufferBatchCountMetrics = new ArrayList<>(this.storeCount);
         this.callbackLatencyMetrics = new ArrayList<>(this.storeCount);
         for (int i = 0; i < this.storeCount; i++) {
-            this.bufferBatchCountMetrics.add(new AvgMetric());
             this.callbackLatencyMetrics.add(new AvgMetric());
         }
     }

@@ -39,12 +39,12 @@ import java.util.concurrent.ExecutionException;
 public class KafkaLogService implements LogService {
     private static final Logger logger = LoggerFactory.getLogger(KafkaLogService.class);
 
-    private Configs configs;
-    private String servers;
-    private String topic;
-    private int queueCount;
-    private short replicationFactor;
-    private int maxMessageMb;
+    private final Configs configs;
+    private final String servers;
+    private final String topic;
+    private final int queueCount;
+    private final short replicationFactor;
+    private final int maxMessageMb;
 
     private volatile AdminClient adminClient;
 
@@ -97,7 +97,7 @@ public class KafkaLogService implements LogService {
     public LogWriter createWriter(int queueId) {
         String customConfigsStr = KafkaConfig.KAFKA_PRODUCER_CUSTOM_CONFIGS.get(configs);
         Map<String, String> customConfigs = new HashMap<>();
-        if (!"".equals(customConfigsStr)) {
+        if (!customConfigsStr.isEmpty()) {
             for (String item : customConfigsStr.split("\\|")) {
                 String[] kv = item.split(":");
                 if (kv.length != 2) {

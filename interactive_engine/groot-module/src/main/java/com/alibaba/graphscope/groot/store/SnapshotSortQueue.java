@@ -88,10 +88,7 @@ public class SnapshotSortQueue {
                     }
                     this.queueHeads.set(i, entry);
                 }
-                long entrySnapshotId = entry.getSnapshotId();
-                if (entrySnapshotId < minSnapshotId) {
-                    minSnapshotId = entrySnapshotId;
-                }
+                minSnapshotId = Math.min(minSnapshotId, entry.getSnapshotId());
             }
             this.currentPollSnapshotId = minSnapshotId;
             logger.info("currentPollSnapshotId initialize to [" + this.currentPollSnapshotId + "]");
