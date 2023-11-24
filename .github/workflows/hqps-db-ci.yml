@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   test-hqps-engine:
-    runs-on: [self-hosted, manylinux2014]
+    runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.6
@@ -60,7 +60,7 @@ jobs:
         make install
 
     - name: Setup tmate session
-      if: false
+      if: true
       uses: mxschmitt/action-tmate@v3
 
     - name: Build

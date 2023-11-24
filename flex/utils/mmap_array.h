@@ -97,7 +97,6 @@ class mmap_array {
         } else {
           data_ = reinterpret_cast<T*>(
               mmap(NULL, size_ * sizeof(T), PROT_READ, MAP_PRIVATE, fd_, 0));
-          assert(data_ != MAP_FAILED);
         }
       }
     } else {
@@ -114,12 +113,10 @@ class mmap_array {
         data_ = reinterpret_cast<T*>(mmap(NULL, size_ * sizeof(T),
                                           PROT_READ | PROT_WRITE, MAP_SHARED,
                                           fd_, 0));
-        if (data_ == MAP_FAILED) {
-          LOG(FATAL) << "mmap failed " << errno << " " << strerror(errno)
-                     << "..\n";
-        }
-        assert(data_ != MAP_FAILED);
       }
+    }
+    if (data_ == MAP_FAILED) {
+      LOG(FATAL) << "mmap failed " << errno << " " << strerror(errno) << "..\n";
     }
     madvise(data_, size_ * sizeof(T), MADV_RANDOM | MADV_WILLNEED);
   }
@@ -175,11 +172,11 @@ class mmap_array {
         data_ =
             static_cast<T*>(::mmap(NULL, size * sizeof(T),
                                    PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0));
-        if (data_ == MAP_FAILED) {
-          LOG(FATAL) << "mmap failed " << strerror(errno) << "\n";
-        }
       }
       size_ = size;
+    }
+    if (data_ == MAP_FAILED) {
+      LOG(FATAL) << "mmap failed " << strerror(errno) << "\n";
     }
   }
 
