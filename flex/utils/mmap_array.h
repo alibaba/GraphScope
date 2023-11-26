@@ -49,11 +49,7 @@ inline void copy_file(const std::string& src, const std::string& dst) {
   if (creat) {
     std::filesystem::perms readWritePermission =
         std::filesystem::perms::owner_read |
-        std::filesystem::perms::owner_write |
-        std::filesystem::perms::group_read |
-        std::filesystem::perms::group_write |
-        std::filesystem::perms::others_read |
-        std::filesystem::perms::others_write;
+        std::filesystem::perms::owner_write;
     std::error_code errorCode;
     std::filesystem::permissions(dst, readWritePermission,
                                  std::filesystem::perm_options::add, errorCode);
@@ -131,11 +127,7 @@ class mmap_array {
       if (creat) {
         std::filesystem::perms readWritePermission =
             std::filesystem::perms::owner_read |
-            std::filesystem::perms::owner_write |
-            std::filesystem::perms::group_read |
-            std::filesystem::perms::group_write |
-            std::filesystem::perms::others_read |
-            std::filesystem::perms::others_write;
+            std::filesystem::perms::owner_write;
         std::error_code errorCode;
         std::filesystem::permissions(filename, readWritePermission,
                                      std::filesystem::perm_options::add,
@@ -173,9 +165,7 @@ class mmap_array {
     } else {
       std::filesystem::rename(old_filename, filename);
     }
-    std::filesystem::perms readPermission = std::filesystem::perms::owner_read |
-                                            std::filesystem::perms::group_read |
-                                            std::filesystem::perms::others_read;
+    std::filesystem::perms readPermission = std::filesystem::perms::owner_read;
 
     std::error_code errorCode;
     std::filesystem::permissions(filename, readPermission,

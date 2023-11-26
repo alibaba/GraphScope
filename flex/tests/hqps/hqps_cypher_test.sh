@@ -15,6 +15,7 @@
 set -e
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 FLEX_HOME=${SCRIPT_DIR}/../../
+BULK_LOADER=${FLEX_HOME}/build/bin/bulk_loader
 SERVER_BIN=${FLEX_HOME}/build/bin/sync_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
@@ -95,11 +96,13 @@ start_engine_service(){
         err "SERVER_BIN not found"
         exit 1
     fi
-
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
-    cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} -l ${GRAPH_BULK_LOAD_YAML} "
+    cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
 
     echo "Start engine service with command: ${cmd}"
+    BULK_LOADER -l ${GRAPH_BULK_LOAD_YAML} -g ${GRAPH_SCHEMA_YAML} -d ${GRAPH_CSR_DATA_DIR} 
+    rm -r ${GRAPH_CSR_DATA_DIR}/wal
+    rm -r ${GRAPH_CSR_DATA_DIR}/runtime/*
     ${cmd} &
     sleep 5
     #check sync_server is running, if not, exit
