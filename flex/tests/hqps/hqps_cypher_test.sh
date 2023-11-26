@@ -98,9 +98,10 @@ start_engine_service(){
     fi
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
-
+    bulk_load_cmd="${BULK_LOADER} -l ${GRAPH_BULK_LOAD_YAML} -g ${GRAPH_SCHEMA_YAML} -d ${GRAPH_CSR_DATA_DIR} " 
+    
     echo "Start engine service with command: ${cmd}"
-    BULK_LOADER -l ${GRAPH_BULK_LOAD_YAML} -g ${GRAPH_SCHEMA_YAML} -d ${GRAPH_CSR_DATA_DIR} 
+    ${bulk_load_cmd}
     rm -r ${GRAPH_CSR_DATA_DIR}/wal
     rm -r ${GRAPH_CSR_DATA_DIR}/runtime/*
     ${cmd} &
