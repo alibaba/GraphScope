@@ -41,8 +41,27 @@ inline void copy_file(const std::string& src, const std::string& dst) {
   }
   size_t len = std::filesystem::file_size(src);
   int src_fd = open(src.c_str(), O_RDONLY);
+  bool creat = false;
+  if (!std::filesystem::exists(dst)) {
+    creat = true;
+  }
   int dst_fd = open(dst.c_str(), O_WRONLY | O_CREAT);
-
+  if (creat) {
+    std::filesystem::perms readWritePermission =
+        std::filesystem::perms::owner_read |
+        std::filesystem::perms::owner_write |
+        std::filesystem::perms::group_read |
+        std::filesystem::perms::group_write |
+        std::filesystem::perms::others_read |
+        std::filesystem::perms::others_write;
+    std::error_code errorCode;
+    std::filesystem::permissions(dst, readWritePermission,
+                                 std::filesystem::perm_options::add, errorCode);
+    if (errorCode) {
+      LOG(INFO) << "Failed to set read/write permission for file: " << dst
+                << " " << errorCode.message() << std::endl;
+    }
+  }
   ssize_t ret;
   do {
     ret = copy_file_range(src_fd, NULL, dst_fd, NULL, len, 0);
@@ -100,11 +119,33 @@ class mmap_array {
         }
       }
     } else {
+      bool creat = false;
+      if (!std::filesystem::exists(filename)) {
+        creat = true;
+      }
       fd_ = ::open(filename.c_str(), O_RDWR | O_CREAT);
       if (fd_ == -1) {
         LOG(FATAL) << "open file failed " << filename << strerror(errno)
                    << "\n";
       }
+      if (creat) {
+        std::filesystem::perms readWritePermission =
+            std::filesystem::perms::owner_read |
+            std::filesystem::perms::owner_write |
+            std::filesystem::perms::group_read |
+            std::filesystem::perms::group_write |
+            std::filesystem::perms::others_read |
+            std::filesystem::perms::others_write;
+        std::error_code errorCode;
+        std::filesystem::permissions(filename, readWritePermission,
+                                     std::filesystem::perm_options::add,
+                                     errorCode);
+        if (errorCode) {
+          LOG(INFO) << "Failed to set read/write permission for file: "
+                    << filename << " " << errorCode.message() << std::endl;
+        }
+      }
+
       size_t file_size = std::filesystem::file_size(filename);
       size_ = file_size / sizeof(T);
       if (size_ == 0) {
@@ -116,7 +157,8 @@ class mmap_array {
       }
     }
     if (data_ == MAP_FAILED) {
-      LOG(FATAL) << "mmap failed " << errno << " " << strerror(errno) << "..\n";
+      LOG(FATAL) << "mmap failed " << filename << " " << strerror(errno)
+                 << "..\n";
     }
     madvise(data_, size_ * sizeof(T), MADV_RANDOM | MADV_WILLNEED);
   }
@@ -130,6 +172,18 @@ class mmap_array {
       std::filesystem::create_hard_link(old_filename, filename);
     } else {
       std::filesystem::rename(old_filename, filename);
+    }
+    std::filesystem::perms readPermission = std::filesystem::perms::owner_read |
+                                            std::filesystem::perms::group_read |
+                                            std::filesystem::perms::others_read;
+
+    std::error_code errorCode;
+    std::filesystem::permissions(filename, readPermission,
+                                 std::filesystem::perm_options::add, errorCode);
+
+    if (errorCode) {
+      LOG(INFO) << "Failed to set read permission for file: " << filename << " "
+                << errorCode.message() << std::endl;
     }
   }
 
