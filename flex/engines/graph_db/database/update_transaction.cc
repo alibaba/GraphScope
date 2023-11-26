@@ -319,13 +319,13 @@ Any UpdateTransaction::edge_iterator::GetData() const {
 void UpdateTransaction::edge_iterator::SetData(const Any& value) {
   if (init_iter_->is_valid()) {
     vid_t cur = init_iter_->get_neighbor();
-    txn_->SetEdgeDataWithOffset(dir_, label_, v_, neighbor_label_, cur,
-                                edge_label_, value, offset_);
+    txn_->set_edge_data_with_offset(dir_, label_, v_, neighbor_label_, cur,
+                                    edge_label_, value, offset_);
   } else {
     vid_t cur = *added_edges_cur_;
-    txn_->SetEdgeDataWithOffset(dir_, label_, v_, neighbor_label_, cur,
-                                edge_label_, value,
-                                std::numeric_limits<size_t>::max());
+    txn_->set_edge_data_with_offset(dir_, label_, v_, neighbor_label_, cur,
+                                    edge_label_, value,
+                                    std::numeric_limits<size_t>::max());
   }
 }
 
@@ -486,14 +486,13 @@ void UpdateTransaction::SetEdgeData(bool dir, label_t label, vid_t v,
       dir ? graph_.get_outgoing_edges(label, v, neighbor_label, edge_label)
           : graph_.get_incoming_edges(label, v, neighbor_label, edge_label);
   size_t offset = get_offset(edges, nbr);
-  SetEdgeDataWithOffset(dir, label, v, neighbor_label, nbr, edge_label, value,
-                        offset);
+  set_edge_data_with_offset(dir, label, v, neighbor_label, nbr, edge_label,
+                            value, offset);
 }
 
-void UpdateTransaction::SetEdgeDataWithOffset(bool dir, label_t label, vid_t v,
-                                              label_t neighbor_label, vid_t nbr,
-                                              label_t edge_label,
-                                              const Any& value, size_t offset) {
+void UpdateTransaction::set_edge_data_with_offset(
+    bool dir, label_t label, vid_t v, label_t neighbor_label, vid_t nbr,
+    label_t edge_label, const Any& value, size_t offset) {
   size_t csr_index = dir ? get_out_csr_index(label, neighbor_label, edge_label)
                          : get_in_csr_index(neighbor_label, label, edge_label);
   if (value.type == PropertyType::kString) {

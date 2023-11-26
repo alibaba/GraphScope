@@ -138,11 +138,6 @@ class UpdateTransaction {
   void SetEdgeData(bool dir, label_t label, vid_t v, label_t neighbor_label,
                    vid_t nbr, label_t edge_label, const Any& value);
 
-  void SetEdgeDataWithOffset(bool dir, label_t label, vid_t v,
-                             label_t neighbor_label, vid_t nbr,
-                             label_t edge_label, const Any& value,
-                             size_t offset);
-
   bool GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
                           label_t neighbor_label, vid_t nbr, label_t edge_label,
                           Any& ret) const;
@@ -152,6 +147,11 @@ class UpdateTransaction {
                         char* data, size_t length, MMapAllocator& alloc);
 
  private:
+  void set_edge_data_with_offset(bool dir, label_t label, vid_t v,
+                                 label_t neighbor_label, vid_t nbr,
+                                 label_t edge_label, const Any& value,
+                                 size_t offset);
+
   size_t get_in_csr_index(label_t src_label, label_t dst_label,
                           label_t edge_label) const;
 
