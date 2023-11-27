@@ -245,6 +245,15 @@ struct LabelKey {
   LabelKey(label_data_type id) : label_id(id) {}
 };
 
+// overload hash_value for LabelKey
+inline std::size_t hash_value(const LabelKey& key) {
+  return std::hash<int32_t>()(key.label_id);
+}
+
+inline bool operator==(const LabelKey& lhs, const LabelKey& rhs) {
+  return lhs.label_id == rhs.label_id;
+}
+
 template <typename T>
 struct is_label_key_prop : std::false_type {};
 
