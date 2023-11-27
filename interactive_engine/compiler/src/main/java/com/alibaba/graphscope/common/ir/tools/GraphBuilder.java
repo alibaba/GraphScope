@@ -68,7 +68,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -306,6 +305,12 @@ public class GraphBuilder extends RelBuilder {
      * @param opt anti or optional
      */
     public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
+        single =
+                new GraphTypeInference(
+                                (GraphBuilder)
+                                        GraphPlanner.relBuilderFactory.create(
+                                                this.cluster, this.relOptSchema))
+                        .inferTypes(single);
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
@@ -336,10 +341,27 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public GraphBuilder match(RelNode first, Iterable<? extends RelNode> others) {
+        List<RelNode> sentences = Lists.newArrayList();
+        sentences.add(first);
+        for (RelNode other : others) {
+            sentences.add(other);
+        }
+        Preconditions.checkArgument(
+                sentences.size() > 1, "at least two sentences are required in multiple match");
+        sentences =
+                new GraphTypeInference(
+                                (GraphBuilder)
+                                        GraphPlanner.relBuilderFactory.create(
+                                                this.cluster, this.relOptSchema))
+                        .inferTypes(sentences);
         RelNode input = size() > 0 ? peek() : null;
         RelNode match =
                 GraphLogicalMultiMatch.create(
-                        (GraphOptCluster) cluster, null, null, first, ImmutableList.copyOf(others));
+                        (GraphOptCluster) cluster,
+                        null,
+                        null,
+                        sentences.get(0),
+                        sentences.subList(1, sentences.size()));
         if (input == null) {
             push(match);
         } else {
@@ -708,6 +730,7 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
+        RexVisitor propertyChecker = new RexPropertyChecker(true, this);
         // make sure all conditions have the Boolean return type
         for (RexNode condition : conditions) {
             RelDataType type = condition.getType();
@@ -718,6 +741,8 @@ public class GraphBuilder extends RelBuilder {
                                 + " should return Boolean value, but is "
                                 + type);
             }
+            // check property existence for specific label
+            condition.accept(propertyChecker);
         }
         GraphBuilder builder = (GraphBuilder) super.filter(ImmutableSet.of(), conditions);
         // fuse filter with the previous table scan if meets the conditions
@@ -780,14 +805,14 @@ public class GraphBuilder extends RelBuilder {
                                     newLabelConfig,
                                     tableScan.getAliasName()));
                 } else if (tableScan instanceof GraphLogicalExpand) {
-                    ((GraphBuilder) builder.push(tableScan.getInput(0)))
+                    builder.push(tableScan.getInput(0))
                             .expand(
                                     new ExpandConfig(
                                             ((GraphLogicalExpand) tableScan).getOpt(),
                                             newLabelConfig,
                                             tableScan.getAliasName()));
                 } else if (tableScan instanceof GraphLogicalGetV) {
-                    ((GraphBuilder) builder.push(tableScan.getInput(0)))
+                    builder.push(tableScan.getInput(0))
                             .getV(
                                     new GetVConfig(
                                             ((GraphLogicalGetV) tableScan).getOpt(),
@@ -796,24 +821,7 @@ public class GraphBuilder extends RelBuilder {
                 }
                 if (builder.size() > 0) {
                     // check if the property still exist after updating the label type
-                    RexVisitor propertyChecker =
-                            new RexVisitorImpl<Void>(true) {
-                                @Override
-                                public Void visitInputRef(RexInputRef inputRef) {
-                                    if (inputRef instanceof RexGraphVariable) {
-                                        RexGraphVariable variable = (RexGraphVariable) inputRef;
-                                        String[] splits =
-                                                variable.getName()
-                                                        .split(
-                                                                Pattern.quote(
-                                                                        AliasInference.DELIMITER));
-                                        if (splits.length > 1) {
-                                            builder.variable(null, splits[1]);
-                                        }
-                                    }
-                                    return null;
-                                }
-                            };
+                    RexVisitor propertyChecker = new RexPropertyChecker(true, builder);
                     if (tableScan instanceof GraphLogicalSource) {
                         RexNode originalUniqueKeyFilters =
                                 ((GraphLogicalSource) tableScan).getUniqueKeyFilters();

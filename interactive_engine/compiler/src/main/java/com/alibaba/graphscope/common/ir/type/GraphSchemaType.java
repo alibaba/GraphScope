@@ -143,8 +143,9 @@ public class GraphSchemaType extends RelRecordType {
     @Override
     protected void generateTypeString(StringBuilder sb, boolean withDetail) {
         sb.append("Graph_Schema_Type");
-
         sb.append("(");
+        sb.append("labels=" + labelType);
+        sb.append(", properties=[");
         Iterator var3 =
                 Ord.zip((List) Objects.requireNonNull(this.fieldList, "fieldList")).iterator();
 
@@ -164,6 +165,7 @@ public class GraphSchemaType extends RelRecordType {
             sb.append(" ");
             sb.append(field.getName());
         }
+        sb.append("]");
 
         sb.append(")");
     }

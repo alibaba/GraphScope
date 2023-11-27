@@ -18,17 +18,21 @@ package com.alibaba.graphscope.common.ir.type;
 
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
+import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rex.RexNode;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -96,13 +100,20 @@ public class GraphTypeInference {
                                         dfs(
                                                 relGraph,
                                                 k,
-                                                restrictChild(k, top, restriction),
+                                                restrictChild(relGraph, k, top, restriction),
                                                 visited,
                                                 updated))
                         .collect(Collectors.toList());
-        RelDataType newType = restrictParent(newNeighbors, top, restriction);
+        RelDataType newType = restrictParent(relGraph, newNeighbors, top, restriction);
+        String alias = relGraph.getAliasName(top);
+        if (alias != null && alias != AliasInference.DEFAULT_NAME) {
+            List<RelNode> relsWithSameAlias = relGraph.aliasNameToRels.get(alias);
+            if (ObjectUtils.isNotEmpty(relsWithSameAlias)) {
+                newType = restrictShared(relsWithSameAlias, top, newType);
+            }
+        }
         RelDataType oldType = getType(top);
-        if (!newType.equals(oldType)) {
+        if (!typeEquals(oldType, newType)) {
             updated.add(top);
             RelNode newTop = newRel(top, newType);
             RelNode parent = relGraph.getParent(top);
@@ -114,12 +125,32 @@ public class GraphTypeInference {
         return top;
     }
 
-    private RelDataType restrictChild(RelNode child, RelNode parent, RelDataType parentType) {
+    private boolean typeEquals(RelDataType type1, RelDataType type2) {
+        if (type1 instanceof GraphSchemaType && type2 instanceof GraphSchemaType) {
+            return ((GraphSchemaType) type1)
+                    .getLabelType()
+                    .equals(((GraphSchemaType) type2).getLabelType());
+        } else if (type1 instanceof GraphPathType && type2 instanceof GraphPathType) {
+            GraphPathType pathType1 = (GraphPathType) type1;
+            GraphPathType pathType2 = (GraphPathType) type2;
+            return typeEquals(
+                            pathType1.getComponentType().getExpandType(),
+                            pathType2.getComponentType().getExpandType())
+                    && typeEquals(
+                            pathType1.getComponentType().getGetVType(),
+                            pathType2.getComponentType().getGetVType());
+        }
+        return true;
+    }
+
+    private RelDataType restrictChild(
+            RelGraph relGraph, RelNode child, RelNode parent, RelDataType parentType) {
         if (child instanceof GraphLogicalSource
                         && ((GraphLogicalSource) child).getOpt() == GraphOpt.Source.VERTEX
                 || child instanceof GraphLogicalGetV) {
             if (parent instanceof GraphLogicalPathExpand) {
                 parent = ((GraphLogicalPathExpand) parent).getExpand();
+                parentType = ((GraphPathType) parentType).getComponentType().getExpandType();
             }
             if (parent instanceof GraphLogicalExpand) {
                 GraphLogicalExpand expand = (GraphLogicalExpand) parent;
@@ -151,8 +182,19 @@ public class GraphTypeInference {
             GraphLogicalGetV getV = (GraphLogicalGetV) parent;
             GraphLabelType childLabelType = ((GraphSchemaType) getType(child)).getLabelType();
             GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
+            GraphLabelType otherVLabelType = null;
+            if (getV.getOpt() == GraphOpt.GetV.OTHER) {
+                RelDataType otherVType = relGraph.getNeighborsType(child);
+                Preconditions.checkArgument(
+                        otherVType != null && otherVType instanceof GraphSchemaType,
+                        "graph generic type error: invalid opt %s in node %s",
+                        getV.getOpt(),
+                        getV);
+                otherVLabelType = ((GraphSchemaType) otherVType).getLabelType();
+            }
             List<GraphLabelType.Entry> commonLabels =
-                    commonLabels(childLabelType, parentLabelType, getV.getOpt(), true);
+                    commonLabels(
+                            otherVLabelType, childLabelType, parentLabelType, getV.getOpt(), true);
             return new GraphSchemaType(
                     GraphOpt.Source.EDGE, new GraphLabelType(commonLabels), ImmutableList.of());
         }
@@ -169,13 +211,14 @@ public class GraphTypeInference {
             GraphLabelType innerGetVLabelType = ((GraphSchemaType) innerGetVType).getLabelType();
             GraphLabelType outerGetVLabelType = ((GraphSchemaType) parentType).getLabelType();
             List<GraphLabelType.Entry> commonLabels =
-                    commonLabels(innerGetVLabelType, outerGetVLabelType, true);
+                    commonLabels(innerGetVLabelType, outerGetVLabelType);
             RelDataType newGetVType =
                     new GraphSchemaType(
                             GraphOpt.Source.VERTEX,
                             new GraphLabelType(commonLabels),
                             ImmutableList.of());
-            RelDataType newExpandType = restrictChild(pxd.getExpand(), pxd.getGetV(), newGetVType);
+            RelDataType newExpandType =
+                    restrictChild(relGraph, pxd.getExpand(), pxd.getGetV(), newGetVType);
             return new GraphPathType(new GraphPathType.ElementType(newExpandType, newGetVType));
         }
         throw new IllegalArgumentException(
@@ -187,14 +230,15 @@ public class GraphTypeInference {
     }
 
     private RelDataType restrictParent(
-            List<RelNode> children, RelNode parent, RelDataType parentType) {
+            RelGraph relGraph, List<RelNode> children, RelNode parent, RelDataType parentType) {
         for (RelNode child : children) {
-            parentType = restrictParent(child, parent, parentType);
+            parentType = restrictParent(relGraph, child, parent, parentType);
         }
         return parentType;
     }
 
-    private RelDataType restrictParent(RelNode child, RelNode parent, RelDataType parentType) {
+    private RelDataType restrictParent(
+            RelGraph relGraph, RelNode child, RelNode parent, RelDataType parentType) {
         if (child instanceof GraphLogicalSource
                         && ((GraphLogicalSource) child).getOpt() == GraphOpt.Source.VERTEX
                 || child instanceof GraphLogicalGetV) {
@@ -211,12 +255,17 @@ public class GraphTypeInference {
                 GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) parent;
                 RelDataType newExpandType =
                         restrictParent(
+                                relGraph,
                                 child,
                                 pxd.getExpand(),
                                 ((GraphPathType) parentType).getComponentType().getExpandType());
-                RelNode newExpand = newRel(pxd.getExpand(), newExpandType);
+                RelNode oldExpand =
+                        pxd.getExpand()
+                                .copy(pxd.getExpand().getTraitSet(), ImmutableList.of(child));
+                RelNode newExpand = newRel(oldExpand, newExpandType);
                 RelDataType newGetVType =
                         restrictParent(
+                                relGraph,
                                 newExpand,
                                 pxd.getGetV(),
                                 ((GraphPathType) parentType).getComponentType().getGetVType());
@@ -241,8 +290,19 @@ public class GraphTypeInference {
             GraphLogicalGetV getV = (GraphLogicalGetV) parent;
             GraphLabelType childLabelType = ((GraphSchemaType) getType(child)).getLabelType();
             GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
+            GraphLabelType otherVLabelType = null;
+            if (getV.getOpt() == GraphOpt.GetV.OTHER) {
+                RelDataType otherVType = relGraph.getNeighborsType(child);
+                Preconditions.checkArgument(
+                        otherVType != null && otherVType instanceof GraphSchemaType,
+                        "graph generic type error: invalid opt %s in node %s",
+                        getV.getOpt(),
+                        getV);
+                otherVLabelType = ((GraphSchemaType) otherVType).getLabelType();
+            }
             List<GraphLabelType.Entry> commonLabels =
-                    commonLabels(childLabelType, parentLabelType, getV.getOpt(), false);
+                    commonLabels(
+                            otherVLabelType, childLabelType, parentLabelType, getV.getOpt(), false);
             return new GraphSchemaType(
                     GraphOpt.Source.VERTEX, new GraphLabelType(commonLabels), ImmutableList.of());
         }
@@ -259,7 +319,7 @@ public class GraphTypeInference {
             GraphLabelType innerGetVLabelType = ((GraphSchemaType) innerGetVType).getLabelType();
             GraphLabelType outerGetVLabelType = ((GraphSchemaType) parentType).getLabelType();
             List<GraphLabelType.Entry> commonLabels =
-                    commonLabels(innerGetVLabelType, outerGetVLabelType, false);
+                    commonLabels(innerGetVLabelType, outerGetVLabelType);
             return new GraphSchemaType(
                     GraphOpt.Source.VERTEX, new GraphLabelType(commonLabels), ImmutableList.of());
         }
@@ -271,29 +331,70 @@ public class GraphTypeInference {
                         + parent);
     }
 
-    private List<GraphLabelType.Entry> commonLabels(
-            GraphLabelType innerGetVType, GraphLabelType outerGetVType, boolean recordInner) {
-        List<GraphLabelType.Entry> commonLabels = Lists.newArrayList();
-        for (GraphLabelType.Entry entry1 : innerGetVType.getLabelsEntry()) {
-            for (GraphLabelType.Entry entry2 : outerGetVType.getLabelsEntry()) {
-                if (entry1.getLabel().equals(entry2.getLabel())) {
-                    if (recordInner) {
-                        commonLabels.add(entry1);
-                    } else {
-                        commonLabels.add(entry2);
-                    }
-                }
+    private RelDataType restrictShared(
+            List<RelNode> rels, @Nullable RelNode shared, RelDataType sharedType) {
+        if (sharedType instanceof GraphSchemaType) {
+            GraphLabelType sharedLabelType = ((GraphSchemaType) sharedType).getLabelType();
+            for (RelNode rel : rels) {
+                RelDataType relType = getType(rel);
+                Preconditions.checkArgument(
+                        relType instanceof GraphSchemaType
+                                && ((GraphSchemaType) relType).getScanOpt()
+                                        == ((GraphSchemaType) sharedType).getScanOpt(),
+                        "graph schema type error : rel type %s is not compatible with shared type"
+                                + " %s",
+                        relType,
+                        sharedType);
+                GraphLabelType relLabelType = ((GraphSchemaType) relType).getLabelType();
+                sharedLabelType = new GraphLabelType(commonLabels(relLabelType, sharedLabelType));
             }
+            return new GraphSchemaType(
+                    ((GraphSchemaType) sharedType).getScanOpt(),
+                    sharedLabelType,
+                    ImmutableList.of());
         }
+        if (sharedType instanceof GraphPathType) {
+            List<RelNode> expandRels = Lists.newArrayList();
+            List<RelNode> getVRels = Lists.newArrayList();
+            for (RelNode rel : rels) {
+                Preconditions.checkArgument(
+                        rel instanceof GraphLogicalPathExpand,
+                        "graph schema type error : rel %s is not compatible with shared type %s",
+                        rel,
+                        sharedType);
+                expandRels.add(((GraphLogicalPathExpand) rel).getExpand());
+                getVRels.add(((GraphLogicalPathExpand) rel).getGetV());
+            }
+            RelDataType restrictExpand =
+                    restrictShared(
+                            expandRels,
+                            null,
+                            ((GraphPathType) sharedType).getComponentType().getExpandType());
+            RelDataType restrictGetV =
+                    restrictShared(
+                            getVRels,
+                            null,
+                            ((GraphPathType) sharedType).getComponentType().getGetVType());
+            return new GraphPathType(new GraphPathType.ElementType(restrictExpand, restrictGetV));
+        }
+        throw new IllegalArgumentException(
+                "graph schema type error: unable to restrict shared type " + sharedType);
+    }
+
+    private List<GraphLabelType.Entry> commonLabels(
+            GraphLabelType labelType1, GraphLabelType labelType2) {
+        List<GraphLabelType.Entry> commonLabels = Lists.newArrayList(labelType1.getLabelsEntry());
+        commonLabels.retainAll(labelType2.getLabelsEntry());
         Preconditions.checkArgument(
                 !commonLabels.isEmpty(),
                 "graph schema type error: unable to find common labels between %s and %s",
-                innerGetVType,
-                outerGetVType);
+                labelType1,
+                labelType2);
         return commonLabels;
     }
 
     private List<GraphLabelType.Entry> commonLabels(
+            @Nullable GraphLabelType otherVType,
             GraphLabelType expandType,
             GraphLabelType getVType,
             GraphOpt.GetV getVOpt,
@@ -301,16 +402,7 @@ public class GraphTypeInference {
         List<GraphLabelType.Entry> commonLabels = Lists.newArrayList();
         for (GraphLabelType.Entry entry1 : expandType.getLabelsEntry()) {
             for (GraphLabelType.Entry entry2 : getVType.getLabelsEntry()) {
-                if (getVOpt != GraphOpt.GetV.START) {
-                    if (entry1.getDstLabel().equals(entry2.getLabel())) {
-                        if (recordExpand) {
-                            commonLabels.add(entry1);
-                        } else {
-                            commonLabels.add(entry2);
-                        }
-                    }
-                }
-                if (getVOpt != GraphOpt.GetV.END) {
+                if (getVOpt == GraphOpt.GetV.START || getVOpt == GraphOpt.GetV.BOTH) {
                     if (entry1.getSrcLabel().equals(entry2.getLabel())) {
                         if (recordExpand) {
                             commonLabels.add(entry1);
@@ -319,8 +411,32 @@ public class GraphTypeInference {
                         }
                     }
                 }
+                if (getVOpt == GraphOpt.GetV.END || getVOpt == GraphOpt.GetV.BOTH) {
+                    if (entry1.getDstLabel().equals(entry2.getLabel())) {
+                        if (recordExpand) {
+                            commonLabels.add(entry1);
+                        } else {
+                            commonLabels.add(entry2);
+                        }
+                    }
+                }
+                if (getVOpt == GraphOpt.GetV.OTHER && otherVType != null) {
+                    for (GraphLabelType.Entry entry3 : otherVType.getLabelsEntry()) {
+                        if (entry1.getSrcLabel().equals(entry3.getLabel())
+                                        && entry1.getDstLabel().equals(entry2.getLabel())
+                                || entry1.getDstLabel().equals(entry3.getLabel())
+                                        && entry1.getSrcLabel().equals(entry2.getLabel())) {
+                            if (recordExpand) {
+                                commonLabels.add(entry1);
+                            } else {
+                                commonLabels.add(entry2);
+                            }
+                        }
+                    }
+                }
             }
         }
+        commonLabels = commonLabels.stream().distinct().collect(Collectors.toList());
         Preconditions.checkArgument(
                 !commonLabels.isEmpty(),
                 "graph schema type error: unable to find common labels between expand type %s and"
@@ -358,6 +474,7 @@ public class GraphTypeInference {
                 }
             }
         }
+        commonLabels = commonLabels.stream().distinct().collect(Collectors.toList());
         Preconditions.checkArgument(
                 !commonLabels.isEmpty(),
                 "graph schema type error: unable to find common labels between getV type %s and"
@@ -370,53 +487,79 @@ public class GraphTypeInference {
     private RelNode newRel(RelNode rel, RelDataType newType) {
         if (rel instanceof GraphLogicalSource) {
             GraphLogicalSource source = (GraphLogicalSource) rel;
-            return builder.source(
-                            new SourceConfig(
-                                    source.getOpt(),
-                                    getLabelConfig(newType),
-                                    source.getAliasName()))
-                    .build();
+            TableConfig newTableConfig = newTableConfig((GraphLogicalSource) rel, newType);
+            if (newTableConfig != source.getTableConfig()) {
+                GraphLogicalSource newSource =
+                        GraphLogicalSource.create(
+                                (GraphOptCluster) builder.getCluster(),
+                                ImmutableList.of(),
+                                source.getOpt(),
+                                newTableConfig,
+                                source.getAliasName());
+                List<RexNode> filters = Lists.newArrayList();
+                if (source.getUniqueKeyFilters() != null) {
+                    filters.add(source.getUniqueKeyFilters());
+                }
+                if (ObjectUtils.isNotEmpty(source.getFilters())) {
+                    filters.addAll(source.getFilters());
+                }
+                if (!filters.isEmpty()) {
+                    return builder.push(newSource).filter(filters).build();
+                }
+                return newSource;
+            }
         }
         if (rel instanceof GraphLogicalExpand) {
             GraphLogicalExpand expand = (GraphLogicalExpand) rel;
-            GraphLogicalExpand newExpand =
-                    (GraphLogicalExpand)
-                            builder.push(expand.getInput(0))
-                                    .expand(
-                                            new ExpandConfig(
-                                                    expand.getOpt(),
-                                                    getLabelConfig(newType),
-                                                    expand.getAliasName(),
-                                                    expand.getStartAlias().getAliasName()))
-                                    .build();
-            newExpand.setRowType((GraphSchemaType) newType);
-            return newExpand;
+            TableConfig newTableConfig = newTableConfig((GraphLogicalExpand) rel, newType);
+            if (newTableConfig != expand.getTableConfig()) {
+                GraphLogicalExpand newExpand =
+                        GraphLogicalExpand.create(
+                                (GraphOptCluster) builder.getCluster(),
+                                ImmutableList.of(),
+                                expand.getInputs().isEmpty() ? null : expand.getInput(0),
+                                expand.getOpt(),
+                                newTableConfig,
+                                expand.getAliasName(),
+                                expand.getStartAlias());
+                newExpand.setRowType((GraphSchemaType) newType);
+                if (ObjectUtils.isNotEmpty(expand.getFilters())) {
+                    return builder.push(newExpand).filter(expand.getFilters()).build();
+                }
+                return newExpand;
+            } else {
+                expand.setRowType((GraphSchemaType) newType);
+            }
         }
         if (rel instanceof GraphLogicalGetV) {
             GraphLogicalGetV getV = (GraphLogicalGetV) rel;
-            return builder.push(getV.getInput(0))
-                    .getV(
-                            new GetVConfig(
-                                    getV.getOpt(),
-                                    getLabelConfig(newType),
-                                    getV.getAliasName(),
-                                    getV.getStartAlias().getAliasName()))
-                    .build();
+            TableConfig newTableConfig = newTableConfig((GraphLogicalGetV) rel, newType);
+            if (newTableConfig != getV.getTableConfig()) {
+                GraphLogicalGetV newGetV =
+                        GraphLogicalGetV.create(
+                                (GraphOptCluster) builder.getCluster(),
+                                ImmutableList.of(),
+                                getV.getInputs().isEmpty() ? null : getV.getInput(0),
+                                getV.getOpt(),
+                                newTableConfig,
+                                getV.getAliasName(),
+                                getV.getStartAlias());
+                if (ObjectUtils.isNotEmpty(getV.getFilters())) {
+                    return builder.push(newGetV).filter(getV.getFilters()).build();
+                }
+                return newGetV;
+            }
         }
         if (rel instanceof GraphLogicalPathExpand) {
             GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) rel;
-            GraphLogicalExpand expand = (GraphLogicalExpand) pxd.getExpand();
-            GraphLogicalGetV getV = (GraphLogicalGetV) pxd.getGetV();
             RelNode newExpand =
-                    newRel(expand, ((GraphPathType) newType).getComponentType().getExpandType());
-            if (ObjectUtils.isNotEmpty(expand.getFilters())) {
-                newExpand = builder.push(newExpand).filter(expand.getFilters()).build();
-            }
+                    newRel(
+                            pxd.getExpand(),
+                            ((GraphPathType) newType).getComponentType().getExpandType());
             RelNode newGetV =
-                    newRel(getV, ((GraphPathType) newType).getComponentType().getGetVType());
-            if (ObjectUtils.isNotEmpty(getV.getFilters())) {
-                newGetV = builder.push(newGetV).filter(getV.getFilters()).build();
-            }
+                    newRel(
+                            pxd.getGetV(),
+                            ((GraphPathType) newType).getComponentType().getGetVType());
             return GraphLogicalPathExpand.create(
                     (GraphOptCluster) builder.getCluster(),
                     ImmutableList.of(),
@@ -433,15 +576,25 @@ public class GraphTypeInference {
         return rel;
     }
 
-    private LabelConfig getLabelConfig(RelDataType type) {
-        List<String> expectedLabels =
-                ((GraphSchemaType) type)
+    private TableConfig newTableConfig(AbstractBindableTableScan rel, RelDataType newType) {
+        List<RelOptTable> oldTables = rel.getTableConfig().getTables();
+        List<RelOptTable> newTables = Lists.newArrayList();
+        List<String> newLabels =
+                ((GraphSchemaType) newType)
                         .getLabelType().getLabelsEntry().stream()
                                 .map(k -> k.getLabel())
                                 .collect(Collectors.toList());
-        LabelConfig labelConfig = new LabelConfig(false);
-        expectedLabels.forEach(k -> labelConfig.addLabel(k));
-        return labelConfig;
+        oldTables.forEach(
+                k -> {
+                    if (k.getQualifiedName().size() > 0
+                            && newLabels.contains(k.getQualifiedName().get(0))) {
+                        newTables.add(k);
+                    }
+                });
+        if (newTables.size() < oldTables.size()) {
+            return new TableConfig(newTables);
+        }
+        return rel.getTableConfig();
     }
 
     private RelDataType getType(RelNode node) {
@@ -452,15 +605,18 @@ public class GraphTypeInference {
     }
 
     private class RelGraph {
-        private Map<String, List<RelNode>> aliasNameToRels;
-        private List<RelNode> rels;
-        private IdentityHashMap<RelNode, RelNode> relToParent;
+        private final Map<String, List<RelNode>> aliasNameToRels;
+        private final List<RelNode> rels;
+        private final IdentityHashMap<RelNode, RelNode> relToParent;
 
         public RelGraph(RelNode rel) {
-            initialize(rel);
+            this(ImmutableList.of(rel));
         }
 
         public RelGraph(List<RelNode> rels) {
+            this.aliasNameToRels = Maps.newHashMap();
+            this.rels = Lists.newArrayList();
+            this.relToParent = new IdentityHashMap<>();
             for (RelNode rel : rels) {
                 initialize(rel);
             }
@@ -501,6 +657,14 @@ public class GraphTypeInference {
             } else {
                 return Lists.newArrayList();
             }
+        }
+
+        public @Nullable RelDataType getNeighborsType(RelNode rel) {
+            List<RelNode> neighbors = getNeighbors(rel);
+            if (!neighbors.isEmpty()) {
+                return restrictShared(neighbors, null, getType(neighbors.get(0)));
+            }
+            return null;
         }
 
         public @Nullable RelNode getParent(RelNode rel) {

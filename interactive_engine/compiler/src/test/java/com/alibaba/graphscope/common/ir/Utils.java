@@ -46,7 +46,7 @@ public class Utils {
                             ImmutableMap.of(
                                     FrontendConfig.CALCITE_DEFAULT_CHARSET.getKey(), "UTF-8")));
     public static final RexBuilder rexBuilder = new GraphRexBuilder(typeFactory);
-    public static final IrMeta schemaMeta = mockSchemaMeta();
+    public static final IrMeta schemaMeta = mockSchemaMeta("schema/modern.json");
     public static final RelBuilderFactory relBuilderFactory =
             (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
                     GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
@@ -55,6 +55,12 @@ public class Utils {
         GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
         return GraphBuilder.create(
                 null, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
+    }
+
+    public static final GraphBuilder mockGraphBuilder(String schemaJson) {
+        GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
+        return GraphBuilder.create(
+                null, cluster, new GraphOptSchema(cluster, mockSchemaMeta(schemaJson).getSchema()));
     }
 
     public static final RelOptPlanner mockPlanner(RelRule.Config... rules) {
@@ -68,12 +74,10 @@ public class Utils {
         return new HepPlanner(hepBuilder.build());
     }
 
-    private static IrMeta mockSchemaMeta() {
+    private static IrMeta mockSchemaMeta(String schemaJson) {
         try {
             URL schemaResource =
-                    Thread.currentThread()
-                            .getContextClassLoader()
-                            .getResource("schema/modern.json");
+                    Thread.currentThread().getContextClassLoader().getResource(schemaJson);
             URL proceduresResource =
                     Thread.currentThread()
                             .getContextClassLoader()

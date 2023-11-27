@@ -43,7 +43,8 @@ public class ProjectTest {
         Project project = (Project) builder.project(ImmutableList.of(variable)).build();
         Assert.assertEquals("[a]", project.getProjects().toString());
         Assert.assertEquals(
-                "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name, INTEGER age) a)",
+                "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)], properties=[BIGINT id,"
+                        + " CHAR(1) name, INTEGER age]) a)",
                 project.getRowType().toString());
     }
 
