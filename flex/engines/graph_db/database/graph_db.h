@@ -57,9 +57,13 @@ class GraphDB {
    * @param data_dir The directory of graph data.
    * @param thread_num The number of threads for graph db concurrency
    */
-  Result<bool> LoadFromDataDirectory(const Schema& schema,
-                                     const std::string& data_dir,
-                                     int32_t thread_num);
+  Result<bool> Open(const Schema& schema, const std::string& data_dir,
+                    int32_t thread_num);
+
+  /**
+   * @brief Close the current opened graph.
+   */
+  void Close();
 
   /** @brief Create a transaction to read vertices and edges.
    *

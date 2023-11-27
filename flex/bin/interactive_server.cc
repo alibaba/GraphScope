@@ -211,7 +211,8 @@ void initWorkspace(const std::string workspace, int32_t thread_num) {
                << data_dir_res.status().error_message();
   }
   auto data_dir = data_dir_res.value();
-  if (!db.LoadFromDataDirectory(schema, data_dir, thread_num).ok()) {
+  db.Close();
+  if (!db.Open(schema, data_dir, thread_num).ok()) {
     LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
   }
   LOG(INFO) << "Successfully init graph db for default graph: "
@@ -315,7 +316,8 @@ int main(int argc, char** argv) {
     auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
     // Ths schema is loaded just to get the plugin dir and plugin list
     gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
-    auto load_res = db.LoadFromDataDirectory(schema, data_path, shard_num);
+    db.Close();
+    auto load_res = db.Open(schema, data_path, shard_num);
     if (!load_res.ok()) {
       LOG(FATAL) << "Failed to load graph from data directory: "
                  << load_res.status().error_message();

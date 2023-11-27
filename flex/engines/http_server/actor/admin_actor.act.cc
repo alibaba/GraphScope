@@ -320,8 +320,8 @@ seastar::future<query_result> admin_actor::start_service(
       auto& schema_value = schema_result.value();
       // use the previous thread num
       auto thread_num = db.SessionNum();
-      if (!db.LoadFromDataDirectory(schema_value, data_dir.value(), thread_num)
-               .ok()) {
+      db.Close();
+      if (!db.Open(schema_value, data_dir.value(), thread_num).ok()) {
         LOG(ERROR) << "Fail to load graph from data directory: "
                    << data_dir.value();
         return seastar::make_exception_future<query_result>(std::runtime_error(

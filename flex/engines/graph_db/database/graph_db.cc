@@ -49,9 +49,8 @@ GraphDB& GraphDB::get() {
   return db;
 }
 
-Result<bool> GraphDB::LoadFromDataDirectory(const Schema& schema,
-                                            const std::string& data_dir,
-                                            int thread_num) {
+Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
+                           int thread_num) {
   std::filesystem::path data_dir_path(data_dir);
   std::filesystem::path serial_path = data_dir_path / "init_snapshot.bin";
   if (!std::filesystem::exists(data_dir_path)) {
@@ -63,19 +62,6 @@ Result<bool> GraphDB::LoadFromDataDirectory(const Schema& schema,
                         false);
   }
   LOG(INFO) << "Initializing graph db from data files of work directory";
-
-  //-----------Clear graph_db----------------
-  graph_.Clear();
-  version_manager_.clear();
-  if (contexts_ != nullptr) {
-    for (int i = 0; i < thread_num_; ++i) {
-      contexts_[i].~SessionLocalContext();
-    }
-    free(contexts_);
-  }
-  std::fill(app_paths_.begin(), app_paths_.end(), "");
-  std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
-  //-----------Clear graph_db----------------
 
   // Now assign the new thread_num
   thread_num_ = thread_num;
@@ -105,6 +91,20 @@ Result<bool> GraphDB::LoadFromDataDirectory(const Schema& schema,
 
   openWalAndCreateContexts(data_dir_path);
   return Result<bool>(true);
+}
+
+void GraphDB::Close() {
+  //-----------Clear graph_db----------------
+  graph_.Clear();
+  version_manager_.clear();
+  if (contexts_ != nullptr) {
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].~SessionLocalContext();
+    }
+    free(contexts_);
+  }
+  std::fill(app_paths_.begin(), app_paths_.end(), "");
+  std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
 void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
