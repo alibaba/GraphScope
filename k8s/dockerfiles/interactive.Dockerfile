@@ -23,6 +23,8 @@ RUN cd /home/graphscope/GraphScope/ && \
 ############### RUNTIME: frontend #######################
 FROM ubuntu:22.04 AS frontend
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
