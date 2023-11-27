@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y vim wget \
       git g++ libgoogle-glog-dev cmake libopenmpi-dev default-jdk \
       libboost-all-dev
 RUN apt-get install -y maven openssl \
-      gcc make python3 libyaml-cpp-dev nlohmann-json3-dev \
+      gcc make python3 libyaml-cpp-dev \
       libc-ares-dev doxygen python3-pip net-tools curl
 
 # install libgrape-lite
@@ -36,7 +36,7 @@ RUN cd /tmp && git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --sing
 RUN apt-get install -y protobuf-compiler libprotobuf-dev
 
 #install arrow
-RUN cd /tmp && apt-get update && apt-get install -y -V ca-certificates lsb-release wget && \
+RUN cd /tmp && apt-get install -y -V ca-certificates lsb-release wget && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     apt-get install -y ./apache-arrow-apt-source-latest.deb && \
     apt-get update && apt-get install -y libarrow-dev=6.0.1-1
