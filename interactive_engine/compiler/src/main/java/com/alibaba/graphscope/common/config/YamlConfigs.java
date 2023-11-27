@@ -51,6 +51,11 @@ public class YamlConfigs extends Configs {
                 .put(
                         "graph.schema",
                         (Configs configs) -> {
+                            // if System.properties contains graph.schema, use it
+                            String schema = System.getProperty("graph.schema");
+                            if (schema != null) {
+                                return schema;
+                            }
                             String workspace = configs.get("directories.workspace");
                             String subdir = configs.get("directories.subdirs.data");
                             String graphName = configs.get("default_graph");
@@ -121,7 +126,7 @@ public class YamlConfigs extends Configs {
                             if (type == null || !type.equals("pegasus")) {
                                 return null;
                             } else {
-                                return configs.get("compute_engine.worker_num");
+                                return configs.get("compute_engine.thread_num_per_worker");
                             }
                         })
                 .put(
@@ -151,7 +156,7 @@ public class YamlConfigs extends Configs {
                             if (type == null || !type.equals("pegasus")) {
                                 return null;
                             } else {
-                                String hosts = configs.get("compute_engine.hosts");
+                                String hosts = configs.get("compute_engine.workers");
                                 if (hosts != null) {
                                     return hosts.replace("[", "").replace("]", "");
                                 }
@@ -165,11 +170,13 @@ public class YamlConfigs extends Configs {
                             if (type == null || !type.equals("hiactor")) {
                                 return null;
                             } else {
-                                String hosts = configs.get("compute_engine.hosts");
-                                if (hosts != null) {
+                                String port = configs.get("http_service.query_port");
+                                String address = configs.get("http_service.default_listen_address");
+                                if (port != null && address != null) {
+                                    String hosts = address + ":" + port;
                                     return hosts.replace("[", "").replace("]", "");
                                 }
-                                return hosts;
+                                return null;
                             }
                         })
                 .put(

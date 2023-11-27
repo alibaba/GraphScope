@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_HTTP_SERVER_GRAPH_DB_SERVICE_H_
-#define ENGINES_HTTP_SERVER_GRAPH_DB_SERVICE_H_
+#ifndef ENGINES_HTTP_SERVER_SERVICE_GRAPH_DB_SERVICE_H_
+#define ENGINES_HTTP_SERVER_SERVICE_GRAPH_DB_SERVICE_H_
 
 #include "flex/engines/http_server/actor_system.h"
-#include "flex/engines/http_server/graph_db_http_handler.h"
+#include "flex/engines/http_server/handler/graph_db_http_handler.h"
 
 namespace server {
 
@@ -44,4 +44,4 @@ class GraphDBService {
 
 }  // namespace server
 
-#endif  // ENGINES_HTTP_SERVER_GRAPH_DB_SERVICE_H_
+#endif  // ENGINES_HTTP_SERVER_SERVICE_GRAPH_DB_SERVICE_H_

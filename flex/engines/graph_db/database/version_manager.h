@@ -38,6 +38,8 @@ class VersionManager {
 
   void init_ts(uint32_t ts);
 
+  void clear();
+
   uint32_t acquire_read_timestamp();
 
   void release_read_timestamp();

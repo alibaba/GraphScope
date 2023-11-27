@@ -14,13 +14,13 @@
  */
 
 #include "flex/engines/http_server/executor_group.actg.h"
-#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/options.h"
+#include "flex/engines/http_server/service/graph_db_service.h"
 
 #include <seastar/core/alien.hh>
 #include <seastar/core/print.hh>
 #include <seastar/http/handlers.hh>
-#include "flex/engines/http_server/generated/executor_ref.act.autogen.h"
+#include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 #include "flex/engines/http_server/types.h"
 
 namespace server {

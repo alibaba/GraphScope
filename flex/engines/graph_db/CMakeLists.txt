@@ -3,7 +3,8 @@ file(GLOB_RECURSE GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/app/*.cc"
 
 add_library(flex_graph_db SHARED ${GRAPH_DB_SRC_FILES})
 
-target_link_libraries(flex_graph_db flex_rt_mutable_graph flex_utils ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+target_include_directories(flex_graph_db PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+target_link_libraries(flex_graph_db flex_rt_mutable_graph flex_utils hqps_plan_proto ${GLOG_LIBRARIES} ${LIBGRAPELITE_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 install(TARGETS flex_graph_db
         RUNTIME DESTINATION bin

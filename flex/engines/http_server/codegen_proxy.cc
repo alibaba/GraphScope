@@ -111,7 +111,8 @@ seastar::future<int> CodegenProxy::call_codegen_cmd(
   }
 
   std::string expected_res_lib_path = work_dir + "/lib" + query_name + ".so";
-  return call_codegen_cmd_impl(plan_path, query_name, work_dir)
+  return CallCodegenCmd(plan_path, query_name, work_dir, work_dir,
+                        compiler_graph_schema_, ir_compiler_prop_, codegen_bin_)
       .then([this, next_job_id, expected_res_lib_path](int codegen_res) {
         if (codegen_res != 0 ||
             !std::filesystem::exists(expected_res_lib_path)) {
@@ -151,16 +152,19 @@ CodegenProxy::get_res_lib_path_from_cache(int32_t next_job_id) {
   }
 }
 
-seastar::future<int> CodegenProxy::call_codegen_cmd_impl(
+seastar::future<int> CodegenProxy::CallCodegenCmd(
     const std::string& plan_path, const std::string& query_name,
-    const std::string& work_dir) {
+    const std::string& work_dir, const std::string& output_dir,
+    const std::string& graph_schema_path, const std::string& engine_config,
+    const std::string& codegen_bin) {
   // TODO: different suffix for different platform
-  std::string cmd = codegen_bin_ + " -e=hqps " + " -i=" + plan_path +
-                    " -w=" + work_dir + " --ir_conf=" + ir_compiler_prop_ +
-                    " --graph_schema_path=" + compiler_graph_schema_;
+  std::string cmd = codegen_bin + " -e=hqps " + " -i=" + plan_path +
+                    " -o=" + output_dir + " --procedure_name=" + query_name +
+                    " -w=" + work_dir + " --ir_conf=" + engine_config +
+                    " --graph_schema_path=" + graph_schema_path;
   LOG(INFO) << "Start call codegen cmd: [" << cmd << "]";
 
-  return hiactor::thread_resource_pool::submit_work([this, cmd] {
+  return hiactor::thread_resource_pool::submit_work([cmd] {
            auto res = std::system(cmd.c_str());
            LOG(INFO) << "Codegen cmd: [" << cmd << "] return: " << res;
            return res;

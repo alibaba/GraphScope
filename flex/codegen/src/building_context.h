@@ -41,7 +41,7 @@ static constexpr const char* PATH_OPT_NAME = "path_opt";
 static constexpr const char* MAPPER_NAME = "mapper";
 static constexpr const char* APP_BASE_HEADER =
     "flex/engines/apps/cypher_app_base.h";
-static constexpr const char* APP_BASE_CLASS_NAME = "HqpsAppBase";
+static constexpr const char* APP_BASE_CLASS_NAME = "AppBase";
 static constexpr const char* QUERY_FUNC_RETURN = "results::CollectiveResults";
 
 enum class StorageBackend {

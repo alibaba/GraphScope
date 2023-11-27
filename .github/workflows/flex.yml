@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.6
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.8
     steps:
     - uses: actions/checkout@v3
 
@@ -44,6 +44,8 @@ jobs:
       env:
         HOME: /home/graphscope/
       run: |
+        cd ${GITHUB_WORKSPACE}/
+        git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
@@ -74,10 +76,10 @@ jobs:
         GLOG_v=10 ./bin/graph_loader  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
 
     - name: Test Graph Loading on type_test graph
-    env:
+      env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest/
         FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/type_test/
-    run: |
+      run: |
         # remove modern graph indices
         rm -rf /tmp/csr-data-dir/
 

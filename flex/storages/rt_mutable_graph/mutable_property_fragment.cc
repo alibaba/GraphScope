@@ -35,6 +35,26 @@ MutablePropertyFragment::~MutablePropertyFragment() {
   }
 }
 
+void MutablePropertyFragment::Clear() {
+  for (auto ptr : ie_) {
+    if (ptr != NULL) {
+      delete ptr;
+    }
+  }
+  for (auto ptr : oe_) {
+    if (ptr != NULL) {
+      delete ptr;
+    }
+  }
+  lf_indexers_.clear();
+  vertex_data_.clear();
+  ie_.clear();
+  oe_.clear();
+  vertex_label_num_ = 0;
+  edge_label_num_ = 0;
+  schema_.Clear();
+}
+
 void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
                                          label_t dst_label, vid_t dst_lid,
                                          label_t edge_label, timestamp_t ts,
@@ -47,6 +67,8 @@ void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
 }
 
 const Schema& MutablePropertyFragment::schema() const { return schema_; }
+
+Schema& MutablePropertyFragment::mutable_schema() { return schema_; }
 
 void MutablePropertyFragment::Serialize(const std::string& prefix) {
   std::string data_dir = prefix + "/data";

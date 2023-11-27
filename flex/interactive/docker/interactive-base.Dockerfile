@@ -23,7 +23,7 @@ ENV TZ=Asia/Shanghai
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && apt-get install -y protobuf-compiler libprotobuf-dev maven git vim curl \
-    wget python3 make libc-ares-dev doxygen python3-pip net-tools curl default-jdk \
+    wget python3 make libc-ares-dev doxygen python3-pip net-tools curl default-jdk nlohmann-json3-dev \
     libgoogle-glog-dev libopenmpi-dev libboost-all-dev libyaml-cpp-dev libprotobuf-dev libcrypto++-dev openssl
 
 # install libgrape-lite

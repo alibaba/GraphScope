@@ -23,8 +23,8 @@
 #include <vector>
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/executor_group.actg.h"
-#include "flex/engines/http_server/generated/executor_ref.act.autogen.h"
-#include "flex/engines/http_server/graph_db_service.h"
+#include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
+#include "flex/engines/http_server/service/graph_db_service.h"
 
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
+      gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_config_path);
   db.Init(schema, loading_config, data_path, shard_num);
 
   t0 += grape::GetCurrentTime();

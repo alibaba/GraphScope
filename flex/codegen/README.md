@@ -26,21 +26,26 @@ struct Expression1{
 
 //2. Query class
 
-class Query0 : public HqpsAppBase<MutableCSRInterface> {
+class Query0 : public AppBase {
  public:
-  results::CollectiveResults Query(const MutableCSRInterface& graph,
-                                   int64_t time_stamp) const override {
-
-
+  bool Query(Decoder& input, Encoder& output) override {
+    //...
   }
 };
 }  // namespace gs
 
 // 3. Create and delete handler for query
 extern "C" {
-void* CreateApp(gs::GraphStoreType store_type) {
+void* CreateApp(gs::GraphDBSession& db) {
+  Query0* app = new Query0(db);
+  return static_cast<void*>(app);
 }
-void DeleteApp(void* app, gs::GraphStoreType store_type) {
+
+void DeleteApp(void* app) {
+  if (app){
+    Query0* casted = static_cast<Query0*>(app);
+    delete casted;
+  }
 }
 }
 ```
