@@ -253,7 +253,6 @@ class LFIndexer {
     auto new_prime_index = hash_policy_.next_size_over(size);
     hash_policy_.commit(new_prime_index);
     size_t num_elements = num_elements_.load();
-
     indices_.resize(size);
     indices_size_ = size;
     for (size_t k = 0; k != size; ++k) {
@@ -339,7 +338,6 @@ class LFIndexer {
     copy_file(cur_path + ".meta", tmp_path + ".meta");
     load_meta(tmp_path + ".meta");
     keys_->copy_to_tmp(cur_path + ".keys", tmp_path + ".keys");
-    keys_->close();
     copy_file(cur_path + ".indices", tmp_path + ".indices");
   }
 
@@ -363,6 +361,7 @@ class LFIndexer {
     keys_->open(name + ".keys", "", work_dir);
     indices_.open(work_dir + "/" + name + ".indices", false);
     size_t num_elements = num_elements_.load();
+
     keys_->resize(num_elements + (num_elements >> 2));
 
     indices_size_ = indices_.size();
