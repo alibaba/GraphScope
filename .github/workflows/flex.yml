@@ -74,10 +74,10 @@ jobs:
         GLOG_v=10 ./bin/graph_loader  ${SCHEMA_FILE} ${BULK_LOAD_FILE} /tmp/csr-data-dir/
 
     - name: Test Graph Loading on type_test graph
-    env:
+      env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest/
         FLEX_DATA_DIR: ${{ github.workspace }}/gstest/flex/type_test/
-    run: |
+      run: |
         # remove modern graph indices
         rm -rf /tmp/csr-data-dir/
 
