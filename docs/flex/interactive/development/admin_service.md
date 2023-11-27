@@ -23,7 +23,7 @@ The table below provides an overview of the available APIs, categorized for ease
 | ProcedureManagement | UpdateProcedure | PUT    | /v1/graph/{graph_name}/procedure/{procedure_name} | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
 | ServiceManagement   | StartService    | POST   | /v1/service/start                     | Start the service on the graph specified in request body.          |
 | ServiceManagement   | ServiceStatus   | GET    | /v1/service/status                    | Get current service status.                                        |
-| NodeMetrics         | NodeStatus      | GET    | /v1/node/status                       | Get the metrics of current node.                                   |
+| ServicePerfMetric   | ServicePerfMetric      | GET    | /v1/node/status                       | Get the metrics of current node.                                   |
 
 
 ## Detailed API Documentation
@@ -1000,7 +1000,7 @@ Get the status of current service.
 - `500 Internal Error`: Server internal Error.
 
 
-### NodeStatus (NodeMetrics Category)
+### ServicePerfMetric (NodeMetrics Category)
 
 #### Description
 
