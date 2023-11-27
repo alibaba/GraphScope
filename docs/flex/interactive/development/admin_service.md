@@ -1,49 +1,54 @@
-# Interactive Admin Service
+# GraphScope Interactive Admin Service Documentation
 
+## Introduction
 
-If you are just a user trying to use Interactive, you can ignore the content of this section. However, if you are a developer and curious about managing the Interactive service at runtime, this article will guide you through the RESTful HTTP interfaces exposed by the Interactive Admin service.
+Welcome to the GraphScope Interactive Admin Service documentation. This guide is tailored for developers and administrators seeking to manage the Interactive service more efficiently. Here, we delve into the intricate workings of the RESTful HTTP interfaces provided by the Interactive Admin service, offering a comprehensive toolkit for real-time service management. This document is crucial for those looking to customize or enhance their GraphScope Interactive experience.
 
 ## API Overview
+
+The table below provides an overview of the available APIs, categorized for ease of understanding:
+
 
 | Category            | API name        | Method | URL                                   | Explanation                                                        |
 |---------------------|-----------------|--------|---------------------------------------|--------------------------------------------------------------------|
 | GraphManagement     | ListGraphs      | GET    | /v1/graph                             | Get all graphs in current interactive service, the schema for each graph is returned. |
-| GraphManagement     | GetGraphSchema  | GET    | v1/graph/{graph_name}/schema          | Get the schema for the specified graph.                            |
+| GraphManagement     | GetGraphSchema  | GET    | /v1/graph/{graph_name}/schema          | Get the schema for the specified graph.                            |
 | GraphManagement     | CreateGraph     | POST   | /v1/graph                             | Create an empty graph with the specified schema.                    |
-| GraphManagement     | DeleteGraph     | DELETE | v1/graph/{graph_name}                 | Delete the specified graph.                                        |
-| GraphManagement     | ImportGraph     | POST   | v1/graph/{graph_name}/dataloading     | Import data to graph.                                              |
+| GraphManagement     | DeleteGraph     | DELETE | /v1/graph/{graph_name}                 | Delete the specified graph.                                        |
+| GraphManagement     | ImportGraph     | POST   | /v1/graph/{graph_name}/dataloading     | Import data to graph.                                              |
 | ProcedureManagement | CreateProcedure | POST   | /v1/graph/{graph_name}/procedure      | Create a new stored procedure bound to a graph.                    |
 | ProcedureManagement | ShowProcedures  | GET    | /v1/graph/{graph_name}/procedure      | Get all procedures bound to the specified graph.                   |
-| ProcedureManagement | GetProcedure    | GET    | v1/graph/{graph_name}/procedure/{procedure_name} | Get the metadata of the procedure.                                 |
+| ProcedureManagement | GetProcedure    | GET    | /v1/graph/{graph_name}/procedure/{procedure_name} | Get the metadata of the procedure.                                 |
 | ProcedureManagement | DeleteProcedure | DELETE | /v1/graph/{graph_name}/procedure/{procedure_name} | Delete the specified procedure.                                   |
 | ProcedureManagement | UpdateProcedure | PUT    | /v1/graph/{graph_name}/procedure/{procedure_name} | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
 | ServiceManagement   | StartService    | POST   | /v1/service/start                     | Start the service on the graph specified in request body.          |
 | ServiceManagement   | ServiceStatus   | GET    | /v1/service/status                    | Get current service status.                                        |
 | NodeMetrics         | NodeStatus      | GET    | /v1/node/status                       | Get the metrics of current node.                                   |
 
-## Configuration
 
-You can configure the listening port and other properties for admin service, for details, please check [Configuration](../configuration)
+## Detailed API Documentation
 
-## GraphManagment
-### ListGraphs
-#### Request format
+For each API, the documentation will include a detailed description, request format, example curl command, expected response format and body, and status codes. Here's an example for one of the APIs:
 
-```http
-GET /v1/graph/ HTTP/1.1
-Content-Type: text/plain
+
+### ListGraphs API (GraphManagement Category)
+
+#### Description
+This API lists all graphs currently managed by the Interactive service, providing detailed schema information for each.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/graph`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph"
 ```
-#### Request body
-```json
-```
 
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-
-#### Response body
+#### Expected Response
+- **Format**: `application/json`
+- **Body**:
 ```json
 [
   {
@@ -158,179 +163,21 @@ Content-type: application/json
 ]
 ```
 
-### CreateGraph
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
 
-#### Request format
+### CreateGraph (GraphManagement Category)
 
-```http
-POST /v1/graph/ HTTP/1.1
-Content-Type: application/json
-```
+#### Description
+This API create a new graph according to the specified schema in request body.
 
-#### Request body
-```json
-{
-    "name": "modern",
-    "schema": {
-        "vertex_types": [
-            {
-                "type_id": 0,
-                "type_name": "person",
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "id",
-                        "property_type": {
-                            "primitive_type": "DT_SIGNED_INT64"
-                        }
-                    },
-                    {
-                        "property_id": 1,
-                        "property_name": "name",
-                        "property_type": {
-                            "primitive_type": "DT_STRING"
-                        }
-                    },
-                    {
-                        "property_id": 2,
-                        "property_name": "age",
-                        "property_type": {
-                            "primitive_type": "DT_SIGNED_INT32"
-                        }
-                    }
-                ],
-                "primary_keys": [
-                    "id"
-                ]
-            },
-            {
-                "type_id": 1,
-                "type_name": "software",
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "id",
-                        "property_type": {
-                            "primitive_type": "DT_SIGNED_INT64"
-                        }
-                    },
-                    {
-                        "property_id": 1,
-                        "property_name": "name",
-                        "property_type": {
-                            "primitive_type": "DT_STRING"
-                        }
-                    },
-                    {
-                        "property_id": 2,
-                        "property_name": "lang",
-                        "property_type": {
-                            "primitive_type": "DT_STRING"
-                        }
-                    }
-                ],
-                "primary_keys": [
-                    "id"
-                ]
-            }
-        ],
-        "edge_types": [
-            {
-                "type_id": 0,
-                "type_name": "knows",
-                "vertex_type_pair_relations": [
-                    {
-                        "source_vertex": "person",
-                        "destination_vertex": "person",
-                        "relation": "MANY_TO_MANY",
-                    }
-                ],
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "weight",
-                        "property_type": {
-                            "primitive_type": "DT_DOUBLE"
-                        }
-                    }
-                ]
-            },
-            {
-                "type_id": 1,
-                "type_name": "created",
-                "vertex_type_pair_relations": [
-                    {
-                        "source_vertex": "person",
-                        "destination_vertex": "software",
-                        "relation": "ONE_TO_MANY",
-                    }
-                ],
-                "properties": [
-                    {
-                        "property_id": 0,
-                        "property_name": "weight",
-                        "property_type": {
-                            "primitive_type": "DT_DOUBLE"
-                        }
-                    }
-                ]
-            }
-        ]
-    }
-}
-```
-#### Response format
 
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
-
-```json
-{
-  "code": 0,
-  "message": "message"
-}
-```
-
-### DeleteGraph
-#### Request format
-```http
-DELETE /v1/graph/{graph_name} HTTP/1.1
-Content-Type: text/plain
-```
-#### Request body
-Empty request body
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
-```json
-{
-  "code": 0,
-  "message": "message"
-}
-```
-
-### GetGraphSchema
-#### Request format
-```http
-GET /v1/graph/{graph_name} HTTP/1.1
-Content-Type: text/plain
-```
-#### Request body
-
-Empty request body.
-
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
+#### HTTP Request
+- **Method**: POST
+- **Endpoint**: `/v1/graph`
+- **Content-type**: `application/json`
+- **Body**: 
 ```json
 {
     "name": "modern",
@@ -443,13 +290,203 @@ Content-type: application/json
 }
 ```
 
-### ImportGraph
-#### Request format
-```http
-POST /v1/graph/{graph_name}/dataloading HTTP/1.1
-Content-Type: application/json
+#### Curl Command Example
+```bash
+curl -X POST  -H "Content-Type: application/json" -d @path/to/yourfile.json  "http://[host]/v1/graph"
 ```
-#### Request body
+
+#### Expected Response
+
+- **Format**: `application/json`
+- **Body**:
+```json
+{
+  "message": "message"
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph not found
+
+### DeleteGraph  (GraphManagement Category)
+
+#### Description
+Delete a graph by name, including schema, indices and stored procedures.
+
+#### HTTP Request
+- **Method**: DELETE
+- **Endpoint**: `/v1/graph/{graph_name}`
+- **Content-type**: `application/json`
+
+
+#### Curl Command Example
+```bash
+curl -X DELETE  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```json
+{
+  "message": "message"
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+
+### GetGraphSchema  (GraphManagement Category)
+
+#### Description
+Get the schema for the specified graph.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/graph/{graph_name}`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}"
+```
+
+
+#### Expected Response
+- **Format**: `application/json`
+- **Body**:
+```json
+{
+    "name": "modern",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_id": 0,
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_id": 0,
+                        "property_name": "id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_id": 1,
+                        "property_name": "name",
+                        "property_type": {
+                            "primitive_type": "DT_STRING"
+                        }
+                    },
+                    {
+                        "property_id": 2,
+                        "property_name": "age",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT32"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "id"
+                ]
+            },
+            {
+                "type_id": 1,
+                "type_name": "software",
+                "properties": [
+                    {
+                        "property_id": 0,
+                        "property_name": "id",
+                        "property_type": {
+                            "primitive_type": "DT_SIGNED_INT64"
+                        }
+                    },
+                    {
+                        "property_id": 1,
+                        "property_name": "name",
+                        "property_type": {
+                            "primitive_type": "DT_STRING"
+                        }
+                    },
+                    {
+                        "property_id": 2,
+                        "property_name": "lang",
+                        "property_type": {
+                            "primitive_type": "DT_STRING"
+                        }
+                    }
+                ],
+                "primary_keys": [
+                    "id"
+                ]
+            }
+        ],
+        "edge_types": [
+            {
+                "type_id": 0,
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_id": 0,
+                        "property_name": "weight",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ]
+            },
+            {
+                "type_id": 1,
+                "type_name": "created",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "software",
+                        "relation": "ONE_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_id": 0,
+                        "property_name": "weight",
+                        "property_type": {
+                            "primitive_type": "DT_DOUBLE"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph not found
+
+### ImportGraph  (GraphManagement Category)
+
+#### Description
+
+Import data to empty graph.
+
+#### HTTP Request
+
+- **Method**: POST
+- **Endpoint**: `/v1/graph/{graph_name}/dataloading`
+- **Content-type**: `application/json`
+- **Body**:
 ```json
 {
   "graph": "graph",
@@ -628,29 +665,38 @@ Content-Type: application/json
   ]
 }
 ```
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
 
+#### Curl Command Example
+```bash
+curl -X POST -H "Content-Type: application/json" -d @path/to/json "http://[host]/v1/graph/{graph_name}/dataloading"
+```
+
+#### Expected Response
+- **Format**: `application/json`
+- **Body**:
 ```json
 {
-  "code": 0,
   "message": "message"
 }
 ```
 
-## ProcedureManagement
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph not found.
 
-### CreateProcedure
-#### Request format
-```http
-POST /v1/graph/{graph_name}/procedure HTTP/1.1
-Content-Type: application/json
-```
-#### Request body
+
+### CreateProcedure (ProcedureManagement Category)
+
+#### Description 
+
+Create a new stored procedure.
+
+#### HTTP Request
+- **Method**: POST
+- **Endpoint**: `/v1/graph/{graph_name}/procedure`
+- **Content-type**: `application/json`
+- **Body**:
 ```json
 {
   "bound_graph": "bound_graph",
@@ -661,148 +707,286 @@ Content-Type: application/json
   "type": "cypher"
 }
 ```
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
+
+#### Curl Command Example
+```bash
+curl -X POST -H "Content-Type: application/json" -d @/path/to/json "http://[host]/v1/graph/{graph_name}/procedure"
 ```
-#### Response body
+
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
 ```json
 {
-  "code": 0,
   "message": "message"
 }
 ```
 
-### ListAllProcedure
-#### Request format
-```http
-GET /v1/graph/{graph_name}/procedure HTTP/1.1
-Content-Type: application/json
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not FOund`: Graph not found.
+
+### ListAllProcedure  (ProcedureManagement Category)
+
+#### Description
+
+List all procedures bound to a graph.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/graph/{graph_name}/procedure`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}/procedure"
 ```
-#### Request body
-Empty Request body.
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
 ```json
+[
+  {
+    "bound_graph": "bound_graph",
+    "description": "description",
+    "enable": true,
+    "name": "name",
+    "params": [
+      {
+        "name": "name",
+        "type": "type"
+      },
+      {
+        "name": "name",
+        "type": "type"
+      }
+    ],
+    "query": "query",
+    "returns": [
+      {
+        "name": "name",
+        "type": "type"
+      },
+      {
+        "name": "name",
+        "type": "type"
+      }
+    ],
+    "type": "cpp"
+  }
+]
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph not found
+
+
+### GetProcedure (ProcedureManagement Category)
+
+#### Description
+
+Get a single procedure's metadata.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/graph/{graph_name}/procedure/{procedure_name}`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}/procedure/{procedure_name}"
+```
+
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```json
+
 {
-  "code": 0,
-  "message": "message"
+  "bound_graph": "bound_graph",
+  "description": "description",
+  "enable": true,
+  "name": "name",
+  "params": [
+    {
+      "name": "name",
+      "type": "type"
+    },
+    {
+      "name": "name",
+      "type": "type"
+    }
+  ],
+  "query": "query",
+  "returns": [
+    {
+      "name": "name",
+      "type": "type"
+    },
+    {
+      "name": "name",
+      "type": "type"
+    }
+  ],
+  "type": "cpp"
 }
 ```
-### GetProcedure
-#### Request format
-```http
-GET /v1/graph/{graph_name}/procedure/{procedure_name} HTTP/1.1
-Content-Type: application/json
-```
-#### Request body
-Empty Request body.
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
-```json
-{
-  "code": 0,
-  "message": "message"
-}
-```
-### UpdateProcedure
-#### Request format
-```http
-PUT /v1/graph/{graph_name}/procedure/{procedure_name} HTTP/1.1
-Content-Type: application/json
-```
-#### Request body
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+
+
+### UpdateProcedure (ProcedureManagement Category)
+
+#### Description
+
+Update a procedure's metadata, enable/disable status, description. The procedure's name can not be modified.
+
+
+#### HTTP Request
+- **Method**: PUT
+- **Endpoint**: `/v1/graph/{graph_name}/procedure/{procedure_name}`
+- **Content-type**: `application/json`
+- **Body**:
 ```json
 {
   "description": "description",
   "enable": true,
 }
 ```
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
+
+#### Curl Command Example
+```bash
+curl -X PUT  -H "Content-Type: application/json" -d @/path/to/json "http://[host]//v1/graph/{graph_name}/procedure/{procedure_name}"
 ```
-#### Response body
+
+#### Expected Response
+- **Format**: `application/json`
+- **Body**:
 ```json
 {
-  "code": 0,
+  "bound_graph": "bound_graph",
+  "description": "description",
+  "enable": true,
+  "name": "name",
+  "params": [
+    {
+      "name": "name",
+      "type": "type"
+    },
+    {
+      "name": "name",
+      "type": "type"
+    }
+  ],
+  "query": "query",
+  "returns": [
+    {
+      "name": "name",
+      "type": "type"
+    },
+    {
+      "name": "name",
+      "type": "type"
+    }
+  ],
+  "type": "cpp"
+}
+```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph or procedure not found.
+
+### DeleteProcedure (ProcedureManagement Category)
+
+#### Description
+
+Delete a procedure bound to the graph.
+
+#### HTTP Request
+
+- **Method**: DELETE
+- **Endpoint**: `/v1/graph/{graph_name}/procedure/{procedure_name}`
+- **Content-type**: `application/json`
+
+
+#### Curl Command Example
+```bash
+curl -X DELETE -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_name}/procedure/{procedure_name}"
+```
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
+```json
+{
   "message": "message"
 }
 ```
-### DeleteProcedure
-#### Request format
-```http
-DELETE /v1/graph/{graph_name}/procedure/{procedure_name} HTTP/1.1
-Content-Type: application/json
-```
-#### Request body
-Empty Request body.
 
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
-```json
-{
-  "code": 0,
-  "message": "message"
-}
-```
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
+- `404 Not Found`: Graph or procedure not found.
 
-## ServiceManagement
-### StartService
-#### Request format
-```http
-POST /v1/service/start HTTP/1.1
-Content-Type: application/json
-```
-#### Request body
+### StartService (ServiceManagement Category)
+
+#### Description 
+
+Start the query service on a graph.
+
+#### HTTP Request
+- **Method**: POST
+- **Endpoint**: `/v1/service/start`
+- **Content-type**: `application/json`
+- **Body**:
 ```json
 {
 	"graph_name": "modern_graph"
 }
 ```
 
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
+#### Curl Command Example
+```bash
+curl -X POST -H "Content-Type: application/json" "http://[host]/v1/service/start"
 ```
-#### Response body
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
 ```json
 {
-  "code": 0,
   "message": "message"
 }
 ```
 
-### ServiceStatus
-#### Request format
-```http
-GET /v1/service/status HTTP/1.1
-Content-Type: application/json
-```
-#### Request body
-Empty request body.
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
 
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
-```
-#### Response body
+### ServiceStatus
+
+#### Description
+
+Get the status of current service.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/service/status`
+- **Content-type**: `application/json`
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
 ```json
 {
   "graph_name": "graph_name",
@@ -811,25 +995,37 @@ Content-type: application/json
 }
 ```
 
-## NodeMetrics
-### Nodestatus
-#### Request format
-```http
-GET /v1/node/status HTTP/1.1
-Content-Type: text/plain
-```
-#### Request body
-Empty request body.
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
 
-#### Response format
-```http
-HTTP/1.1 200 Accepted
-Content-type: application/json
+
+### NodeStatus (NodeMetrics Category)
+
+#### Description
+
+Get node status.
+
+#### HTTP Request
+- **Method**: GET
+- **Endpoint**: `/v1/node/status`
+- **Content-type**: `application/json`
+
+#### Curl Command Example
+```bash
+curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/node/status"
 ```
-#### Response body
+
+#### Expected Response
+- **Format**: application/json
+- **Body**:
 ```json
 {
   "cpu_usage": "0.2",
   "memory_usage": "0.3"
 }
 ```
+
+#### Status Codes
+- `200 OK`: Request successful.
+- `500 Internal Error`: Server internal Error.
