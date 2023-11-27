@@ -45,10 +45,6 @@ include_directories(SYSTEM ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps)
 set(CMAKE_THREAD_PREFER_PTHREAD ON)
 find_package(Threads REQUIRED)
 
-# find nlohmann_json------------------------------------------------------------
-# CMakeLists.txt
-find_package(nlohmann_json REQUIRED)
-
 # find glog---------------------------------------------------------------------
 include("cmake/FindGlog.cmake")
 if (NOT GLOG_FOUND)
