@@ -68,6 +68,8 @@ jobs:
         GIE_HOME: ${{ github.workspace }}/interactive_engine/
         HOME: /home/graphscope/
       run: |
+        cd ${GITHUB_WORKSPACE}/
+        git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
