@@ -57,14 +57,13 @@ struct StoredProcedureLibMeta {
 class CodegenProxy {
  public:
   static CodegenProxy& get();
+  static constexpr const char* DEFAULT_CODEGEN_DIR = "/tmp/codegen/";
   CodegenProxy();
 
   ~CodegenProxy();
 
   bool Initialized();
 
-  // the last two params are needed temporally, should be remove after all
-  // configuration are merged
   void Init(std::string working_dir, std::string codegen_bin,
             std::string ir_compiler_prop, std::string compiler_graph_schema);
 
@@ -80,12 +79,14 @@ class CodegenProxy {
   seastar::future<std::pair<int32_t, std::string>> DoGen(
       const physical::PhysicalPlan& plan);
 
+  static seastar::future<int> CallCodegenCmd(
+      const std::string& plan_path, const std::string& query_name,
+      const std::string& work_dir, const std::string& output_dir,
+      const std::string& graph_schema_path, const std::string& engine_config,
+      const std::string& codegen_bin);
+
  private:
   seastar::future<int> call_codegen_cmd(const physical::PhysicalPlan& plan);
-
-  seastar::future<int> call_codegen_cmd_impl(const std::string& plan_path,
-                                             const std::string& query_name,
-                                             const std::string& work_dir);
 
   seastar::future<std::pair<int32_t, std::string>> get_res_lib_path_from_cache(
       int32_t job_id);

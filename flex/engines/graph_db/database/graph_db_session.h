@@ -22,8 +22,10 @@
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/column.h"
+#include "flex/utils/result.h"
 
 namespace gs {
 
@@ -31,8 +33,11 @@ class GraphDB;
 class WalWriter;
 class ArenaAllocator;
 
+void put_argment(gs::Encoder& encoder, const query::Argument& argment);
+
 class GraphDBSession {
  public:
+  static constexpr int32_t MAX_RETRY = 4;
   GraphDBSession(GraphDB& db, MMapAllocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
@@ -67,7 +72,14 @@ class GraphDBSession {
   // Get vertex id column.
   std::shared_ptr<RefColumnBase> get_vertex_id_column(uint8_t label) const;
 
-  std::vector<char> Eval(const std::string& input);
+  Result<std::vector<char>> Eval(const std::string& input);
+
+  // Evaluate a temporary stored procedure. close the handle of the dynamic lib
+  // immediately.
+  Result<std::vector<char>> EvalAdhoc(const std::string& input_lib_path);
+
+  // Evaluate a stored procedure with input parameters given.
+  Result<std::vector<char>> EvalHqpsProcedure(const query::Query& query_pb);
 
   void GetAppInfo(Encoder& result);
 

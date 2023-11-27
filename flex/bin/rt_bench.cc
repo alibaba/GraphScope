@@ -23,8 +23,8 @@
 #include <vector>
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/executor_group.actg.h"
-#include "flex/engines/http_server/generated/executor_ref.act.autogen.h"
-#include "flex/engines/http_server/graph_db_service.h"
+#include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
+#include "flex/engines/http_server/service/graph_db_service.h"
 
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  db.Init(schema, data_path, shard_num);
+  db.Open(schema, data_path, shard_num);
 
   t0 += grape::GetCurrentTime();
   uint32_t warmup_num = vm["warmup-num"].as<uint32_t>();

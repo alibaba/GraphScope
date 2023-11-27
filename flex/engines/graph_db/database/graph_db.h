@@ -47,8 +47,21 @@ class GraphDB {
 
   static GraphDB& get();
 
-  void Init(const Schema& schema, const std::string& data_dir,
-            int thread_num = 1, bool warmup = false);
+  /**
+   * @brief Load the graph from data directory.
+   * @param schema The schema of graph. It should be the same as the schema,
+   * except that the procedure enable_lists changes.
+   * @param data_dir The directory of graph data.
+   * @param thread_num The number of threads for graph db concurrency
+   * @param warmup Whether to warmup the graph db.
+   */
+  Result<bool> Open(const Schema& schema, const std::string& data_dir,
+                    int thread_num = 1, bool warmup = false);
+
+  /**
+   * @brief Close the current opened graph.
+   */
+  void Close();
 
   void Checkpoint();
 
@@ -106,12 +119,16 @@ class GraphDB {
   int SessionNum() const;
 
  private:
-  void registerApp(const std::string& path, uint8_t index = 0);
+  bool registerApp(const std::string& path, uint8_t index = 0);
 
   void ingestWals(const std::vector<std::string>& wals,
                   const std::string& work_dir, int thread_num);
 
-  void initApps(const std::vector<std::string>& plugins);
+  void initApps(
+      const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
+          plugins);
+
+  void openWalAndCreateContexts(const std::string& data_dir_path);
 
   friend class GraphDBSession;
 

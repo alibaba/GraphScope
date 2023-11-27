@@ -4,7 +4,7 @@ if (Hiactor_FOUND)
 
   hiactor_codegen (server_actor_autogen server_actor_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
-        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../)
+        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/nlohmann-json/single_include/)
 
   file(GLOB_RECURSE SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
 
@@ -13,7 +13,7 @@ if (Hiactor_FOUND)
   target_compile_options (flex_server
         PUBLIC
         -Wno-attributes)
-  target_link_libraries(flex_server Hiactor::hiactor hqps_plan_proto)
+  target_link_libraries(flex_server Hiactor::hiactor hqps_plan_proto flex_graph_db)
   target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../hqps/)
 
 

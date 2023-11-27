@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
-#include "flex/engines/http_server/codegen_actor.act.h"
+#include "flex/engines/http_server/actor/codegen_actor.act.h"
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/stored_procedure.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 #include <seastar/core/print.hh>
 

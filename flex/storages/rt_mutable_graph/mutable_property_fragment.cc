@@ -54,6 +54,26 @@ void MutablePropertyFragment::loadSchema(const std::string& schema_path) {
   schema_.Deserialize(io_adaptor);
 }
 
+void MutablePropertyFragment::Clear() {
+  for (auto ptr : ie_) {
+    if (ptr != NULL) {
+      delete ptr;
+    }
+  }
+  for (auto ptr : oe_) {
+    if (ptr != NULL) {
+      delete ptr;
+    }
+  }
+  lf_indexers_.clear();
+  vertex_data_.clear();
+  ie_.clear();
+  oe_.clear();
+  vertex_label_num_ = 0;
+  edge_label_num_ = 0;
+  schema_.Clear();
+}
+
 void MutablePropertyFragment::DumpSchema(const std::string& schema_path) {
   auto io_adaptor = std::unique_ptr<grape::LocalIOAdaptor>(
       new grape::LocalIOAdaptor(schema_path));
@@ -310,6 +330,8 @@ void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
 }
 
 const Schema& MutablePropertyFragment::schema() const { return schema_; }
+
+Schema& MutablePropertyFragment::mutable_schema() { return schema_; }
 
 Table& MutablePropertyFragment::get_vertex_table(label_t vertex_label) {
   return vertex_data_[vertex_label];

@@ -34,6 +34,13 @@ void VersionManager::init_ts(uint32_t ts, int thread_num) {
   thread_num_ = thread_num;
 }
 
+void VersionManager::clear() {
+  write_ts_.store(1);
+  read_ts_.store(0);
+  pending_reqs_.store(0);
+  buf_.clear();
+}
+
 uint32_t VersionManager::acquire_read_timestamp() {
   int pr = pending_reqs_.fetch_add(1);
   if (likely(pr >= 0)) {

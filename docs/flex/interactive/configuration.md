@@ -44,6 +44,10 @@ compiler:
     - FilterIntoJoinRule
     - NotExistToAntiJoinRule
   query_timeout: 20000  # query timeout in milliseconds, default 20000
+http_service:
+  default_listen_address: localhost
+  admin_port: 7777
+  query_port: 10000
 ```
 
 
@@ -65,5 +69,8 @@ In this following table, we use the `.` notation to represent the hierarchy with
 | compiler.planner.rules.FilterMatchRule | N/A | An optimization rule that pushes filter (`Where`) conditions into the `Match` clause | 0.0.1 |
 | compiler.planner.rules.FilterIntoJoinRule | N/A | A native Calcite optimization rule that pushes filter conditions to the Join participants before performing the join | 0.0.1 |
 | compiler.planner.rules.NotMatchToAntiJoinRule | N/A | An optimization rule that transforms a "not exist" pattern into an anti-join operation  | 0.0.1 |
+| http_service.default_listen_address | localhost | The address for http service to bind | 0.0.2 |
+| http_service.admin_port | 7777 | The port for admin service to listen on | 0.0.2 |
+| http_service.query_port | 10000 | The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved | 0.0.2 |
 
 

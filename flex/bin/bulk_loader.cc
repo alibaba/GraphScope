@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
+      gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_config_path);
 
   std::filesystem::path data_dir_path(data_path);
   if (!std::filesystem::exists(data_dir_path)) {

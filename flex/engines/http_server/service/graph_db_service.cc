@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flex/engines/http_server/graph_db_service.h"
+#include "flex/engines/http_server/service/graph_db_service.h"
 #include "flex/engines/http_server/options.h"
 namespace server {
 
