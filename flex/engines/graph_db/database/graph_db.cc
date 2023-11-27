@@ -50,20 +50,6 @@ GraphDB& GraphDB::get() {
   return db;
 }
 
-void GraphDB::Close() {
-  //-----------Clear graph_db----------------
-  graph_.Clear();
-  version_manager_.clear();
-  if (contexts_ != nullptr) {
-    for (int i = 0; i < thread_num_; ++i) {
-      contexts_[i].~SessionLocalContext();
-    }
-    free(contexts_);
-  }
-  std::fill(app_paths_.begin(), app_paths_.end(), "");
-  std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
-}
-
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int thread_num, bool warmup) {
   if (!std::filesystem::exists(data_dir)) {
@@ -106,6 +92,20 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
     graph_.Warmup(thread_num_);
   }
   return Result<bool>(true);
+}
+
+void GraphDB::Close() {
+  //-----------Clear graph_db----------------
+  graph_.Clear();
+  version_manager_.clear();
+  if (contexts_ != nullptr) {
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].~SessionLocalContext();
+    }
+    free(contexts_);
+  }
+  std::fill(app_paths_.begin(), app_paths_.end(), "");
+  std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
 void GraphDB::Checkpoint() {
