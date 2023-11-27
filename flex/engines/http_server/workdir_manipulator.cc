@@ -172,7 +172,6 @@ gs::Result<seastar::sstring> WorkDirManipulator::ListGraphs() {
       try {
         auto graph_schema_str_res = YAML::LoadFile(graph_path);
         yaml_list.push_back(graph_schema_str_res);
-
       } catch (const std::exception& e) {
         LOG(ERROR) << "Fail to parse graph schema file: " << graph_path
                    << ", error: " << e.what();

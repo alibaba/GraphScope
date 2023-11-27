@@ -541,7 +541,9 @@ Result<LoadingConfig> LoadingConfig::ParseFromYamlNode(
   try {
     if (!yaml_node.IsNull()) {
       if (!config_parsing::parse_bulk_load_config_yaml(yaml_node, schema,
-                                                       load_config)) {}
+                                                       load_config)) {
+        LOG(FATAL) << "Failed to parse bulk load config: ";
+      }
     }
   } catch (const YAML::Exception& e) {
     return gs::Result<LoadingConfig>(
