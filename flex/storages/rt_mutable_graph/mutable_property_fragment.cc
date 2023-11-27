@@ -196,7 +196,11 @@ void MutablePropertyFragment::Open(const std::string& work_dir) {
   vertex_data_.resize(vertex_label_num_);
   std::string snapshot_dir = get_latest_snapshot(work_dir);
   std::string tmp_dir_path = tmp_dir(work_dir);
+  if (std::filesystem::exists(tmp_dir_path)) {
+    std::filesystem::remove_all(tmp_dir_path);
+  }
   std::filesystem::create_directory(tmp_dir_path);
+
   // copy_files_to_tmp(snapshot_dir, tmp_dir_path);
   std::vector<size_t> vertex_capacities(vertex_label_num_, 0);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
