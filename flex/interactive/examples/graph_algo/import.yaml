@@ -86,3 +86,9 @@ edge_mappings:
       destination_vertex:  CCFField
     inputs:
       - Paper_HasField_CCFField.csv
+  - type_triplet:
+      edge: Citation
+      source_vertex:  Paper
+      destination_vertex:  Paper
+    inputs:
+      - Paper_Citation_Paper.csv

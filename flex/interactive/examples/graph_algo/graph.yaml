@@ -12,6 +12,9 @@ schema:
         - property_name: CCFRank
           property_type:
             primitive_type: DT_STRING
+        - property_name: CCFField
+          property_type:
+            primitive_type: DT_STRING
         - property_name: year
           property_type:
             primitive_type: DT_SIGNED_INT32
@@ -109,4 +112,9 @@ schema:
       vertex_type_pair_relations:
         - source_vertex: Paper
           destination_vertex: CCFField
+          relation: MANY_TO_MANY
+    - type_name: Citation
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: Paper
           relation: MANY_TO_MANY

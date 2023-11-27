@@ -18,10 +18,14 @@ schema:
           property_type:
             primitive_type: DT_STRING
         - property_id: 3
+          property_name: CCFField
+          property_type:
+            primitive_type: DT_STRING
+        - property_id: 4
           property_name: year
           property_type:
             primitive_type: DT_SIGNED_INT32
-        - property_id: 4
+        - property_id: 5
           property_name: paper
           property_type:
             primitive_type: DT_STRING
@@ -139,4 +143,10 @@ schema:
       vertex_type_pair_relations:
         - source_vertex: Paper
           destination_vertex: CCFField
+          relation: MANY_TO_MANY
+    - type_id: 7
+      type_name: Citation
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: Paper
           relation: MANY_TO_MANY
