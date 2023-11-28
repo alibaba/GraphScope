@@ -133,7 +133,9 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     }
 
     fn release(&mut self) {
-        pegasus_memory::alloc::remove_task(self.conf.job_id as usize);
+        if self.peer_guard.load(Ordering::SeqCst) == 0 {
+            pegasus_memory::alloc::remove_task(self.conf.job_id as usize);
+        }
         if !crate::remove_cancel_hook(self.conf.job_id).is_ok() {
             error!("JOB_CANCEL_MAP is poisoned!");
         }
