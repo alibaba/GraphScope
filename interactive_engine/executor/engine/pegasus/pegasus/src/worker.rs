@@ -266,30 +266,31 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
-        // all workers are finished, return state Finished
-        if self.peer_guard.load(Ordering::SeqCst) == 0 {
-            return TaskState::Finished;
-        }
-        // current worker is finished, return NotReady
-        if self.is_finished {
-            return TaskState::NotReady;
-        }
-        match self.task.check_ready() {
-            Ok(state) => {
-                if TaskState::Finished == state {
-                    info_worker!(
-                        "job({}) '{}' finished, used {:?};",
-                        self.id.job_id,
-                        self.conf.job_name,
-                        self.start.elapsed()
-                    );
+        if !self.is_finished {
+            match self.task.check_ready() {
+                Ok(state) => {
+                    {
+                        info_worker!(
+                            "job({}) '{}' finished, used {:?};",
+                            self.id.job_id,
+                            self.conf.job_name,
+                            self.start.elapsed()
+                        );
+                    }
+                    state
                 }
-                state
+                Err(e) => {
+                    error_worker!("job({}) execute error: {}", self.id.job_id, e);
+                    self.sink.on_error(e);
+                    TaskState::Finished
+                }
             }
-            Err(e) => {
-                error_worker!("job({}) execute error: {}", self.id.job_id, e);
-                self.sink.on_error(e);
-                TaskState::Finished
+        } else {
+            // all workers are finished, return state Finished
+            if self.peer_guard.load(Ordering::SeqCst) == 0 {
+                return TaskState::Finished;
+            } else {
+                return TaskState::NotReady;
             }
         }
     }

@@ -69,7 +69,7 @@ impl EventCollector {
 
 impl EventCollector {
     pub fn collect(&mut self) -> Result<bool, IOError> {
-        while let Some(event) = self.rx.next()? {
+        while let Ok(Some(event)) = self.rx.next() {
             self.received.push_back(event);
         }
         Ok(!self.received.is_empty())
