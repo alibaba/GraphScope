@@ -85,7 +85,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 resultCollectors.addAll(resultParser.parseFrom(response));
             }
         } catch (Exception e) {
-            statusCallback.getQueryLogger().error("process response from grpc fail, msg {}", e);
+            statusCallback.getQueryLogger().error("process response from grpc fail, msg: {}", e);
             // cannot write to this context any more
             isContextWritable = false;
             statusCallback.onEnd(false, null);
@@ -108,7 +108,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     @Override
     public synchronized void error(Status status) {
-        statusCallback.getQueryLogger().error("error return from grpc, msg {}", status);
+        statusCallback.getQueryLogger().error("error return from grpc, msg: {}", status);
         if (isContextWritable) {
             isContextWritable = false;
             statusCallback.onEnd(false, status.getDescription());
@@ -174,7 +174,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                                             + context
                                             + " status code=>"
                                             + statusCode
-                                            + " fail, msg {}",
+                                            + " fail, msg: {}",
                                     e);
                     throw new RuntimeException(e);
                 }
