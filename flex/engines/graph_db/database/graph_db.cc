@@ -53,12 +53,12 @@ GraphDB& GraphDB::get() {
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int thread_num, bool warmup) {
   if (!std::filesystem::exists(data_dir)) {
-    LOG(FATAL) << "Data directory does not exist";
+    return Result<bool>(StatusCode::NotExists, "Data directory does not exist");
   }
 
   std::string schema_file = schema_path(data_dir);
   if (!std::filesystem::exists(schema_file)) {
-    LOG(FATAL) << "Schema file does not exist";
+    return Result<bool>(StatusCode::NotExists, "Schema file does not exist");
   }
   work_dir_ = data_dir;
   thread_num_ = thread_num;
