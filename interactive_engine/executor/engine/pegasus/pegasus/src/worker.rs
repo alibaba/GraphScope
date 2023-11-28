@@ -46,6 +46,7 @@ pub struct Worker<D: Data, T: Debug + Send + 'static> {
     sink: ResultSink<T>,
     resources: ResourceMap,
     keyed_resources: KeyedResources,
+    is_finished: bool,
     _ph: std::marker::PhantomData<D>,
 }
 
@@ -65,6 +66,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             sink,
             resources: ResourceMap::default(),
             keyed_resources: KeyedResources::default(),
+            is_finished: false,
             _ph: std::marker::PhantomData,
         }
     }
@@ -131,9 +133,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     }
 
     fn release(&mut self) {
-        if self.peer_guard.fetch_sub(1, Ordering::SeqCst) == 1 {
-            pegasus_memory::alloc::remove_task(self.conf.job_id as usize);
-        }
+        pegasus_memory::alloc::remove_task(self.conf.job_id as usize);
         if !crate::remove_cancel_hook(self.conf.job_id).is_ok() {
             error!("JOB_CANCEL_MAP is poisoned!");
         }
@@ -237,9 +237,18 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                         self.id.job_id,
                         self.conf.job_name,
                         self.start.elapsed().as_millis()
-                    )
+                    );
+                    self.is_finished = true;
+                    // if this is last worker, return Finished
+                    if self.peer_guard.fetch_sub(1, Ordering::SeqCst) == 1 {
+                        state
+                    } else {
+                        // if other workers are not finished, return NotReady until all workers finished
+                        TaskState::NotReady
+                    }
+                } else {
+                    state
                 }
-                state
             }
             Err(e) => {
                 error_worker!("job({}) execute error: {}", self.id.job_id, e);
@@ -255,7 +264,14 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
-
+        // all workers are finished, return state Finished
+        if self.peer_guard.load(Ordering::SeqCst) == 0 {
+            return TaskState::Finished;
+        }
+        // current worker is finished, return NotReady
+        if self.is_finished {
+            return TaskState::NotReady;
+        }
         match self.task.check_ready() {
             Ok(state) => {
                 if TaskState::Finished == state {
