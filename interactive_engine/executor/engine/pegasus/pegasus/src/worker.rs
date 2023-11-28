@@ -270,12 +270,14 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
             match self.task.check_ready() {
                 Ok(state) => {
                     {
-                        info_worker!(
-                            "job({}) '{}' finished, used {:?};",
-                            self.id.job_id,
-                            self.conf.job_name,
-                            self.start.elapsed()
-                        );
+                        if TaskState::Finished == state {
+                            info_worker!(
+                                "job({}) '{}' finished, used {:?};",
+                                self.id.job_id,
+                                self.conf.job_name,
+                                self.start.elapsed()
+                            );
+                        }
                     }
                     state
                 }
