@@ -84,9 +84,15 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   auto& mutable_schema = graph_.mutable_schema();
   mutable_schema.SetPluginDir(schema.GetPluginDir());
   std::vector<std::string> plugin_paths;
-  for (auto plugin_pair : schema.GetPlugins()) {
+  const auto& plugins = schema.GetPlugins();
+  for (auto plugin_pair : plugins) {
     plugin_paths.emplace_back(plugin_pair.first);
   }
+
+  std::sort(plugin_paths.begin(), plugin_paths.end(),
+            [&](const std::string& a, const std::string& b) {
+              return plugins.at(a).second < plugins.at(b).second;
+            });
   mutable_schema.EmplacePlugins(plugin_paths);
 
   openWalAndCreateContexts(data_dir);
