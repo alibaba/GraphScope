@@ -187,7 +187,7 @@ HOST_DB_ENV_FILE="${HOST_DB_HOME}/.env"
 
 DOCKER_DB_GRAPHSCOPE_HOME="/opt/flex"
 DOCKER_DB_GIE_HOME="${DOCKER_DB_GRAPHSCOPE_HOME}"
-DOCKER_DB_SERVER_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/sync_server"
+DOCKER_DB_SERVER_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/interactive_server"
 DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/graph_loader"
 DOCKER_DB_COMPILER_BIN="com.alibaba.graphscope.GraphServer"
 DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/load_plan_and_gen.sh"
@@ -213,6 +213,7 @@ DATABASE_COMPILER_QUERY_TIMEOUT="20000"
 
 ## hiactor related default configuration
 DATABASE_COMPUTE_ENGINE_PORT="10000"
+DATABASE_ADMIN_PORT="7777"
 DATABASE_COMPUTE_ENGINE_SHARD_NUM=1
 
 ## directories
@@ -354,6 +355,7 @@ function update_init_config_from_yaml(){
   # append compiler port and engine port to DATABASE_PORTS
   DATABASE_PORTS="${DATABASE_COMPILER_BOLT_PORT}:${DATABASE_COMPILER_BOLT_PORT}"
   DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_COMPUTE_ENGINE_PORT}:${DATABASE_COMPUTE_ENGINE_PORT}"
+  DATABASE_PORTS="${DATABASE_PORTS},${DATABASE_ADMIN_PORT}:${DATABASE_ADMIN_PORT}"
 }
 
 function update_engine_config_from_yaml(){
@@ -676,8 +678,9 @@ function do_gen_conf(){
   #compute_engine
   echo "compute_engine:" >> ${output_config_file}
   echo "  type: hiactor" >> ${output_config_file}
-  echo "  hosts:" >> ${output_config_file}
+  echo "  workers:" >> ${output_config_file}
   echo "    - localhost:${DATABASE_COMPUTE_ENGINE_PORT}" >> ${output_config_file}
+  echo "  admin_endpoint:${DATABASE_ADMIN_PORT} " >> ${output_config_file}
   echo "  shard_num: ${DATABASE_COMPUTE_ENGINE_SHARD_NUM}" >> ${output_config_file}
 
 
@@ -1169,7 +1172,7 @@ function do_destroy() {
   if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
     exit 1
   fi
-  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "sync_server" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "interactive_server" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
     exit 1
   fi
 

@@ -68,7 +68,7 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
   }
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
+      gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_config_path);
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
   auto loader =

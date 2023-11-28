@@ -21,8 +21,11 @@ RUN cd /home/graphscope/graphscope \
 
 FROM ubuntu:22.04
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk dnsutils tzdata && \
+    apt-get install -y sudo default-jdk dnsutils tzdata \
+        libjemalloc-dev libunwind-dev binutils && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

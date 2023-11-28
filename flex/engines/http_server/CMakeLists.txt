@@ -13,7 +13,7 @@ if (Hiactor_FOUND)
   target_compile_options (flex_server
         PUBLIC
         -Wno-attributes)
-  target_link_libraries(flex_server Hiactor::hiactor hqps_plan_proto)
+  target_link_libraries(flex_server Hiactor::hiactor hqps_plan_proto flex_graph_db)
   target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../hqps/)
 
 

@@ -7,6 +7,8 @@ FROM $REGISTRY/graphscope/vineyard-dev:$BUILDER_VERSION AS builder
 
 FROM ubuntu:22.04 AS runtime
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib64:/opt/graphscope/lib:/opt/graphscope/lib64
 
 RUN apt-get update -y && \

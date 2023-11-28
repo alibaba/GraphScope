@@ -11,10 +11,10 @@ default_graph: modern  # configure the graph to be loaded while starting the ser
 # may include other configuration items of other engines
 compute_engine:
   type: pegasus  # [hiactor|pegasus] hiactor is for high-qps scenario, pegasus is for bi scenario
-  hosts:
+  workers:
     - localhost:8001
     - localhost:8005
-  worker_num: 3
+  thread_num_per_worker: 3
   batch_size: 2048
   output_capacity: 18
 

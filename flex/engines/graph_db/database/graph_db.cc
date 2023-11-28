@@ -18,6 +18,7 @@
 
 #include "flex/engines/graph_db/app/server_app.h"
 #include "flex/engines/graph_db/database/wal.h"
+#include "flex/utils/yaml_utils.h"
 
 namespace gs {
 
@@ -46,6 +47,64 @@ GraphDB::~GraphDB() {
 GraphDB& GraphDB::get() {
   static GraphDB db;
   return db;
+}
+
+Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
+                           int thread_num) {
+  std::filesystem::path data_dir_path(data_dir);
+  std::filesystem::path serial_path = data_dir_path / "init_snapshot.bin";
+  if (!std::filesystem::exists(data_dir_path)) {
+    return Result<bool>(StatusCode::NotExists, "Data directory does not exist",
+                        false);
+  }
+  if (!std::filesystem::exists(serial_path)) {
+    return Result<bool>(StatusCode::NotExists, "Snapshot file does not exist",
+                        false);
+  }
+  LOG(INFO) << "Initializing graph db from data files of work directory";
+
+  // Now assign the new thread_num
+  thread_num_ = thread_num;
+  try {
+    graph_.Deserialize(data_dir_path.string());
+  } catch (std::exception& e) {
+    LOG(ERROR) << "Exception: " << e.what();
+    return Result<bool>(StatusCode::InternalError,
+                        "Exception: " + std::string(e.what()), false);
+  }
+  VLOG(10) << "Finish deserializing graph db";
+  if (!graph_.schema().Equals(schema)) {
+    return Result<bool>(StatusCode::InternalError,
+                        "Schema of work directory is not compatible with the "
+                        "graph schema",
+                        false);
+  }
+  // Set the plugin info from schema to graph_.schema(), since the plugin info
+  // is not serialized and deserialized.
+  auto& mutable_schema = graph_.mutable_schema();
+  mutable_schema.SetPluginDir(schema.GetPluginDir());
+  std::vector<std::string> plugin_paths;
+  for (auto plugin_pair : schema.GetPlugins()) {
+    plugin_paths.emplace_back(plugin_pair.first);
+  }
+  mutable_schema.EmplacePlugins(plugin_paths);
+
+  openWalAndCreateContexts(data_dir_path);
+  return Result<bool>(true);
+}
+
+void GraphDB::Close() {
+  //-----------Clear graph_db----------------
+  graph_.Clear();
+  version_manager_.clear();
+  if (contexts_ != nullptr) {
+    for (int i = 0; i < thread_num_; ++i) {
+      contexts_[i].~SessionLocalContext();
+    }
+    free(contexts_);
+  }
+  std::fill(app_paths_.begin(), app_paths_.end(), "");
+  std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
 
 void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
@@ -84,33 +143,12 @@ void GraphDB::Init(const Schema& schema, const LoadingConfig& load_config,
     }
     graph_.Deserialize(data_dir_path.string());
     if (!graph_.schema().Equals(schema)) {
-      LOG(FATAL)
-          << "Schema of work directory is not compatible with the given schema";
+      LOG(FATAL) << "Schema of work directory is not compatible with the "
+                    "given schema";
     }
   }
-
-  std::filesystem::path wal_dir = data_dir_path / "wal";
-  if (!std::filesystem::exists(wal_dir)) {
-    std::filesystem::create_directory(wal_dir);
-  }
-  std::vector<std::string> wal_files;
-  for (const auto& entry : std::filesystem::directory_iterator(wal_dir)) {
-    wal_files.push_back(entry.path().string());
-  }
-
   thread_num_ = thread_num;
-  contexts_ = static_cast<SessionLocalContext*>(
-      aligned_alloc(4096, sizeof(SessionLocalContext) * thread_num));
-  for (int i = 0; i < thread_num_; ++i) {
-    new (&contexts_[i]) SessionLocalContext(*this, i);
-  }
-  ingestWals(wal_files, thread_num_);
-
-  for (int i = 0; i < thread_num_; ++i) {
-    contexts_[i].logger.open(wal_dir.string(), i);
-  }
-
-  initApps(schema.GetPluginsList());
+  openWalAndCreateContexts(data_dir);
 }
 
 ReadTransaction GraphDB::GetReadTransaction() {
@@ -162,27 +200,28 @@ AppWrapper GraphDB::CreateApp(uint8_t app_type, int thread_id) {
   }
 }
 
-void GraphDB::registerApp(const std::string& path, uint8_t index) {
+bool GraphDB::registerApp(const std::string& plugin_path, uint8_t index) {
   // this function will only be called when initializing the graph db
-  if (index == 0) {
-    for (size_t i = 1; i != 256; ++i) {
-      if (app_factories_[i] == nullptr) {
-        index = static_cast<uint8_t>(i);
-        break;
-      }
-    }
+  VLOG(10) << "Registering stored procedure at:" << std::to_string(index)
+           << ", path:" << plugin_path;
+  if (!app_factories_[index] && app_paths_[index].empty()) {
+    app_paths_[index] = plugin_path;
+    app_factories_[index] =
+        std::make_shared<SharedLibraryAppFactory>(plugin_path);
+    return true;
+  } else {
+    LOG(ERROR) << "Stored procedure has already been registered at:"
+               << std::to_string(index) << ", path:" << app_paths_[index];
+    return false;
   }
-  if (index == 0) {
-    LOG(ERROR) << "too many stored procedures...";
-  }
-  app_paths_[index] = path;
-  app_factories_[index] = std::make_shared<SharedLibraryAppFactory>(path);
 }
 
 void GraphDB::GetAppInfo(Encoder& output) {
   std::string ret;
   for (size_t i = 1; i != 256; ++i) {
-    output.put_string(app_paths_[i]);
+    if (!app_paths_.empty()) {
+      output.put_string(app_paths_[i]);
+    }
   }
 }
 
@@ -235,16 +274,52 @@ void GraphDB::ingestWals(const std::vector<std::string>& wals, int thread_num) {
   version_manager_.init_ts(parser.last_ts());
 }
 
-void GraphDB::initApps(const std::vector<std::string>& plugins) {
+void GraphDB::initApps(
+    const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
+        plugins) {
+  VLOG(1) << "Initializing stored procedures, size: " << plugins.size()
+          << " ...";
   for (size_t i = 0; i < 256; ++i) {
     app_factories_[i] = nullptr;
   }
   app_factories_[0] = std::make_shared<ServerAppFactory>();
-
-  uint8_t sp_index = 1;
-  for (auto path : plugins) {
-    registerApp(path, sp_index++);
+  size_t valid_plugins = 0;
+  for (auto& path_and_index : plugins) {
+    auto path = path_and_index.second.first;
+    auto index = path_and_index.second.second;
+    if (registerApp(path, index)) {
+      ++valid_plugins;
+    }
   }
+  LOG(INFO) << "Successfully registered stored procedures : " << valid_plugins
+            << ", from " << plugins.size();
+}
+
+void GraphDB::openWalAndCreateContexts(
+    const std::filesystem::path& data_dir_path) {
+  std::filesystem::path wal_dir = data_dir_path / "wal";
+  if (!std::filesystem::exists(wal_dir)) {
+    std::filesystem::create_directory(wal_dir);
+  }
+  std::vector<std::string> wal_files;
+  for (const auto& entry : std::filesystem::directory_iterator(wal_dir)) {
+    wal_files.push_back(entry.path().string());
+  }
+
+  contexts_ = static_cast<SessionLocalContext*>(
+      aligned_alloc(4096, sizeof(SessionLocalContext) * thread_num_));
+  for (int i = 0; i < thread_num_; ++i) {
+    new (&contexts_[i]) SessionLocalContext(*this, i);
+  }
+  ingestWals(wal_files, thread_num_);
+
+  for (int i = 0; i < thread_num_; ++i) {
+    contexts_[i].logger.open(wal_dir.string(), i);
+  }
+  VLOG(1) << "Successfully restore graph db from data directory";
+
+  initApps(graph_.schema().GetPlugins());
+  VLOG(1) << "Successfully restore load plugins";
 }
 
 }  // namespace gs

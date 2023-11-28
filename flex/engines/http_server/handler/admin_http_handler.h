@@ -13,16 +13,21 @@
  * limitations under the License.
  */
 
-#ifndef ENGINES_HTTP_SERVER_GRAPH_DB_HTTP_HANDLER_H_
-#define ENGINES_HTTP_SERVER_GRAPH_DB_HTTP_HANDLER_H_
+#ifndef ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
+#define ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
 
+#include <boost/property_tree/json_parser.hpp>
 #include <seastar/http/httpd.hh>
+#include <string>
+#include "flex/engines/http_server/types.h"
+#include "flex/utils/service_utils.h"
 
 namespace server {
 
-class graph_db_http_handler {
+class InteractiveAdminService;
+class admin_http_handler {
  public:
-  graph_db_http_handler(uint16_t http_port);
+  admin_http_handler(uint16_t http_port);
 
   void start();
   void stop();
@@ -37,4 +42,4 @@ class graph_db_http_handler {
 
 }  // namespace server
 
-#endif  // ENGINES_HTTP_SERVER_GRAPH_DB_HTTP_HANDLER_H_
+#endif  // ENGINES_HTTP_SERVER_HANDLER_ADMIN_HTTP_HANDLER_H_
