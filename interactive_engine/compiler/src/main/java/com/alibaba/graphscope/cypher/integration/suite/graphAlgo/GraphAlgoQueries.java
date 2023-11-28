@@ -25,7 +25,7 @@ public class GraphAlgoQueries {
 
     public static QueryContext get_graph_algo_test1() {
         String query =
-                "MATCH (p:Paper)-[:WorkOn]->(:Algorithm)-[:Belong]->(ca:Category)\n"
+                "MATCH (p:Paper)-[:WorkOn]->(:Algorithm)-[:Belong]->(ca:Topic)\n"
                         + "WITH distinct ca, count(p) as paperCount\n"
                         + "RETURN ca.category, paperCount\n "
                         + "ORDER BY paperCount desc;";
@@ -44,7 +44,7 @@ public class GraphAlgoQueries {
 
     public static QueryContext get_graph_algo_test2() {
         String query =
-                "MATCH (ca:Category)<-[:Belong]-(a:Algorithm),\n"
+                "MATCH (ca:Topic)<-[:Belong]-(a:Algorithm),\n"
                         + "(a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Strategy),\n"
                         + "(s)-[:ApplyOn]->(ch:Challenge)\n"
                         + "WITH ca, ch, count(p) AS num \n"
@@ -61,6 +61,30 @@ public class GraphAlgoQueries {
                                 + " \"Parallelism\", num: 5}>",
                         "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\", num:"
                                 + " 3}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_graph_algo_test3() {
+        String query =
+                "MATCH(c: CCFField)<-[e]-(p:Paper) return type(e) As edgeType ORDER BY edgeType ASC LIMIT 10;";
+        List<String> expected =
+                Arrays.asList();
+        return new QueryContext(query, expected);
+    }
+
+        public static QueryContext get_graph_algo_test4() {
+        String query =
+                "MATCH(v)-[e]-() return distinct type(e) AS edgeType order by edgeType ASC;";
+        List<String> expected =
+                Arrays.asList();
+        return new QueryContext(query, expected);
+    }
+
+        public static QueryContext get_graph_algo_test5() {
+        String query =
+                "MATCH(c: CCFField)<-[e]-(p:Paper) where type(e) = 6 return type(e) As edgeType ORDER BY edgeType ASC LIMIT 10;";
+        List<String> expected =
+                Arrays.asList();
         return new QueryContext(query, expected);
     }
 }

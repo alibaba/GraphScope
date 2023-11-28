@@ -225,40 +225,31 @@ struct InnerIdProperty {
   InnerIdProperty() = default;
 };
 
-template <typename label_id_t, int _tag_id = -1>
-struct LabelKeyProperty {
-  using prop_t = label_id_t;
-  static constexpr int tag_id = _tag_id;
-  std::string name;
-  LabelKeyProperty(std::string&& n) : name(std::move(n)){};
-};
-
 // Denote the length of a path
 struct LengthKey {
   using length_data_type = int32_t;
 };
 
-struct LabelKey {
-  using label_data_type = uint8_t;
-  int32_t label_id;
-  LabelKey() = default;
-  LabelKey(label_data_type id) : label_id(id) {}
-};
-
-// overload hash_value for LabelKey
-inline std::size_t hash_value(const LabelKey& key) {
-  return std::hash<int32_t>()(key.label_id);
+inline bool operator<(const LabelKey& lhs, const LabelKey& rhs) {
+  return lhs.label_id < rhs.label_id;
 }
 
 inline bool operator==(const LabelKey& lhs, const LabelKey& rhs) {
   return lhs.label_id == rhs.label_id;
 }
 
-template <typename T>
-struct is_label_key_prop : std::false_type {};
+inline bool operator!=(const LabelKey& lhs, const LabelKey& rhs) {
+  return lhs.label_id != rhs.label_id;
+}
 
-template <typename T, int tag_id>
-struct is_label_key_prop<LabelKeyProperty<T, tag_id>> : std::true_type {};
+inline bool operator>(const LabelKey& lhs, const LabelKey& rhs) {
+  return lhs.label_id > rhs.label_id;
+}
+
+// overload hash_value for LabelKey
+inline std::size_t hash_value(const LabelKey& key) {
+  return std::hash<int32_t>()(key.label_id);
+}
 
 // static constexpr size_t dist_col = 0;
 

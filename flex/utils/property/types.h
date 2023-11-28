@@ -55,6 +55,21 @@ struct Date {
   int64_t milli_second;
 };
 
+struct LabelKey {
+  using label_data_type = uint8_t;
+  int32_t label_id;
+  LabelKey() = default;
+  LabelKey(label_data_type id) : label_id(id) {}
+  LabelKey(LabelKey&&) = default;
+  LabelKey(const LabelKey&) = default;
+
+  // operator=
+  LabelKey& operator=(const LabelKey& other) {
+    label_id = other.label_id;
+    return *this;
+  }
+};
+
 union AnyValue {
   AnyValue() {}
   ~AnyValue() {}

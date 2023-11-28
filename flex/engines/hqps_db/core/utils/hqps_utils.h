@@ -36,7 +36,6 @@
 namespace gs {
 
 // demangle a c++ variable's class name
-
 template <typename T>
 std::string demangle(const T& t) {
   int status;
@@ -197,6 +196,18 @@ template <typename T, size_t N,
           typename std::enable_if<std::is_pod_v<T> && (N > 1)>::type* = nullptr>
 bool operator>(const WithProxy<T>& lhs, const std::array<T, N>& rhs) {
   return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_);
+}
+
+template <size_t N, typename std::enable_if<(N > 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_.label_id);
+}
+
+template <size_t N, typename std::enable_if<(N == 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return false;
 }
 
 template <

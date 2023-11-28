@@ -95,6 +95,7 @@ class SubGraph {
     return iterator(label_triplet_, nullptr, &prop_names_);
   }
 
+  // here the src, dst, refer the src, dst of the csr, not the direction.
   label_id_t GetSrcLabel() const { return label_triplet_[0]; }
   label_id_t GetEdgeLabel() const { return label_triplet_[2]; }
   label_id_t GetDstLabel() const { return label_triplet_[1]; }

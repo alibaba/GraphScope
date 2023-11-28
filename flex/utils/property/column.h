@@ -146,6 +146,24 @@ class TypedRefColumn : public RefColumnBase {
   StorageStrategy strategy_;
 };
 
+template <>
+class TypedRefColumn<LabelKey> : public RefColumnBase {
+ public:
+  TypedRefColumn(LabelKey label_key) : label_key_(label_key) {}
+
+  ~TypedRefColumn() {}
+
+  inline LabelKey get_view(size_t index) const { return label_key_; }
+
+  Any get(size_t index) const override {
+    LOG(ERROR) << "LabelKeyColumn does not support get() to Any";
+    return Any();
+  }
+
+ private:
+  LabelKey label_key_;
+};
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_PROPERTY_COLUMN_H_

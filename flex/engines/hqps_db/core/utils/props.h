@@ -189,6 +189,54 @@ class InnerIdGetter {
   const std::vector<VID_T>& vids_;
 };
 
+template <int tag_id>
+class VertexLabelGetter {
+ public:
+  VertexLabelGetter(const std::vector<LabelKey>&& label_keys)
+      : label_keys(std::move(label_keys)) {}
+
+  template <typename IND_ELE>
+  LabelKey get_view(const IND_ELE& ele) const {
+    auto index_ = std::get<0>(ele);
+    if (index_ >= label_keys.size()) {
+      LOG(FATAL) << "index out of range";
+    }
+    return label_keys[index_];
+  }
+
+  template <typename ALL_ELE_T>
+  inline auto get_from_all_element(const ALL_ELE_T& all_ele) const {
+    return get_view(gs::get_from_tuple<tag_id>(all_ele));
+  }
+
+ private:
+  std::vector<LabelKey> label_keys;
+};
+
+template <int tag_id>
+class EdgeLabelGetter {
+ public:
+  EdgeLabelGetter(const std::vector<LabelKey>&& label_keys)
+      : label_keys(std::move(label_keys)) {}
+
+  template <typename IND_ELE>
+  LabelKey get_view(const IND_ELE& ele) const {
+    auto index_ = std::get<0>(ele);
+    if (index_ >= label_keys.size()) {
+      LOG(FATAL) << "index out of range";
+    }
+    return label_keys[index_];
+  }
+
+  template <typename ALL_ELE_T>
+  inline auto get_from_all_element(const ALL_ELE_T& all_ele) const {
+    return get_view(gs::get_from_tuple<tag_id>(all_ele));
+  }
+
+ private:
+  std::vector<LabelKey> label_keys;
+};
+
 template <int tag_id, typename VID_T, typename... DATA_T>
 class InnerIdDataGetter {
  public:
@@ -279,6 +327,32 @@ class CollectionPropGetter {
 
  private:
   std::tuple<size_t, T> ind_ele_;
+};
+
+// Specialize for LabelKey
+template <int tag_id>
+class CollectionPropGetter<tag_id, LabelKey> {
+ public:
+  CollectionPropGetter() {}
+
+  inline auto get_view(const std::tuple<size_t, LabelKey>& ele) const {
+    return std::get<1>(ele).label_id;
+  }
+
+  inline auto get_view() const { return std::get<1>(ind_ele_); }
+
+  template <typename ALL_ELE_T>
+  inline auto get_from_all_element(const ALL_ELE_T& all_ele) const {
+    return get_view(gs::get_from_tuple<tag_id>(all_ele));
+  }
+
+  template <typename ALL_IND_ELE_T>
+  inline void set_ind_ele(const ALL_IND_ELE_T& ind_ele) {
+    ind_ele_ = ind_ele;
+  }
+
+ private:
+  std::tuple<size_t, LabelKey> ind_ele_;
 };
 
 // specialize for collection with only one column
@@ -560,11 +634,35 @@ static auto get_dist_prop_getter(
   }
 }
 
+///////////////////// Get LabelKey Property for VertexSet
+template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
+          typename NODE_T,
+          typename std::enable_if<(std::is_same_v<prop_t, LabelKey> &&
+                                   NODE_T::is_vertex_set)>::type* = nullptr>
+static auto create_prop_getter_impl(const NODE_T& set,
+                                    const GRAPH_INTERFACE& graph,
+                                    const std::string& prop_name) {
+  auto label_vec = set.GetLabelVec();
+  return VertexLabelGetter<tag_id>(std::move(label_vec));
+}
+
+template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
+          typename NODE_T,
+          typename std::enable_if<(std::is_same_v<prop_t, LabelKey> &&
+                                   NODE_T::is_edge_set)>::type* = nullptr>
+static auto create_prop_getter_impl(const NODE_T& set,
+                                    const GRAPH_INTERFACE& graph,
+                                    const std::string& prop_name) {
+  auto label_vec = set.GetLabelVec();
+  return EdgeLabelGetter<tag_id>(std::move(label_vec));
+}
+
 // get for common properties for two_vertex_set
-template <
-    int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename LabelT,
-    typename VID_T, typename... T,
-    typename std::enable_if<!std::is_same_v<prop_t, Dist>>::type* = nullptr>
+template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
+          typename LabelT, typename VID_T, typename... T,
+          typename std::enable_if<(!std::is_same_v<prop_t, Dist> &&
+                                   !std::is_same_v<prop_t, LabelKey>)>::type* =
+              nullptr>
 static auto create_prop_getter_impl(
     const RowVertexSetImpl<LabelT, VID_T, T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
@@ -610,7 +708,9 @@ static auto create_prop_getter_impl(
 
 // get for common properties for two_label_vertex_set
 template <int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename VID_T,
-          typename LabelT, typename... T>
+          typename LabelT, typename... T,
+          typename std::enable_if<!(std::is_same_v<prop_t, LabelKey>)>::type* =
+              nullptr>
 static auto create_prop_getter_impl(
     const TwoLabelVertexSetImpl<VID_T, LabelT, T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
@@ -631,10 +731,11 @@ static auto create_prop_getter_impl(
 }
 
 // get for common properties for keyed_row_vertex_set
-template <
-    int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename LabelT,
-    typename KEY_T, typename VID_T, typename... T,
-    typename std::enable_if<!std::is_same_v<prop_t, Dist>>::type* = nullptr>
+template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
+          typename LabelT, typename KEY_T, typename VID_T, typename... T,
+          typename std::enable_if<(!std::is_same_v<prop_t, Dist> &&
+                                   !std::is_same_v<prop_t, LabelKey>)>::type* =
+              nullptr>
 static auto create_prop_getter_impl(
     const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
@@ -653,7 +754,9 @@ static auto create_prop_getter_impl(
 
 // get for common properties for keyed_row_vertex_set
 template <int tag_id, typename prop_t, typename GRAPH_INTERFACE,
-          typename LabelT, typename VID_T, typename... SET_T>
+          typename LabelT, typename VID_T, typename... SET_T,
+          typename std::enable_if<!(std::is_same_v<prop_t, LabelKey>)>::type* =
+              nullptr>
 static auto create_prop_getter_impl(
     const GeneralVertexSet<VID_T, LabelT, SET_T...>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
@@ -675,7 +778,9 @@ static auto create_prop_getter_impl(
 
 // get for common properties for FlatEdgeSet
 template <int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename VID_T,
-          typename LabelT, typename EDATA_T>
+          typename LabelT, typename EDATA_T,
+          typename std::enable_if<!(std::is_same_v<prop_t, LabelKey>)>::type* =
+              nullptr>
 static auto create_prop_getter_impl(
     const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
@@ -686,7 +791,9 @@ static auto create_prop_getter_impl(
 
 // get for common properties for Single label edge set.
 template <int tag_id, typename prop_t, typename GRAPH_INTERFACE, typename VID_T,
-          typename LabelT, typename EDATA_T>
+          typename LabelT, typename EDATA_T,
+          typename std::enable_if<!(std::is_same_v<prop_t, LabelKey>)>::type* =
+              nullptr>
 static auto create_prop_getter_impl(
     const SingleLabelEdgeSet<VID_T, LabelT, EDATA_T>& set,
     const GRAPH_INTERFACE& graph, const std::string& prop_name) {
@@ -698,7 +805,9 @@ static auto create_prop_getter_impl(
 
 // get for common properties for GeneralEdgeSet
 template <int tag_id, typename prop_t, size_t N, typename GI, typename VID_T,
-          typename LabelT, typename... EDATA_T>
+          typename LabelT, typename... EDATA_T,
+          typename std::enable_if<!(std::is_same_v<prop_t, LabelKey>)>::type* =
+              nullptr>
 static auto create_prop_getter_impl(
     const GeneralEdgeSet<N, GI, VID_T, LabelT, EDATA_T...>& set,
     const GI& graph, const std::string& prop_name) {

@@ -499,6 +499,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
   const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
   std::vector<LabelKey> GetLabelVec() const {
+    VLOG(1) << "GetLabelVec for general edge set.";
     std::vector<LabelKey> res;
     res.reserve(Size());
     for (auto i = 0; i < Size(); ++i) {
@@ -693,6 +694,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
 
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
+    VLOG(1) << "GetLabelVec for general edge set.";
     res.reserve(Size());
     for (auto i = 0; i < Size(); ++i) {
       res.emplace_back(edge_label_);

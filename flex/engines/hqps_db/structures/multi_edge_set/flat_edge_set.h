@@ -216,7 +216,7 @@ class FlatEdgeSet {
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
-    std::vector<std::tuple<VID_T, VID_T, std::tuple<EDATA_T>>> res;
+    std::vector<ele_tuple_t> res;
     std::vector<uint8_t> label_triplet_ind;
     res.reserve(index_ele_tuple.size());
     label_triplet_ind.reserve(index_ele_tuple.size());
@@ -226,8 +226,9 @@ class FlatEdgeSet {
       label_triplet_ind.emplace_back(
           label_triplet_ind_[std::get<0>(cur_ind_ele)]);
     }
-    return FlatEdgeSet(std::move(res), label_triplet_, prop_names_,
-                       std::move(label_triplet_ind), direction_);
+    auto copied_label_triplet = label_triplet_;
+    return FlatEdgeSet(std::move(res), std::move(copied_label_triplet),
+                       prop_names_, std::move(label_triplet_ind), direction_);
   }
 
   void fillBuiltinPropsImpl(std::vector<EDATA_T>& tuples,
