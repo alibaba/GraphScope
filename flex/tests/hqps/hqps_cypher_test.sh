@@ -81,6 +81,12 @@ trap kill_service EXIT
 
 # start engine service and load ldbc graph
 start_engine_service(){
+    # suppose graph has been loaded, check ${GRAPH_CSR_DATA_DIR} exists
+    if [ ! -d ${GRAPH_CSR_DATA_DIR} ]; then
+        err "GRAPH_CSR_DATA_DIR not found"
+        exit 1
+    fi
+
     #check SERVER_BIN exists
     if [ ! -f ${SERVER_BIN} ]; then
         err "SERVER_BIN not found"
@@ -88,12 +94,8 @@ start_engine_service(){
     fi
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
-    bulk_load_cmd="${BULK_LOADER} -l ${GRAPH_BULK_LOAD_YAML} -g ${GRAPH_SCHEMA_YAML} -d ${GRAPH_CSR_DATA_DIR} " 
     
-    echo "Start engine service with command: ${cmd}"
-    ${bulk_load_cmd}
-    rm -r ${GRAPH_CSR_DATA_DIR}/wal
-    rm -r ${GRAPH_CSR_DATA_DIR}/runtime/*
+    info "Start engine service with command: ${cmd}"
     ${cmd} &
     sleep 5
     #check interactive_server is running, if not, exit
