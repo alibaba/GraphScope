@@ -26,7 +26,7 @@
 namespace gs {
 
 UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
-                                     MMapAllocator& alloc,
+                                     Allocator& alloc,
                                      const std::string& work_dir,
                                      WalWriter& logger, VersionManager& vm,
                                      timestamp_t timestamp)
@@ -539,7 +539,7 @@ bool UpdateTransaction::GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
 void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
                                   const std::string& work_dir,
                                   uint32_t timestamp, char* data, size_t length,
-                                  MMapAllocator& alloc) {
+                                  Allocator& alloc) {
   std::vector<std::shared_ptr<IdIndexerBase<vid_t>>> added_vertices;
   std::vector<vid_t> added_vertices_base;
   std::vector<vid_t> vertex_nums;

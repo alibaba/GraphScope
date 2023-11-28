@@ -145,7 +145,7 @@ class MutableAdjlist {
   }
 
   void put_edge(vid_t neighbor, const EDATA_T& data, timestamp_t ts,
-                MMapAllocator& allocator) {
+                Allocator& allocator) {
     if (size_ == capacity_) {
       capacity_ += ((capacity_) >> 1);
       capacity_ = std::max(capacity_, 8);
@@ -235,14 +235,14 @@ class MutableCsrBase {
 
   virtual void resize(vid_t vnum) = 0;
   virtual size_t size() const = 0;
-
   virtual void put_generic_edge(vid_t src, vid_t dst, const Any& data,
-                                timestamp_t ts, MMapAllocator& alloc) = 0;
+                                timestamp_t ts, Allocator& alloc) = 0;
 
   virtual void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                           timestamp_t ts, MMapAllocator& alloc) = 0;
+                           timestamp_t ts, Allocator& alloc) = 0;
+
   virtual void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                                timestamp_t ts, MMapAllocator& alloc) = 0;
+                                timestamp_t ts, Allocator& alloc) = 0;
 
   virtual std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const = 0;
@@ -535,14 +535,14 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   }
 
   void put_generic_edge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-                        MMapAllocator& alloc) override {
+                        Allocator& alloc) override {
     EDATA_T value;
     ConvertAny<EDATA_T>::to(data, value);
     put_edge(src, dst, value, ts, alloc);
   }
 
   void put_edge(vid_t src, vid_t dst, const EDATA_T& data, timestamp_t ts,
-                MMapAllocator& alloc) {
+                Allocator& alloc) {
     CHECK_LT(src, adj_lists_.size());
     locks_[src].lock();
     adj_lists_[src].put_edge(dst, data, ts, alloc);
@@ -557,14 +557,14 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   mut_slice_t get_edges_mut(vid_t i) { return adj_lists_[i].get_edges_mut(); }
 
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   MMapAllocator& alloc) override {
+                   Allocator& alloc) override {
     EDATA_T value;
     arc >> value;
     put_edge(src, dst, value, ts, alloc);
   }
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                        timestamp_t ts, MMapAllocator& alloc) override {
+                        timestamp_t ts, Allocator& alloc) override {
     EDATA_T value;
     arc.Peek<EDATA_T>(value);
     put_edge(src, dst, value, ts, alloc);
@@ -616,8 +616,6 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
                 work_dir + "/" + name + ".snbr");
     }
     nbr_list_.open(work_dir + "/" + name + ".snbr", false);
-    // nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
-    // nbr_list_.touch(work_dir + "/" + name + ".nbr");
   }
 
   void dump(const std::string& name,
@@ -653,14 +651,14 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
   }
 
   void put_generic_edge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-                        MMapAllocator& alloc) override {
+                        Allocator& alloc) override {
     EDATA_T value;
     ConvertAny<EDATA_T>::to(data, value);
     put_edge(src, dst, value, ts, alloc);
   }
 
   void put_edge(vid_t src, vid_t dst, const EDATA_T& data, timestamp_t ts,
-                MMapAllocator&) {
+                Allocator&) {
     CHECK_LT(src, nbr_list_.size());
     nbr_list_[src].neighbor = dst;
     nbr_list_[src].data = data;
@@ -695,14 +693,14 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   MMapAllocator& alloc) override {
+                   Allocator& alloc) override {
     EDATA_T value;
     arc >> value;
     put_edge(src, dst, value, ts, alloc);
   }
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                        timestamp_t ts, MMapAllocator& alloc) override {
+                        timestamp_t ts, Allocator& alloc) override {
     EDATA_T value;
     arc.Peek<EDATA_T>(value);
     put_edge(src, dst, value, ts, alloc);
@@ -782,20 +780,19 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   slice_t get_edges(vid_t i) const override { return slice_t::empty(); }
 
   void put_generic_edge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-                        MMapAllocator&) override {}
+                        Allocator&) override {}
 
   void batch_put_edge(vid_t src, vid_t dst, const EDATA_T& data,
                       timestamp_t ts = 0) override {}
 
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   MMapAllocator&) override {
+                   Allocator&) override {
     EDATA_T value;
     arc >> value;
   }
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                        const timestamp_t ts, MMapAllocator&) override {}
-
+                        const timestamp_t ts, Allocator&) override {}
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
     return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(

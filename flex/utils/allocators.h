@@ -147,6 +147,11 @@ class MMapAllocator {
   size_t cur_size_;
 };
 
+#ifdef USE_MMAPALLOC
+using Allocator = MMapAllocator;
+#else
+using Allocator = ArenaAllocator;
+#endif
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_UTILS_ALLOCATORS_H_

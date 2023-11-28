@@ -25,7 +25,7 @@
 namespace gs {
 
 SingleEdgeInsertTransaction::SingleEdgeInsertTransaction(
-    MutablePropertyFragment& graph, MMapAllocator& alloc, WalWriter& logger,
+    MutablePropertyFragment& graph, Allocator& alloc, WalWriter& logger,
     VersionManager& vm, timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),

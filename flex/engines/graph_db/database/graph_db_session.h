@@ -31,14 +31,13 @@ namespace gs {
 
 class GraphDB;
 class WalWriter;
-class ArenaAllocator;
 
 void put_argment(gs::Encoder& encoder, const query::Argument& argment);
 
 class GraphDBSession {
  public:
   static constexpr int32_t MAX_RETRY = 4;
-  GraphDBSession(GraphDB& db, MMapAllocator& alloc, WalWriter& logger,
+  GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
         alloc_(alloc),
@@ -87,7 +86,7 @@ class GraphDBSession {
 
  private:
   GraphDB& db_;
-  MMapAllocator& alloc_;
+  Allocator& alloc_;
   WalWriter& logger_;
   std::string work_dir_;
   int thread_id_;

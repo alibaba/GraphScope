@@ -30,13 +30,21 @@
 namespace gs {
 
 class MutablePropertyFragment;
+
+#ifdef USE_MMAPALLOC
 class MMapAllocator;
+using Allocator = MMapAllocator;
+#else
+class ArenaAllocator;
+using Allocator = ArenaAllocator;
+#endif
+
 class WalWriter;
 class VersionManager;
 
 class UpdateTransaction {
  public:
-  UpdateTransaction(MutablePropertyFragment& graph, MMapAllocator& alloc,
+  UpdateTransaction(MutablePropertyFragment& graph, Allocator& alloc,
                     const std::string& work_dir, WalWriter& logger,
                     VersionManager& vm, timestamp_t timestamp);
 
@@ -144,7 +152,7 @@ class UpdateTransaction {
 
   static void IngestWal(MutablePropertyFragment& graph,
                         const std::string& work_dir, uint32_t timestamp,
-                        char* data, size_t length, MMapAllocator& alloc);
+                        char* data, size_t length, Allocator& alloc);
   void BatchCommit(
       std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
       std::vector<std::tuple<size_t, size_t, label_t, Any>>&& insertEdges,
@@ -173,7 +181,7 @@ class UpdateTransaction {
   void applyEdgesUpdates();
 
   MutablePropertyFragment& graph_;
-  MMapAllocator& alloc_;
+  Allocator& alloc_;
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

@@ -13,6 +13,7 @@ project (
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
+option(USE_MMAPALLOC "Whether to use mmap allocator." OFF)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
@@ -112,6 +113,10 @@ if (BUILD_TEST)
    add_subdirectory(tests)
 endif()
 
+if (USE_MMAPALLOC)
+    add_definitions(-DUSE_MMAPALLOC)
+    message("mmap allocator")
+endif()
 
 file(GLOB_RECURSE FILES_NEED_LINT
         "engines/*.cc"

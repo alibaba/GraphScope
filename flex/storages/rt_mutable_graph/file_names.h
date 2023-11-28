@@ -18,25 +18,35 @@
 #include <string>
 
 namespace gs {
-
+// clang-format off
 /*
     ├── schema
     ├── runtime
     │   ├── allocator                                // allocator dir
-    │   ├── tails                                    // tails (mutable parts) of
-   tables │   │   ├── vertex_table_PERSON.col_0 │   │   ├──
-   vertex_table_PERSON.col_1.data │   │   └── vertex_table_PERSON.col_1.items
-    │   └── tmp                                      // tmp dir, used for
-   touched vertex maps, vertex tables and adjlists of csrs │       ├──
-   ie_PERSON_KNOWS_PERSON.adj │       ├── oe_PERSON_KNOWS_PERSON.adj │       ├──
-   vertex_map_PERSON.indices │       ├── vertex_map_PERSON.keys │       ├──
-   vertex_table_PERSON.col_0 │       ├── vertex_table_PERSON.col_1.data │   └──
-   vertex_table_PERSON.col_1.items ├── snapshots // snapshots dir │   ├── 0 │  
-   │   ├── ie_PERSON_KNOWS_PERSON.deg │   │   ├── ie_PERSON_KNOWS_PERSON.nbr │  
-   │   ├── oe_PERSON_KNOWS_PERSON.deg │   │   ├── oe_PERSON_KNOWS_PERSON.nbr │  
-   │   ├── vertex_map_PERSON.indices │   │   ├── vertex_map_PERSON.keys │   │  
-   ├── vertex_map_PERSON.meta │   │   ├── vertex_table_PERSON.col_0 │   │   ├──
-   vertex_table_PERSON.col_1.data │   │   └── vertex_table_PERSON.col_1.items
+    │   ├── tails                                    // tails (mutable parts) of tables 
+    │   │   ├── vertex_table_PERSON.col_0 
+    │   │   ├── vertex_table_PERSON.col_1.data 
+    │   │   └── vertex_table_PERSON.col_1.items
+    │   └── tmp                                      // tmp dir, used for touched vertex maps, vertex tables and adjlists of csrs 
+    │       ├── ie_PERSON_KNOWS_PERSON.adj 
+    │       ├── oe_PERSON_KNOWS_PERSON.adj 
+    │       ├── vertex_map_PERSON.indices 
+    │       ├── vertex_map_PERSON.keys 
+    │       ├── vertex_table_PERSON.col_0 
+    │       ├── vertex_table_PERSON.col_1.data
+    │   └── vertex_table_PERSON.col_1.items 
+    ├── snapshots // snapshots dir 
+    │   ├── 0 
+    │   │   ├── ie_PERSON_KNOWS_PERSON.deg 
+    │   │   ├── ie_PERSON_KNOWS_PERSON.nbr 
+    │   │   ├── oe_PERSON_KNOWS_PERSON.deg 
+    │   │   ├── oe_PERSON_KNOWS_PERSON.nbr 
+    │   │   ├── vertex_map_PERSON.indices 
+    │   │   ├── vertex_map_PERSON.keys 
+    │   │   ├── vertex_map_PERSON.meta 
+    │   │   ├── vertex_table_PERSON.col_0 
+    │   │   ├── vertex_table_PERSON.col_1.data 
+    │   │   └── vertex_table_PERSON.col_1.items
     │   ├── 1234567
     │   │   ├── ie_PERSON_KNOWS_PERSON.deg
     │   │   ├── ie_PERSON_KNOWS_PERSON.nbr
@@ -55,6 +65,7 @@ namespace gs {
         ├── log_1
         └── ...
 */
+// clang-format on
 
 inline std::string schema_path(const std::string& work_dir) {
   return work_dir + "/schema";

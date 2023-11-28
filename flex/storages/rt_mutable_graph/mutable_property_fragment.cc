@@ -321,12 +321,11 @@ void MutablePropertyFragment::Warmup(int thread_num) {
   t += grape::GetCurrentTime();
   LOG(INFO) << "Warmup takes: " << t << " s";
 }
-
 void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
                                          label_t dst_label, vid_t dst_lid,
                                          label_t edge_label, timestamp_t ts,
                                          grape::OutArchive& arc,
-                                         MMapAllocator& alloc) {
+                                         Allocator& alloc) {
   size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                  dst_label * edge_label_num_ + edge_label;
   ie_[index]->peek_ingest_edge(dst_lid, src_lid, arc, ts, alloc);

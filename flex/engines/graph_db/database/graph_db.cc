@@ -24,14 +24,17 @@ namespace gs {
 
 struct SessionLocalContext {
   SessionLocalContext(GraphDB& db, const std::string& work_dir, int thread_id)
-      : allocator(thread_local_allocator_prefix(work_dir, thread_id)),
-        session(db, allocator, logger, work_dir, thread_id) {}
+      :
+#ifdef USE_MMAPALLOC
+        allocator(thread_local_allocator_prefix(work_dir, thread_id)),
+#endif
+        session(db, allocator, logger, work_dir, thread_id) {
+  }
   ~SessionLocalContext() { logger.close(); }
-
-  MMapAllocator allocator;
-  char _padding0[128 - sizeof(MMapAllocator) % 128];
+  Allocator allocator;
+  char _padding0[128 - sizeof(Allocator) % 128];
   WalWriter logger;
-  char _padding1[4096 - sizeof(WalWriter) - sizeof(MMapAllocator) -
+  char _padding1[4096 - sizeof(WalWriter) - sizeof(Allocator) -
                  sizeof(_padding0)];
   GraphDBSession session;
   char _padding2[4096 - sizeof(GraphDBSession) % 4096];
@@ -106,28 +109,6 @@ void GraphDB::Close() {
   }
   std::fill(app_paths_.begin(), app_paths_.end(), "");
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
-}
-
-void GraphDB::Checkpoint() {
-  uint32_t ts = version_manager_.acquire_update_timestamp();
-
-  uint32_t read_version = ts - 1;
-  if (read_version == 0 || read_version <= get_snapshot_version(work_dir_)) {
-    CHECK(version_manager_.revert_update_timestamp(ts));
-    return;
-  }
-
-  double t = -grape::GetCurrentTime();
-  graph_.Dump(work_dir_, read_version);
-  t += grape::GetCurrentTime();
-  LOG(INFO) << "Dump graph data using " << t << "s";
-  CHECK(version_manager_.revert_update_timestamp(ts));
-}
-
-void GraphDB::CheckpointAndRestart() {
-  Checkpoint();
-  Close();
-  Open(graph_.schema(), work_dir_, thread_num_);
 }
 
 ReadTransaction GraphDB::GetReadTransaction() {

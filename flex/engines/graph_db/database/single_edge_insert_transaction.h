@@ -22,16 +22,22 @@
 namespace gs {
 
 class MutablePropertyFragment;
+#ifdef USE_MMAPALLOC
 class MMapAllocator;
+using Allocator = MMapAllocator;
+#else
+class ArenaAllocator;
+using Allocator = ArenaAllocator;
+#endif
 class WalWriter;
 class VersionManager;
 class Any;
 
 class SingleEdgeInsertTransaction {
  public:
-  SingleEdgeInsertTransaction(MutablePropertyFragment& graph,
-                              MMapAllocator& alloc, WalWriter& logger,
-                              VersionManager& vm, timestamp_t timestamp);
+  SingleEdgeInsertTransaction(MutablePropertyFragment& graph, Allocator& alloc,
+                              WalWriter& logger, VersionManager& vm,
+                              timestamp_t timestamp);
   ~SingleEdgeInsertTransaction();
 
   bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
@@ -55,7 +61,8 @@ class SingleEdgeInsertTransaction {
   grape::InArchive arc_;
 
   MutablePropertyFragment& graph_;
-  MMapAllocator& alloc_;
+
+  Allocator& alloc_;
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

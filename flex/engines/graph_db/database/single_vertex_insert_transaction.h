@@ -23,14 +23,20 @@
 namespace gs {
 
 class MutablePropertyFragment;
+#ifdef USE_MMAPALLOC
 class MMapAllocator;
+using Allocator = MMapAllocator;
+#else
+class ArenaAllocator;
+using Allocator = ArenaAllocator;
+#endif
 class WalWriter;
 class VersionManager;
 
 class SingleVertexInsertTransaction {
  public:
   SingleVertexInsertTransaction(MutablePropertyFragment& graph,
-                                MMapAllocator& alloc, WalWriter& logger,
+                                Allocator& alloc, WalWriter& logger,
                                 VersionManager& vm, timestamp_t timestamp);
   ~SingleVertexInsertTransaction();
 
@@ -58,7 +64,11 @@ class SingleVertexInsertTransaction {
   std::vector<vid_t> parsed_endpoints_;
 
   MutablePropertyFragment& graph_;
+#ifdef USE_MMAPALLOCATOR
   MMapAllocator& alloc_;
+#else
+  ArenaAllocator& alloc_;
+#endif
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

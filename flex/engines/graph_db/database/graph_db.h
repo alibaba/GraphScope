@@ -63,10 +63,6 @@ class GraphDB {
    */
   void Close();
 
-  void Checkpoint();
-
-  void CheckpointAndRestart();
-
   /** @brief Create a transaction to read vertices and edges.
    *
    * @return graph_dir The directory of graph data.

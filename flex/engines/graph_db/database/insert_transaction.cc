@@ -23,8 +23,9 @@
 namespace gs {
 
 InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
-                                     MMapAllocator& alloc, WalWriter& logger,
+                                     Allocator& alloc, WalWriter& logger,
                                      VersionManager& vm, timestamp_t timestamp)
+
     : graph_(graph),
       alloc_(alloc),
       logger_(logger),
@@ -140,7 +141,7 @@ timestamp_t InsertTransaction::timestamp() const { return timestamp_; }
 
 void InsertTransaction::IngestWal(MutablePropertyFragment& graph,
                                   uint32_t timestamp, char* data, size_t length,
-                                  MMapAllocator& alloc) {
+                                  Allocator& alloc) {
   grape::OutArchive arc;
   arc.SetSlice(data, length);
   while (!arc.Empty()) {

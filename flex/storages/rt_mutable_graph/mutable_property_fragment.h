@@ -41,7 +41,7 @@ class MutablePropertyFragment {
 
   void IngestEdge(label_t src_label, vid_t src_lid, label_t dst_label,
                   vid_t dst_lid, label_t edge_label, timestamp_t ts,
-                  grape::OutArchive& arc, MMapAllocator& alloc);
+                  grape::OutArchive& arc, Allocator& alloc);
 
   void Open(const std::string& work_dir);
 
