@@ -724,6 +724,73 @@ void UpdateTransaction::release() {
   }
 }
 
+void UpdateTransaction::BatchCommit(
+    std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
+    std::vector<std::tuple<size_t, size_t, label_t, Any>>&& insertEdges,
+    grape::InArchive& arc) {
+  if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
+    return;
+  }
+  auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
+  header->length = arc.GetSize() - sizeof(WalHeader);
+  header->type = 1;
+  header->timestamp = timestamp_;
+  logger_.append(arc.GetBuffer(), arc.GetSize());
+  std::vector<std::pair<bool, vid_t>> vec;
+  vec.reserve(insertVertices.size());
+
+  for (auto& [label, oid, prop] : insertVertices) {
+    vid_t lid;
+    if (graph_.get_lid(label, oid, lid)) {
+      graph_.get_vertex_table(label).insert(lid, prop);
+      vec.emplace_back(true, lid);
+    } else {
+      lid = graph_.add_vertex(label, oid);
+      vec.emplace_back(false, lid);
+      graph_.get_vertex_table(label).insert(lid, prop);
+    }
+  }
+
+  for (auto& [src_index, dst_index, edge_label, prop] : insertEdges) {
+    auto& [src_flag, src_lid] = vec[src_index];
+    auto& [dst_flag, dst_lid] = vec[dst_index];
+    label_t src_label = std::get<0>(insertVertices[src_index]);
+    label_t dst_label = std::get<0>(insertVertices[dst_index]);
+    if (src_flag && dst_flag) {
+      auto oe = graph_.get_outgoing_edges_mut(src_label, src_lid, dst_label,
+                                              edge_label);
+      while (oe != nullptr && oe->is_valid()) {
+        if (oe->get_neighbor() == dst_lid) {
+          oe->set_data(prop, timestamp_);
+          src_flag = false;
+          break;
+        }
+        oe->next();
+      }
+      auto ie = graph_.get_incoming_edges_mut(dst_label, dst_lid, src_label,
+                                              edge_label);
+      while (ie != nullptr && ie->is_valid()) {
+        if (ie->get_neighbor() == src_lid) {
+          dst_flag = false;
+          ie->set_data(prop, timestamp_);
+          break;
+        }
+        ie->next();
+      }
+      if ((!src_flag) || (!dst_flag)) {
+      } else {
+        grape::InArchive arc;
+        arc << prop;
+
+        grape::OutArchive out_arc(std::move(arc));
+        graph_.IngestEdge(src_label, src_lid, dst_label, dst_lid, edge_label,
+                          timestamp_, out_arc, alloc_);
+      }
+    }
+  }
+  release();
+}
+
 void UpdateTransaction::applyVerticesUpdates() {
   for (label_t label = 0; label < vertex_label_num_; ++label) {
     std::vector<std::pair<vid_t, Any>> added_vertices;
