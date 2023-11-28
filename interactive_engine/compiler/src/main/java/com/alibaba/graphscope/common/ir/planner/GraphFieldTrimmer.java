@@ -14,7 +14,10 @@ import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexPermuteGraphShuttle;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.tools.config.ExpandConfig;
+import com.alibaba.graphscope.common.ir.tools.config.GetVConfig;
+import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
+import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
@@ -447,7 +450,8 @@ public class GraphFieldTrimmer extends RelFieldTrimmer {
                         pathExpand.getFetch(),
                         pathExpand.getResultOpt(),
                         pathExpand.getPathOpt(),
-                        pathExpand.getAliasName());
+                        pathExpand.getAliasName(),
+                        pathExpand.getStartAlias());
         return result(newPathExpand, mapping, pathExpand);
     }
 

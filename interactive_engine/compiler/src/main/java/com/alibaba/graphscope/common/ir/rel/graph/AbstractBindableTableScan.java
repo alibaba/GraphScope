@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
@@ -55,12 +56,15 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     protected final int aliasId;
 
+    protected final AliasNameWithId startAlias;
+
     protected AbstractBindableTableScan(
             GraphOptCluster cluster,
             List<RelHint> hints,
             @Nullable RelNode input,
             TableConfig tableConfig,
-            @Nullable String aliasName) {
+            @Nullable String aliasName,
+            AliasNameWithId startAlias) {
         super(
                 cluster,
                 RelTraitSet.createEmpty(),
@@ -74,6 +78,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
+        this.startAlias = Objects.requireNonNull(startAlias);
     }
 
     protected AbstractBindableTableScan(
@@ -81,7 +86,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
             List<RelHint> hints,
             TableConfig tableConfig,
             String aliasName) {
-        this(cluster, hints, null, tableConfig, aliasName);
+        this(cluster, hints, null, tableConfig, aliasName, AliasNameWithId.DEFAULT);
     }
 
     @Override
@@ -132,6 +137,10 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return pw.itemIf("input", input, !Objects.isNull(input))
                 .item("tableConfig", tableConfig)
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                .itemIf(
+                        "startAlias",
+                        startAlias.getAliasName(),
+                        startAlias.getAliasName() != AliasInference.DEFAULT_NAME)
                 .itemIf("fusedProject", project, !ObjectUtils.isEmpty(project))
                 .itemIf("fusedFilter", filters, !ObjectUtils.isEmpty(filters));
     }
@@ -155,5 +164,9 @@ public abstract class AbstractBindableTableScan extends TableScan {
 
     public @Nullable ImmutableList<RexNode> getFilters() {
         return filters;
+    }
+
+    public AliasNameWithId getStartAlias() {
+        return startAlias;
     }
 }
