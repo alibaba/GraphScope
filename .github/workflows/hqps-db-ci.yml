@@ -203,7 +203,7 @@ jobs:
         export ENGINE_TYPE=hiactor
         # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to graph_algo
         sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./engine_config_test.yaml
-        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} movies \
+        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
 
 

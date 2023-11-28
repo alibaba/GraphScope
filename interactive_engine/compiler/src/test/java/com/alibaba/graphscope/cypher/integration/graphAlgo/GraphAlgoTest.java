@@ -66,13 +66,12 @@ public class GraphAlgoTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
-        @Test
+    @Test
     public void run_graph_query5_test() {
         QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test5();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
-
 
     @AfterClass
     public static void afterClass() {

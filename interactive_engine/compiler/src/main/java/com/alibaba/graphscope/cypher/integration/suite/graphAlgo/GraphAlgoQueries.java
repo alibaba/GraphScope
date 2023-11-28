@@ -31,11 +31,10 @@ public class GraphAlgoQueries {
                         + "ORDER BY paperCount desc;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Traversal\", paperCount: 28}>",
-                        "Record<{category: \"Cohesive_Subgraph/Community_Search\", paperCount:"
-                                + " 18}>",
+                        "Record<{category: \"Traversal\", paperCount: 29}>",
+                        "Record<{category: \"Cohesive_Subgraph\", paperCount:" + " 18}>",
                         "Record<{category: \"Centrality\", paperCount: 18}>",
-                        "Record<{category: \"Clustering/Community_Detection\", paperCount: 17}>",
+                        "Record<{category: \"Clustering\", paperCount: 17}>",
                         "Record<{category: \"Pattern Matching\", paperCount: 11}>",
                         "Record<{category: \"Other\", paperCount: 7}>",
                         "Record<{category: \"Similarity\", paperCount: 2}>");
@@ -52,12 +51,12 @@ public class GraphAlgoQueries {
                         + "ORDER BY num DESC LIMIT 5;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Cohesive_Subgraph/Community_Search\", challenge:"
-                                + " \"Communication Overhead\", num: 8}>",
-                        "Record<{category: \"Traversal\", challenge: \"Load Balance\", num: 8}>",
                         "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
-                                + " num: 7}>",
-                        "Record<{category: \"Cohesive_Subgraph/Community_Search\", challenge:"
+                                + " num: 8}>",
+                        "Record<{category: \"Traversal\", challenge: \"Load Balance\", num: 8}>",
+                        "Record<{category: \"Cohesive_Subgraph\", challenge:"
+                                + " \"Communication Overhead\", num: 8}>",
+                        "Record<{category: \"Cohesive_Subgraph\", challenge:"
                                 + " \"Parallelism\", num: 5}>",
                         "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\", num:"
                                 + " 3}>");
@@ -66,25 +65,54 @@ public class GraphAlgoQueries {
 
     public static QueryContext get_graph_algo_test3() {
         String query =
-                "MATCH(c: CCFField)<-[e]-(p:Paper) return type(e) As edgeType ORDER BY edgeType ASC LIMIT 10;";
+                "MATCH(c: CCFField)<-[e]-(p:Paper) return type(e) As edgeType ORDER BY edgeType ASC"
+                        + " LIMIT 10;";
         List<String> expected =
-                Arrays.asList();
+                Arrays.asList(
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>");
         return new QueryContext(query, expected);
     }
 
-        public static QueryContext get_graph_algo_test4() {
-        String query =
-                "MATCH(v)-[e]-() return distinct type(e) AS edgeType order by edgeType ASC;";
+    public static QueryContext get_graph_algo_test4() {
+        String query = "MATCH(v)-[e]-() return distinct type(e) AS edgeType order by edgeType ASC;";
         List<String> expected =
-                Arrays.asList();
+                Arrays.asList(
+                        "Record<{edgeType: \"WorkOn\"}>",
+                        "Record<{edgeType: \"Resolve\"}>",
+                        "Record<{edgeType: \"Target\"}>",
+                        "Record<{edgeType: \"Belong\"}>",
+                        "Record<{edgeType: \"Use\"}>",
+                        "Record<{edgeType: \"ApplyOn\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"Citation\"}>");
         return new QueryContext(query, expected);
     }
 
-        public static QueryContext get_graph_algo_test5() {
+    public static QueryContext get_graph_algo_test5() {
         String query =
-                "MATCH(c: CCFField)<-[e]-(p:Paper) where type(e) = 6 return type(e) As edgeType ORDER BY edgeType ASC LIMIT 10;";
+                "MATCH(c: CCFField)<-[e]-(p:Paper) where type(e) = 6 return type(e) As edgeType"
+                        + " ORDER BY edgeType ASC LIMIT 10;";
         List<String> expected =
-                Arrays.asList();
+                Arrays.asList(
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>",
+                        "Record<{edgeType: \"HasField\"}>");
         return new QueryContext(query, expected);
     }
 }

@@ -101,7 +101,7 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nloh
     message(FATAL_ERROR "${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nlohmann/json.hpp not found, "
                          "please run `git submodule update --init` to download third_party")
 endif()
-include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/single_include)
+include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
 
 add_subdirectory(utils)
 add_subdirectory(codegen)
