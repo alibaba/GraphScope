@@ -12,16 +12,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ENGINES_HTTP_SERVER_HQPS_HTTP_HANDLER_H_
-#define ENGINES_HTTP_SERVER_HQPS_HTTP_HANDLER_H_
+
+#ifndef ENGINES_HTTP_SERVER_HANDLER_GRAPH_DB_HTTP_HANDLER_H_
+#define ENGINES_HTTP_SERVER_HANDLER_GRAPH_DB_HTTP_HANDLER_H_
 
 #include <seastar/http/httpd.hh>
 
 namespace server {
 
-class hqps_http_handler {
+class graph_db_http_handler {
  public:
-  hqps_http_handler(uint16_t http_port);
+  graph_db_http_handler(uint16_t http_port);
 
   void start();
   void stop();
@@ -36,4 +37,4 @@ class hqps_http_handler {
 
 }  // namespace server
 
-#endif  // ENGINES_HTTP_SERVER_HQPS_HTTP_HANDLER_H_
+#endif  // ENGINES_HTTP_SERVER_HANDLER_GRAPH_DB_HTTP_HANDLER_H_

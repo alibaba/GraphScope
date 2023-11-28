@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.tools.config;
 
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -48,6 +49,7 @@ public class PathExpandConfig {
     private final GraphOpt.PathExpandResult resultOpt;
 
     @Nullable private final String alias;
+    @Nullable private final String startAlias;
 
     protected PathExpandConfig(
             RelNode expand,
@@ -57,6 +59,18 @@ public class PathExpandConfig {
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
             @Nullable String alias) {
+        this(expand, getV, offset, fetch, resultOpt, pathOpt, alias, null);
+    }
+
+    protected PathExpandConfig(
+            RelNode expand,
+            RelNode getV,
+            int offset,
+            int fetch,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
+            @Nullable String alias,
+            @Nullable String startAlias) {
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
         this.offset = offset;
@@ -64,6 +78,7 @@ public class PathExpandConfig {
         this.resultOpt = resultOpt;
         this.pathOpt = pathOpt;
         this.alias = alias;
+        this.startAlias = startAlias;
     }
 
     public static Builder newBuilder(GraphBuilder innerBuilder) {
@@ -72,6 +87,10 @@ public class PathExpandConfig {
 
     public @Nullable String getAlias() {
         return alias;
+    }
+
+    public @Nullable String getStartAlias() {
+        return startAlias;
     }
 
     public GraphOpt.PathExpandPath getPathOpt() {
@@ -126,6 +145,7 @@ public class PathExpandConfig {
         private GraphOpt.PathExpandResult resultOpt;
 
         @Nullable private String alias;
+        @Nullable private String startAlias;
 
         protected Builder(GraphBuilder innerBuilder) {
             this.innerBuilder =
@@ -147,7 +167,8 @@ public class PathExpandConfig {
                                 config.getOpt(),
                                 innerBuilder.getTableConfig(
                                         config.getLabels(), GraphOpt.Source.EDGE),
-                                AliasInference.DEFAULT_NAME);
+                                AliasInference.DEFAULT_NAME,
+                                AliasNameWithId.DEFAULT);
                 innerBuilder.push(this.expand);
             }
             return this;
@@ -163,7 +184,8 @@ public class PathExpandConfig {
                                 config.getOpt(),
                                 innerBuilder.getTableConfig(
                                         config.getLabels(), GraphOpt.Source.VERTEX),
-                                AliasInference.DEFAULT_NAME);
+                                AliasInference.DEFAULT_NAME,
+                                AliasNameWithId.DEFAULT);
                 // (the alias of endV is given in the getV
                 // base)
                 innerBuilder.push(this.getV);
@@ -228,8 +250,14 @@ public class PathExpandConfig {
             return this;
         }
 
+        public Builder startAlias(@Nullable String startAlias) {
+            this.startAlias = startAlias;
+            return this;
+        }
+
         public PathExpandConfig build() {
-            return new PathExpandConfig(expand, getV, offset, fetch, resultOpt, pathOpt, alias);
+            return new PathExpandConfig(
+                    expand, getV, offset, fetch, resultOpt, pathOpt, alias, startAlias);
         }
 
         public GraphBuilder getInnerBuilder() {

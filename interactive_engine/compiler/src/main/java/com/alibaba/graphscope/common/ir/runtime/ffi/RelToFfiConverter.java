@@ -108,6 +108,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (expand.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setEdgexpdAlias(ptrExpand, ArgUtils.asAlias(expand.getAliasId())));
         }
+        if (expand.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setEdgexpdVtag(
+                            ptrExpand, ArgUtils.asNameOrId(expand.getStartAlias().getAliasId())));
+        }
         checkFfiResult(
                 LIB.setEdgexpdMeta(
                         ptrExpand,
@@ -149,6 +154,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (getV.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setGetvAlias(ptrGetV, ArgUtils.asAlias(getV.getAliasId())));
         }
+        if (getV.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setGetvTag(
+                            ptrGetV, ArgUtils.asNameOrId(getV.getStartAlias().getAliasId())));
+        }
         checkFfiResult(
                 LIB.setGetvMeta(
                         ptrGetV,
@@ -174,6 +184,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         checkFfiResult(LIB.setPathxpdHops(ptrPxd, hops.get(0), hops.get(1)));
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setPathxpdAlias(ptrPxd, ArgUtils.asAlias(pxd.getAliasId())));
+        }
+        if (pxd.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setPathxpdTag(
+                            ptrPxd, ArgUtils.asNameOrId(pxd.getStartAlias().getAliasId())));
         }
         return new PhysicalNode(pxd, ptrPxd);
     }

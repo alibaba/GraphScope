@@ -1,4 +1,4 @@
-graph: modern
+graph: modern_graph
 loading_config:
   data_source:
     scheme: file  # file, oss, s3, hdfs; only file is supported now

@@ -443,6 +443,14 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
     ConvertAny<KEY_T>::to(oid, oid_);
     return get_index(oid_, lid);
   }
+  void Clear() {
+    keys_.clear();
+    indices_.clear();
+    distances_.clear();
+    num_elements_ = 0;
+    num_slots_minus_one_ = 0;
+    hash_policy_.reset();
+  }
 
   size_t entry_num() const { return distances_.size(); }
 

@@ -63,7 +63,11 @@ namespace config_parsing {
 static bool parse_bulk_load_config_file(const std::string& config_file,
                                         const Schema& schema,
                                         LoadingConfig& load_config);
-}
+
+static bool parse_bulk_load_config_yaml(const YAML::Node& yaml_node,
+                                        const Schema& schema,
+                                        LoadingConfig& load_config);
+}  // namespace config_parsing
 
 // Provide meta info about bulk loading.
 class LoadingConfig {
@@ -74,8 +78,10 @@ class LoadingConfig {
                  schema_label_type>;  // src_label_t, dst_label_t, edge_label_t
 
   // Check whether loading config file is consistent with schema
-  static LoadingConfig ParseFromYaml(const Schema& schema,
-                                     const std::string& yaml_file);
+  static LoadingConfig ParseFromYamlFile(const Schema& schema,
+                                         const std::string& yaml_file);
+  static gs::Result<LoadingConfig> ParseFromYamlNode(
+      const Schema& schema, const YAML::Node& yaml_node);
 
   LoadingConfig(const Schema& schema);
 
@@ -171,6 +177,9 @@ class LoadingConfig {
   friend bool config_parsing::parse_bulk_load_config_file(
       const std::string& config_file, const Schema& schema,
       LoadingConfig& load_config);
+
+  friend bool config_parsing::parse_bulk_load_config_yaml(
+      const YAML::Node& root, const Schema& schema, LoadingConfig& load_config);
 };
 
 }  // namespace gs

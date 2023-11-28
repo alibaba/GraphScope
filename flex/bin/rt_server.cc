@@ -16,8 +16,8 @@
 #include "grape/util.h"
 
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/options.h"
+#include "flex/engines/http_server/service/graph_db_service.h"
 
 #include <boost/program_options.hpp>
 #include <seastar/core/alien.hh>
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
+      gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_config_path);
   db.Init(schema, loading_config, data_path, shard_num);
 
   t0 += grape::GetCurrentTime();

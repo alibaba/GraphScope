@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
@@ -37,8 +38,9 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
             RelNode input,
             GraphOpt.GetV opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        super(cluster, hints, input, tableConfig, alias);
+            @Nullable String alias,
+            AliasNameWithId startAlias) {
+        super(cluster, hints, input, tableConfig, alias, startAlias);
         this.opt = opt;
     }
 
@@ -48,8 +50,9 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
             RelNode input,
             GraphOpt.GetV opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        return new GraphLogicalGetV(cluster, hints, input, opt, tableConfig, alias);
+            @Nullable String alias,
+            AliasNameWithId startAlias) {
+        return new GraphLogicalGetV(cluster, hints, input, opt, tableConfig, alias, startAlias);
     }
 
     public GraphOpt.GetV getOpt() {
@@ -69,6 +72,7 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
                 inputs.get(0),
                 this.getOpt(),
                 this.tableConfig,
-                this.getAliasName());
+                this.getAliasName(),
+                this.getStartAlias());
     }
 }
