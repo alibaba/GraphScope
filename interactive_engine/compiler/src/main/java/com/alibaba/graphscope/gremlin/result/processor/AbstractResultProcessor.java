@@ -34,8 +34,6 @@ import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.handler.Frame;
 import org.apache.tinkerpop.gremlin.server.handler.StateKey;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,8 +42,6 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractResultProcessor extends StandardOpProcessor
         implements ResultProcessor {
-    private static Logger logger = LoggerFactory.getLogger(AbstractResultProcessor.class);
-
     protected final Context writeResult;
     protected final ResultParser resultParser;
     protected final QueryStatusCallback statusCallback;
@@ -89,7 +85,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 resultCollectors.addAll(resultParser.parseFrom(response));
             }
         } catch (Exception e) {
-            statusCallback.getQueryLogger().error("process response from grpc fail", e);
+            statusCallback.getQueryLogger().error("process response from grpc fail, msg {}", e);
             // cannot write to this context any more
             isContextWritable = false;
             statusCallback.onEnd(false, null);
@@ -112,7 +108,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     @Override
     public synchronized void error(Status status) {
-        logger.error("error return from grpc, status {}", status);
+        statusCallback.getQueryLogger().error("error return from grpc, msg {}", status);
         if (isContextWritable) {
             isContextWritable = false;
             statusCallback.onEnd(false, status.getDescription());
@@ -169,28 +165,33 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                     if (frame != null) {
                         frame.tryRelease();
                     }
-                    logger.error(
-                            "write "
-                                    + resultList.size()
-                                    + " result to context "
-                                    + context
-                                    + " status code=>"
-                                    + statusCode
-                                    + " fail",
-                            e);
+                    statusCallback
+                            .getQueryLogger()
+                            .error(
+                                    "write "
+                                            + resultList.size()
+                                            + " result to context "
+                                            + context
+                                            + " status code=>"
+                                            + statusCode
+                                            + " fail, msg {}",
+                                    e);
                     throw new RuntimeException(e);
                 }
             } else {
                 if (retryOnce) {
                     String message =
                             "write result to context fail for context " + msg + " is too busy";
-                    logger.error(message);
+                    statusCallback.getQueryLogger().error(message);
                     throw new RuntimeException(message);
                 } else {
-                    logger.warn(
-                            "Pausing response writing as writeBufferHighWaterMark exceeded on "
-                                    + msg
-                                    + " - writing will continue once client has caught up");
+                    statusCallback
+                            .getQueryLogger()
+                            .warn(
+                                    "Pausing response writing as writeBufferHighWaterMark exceeded"
+                                            + " on "
+                                            + msg
+                                            + " - writing will continue once client has caught up");
                     retryOnce = true;
                     try {
                         TimeUnit.MILLISECONDS.sleep(10L);
