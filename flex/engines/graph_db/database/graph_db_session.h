@@ -60,6 +60,11 @@ class GraphDBSession {
 
   UpdateTransaction GetUpdateTransaction();
 
+  bool BatchUpdate(
+      std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& vertices,
+      std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
+          edges);
+
   const MutablePropertyFragment& graph() const;
   MutablePropertyFragment& graph();
 

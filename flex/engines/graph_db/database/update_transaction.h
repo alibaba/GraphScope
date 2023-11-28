@@ -153,12 +153,14 @@ class UpdateTransaction {
   static void IngestWal(MutablePropertyFragment& graph,
                         const std::string& work_dir, uint32_t timestamp,
                         char* data, size_t length, Allocator& alloc);
-  void BatchCommit(
-      std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
-      std::vector<std::tuple<size_t, size_t, label_t, Any>>&& insertEdges,
-      grape::InArchive& arc);
 
  private:
+  friend class GraphDBSession;
+  void batch_commit(
+      std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
+      std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
+          insertEdges);
+
   void set_edge_data_with_offset(bool dir, label_t label, vid_t v,
                                  label_t neighbor_label, vid_t nbr,
                                  label_t edge_label, const Any& value,

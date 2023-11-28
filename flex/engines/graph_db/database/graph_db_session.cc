@@ -71,6 +71,14 @@ UpdateTransaction GraphDBSession::GetUpdateTransaction() {
                            db_.version_manager_, ts);
 }
 
+bool GraphDBSession::BatchUpdate(
+    std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& vertices,
+    std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&& edges) {
+  auto txn = GetUpdateTransaction();
+  txn.batch_commit(std::move(vertices), std::move(edges));
+  return true;
+}
+
 const MutablePropertyFragment& GraphDBSession::graph() const {
   return db_.graph();
 }
