@@ -1,7 +1,15 @@
 var searchData=
 [
-  ['uninitializedutils_888',['UninitializedUtils',['../structgs_1_1UninitializedUtils.html',1,'gs']]],
-  ['uninitializedutils_3c_20mutablenbr_3c_20std_3a_3astring_20_3e_20_3e_889',['UninitializedUtils&lt; MutableNbr&lt; std::string &gt; &gt;',['../structgs_1_1UninitializedUtils_3_01MutableNbr_3_01std_1_1string_01_4_01_4.html',1,'gs']]],
-  ['updatetransaction_890',['UpdateTransaction',['../classgs_1_1UpdateTransaction.html',1,'gs']]],
-  ['updatewalunit_891',['UpdateWalUnit',['../structgs_1_1UpdateWalUnit.html',1,'gs']]]
+  ['schema_986',['Schema',['../classgs_1_1Schema.html',1,'gs']]],
+  ['serverapp_987',['ServerApp',['../classgs_1_1ServerApp.html',1,'gs']]],
+  ['serverappfactory_988',['ServerAppFactory',['../classgs_1_1ServerAppFactory.html',1,'gs']]],
+  ['sessionlocalcontext_989',['SessionLocalContext',['../structgs_1_1SessionLocalContext.html',1,'gs']]],
+  ['sharedlibraryappfactory_990',['SharedLibraryAppFactory',['../classgs_1_1SharedLibraryAppFactory.html',1,'gs']]],
+  ['singleedgeinserttransaction_991',['SingleEdgeInsertTransaction',['../classgs_1_1SingleEdgeInsertTransaction.html',1,'gs']]],
+  ['singlegraphview_992',['SingleGraphView',['../classgs_1_1SingleGraphView.html',1,'gs']]],
+  ['singlemutablecsr_993',['SingleMutableCsr',['../classgs_1_1SingleMutableCsr.html',1,'gs']]],
+  ['singlevertexinserttransaction_994',['SingleVertexInsertTransaction',['../classgs_1_1SingleVertexInsertTransaction.html',1,'gs']]],
+  ['status_995',['Status',['../classgs_1_1Status.html',1,'gs']]],
+  ['string_5fitem_996',['string_item',['../structgs_1_1string__item.html',1,'gs']]],
+  ['stringviewvector_997',['StringViewVector',['../classgs_1_1StringViewVector.html',1,'gs']]]
 ];

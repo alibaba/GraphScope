@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Import and Export Graph Data of Neo4j with GraphAr</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2023-09-14">14 Sep 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-09-14">14 Sep 2023</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Import and Export Graph Data of Neo4j with GraphAr</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2023-09-14-title-picture.jpg" alt="title-picture" />
+<a href="https://graphscope.io/blog/tech/2023/08/29/GraphAr-A-Standard-Data-File-Format-for-Graph-Data-Storage-and-Retrieval">GraphAr</a> is an open source, standard data file format for graph data storage and retrieval. It defines a standardized file format for graph data, and provides a set of interfaces for generating, accessing, and transforming these formatted files.
+This post is a quick guide that shows how to import and export graph data of <a href="https://neo4j.com/product/neo4j-graph-database/">Neo4j</a> with GraphAr.</p>
+
+<h3 id="what-is-graphar">What is GraphAr?</h3>
+
+<p>GraphAr (Graph Archive, abbreviated as GAR) defines a standardized, system-independent file format for graph data and provides a set of interfaces for generating, accessing, and converting these formatted files. GraphAr can help various graph computing applications or existing systems to conveniently build and access graph data. It can be used as a direct data source for graph computing applications, as well as for importing/exporting and persistently storing graph data, reducing the overhead of collaboration between various graph systems. The following figure shows the scenario of using GraphAr as a graph data archiving format and data source for graph computing applications: with GraphAr, users can quickly and easily import/export graph data from/to graph databases, such as Neo4j, and use GraphAr as a data source for graph computing applications, such as GraphScope.</p>
+
+<p><img src="/blog/assets/images/2023-09-14-graphar-exchange.jpg" alt="graphar-exchange" /></p>
+
+<h3 id="graphar-spark-sdk">GraphAr Spark SDK</h3>
+
+<p><a href="https://alibaba.github.io/GraphAr/user-guide/spark-lib.html">GraphAr Spark SDK</a> uses maven as a package build system and requires Java 8 or higher. We provide a script to build GraphAr Spark SDK. To build GraphAr Spark SDK, run the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># download GraphAr Spark SDK source code</span>
+git clone https://github.com/alibaba/GraphAr.git
+<span class="nb">cd </span>GraphAr
+<span class="nb">cd </span>spark
+
+<span class="c"># build GraphAr Spark SDK</span>
+./scripts/build.sh
+</code></pre></div></div>
+
+<h3 id="exportimport-graph-data-of-neo4j-with-graphar">Export/Import Graph Data of Neo4j with GraphAr</h3>
+
+<p>Neo4j is a popular graph database system and it provide <a href="https://neo4j.com/docs/spark/current/overview/">Neo4j Spark Connector</a> tool to import/export graph data between Neo4j and Spark. GraphAr Spark SDK can be used as a data source for Neo4j Spark Connector to import/export graph data between Neo4j and GraphAr.</p>
+
+<p>To demonstrate how to export graph data of Neo4j to GraphAr, we use <a href="https://github.com/neo4j-graph-examples/movies">movie graph data</a> of Neo4j as an example to show how to export graph data of Neo4j with GraphAr. The following figure shows the movie graph data of Neo4j:</p>
+
+<p><img src="/blog/assets/images/2023-09-14-movie-example.jpg" alt="movie-example" /></p>
+
+<h4 id="deploy-neo4j">Deploy Neo4j</h4>
+
+<p>Before exporting graph data of Neo4j with GraphAr, we need to deploy Neo4j. Here we provide a script to deploy Neo4j to HOME directory. But If you already have a Neo4j instance, you can skip this step. To deploy Neo4j, run the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./scripts/get-neo4j-to-home.sh
+<span class="nb">export </span><span class="nv">NEO4J_HOME</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">HOME</span><span class="k">}</span><span class="s2">/neo4j-community-4.4.23"</span>
+<span class="nb">export </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">"</span><span class="k">${</span><span class="nv">NEO4J_HOME</span><span class="k">}</span><span class="s2">/bin:</span><span class="k">${</span><span class="nv">PATH</span><span class="k">}</span><span class="s2">"</span>
+</code></pre></div></div>
+
+<p>Set the initial password of Neo4j:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>neo4j-admin set-initial-password xxxx <span class="c"># set your password here</span>
+</code></pre></div></div>
+
+<h4 id="load-movie-graph-data-to-neo4j">Load Movie Graph Data to Neo4j</h4>
+
+<p>Neo4j provides a movie graph data example in their dateset. We can load this movie graph data to Neo4j. To load movie graph data to Neo4j, run the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./scripts/deploy-neo4j-movie-data.sh
+</code></pre></div></div>
+<p>After loading movie graph data to Neo4j, we can use Neo4j Browser to check the movie graph data. The username is <code class="language-plaintext highlighter-rouge">neo4j</code> and the password is the one you set in the previous step. Open the <a href="http://localhost:7474/browser">Neo4j browser</a> to check the movie graph data. The following figure shows the movie graph data of Neo4j:</p>
+
+<p><img src="/blog/assets/images/2023-09-14-neo4j-browser.jpg" alt="neo4j-browser" /></p>
+
+<h4 id="export-graph-data-of-neo4j-with-graphar">Export Graph Data of Neo4j with GraphAr</h4>
+
+<p>GraphAr provides a <code class="language-plaintext highlighter-rouge">Neo4j2GraphAr</code> example class to export movie graph data of Neo4j to GraphAr. The following code shows how to export graph data of Neo4j to GraphAr:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">Neo4j2GraphAr</span> <span class="o">{</span>
+  <span class="k">def</span> <span class="nf">main</span><span class="o">(</span><span class="n">args</span><span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="c1">// connect to the Neo4j instance</span>
+    <span class="k">val</span> <span class="nv">spark</span> <span class="k">=</span> <span class="nc">SparkSession</span>
+      <span class="o">.</span><span class="py">builder</span><span class="o">()</span>
+      <span class="o">.</span><span class="py">appName</span><span class="o">(</span><span class="s">"Neo4j to GraphAr for Movie Graph"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span><span class="s">"neo4j.url"</span><span class="o">,</span> <span class="s">"bolt://localhost:7687"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span><span class="s">"neo4j.authentication.type"</span><span class="o">,</span> <span class="s">"basic"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span>
+        <span class="s">"neo4j.authentication.basic.username"</span><span class="o">,</span>
+        <span class="nv">sys</span><span class="o">.</span><span class="py">env</span><span class="o">.</span><span class="py">get</span><span class="o">(</span><span class="s">"NEO4J_USR"</span><span class="o">).</span><span class="py">get</span>
+      <span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span>
+        <span class="s">"neo4j.authentication.basic.password"</span><span class="o">,</span>
+        <span class="nv">sys</span><span class="o">.</span><span class="py">env</span><span class="o">.</span><span class="py">get</span><span class="o">(</span><span class="s">"NEO4J_PWD"</span><span class="o">).</span><span class="py">get</span>
+      <span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span><span class="s">"spark.master"</span><span class="o">,</span> <span class="s">"local"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">getOrCreate</span><span class="o">()</span>
+
+    <span class="c1">// initialize a graph writer</span>
+    <span class="k">val</span> <span class="nv">writer</span><span class="k">:</span> <span class="kt">GraphWriter</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">GraphWriter</span><span class="o">()</span>
+
+    <span class="c1">// put movie graph data into writer</span>
+    <span class="nf">readAndPutDataIntoWriter</span><span class="o">(</span><span class="n">writer</span><span class="o">,</span> <span class="n">spark</span><span class="o">)</span>
+
+    <span class="c1">// output directory</span>
+    <span class="k">val</span> <span class="nv">outputPath</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nf">args</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+    <span class="c1">// vertex chunk size</span>
+    <span class="k">val</span> <span class="nv">vertexChunkSize</span><span class="k">:</span> <span class="kt">Long</span> <span class="o">=</span> <span class="nf">args</span><span class="o">(</span><span class="mi">1</span><span class="o">).</span><span class="py">toLong</span>
+    <span class="c1">// edge chunk size</span>
+    <span class="k">val</span> <span class="nv">edgeChunkSize</span><span class="k">:</span> <span class="kt">Long</span> <span class="o">=</span> <span class="nf">args</span><span class="o">(</span><span class="mi">2</span><span class="o">).</span><span class="py">toLong</span>
+    <span class="c1">// file type</span>
+    <span class="k">val</span> <span class="nv">fileType</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nf">args</span><span class="o">(</span><span class="mi">3</span><span class="o">)</span>
+
+    <span class="c1">// write in graphar format</span>
+    <span class="nv">writer</span><span class="o">.</span><span class="py">write</span><span class="o">(</span>
+      <span class="n">outputPath</span><span class="o">,</span>
+      <span class="n">spark</span><span class="o">,</span>
+      <span class="s">"MovieGraph"</span><span class="o">,</span>
+      <span class="n">vertexChunkSize</span><span class="o">,</span>
+      <span class="n">edgeChunkSize</span><span class="o">,</span>
+      <span class="n">fileType</span>
+    <span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The code above shows how to export graph data of Neo4j to GraphAr. The <code class="language-plaintext highlighter-rouge">readAndPutDataIntoWriter</code> method is used to read graph data of Neo4j and put the graph data into a <code class="language-plaintext highlighter-rouge">GraphWriter</code> instance. The detail of the implementation of <code class="language-plaintext highlighter-rouge">readAndPutDataIntoWriter</code> method can be found in the <a href="https://github.com/alibaba/GraphAr/blob/main/spark/src/main/scala/com/alibaba/graphar/example/Neo4j2GraphAr.scala">Neo4j2GraphAr.scala</a> file.</p>
+
+<p>To run the <code class="language-plaintext highlighter-rouge">Neo4j2GraphAr</code> example, just run the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">export </span><span class="nv">NEO4J_USR</span><span class="o">=</span><span class="s2">"neo4j"</span>
+<span class="nb">export </span><span class="nv">NEO4J_PWD</span><span class="o">=</span><span class="s2">"xxxx"</span> <span class="c"># the password you set in the previous step</span>
+./scripts/run-neo4j2graphar.sh
+</code></pre></div></div>
+
+<p>The example will convert the movie data in Neo4j to GraphAr data and save it to the directory <code class="language-plaintext highlighter-rouge">/tmp/graphar/neo4j2graphar</code>.</p>
+
+<h4 id="import-graph-data-of-neo4j-with-graphar">Import Graph Data of Neo4j with GraphAr</h4>
+
+<p>In the same way, GraphAr provides a <code class="language-plaintext highlighter-rouge">GraphAr2Neo4j</code> example class to import movie graph data of GraphAr to Neo4j. The following code shows how to import graph data of GraphAr to Neo4j:</p>
+
+<div class="language-scala highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">object</span> <span class="nc">GraphAr2Neo4j</span> <span class="o">{</span>
+
+  <span class="k">def</span> <span class="nf">main</span><span class="o">(</span><span class="n">args</span><span class="k">:</span> <span class="kt">Array</span><span class="o">[</span><span class="kt">String</span><span class="o">])</span><span class="k">:</span> <span class="kt">Unit</span> <span class="o">=</span> <span class="o">{</span>
+    <span class="c1">// connect to the Neo4j instance</span>
+    <span class="k">val</span> <span class="nv">spark</span> <span class="k">=</span> <span class="nc">SparkSession</span>
+      <span class="o">.</span><span class="py">builder</span><span class="o">()</span>
+      <span class="o">.</span><span class="py">appName</span><span class="o">(</span><span class="s">"GraphAr to Neo4j for Movie Graph"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span><span class="s">"neo4j.url"</span><span class="o">,</span> <span class="s">"bolt://localhost:7687"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span><span class="s">"neo4j.authentication.type"</span><span class="o">,</span> <span class="s">"basic"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span>
+        <span class="s">"neo4j.authentication.basic.username"</span><span class="o">,</span>
+        <span class="nv">sys</span><span class="o">.</span><span class="py">env</span><span class="o">.</span><span class="py">get</span><span class="o">(</span><span class="s">"NEO4J_USR"</span><span class="o">).</span><span class="py">get</span>
+      <span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span>
+        <span class="s">"neo4j.authentication.basic.password"</span><span class="o">,</span>
+        <span class="nv">sys</span><span class="o">.</span><span class="py">env</span><span class="o">.</span><span class="py">get</span><span class="o">(</span><span class="s">"NEO4J_PWD"</span><span class="o">).</span><span class="py">get</span>
+      <span class="o">)</span>
+      <span class="o">.</span><span class="py">config</span><span class="o">(</span><span class="s">"spark.master"</span><span class="o">,</span> <span class="s">"local"</span><span class="o">)</span>
+      <span class="o">.</span><span class="py">getOrCreate</span><span class="o">()</span>
+
+    <span class="c1">// path to the graph information file</span>
+    <span class="k">val</span> <span class="nv">graphInfoPath</span><span class="k">:</span> <span class="kt">String</span> <span class="o">=</span> <span class="nf">args</span><span class="o">(</span><span class="mi">0</span><span class="o">)</span>
+    <span class="k">val</span> <span class="nv">graphInfo</span> <span class="k">=</span> <span class="nv">GraphInfo</span><span class="o">.</span><span class="py">loadGraphInfo</span><span class="o">(</span><span class="n">graphInfoPath</span><span class="o">,</span> <span class="n">spark</span><span class="o">)</span>
+
+    <span class="c1">// The edge data need to convert src and dst to the vertex id , so we need to read</span>
+    <span class="c1">// the vertex data with index column.</span>
+    <span class="k">val</span> <span class="nv">graphData</span> <span class="k">=</span> <span class="nv">GraphReader</span><span class="o">.</span><span class="py">read</span><span class="o">(</span><span class="n">graphInfoPath</span><span class="o">,</span> <span class="n">spark</span><span class="o">,</span> <span class="kc">true</span><span class="o">)</span>
+    <span class="k">val</span> <span class="nv">vertexData</span> <span class="k">=</span> <span class="nv">graphData</span><span class="o">.</span><span class="py">_1</span>
+    <span class="k">val</span> <span class="nv">edgeData</span> <span class="k">=</span> <span class="nv">graphData</span><span class="o">.</span><span class="py">_2</span>
+
+    <span class="nf">putVertexDataIntoNeo4j</span><span class="o">(</span><span class="n">graphInfo</span><span class="o">,</span> <span class="n">vertexData</span><span class="o">,</span> <span class="n">spark</span><span class="o">)</span>
+    <span class="nf">putEdgeDataIntoNeo4j</span><span class="o">(</span><span class="n">graphInfo</span><span class="o">,</span> <span class="n">vertexData</span><span class="o">,</span> <span class="n">edgeData</span><span class="o">,</span> <span class="n">spark</span><span class="o">)</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>The code above shows how to import graph data of GraphAr to Neo4j. The <code class="language-plaintext highlighter-rouge">putVertexDataIntoNeo4j</code> method is used to put vertex data of GraphAr into Neo4j. The <code class="language-plaintext highlighter-rouge">putEdgeDataIntoNeo4j</code> method is used to put edge data of GraphAr into Neo4j. The detail of the implementation of <code class="language-plaintext highlighter-rouge">putVertexDataIntoNeo4j</code> and <code class="language-plaintext highlighter-rouge">putEdgeDataIntoNeo4j</code> methods can be found in the <a href="https://github.com/alibaba/GraphAr/blob/main/spark/src/main/scala/com/alibaba/graphar/example/GraphAr2Neo4j.scala">GraphAr2Neo4j.scala</a> file.</p>
+
+<p>To run the <code class="language-plaintext highlighter-rouge">GraphAr2Neo4j</code> example, just run the following command:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>./scripts/run-graphar2neo4j.sh
+</code></pre></div></div>
+
+<p>Now we have successfully imported the movie graph data of GraphAr to Neo4j. We can use Neo4j Browser to check the movie graph data like the previous step.</p>
+
+<h3 id="conclusion">Conclusion</h3>
+
+<p>GraphAr define a simple and standard data file format for graph data storage and retrieval. It provides a set of interfaces for generating, accessing, and converting these formatted files. GraphAr can help various graph computing applications or existing systems to conveniently build and access graph data. It can be used as a direct data source for graph computing applications, as well as for importing/exporting and persistently storing graph data, reducing the overhead of collaboration between various graph systems. In this post, we show how to import and export graph data of Neo4j with GraphAr. There are many other examples in GraphAr Spark SDK. Please refer to <a href="https://alibaba.github.io/GraphAr/applications/out-of-core.html">more examples</a> to learn about the other available case studies utilizing GraphAr Spark SDK.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Import and Export Graph Data of Neo4j with GraphAr&amp;url=https://graphscope.io/tech/2023/09/14/Import-and-Export-Graph-Data-of-Neo4j-with-GraphAr.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2023/09/14/Import-and-Export-Graph-Data-of-Neo4j-with-GraphAr.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2023/09/14/Import-and-Export-Graph-Data-of-Neo4j-with-GraphAr.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2023 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

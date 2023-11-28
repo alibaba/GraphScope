@@ -1,6 +1,4 @@
 var searchData=
 [
-  ['ind_5fbuffer_5ft_1598',['ind_buffer_t',['../classgs_1_1IdIndexer.html#a0fac3ced93c1e64be3dca6d2efba31b0',1,'gs::IdIndexer']]],
-  ['intcolumn_1599',['IntColumn',['../namespacegs.html#ad79b0153c166cb0b6f6157829b7bdc27',1,'gs']]],
-  ['intemptycolumn_1600',['IntEmptyColumn',['../namespacegs.html#ae200011097d9b858e4400ec046f7a3c4',1,'gs']]]
+  ['edge_5ftriplet_5ftype_1799',['edge_triplet_type',['../classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b',1,'gs::LoadingConfig']]]
 ];

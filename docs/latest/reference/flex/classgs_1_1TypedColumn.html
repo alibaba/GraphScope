@@ -113,10 +113,16 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a0a5578312a630fff9b4bcd3466c9c22b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1f66f30a5ed5575ea400baaa36f73d3c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1Any.html">Any</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#a1f66f30a5ed5575ea400baaa36f73d3c">get</a> (size_t index) const override</td></tr>
 <tr class="separator:a1f66f30a5ed5575ea400baaa36f73d3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a71897d073cb9cb670e597b92d5bf62e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#a71897d073cb9cb670e597b92d5bf62e7">Serialize</a> (const std::string &amp;path, size_t size) override</td></tr>
+<tr class="memitem:a7109f0f7c591f5382f3cde6e9769980c"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#a7109f0f7c591f5382f3cde6e9769980c">size</a> () const override</td></tr>
+<tr class="separator:a7109f0f7c591f5382f3cde6e9769980c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71897d073cb9cb670e597b92d5bf62e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#a71897d073cb9cb670e597b92d5bf62e7">Serialize</a> (const std::string &amp;path, size_t <a class="el" href="classgs_1_1TypedColumn.html#a7109f0f7c591f5382f3cde6e9769980c">size</a>) override</td></tr>
 <tr class="separator:a71897d073cb9cb670e597b92d5bf62e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abad0580a97ee945c50492e087a3f0821"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#abad0580a97ee945c50492e087a3f0821">Deserialize</a> (const std::string &amp;path) override</td></tr>
 <tr class="separator:abad0580a97ee945c50492e087a3f0821"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aad90f1f23db4094b8afd5b3f8f9c9e6e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#aad90f1f23db4094b8afd5b3f8f9c9e6e">clear</a> () override</td></tr>
+<tr class="separator:aad90f1f23db4094b8afd5b3f8f9c9e6e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd07c385eb58f0d63ac0b444eac12e7b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#abd07c385eb58f0d63ac0b444eac12e7b">resize</a> (size_t <a class="el" href="classgs_1_1TypedColumn.html#a7109f0f7c591f5382f3cde6e9769980c">size</a>) override</td></tr>
+<tr class="separator:abd07c385eb58f0d63ac0b444eac12e7b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0bd34f82816020c16e5aa256cd0ed886"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#a0bd34f82816020c16e5aa256cd0ed886">ingest</a> (uint32_t index, grape::OutArchive &amp;arc) override</td></tr>
 <tr class="separator:a0bd34f82816020c16e5aa256cd0ed886"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a243c29e0949270accd3ca5231edfb618"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedColumn.html#a243c29e0949270accd3ca5231edfb618">storage_strategy</a> () const override</td></tr>
@@ -244,6 +250,35 @@ template&lt;typename T &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="aad90f1f23db4094b8afd5b3f8f9c9e6e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aad90f1f23db4094b8afd5b3f8f9c9e6e">&#9670;&nbsp;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classgs_1_1TypedColumn.html">gs::TypedColumn</a>&lt; T &gt;::clear </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="el" href="classgs_1_1ColumnBase.html#a5e377a81371e43fc00d48869da19b34e">gs::ColumnBase</a>.</p>
 
 </div>
 </div>
@@ -405,6 +440,36 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a id="abd07c385eb58f0d63ac0b444eac12e7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd07c385eb58f0d63ac0b444eac12e7b">&#9670;&nbsp;</a></span>resize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="classgs_1_1TypedColumn.html">gs::TypedColumn</a>&lt; T &gt;::resize </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="el" href="classgs_1_1ColumnBase.html#ab08f8c143d3ea6f6fd7861608868764e">gs::ColumnBase</a>.</p>
+
+</div>
+</div>
 <a id="a71897d073cb9cb670e597b92d5bf62e7"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a71897d073cb9cb670e597b92d5bf62e7">&#9670;&nbsp;</a></span>Serialize()</h2>
 
@@ -520,6 +585,35 @@ template&lt;typename T &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7109f0f7c591f5382f3cde6e9769980c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7109f0f7c591f5382f3cde6e9769980c">&#9670;&nbsp;</a></span>size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t <a class="el" href="classgs_1_1TypedColumn.html">gs::TypedColumn</a>&lt; T &gt;::size </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implements <a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">gs::ColumnBase</a>.</p>
 
 </div>
 </div>

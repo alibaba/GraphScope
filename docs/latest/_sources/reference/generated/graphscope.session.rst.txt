@@ -23,6 +23,7 @@
       ~session.get_config
       ~session.get_vineyard_object_mapping_table
       ~session.graphlearn
+      ~session.graphlearn_torch
       ~session.gremlin
       ~session.interactive
       ~session.learning

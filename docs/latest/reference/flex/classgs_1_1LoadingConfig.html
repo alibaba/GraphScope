@@ -152,8 +152,10 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a8784ea3cc8d57c2bcd6bcb6ddacb8c00"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a8784ea3cc8d57c2bcd6bcb6ddacb8c00">ParseFromYaml</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;yaml_file)</td></tr>
-<tr class="separator:a8784ea3cc8d57c2bcd6bcb6ddacb8c00"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d32c0f59681ea5f7a5ff01eac103fae"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a9d32c0f59681ea5f7a5ff01eac103fae">ParseFromYamlFile</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const std::string &amp;yaml_file)</td></tr>
+<tr class="separator:a9d32c0f59681ea5f7a5ff01eac103fae"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a740cd25aaa5f1ceb591625cb4d68ec0b"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1Result.html">gs::Result</a>&lt; <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a740cd25aaa5f1ceb591625cb4d68ec0b">ParseFromYamlNode</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const YAML::Node &amp;yaml_node)</td></tr>
+<tr class="separator:a740cd25aaa5f1ceb591625cb4d68ec0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -182,6 +184,8 @@ Private Attributes</h2></td></tr>
 Friends</h2></td></tr>
 <tr class="memitem:ac9fd7c27f467c9a4d692016237bffd4a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#ac9fd7c27f467c9a4d692016237bffd4a">config_parsing::parse_bulk_load_config_file</a> (const std::string &amp;config_file, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;load_config)</td></tr>
 <tr class="separator:ac9fd7c27f467c9a4d692016237bffd4a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad369f59d100cda3a10c17426e3d94636"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#ad369f59d100cda3a10c17426e3d94636">config_parsing::parse_bulk_load_config_yaml</a> (const YAML::Node &amp;root, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;load_config)</td></tr>
+<tr class="separator:ad369f59d100cda3a10c17426e3d94636"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a234f4c960989e6e7ccb7e19f143e321b"></a>
@@ -682,8 +686,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="a8784ea3cc8d57c2bcd6bcb6ddacb8c00"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8784ea3cc8d57c2bcd6bcb6ddacb8c00">&#9670;&nbsp;</a></span>ParseFromYaml()</h2>
+<a id="a9d32c0f59681ea5f7a5ff01eac103fae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d32c0f59681ea5f7a5ff01eac103fae">&#9670;&nbsp;</a></span>ParseFromYamlFile()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -692,7 +696,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> gs::LoadingConfig::ParseFromYaml </td>
+          <td class="memname"><a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> gs::LoadingConfig::ParseFromYamlFile </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td>
           <td class="paramname"><em>schema</em>, </td>
@@ -702,6 +706,42 @@ Friends</h2></td></tr>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>yaml_file</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a740cd25aaa5f1ceb591625cb4d68ec0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a740cd25aaa5f1ceb591625cb4d68ec0b">&#9670;&nbsp;</a></span>ParseFromYamlNode()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &gt; gs::LoadingConfig::ParseFromYamlNode </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td>
+          <td class="paramname"><em>schema</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const YAML::Node &amp;&#160;</td>
+          <td class="paramname"><em>yaml_node</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -787,6 +827,48 @@ Friends</h2></td></tr>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>config_file</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td>
+          <td class="paramname"><em>schema</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
+          <td class="paramname"><em>load_config</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad369f59d100cda3a10c17426e3d94636"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad369f59d100cda3a10c17426e3d94636">&#9670;&nbsp;</a></span>config_parsing::parse_bulk_load_config_yaml</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool <a class="el" href="namespacegs_1_1config__parsing.html#a9cf7667168c3e6219e12ba0d23cde333">config_parsing::parse_bulk_load_config_yaml</a> </td>
+          <td>(</td>
+          <td class="paramtype">const YAML::Node &amp;&#160;</td>
+          <td class="paramname"><em>root</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

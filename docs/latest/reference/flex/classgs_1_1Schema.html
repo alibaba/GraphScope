@@ -70,6 +70,7 @@ $(function() {
 <a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
 <a href="classgs_1_1Schema-members.html">List of all members</a>  </div>
@@ -102,6 +103,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:af773661c01ce90ab4fdb0600a320a724"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf7c183608763c5fa090e31a5604fc24"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#abf7c183608763c5fa090e31a5604fc24">~Schema</a> ()</td></tr>
 <tr class="separator:abf7c183608763c5fa090e31a5604fc24"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a36a15d1869141b229eb85fae54340643"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a36a15d1869141b229eb85fae54340643">Clear</a> ()</td></tr>
+<tr class="separator:a36a15d1869141b229eb85fae54340643"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f3e18ccc636023323bfd2ec54362693"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a2f3e18ccc636023323bfd2ec54362693">add_vertex_label</a> (const std::string &amp;label, const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;property_types, const std::vector&lt; std::string &gt; &amp;property_names, const std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>, std::string, size_t &gt;&gt; &amp;primary_key, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies={}, size_t max_vnum=static_cast&lt; size_t &gt;(1)&lt;&lt; 32)</td></tr>
 <tr class="separator:a2f3e18ccc636023323bfd2ec54362693"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1c7145e696a9ca6ba8e64ede660fd181"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a1c7145e696a9ca6ba8e64ede660fd181">add_edge_label</a> (const std::string &amp;src_label, const std::string &amp;dst_label, const std::string &amp;edge_label, const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;properties, const std::vector&lt; std::string &gt; &amp;prop_names, <a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> oe=<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8ac73de5127566435df5b6cfb220788aa7">EdgeStrategy::kMultiple</a>, <a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> ie=<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8ac73de5127566435df5b6cfb220788aa7">EdgeStrategy::kMultiple</a>)</td></tr>
@@ -174,15 +177,26 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a802c0caae51b82188aee45ab5c28af62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae5400894cb31b909fa684342b95de1d9"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ae5400894cb31b909fa684342b95de1d9">Equals</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;other) const</td></tr>
 <tr class="separator:ae5400894cb31b909fa684342b95de1d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5991c9087287a2e01a05763ba7ac5998"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::string &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a5991c9087287a2e01a05763ba7ac5998">GetPluginsList</a> () const</td></tr>
-<tr class="separator:a5991c9087287a2e01a05763ba7ac5998"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1fca4bde5cfcc45d1e16e5bb8564e2c2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a1fca4bde5cfcc45d1e16e5bb8564e2c2">EmplacePlugin</a> (const std::string &amp;plugin_name)</td></tr>
-<tr class="separator:a1fca4bde5cfcc45d1e16e5bb8564e2c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f6845d0ee465a44515d9664a6bc937e"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; std::string, std::pair&lt; std::string, uint8_t &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a1f6845d0ee465a44515d9664a6bc937e">GetPlugins</a> () const</td></tr>
+<tr class="separator:a1f6845d0ee465a44515d9664a6bc937e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af620cf6aadd802b16ec3f087561a9a9b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#af620cf6aadd802b16ec3f087561a9a9b">EmplacePlugins</a> (const std::vector&lt; std::string &gt; &amp;plugin_paths_or_names)</td></tr>
+<tr class="separator:af620cf6aadd802b16ec3f087561a9a9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab486ac8c16da0ca7fc12b96a57e6f62c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ab486ac8c16da0ca7fc12b96a57e6f62c">SetPluginDir</a> (const std::string &amp;plugin_dir)</td></tr>
+<tr class="separator:ab486ac8c16da0ca7fc12b96a57e6f62c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af88e987c27bc6a0b3c8907b2de465ec8"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#af88e987c27bc6a0b3c8907b2de465ec8">GetPluginDir</a> () const</td></tr>
+<tr class="separator:af88e987c27bc6a0b3c8907b2de465ec8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:abed45d6f8db8a745a766d4aec2e49032"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1Schema.html">Schema</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#abed45d6f8db8a745a766d4aec2e49032">LoadFromYaml</a> (const std::string &amp;schema_config)</td></tr>
 <tr class="separator:abed45d6f8db8a745a766d4aec2e49032"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a96b0313afa0eb5e5c1198c2e41aba44c"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="classgs_1_1Result.html">Result</a>&lt; <a class="el" href="classgs_1_1Schema.html">Schema</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a96b0313afa0eb5e5c1198c2e41aba44c">LoadFromYamlNode</a> (const YAML::Node &amp;schema_node)</td></tr>
+<tr class="separator:a96b0313afa0eb5e5c1198c2e41aba44c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a931f5d511e6b089ecf55439e569147b4"><td class="memItemLeft" align="right" valign="top">static constexpr uint8_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a931f5d511e6b089ecf55439e569147b4">RESERVED_PLUGIN_NUM</a> = 1</td></tr>
+<tr class="separator:a931f5d511e6b089ecf55439e569147b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -217,8 +231,10 @@ Private Attributes</h2></td></tr>
 <tr class="separator:ad47143943d6a297cae15695067151cd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab227a976f401a39334a774e4a0fcb9ec"><td class="memItemLeft" align="right" valign="top">std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#ab227a976f401a39334a774e4a0fcb9ec">max_vnum_</a></td></tr>
 <tr class="separator:ab227a976f401a39334a774e4a0fcb9ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a169dd8f0196ce76ea9c0f6ecdbc21012"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a169dd8f0196ce76ea9c0f6ecdbc21012">plugin_list_</a></td></tr>
-<tr class="separator:a169dd8f0196ce76ea9c0f6ecdbc21012"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6bb7bbe02b11b4a53ee594292b07e20f"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; std::string, std::pair&lt; std::string, uint8_t &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a6bb7bbe02b11b4a53ee594292b07e20f">plugin_name_to_path_and_id_</a></td></tr>
+<tr class="separator:a6bb7bbe02b11b4a53ee594292b07e20f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a99ec2d9ea0230875607e38343dba715d"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html#a99ec2d9ea0230875607e38343dba715d">plugin_dir_</a></td></tr>
+<tr class="separator:a99ec2d9ea0230875607e38343dba715d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a8bdcf6f3bfde202a9d38464861237b05"></a>
@@ -397,6 +413,23 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a36a15d1869141b229eb85fae54340643"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36a15d1869141b229eb85fae54340643">&#9670;&nbsp;</a></span>Clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Schema::Clear </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a12e3a73890656e58083b1aa546639ac6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a12e3a73890656e58083b1aa546639ac6">&#9670;&nbsp;</a></span>contains_edge_label()</h2>
 
@@ -534,17 +567,17 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a1fca4bde5cfcc45d1e16e5bb8564e2c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1fca4bde5cfcc45d1e16e5bb8564e2c2">&#9670;&nbsp;</a></span>EmplacePlugin()</h2>
+<a id="af620cf6aadd802b16ec3f087561a9a9b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af620cf6aadd802b16ec3f087561a9a9b">&#9670;&nbsp;</a></span>EmplacePlugins()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::Schema::EmplacePlugin </td>
+          <td class="memname">bool gs::Schema::EmplacePlugins </td>
           <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>plugin_name</em></td><td>)</td>
+          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>plugin_paths_or_names</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1100,14 +1133,31 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a5991c9087287a2e01a05763ba7ac5998"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5991c9087287a2e01a05763ba7ac5998">&#9670;&nbsp;</a></span>GetPluginsList()</h2>
+<a id="af88e987c27bc6a0b3c8907b2de465ec8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af88e987c27bc6a0b3c8907b2de465ec8">&#9670;&nbsp;</a></span>GetPluginDir()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const std::vector&lt; std::string &gt; &amp; gs::Schema::GetPluginsList </td>
+          <td class="memname">std::string gs::Schema::GetPluginDir </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1f6845d0ee465a44515d9664a6bc937e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f6845d0ee465a44515d9664a6bc937e">&#9670;&nbsp;</a></span>GetPlugins()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::unordered_map&lt; std::string, std::pair&lt; std::string, uint8_t &gt; &gt; &amp; gs::Schema::GetPlugins </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -1195,6 +1245,32 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a96b0313afa0eb5e5c1198c2e41aba44c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a96b0313afa0eb5e5c1198c2e41aba44c">&#9670;&nbsp;</a></span>LoadFromYamlNode()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; <a class="el" href="classgs_1_1Schema.html">Schema</a> &gt; gs::Schema::LoadFromYamlNode </td>
+          <td>(</td>
+          <td class="paramtype">const YAML::Node &amp;&#160;</td>
+          <td class="paramname"><em>schema_node</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a4dec6c2aeacea68a8391673263390933"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4dec6c2aeacea68a8391673263390933">&#9670;&nbsp;</a></span>Serialize()</h2>
 
@@ -1241,6 +1317,24 @@ Private Attributes</h2></td></tr>
           <td></td>
           <td>)</td>
           <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ab486ac8c16da0ca7fc12b96a57e6f62c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab486ac8c16da0ca7fc12b96a57e6f62c">&#9670;&nbsp;</a></span>SetPluginDir()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Schema::SetPluginDir </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>plugin_dir</em></td><td>)</td>
+          <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1513,8 +1607,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a169dd8f0196ce76ea9c0f6ecdbc21012"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a169dd8f0196ce76ea9c0f6ecdbc21012">&#9670;&nbsp;</a></span>plugin_list_</h2>
+<a id="a99ec2d9ea0230875607e38343dba715d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a99ec2d9ea0230875607e38343dba715d">&#9670;&nbsp;</a></span>plugin_dir_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1523,12 +1617,56 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;std::string&gt; gs::Schema::plugin_list_</td>
+          <td class="memname">std::string gs::Schema::plugin_dir_</td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
 <span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a6bb7bbe02b11b4a53ee594292b07e20f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6bb7bbe02b11b4a53ee594292b07e20f">&#9670;&nbsp;</a></span>plugin_name_to_path_and_id_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::unordered_map&lt;std::string, std::pair&lt;std::string, uint8_t&gt; &gt; gs::Schema::plugin_name_to_path_and_id_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a931f5d511e6b089ecf55439e569147b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a931f5d511e6b089ecf55439e569147b4">&#9670;&nbsp;</a></span>RESERVED_PLUGIN_NUM</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr uint8_t gs::Schema::RESERVED_PLUGIN_NUM = 1</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">

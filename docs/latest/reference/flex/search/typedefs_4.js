@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['key_5fbuffer_5ft_1601',['key_buffer_t',['../classgs_1_1IdIndexer.html#ae7cebed159c7fe05c43e1e88c9695632',1,'gs::IdIndexer']]]
+  ['floatcolumn_1800',['FloatColumn',['../namespacegs.html#ac86726b211d2ff412286bd0945b7be60',1,'gs']]],
+  ['floatemptycolumn_1801',['FloatEmptyColumn',['../namespacegs.html#a6c9f600c366c6bd434bf66704ebe2fcf',1,'gs']]]
 ];

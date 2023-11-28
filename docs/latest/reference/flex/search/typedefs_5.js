@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['label_5ft_1602',['label_t',['../namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2',1,'gs']]],
-  ['label_5ftype_1603',['label_type',['../classgs_1_1Schema.html#a8bdcf6f3bfde202a9d38464861237b05',1,'gs::Schema']]],
-  ['longcolumn_1604',['LongColumn',['../namespacegs.html#ae3d3eda4b0ae9d9abfb55848e7b5dff5',1,'gs']]],
-  ['longemptycolumn_1605',['LongEmptyColumn',['../namespacegs.html#a1435fbe3eec7b86748ca1597f83c1f8f',1,'gs']]]
+  ['ind_5fbuffer_5ft_1802',['ind_buffer_t',['../classgs_1_1IdIndexer.html#a0fac3ced93c1e64be3dca6d2efba31b0',1,'gs::IdIndexer']]],
+  ['intcolumn_1803',['IntColumn',['../namespacegs.html#ac13f98d1ef8645cfe123e9f3c9784609',1,'gs']]],
+  ['intemptycolumn_1804',['IntEmptyColumn',['../namespacegs.html#a8ef628511d251bb752f19f3768662dac',1,'gs']]]
 ];

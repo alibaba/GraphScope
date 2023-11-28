@@ -98,9 +98,15 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a16e5b36a6ed1c4ef6bbbf1f4fa97abc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6427a00b8c6dacd3457b3ecc39a02215"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structgs_1_1Any.html">Any</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a6427a00b8c6dacd3457b3ecc39a02215">get</a> (size_t index) const =0</td></tr>
 <tr class="separator:a6427a00b8c6dacd3457b3ecc39a02215"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f44d5651c204aec64d1166031a4a5c3"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a> () const =0</td></tr>
+<tr class="separator:a3f44d5651c204aec64d1166031a4a5c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e377a81371e43fc00d48869da19b34e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a5e377a81371e43fc00d48869da19b34e">clear</a> ()=0</td></tr>
+<tr class="separator:a5e377a81371e43fc00d48869da19b34e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab08f8c143d3ea6f6fd7861608868764e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#ab08f8c143d3ea6f6fd7861608868764e">resize</a> (size_t <a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a>)=0</td></tr>
+<tr class="separator:ab08f8c143d3ea6f6fd7861608868764e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58889b5be1a462289718f7e0c19bb22a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a58889b5be1a462289718f7e0c19bb22a">ingest</a> (uint32_t index, grape::OutArchive &amp;arc)=0</td></tr>
 <tr class="separator:a58889b5be1a462289718f7e0c19bb22a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00d5681fd6224210233374943ebd5318"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a00d5681fd6224210233374943ebd5318">Serialize</a> (const std::string &amp;filename, size_t size)=0</td></tr>
+<tr class="memitem:a00d5681fd6224210233374943ebd5318"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a00d5681fd6224210233374943ebd5318">Serialize</a> (const std::string &amp;filename, size_t <a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a>)=0</td></tr>
 <tr class="separator:a00d5681fd6224210233374943ebd5318"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83f5c3ec88591592686a3a5841ee7534"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a83f5c3ec88591592686a3a5841ee7534">Deserialize</a> (const std::string &amp;filename)=0</td></tr>
 <tr class="separator:a83f5c3ec88591592686a3a5841ee7534"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -134,6 +140,33 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a5e377a81371e43fc00d48869da19b34e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e377a81371e43fc00d48869da19b34e">&#9670;&nbsp;</a></span>clear()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::ColumnBase::clear </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#aad90f1f23db4094b8afd5b3f8f9c9e6e">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a45c4c96a54c1791436a82919d377115a">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+
+</div>
+</div>
 <a id="a83f5c3ec88591592686a3a5841ee7534"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a83f5c3ec88591592686a3a5841ee7534">&#9670;&nbsp;</a></span>Deserialize()</h2>
 
@@ -256,6 +289,34 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
+<a id="ab08f8c143d3ea6f6fd7861608868764e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab08f8c143d3ea6f6fd7861608868764e">&#9670;&nbsp;</a></span>resize()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::ColumnBase::resize </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1TypedEmptyColumn.html#af48d468115b9b2107a0ca18614ff6cf5">gs::TypedEmptyColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedColumn.html#abd07c385eb58f0d63ac0b444eac12e7b">gs::TypedColumn&lt; T &gt;</a>.</p>
+
+</div>
+</div>
 <a id="a00d5681fd6224210233374943ebd5318"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a00d5681fd6224210233374943ebd5318">&#9670;&nbsp;</a></span>Serialize()</h2>
 
@@ -329,6 +390,33 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a44fd806b2b737c22bf52a083716e22e8">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#af98f42ddba698bb04a36bfbdd66668d8">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a3f44d5651c204aec64d1166031a4a5c3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3f44d5651c204aec64d1166031a4a5c3">&#9670;&nbsp;</a></span>size()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual size_t gs::ColumnBase::size </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a7109f0f7c591f5382f3cde6e9769980c">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a665cccec5ba641709eac40bf65bf642e">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
