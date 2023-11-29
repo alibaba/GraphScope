@@ -79,7 +79,8 @@ public class FileMetaStore implements MetaStore {
             is.read(res);
             long realCrc = getCRC32Checksum(res);
             if (realCrc != crc) {
-                logger.error("checksum [{}] is [{}] versus [{}]", file0.getAbsolutePath(), realCrc, crc);
+                logger.error(
+                        "checksum [{}] is [{}] versus [{}]", file0.getAbsolutePath(), realCrc, crc);
                 res = null;
             }
         }

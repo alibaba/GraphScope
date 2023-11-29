@@ -118,10 +118,10 @@ public class ZkDiscovery implements NodeDiscovery {
                 listener.cacheChanged();
                 this.serviceCaches.add(serviceCache);
             }
-            logger.info("ZkDiscovery started");
         } catch (Exception e) {
             throw new GrootException(e);
         }
+        logger.info("ZkDiscovery started");
     }
 
     @Override
@@ -218,7 +218,8 @@ public class ZkDiscovery implements NodeDiscovery {
                         try {
                             listener.nodesLeft(role, removed);
                         } catch (Exception e) {
-                            logger.error("listener [{}] failed on nodesLeft [{}]", listener, removed, e);
+                            logger.error(
+                                    "listener [{}] failed on nodesLeft [{}]", listener, removed, e);
                         }
                     });
         }
@@ -235,7 +236,8 @@ public class ZkDiscovery implements NodeDiscovery {
                         try {
                             listener.nodesJoin(role, added);
                         } catch (Exception e) {
-                            logger.error("listener [{}] failed on nodesJoin [{}]", listener, added, e);
+                            logger.error(
+                                    "listener [{}] failed on nodesJoin [{}]", listener, added, e);
                         }
                     });
         }
@@ -255,7 +257,11 @@ public class ZkDiscovery implements NodeDiscovery {
                                 try {
                                     listener.nodesJoin(role, nodes);
                                 } catch (Exception ex) {
-                                    logger.error("listener [{}] failed on nodesJoin [{}]", listener, nodes, ex);
+                                    logger.error(
+                                            "listener [{}] failed on nodesJoin [{}]",
+                                            listener,
+                                            nodes,
+                                            ex);
                                 }
                             });
                 }

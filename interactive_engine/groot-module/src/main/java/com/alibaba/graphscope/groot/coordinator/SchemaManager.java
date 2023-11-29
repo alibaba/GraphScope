@@ -126,12 +126,10 @@ public class SchemaManager {
             DdlRequestBatch ddlRequestBatch,
             CompletionCallback<Long> callback) {
         logger.info(
-                "submitBatchDdl requestId ["
-                        + requestId
-                        + "], sessionId ["
-                        + sessionId
-                        + "]. Request Body: "
-                        + ddlRequestBatch.toProto().toString());
+                "submitBatchDdl requestId [{}], sessionId [{}], request body [{}]",
+                requestId,
+                sessionId,
+                ddlRequestBatch.toProto());
         if (!ready) {
             callback.onError(new IllegalStateException("SchemaManager is recovering"));
             return;
@@ -174,7 +172,11 @@ public class SchemaManager {
                         future.get();
                         callback.onCompleted(snapshotId);
                     } catch (Exception e) {
-                        logger.error("Error in Ddl requestId [{}], sessionId [{}]", requestId, sessionId, e);
+                        logger.error(
+                                "Error in Ddl requestId [{}], sessionId [{}]",
+                                requestId,
+                                sessionId,
+                                e);
                         this.ready = false;
                         callback.onError(e);
                         this.singleThreadExecutor.execute(() -> recover());

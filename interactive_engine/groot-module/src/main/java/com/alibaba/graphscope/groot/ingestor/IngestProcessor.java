@@ -19,6 +19,8 @@ import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.operation.OperationBlob;
+import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
@@ -29,7 +31,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -151,15 +155,14 @@ public class IngestProcessor implements MetricsAgent {
 
     private void checkStarted() {
         if (!started) {
-            throw new IllegalStateException(
-                    "IngestProcessor of queue #[" + this.queueId + "] not started yet");
+            throw new IllegalStateException("IngestProcessor queue#[" + queueId + "] not started");
         }
     }
 
     public void ingestBatch(
             String requestId, OperationBatch operationBatch, IngestCallback callback) {
         checkStarted();
-        logger.debug("ingestBatch requestId [" + requestId + "], queueId [" + queueId + "]");
+        logger.debug("ingestBatch requestId [{}], queueId [{}]", requestId, queueId);
         if (this.ingestSnapshotId.get() == -1L) {
             throw new IllegalStateException("ingestor has no valid ingestSnapshotId");
         }
@@ -197,7 +200,10 @@ public class IngestProcessor implements MetricsAgent {
         if (batchSnapshotId == -1L) {
             throw new IllegalStateException("invalid ingestSnapshotId [" + batchSnapshotId + "]");
         }
-        logger.debug("append batch to WAL. requestId [{}], snapshotId [{}]", task.requestId, batchSnapshotId);
+        logger.debug(
+                "append batch to WAL. requestId [{}], snapshotId [{}]",
+                task.requestId,
+                batchSnapshotId);
         long latestSnapshotId = task.operationBatch.getLatestSnapshotId();
         if (latestSnapshotId > 0 && latestSnapshotId < batchSnapshotId) {
             throw new IllegalStateException(
@@ -231,6 +237,107 @@ public class IngestProcessor implements MetricsAgent {
             this.totalProcessed += task.operationBatch.getOperationCount();
         }
         return batchSnapshotId;
+    }
+
+    class IngestTask {
+        String requestId;
+        OperationBatch operationBatch;
+        IngestCallback callback;
+
+        public IngestTask(
+                String requestId, OperationBatch operationBatch, IngestCallback callback) {
+            this.requestId = requestId;
+            this.operationBatch = operationBatch;
+            this.callback = callback;
+        }
+    }
+
+    public void setTailOffset(long offset) {
+        logger.info("IngestProcessor of queue #[{}] set tail offset to [{}]", queueId, offset);
+        this.tailOffset = offset;
+    }
+
+    public void replayWAL(long tailOffset) throws IOException {
+        long replayFrom = tailOffset + 1;
+        logger.info("replay WAL of queue#[{}] from offset [{}]", queueId, replayFrom);
+        int replayCount = 0;
+        try (LogReader logReader = this.logService.createReader(queueId, replayFrom)) {
+            ReadLogEntry readLogEntry;
+            while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
+                long offset = readLogEntry.getOffset();
+                LogEntry logEntry = readLogEntry.getLogEntry();
+                long snapshotId = logEntry.getSnapshotId();
+                OperationBatch batch = logEntry.getOperationBatch();
+                this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
+                replayCount++;
+            }
+        }
+        logger.info("replayWAL finished. total replayed [{}] records", replayCount);
+    }
+
+    public long replayDMLRecordsFrom(long offset, long timestamp) throws IOException {
+        List<OperationType> types = new ArrayList<>();
+        types.add(OperationType.OVERWRITE_VERTEX);
+        types.add(OperationType.UPDATE_VERTEX);
+        types.add(OperationType.DELETE_VERTEX);
+        types.add(OperationType.OVERWRITE_EDGE);
+        types.add(OperationType.UPDATE_EDGE);
+        types.add(OperationType.DELETE_EDGE);
+        types.add(OperationType.CLEAR_VERTEX_PROPERTIES);
+        types.add(OperationType.CLEAR_EDGE_PROPERTIES);
+
+        long batchSnapshotId = this.ingestSnapshotId.get();
+        logger.info(
+                "replay DML records of queue#[{}] from offset [{}], ts [{}]",
+                queueId,
+                offset,
+                timestamp);
+        int replayCount = 0;
+        try (LogReader logReader = this.logService.createReader(queueId, offset, timestamp)) {
+            ReadLogEntry readLogEntry;
+            while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
+                long entryOffset = readLogEntry.getOffset();
+                LogEntry logEntry = readLogEntry.getLogEntry();
+                OperationBatch batch = extractOperations(logEntry.getOperationBatch(), types);
+                if (batch.getOperationCount() == 0) {
+                    continue;
+                }
+                this.batchSender.asyncSendWithRetry(
+                        "", queueId, batchSnapshotId, entryOffset, batch);
+                replayCount++;
+            }
+        }
+        logger.info("replay DML records finished. total replayed [{}] records", replayCount);
+        return batchSnapshotId;
+    }
+
+    private OperationBatch extractOperations(OperationBatch input, List<OperationType> types) {
+        boolean hasOtherType = false;
+        for (int i = 0; i < input.getOperationCount(); ++i) {
+            OperationBlob blob = input.getOperationBlob(i);
+            OperationType opType = blob.getOperationType();
+            if (!types.contains(opType)) {
+                hasOtherType = true;
+                break;
+            }
+        }
+        if (!hasOtherType) {
+            return input;
+        }
+        OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
+        batchBuilder.setLatestSnapshotId(input.getLatestSnapshotId());
+        for (int i = 0; i < input.getOperationCount(); ++i) {
+            OperationBlob blob = input.getOperationBlob(i);
+            OperationType opType = blob.getOperationType();
+            if (types.contains(opType)) {
+                batchBuilder.addOperationBlob(blob);
+            }
+        }
+        return batchBuilder.build();
+    }
+
+    public int getQueueId() {
+        return queueId;
     }
 
     @Override
@@ -289,45 +396,5 @@ public class IngestProcessor implements MetricsAgent {
             INGESTOR_REJECT_COUNT,
             INGEST_BUFFER_TASKS_COUNT
         };
-    }
-
-    class IngestTask {
-        String requestId;
-        OperationBatch operationBatch;
-        IngestCallback callback;
-
-        public IngestTask(
-                String requestId, OperationBatch operationBatch, IngestCallback callback) {
-            this.requestId = requestId;
-            this.operationBatch = operationBatch;
-            this.callback = callback;
-        }
-    }
-
-    public void setTailOffset(long offset) {
-        logger.info("IngestProcessor of queue #[{}] set tail offset to [{}]", queueId, offset);
-        this.tailOffset = offset;
-    }
-
-    public void replayWAL(long tailOffset) throws IOException {
-        long replayFrom = tailOffset + 1;
-        logger.info("replay WAL of queue#[{}] from offset [{}]", queueId, replayFrom);
-        int replayCount = 0;
-        try(LogReader logReader = this.logService.createReader(queueId, replayFrom)) {
-            ReadLogEntry readLogEntry;
-            while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
-                long offset = readLogEntry.getOffset();
-                LogEntry logEntry = readLogEntry.getLogEntry();
-                long snapshotId = logEntry.getSnapshotId();
-                OperationBatch batch = logEntry.getOperationBatch();
-                this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
-                replayCount++;
-            }
-        }
-        logger.info("replayWAL finished. total replayed [{}] records", replayCount);
-    }
-
-    public int getQueueId() {
-        return queueId;
     }
 }

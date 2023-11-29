@@ -15,8 +15,6 @@ import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch.Builder;
 
-import com.alibaba.graphscope.groot.wal.LogEntry;
-import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -198,7 +196,7 @@ public class BatchSender implements MetricsAgent {
                     dataBatch = buffer.poll(100L, TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     dataBatch = null;
-                    logger.warn("polling send buffer interrupted", e);
+                    logger.warn("polling send buffer interrupted, {}", e.getMessage());
                 }
                 if (dataBatch == null) {
                     break;

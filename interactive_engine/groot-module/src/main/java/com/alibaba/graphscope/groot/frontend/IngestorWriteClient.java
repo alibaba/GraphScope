@@ -22,6 +22,8 @@ import com.alibaba.graphscope.proto.groot.*;
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
+import java.util.List;
+
 public class IngestorWriteClient extends RpcClient {
 
     private final IngestorWriteGrpc.IngestorWriteBlockingStub stub;
@@ -49,9 +51,11 @@ public class IngestorWriteClient extends RpcClient {
         return new BatchId(response.getSnapshotId());
     }
 
-    public void replayWALFrom(long offset) {
-        ReplayWALRequest request = ReplayWALRequest.newBuilder().setOffset(offset).build();
+    public List<Long> replayWALFrom(long offset, long timestamp) {
+        ReplayWALRequest request =
+                ReplayWALRequest.newBuilder().setOffset(offset).setTimestamp(timestamp).build();
         ReplayWALResponse response = stub.replayWAL(request);
+        return response.getSnapshotIdList();
     }
 
     public void writeIngestorAsync(

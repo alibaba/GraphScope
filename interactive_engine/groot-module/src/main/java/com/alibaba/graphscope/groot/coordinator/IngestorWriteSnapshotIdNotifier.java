@@ -47,13 +47,23 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
                                     @Override
                                     public void onCompleted(Long previousSnapshotId) {
                                         if (previousSnapshotId > snapshotId) {
-                                            logger.error("unexpected previousSnapshotId [{}], should <= [{}]. target realtime writer [{}]", previousSnapshotId, snapshotId, realtimeWriterId);
+                                            logger.error(
+                                                    "unexpected previousSnapshotId [{}], should <="
+                                                        + " [{}]. target realtime writer [{}]",
+                                                    previousSnapshotId,
+                                                    snapshotId,
+                                                    realtimeWriterId);
                                         }
                                     }
 
                                     @Override
                                     public void onError(Throwable t) {
-                                        logger.error("error in advanceIngestSnapshotId [{}]. realtime writer [{}], reason [{}]", snapshotId, realtimeWriterId, t.getMessage());
+                                        logger.error(
+                                                "error in advanceIngestSnapshotId [{}]. realtime"
+                                                    + " writer [{}], reason [{}]",
+                                                snapshotId,
+                                                realtimeWriterId,
+                                                t.getMessage());
                                     }
                                 });
             } catch (Exception e) {

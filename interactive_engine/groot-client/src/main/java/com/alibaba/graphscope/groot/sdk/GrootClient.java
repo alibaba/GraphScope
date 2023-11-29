@@ -82,6 +82,13 @@ public class GrootClient implements Writer {
         }
     }
 
+    public List<Long> replayRecords(long offset, long timestamp) {
+        ReplayRecordsRequest req =
+                ReplayRecordsRequest.newBuilder().setOffset(offset).setTimestamp(timestamp).build();
+        ReplayRecordsResponse resp = writeStub.replayRecords(req);
+        return resp.getSnapshotIdList();
+    }
+
     private long modifyVertex(Vertex vertex, WriteTypePb writeType) {
         WriteRequestPb request = vertex.toWriteRequest(writeType);
         return submit(request);

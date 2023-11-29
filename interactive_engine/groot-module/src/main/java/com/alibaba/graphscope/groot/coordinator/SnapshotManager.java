@@ -347,7 +347,9 @@ public class SnapshotManager {
 
     private void maybeUpdateQuerySnapshotId() {
         if (this.storeToSnapshotInfo.size() < this.storeCount) {
-            logger.warn("Not all store nodes reported snapshot progress. current: [{}]", storeToSnapshotInfo);
+            logger.warn(
+                    "Not all store nodes reported snapshot progress. current: [{}]",
+                    storeToSnapshotInfo);
             return;
         }
         SnapshotInfo minSnapshotInfo = Collections.min(this.storeToSnapshotInfo.values());
@@ -385,7 +387,9 @@ public class SnapshotManager {
                             try {
                                 listener.onSnapshotAvailable();
                             } catch (Exception e) {
-                                logger.warn("trigger snapshotListener failed. snapshotId [{}]", snapshotId);
+                                logger.warn(
+                                        "trigger snapshotListener failed. snapshotId [{}]",
+                                        snapshotId);
                             }
                         }
                     }
@@ -440,7 +444,8 @@ public class SnapshotManager {
 
     private void updateQueueOffsets() throws IOException {
         if (this.storeToOffsets.size() < this.storeCount) {
-            logger.warn("Not all store nodes reported queue offsets. current: [{}]", storeToOffsets);
+            logger.warn(
+                    "Not all store nodes reported queue offsets. current: [{}]", storeToOffsets);
             return;
         }
         List<Long> queueOffsets = this.queueOffsetsRef.get();

@@ -16,7 +16,10 @@ package com.alibaba.graphscope.groot.ingestor;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.proto.groot.*;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+
+import java.util.List;
 
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {
 
@@ -59,11 +62,15 @@ public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBas
     }
 
     @Override
-    public void replayWAL(ReplayWALRequest request, StreamObserver<ReplayWALResponse> responseObserver) {
+    public void replayWAL(
+            ReplayWALRequest request, StreamObserver<ReplayWALResponse> responseObserver) {
         try {
-            ingestService.replayWALFrom(request.getOffset());
+            List<Long> ids =
+                    ingestService.replayDMLRecordsFrom(request.getOffset(), request.getTimestamp());
+            responseObserver.onNext(ReplayWALResponse.newBuilder().addAllSnapshotId(ids).build());
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
         }
         responseObserver.onCompleted();
     }

@@ -21,10 +21,7 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DeleteRecordsResult;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.admin.RecordsToDelete;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,12 +104,17 @@ public class KafkaLogService implements LogService {
                 customConfigs.put(kv[0], kv[1]);
             }
         }
+        logger.info("Kafka writer configs {}", customConfigs);
         return new KafkaLogWriter(servers, topic, queueId, customConfigs);
     }
 
     @Override
     public LogReader createReader(int queueId, long offset) throws IOException {
-        return new KafkaLogReader(servers, getAdmin(), topic, queueId, offset);
+        return createReader(queueId, offset, -1);
+    }
+
+    public LogReader createReader(int queueId, long offset, long timestamp) throws IOException {
+        return new KafkaLogReader(servers, getAdmin(), topic, queueId, offset, timestamp);
     }
 
     @Override

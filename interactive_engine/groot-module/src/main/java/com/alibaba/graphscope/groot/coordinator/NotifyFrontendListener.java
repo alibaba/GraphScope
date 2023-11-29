@@ -43,7 +43,8 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
 
     @Override
     public void snapshotAdvanced(long snapshotId, long ddlSnapshotId) {
-        logger.debug("snapshot advanced to [{}]-[{}], will notify frontend", snapshotId, ddlSnapshotId);
+        logger.debug(
+                "snapshot advanced to [{}]-[{}], will notify frontend", snapshotId, ddlSnapshotId);
         GraphDef graphDef = null;
         if (ddlSnapshotId > this.lastDdlSnapshotId.get()) {
             graphDef = this.schemaManager.getGraphDef();
@@ -55,7 +56,12 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
                     @Override
                     public void onCompleted(Long res) {
                         if (res >= snapshotId) {
-                            logger.warn("Unexpected previous snapshot id [{}], should <= [{}], frontend [{}]", res, snapshotId, frontendId);
+                            logger.warn(
+                                    "Unexpected previous snapshot id [{}], should <= [{}], frontend"
+                                        + " [{}]",
+                                    res,
+                                    snapshotId,
+                                    frontendId);
                         } else {
                             lastDdlSnapshotId.getAndUpdate(x -> Math.max(x, ddlSnapshotId));
                         }
@@ -63,7 +69,12 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
 
                     @Override
                     public void onError(Throwable t) {
-                        logger.error("error in advanceQuerySnapshot [{}]-[{}], frontend [{}]", snapshotId, ddlSnapshotId, frontendId, t);
+                        logger.error(
+                                "error in advanceQuerySnapshot [{}]-[{}], frontend [{}]",
+                                snapshotId,
+                                ddlSnapshotId,
+                                frontendId,
+                                t);
                     }
                 });
     }

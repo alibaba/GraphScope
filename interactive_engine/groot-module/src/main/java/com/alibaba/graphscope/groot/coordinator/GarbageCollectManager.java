@@ -44,13 +44,15 @@ public class GarbageCollectManager {
                             for (int i = 0; i < CommonConfig.STORE_NODE_COUNT.get(configs); i++) {
                                 CoordinatorSnapshotClient client = clients.getClient(i);
                                 client.synchronizeSnapshot(offlineVersion);
-                                if (i == 0 && offlineVersion % 100 == 0) {
+                                if (i == 0 && offlineVersion % 1000 == 0) {
                                     logger.info("Offline version updated to {}", offlineVersion);
                                 }
                             }
                         }
                     } catch (Exception e) {
-                        logger.error("error in updateStoreMinSnapshotScheduler, ignore", e);
+                        logger.error(
+                                "error in updateStoreMinSnapshotScheduler {}, ignore",
+                                e.getMessage());
                     }
                 },
                 5000L,

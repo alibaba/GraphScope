@@ -31,11 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -135,7 +131,8 @@ public class IngestService implements NodeDiscovery.Listener {
                                 "ingest-try-start", logger));
 
         long delay = IngestorConfig.INGESTOR_CHECK_PROCESSOR_INTERVAL_MS.get(configs);
-        this.scheduler.scheduleWithFixedDelay(this::tryStartProcessors, delay, delay, TimeUnit.MILLISECONDS);
+        this.scheduler.scheduleWithFixedDelay(
+                this::tryStartProcessors, 0, delay, TimeUnit.MILLISECONDS);
         this.started = true;
         logger.info("IngestService started");
     }
@@ -188,10 +185,13 @@ public class IngestService implements NodeDiscovery.Listener {
         this.queueToProcessor.get(queueId).ingestBatch(requestId, operationBatch, callback);
     }
 
-    public void replayWALFrom(long offset) throws IOException {
+    public List<Long> replayDMLRecordsFrom(long offset, long timestamp) throws IOException {
+        List<Long> ids = new ArrayList<>();
         for (IngestProcessor processor : queueToProcessor.values()) {
-            processor.replayWAL(offset);
+            long snapshotId = processor.replayDMLRecordsFrom(offset, timestamp);
+            ids.add(snapshotId);
         }
+        return ids;
     }
 
     /**
@@ -239,7 +239,11 @@ public class IngestService implements NodeDiscovery.Listener {
                                 if (finished.getAndSet(true)) {
                                     return;
                                 }
-                                logger.warn("ingest marker failed. queue#{}, snapshotId {}", queue, snapshotId, e);
+                                logger.warn(
+                                        "ingest marker failed. queue#{}, snapshotId {}",
+                                        queue,
+                                        snapshotId,
+                                        e);
                                 callback.onError(e);
                             }
                         });

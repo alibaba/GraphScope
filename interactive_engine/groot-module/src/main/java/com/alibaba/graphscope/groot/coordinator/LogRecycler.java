@@ -45,7 +45,7 @@ public class LogRecycler {
 
     public void start() {
         if (!this.recycleEnable) {
-            logger.info("log recycler is disable");
+            logger.info("log recycler is disabled");
             return;
         }
         this.scheduler =

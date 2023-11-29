@@ -21,17 +21,13 @@ import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.OffsetSpec;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.*;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 
@@ -46,55 +42,53 @@ public class KafkaLogReader implements LogReader {
     private long nextReadOffset;
 
     public KafkaLogReader(
-            String servers, AdminClient adminClient, String topicName, int partitionId, long offset)
+            String servers,
+            AdminClient client,
+            String topicName,
+            int partitionId,
+            long offset,
+            long timestamp)
             throws IOException {
         Map<String, Object> kafkaConfigs = new HashMap<>();
         kafkaConfigs.put("bootstrap.servers", servers);
 
         TopicPartition partition = new TopicPartition(topicName, partitionId);
-        long earliestOffset;
-        try {
-            earliestOffset =
-                    adminClient
-                            .listOffsets(Collections.singletonMap(partition, OffsetSpec.earliest()))
-                            .partitionResult(partition)
-                            .get()
-                            .offset();
-            this.latestOffset =
-                    adminClient
-                            .listOffsets(Collections.singletonMap(partition, OffsetSpec.latest()))
-                            .partitionResult(partition)
-                            .get()
-                            .offset();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new IOException(e);
+
+        long earliestOffset = getOffset(client, partition, OffsetSpec.earliest());
+        latestOffset = getOffset(client, partition, OffsetSpec.latest());
+
+        // Get offset from timestamp
+        if (offset == -1) {
+            offset = getOffset(client, partition, OffsetSpec.forTimestamp(timestamp));
         }
-        if (earliestOffset > offset || offset > this.latestOffset) {
+        if (earliestOffset > offset || offset > latestOffset) {
             throw new IllegalArgumentException(
-                    "cannot read from ["
+                    "invalid offset "
                             + offset
-                            + "], earliest offset is ["
+                            + ", hint: ["
                             + earliestOffset
-                            + "], latest offset is ["
-                            + this.latestOffset
-                            + "]");
+                            + ", "
+                            + latestOffset
+                            + ")");
         }
         consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
         consumer.assign(List.of(partition));
         consumer.seek(partition, offset);
         nextReadOffset = offset;
-        logger.info("reader created. kafka offset range is [{}] ~ [{}]", earliestOffset, latestOffset);
+        logger.info(
+                "reader created. kafka offset range is [{}] ~ [{}]", earliestOffset, latestOffset);
     }
 
-    public void readFromTimeStamp() {
-        ZoneId zone = ZoneId.of("UTC+8");
-        LocalDate currentDate = LocalDate.now(zone);
-        LocalDateTime startOfDay = currentDate.atStartOfDay(zone).truncatedTo(ChronoUnit.DAYS).toLocalDateTime();
-        long timestamp = startOfDay.toEpochSecond(ZoneOffset.UTC) * 1000;
-
-        long ts = System.currentTimeMillis();
-        System.out.println("Timestamp of the start of the day in UTC+8: " + timestamp);
-        OffsetSpec spec = OffsetSpec.forTimestamp(timestamp);
+    private long getOffset(AdminClient client, TopicPartition partition, OffsetSpec spec)
+            throws IOException {
+        try {
+            return client.listOffsets(Collections.singletonMap(partition, spec))
+                    .partitionResult(partition)
+                    .get()
+                    .offset();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new IOException(e);
+        }
     }
 
     @Override
@@ -103,7 +97,8 @@ public class KafkaLogReader implements LogReader {
             return null;
         }
         while (iterator == null || !iterator.hasNext()) {
-            ConsumerRecords<LogEntry, LogEntry> consumerRecords = consumer.poll(Duration.ofMillis(100L));
+            ConsumerRecords<LogEntry, LogEntry> consumerRecords =
+                    consumer.poll(Duration.ofMillis(100L));
             if (consumerRecords == null || consumerRecords.isEmpty()) {
                 logger.info("polled nothing from Kafka. nextReadOffset is [{}]", nextReadOffset);
                 continue;

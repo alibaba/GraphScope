@@ -42,7 +42,11 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
         String writeSession = request.getClientId();
         int count = request.getWriteRequestsCount();
         List<WriteRequest> writeRequests = new ArrayList<>(count);
-        logger.debug("batchWrite: requestId {} writeSession {} batchSize {}", requestId, writeSession, count);
+        logger.debug(
+                "batchWrite: requestId {} writeSession {} batchSize {}",
+                requestId,
+                writeSession,
+                count);
         try {
             for (WriteRequestPb writeRequestPb : request.getWriteRequestsList()) {
                 writeRequests.add(WriteRequest.parseProto(writeRequestPb));
@@ -61,14 +65,23 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
                         @Override
                         public void onError(Throwable t) {
-                            logger.error("batch write error. request {} session {}", requestId, writeSession, t);
-                            responseObserver.onError(Status.INTERNAL.withDescription(t.getMessage()).asRuntimeException());
+                            logger.error(
+                                    "batch write error. request {} session {}",
+                                    requestId,
+                                    writeSession,
+                                    t);
+                            responseObserver.onError(
+                                    Status.INTERNAL
+                                            .withDescription(t.getMessage())
+                                            .asRuntimeException());
                         }
                     });
 
         } catch (Exception e) {
-            logger.error("batchWrite failed. request [{}] session [{}]", requestId, writeSession, e);
-            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            logger.error(
+                    "batchWrite failed. request [{}] session [{}]", requestId, writeSession, e);
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
@@ -88,8 +101,23 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             responseObserver.onNext(RemoteFlushResponse.newBuilder().setSuccess(suc).build());
             responseObserver.onCompleted();
         } catch (InterruptedException e) {
-            logger.error("remoteFlush failed. flushSnapshotId [{}] waitTimeMs [{}]", snapshotId, timeout);
-            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+            logger.error(
+                    "remoteFlush failed. flushSnapshotId [{}] waitTimeMs [{}]",
+                    snapshotId,
+                    timeout);
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
+    }
+
+    @Override
+    public void replayRecords(
+            ReplayRecordsRequest request, StreamObserver<ReplayRecordsResponse> responseObserver) {
+        long offset = request.getOffset();
+        long timestamp = request.getTimestamp();
+        logger.info("replay records from offset {}, timestamp {}", offset, timestamp);
+        List<Long> ids = graphWriter.replayWALFrom(offset, timestamp);
+        responseObserver.onNext(ReplayRecordsResponse.newBuilder().addAllSnapshotId(ids).build());
+        responseObserver.onCompleted();
     }
 }

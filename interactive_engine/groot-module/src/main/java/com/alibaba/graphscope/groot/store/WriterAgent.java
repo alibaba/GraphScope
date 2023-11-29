@@ -251,7 +251,8 @@ public class WriterAgent implements MetricsAgent {
                         this.storeId, availSnapshotId, ddlSnapshotId, queueOffsets);
                 this.lastCommitSnapshotId = availSnapshotId;
             } catch (Exception e) {
-                logger.warn("commit failed. snapshotId ["
+                logger.warn(
+                        "commit failed. snapshotId ["
                                 + availSnapshotId
                                 + "], queueOffsets ["
                                 + queueOffsets

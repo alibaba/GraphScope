@@ -89,8 +89,7 @@ public class FileDiscovery implements NodeDiscovery {
 
         // Coordinator nodes
         int coordinatorCount = CommonConfig.COORDINATOR_NODE_COUNT.get(configs);
-        String coordinatorNamePrefix =
-                DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
+        String coordinatorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
         Map<Integer, GrootNode> coordinatorNodes =
                 makeRoleNodes(
                         coordinatorCount,

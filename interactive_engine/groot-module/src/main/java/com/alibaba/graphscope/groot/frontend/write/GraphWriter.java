@@ -166,7 +166,7 @@ public class GraphWriter implements MetricsAgent {
                             public void onCompleted(Long res) {
                                 long writeSnapshotId = res;
                                 lastWrittenSnapshotId.updateAndGet(
-                                        x -> x < writeSnapshotId ? writeSnapshotId : x);
+                                        x -> Math.max(x, writeSnapshotId));
                                 writeRequestsTotal.addAndGet(writeRequests.size());
                                 finish();
                                 callback.onCompleted(res);
@@ -187,12 +187,14 @@ public class GraphWriter implements MetricsAgent {
                         });
     }
 
-    public void replayWALFrom(long offset) {
-        int queueCount = metaService.getQueueCount();
+    public List<Long> replayWALFrom(long offset, long timestamp) {
+        List<Long> allIds = new ArrayList<>();
         for (int queue = 0; queue < metaService.getQueueCount(); ++queue) {
-            int ingestorId = metaService.getIngestorIdForQueue(queue);
-            ingestWriteClients.getClient(ingestorId).replayWALFrom(offset);
+            int id = metaService.getIngestorIdForQueue(queue);
+            List<Long> ids = ingestWriteClients.getClient(id).replayWALFrom(offset, timestamp);
+            allIds.addAll(ids);
         }
+        return allIds;
     }
 
     public boolean flushSnapshot(long snapshotId, long waitTimeMs) throws InterruptedException {
