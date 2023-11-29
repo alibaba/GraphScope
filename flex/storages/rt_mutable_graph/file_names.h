@@ -34,7 +34,7 @@ namespace gs {
     │       ├── vertex_map_PERSON.keys 
     │       ├── vertex_table_PERSON.col_0 
     │       ├── vertex_table_PERSON.col_1.data
-    │   └── vertex_table_PERSON.col_1.items 
+    │       └── vertex_table_PERSON.col_1.items 
     ├── snapshots // snapshots dir 
     │   ├── 0 
     │   │   ├── ie_PERSON_KNOWS_PERSON.deg 

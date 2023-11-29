@@ -64,11 +64,9 @@ class SingleVertexInsertTransaction {
   std::vector<vid_t> parsed_endpoints_;
 
   MutablePropertyFragment& graph_;
-#ifdef USE_MMAPALLOCATOR
-  MMapAllocator& alloc_;
-#else
-  ArenaAllocator& alloc_;
-#endif
+
+  Allocator& alloc_;
+
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
