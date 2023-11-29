@@ -214,7 +214,7 @@ DATABASE_COMPILER_QUERY_TIMEOUT="20000"
 ## hiactor related default configuration
 DATABASE_COMPUTE_ENGINE_PORT="10000"
 DATABASE_ADMIN_PORT="7777"
-DATABASE_COMPUTE_ENGINE_SHARD_NUM=1
+DATABASE_COMPUTE_ENGINE_THREAD_NUM_PER_WORKER=1
 
 ## directories
 DATABASE_WORKSPACE="/home/graphscope/workspace/"
@@ -373,8 +373,8 @@ function update_engine_config_from_yaml(){
     DATABASE_CURRENT_GRAPH_NAME="${default_graph}"
   fi
   # update hiactor shard num
-  if [[ -n "${compute_engine_shard_num}" ]]; then
-    DATABASE_COMPUTE_ENGINE_SHARD_NUM="${compute_engine_shard_num}"
+  if [[ -n "${compute_engine_thread_num_per_worker}" ]]; then
+    DATABASE_COMPUTE_ENGINE_THREAD_NUM_PER_WORKER="${compute_engine_thread_num_per_worker}"
   fi
   # compiler
   if [[ -n ${compiler_planner_is_on} ]]; then 
@@ -680,8 +680,7 @@ function do_gen_conf(){
   echo "  type: hiactor" >> ${output_config_file}
   echo "  workers:" >> ${output_config_file}
   echo "    - localhost:${DATABASE_COMPUTE_ENGINE_PORT}" >> ${output_config_file}
-  echo "  admin_endpoint:${DATABASE_ADMIN_PORT} " >> ${output_config_file}
-  echo "  shard_num: ${DATABASE_COMPUTE_ENGINE_SHARD_NUM}" >> ${output_config_file}
+  echo "  thread_num_per_worker: ${DATABASE_COMPUTE_ENGINE_THREAD_NUM_PER_WORKER}" >> ${output_config_file}
 
 
   #compiler
@@ -703,6 +702,12 @@ function do_gen_conf(){
   echo "      disabled: true" >> ${output_config_file}
   echo "      port: 8182" >> ${output_config_file}
   echo "  query_timeout: ${DATABASE_COMPILER_QUERY_TIMEOUT}" >> ${output_config_file}
+
+  # http service:
+  echo "http_service:" >> ${output_config_file}
+  echo "  default_listen_address: localhost" >> ${output_config_file}
+  echo "  admin_port: ${DATABASE_ADMIN_PORT}" >> ${output_config_file}
+  echo "  query_port: ${DATABASE_COMPUTE_ENGINE_PORT}" >> ${output_config_file}
   info "Finish generate config file ${output_config_file}"
 }
 
