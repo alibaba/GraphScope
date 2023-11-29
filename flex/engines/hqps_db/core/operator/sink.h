@@ -212,7 +212,7 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
     value->set_f64(any.value.f);
     break;
   default:
-    LOG(WARNING) << "Not supported type: " << static_cast<int>(any.type);
+    LOG(WARNING) << "Unsupported type: " << static_cast<int>(any.type);
     break;
   }
 }

@@ -277,28 +277,6 @@ class ExprBuilder {
     VLOG(10) << "Adding expr of size: " << size;
     for (auto i = 0; i < size;) {
       auto expr = expr_ops[i];
-      // if (expr.has_var() && expr.var().property().has_label()) {
-      //   VLOG(10) << "Found label in expr, skip this check";
-      //   int j = i;
-      //   for (; j < size; ++j) {
-      //     if (expr_ops[j].item_case() == common::ExprOpr::kBrace &&
-      //         expr_ops[j].brace() ==
-      //             common::ExprOpr::Brace::ExprOpr_Brace_RIGHT_BRACE) {
-      //       VLOG(10) << "Found right brace at ind: " << j
-      //                << ", started at: " << i;
-      //       AddExprOpr(std::string("true"));
-      //       AddExprOpr(expr_ops[j]);
-      //       i = j + 1;
-      //       break;
-      //     }
-      //   }
-      //   if (j == size) {
-      //     LOG(WARNING) << "no right brace found" << j << "size: " << size;
-      //     // just add true, since the current expresion has no other expr_ops
-      //     AddExprOpr(std::string("true"));
-      //     i = j;
-      //   }
-      // } else
       if (expr.has_extract()) {
         // special case for extract
         auto extract = expr.extract();
