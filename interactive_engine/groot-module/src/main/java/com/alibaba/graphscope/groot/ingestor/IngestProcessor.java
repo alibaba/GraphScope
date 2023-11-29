@@ -269,7 +269,9 @@ public class IngestProcessor implements MetricsAgent {
                 long snapshotId = logEntry.getSnapshotId();
                 OperationBatch batch = logEntry.getOperationBatch();
                 this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
-                replayCount++;
+                if (!batch.equals(IngestService.MARKER_BATCH)) {
+                    replayCount++;
+                }
             }
         }
         logger.info("replayWAL finished. total replayed [{}] records", replayCount);

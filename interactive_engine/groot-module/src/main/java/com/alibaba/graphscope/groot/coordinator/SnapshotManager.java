@@ -250,7 +250,7 @@ public class SnapshotManager {
         byte[] queueOffsetsBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
         List<Long> recoveredQueueOffsets =
                 this.objectMapper.readValue(queueOffsetsBytes, new TypeReference<List<Long>>() {});
-        logger.info("recovered queue offsets [" + recoveredQueueOffsets + "]");
+        logger.info("recovered queue offsets " + recoveredQueueOffsets + "");
         if (recoveredQueueOffsets.size() != this.queueCount) {
             throw new IllegalStateException(
                     "recovered queueCount ["
