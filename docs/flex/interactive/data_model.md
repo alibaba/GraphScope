@@ -18,10 +18,10 @@ Within the `graph.yaml` file, vertices are delineated under the `vertex_types` s
   properties:
     - property_name: id
       property_type:
-            primitive_type: DT_SIGNED_INT64
+        primitive_type: DT_SIGNED_INT64
     - property_name: name
       property_type:
-            primitive_type: DT_STRING
+        primitive_type: DT_STRING
   primary_keys: # these must also be listed in the properties
     - id  
 ```
