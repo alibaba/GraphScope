@@ -392,6 +392,19 @@ class FlatEdgeSet {
                        direction_);
   }
 
+  void SubSetWithIndices(std::vector<size_t>& indices) {
+    std::vector<ele_tuple_t> res_vec;
+    std::vector<uint8_t> res_label_triplet_ind;
+    res_vec.reserve(indices.size());
+    res_label_triplet_ind.reserve(indices.size());
+    for (auto i = 0; i < indices.size(); ++i) {
+      res_vec.emplace_back(vec_[indices[i]]);
+      res_label_triplet_ind.emplace_back(label_triplet_ind_[indices[i]]);
+    }
+    vec_.swap(res_vec);
+    label_triplet_ind_.swap(res_label_triplet_ind);
+  }
+
   void Repeat(std::vector<offset_t>& cur_offset,
               std::vector<offset_t>& repeat_vec) {
     CHECK(cur_offset.size() == repeat_vec.size());
