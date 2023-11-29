@@ -121,7 +121,7 @@ public class SnapshotSortQueue {
             } else {
                 logger.warn(
                         "Illegal entry polled from queue [{}]. entrySnapshotId [{}] <"
-                            + " currentSnapshotId [{}]. Ignored entry",
+                                + " currentSnapshotId [{}]. Ignored entry",
                         currentPollQueueIdx,
                         snapshotId,
                         currentPollSnapshotId);

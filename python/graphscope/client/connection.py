@@ -184,7 +184,7 @@ class Connection:
         response = self._write_service_stub.replayRecords(
             request, metadata=self._metadata
         )
-        return response.snapsot_id
+        return response.snapshot_id
 
     def get_store_state(self):
         request = model_pb2.GetStoreStateRequest()

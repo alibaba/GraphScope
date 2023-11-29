@@ -38,7 +38,7 @@ public class KafkaLogReader implements LogReader {
     private static final LogEntryDeserializer deSer = new LogEntryDeserializer();
     private final Consumer<LogEntry, LogEntry> consumer;
     private Iterator<ConsumerRecord<LogEntry, LogEntry>> iterator;
-    private final long latestOffset;
+    private final long latest;
     private long nextReadOffset;
 
     public KafkaLogReader(
@@ -54,29 +54,26 @@ public class KafkaLogReader implements LogReader {
 
         TopicPartition partition = new TopicPartition(topicName, partitionId);
 
-        long earliestOffset = getOffset(client, partition, OffsetSpec.earliest());
-        latestOffset = getOffset(client, partition, OffsetSpec.latest());
+        long earliest = getOffset(client, partition, OffsetSpec.earliest());
+        latest = getOffset(client, partition, OffsetSpec.latest());
 
         // Get offset from timestamp
         if (offset == -1) {
             offset = getOffset(client, partition, OffsetSpec.forTimestamp(timestamp));
         }
-        if (earliestOffset > offset || offset > latestOffset) {
+        if (earliest > offset || offset > latest) {
             throw new IllegalArgumentException(
-                    "invalid offset "
-                            + offset
-                            + ", hint: ["
-                            + earliestOffset
-                            + ", "
-                            + latestOffset
-                            + ")");
+                    "invalid offset " + offset + ", hint: [" + earliest + ", " + latest + ")");
         }
         consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
         consumer.assign(List.of(partition));
         consumer.seek(partition, offset);
         nextReadOffset = offset;
         logger.info(
-                "reader created. kafka offset range is [{}] ~ [{}]", earliestOffset, latestOffset);
+                "reader created with offset [{}], offset range is [{}] ~ [{}]",
+                offset,
+                earliest,
+                latest);
     }
 
     private long getOffset(AdminClient client, TopicPartition partition, OffsetSpec spec)
@@ -93,7 +90,7 @@ public class KafkaLogReader implements LogReader {
 
     @Override
     public ReadLogEntry readNext() {
-        if (nextReadOffset == latestOffset) {
+        if (nextReadOffset == latest) {
             return null;
         }
         while (iterator == null || !iterator.hasNext()) {

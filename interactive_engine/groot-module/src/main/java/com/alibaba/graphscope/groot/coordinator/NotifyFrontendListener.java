@@ -58,7 +58,7 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
                         if (res >= snapshotId) {
                             logger.warn(
                                     "Unexpected previous snapshot id [{}], should <= [{}], frontend"
-                                        + " [{}]",
+                                            + " [{}]",
                                     res,
                                     snapshotId,
                                     frontendId);

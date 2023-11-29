@@ -49,7 +49,7 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
                                         if (previousSnapshotId > snapshotId) {
                                             logger.error(
                                                     "unexpected previousSnapshotId [{}], should <="
-                                                        + " [{}]. target realtime writer [{}]",
+                                                            + " [{}]. target realtime writer [{}]",
                                                     previousSnapshotId,
                                                     snapshotId,
                                                     realtimeWriterId);
@@ -60,7 +60,7 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
                                     public void onError(Throwable t) {
                                         logger.error(
                                                 "error in advanceIngestSnapshotId [{}]. realtime"
-                                                    + " writer [{}], reason [{}]",
+                                                        + " writer [{}], reason [{}]",
                                                 snapshotId,
                                                 realtimeWriterId,
                                                 t.getMessage());
