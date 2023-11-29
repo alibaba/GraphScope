@@ -18,10 +18,10 @@ package com.alibaba.graphscope.groot.common.config;
 import java.util.function.Function;
 
 public class Config<T> {
-    private String key;
-    private String defaultVal;
+    private final String key;
+    private final String defaultVal;
 
-    private Function<String, T> parseFunc;
+    private final Function<String, T> parseFunc;
 
     public Config(String key, String defaultVal, Function<String, T> parseFunc) {
         this.key = key;

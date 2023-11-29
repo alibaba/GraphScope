@@ -15,7 +15,6 @@ metadata:
 data:
   groot.config: |-
     ## Common Config
-    graph.name={{ .Values.graphName }}
     role.name=ROLE
     node.idx=INDEX
     rpc.port=55555
@@ -26,7 +25,6 @@ data:
     coordinator.node.count={{ .Values.coordinator.replicaCount }}
     ingestor.queue.count={{ .Values.ingestor.replicaCount }}
     partition.count={{ .Values.store.replicaCount | mul 16 }}
-    engine.type={{ .Values.engineType }}
     discovery.mode={{ .Values.discoveryMode }}
 
     ## Frontend Config
@@ -36,8 +34,9 @@ data:
     enable.hash.generate.eid={{ .Values.enableHashGenerateEid }}
 
     ## Ingestor Config
-    ingestor.queue.buffer.size={{ .Values.ingestorQueueBufferSize }}
-    ingestor.sender.buffer.size={{ .Values.ingestorSenderBufferSize }}
+    ingestor.queue.buffer.max.count={{ .Values.ingestorQueueBufferMaxCount }}
+    ingestor.sender.buffer.max.count={{ .Values.ingestorSenderBufferMaxCount }}
+    ingestor.sender.operation.max.count={{ .Values.ingestorSenderOperationMaxCount }}
 
     ## Coordinator Config
     snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
@@ -48,11 +47,13 @@ data:
     ## Store Config
     store.data.path={{ .Values.storeDataPath }}
     store.write.thread.count={{ .Values.storeWriteThreadCount }}
+    store.queue.buffer.size={{ .Values.storeQueueBufferSize }}
 
     ## Kafka Config
     kafka.servers=KAFKA_SERVERS
     kafka.topic={{ .Values.kafkaTopic }}
     kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
+    kafka.test.cluster.enable=false
 
     ## Frontend Config
     gremlin.server.port=12312

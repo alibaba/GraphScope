@@ -348,14 +348,12 @@ externalKafka:
 ##
 javaOpts: ""
 
-graphName: "graphscope"
-
 rpcMaxBytesMb: 20
 
 ## Ingestor Config
-ingestorQueueBufferSize: 1024
-
-ingestorSenderBufferSize: 1024
+ingestorQueueBufferMaxCount: 102400
+ingestorSenderBufferMaxCount: 102400
+ingestorSenderOperationMaxCount: 102400
 
 ## Coordinator Config
 snapshotIncreaseIntervalMs: 1000
@@ -369,12 +367,13 @@ enableHashGenerateEid: false
 ## Store Config
 storeDataPath: "/var/lib/graphscope-store"
 storeWriteThreadCount: 1
+storeQueueBufferSize: 102400
 
 ## Kafka Config
 kafkaTopic: "graphscope"
 kafkaProducerCustomConfigs: ""
 
-## Key-value pair seperated by ;
+## Key-value pair separated by ;
 ## For example extraConfig="k1=v1;k2=v2"
 extraConfig: ""
 
@@ -384,5 +383,5 @@ auth:
 
 pegasus:
   worker:
-    num: 4
+    num: 1
   timeout: 240000
