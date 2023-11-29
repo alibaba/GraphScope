@@ -869,11 +869,16 @@ void UpdateTransaction::applyEdgesUpdates() {
         for (auto& pair : added_edges_[oe_csr_index]) {
           vid_t v = pair.first;
           auto& add_list = pair.second;
+
           if (add_list.empty()) {
             continue;
           }
+          std::sort(add_list.begin(), add_list.end());
           auto& edge_data = updated_edge_data_[oe_csr_index].at(v);
-          for (auto u : add_list) {
+          for (auto idx = 0; idx < add_list.size(); ++idx) {
+            if (idx && add_list[idx] == add_list[idx - 1])
+              continue;
+            auto u = add_list[idx];
             auto value = edge_data.at(u).first;
             csr->put_generic_edge(v, u, value, timestamp_, alloc_);
           }
