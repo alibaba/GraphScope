@@ -43,6 +43,7 @@ data:
     snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
+    log.recycle.enable={{ .Values.logRecycleEnable }}
 
     ## Store Config
     store.data.path={{ .Values.storeDataPath }}
@@ -57,11 +58,6 @@ data:
     gremlin.server.port=12312
     ## disable neo4j when launching groot server by default
     neo4j.bolt.server.disabled=true
-
-    executor.worker.per.process={{ .Values.executorWorkerPerProcess }}
-    executor.query.thread.count={{ .Values.executorQueryThreadCount }}
-    executor.query.manager.thread.count={{ .Values.executorQueryManagerThreadCount }}
-    executor.query.store.thread.count={{ .Values.executorQueryStoreThreadCount }}
 
     dns.name.prefix.frontend=FRONTEND
     dns.name.prefix.ingestor=INGESTOR
