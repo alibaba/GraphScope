@@ -159,7 +159,8 @@ class UpdateTransaction {
   void batch_commit(
       std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
       std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
-          insertEdges);
+          insertEdges,
+      grape::InArchive& arc);
 
   void set_edge_data_with_offset(bool dir, label_t label, vid_t v,
                                  label_t neighbor_label, vid_t nbr,

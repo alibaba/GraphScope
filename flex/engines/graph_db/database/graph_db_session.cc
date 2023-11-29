@@ -16,6 +16,8 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/graph_db/database/transaction_utils.h"
+#include "flex/engines/graph_db/database/wal.h"
 #include "flex/utils/app_utils.h"
 
 namespace gs {
@@ -74,8 +76,26 @@ UpdateTransaction GraphDBSession::GetUpdateTransaction() {
 bool GraphDBSession::BatchUpdate(
     std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& vertices,
     std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&& edges) {
-  auto txn = GetUpdateTransaction();
-  txn.batch_commit(std::move(vertices), std::move(edges));
+  grape::InArchive arc;
+  arc.Resize(sizeof(WalHeader));
+  for (auto& [label, oid, props] : vertices) {
+    arc << static_cast<uint8_t>(0) << label;
+    serialize_field(arc, oid);
+    for (auto& prop : props) {
+      serialize_field(arc, prop);
+    }
+  }
+
+  for (auto& [src_label, src, dst_label, dst, edge_label, prop] : edges) {
+    arc << static_cast<uint8_t>(1) << src_label;
+    serialize_field(arc, src);
+    arc << dst_label;
+    serialize_field(arc, dst);
+    arc << edge_label;
+    serialize_field(arc, prop);
+  }
+  GetUpdateTransaction().batch_commit(std::move(vertices), std::move(edges),
+                                      arc);
   return true;
 }
 

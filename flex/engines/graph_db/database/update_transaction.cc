@@ -727,22 +727,14 @@ void UpdateTransaction::release() {
 void UpdateTransaction::batch_commit(
     std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
     std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
-        insertEdges) {
+        insertEdges,
+    grape::InArchive& arc) {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
     return;
   }
 
-  arc_.Resize(sizeof(WalHeader));
-
   for (auto& [label, oid, props] : insertVertices) {
     vid_t lid;
-    grape::InArchive arc;
-    for (auto& prop : props) {
-      serialize_field(arc, prop);
-    }
-    arc_ << static_cast<uint8_t>(0) << label;
-    serialize_field(arc_, oid);
-    arc_.AddBytes(arc.GetBuffer(), arc.GetSize());
 
     if (graph_.get_lid(label, oid, lid)) {
       graph_.get_vertex_table(label).insert(lid, props);
@@ -756,12 +748,7 @@ void UpdateTransaction::batch_commit(
     vid_t src_lid, dst_lid;
     bool src_flag = graph_.get_lid(src_label, src, src_lid);
     bool dst_flag = graph_.get_lid(dst_label, dst, dst_lid);
-    arc_ << static_cast<uint8_t>(1) << src_label;
-    serialize_field(arc_, src);
-    arc_ << dst_label;
-    serialize_field(arc_, dst);
-    arc_ << edge_label;
-    serialize_field(arc_, prop);
+
     if (src_flag && dst_flag) {
       auto oe = graph_.get_outgoing_edges_mut(src_label, src_lid, dst_label,
                                               edge_label);
@@ -794,11 +781,11 @@ void UpdateTransaction::batch_commit(
       }
     }
   }
-  auto* header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
-  header->length = arc_.GetSize() - sizeof(WalHeader);
+  auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
+  header->length = arc.GetSize() - sizeof(WalHeader);
   header->type = 1;
   header->timestamp = timestamp_;
-  logger_.append(arc_.GetBuffer(), arc_.GetSize());
+  logger_.append(arc.GetBuffer(), arc.GetSize());
 
   release();
 }
