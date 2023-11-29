@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -23,6 +24,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -74,5 +76,13 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
                 this.tableConfig,
                 this.getAliasName(),
                 this.getStartAlias());
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphShuttle) {
+            return ((GraphShuttle) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
     }
 }
