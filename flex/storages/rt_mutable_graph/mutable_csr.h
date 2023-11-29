@@ -261,11 +261,13 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
       : cur_(slice.begin()), end_(slice.end()) {}
   ~TypedMutableCsrConstEdgeIter() = default;
 
-  vid_t get_neighbor() const { return cur_->neighbor; }
-  Any get_data() const { return AnyConverter<EDATA_T>::to_any(cur_->data); }
-  timestamp_t get_timestamp() const { return cur_->timestamp.load(); }
+  vid_t get_neighbor() const override { return cur_->neighbor; }
+  Any get_data() const override {
+    return AnyConverter<EDATA_T>::to_any(cur_->data);
+  }
+  timestamp_t get_timestamp() const override { return cur_->timestamp.load(); }
 
-  void next() { ++cur_; }
+  void next() override { ++cur_; }
   TypedMutableCsrConstEdgeIter& operator+=(size_t offset) override {
     if (cur_ + offset >= end_) {
       cur_ = end_;
@@ -274,8 +276,8 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
     }
     return *this;
   }
-  bool is_valid() const { return cur_ != end_; }
-  size_t size() const { return end_ - cur_; }
+  bool is_valid() const override { return cur_ != end_; }
+  size_t size() const override { return end_ - cur_; }
 
  private:
   const nbr_t* cur_;
@@ -291,11 +293,13 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
       : cur_(slice.begin()), end_(slice.end()) {}
   ~TypedMutableCsrEdgeIter() = default;
 
-  vid_t get_neighbor() const { return cur_->neighbor; }
-  Any get_data() const { return AnyConverter<EDATA_T>::to_any(cur_->data); }
-  timestamp_t get_timestamp() const { return cur_->timestamp.load(); }
+  vid_t get_neighbor() const override { return cur_->neighbor; }
+  Any get_data() const override {
+    return AnyConverter<EDATA_T>::to_any(cur_->data);
+  }
+  timestamp_t get_timestamp() const override { return cur_->timestamp.load(); }
 
-  void set_data(const Any& value, timestamp_t ts) {
+  void set_data(const Any& value, timestamp_t ts) override {
     ConvertAny<EDATA_T>::to(value, cur_->data);
     cur_->timestamp.store(ts);
   }
@@ -309,8 +313,8 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
     return *this;
   }
 
-  void next() { ++cur_; }
-  bool is_valid() const { return cur_ != end_; }
+  void next() override { ++cur_; }
+  bool is_valid() const override { return cur_ != end_; }
 
  private:
   nbr_t* cur_;

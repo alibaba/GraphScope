@@ -44,7 +44,7 @@ seastar::future<query_result> executor::run_graph_db_query(
                  .GetSession(hiactor::local_shard_id())
                  .Eval(param.content);
   if (!ret.ok()) {
-    LOG(ERROR) << "Eval failed: " << ret.status().error_message();
+    LOG(INFO) << "Eval failed: " << ret.status().error_message();
     return seastar::make_exception_future<query_result>(
         seastar::sstring(ret.status().error_message()));
   }
