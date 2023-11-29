@@ -99,7 +99,9 @@ class MMapAllocator {
       : prefix_(prefix), cur_loc_(0), cur_size_(0) {}
   ~MMapAllocator() {
     for (auto ptr : buffers_) {
-      free(ptr);
+      if (ptr != nullptr) {
+        delete ptr;
+      }
     }
   }
 
@@ -107,18 +109,31 @@ class MMapAllocator {
     if (cur_size_ - cur_loc_ >= cap) {
       return;
     }
+    size_t old = cap;
+    mmap_array<char>* buf = new mmap_array<char>();
+    buf->open(prefix_ + std::to_string(buffers_.size()), false);
     cap = (cap + batch_size - 1) ^ (batch_size - 1);
-    cur_buffer_ = malloc(cap);
-    buffers_.push_back(cur_buffer_);
+    buf->resize(cap);
+    buffers_.push_back(buf);
+    cur_buffer_ = static_cast<void*>(buf->data());
     cur_loc_ = 0;
     cur_size_ = cap;
   }
 
-  void* allocate_large(size_t size) { return malloc(size); }
+  void* allocate_large(size_t size) {
+    mmap_array<char>* buf = new mmap_array<char>();
+    buf->open(prefix_ + std::to_string(buffers_.size()), false);
+    buf->resize(size);
+    buffers_.push_back(buf);
+    return static_cast<void*>(buf->data());
+  }
 
   void allocate_new_batch() {
-    cur_buffer_ = malloc(batch_size);
-    buffers_.push_back(cur_buffer_);
+    mmap_array<char>* buf = new mmap_array<char>();
+    buf->open(prefix_ + std::to_string(buffers_.size()), false);
+    buf->resize(batch_size);
+    buffers_.push_back(buf);
+    cur_buffer_ = static_cast<void*>(buf->data());
     cur_loc_ = 0;
     cur_size_ = batch_size;
   }
@@ -140,13 +155,12 @@ class MMapAllocator {
 
  private:
   std::string prefix_;
-  std::vector<void*> buffers_;
+  std::vector<mmap_array<char>*> buffers_;
 
   void* cur_buffer_;
   size_t cur_loc_;
   size_t cur_size_;
 };
-
 #ifdef USE_MMAPALLOC
 using Allocator = MMapAllocator;
 #else
