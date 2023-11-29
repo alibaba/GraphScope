@@ -75,11 +75,11 @@ public class GrootClient implements Writer {
      * Block until this snapshot becomes available.
      * @param snapshotId the snapshot id to be flushed
      */
-    public void remoteFlush(long snapshotId) {
-        if (snapshotId != 0) {
-            this.writeStub.remoteFlush(
-                    RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
-        }
+    public boolean remoteFlush(long snapshotId) {
+        RemoteFlushResponse resp =
+                this.writeStub.remoteFlush(
+                        RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
+        return resp.getSuccess();
     }
 
     public List<Long> replayRecords(long offset, long timestamp) {

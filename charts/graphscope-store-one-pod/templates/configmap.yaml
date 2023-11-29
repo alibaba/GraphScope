@@ -41,6 +41,7 @@ data:
     snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
+    log.recycle.enable={{ .Values.logRecycleEnable }}
 
     ## Store Config
     store.data.path={{ .Values.storeDataPath }}
