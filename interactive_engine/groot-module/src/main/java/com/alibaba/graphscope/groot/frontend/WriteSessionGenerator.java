@@ -9,8 +9,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class WriteSessionGenerator {
 
-    private AtomicLong nextIdx;
-    private int frontendNodeId;
+    private final AtomicLong nextIdx;
+    private final int frontendNodeId;
 
     public WriteSessionGenerator(Configs configs) {
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);

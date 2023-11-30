@@ -45,18 +45,18 @@ public class ZkDiscovery implements NodeDiscovery {
     private static final Logger logger = LoggerFactory.getLogger(ZkDiscovery.class);
     public static final String ROOT_NODE = "discovery";
 
-    private List<Listener> listeners = new ArrayList<>();
+    private final List<Listener> listeners = new ArrayList<>();
     private ServiceDiscovery<GrootNode> serviceDiscovery;
     private List<ServiceCache<GrootNode>> serviceCaches;
 
-    private LocalNodeProvider localNodeProvider;
-    private CuratorFramework curator;
-    private String discoveryBasePath;
+    private final LocalNodeProvider localNodeProvider;
+    private final CuratorFramework curator;
+    private final String discoveryBasePath;
     private ExecutorService singleThreadExecutor;
     private AtomicReference<Map<RoleType, Map<Integer, GrootNode>>> currentNodesRef =
             new AtomicReference<>(new HashMap<>());
 
-    private Object lock = new Object();
+    private final Object lock = new Object();
 
     public ZkDiscovery(
             Configs configs, LocalNodeProvider localNodeProvider, CuratorFramework curator) {
@@ -118,10 +118,10 @@ public class ZkDiscovery implements NodeDiscovery {
                 listener.cacheChanged();
                 this.serviceCaches.add(serviceCache);
             }
-            logger.info("ZkDiscovery started");
         } catch (Exception e) {
             throw new GrootException(e);
         }
+        logger.info("ZkDiscovery started");
     }
 
     @Override
@@ -143,13 +143,13 @@ public class ZkDiscovery implements NodeDiscovery {
                 logger.warn("close serviceDiscovery failed", e);
             }
         }
-        logger.info("ZkDiscovery stopped");
+        logger.debug("ZkDiscovery stopped");
     }
 
     private class NodeChangeListener implements ServiceCacheListener {
 
-        private RoleType roleType;
-        private ServiceCache<GrootNode> serviceCache;
+        private final RoleType roleType;
+        private final ServiceCache<GrootNode> serviceCache;
 
         public NodeChangeListener(RoleType roleType, ServiceCache<GrootNode> serviceCache) {
             this.roleType = roleType;
@@ -184,7 +184,7 @@ public class ZkDiscovery implements NodeDiscovery {
                     notifyRemoved(roleType, removed);
                 }
 
-                if (newRoleNodes != null && !newRoleNodes.isEmpty()) {
+                if (!newRoleNodes.isEmpty()) {
                     Map<Integer, GrootNode> added = new HashMap<>();
                     newRoleNodes.forEach(
                             (id, newNode) -> {
@@ -203,7 +203,7 @@ public class ZkDiscovery implements NodeDiscovery {
 
         @Override
         public void stateChanged(CuratorFramework client, ConnectionState newState) {
-            logger.info("stateChanged to [" + newState + "]");
+            logger.info("stateChanged to [{}]", newState);
         }
     }
 
@@ -211,7 +211,7 @@ public class ZkDiscovery implements NodeDiscovery {
         if (removed.isEmpty()) {
             return;
         }
-        logger.debug("role [" + role.getName() + "] remove nodes [" + removed.values() + "]");
+        logger.debug("role [{}] remove nodes [{}]", role.getName(), removed.values());
         for (Listener listener : this.listeners) {
             this.singleThreadExecutor.execute(
                     () -> {
@@ -219,12 +219,7 @@ public class ZkDiscovery implements NodeDiscovery {
                             listener.nodesLeft(role, removed);
                         } catch (Exception e) {
                             logger.error(
-                                    "listener ["
-                                            + listener
-                                            + "] failed on nodesLeft ["
-                                            + removed
-                                            + "]",
-                                    e);
+                                    "listener [{}] failed on nodesLeft [{}]", listener, removed, e);
                         }
                     });
         }
@@ -234,7 +229,7 @@ public class ZkDiscovery implements NodeDiscovery {
         if (added.isEmpty()) {
             return;
         }
-        logger.debug("role [" + role.getName() + "] add nodes [" + added.values() + "]");
+        logger.debug("role [{}] add nodes [{}]", role.getName(), added.values());
         for (Listener listener : this.listeners) {
             this.singleThreadExecutor.execute(
                     () -> {
@@ -242,12 +237,7 @@ public class ZkDiscovery implements NodeDiscovery {
                             listener.nodesJoin(role, added);
                         } catch (Exception e) {
                             logger.error(
-                                    "listener ["
-                                            + listener
-                                            + "] failed on nodesJoin ["
-                                            + added
-                                            + "]",
-                                    e);
+                                    "listener [{}] failed on nodesJoin [{}]", listener, added, e);
                         }
                     });
         }
@@ -268,11 +258,9 @@ public class ZkDiscovery implements NodeDiscovery {
                                     listener.nodesJoin(role, nodes);
                                 } catch (Exception ex) {
                                     logger.error(
-                                            "listener ["
-                                                    + listener
-                                                    + "] failed on nodesJoin ["
-                                                    + nodes
-                                                    + "]",
+                                            "listener [{}] failed on nodesJoin [{}]",
+                                            listener,
+                                            nodes,
                                             ex);
                                 }
                             });

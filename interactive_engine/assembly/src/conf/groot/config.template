@@ -1,31 +1,21 @@
 ## Common Config
-graph.name=graphscope
 role.name=
 node.idx=
 rpc.port=0
-rpc.max.bytes.mb=4
 store.node.count=1
 frontend.node.count=1
 ingestor.node.count=2
 coordinator.node.count=1
 ingestor.queue.count=2
-partition.count=1
-engine.type=gaia
+partition.count=4
 discovery.mode=zookeeper
 
-## Ingestor Config
-ingestor.queue.buffer.size=128
-ingestor.sender.buffer.size=128
-
 ## Coordinator Config
-snapshot.increase.interval.ms=1000
-offsets.persist.interval.ms=3000
 log.recycle.enable=true
 file.meta.store.path=./meta
 
 ## Store Config
 store.data.path=./data
-store.write.thread.count=1
 
 ## Zk Config
 zk.base.path=/graphscope/groot
@@ -38,24 +28,11 @@ kafka.topic=groot
 ## Frontend Config
 gremlin.server.port=12312
 
-## Backup Config
-backup.enable=false
-store.backup.thread.count=1
-
 log4rs.config=LOG4RS_CONFIG
 
-dns.name.prefix.frontend=localhost
-dns.name.prefix.ingestor=localhost
-dns.name.prefix.coordinator=localhost
-dns.name.prefix.store=localhost
-
-gaia.enable=true
 neo4j.bolt.server.disabled=true
 
 pegasus.worker.num=2
-pegasus.timeout=240000
-pegasus.batch.size=1024
-pegasus.output.capacity=16
 pegasus.hosts=localhost:8080
 
 kafka.test.cluster.enable=true

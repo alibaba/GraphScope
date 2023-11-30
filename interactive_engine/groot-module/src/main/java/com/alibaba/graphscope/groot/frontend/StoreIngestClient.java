@@ -28,7 +28,7 @@ import java.util.Map;
 
 public class StoreIngestClient extends RpcClient {
 
-    private StoreIngestGrpc.StoreIngestStub stub;
+    private final StoreIngestGrpc.StoreIngestStub stub;
 
     public StoreIngestClient(ManagedChannel channel) {
         super(channel);

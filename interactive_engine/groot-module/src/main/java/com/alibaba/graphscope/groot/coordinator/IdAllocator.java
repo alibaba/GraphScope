@@ -11,8 +11,8 @@ public class IdAllocator {
 
     public static final String ID_ALLOCATE_INFO_PATH = "id_allocate_info";
 
-    private MetaStore metaStore;
-    private ObjectMapper objectMapper;
+    private final MetaStore metaStore;
+    private final ObjectMapper objectMapper;
     private volatile long tailId;
 
     public IdAllocator(MetaStore metaStore) {
@@ -37,8 +37,7 @@ public class IdAllocator {
             throw new FileNotFoundException(ID_ALLOCATE_INFO_PATH);
         }
         byte[] b = this.metaStore.read(ID_ALLOCATE_INFO_PATH);
-        long tailId = this.objectMapper.readValue(b, Long.class);
-        this.tailId = tailId;
+        this.tailId = this.objectMapper.readValue(b, Long.class);
     }
 
     public synchronized long allocate(int allocateSize) throws IOException {

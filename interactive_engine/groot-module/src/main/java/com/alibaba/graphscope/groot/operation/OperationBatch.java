@@ -19,11 +19,12 @@ import com.alibaba.graphscope.proto.groot.OperationPb;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 public class OperationBatch implements Iterable<OperationBlob> {
 
-    private long latestSnapshotId;
-    private List<OperationBlob> operationBlobs;
+    private final long latestSnapshotId;
+    private final List<OperationBlob> operationBlobs;
 
     private OperationBatch(long latestSnapshotId, List<OperationBlob> operationBlobs) {
         this.latestSnapshotId = latestSnapshotId;
@@ -81,9 +82,7 @@ public class OperationBatch implements Iterable<OperationBlob> {
 
         OperationBatch that = (OperationBatch) o;
 
-        return operationBlobs != null
-                ? operationBlobs.equals(that.operationBlobs)
-                : that.operationBlobs == null;
+        return Objects.equals(operationBlobs, that.operationBlobs);
     }
 
     public static class Builder {

@@ -105,7 +105,7 @@ public class ChannelManager {
                 for (int i = 0; i < count; i++) {
                     String host = hostTemplate.replace("{}", String.valueOf(i));
                     logger.info(
-                            "Creating channel to role {} #{}, host {}, port {}",
+                            "Create channel to role {} #{}, host {}, port {}",
                             role.getName(),
                             i,
                             host,
@@ -147,7 +147,7 @@ public class ChannelManager {
             }
             this.roleToChannels = null;
         }
-        logger.info("ChannelManager stopped");
+        logger.debug("ChannelManager stopped");
     }
 
     public void registerRole(RoleType role) {
