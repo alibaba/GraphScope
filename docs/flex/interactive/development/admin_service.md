@@ -6,24 +6,24 @@ Welcome to the GraphScope Interactive Admin Service documentation. This guide is
 
 ## API Overview
 
-The table below provides an overview of the available APIs, categorized for ease of understanding:
+The table below provides an overview of the available APIs:
 
 
-| Category            | API name        | Method | URL                                   | Explanation                                                        |
-|---------------------|-----------------|--------|---------------------------------------|--------------------------------------------------------------------|
-| GraphManagement     | ListGraphs      | GET    | /v1/graph                             | Get all graphs in current interactive service, the schema for each graph is returned. |
-| GraphManagement     | GetGraphSchema  | GET    | /v1/graph/{graph_name}/schema          | Get the schema for the specified graph.                            |
-| GraphManagement     | CreateGraph     | POST   | /v1/graph                             | Create an empty graph with the specified schema.                    |
-| GraphManagement     | DeleteGraph     | DELETE | /v1/graph/{graph_name}                 | Delete the specified graph.                                        |
-| GraphManagement     | ImportGraph     | POST   | /v1/graph/{graph_name}/dataloading     | Import data to graph.                                              |
-| ProcedureManagement | CreateProcedure | POST   | /v1/graph/{graph_name}/procedure      | Create a new stored procedure bound to a graph.                    |
-| ProcedureManagement | ShowProcedures  | GET    | /v1/graph/{graph_name}/procedure      | Get all procedures bound to the specified graph.                   |
-| ProcedureManagement | GetProcedure    | GET    | /v1/graph/{graph_name}/procedure/{procedure_name} | Get the metadata of the procedure.                                 |
-| ProcedureManagement | DeleteProcedure | DELETE | /v1/graph/{graph_name}/procedure/{procedure_name} | Delete the specified procedure.                                   |
-| ProcedureManagement | UpdateProcedure | PUT    | /v1/graph/{graph_name}/procedure/{procedure_name} | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
-| ServiceManagement   | StartService    | POST   | /v1/service/start                     | Start the service on the graph specified in request body.          |
-| ServiceManagement   | ServiceStatus   | GET    | /v1/service/status                    | Get current service status.                                        |
-| SystemMetrics   | SystemMetrics      | GET     | /v1/node/status                       | Get the system metrics of current host/pod, i.e. CPU usage, memory usages.                    |
+| API name        | Method and URL                        | Explanation                                                        |
+|-----------------|---------------------------------------|--------------------------------------------------------------------|
+| ListGraphs      | GET /v1/graph                             | Get all graphs in current interactive service, the schema for each graph is returned. |
+| GetGraphSchema  | GET /v1/graph/{graph}/schema          | Get the schema for the specified graph.                            |
+| CreateGraph     | POST /v1/graph                             | Create an empty graph with the specified schema.                    |
+| DeleteGraph     | DELETE /v1/graph/{graph}                 | Delete the specified graph.                                        |
+| ImportGraph     | POST /v1/graph/{graph}/dataloading     | Import data to graph.                                              |
+| CreateProcedure | POST /v1/graph/{graph}/procedure      | Create a new stored procedure bound to a graph.                    |
+| ShowProcedures  | GET /v1/graph/{graph}/procedure      | Get all procedures bound to the specified graph.                   |
+| GetProcedure    | GET /v1/graph/{graph}/procedure/{proc_name} | Get the metadata of the procedure.                                 |
+| DeleteProcedure | DELETE /v1/graph/{graph}/procedure/{proc_name} | Delete the specified procedure.                                   |
+| UpdateProcedure | PUT /v1/graph/{graph}/procedure/{proc_name} | Update some metadata for the specified procedure, i.e. update description, enable/disable. |
+| StartService   | POST /v1/service/start                     | Start the service on the graph specified in request body.          |
+| ServiceStatus  | GET /v1/service/status                    | Get current service status.                                        |
+| SystemMetrics     | GET /v1/node/status                       | Get the system metrics of current host/pod, i.e. CPU usage, memory usages.                    |
 
 
 ## Detailed API Documentation
