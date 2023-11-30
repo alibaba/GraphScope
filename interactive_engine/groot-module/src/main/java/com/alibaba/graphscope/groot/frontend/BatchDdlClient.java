@@ -10,9 +10,9 @@ import com.google.protobuf.InvalidProtocolBufferException;
 
 public class BatchDdlClient {
 
-    private DdlExecutors ddlExecutors;
-    private SnapshotCache snapshotCache;
-    private SchemaWriter schemaWriter;
+    private final DdlExecutors ddlExecutors;
+    private final SnapshotCache snapshotCache;
+    private final SchemaWriter schemaWriter;
 
     public BatchDdlClient(
             DdlExecutors ddlExecutors, SnapshotCache snapshotCache, SchemaWriter schemaWriter) {

@@ -15,7 +15,6 @@ metadata:
 data:
   groot.config: |-
     ## Common Config
-    graph.name={{ .Values.graphName }}
     role.name=
     node.idx=
     rpc.port=0
@@ -26,7 +25,6 @@ data:
     coordinator.node.count=1
     ingestor.queue.count={{ .Values.ingestor.replicaCount }}
     partition.count={{ .Values.store.replicaCount | mul 16 }}
-    engine.type=gaia
     discovery.mode=zookeeper
 
     ## Frontend Config
@@ -34,17 +32,20 @@ data:
     enable.hash.generate.eid={{ .Values.enableHashGenerateEid }}
 
     ## Ingestor Config
-    ingestor.queue.buffer.size={{ .Values.ingestorQueueBufferSize }}
-    ingestor.sender.buffer.size={{ .Values.ingestorSenderBufferSize }}
+    ingestor.queue.buffer.max.count={{ .Values.ingestorQueueBufferMaxCount }}
+    ingestor.sender.buffer.max.count={{ .Values.ingestorSenderBufferMaxCount }}
+    ingestor.sender.operation.max.count={{ .Values.ingestorSenderOperationMaxCount }}
 
     ## Coordinator Config
     snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
+    log.recycle.enable={{ .Values.logRecycleEnable }}
 
     ## Store Config
     store.data.path={{ .Values.storeDataPath }}
     store.write.thread.count={{ .Values.storeWriteThreadCount }}
+    store.queue.buffer.size={{ .Values.storeQueueBufferSize }}
 
     ## Frontend Config
     gremlin.server.port=12312
@@ -69,11 +70,11 @@ data:
     pegasus.output.capacity=16
     pegasus.hosts=localhost:8080
 
-    kafka.test.cluster.enable={{ not .Values.kafka.enabled }}
     ## Kafka Config
     kafka.servers=KAFKA_SERVERS
     kafka.topic={{ .Values.kafkaTopic }}
     kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
+    kafka.test.cluster.enable={{ not .Values.kafka.enabled }}
 
     ## Zk Config
     zk.base.path=/graphscope/groot

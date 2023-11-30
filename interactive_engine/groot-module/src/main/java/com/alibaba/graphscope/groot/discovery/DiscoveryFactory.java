@@ -8,7 +8,7 @@ import org.apache.curator.framework.CuratorFramework;
 
 public class DiscoveryFactory {
 
-    private Configs configs;
+    private final Configs configs;
 
     public DiscoveryFactory(Configs configs) {
         this.configs = configs;

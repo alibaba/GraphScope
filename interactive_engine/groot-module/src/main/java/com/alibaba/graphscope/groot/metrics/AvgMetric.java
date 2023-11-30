@@ -3,7 +3,7 @@ package com.alibaba.graphscope.groot.metrics;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class AvgMetric {
-    private AtomicLong totalVal;
+    private final AtomicLong totalVal;
     private volatile long lastUpdateVal;
     private volatile double metricVal;
 

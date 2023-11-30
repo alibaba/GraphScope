@@ -22,7 +22,7 @@ import io.grpc.stub.StreamObserver;
 
 public class IngestorSnapshotService extends IngestorSnapshotGrpc.IngestorSnapshotImplBase {
 
-    private IngestService ingestService;
+    private final IngestService ingestService;
 
     public IngestorSnapshotService(IngestService ingestService) {
         this.ingestService = ingestService;

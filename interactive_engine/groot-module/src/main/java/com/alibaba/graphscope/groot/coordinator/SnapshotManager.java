@@ -110,32 +110,32 @@ public class SnapshotManager {
     public static final String QUERY_SNAPSHOT_INFO_PATH = "query_snapshot_info";
     public static final String QUEUE_OFFSETS_PATH = "queue_offsets";
 
-    private MetaStore metaStore;
-    private LogService logService;
-    private WriteSnapshotIdNotifier writeSnapshotIdNotifier;
+    private final MetaStore metaStore;
+    private final LogService logService;
+    private final WriteSnapshotIdNotifier writeSnapshotIdNotifier;
 
-    private int storeCount;
-    private int queueCount;
-    private long snapshotIncreaseIntervalMs;
-    private long offsetsPersistIntervalMs;
+    private final int storeCount;
+    private final int queueCount;
+    private final long snapshotIncreaseIntervalMs;
+    private final long offsetsPersistIntervalMs;
 
     private volatile SnapshotInfo querySnapshotInfo;
     private volatile long writeSnapshotId;
 
-    private Map<Integer, SnapshotInfo> storeToSnapshotInfo;
-    private Map<Integer, List<Long>> storeToOffsets;
+    private final Map<Integer, SnapshotInfo> storeToSnapshotInfo;
+    private final Map<Integer, List<Long>> storeToOffsets;
     private AtomicReference<List<Long>> queueOffsetsRef;
 
     private ScheduledExecutorService increaseWriteSnapshotIdScheduler;
     private ScheduledExecutorService persistOffsetsScheduler;
 
-    private List<QuerySnapshotListener> listeners = new CopyOnWriteArrayList<>();
-    private TreeMap<Long, List<SnapshotListener>> snapshotToListeners = new TreeMap<>();
+    private final List<QuerySnapshotListener> listeners = new CopyOnWriteArrayList<>();
+    private final TreeMap<Long, List<SnapshotListener>> snapshotToListeners = new TreeMap<>();
 
-    private Object querySnapshotLock = new Object();
-    private Lock writeSnapshotLock = new ReentrantLock();
+    private final Object querySnapshotLock = new Object();
+    private final Lock writeSnapshotLock = new ReentrantLock();
 
-    private ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper;
 
     public SnapshotManager(
             Configs configs,
@@ -250,7 +250,7 @@ public class SnapshotManager {
         byte[] queueOffsetsBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
         List<Long> recoveredQueueOffsets =
                 this.objectMapper.readValue(queueOffsetsBytes, new TypeReference<List<Long>>() {});
-        logger.info("recovered queue offsets [" + recoveredQueueOffsets + "]");
+        logger.info("recovered queue offsets " + recoveredQueueOffsets + "");
         if (recoveredQueueOffsets.size() != this.queueCount) {
             throw new IllegalStateException(
                     "recovered queueCount ["
@@ -262,9 +262,7 @@ public class SnapshotManager {
 
         for (int i = 0; i < this.queueCount; i++) {
             long recoveredOffset = recoveredQueueOffsets.get(i);
-            LogReader reader = null;
-            try {
-                reader = logService.createReader(i, recoveredOffset + 1);
+            try (LogReader reader = logService.createReader(i, recoveredOffset + 1)) {
             } catch (Exception e) {
                 throw new IOException(
                         "recovered queue ["
@@ -273,10 +271,6 @@ public class SnapshotManager {
                                 + recoveredOffset
                                 + "] is not available",
                         e);
-            } finally {
-                if (reader != null) {
-                    reader.close();
-                }
             }
         }
 
@@ -354,9 +348,8 @@ public class SnapshotManager {
     private void maybeUpdateQuerySnapshotId() {
         if (this.storeToSnapshotInfo.size() < this.storeCount) {
             logger.warn(
-                    "Not all store nodes reported snapshot progress. current storeToSnapshot ["
-                            + this.storeToSnapshotInfo
-                            + "]");
+                    "Not all store nodes reported snapshot progress. current: [{}]",
+                    storeToSnapshotInfo);
             return;
         }
         SnapshotInfo minSnapshotInfo = Collections.min(this.storeToSnapshotInfo.values());
@@ -378,7 +371,7 @@ public class SnapshotManager {
                         }
                         persistQuerySnapshotId(minSnapshotInfo);
                         this.querySnapshotInfo = minSnapshotInfo;
-                        logger.debug("querySnapshotInfo updated to [" + minSnapshotInfo + "]");
+                        logger.debug("querySnapshotInfo updated to [{}]", querySnapshotInfo);
                     } catch (IOException e) {
                         logger.error("update querySnapshotInfo failed", e);
                         return;
@@ -395,9 +388,8 @@ public class SnapshotManager {
                                 listener.onSnapshotAvailable();
                             } catch (Exception e) {
                                 logger.warn(
-                                        "trigger snapshotListener failed. snapshotId ["
-                                                + snapshotId
-                                                + "]");
+                                        "trigger snapshotListener failed. snapshotId [{}]",
+                                        snapshotId);
                             }
                         }
                     }
@@ -453,9 +445,7 @@ public class SnapshotManager {
     private void updateQueueOffsets() throws IOException {
         if (this.storeToOffsets.size() < this.storeCount) {
             logger.warn(
-                    "Not all store nodes reported queue offsets. current storeToOffsets ["
-                            + this.storeToOffsets
-                            + "]");
+                    "Not all store nodes reported queue offsets. current: [{}]", storeToOffsets);
             return;
         }
         List<Long> queueOffsets = this.queueOffsetsRef.get();
