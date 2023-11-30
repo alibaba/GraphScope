@@ -54,9 +54,6 @@ class UpdateTransaction {
   bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
                const Any& dst, label_t edge_label, const Any& value);
 
-  bool AddOrUpdateEdge(label_t src_label, const Any& src, label_t dst_label,
-                       const Any& dst, label_t edge_label, const Any& value);
-
   class vertex_iterator {
    public:
     vertex_iterator(label_t label, vid_t cur, vid_t& num,
@@ -191,7 +188,6 @@ class UpdateTransaction {
   std::vector<Table> extra_vertex_properties_;
 
   std::vector<ska::flat_hash_map<vid_t, std::vector<vid_t>>> added_edges_;
-  // std::pair <prop, offset>
   std::vector<ska::flat_hash_map<
       vid_t, ska::flat_hash_map<vid_t, std::pair<Any, size_t>>>>
       updated_edge_data_;

@@ -153,43 +153,6 @@ bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
   return true;
 }
 
-bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
-                                label_t dst_label, const Any& dst,
-                                label_t edge_label, const Any& value) {
-  vid_t src_lid, dst_lid;
-  if (!oid_to_lid(src_label, src, src_lid)) {
-    return false;
-  }
-  if (!oid_to_lid(dst_label, dst, dst_lid)) {
-    return false;
-  }
-  PropertyType type =
-      graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (type != value.type) {
-    return false;
-  }
-  size_t in_csr_index = get_in_csr_index(src_label, dst_label, edge_label);
-  size_t out_csr_index = get_out_csr_index(src_label, dst_label, edge_label);
-  added_edges_[in_csr_index][dst_lid].push_back(src_lid);
-  updated_edge_data_[in_csr_index][dst_lid].emplace(
-      src_lid,
-      std::pair<Any, size_t>{value, std::numeric_limits<size_t>::max()});
-
-  added_edges_[out_csr_index][src_lid].push_back(dst_lid);
-  updated_edge_data_[out_csr_index][src_lid].emplace(
-      dst_lid,
-      std::pair<Any, size_t>{value, std::numeric_limits<size_t>::max()});
-
-  op_num_ += 1;
-  arc_ << static_cast<uint8_t>(1) << src_label;
-  serialize_field(arc_, src);
-  arc_ << dst_label;
-  serialize_field(arc_, dst);
-  arc_ << edge_label;
-  serialize_field(arc_, value);
-
-  return true;
-}
 static size_t get_offset(
     const std::shared_ptr<MutableCsrConstEdgeIterBase>& base, vid_t target) {
   size_t offset = 0;
@@ -201,9 +164,10 @@ static size_t get_offset(
   }
   return std::numeric_limits<size_t>::max();
 }
-bool UpdateTransaction::AddOrUpdateEdge(label_t src_label, const Any& src,
-                                        label_t dst_label, const Any& dst,
-                                        label_t edge_label, const Any& value) {
+
+bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
+                                label_t dst_label, const Any& dst,
+                                label_t edge_label, const Any& value) {
   vid_t src_lid, dst_lid;
   static constexpr size_t sentinel = std::numeric_limits<size_t>::max();
   size_t offset_out, offset_in;
@@ -215,13 +179,11 @@ bool UpdateTransaction::AddOrUpdateEdge(label_t src_label, const Any& src,
     const auto& ie =
         graph_.get_incoming_edges(dst_label, dst_lid, src_label, edge_label);
     offset_in = get_offset(ie, src_lid);
-  }
-
-  if (!oid_to_lid(src_label, src, src_lid)) {
-    return false;
-  }
-  if (!oid_to_lid(dst_label, dst, dst_lid)) {
-    return false;
+  } else {
+    if (!oid_to_lid(src_label, src, src_lid) ||
+        !oid_to_lid(dst_label, dst, dst_lid)) {
+      return false;
+    }
   }
   PropertyType type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
