@@ -110,9 +110,9 @@ fn count_test_04() {
             input
                 .input_from(0..10u64)?
                 .apply(|sub| {
-                    sub.repartition(move |id| Ok(*id % workers))
+                    sub.repartition(move |id| Ok(*id % 2))
                         .flat_map(|i| Ok(0..i))?
-                        .repartition(move |id| Ok(*id % workers))
+                        .repartition(move |id| Ok(*id % 2))
                         .count()?
                         .into_stream()?
                         .map(|i| Ok(i))?
@@ -129,7 +129,7 @@ fn count_test_04() {
         count += d;
     }
 
-    assert_eq!(360, count);
+    assert_eq!(90, count);
 }
 
 #[test]
