@@ -34,12 +34,12 @@ namespace gs {
 // LoadFragment for csv files.
 class CSVFragmentLoader : public IFragmentLoader {
  public:
-  CSVFragmentLoader(const Schema& schema, const LoadingConfig& loading_config,
-                    int32_t thread_num)
+  CSVFragmentLoader(const std::string& work_dir, const Schema& schema,
+                    const LoadingConfig& loading_config, int32_t thread_num)
       : loading_config_(loading_config),
         schema_(schema),
         thread_num_(thread_num),
-        basic_fragment_loader_(schema_),
+        basic_fragment_loader_(schema_, work_dir),
         read_vertex_table_time_(0),
         read_edge_table_time_(0),
         convert_to_internal_vertex_time_(0),
@@ -56,7 +56,7 @@ class CSVFragmentLoader : public IFragmentLoader {
     return FragmentLoaderType::kCSVFragmentLoader;
   }
 
-  void LoadFragment(MutablePropertyFragment& fragment) override;
+  void LoadFragment() override;
 
  private:
   void loadVertices();

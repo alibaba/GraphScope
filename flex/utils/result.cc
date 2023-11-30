@@ -23,6 +23,9 @@ Status::Status(StatusCode error_code) noexcept : error_code_(error_code) {}
 Status::Status(StatusCode error_code, std::string&& error_msg) noexcept
     : error_code_(error_code), error_msg_(std::move(error_msg)) {}
 
+Status::Status(StatusCode error_code, const std::string& error_msg) noexcept
+    : error_code_(error_code), error_msg_(error_msg) {}
+
 std::string Status::error_message() const { return error_msg_; }
 
 bool Status::ok() const { return error_code_ == StatusCode::OK; }

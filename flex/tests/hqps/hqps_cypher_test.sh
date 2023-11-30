@@ -15,6 +15,7 @@
 set -e
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 FLEX_HOME=${SCRIPT_DIR}/../../
+BULK_LOADER=${FLEX_HOME}/build/bin/bulk_loader
 SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
@@ -80,16 +81,21 @@ trap kill_service EXIT
 
 # start engine service and load ldbc graph
 start_engine_service(){
+    # suppose graph has been loaded, check ${GRAPH_CSR_DATA_DIR} exists
+    if [ ! -d ${GRAPH_CSR_DATA_DIR} ]; then
+        err "GRAPH_CSR_DATA_DIR not found"
+        exit 1
+    fi
+
     #check SERVER_BIN exists
     if [ ! -f ${SERVER_BIN} ]; then
         err "SERVER_BIN not found"
         exit 1
     fi
-
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
-
-    echo "Start engine service with command: ${cmd}"
+    
+    info "Start engine service with command: ${cmd}"
     ${cmd} &
     sleep 5
     #check interactive_server is running, if not, exit

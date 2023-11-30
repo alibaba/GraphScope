@@ -43,6 +43,9 @@ enum class PropertyType {
   kUInt64,
   kBool,
   kFloat,
+  kUInt8,
+  kUInt16,
+  kStringMap,
 };
 
 struct Date {
@@ -65,9 +68,12 @@ union AnyValue {
   float f;
   int64_t l;
   uint64_t ul;
+
   Date d;
   std::string_view s;
   double db;
+  uint8_t u8;
+  uint16_t u16;
 };
 
 template <typename T>
@@ -88,28 +94,27 @@ struct Any {
     assert(type == PropertyType::kInt64);
     return value.l;
   }
-
   void set_bool(bool v) {
     type = PropertyType::kBool;
     value.b = v;
   }
 
-  void set_signed_integer(int32_t v) {
+  void set_i32(int32_t v) {
     type = PropertyType::kInt32;
     value.i = v;
   }
 
-  void set_unsigned_integer(uint32_t v) {
+  void set_u32(uint32_t v) {
     type = PropertyType::kUInt32;
     value.ui = v;
   }
 
-  void set_signed_long(int64_t v) {
+  void set_i64(int64_t v) {
     type = PropertyType::kInt64;
     value.l = v;
   }
 
-  void set_unsigned_long(uint64_t v) {
+  void set_u64(uint64_t v) {
     type = PropertyType::kUInt64;
     value.ul = v;
   }
@@ -138,6 +143,16 @@ struct Any {
     value.db = db;
   }
 
+  void set_u8(uint8_t v) {
+    type = PropertyType::kUInt8;
+    value.u8 = v;
+  }
+
+  void set_u16(uint16_t v) {
+    type = PropertyType::kUInt16;
+    value.u16 = v;
+  }
+
   std::string to_string() const {
     if (type == PropertyType::kInt32) {
       return std::to_string(value.i);
@@ -145,12 +160,17 @@ struct Any {
       return std::to_string(value.l);
     } else if (type == PropertyType::kString) {
       return std::string(value.s.data(), value.s.size());
+      //      return value.s.to_string();
     } else if (type == PropertyType::kDate) {
       return value.d.to_string();
     } else if (type == PropertyType::kEmpty) {
       return "NULL";
     } else if (type == PropertyType::kDouble) {
       return std::to_string(value.db);
+    } else if (type == PropertyType::kUInt8) {
+      return std::to_string(value.u8);
+    } else if (type == PropertyType::kUInt16) {
+      return std::to_string(value.u16);
     } else if (type == PropertyType::kUInt32) {
       return std::to_string(value.ui);
     } else if (type == PropertyType::kUInt64) {
@@ -356,6 +376,14 @@ struct ConvertAny<std::string> {
 };
 
 template <>
+struct ConvertAny<std::string_view> {
+  static void to(const Any& value, std::string_view& out) {
+    CHECK(value.type == PropertyType::kString);
+    out = value.value.s;
+  }
+};
+
+template <>
 struct ConvertAny<float> {
   static void to(const Any& value, float& out) {
     CHECK(value.type == PropertyType::kFloat);
@@ -400,12 +428,40 @@ struct AnyConverter<bool> {
 };
 
 template <>
+struct AnyConverter<uint8_t> {
+  static constexpr PropertyType type = PropertyType::kUInt8;
+  static Any to_any(const uint8_t& value) {
+    Any ret;
+    ret.set_u8(value);
+    return ret;
+  }
+  static const uint8_t& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kUInt8);
+    return value.value.u8;
+  }
+};
+
+template <>
+struct AnyConverter<uint16_t> {
+  static constexpr PropertyType type = PropertyType::kUInt16;
+  static Any to_any(const uint16_t& value) {
+    Any ret;
+    ret.set_u16(value);
+    return ret;
+  }
+  static const uint16_t& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kUInt8);
+    return value.value.u16;
+  }
+};
+
+template <>
 struct AnyConverter<int32_t> {
   static constexpr PropertyType type = PropertyType::kInt32;
 
   static Any to_any(const int32_t& value) {
     Any ret;
-    ret.set_signed_integer(value);
+    ret.set_i32(value);
     return ret;
   }
 
@@ -431,7 +487,7 @@ struct AnyConverter<uint32_t> {
 
   static Any to_any(const uint32_t& value) {
     Any ret;
-    ret.set_unsigned_integer(value);
+    ret.set_u32(value);
     return ret;
   }
 
@@ -450,14 +506,13 @@ struct AnyConverter<uint32_t> {
     return value.ui;
   }
 };
-
 template <>
 struct AnyConverter<int64_t> {
   static constexpr PropertyType type = PropertyType::kInt64;
 
   static Any to_any(const int64_t& value) {
     Any ret;
-    ret.set_signed_long(value);
+    ret.set_i64(value);
     return ret;
   }
 
@@ -483,7 +538,7 @@ struct AnyConverter<uint64_t> {
 
   static Any to_any(const uint64_t& value) {
     Any ret;
-    ret.set_unsigned_long(value);
+    ret.set_u64(value);
     return ret;
   }
 
@@ -671,6 +726,7 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
 }  // namespace gs
 
 namespace std {
+
 inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   os << dt.to_string();
   return os;

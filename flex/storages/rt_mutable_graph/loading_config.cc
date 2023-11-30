@@ -391,7 +391,7 @@ static bool parse_edges_files_schema(
     return false;
   }
   int num = node.size();
-  LOG(INFO) << " Try to parse " << num << "edge configuration";
+  LOG(INFO) << " Try to parse " << num << " edge configuration";
   for (int i = 0; i < num; ++i) {
     if (!parse_edge_files(node[i], schema, data_location, files, edge_mapping,
                           edge_src_dst_col)) {

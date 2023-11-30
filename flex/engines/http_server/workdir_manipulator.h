@@ -52,6 +52,7 @@ class WorkDirManipulator {
   static const std::string CONF_ENGINE_CONFIG_FILE_NAME;
   static const std::string RUNNING_GRAPH_FILE_NAME;
   static const std::string TMP_DIR;
+  static const std::string GRAPH_LOADER_BIN;
 
   static void SetWorkspace(const std::string& workspace_path);
 

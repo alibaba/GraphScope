@@ -37,7 +37,6 @@
 namespace gs {
 
 static constexpr const char* CODEGEN_BIN = "load_plan_and_gen.sh";
-static constexpr const char* GRAPH_LOADER_BIN = "graph_loader";
 
 class FlexException : public std::exception {
  public:

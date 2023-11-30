@@ -25,8 +25,8 @@ namespace gs {
 class LoaderFactory {
  public:
   static std::shared_ptr<IFragmentLoader> CreateFragmentLoader(
-      const Schema& schema, const LoadingConfig& loading_config,
-      int thread_num);
+      const std::string& work_dir, const Schema& schema,
+      const LoadingConfig& loading_config, int thread_num);
 };
 }  // namespace gs
 

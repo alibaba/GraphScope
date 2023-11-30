@@ -259,7 +259,7 @@ Schema::get_vertex_primary_key(label_t index) const {
 }
 
 // Note that plugin_dir_ and plugin_name_to_path_and_id_ are not serialized.
-void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
+void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   vlabel_indexer_.Serialize(writer);
   elabel_indexer_.Serialize(writer);
   grape::InArchive arc;
@@ -396,6 +396,8 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kDate;
   } else if (str == "String" || str == DT_STRING) {
     return PropertyType::kString;
+  } else if (str == DT_STRINGMAP) {
+    return PropertyType::kStringMap;
   } else if (str == "Empty") {
     return PropertyType::kEmpty;
   } else if (str == "int64" || str == DT_SIGNED_INT64) {

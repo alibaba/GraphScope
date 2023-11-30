@@ -36,7 +36,7 @@ class AdjListView {
    public:
     nbr_iterator(const nbr_t* ptr, const nbr_t* end, timestamp_t timestamp)
         : ptr_(ptr), end_(end), timestamp_(timestamp) {
-      while (ptr_->timestamp > timestamp_ && ptr_ != end_) {
+      while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
         ++ptr_;
       }
     }
