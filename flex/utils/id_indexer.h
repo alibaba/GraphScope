@@ -889,7 +889,6 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
   size_t num_elements_ = 0;
   size_t num_slots_minus_one_ = 0;
 
-  // std::hash<KEY_T> hasher_;
   GHash<KEY_T> hasher_;
 
   template <typename _KEY_T, typename _INDEX_T>
@@ -903,18 +902,11 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
 template <typename KEY_T, typename INDEX_T>
 struct _move_data {
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
-  void operator()(const key_buffer_t& input, ColumnBase& lf, size_t size) {}
-};
-
-template <typename INDEX_T>
-struct _move_data<int64_t, INDEX_T> {
-  using key_buffer_t = typename id_indexer_impl::KeyBuffer<int64_t>::type;
   void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
-    auto& keys = dynamic_cast<LongColumn&>(col);
+    auto& keys = dynamic_cast<TypedColumn<KEY_T>&>(col);
     for (size_t idx = 0; idx < size; ++idx) {
       keys.set_value(idx, input[idx]);
     }
-    // memcpy(buffer.buffer().data(), input.data(), sizeof(int64_t) * size);
   }
 };
 

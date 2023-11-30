@@ -161,6 +161,7 @@ class MMapAllocator {
   size_t cur_loc_;
   size_t cur_size_;
 };
+
 #ifdef USE_MMAPALLOC
 using Allocator = MMapAllocator;
 #else

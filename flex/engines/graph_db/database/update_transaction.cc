@@ -16,7 +16,6 @@
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
-#include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
 #include "flex/engines/graph_db/database/wal.h"
@@ -724,16 +723,12 @@ void UpdateTransaction::release() {
   }
 }
 
-void UpdateTransaction::batch_commit(
-    std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
-    std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
-        insertEdges,
-    grape::InArchive& arc) {
+void UpdateTransaction::batch_commit(UpdateBatch& batch) {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
     return;
   }
-
-  for (auto& [label, oid, props] : insertVertices) {
+  const auto& updateVertices = batch.GetUpdateVertices();
+  for (auto& [label, oid, props] : updateVertices) {
     vid_t lid;
 
     if (graph_.get_lid(label, oid, lid)) {
@@ -743,8 +738,9 @@ void UpdateTransaction::batch_commit(
       graph_.get_vertex_table(label).insert(lid, props);
     }
   }
+  const auto& updateEdges = batch.GetUpdateEdges();
 
-  for (auto& [src_label, src, dst_label, dst, edge_label, prop] : insertEdges) {
+  for (auto& [src_label, src, dst_label, dst, edge_label, prop] : updateEdges) {
     vid_t src_lid, dst_lid;
     bool src_flag = graph_.get_lid(src_label, src, src_lid);
     bool dst_flag = graph_.get_lid(dst_label, dst, dst_lid);
@@ -781,6 +777,7 @@ void UpdateTransaction::batch_commit(
       }
     }
   }
+  auto& arc = batch.GetArc();
   auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
   header->length = arc.GetSize() - sizeof(WalHeader);
   header->type = 1;

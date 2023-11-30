@@ -20,8 +20,10 @@
 #include <utility>
 
 #include "flat_hash_map/flat_hash_map.hpp"
+#include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/storages/rt_mutable_graph/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/allocators.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
 #include "flex/utils/property/types.h"
@@ -30,15 +32,6 @@
 namespace gs {
 
 class MutablePropertyFragment;
-
-#ifdef USE_MMAPALLOC
-class MMapAllocator;
-using Allocator = MMapAllocator;
-#else
-class ArenaAllocator;
-using Allocator = ArenaAllocator;
-#endif
-
 class WalWriter;
 class VersionManager;
 
@@ -156,11 +149,7 @@ class UpdateTransaction {
 
  private:
   friend class GraphDBSession;
-  void batch_commit(
-      std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& insertVertices,
-      std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
-          insertEdges,
-      grape::InArchive& arc);
+  void batch_commit(UpdateBatch& batch);
 
   void set_edge_data_with_offset(bool dir, label_t label, vid_t v,
                                  label_t neighbor_label, vid_t nbr,

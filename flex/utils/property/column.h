@@ -42,8 +42,6 @@ class ColumnBase {
 
   virtual void copy_to_tmp(const std::string& cur_path,
                            const std::string& tmp_path) = 0;
-  // virtual void clear() = 0;
-
   virtual void resize(size_t size) = 0;
 
   virtual PropertyType type() const = 0;
@@ -325,7 +323,6 @@ class TypedColumn<std::string_view> : public ColumnBase {
   }
 
   std::string_view get_view(size_t idx) const {
-    // LOG(INFO) << basic_size_ << " basic size " << idx << "\n";
     return idx < basic_size_ ? basic_buffer_.get(idx)
                              : extra_buffer_.get(idx - basic_size_);
   }
@@ -394,9 +391,7 @@ class StringMapColumn : public ColumnBase {
   void dump(const std::string& filename) override;
 
   void touch(const std::string& filename) override {
-    // LOG(INFO) << "filename: " << filename << "\n";
     index_col_.touch(filename);
-    // meta_map_->touch(filename);
   }
 
   void close() override {

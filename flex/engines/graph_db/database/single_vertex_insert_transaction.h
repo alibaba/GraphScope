@@ -17,19 +17,13 @@
 #define GRAPHSCOPE_DATABASE_SINGLE_VERTEX_INSERT_TRANSACTION_H_
 
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/allocators.h"
 #include "flex/utils/property/types.h"
 #include "grape/serialization/in_archive.h"
 
 namespace gs {
 
 class MutablePropertyFragment;
-#ifdef USE_MMAPALLOC
-class MMapAllocator;
-using Allocator = MMapAllocator;
-#else
-class ArenaAllocator;
-using Allocator = ArenaAllocator;
-#endif
 class WalWriter;
 class VersionManager;
 

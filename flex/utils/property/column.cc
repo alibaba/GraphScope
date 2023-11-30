@@ -33,7 +33,6 @@ class TypedEmptyColumn : public ColumnBase {
   void dump(const std::string& filename) override {}
   void copy_to_tmp(const std::string& cur_path,
                    const std::string& tmp_path) override {}
-  // void clear() override {}
   void close() override {}
   size_t size() const override { return 0; }
   void resize(size_t size) override {}

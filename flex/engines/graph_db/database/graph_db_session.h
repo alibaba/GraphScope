@@ -21,6 +21,7 @@
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
+#include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
@@ -60,10 +61,7 @@ class GraphDBSession {
 
   UpdateTransaction GetUpdateTransaction();
 
-  bool BatchUpdate(
-      std::vector<std::tuple<label_t, Any, std::vector<Any>>>&& vertices,
-      std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&&
-          edges);
+  bool BatchUpdate(UpdateBatch& batch);
 
   const MutablePropertyFragment& graph() const;
   MutablePropertyFragment& graph();
