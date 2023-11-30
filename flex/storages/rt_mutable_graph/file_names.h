@@ -15,7 +15,14 @@
 #ifndef GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 #define GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 
-#include <string>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <filesystem>
+#include "glog/logging.h"
 
 namespace gs {
 // clang-format off
@@ -67,6 +74,43 @@ namespace gs {
 */
 // clang-format on
 
+inline void copy_file(const std::string& src, const std::string& dst) {
+  if (!std::filesystem::exists(src)) {
+    LOG(ERROR) << "file not exists: " << src;
+    return;
+  }
+  size_t len = std::filesystem::file_size(src);
+  int src_fd = open(src.c_str(), O_RDONLY);
+  bool creat = false;
+  if (!std::filesystem::exists(dst)) {
+    creat = true;
+  }
+  int dst_fd = open(dst.c_str(), O_WRONLY | O_CREAT);
+  if (creat) {
+    std::filesystem::perms readWritePermission =
+        std::filesystem::perms::owner_read |
+        std::filesystem::perms::owner_write;
+    std::error_code errorCode;
+    std::filesystem::permissions(dst, readWritePermission,
+                                 std::filesystem::perm_options::add, errorCode);
+    if (errorCode) {
+      LOG(INFO) << "Failed to set read/write permission for file: " << dst
+                << " " << errorCode.message() << std::endl;
+    }
+  }
+  ssize_t ret;
+  do {
+    ret = copy_file_range(src_fd, NULL, dst_fd, NULL, len, 0);
+    if (ret == -1) {
+      perror("copy_file_range");
+      return;
+    }
+    len -= ret;
+  } while (len > 0 && ret > 0);
+  close(src_fd);
+  close(dst_fd);
+}
+
 inline std::string schema_path(const std::string& work_dir) {
   return work_dir + "/schema";
 }
@@ -77,6 +121,16 @@ inline std::string snapshots_dir(const std::string& work_dir) {
 
 inline std::string snapshot_version_path(const std::string& work_dir) {
   return snapshots_dir(work_dir) + "/VERSION";
+}
+
+inline std::string get_latest_snapshot(const std::string& work_dir) {
+  std::string snapshots_dir = work_dir + "/snapshots";
+  uint32_t version;
+  {
+    FILE* fin = fopen((snapshots_dir + "/VERSION").c_str(), "r");
+    fread(&version, sizeof(uint32_t), 1, fin);
+  }
+  return snapshots_dir + "/" + std::to_string(version);
 }
 
 inline uint32_t get_snapshot_version(const std::string& work_dir) {

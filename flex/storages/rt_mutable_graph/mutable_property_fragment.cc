@@ -161,16 +161,6 @@ inline MutableCsrBase* create_csr(EdgeStrategy es,
   return nullptr;
 }
 
-std::string get_latest_snapshot(const std::string& work_dir) {
-  std::string snapshots_dir = work_dir + "/snapshots";
-  uint32_t version;
-  {
-    FILE* fin = fopen((snapshots_dir + "/VERSION").c_str(), "r");
-    fread(&version, sizeof(uint32_t), 1, fin);
-  }
-  return snapshots_dir + "/" + std::to_string(version);
-}
-
 void MutablePropertyFragment::Open(const std::string& work_dir) {
   loadSchema(schema_path(work_dir));
   vertex_label_num_ = schema_.vertex_label_num();
