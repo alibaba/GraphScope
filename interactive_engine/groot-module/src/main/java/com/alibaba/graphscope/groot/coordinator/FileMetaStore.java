@@ -39,12 +39,12 @@ import java.util.zip.Checksum;
 public class FileMetaStore implements MetaStore {
     private static final Logger logger = LoggerFactory.getLogger(FileMetaStore.class);
 
-    private String workingDir;
-    private Map<String, Integer> pathToSuffix;
+    private final String workingDir;
+    private final Map<String, Integer> pathToSuffix;
 
     public FileMetaStore(Configs configs) {
         this.workingDir = CoordinatorConfig.FILE_META_STORE_PATH.get(configs);
-        new File(this.workingDir).mkdirs();
+        boolean ret = new File(this.workingDir).mkdirs();
         this.pathToSuffix = new ConcurrentHashMap<>();
     }
 
@@ -80,13 +80,7 @@ public class FileMetaStore implements MetaStore {
             long realCrc = getCRC32Checksum(res);
             if (realCrc != crc) {
                 logger.error(
-                        "checksum of file ["
-                                + file0.getAbsolutePath()
-                                + "] is ["
-                                + realCrc
-                                + "], expected ["
-                                + crc
-                                + "]");
+                        "checksum [{}] is [{}] versus [{}]", file0.getAbsolutePath(), realCrc, crc);
                 res = null;
             }
         }
@@ -94,7 +88,7 @@ public class FileMetaStore implements MetaStore {
             if (res != null) {
                 return res;
             } else {
-                throw new IOException("file0 checksum failed, file1 not exists");
+                throw new IOException("file0 checksum failed and file1 not exists");
             }
         } else {
             try (InputStream is = new BufferedInputStream(new FileInputStream(file1))) {

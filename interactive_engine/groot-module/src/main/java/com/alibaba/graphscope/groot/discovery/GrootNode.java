@@ -29,10 +29,10 @@ import java.util.Objects;
 @JsonRootName("details")
 public class GrootNode {
 
-    private String roleName;
-    private int idx;
-    private String host;
-    private int port;
+    private final String roleName;
+    private final int idx;
+    private final String host;
+    private final int port;
 
     @JsonCreator
     public GrootNode(

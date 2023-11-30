@@ -29,10 +29,10 @@ public class MetricsAggregator {
 
     private Map<RoleType, RoleClients<MetricsCollectClient>> roleToClients = new HashMap<>();
 
-    private ObjectMapper objectMapper;
-    private int frontendCount;
-    private int ingestorCount;
-    private int storeCount;
+    private final ObjectMapper objectMapper;
+    private final int frontendCount;
+    private final int ingestorCount;
+    private final int storeCount;
 
     public MetricsAggregator(
             Configs configs,

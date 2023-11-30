@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 public class StoreBackupTaskSender {
-    private RoleClients<StoreBackupClient> storeBackupClients;
+    private final RoleClients<StoreBackupClient> storeBackupClients;
 
     public StoreBackupTaskSender(RoleClients<StoreBackupClient> storeBackupClients) {
         this.storeBackupClients = storeBackupClients;

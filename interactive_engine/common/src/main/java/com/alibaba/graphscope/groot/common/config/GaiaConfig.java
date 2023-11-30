@@ -1,7 +1,7 @@
 package com.alibaba.graphscope.groot.common.config;
 
 public class GaiaConfig {
-    public static final Config<Boolean> GAIA_ENABLE = Config.boolConfig("gaia.enable", false);
+    public static final Config<Boolean> GAIA_ENABLE = Config.boolConfig("gaia.enable", true);
 
     public static final Config<Boolean> GAIA_REPORT = Config.boolConfig("gaia.report", false);
 
