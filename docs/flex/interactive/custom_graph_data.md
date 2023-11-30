@@ -118,7 +118,10 @@ Supported primitive data types for properties include:
 - DT_SIGNED_INT64
 - DT_UNSIGNED_INT64
 - DT_BOOL
+- DT_FLOAT
+- DT_DOUBLE
 - DT_STRING
+- DT_DATE32
 
 For a comprehensive list of supported types, please refer to the [data model](./data_model) page.
 
