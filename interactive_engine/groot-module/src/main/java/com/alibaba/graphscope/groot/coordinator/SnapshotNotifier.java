@@ -23,10 +23,10 @@ import java.util.Map;
 
 public class SnapshotNotifier implements NodeDiscovery.Listener {
 
-    private NodeDiscovery nodeDiscovery;
-    private SnapshotManager snapshotManager;
-    private SchemaManager schemaManager;
-    private RoleClients<FrontendSnapshotClient> frontendSnapshotClients;
+    private final NodeDiscovery nodeDiscovery;
+    private final SnapshotManager snapshotManager;
+    private final SchemaManager schemaManager;
+    private final RoleClients<FrontendSnapshotClient> frontendSnapshotClients;
 
     private Map<Integer, QuerySnapshotListener> listeners;
 

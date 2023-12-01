@@ -88,25 +88,22 @@ public class SnapshotSortQueue {
                     }
                     this.queueHeads.set(i, entry);
                 }
-                long entrySnapshotId = entry.getSnapshotId();
-                if (entrySnapshotId < minSnapshotId) {
-                    minSnapshotId = entrySnapshotId;
-                }
+                minSnapshotId = Math.min(minSnapshotId, entry.getSnapshotId());
             }
             this.currentPollSnapshotId = minSnapshotId;
-            logger.info("currentPollSnapshotId initialize to [" + this.currentPollSnapshotId + "]");
+            logger.info("currentPollSnapshotId initialize to [{}]", currentPollSnapshotId);
         }
         while (true) {
             StoreDataBatch entry = this.queueHeads.get(this.currentPollQueueIdx);
             this.queueHeads.set(this.currentPollQueueIdx, null);
             if (entry == null) {
                 entry =
-                        this.innerQueues
-                                .get(this.currentPollQueueIdx)
-                                .poll(this.queueWaitMs, TimeUnit.MILLISECONDS);
-                if (entry == null) {
-                    return null;
-                }
+                        innerQueues
+                                .get(currentPollQueueIdx)
+                                .poll(queueWaitMs, TimeUnit.MILLISECONDS);
+            }
+            if (entry == null) {
+                return null;
             }
 
             long snapshotId = entry.getSnapshotId();
@@ -123,13 +120,11 @@ public class SnapshotSortQueue {
                 }
             } else {
                 logger.warn(
-                        "Illegal entry polled from queue ["
-                                + this.currentPollQueueIdx
-                                + "]. entrySnapshotId ["
-                                + snapshotId
-                                + "] < currentSnapshotId ["
-                                + this.currentPollSnapshotId
-                                + "]. Ignored entry.");
+                        "Illegal entry polled from queue [{}]. entrySnapshotId [{}] <"
+                                + " currentSnapshotId [{}]. Ignored entry",
+                        currentPollQueueIdx,
+                        snapshotId,
+                        currentPollSnapshotId);
             }
         }
     }

@@ -29,7 +29,7 @@ import java.util.List;
 public class ClientBackupService extends ClientBackupGrpc.ClientBackupImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientBackupService.class);
 
-    private RoleClients<BackupClient> backupClients;
+    private final RoleClients<BackupClient> backupClients;
 
     public ClientBackupService(RoleClients<BackupClient> backupClients) {
         this.backupClients = backupClients;

@@ -28,7 +28,7 @@ class IFragmentLoader {
   virtual ~IFragmentLoader() = default;
   // get the fragment loader type
   virtual FragmentLoaderType GetFragmentLoaderType() const = 0;
-  virtual void LoadFragment(MutablePropertyFragment& fragment) = 0;
+  virtual void LoadFragment() = 0;
 };
 
 }  // namespace gs

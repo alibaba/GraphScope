@@ -30,8 +30,8 @@ public class ZkMetaStore implements MetaStore {
     private static final Logger logger = LoggerFactory.getLogger(ZkMetaStore.class);
     public static final String ROOT_NODE = "meta";
 
-    private CuratorFramework curator;
-    private String metaBasePath;
+    private final CuratorFramework curator;
+    private final String metaBasePath;
 
     public ZkMetaStore(Configs configs, CuratorFramework curator) {
         this(curator, ZkConfig.ZK_BASE_PATH.get(configs));

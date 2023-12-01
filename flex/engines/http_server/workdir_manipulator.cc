@@ -809,12 +809,13 @@ gs::Result<std::string> WorkDirManipulator::dump_graph_schema(
 gs::Result<std::string> WorkDirManipulator::LoadGraph(
     const std::string& config_file_path, const std::string& graph_name,
     int32_t loading_thread_num) {
-  // TODO: call graph_loader.
+  // TODO: call GRAPH_LOADER_BIN.
   auto schema_file = GetGraphSchemaPath(graph_name);
   auto cur_indices_dir = GetGraphIndicesDir(graph_name);
-  // system call to graph_loader schema_file, loading_config, cur_indices_dir
-  std::string cmd_string = "graph_loader " + schema_file + " " +
-                           config_file_path + " " + cur_indices_dir + " " +
+  // system call to GRAPH_LOADER_BIN schema_file, loading_config,
+  // cur_indices_dir
+  std::string cmd_string = GRAPH_LOADER_BIN + " -g " + schema_file + " -l " +
+                           config_file_path + " -d " + cur_indices_dir + " " +
                            std::to_string(loading_thread_num);
   LOG(INFO) << "Call graph_loader: " << cmd_string;
   auto res = std::system(cmd_string.c_str());
@@ -1276,5 +1277,6 @@ const std::string WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME =
     "engine_config.yaml";
 const std::string WorkDirManipulator::RUNNING_GRAPH_FILE_NAME = "RUNNING";
 const std::string WorkDirManipulator::TMP_DIR = "/tmp";
+const std::string WorkDirManipulator::GRAPH_LOADER_BIN = "bulk_loader";
 
 }  // namespace server

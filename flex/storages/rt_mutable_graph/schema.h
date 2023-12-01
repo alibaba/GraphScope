@@ -143,7 +143,7 @@ class Schema {
 
   const std::string& get_vertex_primary_key_name(label_t index) const;
 
-  void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer);
+  void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const;
 
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader);
 

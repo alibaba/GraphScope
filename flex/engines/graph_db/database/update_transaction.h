@@ -20,8 +20,10 @@
 #include <utility>
 
 #include "flat_hash_map/flat_hash_map.hpp"
+#include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/storages/rt_mutable_graph/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/allocators.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
 #include "flex/utils/property/types.h"
@@ -30,15 +32,14 @@
 namespace gs {
 
 class MutablePropertyFragment;
-class ArenaAllocator;
 class WalWriter;
 class VersionManager;
 
 class UpdateTransaction {
  public:
-  UpdateTransaction(MutablePropertyFragment& graph, ArenaAllocator& alloc,
-                    WalWriter& logger, VersionManager& vm,
-                    timestamp_t timestamp);
+  UpdateTransaction(MutablePropertyFragment& graph, Allocator& alloc,
+                    const std::string& work_dir, WalWriter& logger,
+                    VersionManager& vm, timestamp_t timestamp);
 
   ~UpdateTransaction();
 
@@ -94,6 +95,8 @@ class UpdateTransaction {
 
     void Next();
 
+    void Forward(size_t offset);
+
     vid_t GetNeighbor() const;
 
     label_t GetNeighborLabel() const;
@@ -113,6 +116,7 @@ class UpdateTransaction {
     const vid_t* added_edges_end_;
 
     std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter_;
+    size_t offset_;
 
     UpdateTransaction* txn_;
   };
@@ -136,10 +140,19 @@ class UpdateTransaction {
                           label_t neighbor_label, vid_t nbr, label_t edge_label,
                           Any& ret) const;
 
-  static void IngestWal(MutablePropertyFragment& graph, uint32_t timestamp,
-                        char* data, size_t length, ArenaAllocator& alloc);
+  static void IngestWal(MutablePropertyFragment& graph,
+                        const std::string& work_dir, uint32_t timestamp,
+                        char* data, size_t length, Allocator& alloc);
 
  private:
+  friend class GraphDBSession;
+  void batch_commit(UpdateBatch& batch);
+
+  void set_edge_data_with_offset(bool dir, label_t label, vid_t v,
+                                 label_t neighbor_label, vid_t nbr,
+                                 label_t edge_label, const Any& value,
+                                 size_t offset);
+
   size_t get_in_csr_index(label_t src_label, label_t dst_label,
                           label_t edge_label) const;
 
@@ -157,7 +170,7 @@ class UpdateTransaction {
   void applyEdgesUpdates();
 
   MutablePropertyFragment& graph_;
-  ArenaAllocator& alloc_;
+  Allocator& alloc_;
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;
@@ -175,7 +188,8 @@ class UpdateTransaction {
   std::vector<Table> extra_vertex_properties_;
 
   std::vector<ska::flat_hash_map<vid_t, std::vector<vid_t>>> added_edges_;
-  std::vector<ska::flat_hash_map<vid_t, ska::flat_hash_map<vid_t, Any>>>
+  std::vector<ska::flat_hash_map<
+      vid_t, ska::flat_hash_map<vid_t, std::pair<Any, size_t>>>>
       updated_edge_data_;
 
   std::vector<std::string> sv_vec_;

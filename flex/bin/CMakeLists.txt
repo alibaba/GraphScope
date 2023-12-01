@@ -37,13 +37,6 @@ install(TARGETS flex_analytical_engine
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib)
 
-add_executable(graph_loader graph_loader.cc)
-target_link_libraries(graph_loader flex_rt_mutable_graph flex_graph_db ${GLOG_LIBRARIES})
-install(TARGETS graph_loader
-        RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib)
-
 if(BUILD_HQPS)
         if(Hiactor_FOUND)
                 add_executable(interactive_server interactive_server.cc)
@@ -57,3 +50,12 @@ if(BUILD_HQPS)
         # install the script
         install(PROGRAMS load_plan_and_gen.sh DESTINATION bin)
 endif()
+
+include_directories(${Boost_INCLUDE_DIRS})
+add_executable(bulk_loader bulk_loader.cc)
+target_link_libraries(bulk_loader flex_rt_mutable_graph flex_utils ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES} ${Boost_LIBRARIES})
+
+install(TARGETS bulk_loader
+        RUNTIME DESTINATION bin
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib)

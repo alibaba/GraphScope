@@ -24,9 +24,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class LocalSnapshotListener implements QuerySnapshotListener {
     private static final Logger logger = LoggerFactory.getLogger(LocalSnapshotListener.class);
 
-    private SchemaManager schemaManager;
-    private SnapshotCache snapshotCache;
-    private AtomicLong lastDdlSnapshotId;
+    private final SchemaManager schemaManager;
+    private final SnapshotCache snapshotCache;
+    private final AtomicLong lastDdlSnapshotId;
 
     public LocalSnapshotListener(SchemaManager schemaManager, SnapshotCache snapshotCache) {
         this.schemaManager = schemaManager;
@@ -36,12 +36,7 @@ public class LocalSnapshotListener implements QuerySnapshotListener {
 
     @Override
     public void snapshotAdvanced(long snapshotId, long ddlSnapshotId) {
-        logger.debug(
-                "snapshot advance to ["
-                        + snapshotId
-                        + "]-["
-                        + ddlSnapshotId
-                        + "], will update local snapshot cache");
+        logger.debug("snapshot advance to [{}]-[{}]", snapshotId, ddlSnapshotId);
         GraphDef graphDef = null;
         if (ddlSnapshotId > this.lastDdlSnapshotId.get()) {
             graphDef = this.schemaManager.getGraphDef();

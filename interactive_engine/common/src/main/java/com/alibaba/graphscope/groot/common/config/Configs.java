@@ -25,7 +25,7 @@ import java.util.Properties;
 
 public class Configs {
 
-    private Properties properties;
+    private final Properties properties;
 
     public Configs() {
         this.properties = new Properties();
