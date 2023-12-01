@@ -1,3 +1,5 @@
+use std::cmp::max;
+
 use crate::api::{IterCondition, Iteration};
 use crate::macros::filter::*;
 use crate::stream::Stream;
@@ -67,7 +69,8 @@ where
         })?;
     let feedback_partitions = feedback.get_partitions();
     feedback.feedback_to(index)?;
-    leave.set_partitions(feedback_partitions);
+    let partition_update = max(feedback_partitions, leave.get_partitions());
+    leave.set_partitions(partition_update);
     leave.leave()
 }
 
