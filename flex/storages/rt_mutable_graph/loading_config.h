@@ -172,11 +172,16 @@ class LoadingConfig {
                               // schema, {col_ind, col_name, schema_prop_name}
                               // col_name can be empty
 
+  // key: <src_label, dst_label, edge_label>,
+  //  value: <{<src_col_name, src_col_id>,...}, {<dst_col_name,
+  //  dst_col_id>,...}>
+  // for csv loader, we just need the column_id, but for odps loader, we also
+  // need the column_name
   std::unordered_map<edge_triplet_type,
                      std::pair<std::vector<std::pair<std::string, size_t>>,
                                std::vector<std::pair<std::string, size_t>>>,
                      boost::hash<edge_triplet_type>>
-      edge_src_dst_col_;  // Which two columns are src_id and dst_id
+      edge_src_dst_col_;
 
   friend bool config_parsing::parse_bulk_load_config_file(
       const std::string& config_file, const Schema& schema,

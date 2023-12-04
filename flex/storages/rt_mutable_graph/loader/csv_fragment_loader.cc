@@ -1297,7 +1297,7 @@ void CSVFragmentLoader::LoadFragment() {
   loadVertices();
   loadEdges();
 
-  return basic_fragment_loader_.LoadFragment();
+  basic_fragment_loader_.LoadFragment();
 }
 
 const bool CSVFragmentLoader::registered_ = LoaderFactory::Register(
