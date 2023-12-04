@@ -665,7 +665,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.IS_NOT_NULL
                 || sqlKind == SqlKind.EXTRACT
                 || sqlKind == SqlKind.SEARCH
-                || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE;
+                || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE
+                || sqlKind == SqlKind.AS;
     }
 
     @Override
@@ -1014,6 +1015,9 @@ public class GraphBuilder extends RelBuilder {
                         deriveType(nodeList, fieldNameList, input, isAppend),
                         isAppend);
         replaceTop(project);
+        // todo: when isAppend is true and there is only one expression, the project actually
+        // denotes the operator `select('a')` in gremlin
+        // todo: remove useless `select('a')` to avoid extra execution overhead
         return this;
     }
 

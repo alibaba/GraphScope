@@ -14,15 +14,24 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.exception;
+package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
-import org.antlr.v4.runtime.tree.ParseTree;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Project;
 
-public class UnsupportedEvalException extends UnsupportedOperationException {
-    public UnsupportedEvalException(Class<? extends ParseTree> antlrCtx, String error) {
-        super(
-                String.format(
-                        "antlr context {%s} parsing is unsupported, error is {%s}",
-                        antlrCtx, error));
+import java.util.function.Predicate;
+
+public class SubQueryChecker implements Predicate<RelNode> {
+    private final RelNode commonRel;
+
+    public SubQueryChecker(RelNode commonRel) {
+        this.commonRel = commonRel;
+    }
+
+    @Override
+    public boolean test(RelNode rel) {
+        return !(!rel.getInputs().isEmpty()
+                && rel.getInput(0).equals(commonRel)
+                && rel instanceof Project);
     }
 }

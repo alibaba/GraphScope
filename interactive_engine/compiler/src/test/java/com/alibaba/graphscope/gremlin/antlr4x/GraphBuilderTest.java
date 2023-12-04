@@ -454,4 +454,106 @@ public class GraphBuilderTest {
                     + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
     }
+
+    @Test
+    public void g_V_select_a_by_values_name_test() {
+        RelNode node = eval("g.V().as('a').select('a').by(values('name'))");
+    }
+
+    @Test
+    public void g_V_order_test() {
+        RelNode node = eval("g.V().order()");
+        Assert.assertEquals(
+                "GraphLogicalSort(sort0=[DEFAULT], dir0=[ASC])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_order_by_name_age_test() {
+        RelNode node = eval("g.V().order().by('name', desc).by('age', asc)");
+        Assert.assertEquals(
+                "GraphLogicalSort(sort0=[DEFAULT.name], sort1=[DEFAULT.age], dir0=[DESC],"
+                    + " dir1=[ASC])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_order_by_select_test() {
+        RelNode node = eval("g.V().as('a').order().by(select('a').by('name'))");
+        System.out.println(node.explain());
+    }
+
+    @Test
+    public void g_V_limit_test() {
+        RelNode node = eval("g.V().limit(10)");
+        Assert.assertEquals(
+                "GraphLogicalSort(fetch=[10])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_order_limit_test() {
+        RelNode node = eval("g.V().order().by('name', desc).by('age', asc).limit(10)");
+        Assert.assertEquals(
+                "GraphLogicalSort(sort0=[DEFAULT.name], sort1=[DEFAULT.age], dir0=[DESC],"
+                    + " dir1=[ASC], fetch=[10])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_group_test() {
+        RelNode node = eval("g.V().group()");
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[DEFAULT], aliases=[DEFAULT]}],"
+                    + " values=[[{operands=[DEFAULT], aggFunction=COLLECT, alias='$f1',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_group_by_label_by_name_test() {
+        RelNode node = eval("g.V().group().by('~label').by('name')");
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.~label], aliases=[~label]}],"
+                    + " values=[[{operands=[DEFAULT.name], aggFunction=COLLECT, alias='$f1',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_group_by_select_a_name_by_count_test() {
+        RelNode node =
+                eval(
+                        "g.V().as('a').group().by(select('a').by('name').as('b')).by(select('a').count().as('c'))");
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[a.name], aliases=[b]}],"
+                    + " values=[[{operands=[a], aggFunction=COUNT, alias='c', distinct=false}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_groupCount_by_name_test() {
+        RelNode node = eval("g.V().groupCount().by('name')");
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[DEFAULT.name], aliases=[name]}],"
+                    + " values=[[{operands=[DEFAULT], aggFunction=COUNT, alias='$f1',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
 }
