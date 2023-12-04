@@ -17,7 +17,6 @@
 #define STORAGES_RT_MUTABLE_GRAPH_LOADER_LOADER_FACTORY_H_
 
 #include <memory>
-#include "flex/storages/rt_mutable_graph/loader/csv_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loader/i_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 

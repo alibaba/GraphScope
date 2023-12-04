@@ -28,6 +28,7 @@
 
 #include "arrow/util/value_parsing.h"
 #include "common/configuration.h"
+#include "flex/storages/rt_mutable_graph/loader/abstract_arrow_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loader/basic_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loader/i_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
@@ -39,87 +40,47 @@
 #include "storage_api.hpp"
 #include "storage_api_arrow.hpp"
 
+using apsara::odps::sdk::AliyunAccount;
+using apsara::odps::sdk::Configuration;
+using apsara::odps::sdk::storage_api::ReadRowsReq;
+using apsara::odps::sdk::storage_api::SessionReq;
+using apsara::odps::sdk::storage_api::SessionStatus;
+using apsara::odps::sdk::storage_api::SplitOptions;
+using apsara::odps::sdk::storage_api::TableBatchScanReq;
 using apsara::odps::sdk::storage_api::TableBatchScanResp;
+using apsara::odps::sdk::storage_api::TableBatchWriteReq;
 using apsara::odps::sdk::storage_api::TableBatchWriteResp;
 using apsara::odps::sdk::storage_api::TableIdentifier;
+using apsara::odps::sdk::storage_api::WriteRowsReq;
 using apsara::odps::sdk::storage_api::arrow_adapter::ArrowClient;
+using apsara::odps::sdk::storage_api::arrow_adapter::Reader;
 
 namespace gs {
 
-template <typename T>
-struct ConvertTo {};
-
-template <>
-struct ConvertTo<double> {
-  static double convert(const std::string_view& str) {
-    auto value = boost::convert<double>(str, boost::cnv::strtol());
-    if (value.has_value()) {
-      return value.get();
-    }
-    LOG(FATAL) << "Fail to convert " << str << ", to double";
-  }
-};
-
-// LoadFragment for csv files.
-class ODPSFragmentLoader : public IFragmentLoader {
+class ODPSReadClient {
  public:
-  ODPSFragmentLoader(const std::string& work_dir, const Schema& schema,
-                     const LoadingConfig& loading_config, int32_t thread_num)
-      : loading_config_(loading_config),
-        schema_(schema),
-        thread_num_(thread_num),
-        basic_fragment_loader_(schema_, work_dir),
-        read_vertex_table_time_(0),
-        read_edge_table_time_(0),
-        convert_to_internal_vertex_time_(0),
-        convert_to_internal_edge_time_(0),
-        basic_frag_loader_vertex_time_(0),
-        basic_frag_loader_edge_time_(0) {
-    vertex_label_num_ = schema_.vertex_label_num();
-    edge_label_num_ = schema_.edge_label_num();
-    if (thread_num_ > MAX_PRODUCER_NUM) {
-      thread_num_ = MAX_PRODUCER_NUM;
-      LOG(WARNING) << "thread_num_ is too large, set to " << MAX_PRODUCER_NUM;
-    }
-    // get dump_to_csv from env DUMP_TO_CSV
-    char* dump_to_csv = std::getenv("DUMP_TO_CSV");
-    if (dump_to_csv == nullptr) {
-      LOG(WARNING) << "DUMP_TO_CSV is not set";
-    }
-    std::string tmp = dump_to_csv;
-    LOG(INFO) << "dump_to_csv: " << tmp;
-    if (tmp == "true" || tmp == "TRUE") {
-      dump_to_csv_ = true;
-    } else {
-      dump_to_csv_ = false;
-    }
-    LOG(INFO) << "dump to csv " << dump_to_csv_;
-    if (dump_to_csv_) {
-      // get output_directory from env OUTPUT_DIRECTORY
-      char* output_directory = std::getenv("OUTPUT_DIRECTORY");
-      if (output_directory == nullptr) {
-        LOG(FATAL) << "OUTPUT_DIRECTORY is not set";
-      }
-      output_directory_ = output_directory;
-      LOG(INFO) << "output_directory: " << output_directory_;
-    }
-  }
+  static constexpr const int CONNECTION_TIMEOUT = 5;
+  static constexpr const int READ_WRITE_TIMEOUT = 10;
+  ODPSReadClient();
 
-  static std::shared_ptr<IFragmentLoader> Make(
-      const std::string& work_dir, const Schema& schema,
-      const LoadingConfig& loading_config, int32_t thread_num);
+  ~ODPSReadClient();
 
-  ~ODPSFragmentLoader() {}
+  void init();
 
-  void LoadFragment() override;
+  void CreateReadSession(std::string* session_id, int* split_count,
+                         const TableIdentifier& table_identifier,
+                         const std::vector<std::string>& selected_cols,
+                         const std::vector<std::string>& partition_cols,
+                         const std::vector<std::string>& selected_partitions);
+
+  std::shared_ptr<arrow::Table> ReadTable(const std::string& session_id,
+                                          int split_count,
+                                          const TableIdentifier& table_id,
+                                          int thread_num) const;
+
+  std::shared_ptr<ArrowClient> GetArrowClient() const;
 
  private:
-  std::shared_ptr<ArrowClient> getArrowClient(int connect_timeout = 5,
-                                              int rw_timeout = 10);
-
-  void dump_table_to_csv(std::shared_ptr<arrow::Table> table,
-                         const std::string& table_name);
-
   TableBatchScanResp createReadSession(
       const TableIdentifier& table_identifier,
       const std::vector<std::string>& selected_cols,
@@ -132,104 +93,17 @@ class ODPSFragmentLoader : public IFragmentLoader {
   void getReadSessionStatus(const std::string& session_id, int* split_count,
                             const TableIdentifier& table_identifier);
 
-  void preprocessRead(std::string* session_id, int* split_count,
-                      const TableIdentifier& table_identifier,
-                      const std::vector<std::string>& selected_cols,
-                      const std::vector<std::string>& partition_cols,
-                      const std::vector<std::string>& selected_partitions);
-
-  void init();
-
-  void loadVertices();
-
-  void loadEdges();
-
-  void addVertices(label_t v_label_id, const std::vector<std::string>& v_files);
-
-  template <typename KEY_T>
-  void addVerticesImpl(label_t v_label_id, const std::string& v_label_name,
-                       const std::vector<std::string> v_file,
-                       IdIndexer<KEY_T, vid_t>& indexer);
-
-  template <typename KEY_T>
-  void addVerticesImplWithStreamReader(const std::string& filename,
-                                       label_t v_label_id,
-                                       IdIndexer<KEY_T, vid_t>& indexer);
-
-  template <typename KEY_T>
-  void addVerticesImplWithTableReader(const std::string& filename,
-                                      label_t v_label_id,
-                                      IdIndexer<KEY_T, vid_t>& indexer);
-
-  template <typename KEY_T>
-  void addVertexBatch(
-      label_t v_label_id, IdIndexer<KEY_T, vid_t>& indexer,
-      std::shared_ptr<arrow::Array>& primary_key_col,
-      const std::vector<std::shared_ptr<arrow::Array>>& property_cols);
-
-  template <typename KEY_T>
-  void addVertexBatch(
-      label_t v_label_id, IdIndexer<KEY_T, vid_t>& indexer,
-      std::shared_ptr<arrow::ChunkedArray>& primary_key_col,
-      const std::vector<std::shared_ptr<arrow::ChunkedArray>>& property_cols);
-
-  void addEdges(label_t src_label_id, label_t dst_label_id, label_t e_label_id,
-                const std::vector<std::string>& e_files);
-
-  template <typename EDATA_T>
-  void addEdgesImpl(label_t src_label_id, label_t dst_label_id,
-                    label_t e_label_id,
-                    const std::vector<std::string>& e_files);
-
-  template <typename EDATA_T>
-  void addEdgesImplWithStreamReader(
-      const std::string& file_name, label_t src_label_id, label_t dst_label_id,
-      label_t e_label_id, std::vector<int32_t>& ie_degree,
-      std::vector<int32_t>& oe_degree,
-      std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& edges);
-
-  template <typename EDATA_T>
-  void addEdgesImplWithTableReader(
-      const std::string& filename, label_t src_label_id, label_t dst_label_id,
-      label_t e_label_id, std::vector<int32_t>& ie_degree,
-      std::vector<int32_t>& oe_degree,
-      std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges);
-
-  void parseLocation(const std::string& odps_table_path,
-                     TableIdentifier& table_identifier,
-                     std::vector<std::string>& partition_names,
-                     std::vector<std::string>& selected_partitions);
-
-  std::vector<std::string> columnMappingsToSelectedCols(
-      const std::vector<std::tuple<size_t, std::string, std::string>>&
-          column_mappings);
-
-  std::shared_ptr<arrow::Table> readTable(const std::string& session_id,
-                                          int split_count,
-                                          const TableIdentifier& table_id);
   void producerRoutine(
       const std::string& session_id, const TableIdentifier& table_identifier,
       std::vector<std::vector<std::shared_ptr<arrow::RecordBatch>>>&
           all_batches_,
-      std::vector<int> indices);
+      const std::vector<int>& indices) const;
 
   bool readRows(std::string session_id, const TableIdentifier& table_identifier,
                 std::vector<std::shared_ptr<arrow::RecordBatch>>& res_batches,
-                int split_index);
+                int split_index) const;
 
-  const LoadingConfig& loading_config_;
-  const Schema& schema_;
-  size_t vertex_label_num_, edge_label_num_;
-  int32_t thread_num_;
-
-  mutable BasicFragmentLoader basic_fragment_loader_;
-
-  std::atomic<double> read_vertex_table_time_, read_edge_table_time_;
-  std::atomic<double> convert_to_internal_vertex_time_,
-      convert_to_internal_edge_time_;
-  std::atomic<double> basic_frag_loader_vertex_time_,
-      basic_frag_loader_edge_time_;
-
+ private:
   // odps table related
   std::string access_id_;
   std::string access_key_;
@@ -237,11 +111,102 @@ class ODPSFragmentLoader : public IFragmentLoader {
   std::string tunnel_endpoint_;
   std::string output_directory_;
   std::shared_ptr<ArrowClient> arrow_client_ptr_;
+  size_t MAX_PRODUCER_NUM = 8;
+  size_t MAX_RETRY = 5;
+};
+
+class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
+ public:
+  ODPSStreamRecordBatchSupplier(label_t label_id, const std::string& file_path,
+                                const ODPSReadClient& odps_table_reader,
+                                const std::string& session_id, int split_count,
+                                TableIdentifier table_identifier);
+
+  std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
+
+ private:
+  label_t label_id_;
+  std::string file_path_;
+  const ODPSReadClient& odps_read_client_;
+  std::string session_id_;
+  int split_count_;
+  TableIdentifier table_identifier_;
+
+  int32_t cur_split_index_;
+  ReadRowsReq read_rows_req_;
+  std::shared_ptr<Reader> cur_batch_reader_;
+};
+
+class ODPSTableRecordBatchSupplier : public IRecordBatchSupplier {
+ public:
+  ODPSTableRecordBatchSupplier(label_t label_id, const std::string& file_path,
+                               const ODPSReadClient& odps_table_reader,
+                               const std::string& session_id, int split_count,
+                               TableIdentifier table_identifier,
+                               int thread_num);
+
+  std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
+
+ private:
+  label_t label_id_;
+  std::string file_path_;
+  const ODPSReadClient& odps_read_client_;
+  std::string session_id_;
+  int split_count_;
+  TableIdentifier table_identifier_;
+
+  std::shared_ptr<arrow::Table> table_;
+  std::shared_ptr<arrow::TableBatchReader> reader_;
+};
+
+/*
+ * ODPSFragmentLoader is used to load graph data from ODPS Table.
+ * It fetch the data via ODPS tunnel/halo API.
+ * You need to set the following environment variables:
+ * 1. ODPS_ACCESS_ID
+ * 2. ODPS_ACCESS_KEY
+ * 3. ODPS_ENDPOINT
+ * 4. ODPS_TUNNEL_ENDPOINT(optional)
+ */
+class ODPSFragmentLoader : public AbstractArrowFragmentLoader {
+ public:
+  ODPSFragmentLoader(const std::string& work_dir, const Schema& schema,
+                     const LoadingConfig& loading_config, int32_t thread_num)
+      : AbstractArrowFragmentLoader(work_dir, schema, loading_config,
+                                    thread_num) {}
+
+  static std::shared_ptr<IFragmentLoader> Make(
+      const std::string& work_dir, const Schema& schema,
+      const LoadingConfig& loading_config, int32_t thread_num);
+
+  ~ODPSFragmentLoader() {}
+
+  void LoadFragment() override;
+
+ private:
+  void init();
+
+  void parseLocation(const std::string& odps_table_path,
+                     TableIdentifier& table_identifier,
+                     std::vector<std::string>& partition_names,
+                     std::vector<std::string>& selected_partitions);
+
+  void loadVertices();
+
+  void loadEdges();
+
+  void addVertices(label_t v_label_id, const std::vector<std::string>& v_files);
+
+  void addEdges(label_t src_label_id, label_t dst_label_id, label_t e_label_id,
+                const std::vector<std::string>& e_files);
+
+  std::vector<std::string> columnMappingsToSelectedCols(
+      const std::vector<std::tuple<size_t, std::string, std::string>>&
+          column_mappings);
+
+  ODPSReadClient odps_read_client_;
 
   static const bool registered_;
-  size_t MAX_PRODUCER_NUM = 8;
-
-  bool dump_to_csv_;
 };
 
 }  // namespace gs
