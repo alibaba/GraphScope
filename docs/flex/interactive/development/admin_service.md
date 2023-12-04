@@ -942,7 +942,9 @@ curl -X DELETE -H "Content-Type: application/json" "http://[host]/v1/graph/{grap
 
 #### Description 
 
-Start the query service on a graph.
+Start the query service on a graph. The `graph_name` param can be empty, indicating restarting on current running graph.
+
+After the AdminService receives this request, any new requests received by query_service will not be executed and will be rejected (but requests that have already been received will be executed); we will proceed by closing the current graph, then opening the specified new graph, and reloading the stored procedures. The service of query_service will not be reopened until these steps are completed.
 
 #### HTTP Request
 - **Method**: POST
