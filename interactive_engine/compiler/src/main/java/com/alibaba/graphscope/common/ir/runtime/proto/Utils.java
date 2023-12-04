@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
@@ -24,11 +26,14 @@ import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
+import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Int32Value;
 
 import org.apache.calcite.avatica.util.TimeUnit;
+import org.apache.calcite.rel.RelFieldCollation;
+import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.sql.SqlOperator;
@@ -403,6 +408,165 @@ public abstract class Utils {
                 return OuterExpression.Extract.Interval.SECOND;
             default:
                 throw new UnsupportedOperationException("unsupported interval type " + timeUnit);
+        }
+    }
+
+    public static final GraphAlgebra.OrderBy.OrderingPair.Order protoOrderOpt(
+            RelFieldCollation.Direction direction) {
+        switch (direction) {
+            case ASCENDING:
+                return GraphAlgebra.OrderBy.OrderingPair.Order.ASC;
+            case DESCENDING:
+                return GraphAlgebra.OrderBy.OrderingPair.Order.DESC;
+            case CLUSTERED:
+                return GraphAlgebra.OrderBy.OrderingPair.Order.SHUFFLE;
+            default:
+                throw new UnsupportedOperationException(
+                        "direction " + direction + " in order is unsupported yet");
+        }
+    }
+
+    public static final GraphAlgebraPhysical.EdgeExpand.Direction protoExpandOpt(
+            GraphOpt.Expand opt) {
+        switch (opt) {
+            case OUT:
+                return GraphAlgebraPhysical.EdgeExpand.Direction.OUT;
+            case IN:
+                return GraphAlgebraPhysical.EdgeExpand.Direction.IN;
+            case BOTH:
+                return GraphAlgebraPhysical.EdgeExpand.Direction.BOTH;
+            default:
+                throw new UnsupportedOperationException(
+                        "opt " + opt + " in expand is unsupported yet");
+        }
+    }
+
+    public static final GraphAlgebraPhysical.GetV.VOpt protoGetVOpt(GraphOpt.GetV opt) {
+        switch (opt) {
+            case START:
+                return GraphAlgebraPhysical.GetV.VOpt.START;
+            case END:
+                return GraphAlgebraPhysical.GetV.VOpt.END;
+            case OTHER:
+                return GraphAlgebraPhysical.GetV.VOpt.OTHER;
+            case BOTH:
+                return GraphAlgebraPhysical.GetV.VOpt.BOTH;
+            default:
+                throw new UnsupportedOperationException(
+                        "opt " + opt + " in getV is unsupported yet");
+        }
+    }
+
+    public static final GraphAlgebraPhysical.PathExpand.PathOpt protoPathOpt(
+            GraphOpt.PathExpandPath opt) {
+        switch (opt) {
+            case ARBITRARY:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.ARBITRARY;
+            case SIMPLE:
+                return GraphAlgebraPhysical.PathExpand.PathOpt.SIMPLE;
+            default:
+                throw new UnsupportedOperationException(
+                        "opt " + opt + " in path is unsupported yet");
+        }
+    }
+
+    public static final GraphAlgebraPhysical.PathExpand.ResultOpt protoPathResultOpt(
+            GraphOpt.PathExpandResult opt) {
+        switch (opt) {
+            case END_V:
+                return GraphAlgebraPhysical.PathExpand.ResultOpt.END_V;
+            case ALL_V:
+                return GraphAlgebraPhysical.PathExpand.ResultOpt.ALL_V;
+            case ALL_V_E:
+                return GraphAlgebraPhysical.PathExpand.ResultOpt.ALL_V_E;
+            default:
+                throw new UnsupportedOperationException(
+                        "result opt " + opt + " in path is unsupported yet");
+        }
+    }
+
+    public static final GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate protoAggOpt(
+            GraphAggCall aggCall) {
+        switch (aggCall.getAggFunction().kind) {
+            case COUNT:
+                return aggCall.isDistinct()
+                        ? GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.COUNT_DISTINCT
+                        : GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.COUNT;
+            case COLLECT:
+                return aggCall.isDistinct()
+                        ? GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.TO_SET
+                        : GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.TO_LIST;
+            case SUM:
+                return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.SUM;
+            case AVG:
+                return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.AVG;
+            case MIN:
+                return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.MIN;
+            case MAX:
+                return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.MAX;
+            case FIRST_VALUE:
+                return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.FIRST;
+            default:
+                throw new UnsupportedOperationException(
+                        "aggregate opt " + aggCall.getAggFunction().kind + " is unsupported yet");
+        }
+    }
+
+    public static final GraphAlgebraPhysical.Join.JoinKind protoJoinKind(JoinRelType joinRelType) {
+        switch (joinRelType) {
+            case INNER:
+                return GraphAlgebraPhysical.Join.JoinKind.INNER;
+            case LEFT:
+                return GraphAlgebraPhysical.Join.JoinKind.LEFT_OUTER;
+            case RIGHT:
+                return GraphAlgebraPhysical.Join.JoinKind.RIGHT_OUTER;
+            case FULL:
+                return GraphAlgebraPhysical.Join.JoinKind.FULL_OUTER;
+            case SEMI:
+                return GraphAlgebraPhysical.Join.JoinKind.SEMI;
+            case ANTI:
+                return GraphAlgebraPhysical.Join.JoinKind.ANTI;
+            default:
+                throw new UnsupportedOperationException(
+                        "join type " + joinRelType + " is unsupported yet");
+        }
+    }
+
+    public static Common.NameOrId asNameOrId(int id) {
+        Common.NameOrId.Builder builder = Common.NameOrId.newBuilder();
+        builder.setId(id);
+        return builder.build();
+    }
+
+    public static com.google.protobuf.Int32Value asAliasId(int id) {
+        if (id == AliasInference.DEFAULT_ID) {
+            // TODO: check if it is None
+            return com.google.protobuf.Int32Value.newBuilder().build();
+        } else {
+            return com.google.protobuf.Int32Value.of(id);
+        }
+    }
+
+    public static final List<GraphAlgebraPhysical.PhysicalOpr.MetaData> physicalProtoRowType(
+            RelDataType rowType, boolean isColumnId) {
+        switch (rowType.getSqlTypeName()) {
+            case ROW:
+                return rowType.getFieldList().stream()
+                        .map(
+                                k ->
+                                        GraphAlgebraPhysical.PhysicalOpr.MetaData.newBuilder()
+                                                .setType(
+                                                        com.alibaba.graphscope.common.ir.runtime
+                                                                .proto.Utils.protoIrDataType(
+                                                                k.getType(), isColumnId))
+                                                .setAlias(k.getIndex())
+                                                .build())
+                        .collect(Collectors.toList());
+            default:
+                throw new UnsupportedOperationException(
+                        "convert type "
+                                + rowType.getSqlTypeName()
+                                + " to List<MetaData> is unsupported");
         }
     }
 }
