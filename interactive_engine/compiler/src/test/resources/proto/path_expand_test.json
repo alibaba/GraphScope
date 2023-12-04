@@ -1,0 +1,85 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 0,
+        "params": {
+          "tables": [{
+            "id": 0
+          }]
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
+            }]
+          }]
+        }
+      }
+    }]
+  }, {
+    "opr": {
+      "path": {
+        "base": {
+          "edgeExpand": {
+            "vTag": 0,
+            "params": {
+              "tables": [{
+                "id": 0
+              }]
+            },
+            "alias": 0
+          },
+          "getV": {
+            "tag": 0,
+            "opt": "END",
+            "params": {
+              "tables": [{
+                "id": 0
+              }]
+            },
+            "alias": 0
+          }
+        },
+        "startTag": 0,
+        "alias": 0,
+        "hopRange": {
+          "lower": 1,
+          "upper": 3
+        },
+        "pathOpt": "SIMPLE",
+        "resultOpt": "ALL_V"
+      }
+    }
+  }, {
+    "opr": {
+      "sink": {
+        "tags": [{
+        }],
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}
