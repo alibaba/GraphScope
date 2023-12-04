@@ -1880,6 +1880,24 @@ mod scan {
     }
 
     #[no_mangle]
+    pub extern "C" fn add_index_predicate_pb(
+        ptr_scan: *const c_void, ptr_predicate: FfiPbPointer,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        let predicate = ptr_to_pb::<pb::IndexPredicate>(ptr_predicate);
+        match predicate {
+            Ok(predicate) => {
+                scan.idx_predicate = Some(predicate);
+            }
+            Err(e) => result = e,
+        }
+        std::mem::forget(scan);
+
+        result
+    }
+
+    #[no_mangle]
     pub extern "C" fn set_scan_params(ptr_scan: *const c_void, ptr_params: *const c_void) -> FfiResult {
         let mut result = FfiResult::success();
         let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
