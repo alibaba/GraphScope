@@ -1761,7 +1761,7 @@ mod scan {
         Ok(pb::index_predicate::Triplet {
             key: key.try_into()?,
             value: Some(pb::index_predicate::triplet::Value::Const(value.try_into()?)),
-            cmp: None,
+            cmp: common_pb::Logical::Eq as i32,
         })
     }
 
