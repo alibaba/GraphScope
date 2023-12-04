@@ -21,6 +21,7 @@ import com.alibaba.graphscope.groot.common.schema.api.GraphProperty;
 import com.alibaba.graphscope.groot.common.schema.wrapper.TypeDef;
 import com.google.common.base.MoreObjects;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +30,7 @@ public class DefaultGraphEdge implements GraphEdge {
     private String label;
     private List<GraphProperty> propertyList;
     private List<EdgeRelation> relationList;
+    private List<String> primaryKeyList;
 
     private final int versionId;
 
@@ -45,11 +47,35 @@ public class DefaultGraphEdge implements GraphEdge {
             String label,
             List<GraphProperty> propertyList,
             List<EdgeRelation> relationList,
+            List<String> primaryKeyList) {
+        this(id, label, propertyList, relationList, primaryKeyList, 0);
+    }
+
+    public DefaultGraphEdge(
+            int id,
+            String label,
+            List<GraphProperty> propertyList,
+            List<EdgeRelation> relationList,
             int versionId) {
         this.id = id;
         this.label = label;
         this.propertyList = propertyList;
         this.relationList = relationList;
+        this.versionId = versionId;
+    }
+
+    public DefaultGraphEdge(
+            int id,
+            String label,
+            List<GraphProperty> propertyList,
+            List<EdgeRelation> relationList,
+            List<String> primaryKeyList,
+            int versionId) {
+        this.id = id;
+        this.label = label;
+        this.propertyList = propertyList;
+        this.relationList = relationList;
+        this.primaryKeyList = primaryKeyList;
         this.versionId = versionId;
     }
 
@@ -59,6 +85,7 @@ public class DefaultGraphEdge implements GraphEdge {
                 typeDef.getLabel(),
                 typeDef.getPropertyList(),
                 edgeRelations,
+                typeDef.getPrimaryKeyNameList(),
                 typeDef.getVersionId());
     }
 
@@ -111,12 +138,18 @@ public class DefaultGraphEdge implements GraphEdge {
 
     @Override
     public List<GraphProperty> getPrimaryKeyList() {
-        return null;
+        List<GraphProperty> props = new ArrayList<>();
+        if (this.primaryKeyList != null) {
+            for (String name : primaryKeyList) {
+                props.add(getProperty(name));
+            }
+        }
+        return props;
     }
 
     @Override
     public List<String> getPrimaryKeyNameList() {
-        return null;
+        return primaryKeyList;
     }
 
     @Override

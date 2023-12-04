@@ -48,9 +48,7 @@ class UnTypedEdgeSetIter {
         iter_ind_(0) {
     LOG(INFO) << "UnTypedEdgeSetIter init,size: " << adj_lists_.size()
               << ", vertices size: " << src_vertices_.size();
-    if (vid_ind_ == src_vertices_.size()) {
-      cur_iter_ = edge_iter_t();  // invalid
-    } else {
+    if (vid_ind_ != src_vertices_.size()) {
       while (vid_ind_ < src_vertices_.size()) {
         auto& edge_iter_vec = adj_lists_[vid_ind_];
         while (iter_ind_ < edge_iter_vec.size()) {
@@ -80,6 +78,9 @@ class UnTypedEdgeSetIter {
   inline label_t GetSrcLabel() const { return cur_iter_.GetSrcLabel(); }
 
   inline Any GetData() const { return cur_iter_.GetData(); }
+  inline const std::vector<std::string>& GetPropNames() const {
+    return cur_iter_.GetPropNames();
+  }
 
   inline ele_tuple_t GetElement() const {
     return std::make_tuple(GetSrc(), GetDst(), GetData());
@@ -247,7 +248,7 @@ class UnTypedEdgeSet {
     while (iter != end_iter) {
       auto edata = iter.GetData();
       PropT prop;
-      if (edata.type == CppTypeToPropertyType<PropT>::value) {
+      if (edata.type == TypeConverter<PropT>::property_type) {
         ConvertAny<PropT>::to(edata, prop);
       }
       CHECK(cur_ind < sum) << "cur: " << cur_ind << ", sum: " << sum;
@@ -264,7 +265,8 @@ class UnTypedEdgeSet {
   const std::vector<uint8_t>& GetLabelIndices() const { return label_indices_; }
 
   template <size_t num_labels>
-  std::pair<GeneralVertexSet<vid_t, label_t>, std::vector<offset_t>>
+  std::pair<GeneralVertexSet<vid_t, label_t, grape::EmptyType>,
+            std::vector<offset_t>>
   GetVertices(const GetVOpt<label_t, num_labels, Filter<TruePredicate>>&
                   get_v_opt) const {
     auto v_opt = get_v_opt.v_opt_;
@@ -288,7 +290,8 @@ class UnTypedEdgeSet {
     }
   }
 
-  std::pair<GeneralVertexSet<vid_t, label_t>, std::vector<offset_t>>
+  std::pair<GeneralVertexSet<vid_t, label_t, grape::EmptyType>,
+            std::vector<offset_t>>
   getSrcVertices(const std::vector<label_t>& req_labels) const {
     std::vector<vid_t> ret;
     std::vector<offset_t> offset;
@@ -327,7 +330,8 @@ class UnTypedEdgeSet {
     return std::make_pair(std::move(general_set), std::move(offset));
   }
 
-  std::pair<GeneralVertexSet<vid_t, label_t>, std::vector<offset_t>>
+  std::pair<GeneralVertexSet<vid_t, label_t, grape::EmptyType>,
+            std::vector<offset_t>>
   getDstVertices(const std::vector<label_t>& req_labels) const {
     std::vector<vid_t> ret;
     std::vector<offset_t> offset;

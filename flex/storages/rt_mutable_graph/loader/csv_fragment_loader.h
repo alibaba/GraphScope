@@ -35,12 +35,12 @@ namespace gs {
 // LoadFragment for csv files.
 class CSVFragmentLoader : public IFragmentLoader {
  public:
-  CSVFragmentLoader(const Schema& schema, const LoadingConfig& loading_config,
-                    int32_t thread_num)
+  CSVFragmentLoader(const std::string& work_dir, const Schema& schema,
+                    const LoadingConfig& loading_config, int32_t thread_num)
       : loading_config_(loading_config),
         schema_(schema),
         thread_num_(thread_num),
-        basic_fragment_loader_(schema_),
+        basic_fragment_loader_(schema_, work_dir),
         read_vertex_table_time_(0),
         read_edge_table_time_(0),
         convert_to_internal_vertex_time_(0),
@@ -52,12 +52,12 @@ class CSVFragmentLoader : public IFragmentLoader {
   }
 
   static std::shared_ptr<IFragmentLoader> Make(
-      const Schema& schema, const LoadingConfig& loading_config,
-      int32_t thread_num);
+      const std::string& work_dir, const Schema& schema,
+      const LoadingConfig& loading_config, int32_t thread_num);
 
   ~CSVFragmentLoader() {}
 
-  void LoadFragment(MutablePropertyFragment& fragment) override;
+  void LoadFragment() override;
 
  private:
   void loadVertices();
@@ -70,15 +70,6 @@ class CSVFragmentLoader : public IFragmentLoader {
   void addVerticesImpl(label_t v_label_id, const std::string& v_label_name,
                        const std::vector<std::string> v_file,
                        IdIndexer<KEY_T, vid_t>& indexer);
-  template <typename KEY_T>
-  void addVerticesImplWithStreamReader(const std::string& filename,
-                                       label_t v_label_id,
-                                       IdIndexer<KEY_T, vid_t>& indexer);
-
-  template <typename KEY_T>
-  void addVerticesImplWithTableReader(const std::string& filename,
-                                      label_t v_label_id,
-                                      IdIndexer<KEY_T, vid_t>& indexer);
 
   template <typename KEY_T>
   void addVertexBatch(
@@ -99,34 +90,6 @@ class CSVFragmentLoader : public IFragmentLoader {
   void addEdgesImpl(label_t src_label_id, label_t dst_label_id,
                     label_t e_label_id,
                     const std::vector<std::string>& e_files);
-
-  template <typename EDATA_T>
-  void addEdgesImplWithStreamReader(
-      const std::string& file_name, label_t src_label_id, label_t dst_label_id,
-      label_t e_label_id, std::vector<int32_t>& ie_degree,
-      std::vector<int32_t>& oe_degree,
-      std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& edges);
-
-  template <typename EDATA_T>
-  void addEdgesImplWithTableReader(
-      const std::string& filename, label_t src_label_id, label_t dst_label_id,
-      label_t e_label_id, std::vector<int32_t>& ie_degree,
-      std::vector<int32_t>& oe_degree,
-      std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& edges);
-
-  std::shared_ptr<arrow::csv::StreamingReader> createVertexStreamReader(
-      label_t v_label, const std::string& v_file);
-
-  std::shared_ptr<arrow::csv::TableReader> createVertexTableReader(
-      label_t v_label, const std::string& v_file);
-
-  std::shared_ptr<arrow::csv::StreamingReader> createEdgeStreamReader(
-      label_t src_label_id, label_t dst_label_id, label_t e_label,
-      const std::string& e_file);
-
-  std::shared_ptr<arrow::csv::TableReader> createEdgeTableReader(
-      label_t src_label_id, label_t dst_label_id, label_t e_label,
-      const std::string& e_file);
 
   void fillEdgeReaderMeta(arrow::csv::ReadOptions& read_options,
                           arrow::csv::ParseOptions& parse_options,

@@ -27,6 +27,7 @@ GraphScope Interactive boasts several key features:
 3. **Future-Ready Expansion Capabilities**: Drawing from the prowess of GraphScope Flex, GraphScope Interactive is primed for adaptability:
     * Support for Multiple Query Languages: In the near future, GraphScope Interactive will extend its language support to include [Gremlin](https://tinkerpop.apache.org/gremlin.html), and [GQL](https://www.gqlstandards.org/), further enhancing its versatility.
     * Scalability: GraphScope Interactive possesses the potential for distributed processing. This means it can be expanded with few effort to handle larger-scale graphs, ensuring it remains effective as your data grows.
+4. **Massive Graph Support**: To enhance system throughput and query performance, we store all graph data in memory by default. However, when encountering graph data too large to fit entirely in memory, we offload excess data to disk storage. This approach, while effectively handling massive-scale graph data, may result in reduced throughput. Moving forward, we aim to adopt a master-slave architecture designed to enhance concurrent querying performance. This will be achieved by distributing the workload across multiple machines, thereby optimizing resource utilization to improve throughput. 
 
 ## Property Graph Model and Graph Queries
 

@@ -39,12 +39,12 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                 } else {
                     let sub_result = sub.get(0).unwrap();
                     // We assume the result of sub_entry is always saved on head of Record for now.
-                    let sub_entry = sub_result
-                        .get(None)
-                        .ok_or(FnExecError::get_tag_error(&format!(
+                    let sub_entry = sub_result.get(None).ok_or_else(|| {
+                        FnExecError::get_tag_error(&format!(
                             "get None tag from the sub record in `Apply` operator, the record is {:?}",
                             sub_result
-                        )))?;
+                        ))
+                    })?;
                     if let Some(alias) = self.alias.as_ref() {
                         // append sub_entry without moving head
                         let columns = parent.get_columns_mut();
@@ -68,12 +68,12 @@ impl BinaryFunction<Record, Vec<Record>, Option<Record>> for ApplyOperator {
                 } else {
                     let sub_result = sub.get(0).unwrap();
                     // We assume the result of sub_entry is always saved on head of Record for now.
-                    let sub_entry = sub_result
-                        .get(None)
-                        .ok_or(FnExecError::get_tag_error(&format!(
+                    let sub_entry = sub_result.get(None).ok_or_else(|| {
+                        FnExecError::get_tag_error(&format!(
                             "get None tag from the sub record in `Apply` operator, the record is {:?}",
                             sub_result
-                        )))?;
+                        ))
+                    })?;
                     if let Some(alias) = self.alias.as_ref() {
                         let columns = parent.get_columns_mut();
                         columns.insert(*alias as usize, sub_entry.clone());

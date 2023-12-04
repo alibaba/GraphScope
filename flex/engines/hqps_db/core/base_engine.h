@@ -64,30 +64,6 @@ class BaseEngine {
     return prev.template Alias<res_alias>();
   }
 
-  //--------- Sink the context to output--------
-  template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-            typename... CTX_PREV>
-  static auto Sink(
-      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx,
-      std::array<int32_t,
-                 Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>::col_num>
-          tag_ids) {
-    return SinkOp::Sink(ctx, tag_ids);
-  }
-
-  //---------------Sink without giving the tags explicitly.----------------
-  template <typename CTX_HEAD_T, int cur_alias, int base_tag,
-            typename... CTX_PREV>
-  static auto Sink(Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>& ctx) {
-    std::array<int32_t,
-               Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>::col_num>
-        tag_ids;
-    for (int i = 0; i < tag_ids.size(); i++) {
-      tag_ids[i] = i;
-    }
-    return Sink(ctx, tag_ids);
-  }
-
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
             typename... CTX_PREV>
   static auto Limit(Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,

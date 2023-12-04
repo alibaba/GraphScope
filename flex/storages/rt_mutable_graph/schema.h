@@ -16,18 +16,25 @@
 #ifndef GRAPHSCOPE_FRAGMENT_SCHEMA_H_
 #define GRAPHSCOPE_FRAGMENT_SCHEMA_H_
 
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/id_indexer.h"
 #include "flex/utils/property/table.h"
+#include "flex/utils/result.h"
 #include "flex/utils/yaml_utils.h"
 
 namespace gs {
 
 class Schema {
  public:
+  // How many built-in plugins are there.
+  // Currently only one builtin plugin, SERVER_APP is supported.
+  static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
   using label_type = label_t;
   Schema();
   ~Schema();
+
+  void Clear();
 
   void add_vertex_label(
       const std::string& label, const std::vector<PropertyType>& property_types,
@@ -136,17 +143,21 @@ class Schema {
 
   const std::string& get_vertex_primary_key_name(label_t index) const;
 
-  void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer);
+  void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const;
 
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader);
 
   static Schema LoadFromYaml(const std::string& schema_config);
 
+  static Result<Schema> LoadFromYamlNode(const YAML::Node& schema_node);
+
   bool Equals(const Schema& other) const;
 
-  const std::vector<std::string>& GetPluginsList() const;
+  // Return the map from plugin name to plugin id
+  const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
+  GetPlugins() const;
 
-  void EmplacePlugin(const std::string& plugin_name);
+  bool EmplacePlugins(const std::vector<std::string>& plugin_paths_or_names);
 
   void SetPluginDir(const std::string& plugin_dir);
 
@@ -172,7 +183,9 @@ class Schema {
   std::map<uint32_t, EdgeStrategy> oe_strategy_;
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
   std::vector<size_t> max_vnum_;
-  std::vector<std::string> plugin_list_;
+  std::unordered_map<std::string, std::pair<std::string, uint8_t>>
+      plugin_name_to_path_and_id_;  // key is plugin name, value is plugin path
+                                    // and plugin id
   std::string plugin_dir_;
 };
 

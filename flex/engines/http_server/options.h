@@ -24,10 +24,16 @@ namespace server {
 const uint32_t ic_query_group_id = 1;
 const uint32_t ic_update_group_id = 2;
 const uint32_t ic_adhoc_group_id = 3;
+const uint32_t codegen_group_id = 4;
+const uint32_t interactive_admin_group_id = 5;
 
 extern uint32_t shard_query_concurrency;
 extern uint32_t shard_update_concurrency;
 extern uint32_t shard_adhoc_concurrency;
+extern uint32_t shard_admin_graph_concurrency;
+extern uint32_t shard_admin_node_concurrency;
+extern uint32_t shard_admin_service_concurrency;
+extern uint32_t shard_admin_procedure_concurrency;
 
 }  // namespace server
 

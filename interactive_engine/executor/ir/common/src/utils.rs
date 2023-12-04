@@ -136,6 +136,12 @@ impl From<(common_pb::VariableKeys, bool)> for common_pb::ExprOpr {
     }
 }
 
+impl From<common_pb::VariableKeyValues> for common_pb::ExprOpr {
+    fn from(vars: common_pb::VariableKeyValues) -> Self {
+        common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Map(vars)) }
+    }
+}
+
 impl From<bool> for common_pb::Value {
     fn from(b: bool) -> Self {
         common_pb::Value { item: Some(common_pb::value::Item::Boolean(b)) }
@@ -388,14 +394,16 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
             let predicate = and_predicate
                 .predicates
                 .get(0)
-                .ok_or(ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
+                .ok_or_else(|| ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
 
             let (key, value) = (predicate.key.as_ref(), predicate.value.as_ref());
-            let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
+            let key = key.ok_or_else(|| {
+                ParsePbError::EmptyFieldError("key is empty in kv_pair in indexed_scan".to_string())
+            })?;
             if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
-                let value_item = value.ok_or(ParsePbError::EmptyFieldError(
-                    "`Value` is empty in kv_pair in indexed_scan".to_string(),
-                ))?;
+                let value_item = value.ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("`Value` is empty in kv_pair in indexed_scan".to_string())
+                })?;
 
                 match value_item {
                     pb::index_predicate::triplet::Value::Const(value) => match value.item.as_ref() {
@@ -434,14 +442,12 @@ impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
             // PkValue can be one-column or multi-columns, which is a set of and_conditions.
             let mut primary_key_value = Vec::with_capacity(and_predicates.predicates.len());
             for predicate in &and_predicates.predicates {
-                let key_pb = predicate
-                    .key
-                    .clone()
-                    .ok_or("key is empty in kv_pair in indexed_scan")?;
-                let value_pb = predicate
-                    .value
-                    .clone()
-                    .ok_or("value is empty in kv_pair in indexed_scan")?;
+                let key_pb = predicate.key.clone().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("key is empty in kv_pair in indexed_scan".to_string())
+                })?;
+                let value_pb = predicate.value.clone().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("value is empty in kv_pair in indexed_scan".to_string())
+                })?;
                 let key = match key_pb.item {
                     Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
                     _ => Err(ParsePbError::Unsupported(
@@ -681,13 +687,24 @@ impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
 }
 
 impl pb::QueryParams {
-    // is_queryable doesn't consider tables as we assume that the table info can be inferred directly from current data.
-    pub fn is_queryable(&self) -> bool {
-        !(self.predicate.is_none()
-            && self.limit.is_none()
-            && self.sample_ratio == 1.0
-            && self.columns.is_empty()
-            && !self.is_all_columns)
+    pub fn has_labels(&self) -> bool {
+        !self.tables.is_empty()
+    }
+
+    pub fn has_columns(&self) -> bool {
+        !self.columns.is_empty() || self.is_all_columns
+    }
+
+    pub fn has_predicates(&self) -> bool {
+        self.predicate.is_some()
+    }
+
+    pub fn has_sample(&self) -> bool {
+        self.sample_ratio != 1.0
+    }
+
+    pub fn has_limit(&self) -> bool {
+        self.limit.is_some()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -903,9 +920,9 @@ impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::
     fn try_from(op: PhysicalOpr) -> Result<Self, Self::Error> {
         let op_kind = op
             .opr
-            .ok_or(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            .ok_or_else(|| ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
             .op_kind
-            .ok_or(ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
+            .ok_or_else(|| ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
         Ok(op_kind)
     }
 }

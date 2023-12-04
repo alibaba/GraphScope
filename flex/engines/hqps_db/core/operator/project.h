@@ -407,10 +407,11 @@ class ProjectOp {
 
   // general vertex set.
   template <
-      typename T, typename VID_T, typename LabelT,
+      typename T, typename VID_T, typename LabelT, typename... SET_T,
       typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
-      const GRAPH_INTERFACE& graph, GeneralVertexSet<VID_T, LabelT>& node,
+      const GRAPH_INTERFACE& graph,
+      GeneralVertexSet<VID_T, LabelT, SET_T...>& node,
       const std::string& prop_name_, const std::vector<size_t>& repeat_array) {
     VLOG(10) << "start fetching properties";
     auto tmp_prop_vec = get_property_tuple_general<T>(

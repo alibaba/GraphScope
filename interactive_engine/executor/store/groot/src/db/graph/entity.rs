@@ -144,7 +144,7 @@ impl PropertyReader for RocksVertexImpl {
         match &self.decoder {
             None => None,
             Some(decoder) => {
-                let bytes = unsafe { self.raw_bytes.to_slice() };
+                let bytes = self.raw_bytes.to_slice();
                 let value_ref = decoder.decode_property(bytes, property_id as i32);
                 value_ref.map(|v| PropertyImpl { property_id, property_value: v.into() })
             }
@@ -237,7 +237,7 @@ impl Vertex for RocksVertexImpl {
         match &self.decoder {
             None => None,
             Some(decoder) => {
-                let bytes = unsafe { self.raw_bytes.to_slice() };
+                let bytes = self.raw_bytes.to_slice();
                 let value_ref = decoder.decode_property(bytes, property_id);
                 value_ref.map(|v| {
                     PropertyImpl { property_id, property_value: v.into() }
@@ -336,7 +336,7 @@ impl PropertyReader for RocksEdgeImpl {
         match &self.decoder {
             None => None,
             Some(decoder) => {
-                let bytes = unsafe { self.raw_bytes.to_slice() };
+                let bytes = self.raw_bytes.to_slice();
                 let value_ref = decoder.decode_property(bytes, property_id as i32);
                 value_ref.map(|v| PropertyImpl { property_id, property_value: v.into() })
             }
@@ -445,7 +445,7 @@ impl Edge for RocksEdgeImpl {
         match &self.decoder {
             None => None,
             Some(decoder) => {
-                let bytes = unsafe { self.raw_bytes.to_slice() };
+                let bytes = self.raw_bytes.to_slice();
                 let value_ref = decoder.decode_property(bytes, property_id);
                 value_ref.map(|v| {
                     PropertyImpl { property_id, property_value: v.into() }

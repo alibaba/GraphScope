@@ -33,14 +33,17 @@ template <typename LabelT>
 class EdgeIter {
  public:
   using label_id_t = LabelT;
-  EdgeIter() {}
-  EdgeIter(const std::array<LabelT, 3>& label_triplet)
-      : label_triplet_(label_triplet) {}
+  EdgeIter() : label_triplet_(), ptr1_(nullptr), prop_names_(nullptr) {}
+
   EdgeIter(const EdgeIter& other)
-      : label_triplet_(other.label_triplet_), ptr1_(other.ptr1_) {}
+      : label_triplet_(other.label_triplet_),
+        ptr1_(other.ptr1_),
+        prop_names_(other.prop_names_) {}
   EdgeIter(const std::array<LabelT, 3>& label_triplet,
-           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr)
-      : label_triplet_(label_triplet), ptr1_(ptr) {}
+           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr,
+           const std::vector<std::string>* prop_names)
+      : label_triplet_(label_triplet), ptr1_(ptr), prop_names_(prop_names) {}
+
   inline void Next() const { ptr1_->next(); }
   inline vid_t GetDstId() const { return ptr1_->get_neighbor(); }
 
@@ -50,6 +53,15 @@ class EdgeIter {
 
   inline Any GetData() const { return ptr1_->get_data(); }
   inline bool IsValid() const { return ptr1_ && ptr1_->is_valid(); }
+
+  const std::vector<std::string>& GetPropNames() const { return *prop_names_; }
+
+  EdgeIter<LabelT>& operator=(const EdgeIter<LabelT>& rhs) {
+    this->ptr1_ = rhs.ptr1_;
+    this->label_triplet_ = rhs.label_triplet_;
+    this->prop_names_ = rhs.prop_names_;
+    return *this;
+  }
 
   size_t Size() const {
     if (ptr1_) {
@@ -61,6 +73,7 @@ class EdgeIter {
  private:
   std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
   std::array<LabelT, 3> label_triplet_;
+  const std::vector<std::string>* prop_names_;
 };
 
 // A subGraph is a view of a simple graph, with one src label and one dst label.
@@ -77,9 +90,9 @@ class SubGraph {
 
   inline iterator get_edges(VID_T vid) const {
     if (first_) {
-      return iterator(label_triplet_, first_->edge_iter(vid));
+      return iterator(label_triplet_, first_->edge_iter(vid), &prop_names_);
     }
-    return iterator(label_triplet_, nullptr);
+    return iterator(label_triplet_, nullptr, &prop_names_);
   }
 
   label_id_t GetSrcLabel() const { return label_triplet_[0]; }
@@ -101,12 +114,10 @@ class SinglePropGetter {
   using value_type = T;
   static constexpr size_t prop_num = 1;
   SinglePropGetter() {}
-  SinglePropGetter(std::shared_ptr<TypedRefColumn<T>> c) : column(c) {
-    CHECK(column.get() != nullptr);
-  }
+  SinglePropGetter(std::shared_ptr<TypedRefColumn<T>> c) : column(c) {}
 
   inline value_type get_view(vid_t vid) const {
-    if (vid == NONE) {
+    if (vid == NONE || column == nullptr) {
       return NullRecordCreator<value_type>::GetNull();
     }
     return column->get_view(vid);
@@ -136,15 +147,25 @@ class MultiPropGetter {
     if (vid == NONE) {
       return NullRecordCreator<result_tuple_t>::GetNull();
     }
-    return get_view(vid, std::make_index_sequence<sizeof...(T)>());
+    result_tuple_t ret;
+    fill_result_tuple(ret, vid);
+    return ret;
   }
 
-  template <size_t... Is>
-  inline result_tuple_t get_view(vid_t vid, std::index_sequence<Is...>) const {
-    if (vid == NONE) {
-      return NullRecordCreator<result_tuple_t>::GetNull();
+  template <size_t I = 0>
+  inline typename std::enable_if<I == sizeof...(T), void>::type
+  fill_result_tuple(result_tuple_t& ret, vid_t vid) const {}
+
+  template <size_t I = 0>
+  inline typename std::enable_if<(I < sizeof...(T)), void>::type
+  fill_result_tuple(result_tuple_t& ret, vid_t vid) const {
+    using cur_ele_t = typename std::tuple_element<I, result_tuple_t>::type;
+    if (std::get<I>(column) == nullptr) {
+      std::get<I>(ret) = NullRecordCreator<cur_ele_t>::GetNull();
+    } else {
+      std::get<I>(ret) = std::get<I>(column)->get_view(vid);
     }
-    return std::make_tuple(std::get<Is>(column)->get_view(vid)...);
+    fill_result_tuple<I + 1>(ret, vid);
   }
 
   inline MultiPropGetter<T...>& operator=(const MultiPropGetter<T...>& d) {
@@ -605,6 +626,7 @@ class Nbr {
 class NbrList {
  public:
   NbrList(const Nbr* b, const Nbr* e) : begin_(b), end_(e) {}
+  NbrList() : begin_(nullptr), end_(nullptr) {}
   ~NbrList() = default;
 
   const Nbr* begin() const { return begin_; }

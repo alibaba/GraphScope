@@ -23,12 +23,10 @@ import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
 import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.RegularPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
@@ -53,7 +51,7 @@ import java.util.Objects;
 /**
  * build physical plan from logical plan of a regular query, the physical plan is actually denoted by ir core structure (FFI Pointer)
  */
-public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> {
+public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer> {
     private static final Logger logger = LoggerFactory.getLogger(FfiPhysicalBuilder.class);
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
     private final IrMeta irMeta;
@@ -89,7 +87,8 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
         if (original instanceof GraphLogicalSource) {
             checkFfiResult(
                     LIB.appendScanOperator(ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
-        } else if (original instanceof GraphLogicalExpand) {
+        } else if (original instanceof GraphLogicalExpand
+                || original instanceof GraphLogicalExpandDegree) {
             checkFfiResult(
                     LIB.appendEdgexpdOperator(ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
         } else if (original instanceof GraphLogicalGetV) {
@@ -160,27 +159,25 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
     }
 
     @Override
-    public String explain() {
-        FfiResult res = LIB.printPlanAsJson(this.planPointer.ptrPlan);
-        if (res == null || res.code != ResultCode.Success) {
-            throw new IllegalStateException("print plan in ir core fail, msg : %s" + res, null);
-        }
-        return res.msg;
-    }
-
-    @Override
-    public byte[] build() {
+    public PhysicalPlan build() {
+        String planJson = null;
         try {
             appendSink(new IntByReference(this.planPointer.lastIdx));
+            planJson = getPlanAsJson();
+            int planId = Objects.hash(logicalPlan);
+            logger.debug("plan id is {}", planId);
             FfiData.ByValue ffiData =
                     LIB.buildPhysicalPlan(
-                            this.planPointer.ptrPlan, getEngineWorkerNum(), getEngineServerNum());
+                            this.planPointer.ptrPlan,
+                            getEngineWorkerNum(),
+                            getEngineServerNum(),
+                            planId);
             checkFfiResult(ffiData.error);
             byte[] bytes = ffiData.getBytes();
             ffiData.close();
-            return bytes;
+            return new PhysicalPlan(bytes, planJson);
         } catch (Exception e) {
-            logger.error("ir core logical plan {}", explain());
+            logger.error("ir core logical plan {}", planJson);
             throw new RuntimeException(e);
         }
     }
@@ -197,6 +194,14 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer, byte[]> 
             throw new IllegalStateException(
                     "build logical plan, unexpected ffi results from ir_core, msg : " + res);
         }
+    }
+
+    private String getPlanAsJson() {
+        FfiResult res = LIB.printPlanAsJson(this.planPointer.ptrPlan);
+        if (res == null || res.code != ResultCode.Success) {
+            throw new IllegalStateException("print plan in ir core fail, msg : %s" + res, null);
+        }
+        return res.getMsg();
     }
 
     private void appendMatch(PhysicalNode<Pointer> node, IntByReference oprIdx) {

@@ -16,15 +16,18 @@
 #ifndef ENGINES_HTTP_SERVER_TYPES_H_
 #define ENGINES_HTTP_SERVER_TYPES_H_
 
+#include <boost/property_tree/ptree.hpp>
 #include <hiactor/net/serializable_queue.hh>
 #include <seastar/core/sstring.hh>
 #include <seastar/core/temporary_buffer.hh>
+#include "flex/utils/service_utils.h"
 
 #include <string>
 
 namespace server {
 
 using timestamp_t = uint32_t;
+using boost_ptree = boost::property_tree::ptree;
 
 template <typename BufType,
           typename = std::enable_if_t<
@@ -52,6 +55,17 @@ struct payload {
 
 using query_param = payload<seastar::sstring>;
 using query_result = payload<seastar::sstring>;
+using adhoc_result = payload<std::pair<int32_t, std::string>>;
+using admin_query_result = payload<gs::Result<seastar::sstring>>;
+// url_path, query_param
+using graph_management_param =
+    payload<std::pair<seastar::sstring, seastar::sstring>>;
+using procedure_query_param =
+    payload<std::pair<seastar::sstring, seastar::sstring>>;
+using create_procedure_query_param =
+    payload<std::pair<seastar::sstring, seastar::sstring>>;
+using update_procedure_query_param =
+    payload<std::tuple<seastar::sstring, seastar::sstring, seastar::sstring>>;
 
 }  // namespace server
 

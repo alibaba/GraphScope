@@ -108,6 +108,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (expand.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setEdgexpdAlias(ptrExpand, ArgUtils.asAlias(expand.getAliasId())));
         }
+        if (expand.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setEdgexpdVtag(
+                            ptrExpand, ArgUtils.asNameOrId(expand.getStartAlias().getAliasId())));
+        }
         checkFfiResult(
                 LIB.setEdgexpdMeta(
                         ptrExpand,
@@ -120,11 +125,39 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     @Override
+    public RelNode visit(GraphLogicalExpandDegree expandCount) {
+        GraphLogicalExpand fusedExpand = expandCount.getFusedExpand();
+        Pointer ptrExpandCount =
+                LIB.initEdgexpdOperator(
+                        FfiExpandOpt.Degree, Utils.ffiDirection(fusedExpand.getOpt()));
+        checkFfiResult(LIB.setEdgexpdParams(ptrExpandCount, ffiQueryParams(fusedExpand)));
+        if (expandCount.getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setEdgexpdAlias(
+                            ptrExpandCount, ArgUtils.asAlias(expandCount.getAliasId())));
+        }
+        checkFfiResult(
+                LIB.setEdgexpdMeta(
+                        ptrExpandCount,
+                        new FfiPbPointer.ByValue(
+                                com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                                                expandCount.getRowType(), isColumnId)
+                                        .get(0)
+                                        .toByteArray())));
+        return new PhysicalNode(expandCount, ptrExpandCount);
+    }
+
+    @Override
     public RelNode visit(GraphLogicalGetV getV) {
         Pointer ptrGetV = LIB.initGetvOperator(Utils.ffiVOpt(getV.getOpt()));
         checkFfiResult(LIB.setGetvParams(ptrGetV, ffiQueryParams(getV)));
         if (getV.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setGetvAlias(ptrGetV, ArgUtils.asAlias(getV.getAliasId())));
+        }
+        if (getV.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setGetvTag(
+                            ptrGetV, ArgUtils.asNameOrId(getV.getStartAlias().getAliasId())));
         }
         checkFfiResult(
                 LIB.setGetvMeta(
@@ -151,6 +184,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         checkFfiResult(LIB.setPathxpdHops(ptrPxd, hops.get(0), hops.get(1)));
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setPathxpdAlias(ptrPxd, ArgUtils.asAlias(pxd.getAliasId())));
+        }
+        if (pxd.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setPathxpdTag(
+                            ptrPxd, ArgUtils.asNameOrId(pxd.getStartAlias().getAliasId())));
         }
         return new PhysicalNode(pxd, ptrPxd);
     }

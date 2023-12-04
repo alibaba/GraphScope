@@ -50,14 +50,14 @@ public class MovieQueries {
                 Arrays.asList(
                         "Record<{personName: \"Aaron Sorkin\"}>",
                         "Record<{personName: \"Al Pacino\"}>",
-                        "Record<{personName: \"Angela Scope\"}>",
                         "Record<{personName: \"Annabella Sciorra\"}>",
                         "Record<{personName: \"Anthony Edwards\"}>",
                         "Record<{personName: \"Audrey Tautou\"}>",
                         "Record<{personName: \"Ben Miles\"}>",
                         "Record<{personName: \"Bill Paxton\"}>",
                         "Record<{personName: \"Bill Pullman\"}>",
-                        "Record<{personName: \"Billy Crystal\"}>");
+                        "Record<{personName: \"Billy Crystal\"}>",
+                        "Record<{personName: \"Bonnie Hunt\"}>");
         return new QueryContext(query, expected);
     }
 
@@ -299,6 +299,38 @@ public class MovieQueries {
                         "Record<{actorName: \"Tom Hanks\", movie1Title: \"You've Got Mail\","
                             + " coActorName: \"Meg Ryan\", movie2Title: \"Top Gun\", coCoActorName:"
                             + " \"Tom Cruise\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query16_test() {
+        String query = "Match (n:Movie {id: 0}) Where n.title starts with 'The' Return n.title;";
+        List<String> expected = Arrays.asList("Record<{title: \"The Matrix\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query17_test() {
+        String query = "Match (n:Movie {id: 0}) Where n.title ends with 'Matrix' Return n.title;";
+        List<String> expected = Arrays.asList("Record<{title: \"The Matrix\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query18_test() {
+        String query = "Match (n:Movie {id: 0}) Where n.title contains 'The' Return n.title;";
+        List<String> expected = Arrays.asList("Record<{title: \"The Matrix\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query19_test() {
+        String query = "Match (n:Movie {id: 0}) Return [n.id, n.tagline] as value;";
+        List<String> expected =
+                Arrays.asList("Record<{value: [0, \"Welcome to the Real World\"]}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query20_test() {
+        String query = "Match (n:Movie {id: 0}) Return {id: n.id, tagline: n.tagline} as value;";
+        List<String> expected =
+                Arrays.asList("Record<{value: {tagline: \"Welcome to the Real World\", id: 0}}>");
         return new QueryContext(query, expected);
     }
 }

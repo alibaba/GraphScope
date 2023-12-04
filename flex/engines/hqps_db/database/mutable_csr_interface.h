@@ -106,6 +106,8 @@ class MutableCSRInterface {
     LOG(INFO) << "person label num: " << db_session_.graph().vertex_num(1);
   }
 
+  const Schema& schema() const { return db_session_.schema(); }
+
   /**
    * @brief Get the Vertex Label id
    *
@@ -694,38 +696,39 @@ class MutableCSRInterface {
       const label_id_t& edge_label_id, const std::vector<vertex_id_t>& vids,
       const std::string& direction_str, size_t limit) const {
     mutable_csr_graph_impl::NbrListArray ret;
-
+    ret.resize(vids.size());
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
       auto csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                 edge_label_id);
-      ret.resize(vids.size());
-      for (size_t i = 0; i < vids.size(); ++i) {
-        auto v = vids[i];
-        auto iter = csr->edge_iter(v);
-        auto& vec = ret.get_vector(i);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+      if (csr) {
+        for (size_t i = 0; i < vids.size(); ++i) {
+          auto v = vids[i];
+          auto iter = csr->edge_iter(v);
+          auto& vec = ret.get_vector(i);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
       }
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
       auto csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
                                                 edge_label_id);
-      ret.resize(vids.size());
-      for (size_t i = 0; i < vids.size(); ++i) {
-        auto v = vids[i];
-        auto iter = csr->edge_iter(v);
-        auto& vec = ret.get_vector(i);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+      if (csr) {
+        for (size_t i = 0; i < vids.size(); ++i) {
+          auto v = vids[i];
+          auto iter = csr->edge_iter(v);
+          auto& vec = ret.get_vector(i);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
       }
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
-      ret.resize(vids.size());
       auto ocsr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                  edge_label_id);
       auto icsr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
@@ -733,15 +736,19 @@ class MutableCSRInterface {
       for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         auto& vec = ret.get_vector(i);
-        auto iter = ocsr->edge_iter(v);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+        if (ocsr) {
+          auto iter = ocsr->edge_iter(v);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
-        iter = icsr->edge_iter(v);
-        while (iter->is_valid()) {
-          vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
-          iter->next();
+        if (icsr) {
+          auto iter = icsr->edge_iter(v);
+          while (iter->is_valid()) {
+            vec.push_back(mutable_csr_graph_impl::Nbr(iter->get_neighbor()));
+            iter->next();
+          }
         }
       }
     } else {
@@ -805,22 +812,44 @@ class MutableCSRInterface {
     return column;
   }
 
+  std::shared_ptr<RefColumnBase> GetRefColumnBase(
+      const label_t& label_id, const std::string& prop_name) const {
+    if (prop_name == "id" || prop_name == "ID" || prop_name == "Id") {
+      return db_session_.get_vertex_id_column(label_id);
+    } else {
+      return create_ref_column(
+          db_session_.get_vertex_property_column(label_id, prop_name));
+    }
+  }
+
  private:
   std::shared_ptr<RefColumnBase> create_ref_column(
       std::shared_ptr<ColumnBase> column) const {
     auto type = column->type();
-    if (type == PropertyType::kInt32) {
+    if (type == PropertyType::kBool) {
+      return std::make_shared<TypedRefColumn<bool>>(
+          *std::dynamic_pointer_cast<TypedColumn<bool>>(column));
+    } else if (type == PropertyType::kInt32) {
       return std::make_shared<TypedRefColumn<int>>(
           *std::dynamic_pointer_cast<TypedColumn<int>>(column));
     } else if (type == PropertyType::kInt64) {
       return std::make_shared<TypedRefColumn<int64_t>>(
           *std::dynamic_pointer_cast<TypedColumn<int64_t>>(column));
+    } else if (type == PropertyType::kUInt32) {
+      return std::make_shared<TypedRefColumn<uint32_t>>(
+          *std::dynamic_pointer_cast<TypedColumn<uint32_t>>(column));
+    } else if (type == PropertyType::kUInt64) {
+      return std::make_shared<TypedRefColumn<uint64_t>>(
+          *std::dynamic_pointer_cast<TypedColumn<uint64_t>>(column));
     } else if (type == PropertyType::kDate) {
       return std::make_shared<TypedRefColumn<Date>>(
           *std::dynamic_pointer_cast<TypedColumn<Date>>(column));
     } else if (type == PropertyType::kString) {
       return std::make_shared<TypedRefColumn<std::string_view>>(
           *std::dynamic_pointer_cast<TypedColumn<std::string_view>>(column));
+    } else if (type == PropertyType::kFloat) {
+      return std::make_shared<TypedRefColumn<float>>(
+          *std::dynamic_pointer_cast<TypedColumn<float>>(column));
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type);

@@ -26,7 +26,7 @@ import java.util.Map;
 
 public class MetricsCollectClient extends RpcClient {
 
-    private MetricsCollectGrpc.MetricsCollectStub stub;
+    private final MetricsCollectGrpc.MetricsCollectStub stub;
 
     public MetricsCollectClient(ManagedChannel channel) {
         super(channel);

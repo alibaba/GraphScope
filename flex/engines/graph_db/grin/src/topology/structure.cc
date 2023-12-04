@@ -36,7 +36,7 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
   }
   _uri = _uri.substr(pos + 3);
   LOG(INFO) << "Params: " << _uri;
-  std::string graph_schema_path, bulk_load_config_path;
+  std::string graph_schema_path, data_dir;
   if (pos != std::string::npos) {
     auto params = _uri;
     std::vector<std::string> param_list;
@@ -49,31 +49,27 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
       }
       if (kv[0] == "schema_file") {
         graph_schema_path = kv[1];
-      } else if (kv[0] == "bulk_load_file") {
-        bulk_load_config_path = kv[1];
+      } else if (kv[0] == "data_dir") {
+        data_dir = kv[1];
       }
     }
   } else {
     return GRIN_NULL_GRAPH;
   }
   VLOG(10) << "Schema file: " << graph_schema_path;
-  VLOG(10) << "Bulk load file: " << bulk_load_config_path;
-  if (graph_schema_path.empty() || bulk_load_config_path.empty()) {
+  if (graph_schema_path.empty() || data_dir.empty()) {
     return GRIN_NULL_GRAPH;
   }
   // get schema_file from
   if (!std::filesystem::exists(graph_schema_path) ||
-      !(std::filesystem::exists(bulk_load_config_path))) {
+      (!std::filesystem::exists(data_dir))) {
     return GRIN_NULL_GRAPH;
   }
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
-  auto loader =
-      gs::LoaderFactory::CreateFragmentLoader(schema, loading_config, 1);
-  loader->LoadFragment(g->g);
+
+  g->g.Open(data_dir);
   init_cache(g);
   return g;
 }
@@ -144,14 +140,26 @@ const void* grin_get_edge_data_value(GRIN_GRAPH, GRIN_EDGE e) {
   auto _e = static_cast<GRIN_EDGE_T*>(e);
   auto type = _e->data.type;
   switch (_get_data_type(type)) {
+  case GRIN_DATATYPE::Bool: {
+    return new bool(_e->data.value.b);
+  }
   case GRIN_DATATYPE::Int32: {
     return new int32_t(_e->data.value.i);
   }
   case GRIN_DATATYPE::Int64: {
     return new int64_t(_e->data.value.l);
   }
+  case GRIN_DATATYPE::UInt32: {
+    return new uint32_t(_e->data.value.ui);
+  }
+  case GRIN_DATATYPE::UInt64: {
+    return new uint64_t(_e->data.value.ul);
+  }
   case GRIN_DATATYPE::Double: {
     return new double(_e->data.value.db);
+  }
+  case GRIN_DATATYPE::Float: {
+    return new float(_e->data.value.f);
   }
   case GRIN_DATATYPE::String: {
     auto s = _e->data.value.s;

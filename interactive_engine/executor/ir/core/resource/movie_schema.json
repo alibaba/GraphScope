@@ -71,6 +71,38 @@
           "is_primary_key": false
         }
       ]
+    },
+    {
+      "label": {
+        "id": 2,
+        "name": "User"
+      },
+      "columns": [
+        {
+          "key": {
+            "id": 4,
+            "name": "id"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 0,
+            "name": "born"
+          },
+          "data_type": 1,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 1,
+            "name": "name"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        }
+      ]
     }
   ],
   "relations": [
@@ -121,7 +153,7 @@
         {
           "src": {
             "id": 1,
-            "name": "Person"
+            "name": "User"
           },
           "dst": {
             "id": 0,
@@ -149,7 +181,7 @@
         {
           "src": {
             "id": 1,
-            "name": "Person"
+            "name": "User"
           },
           "dst": {
             "id": 0,

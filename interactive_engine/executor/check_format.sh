@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Copyright 2022 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,15 +19,20 @@ if ! rustup toolchain list | grep -q nightly; then
   rustup toolchain install nightly
   rustup component add rustfmt --toolchain nightly
 fi
-cd ${CURRENT}/assembly/groot
-cargo +nightly fmt -- --check
-cd ${CURRENT}/assembly/v6d
-cargo +nightly fmt -- --check
-cd ${CURRENT}/common/dyn_type/
-cargo +nightly fmt -- --check
-cd ${CURRENT}/engine/pegasus/
-cargo +nightly fmt -- --check
-cd ${CURRENT}/ir/
-cargo +nightly fmt -- --check
-cd ${CURRENT}/store/
-cargo +nightly fmt -- --check
+
+directories=(
+  "assembly/groot"
+  "assembly/v6d"
+  "common/dyn_type"
+  "engine/pegasus"
+  "ir"
+  "store"
+)
+
+CURRENT=$(pwd)
+
+for dir in "${directories[@]}"; do
+  cd "${CURRENT}/${dir}"
+  cargo +nightly fmt -- --check
+  #cargo +nightly fmt
+done

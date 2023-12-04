@@ -2,6 +2,8 @@ package com.alibaba.graphscope.groot.frontend.write;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
@@ -25,6 +27,9 @@ import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -50,6 +55,10 @@ public class GraphWriter implements MetricsAgent {
     private volatile long ingestorBlockTimeAvgMs;
     private volatile long lastUpdateIngestorBlockTimeNano;
     private AtomicInteger pendingWriteCount;
+    /**
+     * true: enable use hash64(srcId, dstId, edgeLabelId, edgePks) to generate eid;
+     */
+    private boolean enableHashEid;
 
     private SnapshotCache snapshotCache;
     private EdgeIdGenerator edgeIdGenerator;
@@ -57,18 +66,23 @@ public class GraphWriter implements MetricsAgent {
     private RoleClients<IngestorWriteClient> ingestWriteClients;
     private AtomicLong lastWrittenSnapshotId = new AtomicLong(0L);
 
+    private static final Logger logger = LoggerFactory.getLogger(GraphWriter.class);
+
     public GraphWriter(
             SnapshotCache snapshotCache,
             EdgeIdGenerator edgeIdGenerator,
             MetaService metaService,
             RoleClients<IngestorWriteClient> ingestWriteClients,
-            MetricsCollector metricsCollector) {
+            MetricsCollector metricsCollector,
+            Configs configs) {
         this.snapshotCache = snapshotCache;
         this.edgeIdGenerator = edgeIdGenerator;
         this.metaService = metaService;
         this.ingestWriteClients = ingestWriteClients;
         initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
+        metricsCollector.register(this, this::updateMetrics);
+        // default for increment eid generate
+        this.enableHashEid = FrontendConfig.ENABLE_HASH_GENERATE_EID.get(configs);
     }
 
     public long writeBatch(
@@ -152,7 +166,7 @@ public class GraphWriter implements MetricsAgent {
                             public void onCompleted(Long res) {
                                 long writeSnapshotId = res;
                                 lastWrittenSnapshotId.updateAndGet(
-                                        x -> x < writeSnapshotId ? writeSnapshotId : x);
+                                        x -> Math.max(x, writeSnapshotId));
                                 writeRequestsTotal.addAndGet(writeRequests.size());
                                 finish();
                                 callback.onCompleted(res);
@@ -171,6 +185,16 @@ public class GraphWriter implements MetricsAgent {
                                 pendingWriteCount.decrementAndGet();
                             }
                         });
+    }
+
+    public List<Long> replayWALFrom(long offset, long timestamp) {
+        List<Long> allIds = new ArrayList<>();
+        for (int queue = 0; queue < metaService.getQueueCount(); ++queue) {
+            int id = metaService.getIngestorIdForQueue(queue);
+            List<Long> ids = ingestWriteClients.getClient(id).replayWALFrom(offset, timestamp);
+            allIds.addAll(ids);
+        }
+        return allIds;
     }
 
     public boolean flushSnapshot(long snapshotId, long waitTimeMs) throws InterruptedException {
@@ -359,11 +383,58 @@ public class GraphWriter implements MetricsAgent {
                     parseRawProperties(dstVertexDef, dstVertexRecordKey.getProperties());
             long dstVertexHashId =
                     getPrimaryKeysHashId(dstVertexDef.getLabelId(), dstVertexPkVals, dstVertexDef);
+            //            long edgeInnerId =
+            //                    overwrite ? edgeIdGenerator.getNextId() :
+            // edgeRecordKey.getEdgeInnerId();
             long edgeInnerId =
-                    overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
+                    getEdgeInnerId(
+                            srcVertexHashId,
+                            dstVertexHashId,
+                            overwrite,
+                            edgeRecordKey,
+                            schema,
+                            dataRecord);
             return new EdgeId(
                     new VertexId(srcVertexHashId), new VertexId(dstVertexHashId), edgeInnerId);
         }
+    }
+
+    /**
+     * if enableHashEid == true: when eid == 0(client input none eid), return hash eid as final eid
+     * if enableHashEid == false: when eid == 0(client input none eid), return 0
+     * @param srcId srcVertexId
+     * @param dstId dstVertexId
+     * @param overwrite if insert
+     * @param edgeRecordKey edgeRecordKey
+     * @param schema GraphSchema
+     * @param dataRecord DataRecord
+     * @return eid
+     */
+    private long getEdgeInnerId(
+            long srcId,
+            long dstId,
+            boolean overwrite,
+            EdgeRecordKey edgeRecordKey,
+            GraphSchema schema,
+            DataRecord dataRecord) {
+        long edgeInnerId;
+        if (this.enableHashEid) {
+            GraphElement edgeDef = schema.getElement(edgeRecordKey.getLabel());
+            Map<Integer, PropertyValue> edgePkVals =
+                    parseRawProperties(edgeDef, dataRecord.getProperties());
+            List<byte[]> edgePkBytes = getPkBytes(edgePkVals, edgeDef);
+            int edgeLabelId = edgeDef.getLabelId();
+            long eid = edgeIdGenerator.getHashId(srcId, dstId, edgeLabelId, edgePkBytes);
+            edgeInnerId =
+                    overwrite
+                            ? eid
+                            : (edgeRecordKey.getEdgeInnerId() == 0
+                                    ? eid
+                                    : edgeRecordKey.getEdgeInnerId());
+        } else {
+            edgeInnerId = overwrite ? edgeIdGenerator.getNextId() : edgeRecordKey.getEdgeInnerId();
+        }
+        return edgeInnerId;
     }
 
     private EdgeKind getEdgeKind(GraphSchema schema, DataRecord dataRecord) {
@@ -392,13 +463,18 @@ public class GraphWriter implements MetricsAgent {
 
     public static long getPrimaryKeysHashId(
             int labelId, Map<Integer, PropertyValue> properties, GraphElement graphElement) {
+        return PkHashUtils.hash(labelId, getPkBytes(properties, graphElement));
+    }
+
+    public static List<byte[]> getPkBytes(
+            Map<Integer, PropertyValue> properties, GraphElement graphElement) {
         List<GraphProperty> pklist = graphElement.getPrimaryKeyList();
         List<byte[]> pks = new ArrayList<>(pklist.size());
         for (GraphProperty pk : pklist) {
             byte[] valBytes = properties.get(pk.getId()).getValBytes();
             pks.add(valBytes);
         }
-        return PkHashUtils.hash(labelId, pks);
+        return pks;
     }
 
     public static long getPrimaryKeysHashIdFromRaw(

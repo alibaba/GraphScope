@@ -44,6 +44,8 @@ pub enum ExprEvalError {
     UnexpectedDataType(OperatorDesc),
     /// Get ``None` from `Context`
     GetNoneFromContext,
+    /// Regex Error
+    RegexError(regex::Error),
     /// Unsupported
     Unsupported(String),
     /// Other unknown errors that is converted from a error description
@@ -68,6 +70,7 @@ impl Display for ExprEvalError {
             GetNoneFromContext => write!(f, "get `None` from `Context`"),
             Unsupported(e) => write!(f, "unsupported: {}", e),
             OtherErr(e) => write!(f, "parse error {}", e),
+            RegexError(e) => write!(f, "regex error {}", e),
         }
     }
 }
@@ -83,5 +86,11 @@ impl From<CastError> for ExprEvalError {
 impl From<&str> for ExprEvalError {
     fn from(str: &str) -> Self {
         Self::OtherErr(str.to_string())
+    }
+}
+
+impl From<regex::Error> for ExprEvalError {
+    fn from(error: regex::Error) -> Self {
+        Self::RegexError(error)
     }
 }

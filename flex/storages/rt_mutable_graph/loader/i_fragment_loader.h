@@ -24,7 +24,7 @@ namespace gs {
 class IFragmentLoader {
  public:
   virtual ~IFragmentLoader() = default;
-  virtual void LoadFragment(MutablePropertyFragment& fragment) = 0;
+  virtual void LoadFragment() = 0;
 };
 
 }  // namespace gs

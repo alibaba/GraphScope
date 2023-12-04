@@ -14,9 +14,9 @@
  */
 
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
+#include <dlfcn.h>
 #include <memory>
 #include <utility>
-#include <dlfcn.h>
 
 namespace gs {
 
@@ -37,8 +37,7 @@ void LoaderFactory::Init() {
         }
       }
     }
-  }
-  else {
+  } else {
     LOG(INFO) << "No extra loaders provided";
   }
 }
@@ -46,23 +45,18 @@ void LoaderFactory::Init() {
 void LoaderFactory::Finalize() {}
 
 std::shared_ptr<IFragmentLoader> LoaderFactory::CreateFragmentLoader(
-    const Schema& schema, const LoadingConfig& loading_config, int thread_num) {
+    const std::string& work_dir, const Schema& schema,
+    const LoadingConfig& loading_config, int thread_num) {
   auto scheme = loading_config.GetScheme();
   auto format = loading_config.GetFormat();
   auto key = scheme + format;
   auto& known_loaders_ = getKnownLoaders();
   auto iter = known_loaders_.find(key);
   if (iter != known_loaders_.end()) {
-    return iter->second(schema, loading_config, thread_num);
+    return iter->second(work_dir, schema, loading_config, thread_num);
   } else {
     LOG(FATAL) << "Unsupported format: " << format;
   }
-  // if (loading_config.GetFormat() == "csv") {
-  //   return std::make_shared<CSVFragmentLoader>(schema, loading_config,
-  //                                              thread_num);
-  // } else {
-  //   LOG(FATAL) << "Unsupported format: " << loading_config.GetFormat();
-  // }
 }
 
 // the key of map should be scheme + format.

@@ -16,10 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
@@ -36,8 +38,9 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             RelNode input,
             GraphOpt.Expand opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        super(cluster, hints, input, tableConfig, alias);
+            @Nullable String alias,
+            AliasNameWithId startAlias) {
+        super(cluster, hints, input, tableConfig, alias, startAlias);
         this.opt = opt;
     }
 
@@ -47,8 +50,9 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
             RelNode input,
             GraphOpt.Expand opt,
             TableConfig tableConfig,
-            @Nullable String alias) {
-        return new GraphLogicalExpand(cluster, hints, input, opt, tableConfig, alias);
+            @Nullable String alias,
+            AliasNameWithId startAlias) {
+        return new GraphLogicalExpand(cluster, hints, input, opt, tableConfig, alias, startAlias);
     }
 
     public GraphOpt.Expand getOpt() {
@@ -58,5 +62,17 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("opt", getOpt());
+    }
+
+    @Override
+    public GraphLogicalExpand copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new GraphLogicalExpand(
+                (GraphOptCluster) getCluster(),
+                getHints(),
+                inputs.get(0),
+                this.getOpt(),
+                this.tableConfig,
+                this.getAliasName(),
+                this.getStartAlias());
     }
 }

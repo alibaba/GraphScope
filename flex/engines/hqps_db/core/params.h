@@ -239,10 +239,10 @@ struct LengthKey {
 };
 
 struct LabelKey {
-  using label_data_type = int32_t;
+  using label_data_type = uint8_t;
   int32_t label_id;
   LabelKey() = default;
-  LabelKey(int32_t id) : label_id(id) {}
+  LabelKey(label_data_type id) : label_id(id) {}
 };
 
 template <typename T>
@@ -442,6 +442,22 @@ struct EdgeExpandOpt {
   Filter<EDGE_FILTER_FUNC, SELECTOR...> edge_filter_;
 };
 
+// EdgeExpand to vertices with multiple edge triplet.
+// The edge triplet are in the form of <src_label, dst_label, edge_label>
+template <typename LabelT, typename EDGE_FILTER_FUNC>
+struct EdgeExpandVMultiTripletOpt {
+  EdgeExpandVMultiTripletOpt(
+      Direction dir, std::vector<std::array<LabelT, 3>>&& edge_label_triplets,
+      EDGE_FILTER_FUNC&& edge_filter)
+      : direction_(dir),
+        edge_label_triplets_(std::move(edge_label_triplets)),
+        edge_filter_(std::move(edge_filter)) {}
+
+  Direction direction_;
+  std::vector<std::array<LabelT, 3>> edge_label_triplets_;
+  EDGE_FILTER_FUNC edge_filter_;
+};
+
 template <typename LabelT, typename EDGE_FILTER_FUNC, typename Selectors,
           typename... T>
 struct EdgeExpandEOpt;
@@ -579,6 +595,23 @@ auto make_edge_expand_multie_opt(
                              Filter<TruePredicate>, PropTuple...>(
       dir, std::move(edge_label_triplets), std::move(prop_names),
       Filter<TruePredicate>());
+}
+
+// Expand with multiple edge triplet pairs. resulting vertices, prop names and
+// prop types are not needed.
+template <typename LabelT, typename FILTER_T>
+auto make_edge_expand_multiv_opt(
+    Direction dir, std::vector<std::array<LabelT, 3>>&& edge_label_triplets,
+    FILTER_T&& func) {
+  return EdgeExpandVMultiTripletOpt<LabelT, FILTER_T>(
+      dir, std::move(edge_label_triplets), std::move(func));
+}
+
+template <typename LabelT>
+auto make_edge_expand_multiv_opt(
+    Direction dir, std::vector<std::array<LabelT, 3>>&& edge_label_triplets) {
+  return EdgeExpandVMultiTripletOpt<LabelT, Filter<TruePredicate>>(
+      dir, std::move(edge_label_triplets), Filter<TruePredicate>());
 }
 
 // For edge expand with multiple labels.
@@ -738,10 +771,77 @@ struct PathExpandOptImpl {
   ResultOpt result_opt_;  // Get all vertices on Path or only ending vertices.
 };
 
+// Path expand with only one edge label, but possible multiple dst labels.
+template <typename LabelT, size_t num_labels, typename EDGE_FILTER_T,
+          size_t get_v_num_labels, typename VERTEX_FILTER_T,
+          typename UNTIL_CONDITION, typename... T>
+struct PathExpandMultiDstOptImpl {
+  PathExpandMultiDstOptImpl(
+      EdgeExpandOptMultiLabel<LabelT, num_labels, EDGE_FILTER_T>&&
+          edge_expand_opt,
+      GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...>&& get_v_opt,
+      Range&& range, UNTIL_CONDITION&& until_condition,
+      PathOpt path_opt = PathOpt::Arbitrary,
+      ResultOpt result_opt = ResultOpt::EndV)
+      : edge_expand_opt_(std::move(edge_expand_opt)),
+        get_v_opt_(std::move(get_v_opt)),
+        range_(std::move(range)),
+        until_condition_(std::move(until_condition)),
+        path_opt_(path_opt),
+        result_opt_(result_opt) {}
+
+  EdgeExpandOptMultiLabel<LabelT, num_labels, EDGE_FILTER_T> edge_expand_opt_;
+  GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...> get_v_opt_;
+  Range range_;  // Range for result vertices, default is [0,INT_MAX)
+  UNTIL_CONDITION until_condition_;
+  PathOpt path_opt_;      // Single path or not.
+  ResultOpt result_opt_;  // Get all vertices on Path or only ending vertices.
+};
+
+// Path expandv with multiple edge triplets. The src vertices can also contain
+// many labels
+template <typename LabelT, typename EDGE_FILTER_T, size_t get_v_num_labels,
+          typename VERTEX_FILTER_T, typename UNTIL_CONDITION, typename... T>
+struct PathExpandVMultiTripletOptImpl {
+  PathExpandVMultiTripletOptImpl(
+      EdgeExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt,
+      GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...>&& get_v_opt,
+      Range&& range, UNTIL_CONDITION&& until_condition,
+      PathOpt path_opt = PathOpt::Arbitrary,
+      ResultOpt result_opt = ResultOpt::EndV)
+      : edge_expand_opt_(std::move(edge_expand_opt)),
+        get_v_opt_(std::move(get_v_opt)),
+        range_(std::move(range)),
+        until_condition_(std::move(until_condition)),
+        path_opt_(path_opt),
+        result_opt_(result_opt) {}
+
+  EdgeExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T> edge_expand_opt_;
+  GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...> get_v_opt_;
+  Range range_;  // Range for result vertices, default is [0,INT_MAX)
+  UNTIL_CONDITION until_condition_;
+  PathOpt path_opt_;      // Single path or not.
+  ResultOpt result_opt_;  // Get all vertices on Path or only ending vertices.
+};
+
 template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T,
           typename... T>
 using PathExpandVOpt = PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T,
                                          Filter<TruePredicate>, T...>;
+
+template <typename LabelT, size_t num_labels, typename EDGE_FILTER_T,
+          size_t get_v_num_labels, typename VERTEX_FILTER_T, typename... T>
+using PathExpandVMultiDstOpt =
+    PathExpandMultiDstOptImpl<LabelT, num_labels, EDGE_FILTER_T,
+                              get_v_num_labels, VERTEX_FILTER_T,
+                              Filter<TruePredicate>, T...>;
+
+template <typename LabelT, typename EDGE_FILTER_T, size_t get_v_num_labels,
+          typename VERTEX_FILTER_T, typename... T>
+using PathExpandVMultiTripletOpt =
+    PathExpandVMultiTripletOptImpl<LabelT, EDGE_FILTER_T, get_v_num_labels,
+                                   VERTEX_FILTER_T, Filter<TruePredicate>,
+                                   T...>;
 
 template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T>
 using PathExpandPOpt = PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T,
@@ -754,6 +854,7 @@ using ShortestPathOpt =
     PathExpandOptImpl<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T, UNTIL_CONDITION,
                       T...>;
 
+// make path expand opt with only one dst label.
 template <typename LabelT, typename EDGE_FILTER_T, typename VERTEX_FILTER_T,
           typename... T>
 auto make_path_expandv_opt(
@@ -762,6 +863,35 @@ auto make_path_expandv_opt(
     PathOpt path_opt = PathOpt::Arbitrary,
     ResultOpt result_opt = ResultOpt::EndV) {
   return PathExpandVOpt<LabelT, EDGE_FILTER_T, VERTEX_FILTER_T, T...>(
+      std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
+      Filter<TruePredicate>(), path_opt, result_opt);
+}
+
+// make path expand opt with only one edge label, but multiple dst labels.
+template <typename LabelT, size_t num_labels, typename EDGE_FILTER_T,
+          size_t get_v_num_labels, typename VERTEX_FILTER_T, typename... T>
+auto make_path_expandv_opt(
+    EdgeExpandOptMultiLabel<LabelT, num_labels, EDGE_FILTER_T>&&
+        edge_expand_opt,
+    GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...>&& get_v_opt,
+    Range&& range, PathOpt path_opt = PathOpt::Arbitrary,
+    ResultOpt result_opt = ResultOpt::EndV) {
+  return PathExpandVMultiDstOpt<LabelT, num_labels, EDGE_FILTER_T,
+                                get_v_num_labels, VERTEX_FILTER_T, T...>(
+      std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
+      Filter<TruePredicate>(), path_opt, result_opt);
+}
+
+// make path expand opt with multiple edge label triplet.
+template <typename LabelT, typename EDGE_FILTER_T, size_t get_v_num_labels,
+          typename VERTEX_FILTER_T, typename... T>
+auto make_path_expandv_opt(
+    EdgeExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt,
+    GetVOpt<LabelT, get_v_num_labels, VERTEX_FILTER_T, T...>&& get_v_opt,
+    Range&& range, PathOpt path_opt = PathOpt::Arbitrary,
+    ResultOpt result_opt = ResultOpt::EndV) {
+  return PathExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T, get_v_num_labels,
+                                    VERTEX_FILTER_T, T...>(
       std::move(edge_expand_opt), std::move(get_v_opt), std::move(range),
       Filter<TruePredicate>(), path_opt, result_opt);
 }

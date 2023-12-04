@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import com.alibaba.graphscope.groot.sdk.api.Writer;
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.Schema;
 import com.alibaba.graphscope.groot.sdk.schema.Vertex;
@@ -23,8 +24,6 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -33,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class GrootClient {
+public class GrootClient implements Writer {
     private final ClientGrpc.ClientBlockingStub clientStub;
     private final ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private final ClientWriteGrpc.ClientWriteStub asyncWriteStub;
@@ -76,11 +75,18 @@ public class GrootClient {
      * Block until this snapshot becomes available.
      * @param snapshotId the snapshot id to be flushed
      */
-    public void remoteFlush(long snapshotId) {
-        if (snapshotId != 0) {
-            this.writeStub.remoteFlush(
-                    RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
-        }
+    public boolean remoteFlush(long snapshotId) {
+        RemoteFlushResponse resp =
+                this.writeStub.remoteFlush(
+                        RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
+        return resp.getSuccess();
+    }
+
+    public List<Long> replayRecords(long offset, long timestamp) {
+        ReplayRecordsRequest req =
+                ReplayRecordsRequest.newBuilder().setOffset(offset).setTimestamp(timestamp).build();
+        ReplayRecordsResponse resp = writeStub.replayRecords(req);
+        return resp.getSnapshotIdList();
     }
 
     private long modifyVertex(Vertex vertex, WriteTypePb writeType) {
@@ -466,30 +472,19 @@ public class GrootClient {
     }
 
     public static class GrootClientBuilder {
-        private List<SocketAddress> addrs;
+        private String target;
         private String username;
         private String password;
 
-        private GrootClientBuilder() {
-            this.addrs = new ArrayList<>();
-        }
+        private GrootClientBuilder() {}
 
-        public GrootClientBuilder addAddress(SocketAddress address) {
-            this.addrs.add(address);
+        public GrootClientBuilder addHost(String host, int port) {
+            target = host + ":" + port;
             return this;
         }
 
-        public GrootClientBuilder addHost(String host, int port) {
-            return this.addAddress(new InetSocketAddress(host, port));
-        }
-
-        public GrootClientBuilder setHosts(String hosts) {
-            List<SocketAddress> addresses = new ArrayList<>();
-            for (String host : hosts.split(",")) {
-                String[] items = host.split(":");
-                addresses.add(new InetSocketAddress(items[0], Integer.valueOf(items[1])));
-            }
-            this.addrs = addresses;
+        public GrootClientBuilder setHosts(String target) {
+            this.target = target;
             return this;
         }
 
@@ -504,14 +499,12 @@ public class GrootClient {
         }
 
         public GrootClient build() {
-            MultiAddrResovlerFactory multiAddrResovlerFactory =
-                    new MultiAddrResovlerFactory(this.addrs);
             ManagedChannel channel =
-                    ManagedChannelBuilder.forTarget("hosts")
-                            .nameResolverFactory(multiAddrResovlerFactory)
+                    ManagedChannelBuilder.forTarget(target)
                             .defaultLoadBalancingPolicy("round_robin")
                             .usePlaintext()
                             .build();
+
             ClientGrpc.ClientBlockingStub clientBlockingStub = ClientGrpc.newBlockingStub(channel);
             ClientWriteGrpc.ClientWriteBlockingStub clientWriteBlockingStub =
                     ClientWriteGrpc.newBlockingStub(channel);

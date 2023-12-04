@@ -24,6 +24,7 @@ public class ExpandConfig {
     private final GraphOpt.Expand opt;
     private final LabelConfig labels;
     @Nullable private final String alias;
+    @Nullable private final String startAlias;
 
     public ExpandConfig(GraphOpt.Expand opt) {
         this(opt, LabelConfig.DEFAULT, null);
@@ -34,9 +35,18 @@ public class ExpandConfig {
     }
 
     public ExpandConfig(GraphOpt.Expand opt, LabelConfig labels, @Nullable String alias) {
+        this(opt, labels, alias, null);
+    }
+
+    public ExpandConfig(
+            GraphOpt.Expand opt,
+            LabelConfig labels,
+            @Nullable String alias,
+            @Nullable String startAlias) {
         this.opt = Objects.requireNonNull(opt);
         this.labels = Objects.requireNonNull(labels);
         this.alias = alias;
+        this.startAlias = startAlias;
     }
 
     public GraphOpt.Expand getOpt() {
@@ -49,5 +59,9 @@ public class ExpandConfig {
 
     public @Nullable String getAlias() {
         return alias;
+    }
+
+    public @Nullable String getStartAlias() {
+        return startAlias;
     }
 }

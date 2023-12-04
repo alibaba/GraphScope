@@ -139,4 +139,45 @@ public class SimpleMatchQueries {
                 Arrays.asList("Record<{vertexLabelName: \"PERSON\", edgeLabelName: \"KNOWS\"}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_11_test() {
+        String query = "Match( p: PLACE) return p ORDER BY p.id LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{p: node<0>}>",
+                        "Record<{p: node<1>}>",
+                        "Record<{p: node<2>}>",
+                        "Record<{p: node<3>}>",
+                        "Record<{p: node<4>}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_simple_match_query_12_test() {
+        String query =
+                "MATCH(p)<-[:ISLOCATEDIN*1..2]-(a : POST | COMMENT) WITH DISTINCT p, a RETURN p.id"
+                    + " AS placeId, p.name AS placeName, a.id AS postOrCommentId ORDER BY placeId"
+                    + " ASC, postOrCommentId ASC LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54780}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54971}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54972}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54973}>",
+                        "Record<{placeId: 0, placeName: \"India\", postOrCommentId: 54974}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_simple_match_query_13_test() {
+        String query =
+                "MATCH(a)-[*1..2]->(b) WITH a.id AS aId, b.id AS bId RETURN aId, bId ORDER BY aId"
+                        + " ASC, bId ASC LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{aId: 0, bId: 3}>",
+                        "Record<{aId: 0, bId: 59}>",
+                        "Record<{aId: 0, bId: 349}>",
+                        "Record<{aId: 0, bId: 933}>",
+                        "Record<{aId: 0, bId: 1454}>");
+        return new QueryContext(query, expected);
+    }
 }
