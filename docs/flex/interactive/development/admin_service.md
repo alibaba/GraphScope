@@ -942,7 +942,20 @@ curl -X DELETE -H "Content-Type: application/json" "http://[host]/v1/graph/{grap
 
 #### Description 
 
-Start the query service on a graph.
+Start the query service on a graph. The `graph_name` param can be empty, indicating restarting on current running graph.
+
+1. After the AdminService receives this request, the current actor scope for query actors will be cancelled.
+2. During the scope cancellation process of the query actors or after scope cancellation is completed, all requests sent to the query_service will fail and be rejected. 
+The response of the http request will be like
+```json
+{
+  "code": 500,
+  "message" : "Unable to send message, the target actor has been canceled!"
+}
+```
+3. After the previous graph is closed and new graph is opened, the new query actors will be available in a new scope. 
+4. The query service is now ready to serve requests on the new graph.
+ 
 
 #### HTTP Request
 - **Method**: POST

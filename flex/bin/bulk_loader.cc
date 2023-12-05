@@ -85,8 +85,8 @@ int main(int argc, char** argv) {
   }
   std::filesystem::path serial_path = data_dir_path / "schema";
   if (std::filesystem::exists(serial_path)) {
-    LOG(ERROR) << "data directory is not empty";
-    return -1;
+    LOG(WARNING) << "data directory is not empty";
+    return 0;
   }
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(

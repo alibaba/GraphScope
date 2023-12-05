@@ -277,7 +277,8 @@ seastar::future<query_result> admin_actor::update_procedure(
   }
 }
 
-// Manage the service of one graph.
+// Start service on a graph first means stop all current running actors, then
+// switch graph and and create new actors with a unused scope_id.
 seastar::future<query_result> admin_actor::start_service(
     query_param&& query_param) {
   // parse query_param.content as json and get graph_name
@@ -296,49 +297,59 @@ seastar::future<query_result> admin_actor::start_service(
           << server::WorkDirManipulator::GetRunningGraph();
     }
     LOG(WARNING) << "Starting service with graph: " << graph_name;
-
-    auto schema_result = server::WorkDirManipulator::GetGraphSchema(graph_name);
-    if (!schema_result.ok()) {
-      LOG(ERROR) << "Fail to get graph schema: "
-                 << schema_result.status().error_message() << ", "
-                 << graph_name;
-      return seastar::make_exception_future<query_result>(std::runtime_error(
-          "Fail to get graph schema: " +
-          schema_result.status().error_message() + ", " + graph_name));
-    }
-    auto data_dir = server::WorkDirManipulator::GetDataDirectory(graph_name);
-    if (!data_dir.ok()) {
-      LOG(ERROR) << "Fail to get data directory: "
-                 << data_dir.status().error_message();
-      return seastar::make_exception_future<query_result>(std::runtime_error(
-          "Fail to get data directory: " + data_dir.status().error_message()));
-    }
-    {
-      std::lock_guard<std::mutex> lock(mtx_);
-      auto& db = gs::GraphDB::get();
-      LOG(INFO) << "Update service running on graph:" << graph_name;
-      auto& schema_value = schema_result.value();
-      // use the previous thread num
-      auto thread_num = db.SessionNum();
-      db.Close();
-      if (!db.Open(schema_value, data_dir.value(), thread_num).ok()) {
-        LOG(ERROR) << "Fail to load graph from data directory: "
-                   << data_dir.value();
-        return seastar::make_exception_future<query_result>(std::runtime_error(
-            "Fail to load graph from data directory: " + data_dir.value()));
-      }
-      server::WorkDirManipulator::SetRunningGraph(graph_name);
-    }
-
-    LOG(INFO) << "Successfully started service with graph: " << graph_name;
-
-    return seastar::make_ready_future<query_result>(
-        "Successfully start service");
   } catch (std::exception& e) {
     LOG(ERROR) << "Fail to Start service: ";
     return seastar::make_exception_future<query_result>(
         std::runtime_error(e.what()));
   }
+
+  auto schema_result = server::WorkDirManipulator::GetGraphSchema(graph_name);
+  if (!schema_result.ok()) {
+    LOG(ERROR) << "Fail to get graph schema: "
+               << schema_result.status().error_message() << ", " << graph_name;
+    return seastar::make_exception_future<query_result>(std::runtime_error(
+        "Fail to get graph schema: " + schema_result.status().error_message() +
+        ", " + graph_name));
+  }
+  auto& schema_value = schema_result.value();
+  auto data_dir = server::WorkDirManipulator::GetDataDirectory(graph_name);
+  if (!data_dir.ok()) {
+    LOG(ERROR) << "Fail to get data directory: "
+               << data_dir.status().error_message();
+    return seastar::make_exception_future<query_result>(std::runtime_error(
+        "Fail to get data directory: " + data_dir.status().error_message()));
+  }
+  auto data_dir_value = data_dir.value();
+
+  // First Stop query_handler's actors.
+
+  auto& hqps_service = HQPSService::get();
+  return hqps_service.stop_query_actors().then([this, graph_name, schema_value,
+                                                data_dir_value, &hqps_service] {
+    LOG(INFO) << "Successfully stopped query handler";
+
+    {
+      std::lock_guard<std::mutex> lock(mtx_);
+      auto& db = gs::GraphDB::get();
+      LOG(INFO) << "Update service running on graph:" << graph_name;
+
+      // use the previous thread num
+      auto thread_num = db.SessionNum();
+      db.Close();
+      if (!db.Open(schema_value, data_dir_value, thread_num).ok()) {
+        LOG(ERROR) << "Fail to load graph from data directory: "
+                   << data_dir_value;
+        return seastar::make_exception_future<query_result>(std::runtime_error(
+            "Fail to load graph from data directory: " + data_dir_value));
+      }
+      server::WorkDirManipulator::SetRunningGraph(graph_name);
+    }
+    hqps_service.start_query_actors();  // start on a new scope.
+    LOG(INFO) << "Successfully restart query actors";
+    LOG(INFO) << "Successfully started service with graph: " << graph_name;
+    return seastar::make_ready_future<query_result>(
+        "Successfully start service");
+  });
 }
 
 // get service status
