@@ -2223,7 +2223,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some("John".to_string().into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2270,7 +2270,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some("John".to_string().into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2326,7 +2326,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some(dyn_param.into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2366,26 +2366,22 @@ mod test {
         assert_eq!(
             scan.idx_predicate.unwrap(),
             pb::IndexPredicate {
-                or_predicates: vec![
-                    pb::index_predicate::AndPredicate {
-                        predicates: vec![pb::index_predicate::Triplet {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Key("name".into())),
-                            }),
-                            value: Some("John".to_string().into()),
-                            cmp: None,
-                        }]
-                    },
-                    pb::index_predicate::AndPredicate {
-                        predicates: vec![pb::index_predicate::Triplet {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Key("name".into())),
-                            }),
-                            value: Some("Josh".to_string().into()),
-                            cmp: None,
-                        }]
-                    }
-                ]
+                or_predicates: vec![pb::index_predicate::AndPredicate {
+                    predicates: vec![pb::index_predicate::Triplet {
+                        key: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Key("name".into())),
+                        }),
+                        value: Some(
+                            common_pb::Value {
+                                item: Some(common_pb::value::Item::StrArray(common_pb::StringArray {
+                                    item: vec!["John".to_string(), "Josh".to_string()].into(),
+                                })),
+                            }
+                            .into()
+                        ),
+                        cmp: common_pb::Logical::Within as i32,
+                    }]
+                }]
             }
         );
     }
