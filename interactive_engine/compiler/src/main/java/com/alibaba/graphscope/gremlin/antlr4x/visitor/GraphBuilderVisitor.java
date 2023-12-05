@@ -614,6 +614,25 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                         builder.count(builder.variable((String) null)));
     }
 
+    @Override
+    public GraphBuilder visitTraversalMethod_dedup(
+            GremlinGSParser.TraversalMethod_dedupContext ctx) {
+        String[] tagArray = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
+        List<String> dedupTags = Lists.newArrayList();
+        if (tagArray.length == 0) {
+            dedupTags.add(null);
+        } else {
+            for (String tag : tagArray) {
+                dedupTags.add(tag);
+            }
+        }
+        List<RexNode> dedupByKeys =
+                dedupTags.stream()
+                        .map(k -> convertDedupByCtx(ctx.traversalMethod_dedupby(), k))
+                        .collect(Collectors.toList());
+        return builder.dedupBy(dedupByKeys);
+    }
+
     public GraphBuilder getGraphBuilder() {
         return this.builder;
     }
@@ -683,6 +702,36 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                                     .get(0));
         }
         return Pair.with(rex, null);
+    }
+
+    private RexNode convertDedupByCtx(
+            GremlinGSParser.TraversalMethod_dedupbyContext byCtx, @Nullable String tag) {
+        if (byCtx == null) {
+            return builder.variable(tag);
+        } else if (byCtx.stringLiteral() != null) {
+            return builder.variable(
+                    tag, GenericLiteralVisitor.getStringLiteral(byCtx.stringLiteral()));
+        } else if (byCtx.traversalToken() != null) {
+            T token =
+                    TraversalEnumParser.parseTraversalEnumFromContext(
+                            T.class, byCtx.traversalToken());
+            return builder.variable(tag, token.getAccessor());
+        } else if (byCtx.nestedTraversal() != null) {
+            RexNode rex =
+                    convertExprToPair(
+                                    new NestedTraversalVisitor(this.builder, tag)
+                                            .visitNestedTraversal(byCtx.nestedTraversal()))
+                            .getValue0();
+            if (rex instanceof RexCall) {
+                throw new UnsupportedEvalException(
+                        byCtx.nestedTraversal().getClass(),
+                        "rex " + rex + " is unsupported yet in dedup by");
+            }
+            return rex;
+        } else {
+            throw new UnsupportedEvalException(
+                    byCtx.getClass(), byCtx.getText() + " is unsupported yet");
+        }
     }
 
     private List<RexNode> convertOrderByCtx(GremlinGSParser.TraversalMethod_orderbyContext byCtx) {

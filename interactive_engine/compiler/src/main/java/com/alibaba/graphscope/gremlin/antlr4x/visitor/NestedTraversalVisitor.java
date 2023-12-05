@@ -49,6 +49,8 @@ public class NestedTraversalVisitor extends GremlinGSBaseVisitor<RexNode> {
         RelNode commonRel = parentBuilder.peek();
         nestedBuilder.push(commonRel);
         if (tag != null) {
+            // isAppend is set to false, the variable is the only column the sub query can have
+            // access to
             nestedBuilder.project(nestedBuilder.variable(tag));
         }
         GraphBuilderVisitor visitor = new GraphBuilderVisitor(nestedBuilder);

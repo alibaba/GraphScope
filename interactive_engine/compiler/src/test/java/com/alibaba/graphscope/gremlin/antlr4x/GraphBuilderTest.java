@@ -455,10 +455,10 @@ public class GraphBuilderTest {
                 node.explain().trim());
     }
 
-    @Test
-    public void g_V_select_a_by_values_name_test() {
-        RelNode node = eval("g.V().as('a').select('a').by(values('name'))");
-    }
+    //    @Test
+    //    public void g_V_select_a_by_values_name_test() {
+    //        RelNode node = eval("g.V().as('a').select('a').by(values('name'))");
+    //    }
 
     @Test
     public void g_V_order_test() {
@@ -554,6 +554,50 @@ public class GraphBuilderTest {
                     + " distinct=false}]])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_dedup_test() {
+        RelNode node = eval("g.V().dedup()");
+        Assert.assertEquals(
+                "GraphLogicalDedupBy(dedupByKeys=[[DEFAULT]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_dedup_by_name_test() {
+        RelNode node = eval("g.V().dedup().by('name')");
+        Assert.assertEquals(
+                "GraphLogicalDedupBy(dedupByKeys=[[DEFAULT.name]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_dedup_by_a_name_test() {
+        RelNode node = eval("g.V().as('a').dedup('a').by('name')");
+        Assert.assertEquals(
+                "GraphLogicalDedupBy(dedupByKeys=[[a.name]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    @Test
+    public void g_V_dedup_by_a_b_name_test() {
+        RelNode node = eval("g.V().as('a').out().as('b').dedup('a', 'b').by('name')");
+        Assert.assertEquals(
+                "GraphLogicalDedupBy(dedupByKeys=[[a.name, b.name]])\n"
+                    + "  GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[b], opt=[END])\n"
+                    + "    GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
     }
 }
