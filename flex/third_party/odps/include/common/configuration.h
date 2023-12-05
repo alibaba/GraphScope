@@ -119,9 +119,7 @@ class AliyunAccount : public Account {
   AliyunAccount(std::string access_id, std::string access_key)
       : Account(ACCOUNT_ALIYUN, access_id, access_key) {}
 
-  virtual bool IsValid() const override {
-    return id.size() != 0 && key.size() != 0;
-  }
+  bool IsValid() const override { return id.size() != 0 && key.size() != 0; }
 };
 
 class AppAccount : public Account {
@@ -133,9 +131,7 @@ class AppAccount : public Account {
   AppAccount(const std::string& access_id, const std::string& access_key)
       : Account(ACCOUNT_APPLICATION, access_id, access_key) {}
 
-  virtual bool IsValid() const override {
-    return id.size() != 0 && key.size() != 0;
-  }
+  bool IsValid() const override { return id.size() != 0 && key.size() != 0; }
 };
 
 class StsToken : public Account {
@@ -144,7 +140,7 @@ class StsToken : public Account {
   StsToken(const Account& account) : Account(ACCOUNT_STS, account.GetToken()) {}
   StsToken(const std::string& stsToken) : Account(ACCOUNT_STS, stsToken) {}
 
-  virtual bool IsValid() const override { return token.size() != 0; }
+  bool IsValid() const override { return token.size() != 0; }
 };
 
 typedef std::shared_ptr<AppAccount> AppAccountPtr;

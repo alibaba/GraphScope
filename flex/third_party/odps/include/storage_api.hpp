@@ -764,7 +764,6 @@ inline void Client::GetReadSession(const SessionReq& request,
       }
       response.status_ = Status::FAIL;
     }
-
   } catch (nlohmann::detail::exception& e) {
     ODPS_LOG_ERROR("Fail to parse json body: %s\n", e.what());
     response.status_ = Status::FAIL;
@@ -908,7 +907,6 @@ inline void Client::CreateWriteSession(const TableBatchWriteReq& request,
         response.error_message_ = resp_json["Message"].get<std::string>();
       }
     }
-
   } catch (nlohmann::detail::exception& e) {
     ODPS_LOG_ERROR("Fail to parse json body: %s\n", e.what());
     response.status_ = Status::FAIL;
@@ -966,7 +964,6 @@ inline void Client::GetWriteSession(const SessionReq& request,
         response.error_message_ = resp_json["Message"].get<std::string>();
       }
     }
-
   } catch (nlohmann::detail::exception& e) {
     ODPS_LOG_ERROR("Fail to parse json body: %s\n", e.what());
     response.status_ = Status::FAIL;
@@ -1041,7 +1038,6 @@ inline void Client::WriteRows(
         response.error_message_ = resp_json["Message"].get<std::string>();
       }
     }
-
   } catch (nlohmann::detail::exception& e) {
     ODPS_LOG_ERROR("Fail to parse json body: %s\n", e.what());
     response.status_ = Status::FAIL;
