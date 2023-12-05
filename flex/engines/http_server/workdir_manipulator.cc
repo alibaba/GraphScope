@@ -861,7 +861,12 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     const nlohmann::json& json) {
   LOG(INFO) << "Generate procedure: " << json.dump();
   auto codegen_bin = gs::find_codegen_bin();
-  auto work_directory = std::string(server::CodegenProxy::DEFAULT_CODEGEN_DIR);
+  auto temp_codegen_directory =
+      std::string(server::CodegenProxy::DEFAULT_CODEGEN_DIR);
+  // mkdir -p temp_codegen_directory
+  if (!std::filesystem::exists(temp_codegen_directory)) {
+    std::filesystem::create_directory(temp_codegen_directory);
+  }
   // dump json["query"] to file.
   auto query = json["query"].get<std::string>();
   auto name = json["name"].get<std::string>();
@@ -869,9 +874,9 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   auto bounded_graph = json["bound_graph"].get<std::string>();
   std::string query_file;
   if (type == "cypher" || type == "CYPHER") {
-    query_file = work_directory + "/" + name + ".cypher";
+    query_file = temp_codegen_directory + "/" + name + ".cypher";
   } else if (type == "CPP" || type == "cpp") {
-    query_file = work_directory + "/" + name + ".cpp";
+    query_file = temp_codegen_directory + "/" + name + ".cpp";
   } else {
     return seastar::make_exception_future<seastar::sstring>(
         "Procedure type is not supported: " + type);
@@ -902,7 +907,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   auto schema_path = GetGraphSchemaPath(bounded_graph);
   auto engine_config = get_engine_config_path();
 
-  return CodegenProxy::CallCodegenCmd(query_file, name, work_directory,
+  return CodegenProxy::CallCodegenCmd(query_file, name, temp_codegen_directory,
                                       output_dir, schema_path, engine_config,
                                       codegen_bin)
       .then_wrapped([name, output_dir](auto&& f) {
