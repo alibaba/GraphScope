@@ -14,6 +14,7 @@ option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
 option(USE_MMAPALLOC "Whether to use mmap allocator." OFF)
+option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
@@ -103,6 +104,10 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nloh
                          "please run `git submodule update --init` to download third_party")
 endif()
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
+
+if (BUILD_ODPS_FRAGMENT_LOADER)
+    include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
+endif()
 
 add_subdirectory(utils)
 add_subdirectory(codegen)
