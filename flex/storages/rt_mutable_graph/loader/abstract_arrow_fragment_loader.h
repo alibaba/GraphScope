@@ -237,16 +237,16 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   ~AbstractArrowFragmentLoader() {}
 
   void AddVerticesRecordBatch(
-      label_t v_label_id, const std::vector<std::string>& v_files,
+      label_t v_label_id, const std::vector<std::string>& input_paths,
       std::function<std::shared_ptr<IRecordBatchSupplier>(
           label_t, const std::string&, const LoadingConfig&)>
           supplier_creator);
 
   // Add edges in record batch to output_parsed_edges, output_ie_degrees and
   // output_oe_degrees.
-  void addEdgesRecordBatch(
+  void AddEdgesRecordBatch(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
-      const std::vector<std::string>& filenames,
+      const std::vector<std::string>& input_paths,
       std::function<std::shared_ptr<IRecordBatchSupplier>(
           label_t, label_t, label_t, const std::string&, const LoadingConfig&)>
           supplier_creator);

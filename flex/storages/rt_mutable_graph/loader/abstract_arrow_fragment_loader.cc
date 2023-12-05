@@ -236,7 +236,7 @@ void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
   VLOG(10) << "Finish init vertices for label " << v_label_name;
 }
 
-void AbstractArrowFragmentLoader::addEdgesRecordBatch(
+void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
     label_t src_label_i, label_t dst_label_i, label_t edge_label_i,
     const std::vector<std::string>& filenames,
     std::function<std::shared_ptr<IRecordBatchSupplier>(

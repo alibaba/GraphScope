@@ -21,7 +21,7 @@
 namespace gs {
 
 void LoaderFactory::Init() {
-  // get env VINEYARD_OTHER_IO_ADAPTORS
+  // get env FLEX_OTHER_LOADERS
   if (getenv("FLEX_OTHER_LOADERS")) {
     auto other_loaders = getenv("FLEX_OTHER_LOADERS");
     std::vector<std::string> adaptors;

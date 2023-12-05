@@ -514,7 +514,7 @@ void ODPSFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
     }
   };
 
-  AbstractArrowFragmentLoader::addEdgesRecordBatch(
+  AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       src_label_i, dst_label_i, edge_label_i, table_paths, lambda);
 }
 
