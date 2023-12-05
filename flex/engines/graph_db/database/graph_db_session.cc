@@ -157,7 +157,9 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
 
     LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_
               << "] retry - " << i << " / " << MAX_RETRY;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    if (i + 1 < MAX_RETRY) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
     decoder.reset(str_data, str_len);
     result_buffer.clear();
