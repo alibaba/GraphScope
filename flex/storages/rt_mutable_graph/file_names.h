@@ -16,6 +16,7 @@
 #define GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 
 #include <fcntl.h>
+#include <linux/version.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -79,6 +80,7 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     LOG(ERROR) << "file not exists: " << src;
     return;
   }
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 3, 0)
   size_t len = std::filesystem::file_size(src);
   int src_fd = open(src.c_str(), O_RDONLY);
   bool creat = false;
@@ -107,8 +109,30 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     }
     len -= ret;
   } while (len > 0 && ret > 0);
+
   close(src_fd);
   close(dst_fd);
+#else
+  bool creat = false;
+  if (!std::filesystem::exists(dst)) {
+    creat = true;
+  }
+  std::filesystem::copy_file(src, dst,
+                             std::filesystem::copy_options::overwrite_existing);
+  if (creat) {
+    std::filesystem::perms readWritePermission =
+        std::filesystem::perms::owner_read |
+        std::filesystem::perms::owner_write;
+    std::error_code errorCode;
+    std::filesystem::permissions(dst, readWritePermission,
+                                 std::filesystem::perm_options::add, errorCode);
+    if (errorCode) {
+      LOG(INFO) << "Failed to set read/write permission for file: " << dst
+                << " " << errorCode.message() << std::endl;
+    }
+  }
+
+#endif
 }
 
 inline std::string schema_path(const std::string& work_dir) {
