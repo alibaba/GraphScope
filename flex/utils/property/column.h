@@ -312,6 +312,12 @@ class TypedColumn<std::string_view> : public ColumnBase {
     return AnyConverter<std::string_view>::type;
   }
 
+  void set_value(size_t idx, const std::string& val) {
+    assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
+    size_t offset = pos_.fetch_add(val.size());
+    extra_buffer_.set(idx - basic_size_, offset, val);
+  }
+
   void set_value(size_t idx, const std::string_view& val) {
     assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
     size_t offset = pos_.fetch_add(val.size());

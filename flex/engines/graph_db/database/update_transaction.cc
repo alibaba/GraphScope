@@ -164,7 +164,7 @@ static size_t get_offset(
   }
   return std::numeric_limits<size_t>::max();
 }
-
+// Add a new edge
 bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
                                 label_t dst_label, const Any& dst,
                                 label_t edge_label, const Any& value) {
@@ -708,35 +708,8 @@ void UpdateTransaction::batch_commit(UpdateBatch& batch) {
     bool dst_flag = graph_.get_lid(dst_label, dst, dst_lid);
 
     if (src_flag && dst_flag) {
-      auto oe = graph_.get_outgoing_edges_mut(src_label, src_lid, dst_label,
-                                              edge_label);
-      while (oe != nullptr && oe->is_valid()) {
-        if (oe->get_neighbor() == dst_lid) {
-          oe->set_data(prop, timestamp_);
-          src_flag = false;
-          break;
-        }
-        oe->next();
-      }
-      auto ie = graph_.get_incoming_edges_mut(dst_label, dst_lid, src_label,
-                                              edge_label);
-      while (ie != nullptr && ie->is_valid()) {
-        if (ie->get_neighbor() == src_lid) {
-          dst_flag = false;
-          ie->set_data(prop, timestamp_);
-          break;
-        }
-        ie->next();
-      }
-      if ((!src_flag) || (!dst_flag)) {
-      } else {
-        grape::InArchive arc;
-        arc << prop;
-
-        grape::OutArchive out_arc(std::move(arc));
-        graph_.IngestEdge(src_label, src_lid, dst_label, dst_lid, edge_label,
-                          timestamp_, out_arc, alloc_);
-      }
+      graph_.UpdateEdge(src_label, src_lid, dst_label, dst_lid, edge_label,
+                        timestamp_, prop, alloc_);
     }
   }
   auto& arc = batch.GetArc();
