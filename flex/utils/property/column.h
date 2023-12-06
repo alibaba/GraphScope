@@ -144,7 +144,7 @@ class TypedColumn : public ColumnBase {
     }
   }
 
-  PropertyType type() const override { return AnyConverter<T>::type; }
+  PropertyType type() const override { return AnyConverter<T>::type(); }
 
   void set_value(size_t index, const T& val) {
     assert(index >= basic_size_ && index < basic_size_ + extra_size_);
@@ -309,7 +309,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   }
 
   PropertyType type() const override {
-    return AnyConverter<std::string_view>::type;
+    return AnyConverter<std::string_view>::type();
   }
 
   void set_value(size_t idx, const std::string_view& val) {

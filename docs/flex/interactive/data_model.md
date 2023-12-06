@@ -67,7 +67,22 @@ property_type:
   primitive_type: DT_STRING
 ```
 
-Please note that we currently do not support the use of string data type for properties on edges.
+(TBD) Please note that we currently do not support the use of string data type for properties on edges.
+
+### VarChar
+
+For string type, despite the primitive `DT_STRING`, we also provide the `VarChar` data type. Similar to `VARCHAR` in SQL,
+`VarChar` is a used to store character strings of variable length. User need to specify the maximum length for `VarChar`.
+The value of `max_length` should be less than `65536`.
+
+```yaml
+property_type:
+  var_char:
+    max_length: 128
+```
+
+`VarChar` has better performance compared to `DT_STRING`, since ......
+
 
 ### Array Types
 

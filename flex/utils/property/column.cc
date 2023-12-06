@@ -37,7 +37,7 @@ class TypedEmptyColumn : public ColumnBase {
   size_t size() const override { return 0; }
   void resize(size_t size) override {}
 
-  PropertyType type() const override { return AnyConverter<T>::type; }
+  PropertyType type() const override { return AnyConverter<T>::type(); }
 
   void set_value(size_t index, const T& val) {}
 
@@ -92,7 +92,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<StringEmptyColumn>();
     } else {
       LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type);
+                 << static_cast<int>(type.type_enum);
       return nullptr;
     }
   } else {
@@ -118,7 +118,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<StringMapColumn<uint8_t>>(strategy);
     } else {
       LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type);
+                 << static_cast<int>(type.type_enum);
       return nullptr;
     }
   }

@@ -30,6 +30,10 @@ class Schema {
   // How many built-in plugins are there.
   // Currently only one builtin plugin, SERVER_APP is supported.
   static constexpr uint8_t RESERVED_PLUGIN_NUM = 1;
+  static constexpr const char* PRIMITIVE_TYPE_KEY = "primitive_type";
+  static constexpr const char* VAR_CHAR_KEY = "var_char";
+  static constexpr const int32_t DEFAULT_VAR_CHAR_LENGTH = 128;
+
   using label_type = label_t;
   Schema();
   ~Schema();

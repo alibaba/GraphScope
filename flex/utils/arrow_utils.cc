@@ -16,31 +16,31 @@
 
 namespace gs {
 std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
-  switch (type) {
-  case PropertyType::kBool:
+  if (type == PropertyType::bool_()) {
     return arrow::boolean();
-  case PropertyType::kInt32:
+  } else if (type == PropertyType::int32()) {
     return arrow::int32();
-  case PropertyType::kInt64:
+  } else if (type == PropertyType::int64()) {
     return arrow::int64();
-  case PropertyType::kUInt32:
+  } else if (type == PropertyType::uint32()) {
     return arrow::uint32();
-  case PropertyType::kUInt64:
+  } else if (type == PropertyType::uint64()) {
     return arrow::uint64();
-  case PropertyType::kDouble:
+  } else if (type == PropertyType::double_()) {
     return arrow::float64();
-  case PropertyType::kFloat:
+  } else if (type == PropertyType::float_()) {
     return arrow::float32();
-  case PropertyType::kDate:
+  } else if (type == PropertyType::date()) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
-  case PropertyType::kString:
+  } else if (type == PropertyType::string()) {
     return arrow::large_utf8();
-  case PropertyType::kStringMap:
+  } else if (type == PropertyType::string_map()) {
     return arrow::large_utf8();
-  case PropertyType::kEmpty:
+  } else if (type == PropertyType::empty()) {
     return arrow::null();
-  default:
-    LOG(FATAL) << "Unexpected property type: " << static_cast<int>(type);
+  } else {
+    LOG(FATAL) << "Unexpected property type: "
+               << static_cast<int>(type.type_enum);
     return nullptr;
   }
 }

@@ -495,7 +495,7 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
   IdIndexer() : hasher_() { reset_to_empty_state(); }
   ~IdIndexer() {}
 
-  PropertyType get_type() const override { return AnyConverter<KEY_T>::type; }
+  PropertyType get_type() const override { return AnyConverter<KEY_T>::type(); }
 
   void _add(const Any& oid) override {
     assert(get_type() == oid.type);
@@ -928,7 +928,7 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       const std::string& snapshot_dir,
                       const std::string& work_dir) {
   size_t size = input.keys_.size();
-  lf.init(AnyConverter<KEY_T>::type);
+  lf.init(AnyConverter<KEY_T>::type());
   lf.keys_->open(filename + ".keys", "", work_dir);
   lf.keys_->resize(size);
   _move_data<KEY_T, INDEX_T>()(input.keys_, *lf.keys_, size);

@@ -435,6 +435,36 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
   }
 }
 
+static bool parse_primitive_property_type(YAML::Node node,
+                                          std::string& prop_type_str) {
+  if (!node) {
+    LOG(ERROR) << "property_type is not set properly";
+    return false;
+  }
+  if (node[Schema::PRIMITIVE_TYPE_KEY]) {
+    if (!get_scalar(node, Schema::PRIMITIVE_TYPE_KEY, prop_type_str)) {
+      LOG(ERROR) << "Type of primitive property is not specified...";
+      return false;
+    }
+  } else {
+    LOG(ERROR) << "Unknown type of property is not specified...";
+    return false;
+  }
+  return true;
+}
+
+static bool parse_var_char_type(YAML::Node node, int32_t var_char_max_len) {
+  if (node[Schema::VAR_CHAR_KEY]) {
+    int32_t max_length = Schema::DEFAULT_VAR_CHAR_LENGTH;
+    if (node[Schema::VAR_CHAR_KEY]["max_length"]) {
+      max_length = node[Schema::VAR_CHAR_KEY]["max_length"].as<int32_t>();
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
 static bool parse_vertex_properties(YAML::Node node,
                                     const std::string& label_name,
                                     std::vector<PropertyType>& types,
@@ -454,7 +484,7 @@ static bool parse_vertex_properties(YAML::Node node,
   for (int i = 0; i < prop_num; ++i) {
     std::string prop_type_str, strategy_str, prop_name_str;
     if (!get_scalar(node[i], "property_name", prop_name_str)) {
-      LOG(ERROR) << "name of vertex-" << label_name << " prop-" << i - 1
+      LOG(ERROR) << "Name of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
@@ -464,29 +494,30 @@ static bool parse_vertex_properties(YAML::Node node,
       return false;
     }
     auto prop_type_node = node[i]["property_type"];
-    if (prop_type_node["primitive_type"]) {
-      if (!get_scalar(prop_type_node, "primitive_type", prop_type_str)) {
-        LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
-                   << " is not specified...";
+
+    if (!parse_primitive_property_type(prop_type_node, prop_type_str)) {
+      int32_t max_length = Schema::DEFAULT_VAR_CHAR_LENGTH;
+      if (!parse_var_char_type(prop_type_node, max_length)) {
+        LOG(ERROR) << "Fail to parse property type of vertex-" << label_name
+                   << " prop-" << i << " ...";
         return false;
+      } else {
+        VLOG(10) << "Parse VarChar type of vertex-" << label_name << " prop-"
+                 << i << ", max length: " << max_length;
+        types.emplace_back(PropertyType::varchar(max_length));
       }
-    } else if (prop_type_node["date"]) {
-      auto format = prop_type_node["date"].as<std::string>();
-      prop_type_str = DT_DATE;
     } else {
-      LOG(ERROR) << "Unknown type of vertex-" << label_name << " prop-" << i - 1
-                 << " is not specified...";
-      return false;
+      types.push_back(StringToPropertyType(prop_type_str));
     }
-    {
-      if (node[i]["x_csr_params"]) {
-        get_scalar(node[i]["x_csr_params"], "storage_strategy", strategy_str);
-      }
+
+    if (node[i]["x_csr_params"]) {
+      get_scalar(node[i]["x_csr_params"], "storage_strategy", strategy_str);
     }
-    types.push_back(StringToPropertyType(prop_type_str));
     strategies.push_back(StringToStorageStrategy(strategy_str));
-    VLOG(10) << "prop-" << i - 1 << " name: " << prop_name_str
-             << " type: " << prop_type_str << " strategy: " << strategy_str;
+
+    VLOG(10) << "Vertex Label " << label_name << " prop-" << i - 1
+             << " name: " << prop_name_str << " type: " << prop_type_str
+             << " strategy: " << strategy_str;
     names.push_back(prop_name_str);
   }
 
@@ -511,30 +542,36 @@ static bool parse_edge_properties(YAML::Node node,
 
   for (int i = 0; i < prop_num; ++i) {
     std::string prop_type_str, strategy_str, prop_name_str;
-    if (node[i]["property_type"]) {
-      if (!get_scalar(node[i]["property_type"], "primitive_type",
-                      prop_type_str)) {
-        if (!get_scalar(node[i]["property_type"], "date", prop_type_str)) {
-          LOG(ERROR) << "Fail to parse property type of edge-" << label_name
-                     << " prop-" << i << " ...";
-          return false;
-        } else {
-          prop_type_str = DT_DATE;
-        }
-      }
-    } else {
-      LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
+    if (!get_scalar(node[i], "property_name", prop_name_str)) {
+      LOG(ERROR) << "Name of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
-    if (!get_scalar(node[i], "property_name", prop_name_str)) {
-      LOG(ERROR) << "name of edge-" << label_name << " prop-" << i - 1
+    if (!node[i]["property_type"]) {
+      LOG(ERROR) << "type of Edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
+    }
+    auto prop_type_node = node[i]["property_type"];
+    if (!parse_primitive_property_type(prop_type_node, prop_type_str)) {
+      int32_t max_length = Schema::DEFAULT_VAR_CHAR_LENGTH;
+      if (!parse_var_char_type(prop_type_node, max_length)) {
+        LOG(ERROR) << "Fail to parse property type of Edge-" << label_name
+                   << " prop-" << i << " ...";
+        return false;
+      } else {
+        VLOG(10) << "Parse VarChar type of Edge-" << label_name << " prop-" << i
+                 << ", max length: " << max_length;
+        types.emplace_back(PropertyType::varchar(max_length));
+      }
+    } else {
+      types.push_back(StringToPropertyType(prop_type_str));
     }
 
     types.push_back(StringToPropertyType(prop_type_str));
     names.push_back(prop_name_str);
+    VLOG(10) << "Edge Label" << label_name << " prop-" << i - 1
+             << " name: " << prop_name_str << " type: " << prop_type_str;
   }
 
   return true;
