@@ -43,8 +43,8 @@ struct MutableNbr {
   ~MutableNbr() = default;
 
   const EDATA_T& get_data() const { return data; }
-  const vid_t& get_neighbor() const { return neighbor; }
-  const timestamp_t get_timestamp() const { return timestamp.load(); }
+  vid_t get_neighbor() const { return neighbor; }
+  timestamp_t get_timestamp() const { return timestamp.load(); }
 
   void set_data(const EDATA_T& val) { data = val; }
   void set_neighbor(vid_t neighbor) { neighbor = neighbor; }
@@ -65,8 +65,8 @@ struct MutableNbr<grape::EmptyType> {
   void set_neighbor(vid_t neighbor) { neighbor = neighbor; }
   void set_timestamp(timestamp_t ts) { timestamp.store(ts); }
   const grape::EmptyType& get_data() const { return data; }
-  const vid_t& get_neighbor() const { return neighbor; }
-  const timestamp_t get_timestamp() const { return timestamp.load(); }
+  vid_t get_neighbor() const { return neighbor; }
+  timestamp_t get_timestamp() const { return timestamp.load(); }
   vid_t neighbor;
   union {
     std::atomic<timestamp_t> timestamp;
@@ -110,10 +110,8 @@ class MutableNbrSlice<std::string_view> {
 
     MutableColumnNbr(const nbr_t* ptr, const StringColumn& column)
         : ptr_(ptr), column_(column) {}
-    const vid_t& get_neighbor() const { return ptr_->neighbor; }
-    const std::string_view get_data() const {
-      return column_.get_view(ptr_->data);
-    }
+    vid_t get_neighbor() const { return ptr_->neighbor; }
+    std::string_view get_data() const { return column_.get_view(ptr_->data); }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
 
     const MutableColumnNbr& operator*() const { return *this; }
@@ -213,9 +211,9 @@ class MutableNbrSliceMut<std::string_view> {
 
     MutableColumnNbr(nbr_t* ptr, StringColumn& column)
         : ptr_(ptr), column_(column) {}
-    const vid_t neighbor() const { return ptr_->neighbor; }
-    const std::string_view data() { return column_.get_view(ptr_->data); }
-    const vid_t& get_neighbor() const { return ptr_->neighbor; }
+    vid_t neighbor() const { return ptr_->neighbor; }
+    std::string_view data() { return column_.get_view(ptr_->data); }
+    vid_t get_neighbor() const { return ptr_->neighbor; }
     const std::string_view get_data() const {
       return column_.get_view(ptr_->data);
     }
