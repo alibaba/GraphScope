@@ -199,8 +199,8 @@ message IndexPredicate {
          common.Value const = 2;
          common.DynamicParam param = 3;
     }
-    // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq) may be required
-    common.None cmp = 4;
+    // TODO(longbin) More comparators (gt, ge, lt, le, ne) other than equivalence (eq or within) may be required
+    common.Logical cmp = 4;
   }
   // A collection of `Triplet` that forms a logical **AND** of all `Predicate`s.
   message AndPredicate {
