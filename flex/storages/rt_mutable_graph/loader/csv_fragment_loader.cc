@@ -434,7 +434,9 @@ static void append_edges(
                                    arrow::StringArray>::value ||
                       std::is_same<arrow_array_type,
                                    arrow::LargeStringArray>::value) {
-          std::get<2>(parsed_edges[cur_ind++]) = data->GetView(j);
+          auto str = data->GetView(j);
+          std::string_view str_view(str.data(), str.size());
+          std::get<2>(parsed_edges[cur_ind++]) = str_view;
         } else {
           std::get<2>(parsed_edges[cur_ind++]) = data->Value(j);
         }
@@ -896,7 +898,8 @@ void CSVFragmentLoader::addEdges(label_t src_label_i, label_t dst_label_i,
       basic_fragment_loader_.AddNoPropEdgeBatch<std::string>(
           src_label_i, dst_label_i, edge_label_i);
     } else {
-      LOG(FATAL) << "Unsupported edge property type.";
+      addEdgesImpl<std::string_view>(src_label_i, dst_label_i, edge_label_i,
+                                     filenames);
     }
   } else if (property_types[0] == PropertyType::kDouble) {
     if (filenames.empty()) {

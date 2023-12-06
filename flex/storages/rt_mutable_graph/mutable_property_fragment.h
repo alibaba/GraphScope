@@ -22,6 +22,7 @@
 
 #include "flex/storages/rt_mutable_graph/schema.h"
 
+#include "flex/storages/rt_mutable_graph/dual_csr.h"
 #include "flex/storages/rt_mutable_graph/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/arrow_utils.h"
@@ -42,6 +43,10 @@ class MutablePropertyFragment {
   void IngestEdge(label_t src_label, vid_t src_lid, label_t dst_label,
                   vid_t dst_lid, label_t edge_label, timestamp_t ts,
                   grape::OutArchive& arc, Allocator& alloc);
+
+  void UpdateEdge(label_t src_label, vid_t src_lid, label_t dst_label,
+                  vid_t dst_lid, label_t edge_label, timestamp_t ts,
+                  const Any& arc, Allocator& alloc);
 
   void Open(const std::string& work_dir);
 
@@ -105,6 +110,7 @@ class MutablePropertyFragment {
   Schema schema_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;
   std::vector<MutableCsrBase*> ie_, oe_;
+  std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
 
   size_t vertex_label_num_, edge_label_num_;
