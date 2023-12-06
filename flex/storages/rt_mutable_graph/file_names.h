@@ -16,7 +16,6 @@
 #define GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 
 #include <fcntl.h>
-#include <linux/version.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
