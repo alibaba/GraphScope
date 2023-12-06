@@ -80,7 +80,7 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     LOG(ERROR) << "file not exists: " << src;
     return;
   }
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 3, 0)
+#if USE_COPY_FILE_RANGE
   size_t len = std::filesystem::file_size(src);
   int src_fd = open(src.c_str(), O_RDONLY);
   bool creat = false;
