@@ -35,9 +35,6 @@ template class MutableCsr<uint32_t>;
 template class SingleMutableCsr<Date>;
 template class MutableCsr<Date>;
 
-template class SingleMutableCsr<std::string>;
-template class MutableCsr<std::string>;
-
 template class SingleMutableCsr<int64_t>;
 template class MutableCsr<int64_t>;
 

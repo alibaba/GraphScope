@@ -46,7 +46,10 @@ struct MutableNbr {
   vid_t get_neighbor() const { return neighbor; }
   timestamp_t get_timestamp() const { return timestamp.load(); }
 
-  void set_data(const EDATA_T& val) { data = val; }
+  void set_data(const EDATA_T& val, timestamp_t ts) {
+    data = val;
+    timestamp.store(ts);
+  }
   void set_neighbor(vid_t neighbor) { neighbor = neighbor; }
   void set_timestamp(timestamp_t ts) { timestamp.store(ts); }
 
@@ -61,7 +64,9 @@ struct MutableNbr<grape::EmptyType> {
   MutableNbr(const MutableNbr& rhs)
       : neighbor(rhs.neighbor), timestamp(rhs.timestamp.load()) {}
   ~MutableNbr() = default;
-  void set_data(const grape::EmptyType&) {}
+  void set_data(const grape::EmptyType&, timestamp_t ts) {
+    timestamp.store(ts);
+  }
   void set_neighbor(vid_t neighbor) { neighbor = neighbor; }
   void set_timestamp(timestamp_t ts) { timestamp.store(ts); }
   const grape::EmptyType& get_data() const { return data; }
@@ -219,11 +224,9 @@ class MutableNbrSliceMut<std::string_view> {
     }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
     size_t get_index() const { return ptr_->data; }
-    void set_data(const std::string& data) {
-      column_.set_value(ptr_->data, data);
-    }
-    void set_data(const std::string_view& sw) {
+    void set_data(const std::string_view& sw, timestamp_t ts) {
       column_.set_value(ptr_->data, sw);
+      ptr_->timestamp.store(ts);
     }
     void set_neighbor(vid_t neighbor) { ptr_->neighbor = neighbor; }
 
@@ -570,13 +573,9 @@ class TypedMutableCsrEdgeIter<std::string_view>
   timestamp_t get_timestamp() const override { return cur_.get_timestamp(); }
 
   void set_data(const Any& value, timestamp_t ts) override {
-    auto index = cur_.get_index();
-    cur_.set_timestamp(ts);
-    cur_.set_data(value.AsStringView());
+    cur_.set_data(value.AsStringView(), ts);
   }
-
   size_t get_index() const { return cur_.get_index(); }
-
   void set_timestamp(timestamp_t ts) { cur_.set_timestamp(ts); }
 
   MutableCsrEdgeIterBase& operator+=(size_t offset) override {
@@ -1119,7 +1118,7 @@ class MutableCsr<std::string_view>
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
                    Allocator& alloc) override {
     auto row_id = column_idx_.load();
-    put_edge(src, dst, row_id, ts, alloc);
+    put_edge(src, dst, row_id - 1, ts, alloc);
   }
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
@@ -1414,20 +1413,21 @@ class SingleMutableCsr<std::string_view>
   const MutableNbr<std::string_view>& get_edge(vid_t i) const {
     nbr_.neighbor = nbr_list_[i].neighbor;
     nbr_.timestamp.store(nbr_list_[i].timestamp.load());
-    nbr_.data = column_.get_view(nbr_list_[i].get_neighbor());
+    nbr_.data = column_.get_view(nbr_list_[i].data);
     return nbr_;
   }
 
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
                    Allocator& alloc) override {
     auto row_id = column_idx_.load();
-    put_edge(src, dst, row_id, ts, alloc);
+    put_edge(src, dst, row_id - 1, ts, alloc);
   }
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
                         timestamp_t ts, Allocator& alloc) override {
     std::string_view sw;
     arc >> sw;
+
     auto row_id = column_idx_.fetch_add(1);
     column_.set_value(row_id, sw);
     put_edge(src, dst, row_id, ts, alloc);
