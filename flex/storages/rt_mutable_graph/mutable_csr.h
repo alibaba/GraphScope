@@ -82,18 +82,18 @@ struct MutableNbr<grape::EmptyType> {
 template <typename EDATA_T>
 class MutableNbrSlice {
  public:
-  using nbr_t = MutableNbr<EDATA_T>;
-  using nbr_t_ptr = const MutableNbr<EDATA_T>*;
+  using const_nbr_t = MutableNbr<EDATA_T>;
+  using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
   MutableNbrSlice() = default;
   ~MutableNbrSlice() = default;
 
   void set_size(int size) { size_ = size; }
   int size() const { return size_; }
 
-  void set_begin(const nbr_t* ptr) { ptr_ = ptr; }
+  void set_begin(const_nbr_ptr_t ptr) { ptr_ = ptr; }
 
-  const nbr_t* begin() const { return ptr_; }
-  const nbr_t* end() const { return ptr_ + size_; }
+  const_nbr_ptr_t begin() const { return ptr_; }
+  const_nbr_ptr_t end() const { return ptr_ + size_; }
 
   static MutableNbrSlice empty() {
     MutableNbrSlice ret;
@@ -103,7 +103,7 @@ class MutableNbrSlice {
   }
 
  private:
-  const nbr_t* ptr_;
+  const_nbr_ptr_t ptr_;
   int size_;
 };
 
@@ -111,9 +111,10 @@ template <>
 class MutableNbrSlice<std::string_view> {
  public:
   struct MutableColumnNbr {
-    using nbr_t = MutableNbr<size_t>;
+    using const_nbr_t = MutableNbr<size_t>;
+    using const_nbr_ptr_t = const MutableNbr<size_t>*;
 
-    MutableColumnNbr(const nbr_t* ptr, const StringColumn& column)
+    MutableColumnNbr(const_nbr_ptr_t ptr, const StringColumn& column)
         : ptr_(ptr), column_(column) {}
     vid_t get_neighbor() const { return ptr_->neighbor; }
     std::string_view get_data() const { return column_.get_view(ptr_->data); }
@@ -149,11 +150,11 @@ class MutableNbrSlice<std::string_view> {
       return ptr_ < nbr.ptr_;
     }
 
-    mutable const nbr_t* ptr_;
+    mutable const_nbr_ptr_t ptr_;
     const StringColumn& column_;
   };
-  using nbr_t = const MutableColumnNbr;
-  using nbr_t_ptr = const MutableColumnNbr;
+  using const_nbr_t = const MutableColumnNbr;
+  using const_nbr_ptr_t = const MutableColumnNbr;
   MutableNbrSlice(const StringColumn& column) : column_(column) {}
   ~MutableNbrSlice() = default;
   void set_size(int size) { slice_.set_size(size); }
@@ -184,7 +185,7 @@ template <typename EDATA_T>
 class MutableNbrSliceMut {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
-  using nbr_t_ptr = MutableNbr<EDATA_T>*;
+  using nbr_ptr_t = MutableNbr<EDATA_T>*;
   MutableNbrSliceMut() = default;
   ~MutableNbrSliceMut() = default;
 
@@ -258,7 +259,7 @@ class MutableNbrSliceMut<std::string_view> {
     nbr_t* ptr_;
     StringColumn & column_;
   };
-  using nbr_t_ptr = MutableColumnNbr;
+  using nbr_ptr_t = MutableColumnNbr;
 
   MutableNbrSliceMut(StringColumn& column) : column_(column) {}
   ~MutableNbrSliceMut() = default;
@@ -490,7 +491,7 @@ class MutableCsrBase {
 
 template <typename EDATA_T>
 class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
-  using nbr_t_ptr = typename MutableNbrSlice<EDATA_T>::nbr_t_ptr;
+  using const_nbr_ptr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_ptr_t;
 
  public:
   explicit TypedMutableCsrConstEdgeIter(const MutableNbrSlice<EDATA_T>& slice)
@@ -515,8 +516,8 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
   size_t size() const override { return end_ - cur_; }
 
  private:
-  nbr_t_ptr cur_;
-  nbr_t_ptr end_;
+  const_nbr_ptr_t cur_;
+  const_nbr_ptr_t end_;
 };
 
 template <typename EDATA_T>
@@ -559,7 +560,7 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
 template <>
 class TypedMutableCsrEdgeIter<std::string_view>
     : public MutableCsrEdgeIterBase {
-  using nbr_t_ptr = typename MutableNbrSliceMut<std::string_view>::nbr_t_ptr;
+  using nbr_ptr_t = typename MutableNbrSliceMut<std::string_view>::nbr_ptr_t;
 
  public:
   explicit TypedMutableCsrEdgeIter(MutableNbrSliceMut<std::string_view> slice)
@@ -590,8 +591,8 @@ class TypedMutableCsrEdgeIter<std::string_view>
   bool is_valid() const override { return cur_ != end_; }
 
  private:
-  nbr_t_ptr cur_;
-  nbr_t_ptr end_;
+  nbr_ptr_t cur_;
+  nbr_ptr_t end_;
 };
 
 template <typename EDATA_T>

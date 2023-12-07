@@ -20,24 +20,29 @@
 #include <glog/logging.h>
 
 namespace gs {
-class test_string_edge_property {
+class TestStringEdgeProperty {
  public:
-  test_string_edge_property(GraphDB& db)
+  TestStringEdgeProperty(GraphDB& db)
       : db_(db),
         src_label_(db.graph().schema().get_vertex_label_id("person")),
         dst_label_(db.graph().schema().get_vertex_label_id("software")),
         edge_label_(db.graph().schema().get_edge_label_id("created")) {}
   void test() {
-    test_get_edge(db_.graph());
-    test_get_graphview();
-    test_add_edge();
+    int64_t src, dst;
+    src = 1;
+    test_get_edge(src);
+    src = 1;
+    dst = 3;
+    test_get_graph_view(src, dst);
+    src = 3;
+    dst = 5;
+    test_add_edge(src, dst);
   }
-  void test_get_edge(gs::MutablePropertyFragment& graph) {
+  void test_get_edge(int64_t oid) {
     vid_t src_lid;
-    int64_t oid = 1;
-    CHECK(graph.get_lid(src_label_, oid, src_lid));
-    auto oe =
-        graph.get_outgoing_edges(src_label_, src_lid, dst_label_, edge_label_);
+    CHECK(db_.graph().get_lid(src_label_, oid, src_lid));
+    auto oe = db_.graph().get_outgoing_edges(src_label_, src_lid, dst_label_,
+                                             edge_label_);
     CHECK(oe != nullptr) << "Got nullptr oe\n";
     CHECK(oe->get_data().type == PropertyType::kString)
         << "Inconsistent type, Except: string, Got " << oe->get_data().type;
@@ -45,11 +50,10 @@ class test_string_edge_property {
     LOG(INFO) << "Finish test get edge\n";
   }
 
-  void test_get_graphview() {
+  void test_get_graph_view(int64_t src, int64_t dst) {
     auto txn = db_.GetReadTransaction();
     vid_t src_lid, dst_lid;
-    int64_t src = 1;
-    int64_t dst = 3;
+
     CHECK(db_.graph().get_lid(src_label_, src, src_lid));
     CHECK(db_.graph().get_lid(dst_label_, dst, dst_lid));
 
@@ -73,9 +77,7 @@ class test_string_edge_property {
     LOG(INFO) << "Finish test get GraphView\n";
   }
 
-  void test_add_edge() {
-    int64_t src = 3;
-    int64_t dst = 5;
+  void test_add_edge(int64_t src, int64_t dst) {
     {
       auto txn = db_.GetSingleVertexInsertTransaction();
       std::string name = "test-3";
@@ -136,7 +138,7 @@ int main(int argc, char** argv) {
   t0 += grape::GetCurrentTime();
 
   LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
-  gs::test_string_edge_property(db).test();
+  gs::TestStringEdgeProperty(db).test();
 
   return 0;
 }
