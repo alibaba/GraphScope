@@ -184,10 +184,14 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
   } else if (any.type == PropertyType::Int32()) {
     value->set_i32(any.value.i);
   } else if (any.type == PropertyType::UInt32()) {
+    // FIXME(zhanglei): temporarily use i32, fix this after common.proto is
+    // changed
     value->set_i32(any.value.ui);
   } else if (any.type == PropertyType::Int64()) {
     value->set_i64(any.value.l);
   } else if (any.type == PropertyType::UInt64()) {
+    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+    // changed
     value->set_i64(any.value.ul);
   } else if (any.type == PropertyType::Double()) {
     value->set_f64(any.value.db);
