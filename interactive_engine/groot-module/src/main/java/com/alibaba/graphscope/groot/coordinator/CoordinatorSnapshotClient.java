@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 // send rpc to CoordinatorSnapshotService in Store,  to report minimum snapshot current used
 public class CoordinatorSnapshotClient extends RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(CoordinatorSnapshotClient.class);
-    private CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub;
+    private final CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub;
 
     public CoordinatorSnapshotClient(ManagedChannel channel) {
         super(channel);
@@ -29,8 +29,7 @@ public class CoordinatorSnapshotClient extends RpcClient {
                 SynchronizeMinQuerySnapshotIdRequest.newBuilder().setSnapshotId(snapshotId).build();
         SynchronizeMinQuerySnapshotIdResponse res = stub.synchronizeMinQuerySnapshotId(req);
         if (!res.getSuccess()) {
-            throw new RuntimeException(
-                    "Synchronize snapshot to store failed: {} " + res.getErrMsg());
+            throw new RuntimeException("Synchronize snapshot to store failed: " + res.getErrMsg());
         }
     }
 }

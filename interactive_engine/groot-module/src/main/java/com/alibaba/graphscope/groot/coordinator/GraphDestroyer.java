@@ -25,9 +25,9 @@ import org.slf4j.LoggerFactory;
 public class GraphDestroyer {
     private static final Logger logger = LoggerFactory.getLogger(GraphDestroyer.class);
 
-    private Configs configs;
-    private CuratorFramework curator;
-    private LogService logService;
+    private final Configs configs;
+    private final CuratorFramework curator;
+    private final LogService logService;
 
     public GraphDestroyer(Configs configs, CuratorFramework curator, LogService logService) {
         this.configs = configs;
@@ -43,10 +43,9 @@ public class GraphDestroyer {
         }
         String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
         Stat stat = this.curator.checkExists().forPath(zkRoot);
-        if (stat == null) {
-            return;
+        if (stat != null) {
+            this.curator.delete().deletingChildrenIfNeeded().forPath(zkRoot);
+            logger.info("zk destroyed");
         }
-        this.curator.delete().deletingChildrenIfNeeded().forPath(zkRoot);
-        logger.info("zk destroyed");
     }
 }

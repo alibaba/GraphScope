@@ -410,9 +410,9 @@ class SinkOp {
         }
         vertex->mutable_label()->set_id(label);
         // set properties.
-        auto column_ptrs = column_ptrs[label];
-        for (auto j = 0; j < column_ptrs.size(); ++j) {
-          auto& column_ptr = column_ptrs[j];
+        auto columns = column_ptrs[label];
+        for (auto j = 0; j < columns.size(); ++j) {
+          auto& column_ptr = columns[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = vertex->add_properties();
@@ -450,9 +450,9 @@ class SinkOp {
           vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
           // set properties.
-          auto column_ptrs = column_ptrs[label];
-          for (auto j = 0; j < column_ptrs.size(); ++j) {
-            auto& column_ptr = column_ptrs[j];
+          auto columns = column_ptrs[label];
+          for (auto j = 0; j < columns.size(); ++j) {
+            auto& column_ptr = columns[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = vertex->add_properties();

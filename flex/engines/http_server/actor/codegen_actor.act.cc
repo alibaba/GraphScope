@@ -18,6 +18,7 @@
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/codegen_proxy.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 #include <seastar/core/print.hh>
 

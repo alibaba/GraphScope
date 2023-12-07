@@ -27,7 +27,6 @@ use ir_common::{KeyId, OneOrMany};
 use ir_common::{LabelId, NameOrId};
 
 use crate::error::{IrError, IrResult};
-use crate::glogue::DynIter;
 use crate::plan::logical::NodeId;
 use crate::JsonIO;
 

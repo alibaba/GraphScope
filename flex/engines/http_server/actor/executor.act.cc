@@ -19,6 +19,7 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "nlohmann/json.hpp"
 
 #include <seastar/core/print.hh>
@@ -44,8 +45,6 @@ seastar::future<query_result> executor::run_graph_db_query(
                  .Eval(param.content);
   if (!ret.ok()) {
     LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-    return seastar::make_exception_future<query_result>(
-        seastar::sstring(ret.status().error_message()));
   }
   auto result = ret.value();
   seastar::sstring content(result.data(), result.size());

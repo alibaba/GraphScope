@@ -24,7 +24,7 @@ import io.grpc.ManagedChannel;
 
 public class SchemaClient extends RpcClient {
 
-    private SchemaGrpc.SchemaBlockingStub stub;
+    private final SchemaGrpc.SchemaBlockingStub stub;
 
     public SchemaClient(ManagedChannel channel) {
         super(channel);
@@ -46,8 +46,7 @@ public class SchemaClient extends RpcClient {
                         .build();
         SubmitBatchDdlResponse submitBatchDdlResponse = stub.submitBatchDdl(request);
         if (submitBatchDdlResponse.getSuccess()) {
-            long ddlSnapshotId = submitBatchDdlResponse.getDdlSnapshotId();
-            return ddlSnapshotId;
+            return submitBatchDdlResponse.getDdlSnapshotId();
         } else {
             throw new DdlException(submitBatchDdlResponse.getMsg());
         }

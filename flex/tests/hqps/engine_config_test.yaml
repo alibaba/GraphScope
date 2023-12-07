@@ -27,7 +27,7 @@ compiler:
     gremlin_connector:
       disabled: true
       port: 8182
-  query_timeout: 30000
+  query_timeout: 40000
 http_service:
   default_listen_address: localhost
   admin_port: 7777

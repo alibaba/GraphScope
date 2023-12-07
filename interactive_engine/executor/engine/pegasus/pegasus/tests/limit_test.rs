@@ -18,7 +18,7 @@
 extern crate lazy_static;
 
 use pegasus::api::{
-    Collect, CorrelatedSubTask, HasAny, Iteration, Limit, Map, Merge, Sink, SortLimit, SortLimitBy,
+    Collect, CorrelatedSubTask, Count, HasAny, Iteration, Limit, Map, Merge, Sink, SortLimit, SortLimitBy,
 };
 use pegasus::JobConf;
 
@@ -33,6 +33,28 @@ lazy_static! {
     ]
     .into_iter()
     .collect();
+}
+
+// worker 1 finished before worker 0 start
+#[test]
+fn limit_filtermap_flatmap_count_test() {
+    let mut conf = JobConf::new("limit_filtermap_flatmap_count_test");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        |input, output| {
+            input
+                .input_from(1..50000000u32)?
+                .limit(1000000)?
+                .flat_map(|x| Ok(vec![x + 1].into_iter()))?
+                .count()?
+                .sink_into(output)
+        }
+    })
+    .expect("build job failure");
+
+    while let Some(v) = result.next() {
+        println!("get {}", v.unwrap());
+    }
 }
 
 // the most common case with early-stop

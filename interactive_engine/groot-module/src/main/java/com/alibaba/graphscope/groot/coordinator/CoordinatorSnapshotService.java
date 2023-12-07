@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 public class CoordinatorSnapshotService
         extends CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceImplBase {
     private static final Logger logger = LoggerFactory.getLogger(CoordinatorSnapshotService.class);
-    private GarbageCollectManager garbageCollectManager;
+    private final GarbageCollectManager garbageCollectManager;
 
     public CoordinatorSnapshotService(GarbageCollectManager garbageCollectManager) {
         this.garbageCollectManager = garbageCollectManager;

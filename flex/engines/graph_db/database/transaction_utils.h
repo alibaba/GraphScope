@@ -16,6 +16,7 @@
 #ifndef GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 #define GRAPHSCOPE_DATABASE_TRANSACTION_UTILS_H_
 
+#include "flex/engines/graph_db/database/wal.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/types.h"
 #include "glog/logging.h"
@@ -104,6 +105,59 @@ inline label_t deserialize_oid(const MutablePropertyFragment& graph,
   deserialize_field(arc, oid);
   return label;
 }
+
+class UpdateBatch {
+ public:
+  UpdateBatch() { arc_.Resize(sizeof(WalHeader)); }
+  UpdateBatch(const UpdateBatch& other) = delete;
+
+  ~UpdateBatch() {
+    arc_.Clear();
+    update_vertices_.clear();
+    update_edges_.clear();
+  }
+  void clear() {
+    arc_.Clear();
+    update_vertices_.clear();
+    update_edges_.clear();
+    arc_.Resize(sizeof(WalHeader));
+  }
+  void AddVertex(label_t label, Any&& oid, std::vector<Any>&& props) {
+    arc_ << static_cast<uint8_t>(0) << label;
+    serialize_field(arc_, oid);
+    for (auto& prop : props) {
+      serialize_field(arc_, prop);
+    }
+    update_vertices_.emplace_back(label, std::move(oid), std::move(props));
+  }
+
+  void AddEdge(label_t src_label, Any&& src, label_t dst_label, Any&& dst,
+               label_t edge_label, Any&& prop) {
+    arc_ << static_cast<uint8_t>(1) << src_label;
+    serialize_field(arc_, src);
+    arc_ << dst_label;
+    serialize_field(arc_, dst);
+    arc_ << edge_label;
+    serialize_field(arc_, prop);
+    update_edges_.emplace_back(src_label, std::move(src), dst_label,
+                               std::move(dst), edge_label, std::move(prop));
+  }
+  const std::vector<std::tuple<label_t, Any, std::vector<Any>>>&
+  GetUpdateVertices() const {
+    return update_vertices_;
+  }
+  const std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>&
+  GetUpdateEdges() const {
+    return update_edges_;
+  }
+  grape::InArchive& GetArc() { return arc_; }
+
+ private:
+  std::vector<std::tuple<label_t, Any, std::vector<Any>>> update_vertices_;
+  std::vector<std::tuple<label_t, Any, label_t, Any, label_t, Any>>
+      update_edges_;
+  grape::InArchive arc_;
+};
 
 }  // namespace gs
 

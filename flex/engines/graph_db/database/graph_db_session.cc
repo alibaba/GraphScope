@@ -67,8 +67,13 @@ SingleEdgeInsertTransaction GraphDBSession::GetSingleEdgeInsertTransaction() {
 
 UpdateTransaction GraphDBSession::GetUpdateTransaction() {
   uint32_t ts = db_.version_manager_.acquire_update_timestamp();
-  return UpdateTransaction(db_.graph_, alloc_, logger_, db_.version_manager_,
-                           ts);
+  return UpdateTransaction(db_.graph_, alloc_, work_dir_, logger_,
+                           db_.version_manager_, ts);
+}
+
+bool GraphDBSession::BatchUpdate(UpdateBatch& batch) {
+  GetUpdateTransaction().batch_commit(batch);
+  return true;
 }
 
 const MutablePropertyFragment& GraphDBSession::graph() const {

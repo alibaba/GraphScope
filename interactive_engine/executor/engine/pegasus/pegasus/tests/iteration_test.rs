@@ -13,7 +13,9 @@
 //! See the License for the specific language governing permissions and
 //! limitations under the License.
 //
-use pegasus::api::{CorrelatedSubTask, Count, EmitKind, Fold, IterCondition, Iteration, Map, Reduce, Sink};
+use pegasus::api::{
+    CorrelatedSubTask, Count, EmitKind, Fold, IterCondition, Iteration, Limit, Map, Reduce, Sink,
+};
 use pegasus::JobConf;
 
 #[test]
@@ -117,6 +119,71 @@ fn iterate_emit_before_x_r_map_x_test() {
     results.sort();
     expected.sort();
     assert_eq!(results, expected);
+}
+
+#[test]
+fn aggregate_iterate_count_test() {
+    let mut conf = JobConf::new("aggregate_iterate_count_test");
+    conf.set_workers(2);
+    let mut result_stream = pegasus::run(conf, || {
+        |input, output| {
+            input
+                .input_from(0..10000u32)?
+                .limit(1000)?
+                .filter_map(|i| Ok(Some(i)))?
+                .iterate_emit_until(IterCondition::max_iters(1), EmitKind::Before, |start| {
+                    Ok(start
+                        .flat_map(|x| Ok(vec![x + 1].into_iter()))?
+                        .repartition(|x| Ok((x % 32) as u64)))
+                })?
+                .flat_map(|x| Ok(vec![x + 1].into_iter()))?
+                .count()?
+                .sink_into(output)
+        }
+    })
+    .expect("build job failure");
+
+    let mut count = 0;
+    let mut value = 0;
+    while let Some(Ok(d)) = result_stream.next() {
+        count += 1;
+        value = d;
+    }
+    assert_eq!(count, 1);
+    assert_eq!(value, 2000);
+}
+
+#[test]
+fn iterate_aggregate_count_test() {
+    let mut conf = JobConf::new("aggregate_iterate_count_test");
+    conf.set_workers(2);
+    let mut result_stream = pegasus::run(conf, || {
+        |input, output| {
+            input
+                .input_from(0..10000u32)?
+                .limit(1000)?
+                .repartition(|x| Ok((x % 32) as u64))
+                .filter_map(|i| Ok(Some(i)))?
+                .iterate_emit_until(IterCondition::max_iters(1), EmitKind::Before, |start| {
+                    Ok(start
+                        .flat_map(|x| Ok(vec![x + 1].into_iter()))?
+                        .aggregate())
+                })?
+                .flat_map(|x| Ok(vec![x + 1].into_iter()))?
+                .count()?
+                .sink_into(output)
+        }
+    })
+    .expect("build job failure");
+
+    let mut count = 0;
+    let mut value = 0;
+    while let Some(Ok(d)) = result_stream.next() {
+        count += 1;
+        value = d;
+    }
+    assert_eq!(count, 1);
+    assert_eq!(value, 2000);
 }
 
 #[test]

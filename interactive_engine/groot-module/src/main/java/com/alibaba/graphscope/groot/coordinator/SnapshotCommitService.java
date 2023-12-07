@@ -24,7 +24,7 @@ import java.util.List;
 
 public class SnapshotCommitService extends SnapshotCommitGrpc.SnapshotCommitImplBase {
 
-    private SnapshotManager snapshotManager;
+    private final SnapshotManager snapshotManager;
 
     public SnapshotCommitService(SnapshotManager snapshotManager) {
         this.snapshotManager = snapshotManager;

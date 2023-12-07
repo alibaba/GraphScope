@@ -27,7 +27,7 @@ public class RpcUtils {
     public static final Logger logger = LoggerFactory.getLogger(RpcUtils.class);
 
     public static Executor createGrpcExecutor(int threadCount) {
-        logger.info("create grpc executor, thread count [" + threadCount + "]");
+        logger.debug("create grpc executor, thread count [" + threadCount + "]");
         return new ForkJoinPool(
                 threadCount,
                 new ForkJoinPool.ForkJoinWorkerThreadFactory() {

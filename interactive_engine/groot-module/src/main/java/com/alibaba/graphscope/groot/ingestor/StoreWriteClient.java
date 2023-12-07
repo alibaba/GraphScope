@@ -33,7 +33,7 @@ import java.util.List;
 public class StoreWriteClient extends RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(StoreWriteClient.class);
 
-    private StoreWriteGrpc.StoreWriteStub stub;
+    private final StoreWriteGrpc.StoreWriteStub stub;
 
     public StoreWriteClient(ManagedChannel channel) {
         super(channel);
