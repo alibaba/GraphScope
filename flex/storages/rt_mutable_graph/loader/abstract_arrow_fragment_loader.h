@@ -204,7 +204,9 @@ static void append_edges(
                                    arrow::StringArray>::value ||
                       std::is_same<arrow_array_type,
                                    arrow::LargeStringArray>::value) {
-          std::get<2>(parsed_edges[cur_ind++]) = data->GetView(j);
+          auto str = data->GetView(j);
+          std::string_view str_view(str.data(), str.size());
+          std::get<2>(parsed_edges[cur_ind++]) = str_view;
         } else {
           std::get<2>(parsed_edges[cur_ind++]) = data->Value(j);
         }
