@@ -164,7 +164,7 @@ static size_t get_offset(
   }
   return std::numeric_limits<size_t>::max();
 }
-// Add a new edge
+
 bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
                                 label_t dst_label, const Any& dst,
                                 label_t edge_label, const Any& value) {
