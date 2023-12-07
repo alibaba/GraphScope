@@ -80,14 +80,14 @@ class BasicFragmentLoader {
         src_label_name, dst_label_name, edge_label_name);
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
-    ie_[index] = create_typed_csr<EDATA_T>(ie_strategy);
-    oe_[index] = create_typed_csr<EDATA_T>(oe_strategy);
-    ie_[index]->batch_init(
-        ie_prefix(src_label_name, dst_label_name, edge_label_name),
-        tmp_dir(work_dir_), {});
-    oe_[index]->batch_init(
+    dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+    ie_[index] = dual_csr_list_[index]->GetInCsr();
+    oe_[index] = dual_csr_list_[index]->GetOutCsr();
+    dual_csr_list_[index]->BatchInit(
         oe_prefix(src_label_name, dst_label_name, edge_label_name),
-        tmp_dir(work_dir_), {});
+        ie_prefix(src_label_name, dst_label_name, edge_label_name),
+        edata_prefix(src_label_name, dst_label_name, edge_label_name),
+        tmp_dir(work_dir_), {}, {});
   }
 
   template <typename EDATA_T>
@@ -109,26 +109,22 @@ class BasicFragmentLoader {
         src_label_name, dst_label_name, edge_label_name);
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
-    auto ie_csr = create_typed_csr<EDATA_T>(ie_strategy);
-    auto oe_csr = create_typed_csr<EDATA_T>(oe_strategy);
+
+    auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+    dual_csr_list_[index] = dual_csr;
+    ie_[index] = dual_csr_list_[index]->GetInCsr();
+    oe_[index] = dual_csr_list_[index]->GetOutCsr();
     CHECK(ie_degree.size() == dst_indexer.size());
     CHECK(oe_degree.size() == src_indexer.size());
-
-    ie_csr->batch_init(
-        ie_prefix(src_label_name, dst_label_name, edge_label_name),
-        tmp_dir(work_dir_), ie_degree);
-    oe_csr->batch_init(
+    dual_csr->BatchInit(
         oe_prefix(src_label_name, dst_label_name, edge_label_name),
-        tmp_dir(work_dir_), oe_degree);
-
+        ie_prefix(src_label_name, dst_label_name, edge_label_name),
+        edata_prefix(src_label_name, dst_label_name, edge_label_name),
+        tmp_dir(work_dir_), oe_degree, ie_degree);
     for (auto& edge : edges) {
-      ie_csr->batch_put_edge(std::get<1>(edge), std::get<0>(edge),
-                             std::get<2>(edge));
-      oe_csr->batch_put_edge(std::get<0>(edge), std::get<1>(edge),
+      dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
                              std::get<2>(edge));
     }
-    ie_[index] = ie_csr;
-    oe_[index] = oe_csr;
     VLOG(10) << "Finish adding edge batch of size: " << edges.size();
   }
 
@@ -147,6 +143,7 @@ class BasicFragmentLoader {
   size_t vertex_label_num_, edge_label_num_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;
   std::vector<MutableCsrBase*> ie_, oe_;
+  std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
 };
 }  // namespace gs

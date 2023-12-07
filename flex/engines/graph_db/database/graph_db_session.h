@@ -37,7 +37,7 @@ void put_argment(gs::Encoder& encoder, const query::Argument& argment);
 
 class GraphDBSession {
  public:
-  static constexpr int32_t MAX_RETRY = 4;
+  static constexpr int32_t MAX_RETRY = 3;
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),

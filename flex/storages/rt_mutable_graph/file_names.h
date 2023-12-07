@@ -192,6 +192,11 @@ inline std::string oe_prefix(const std::string& src_label,
   return "oe_" + src_label + "_" + edge_label + "_" + dst_label;
 }
 
+inline std::string edata_prefix(const std::string& src_label,
+                                const std::string& dst_label,
+                                const std::string& edge_label) {
+  return "e_" + src_label + "_" + edge_label + "_" + dst_label + "_data";
+}
 inline std::string vertex_table_prefix(const std::string& label) {
   return "vertex_table_" + label;
 }
