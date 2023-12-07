@@ -228,6 +228,54 @@ void run_graph_tests(httplib::Client& cli, const std::string& graph_name,
     LOG(FATAL) << "Empty response: ";
   }
   LOG(INFO) << "load graph response: " << body;
+  nlohmann::json json_body;
+  std::string job_id;
+  try {
+    json_body = nlohmann::json::parse(body.c_str());
+    job_id = json_body["job_id"];
+    LOG(INFO) << "job_id: " << job_id;
+  } catch (nlohmann::json::parse_error& e) {
+    LOG(FATAL) << "parse load graph response failed: " << e.what();
+  }
+
+  // sleep 2s is enough for the job to finish
+  std::this_thread::sleep_for(std::chrono::seconds(2));
+
+  //----4. get job status-----------------------------------
+  res = cli.Get("/v1/job/" + job_id);
+  if (res->status != 200) {
+    LOG(FATAL) << "get job status failed: " << res->body;
+  }
+  try {
+    json_body = nlohmann::json::parse(res->body.c_str());
+    LOG(INFO) << "job status: " << json_body["status"];
+    if (json_body["status"] != "SUCCESS") {
+      LOG(FATAL) << "job failed: " << res->body;
+    }
+    LOG(INFO) << "job type: " << json_body["type"];
+  } catch (nlohmann::json::parse_error& e) {
+    LOG(FATAL) << "parse get job status response failed: " << e.what();
+  }
+
+  //--5. get All jobs
+  res = cli.Get("/v1/job/");
+  if (res->status != 200) {
+    LOG(FATAL) << "get all jobs failed: " << res->body;
+  }
+  body = res->body;
+  try {
+    json_body = nlohmann::json::parse(body.c_str());
+    LOG(INFO) << "all jobs: " << json_body.dump(2);
+  } catch (nlohmann::json::parse_error& e) {
+    LOG(FATAL) << "parse get all jobs response failed: " << e.what();
+  }
+  //---6. try to cancel job
+  res = cli.Delete("/v1/job/" + job_id);
+  if (res->status == 200) {
+    LOG(INFO) << "cancel job success: " << res->body;
+  } else {
+    LOG(INFO) << "cancel job failed: " << res->body;
+  }
 }
 
 // Create the procedure and call the procedure.
@@ -304,15 +352,15 @@ void run_procedure_test(httplib::Client& client, httplib::Client& query_client,
     CHECK(res->status == 200) << "delete procedure failed: " << res->body;
   }
   //-----6. call procedure on deleted procedure------------------------------
-  // Should return success, since the procedure will be deleted when restart
-  // the service.
+  // Should return fail.
   if (procedures.size() > 0) {
     auto proc_name = get_file_name_from_path(procedures[0]);
     auto call_proc_payload =
         generate_call_procedure_payload(graph_name, proc_name);
     res = query_client.Post("/v1/query", call_proc_payload, "text/plain");
-    CHECK(res->status == 200) << "call procedure failed: " << res->body
-                              << ", for query: " << call_proc_payload;
+    CHECK(res->status != 200) << "call procedure should failed: " << res->body
+                              << ", for query: " << call_proc_payload
+                              << ",but : " << res->status << ", " << res->body;
   }
   //-----7. get procedure by name--------------------------------------------
   // get the second procedure by name
@@ -428,7 +476,11 @@ int main(int argc, char** argv) {
                      procedure_paths);
   LOG(INFO) << "run procedure tests done";
   run_get_node_status(cli);
-  test_delete_graph(cli, graph_name);
+  // test_delete_graph(cli, graph_name);
+  auto res = cli.Delete("/v1/graph/" + graph_name);
+  CHECK(res->status != 200)
+      << "delete a running graph should fail, but: " << res->status
+      << ", body:" << res->body;
   LOG(INFO) << "test delete graph done";
   return 0;
 }
