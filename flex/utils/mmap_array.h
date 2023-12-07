@@ -265,6 +265,11 @@ class mmap_array<std::string_view> {
     memcpy(data_.data() + offset, val.data(), val.size());
   }
 
+  void set(size_t idx, size_t offset, const std::string& val) {
+    items_.set(idx, {offset, static_cast<uint32_t>(val.size())});
+    memcpy(data_.data() + offset, val.data(), val.size());
+  }
+
   std::string_view get(size_t idx) const {
     const string_item& item = items_.get(idx);
     return std::string_view(data_.data() + item.offset, item.length);

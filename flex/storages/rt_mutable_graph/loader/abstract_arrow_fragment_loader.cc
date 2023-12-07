@@ -322,10 +322,11 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
     }
   } else if (property_types[0] == PropertyType::kString) {
     if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<std::string>(
+      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
           src_label_i, dst_label_i, edge_label_i);
     } else {
-      LOG(FATAL) << "Unsupported edge property type.";
+      addEdgesRecordBatchImpl<std::string_view>(
+          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
     }
   } else if (property_types[0] == PropertyType::kDouble) {
     if (filenames.empty()) {
