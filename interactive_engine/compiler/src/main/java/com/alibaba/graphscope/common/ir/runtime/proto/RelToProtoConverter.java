@@ -29,7 +29,6 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.runtime.proto.Utils;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
@@ -117,8 +116,9 @@ public class RelToProtoConverter implements GraphRelShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.PathExpand.Builder pathExpandBuilder =
                 GraphAlgebraPhysical.PathExpand.newBuilder();
-        GraphAlgebraPhysical.EdgeExpand expand = buildEdgeExpand((GraphLogicalExpand)pxd.getExpand());
-        GraphAlgebraPhysical.GetV getV = buildGetV((GraphLogicalGetV)pxd.getGetV());
+        GraphAlgebraPhysical.EdgeExpand expand =
+                buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
+        GraphAlgebraPhysical.GetV getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
         // TODO: may have some fusion of expand and getV. add this rule before
@@ -368,42 +368,56 @@ public class RelToProtoConverter implements GraphRelShuttle {
                 GraphAlgebraPhysical.PhysicalPlan.newBuilder();
 
         RelNode left = join.getLeft();
-        RelVisitor leftVisitor = new RelVisitor() {
-            @Override
-            public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                if (ordinal == 0) {
-                    super.visit(node, ordinal, parent);
-                    leftPlanBuilder.addPlan(
-                            (GraphAlgebraPhysical.PhysicalOpr)
-                                    (((PhysicalNode) node.accept( new GraphRelShuttleWrapper(new RelToProtoConverter(isColumnId, graphConfig)))).getNode()));
-                } else {
-                    throw new UnsupportedOperationException(
-                            "join node should have two children of type "
-                                    + GraphLogicalSource.class
-                                    + ", but is "
-                                    + node.getClass());
-                }
-            }
-        };
+        RelVisitor leftVisitor =
+                new RelVisitor() {
+                    @Override
+                    public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                        if (ordinal == 0) {
+                            super.visit(node, ordinal, parent);
+                            leftPlanBuilder.addPlan(
+                                    (GraphAlgebraPhysical.PhysicalOpr)
+                                            (((PhysicalNode)
+                                                            node.accept(
+                                                                    new GraphRelShuttleWrapper(
+                                                                            new RelToProtoConverter(
+                                                                                    isColumnId,
+                                                                                    graphConfig))))
+                                                    .getNode()));
+                        } else {
+                            throw new UnsupportedOperationException(
+                                    "join node should have two children of type "
+                                            + GraphLogicalSource.class
+                                            + ", but is "
+                                            + node.getClass());
+                        }
+                    }
+                };
         leftVisitor.go(left);
         RelNode right = join.getRight();
-        RelVisitor rightVisitor = new RelVisitor() {
-            @Override
-            public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                if (ordinal == 0) {
-                    super.visit(node, ordinal, parent);
-                    rightPlanBuilder.addPlan(
-                            (GraphAlgebraPhysical.PhysicalOpr)
-                                    (((PhysicalNode) node.accept( new GraphRelShuttleWrapper(new RelToProtoConverter(isColumnId, graphConfig)))).getNode()));
-                } else {
-                    throw new UnsupportedOperationException(
-                            "join node should have two children of type "
-                                    + GraphLogicalSource.class
-                                    + ", but is "
-                                    + node.getClass());
-                }
-            }
-        };
+        RelVisitor rightVisitor =
+                new RelVisitor() {
+                    @Override
+                    public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                        if (ordinal == 0) {
+                            super.visit(node, ordinal, parent);
+                            rightPlanBuilder.addPlan(
+                                    (GraphAlgebraPhysical.PhysicalOpr)
+                                            (((PhysicalNode)
+                                                            node.accept(
+                                                                    new GraphRelShuttleWrapper(
+                                                                            new RelToProtoConverter(
+                                                                                    isColumnId,
+                                                                                    graphConfig))))
+                                                    .getNode()));
+                        } else {
+                            throw new UnsupportedOperationException(
+                                    "join node should have two children of type "
+                                            + GraphLogicalSource.class
+                                            + ", but is "
+                                            + node.getClass());
+                        }
+                    }
+                };
         rightVisitor.go(right);
         joinBuilder.setLeftPlan(leftPlanBuilder);
         joinBuilder.setRightPlan(rightPlanBuilder);

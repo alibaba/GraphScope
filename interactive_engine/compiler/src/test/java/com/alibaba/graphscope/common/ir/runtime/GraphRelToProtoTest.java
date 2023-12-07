@@ -16,14 +16,14 @@ import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.Collections;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder.AggCall;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Collections;
 
 public class GraphRelToProtoTest {
     @Test
@@ -74,7 +74,8 @@ public class GraphRelToProtoTest {
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(expand))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/edge_expand_test.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/edge_expand_test.json"),
+                    plan.explain().trim());
         }
     }
 
@@ -98,11 +99,11 @@ public class GraphRelToProtoTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                    + " opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[x], opt=[VERTEX])",
+                        + " opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[x], opt=[VERTEX])",
                 getV.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
@@ -153,7 +154,8 @@ public class GraphRelToProtoTest {
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/path_expand_test.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/path_expand_test.json"),
+                    plan.explain().trim());
         }
     }
 
@@ -180,7 +182,8 @@ public class GraphRelToProtoTest {
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/project_test.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/project_test.json"),
+                    plan.explain().trim());
         }
     }
 
@@ -208,7 +211,8 @@ public class GraphRelToProtoTest {
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/filter_test.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/filter_test.json"),
+                    plan.explain().trim());
         }
     }
 
@@ -227,17 +231,18 @@ public class GraphRelToProtoTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[x.name], aliases=[name]}],"
-                    + " values=[[{operands=[x], aggFunction=COUNT, alias='$f1',"
-                    + " distinct=false}]])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[x], opt=[VERTEX])",
+                        + " values=[[{operands=[x], aggFunction=COUNT, alias='$f1',"
+                        + " distinct=false}]])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[x], opt=[VERTEX])",
                 aggregate.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/aggregate_test.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/aggregate_test.json"),
+                    plan.explain().trim());
         }
     }
 
@@ -245,22 +250,23 @@ public class GraphRelToProtoTest {
     public void dedup_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         Iterable<AggCall> emptyIterable = Collections::emptyIterator;
-        RelNode dedup = builder.source(
-                new SourceConfig(
-                        GraphOpt.Source.VERTEX,
-                        new LabelConfig(false).addLabel("person"),
-                        "x"))
-                .aggregate(
-                        builder.groupKey(builder.variable("x", "name")), emptyIterable)
-                .build();
+        RelNode dedup =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .aggregate(builder.groupKey(builder.variable("x", "name")), emptyIterable)
+                        .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[x.name], aliases=[name]}],"
                         + " values=[[]])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[x], opt=[VERTEX])",
                 dedup.explain().trim());
-        try (PhysicalBuilder protoBuilder = new GraphRelProtoPhysicalBuilder(
-                getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup))) {
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/dedup_test.json"), plan.explain().trim());
@@ -300,7 +306,8 @@ public class GraphRelToProtoTest {
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(join))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/join_test_1.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/join_test_1.json"),
+                    plan.explain().trim());
         }
     }
 
@@ -322,7 +329,8 @@ public class GraphRelToProtoTest {
                                 new GetVConfig(
                                         GraphOpt.GetV.END,
                                         new LabelConfig(false).addLabel("person"),
-                                        "x", "b"))
+                                        "x",
+                                        "b"))
                         .build();
         RelNode expand2 =
                 builder.source(
@@ -339,7 +347,8 @@ public class GraphRelToProtoTest {
                                 new GetVConfig(
                                         GraphOpt.GetV.START,
                                         new LabelConfig(false).addLabel("person"),
-                                        "x", "d"))
+                                        "x",
+                                        "d"))
                         .build();
         RexNode condition = builder.getJoinCondition(expand1, expand2);
         builder.push(expand1);
@@ -365,7 +374,8 @@ public class GraphRelToProtoTest {
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(join))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/join_test_2.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/join_test_2.json"),
+                    plan.explain().trim());
         }
     }
 

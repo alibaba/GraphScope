@@ -116,10 +116,12 @@ public class ProtoPhysicalBuilder extends RegularPhysicalBuilder<PhysicalOpr> {
     }
 
     private void appendDefaultSink() {
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder = GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.Sink.Builder sinkBuilder = GraphAlgebraPhysical.Sink.newBuilder();
         sinkBuilder.addTags(GraphAlgebraPhysical.Sink.OptTag.newBuilder().build());
-        GraphAlgebra.Sink.SinkTarget.Builder sinkTargetBuilder = GraphAlgebra.Sink.SinkTarget.newBuilder();
+        GraphAlgebra.Sink.SinkTarget.Builder sinkTargetBuilder =
+                GraphAlgebra.Sink.SinkTarget.newBuilder();
         sinkTargetBuilder.setSinkDefault(GraphAlgebra.SinkDefault.newBuilder().build());
         sinkBuilder.setSinkTarget(sinkTargetBuilder);
         oprBuilder.setOpr(

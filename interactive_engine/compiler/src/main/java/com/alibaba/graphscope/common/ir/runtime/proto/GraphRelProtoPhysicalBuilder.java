@@ -49,13 +49,15 @@ import java.util.Objects;
  * is a protobuf message {@code GraphAlgebraPhysical.PhysicalPlan}
  */
 public class GraphRelProtoPhysicalBuilder extends RegularPhysicalBuilder<PhysicalOpr> {
-    private static final Logger logger = LoggerFactory.getLogger(GraphRelProtoPhysicalBuilder.class);
+    private static final Logger logger =
+            LoggerFactory.getLogger(GraphRelProtoPhysicalBuilder.class);
     private final GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder;
 
-    public GraphRelProtoPhysicalBuilder(Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan) {
+    public GraphRelProtoPhysicalBuilder(
+            Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan) {
         super(
                 logicalPlan,
-                        new GraphRelToProtoConverter(irMeta.getSchema().isColumnId(), graphConfig));
+                new GraphRelToProtoConverter(irMeta.getSchema().isColumnId(), graphConfig));
         this.physicalBuilder = GraphAlgebraPhysical.PhysicalPlan.newBuilder();
         initialize();
     }
@@ -114,10 +116,12 @@ public class GraphRelProtoPhysicalBuilder extends RegularPhysicalBuilder<Physica
     }
 
     private void appendDefaultSink() {
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder = GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.Sink.Builder sinkBuilder = GraphAlgebraPhysical.Sink.newBuilder();
         sinkBuilder.addTags(GraphAlgebraPhysical.Sink.OptTag.newBuilder().build());
-        GraphAlgebra.Sink.SinkTarget.Builder sinkTargetBuilder = GraphAlgebra.Sink.SinkTarget.newBuilder();
+        GraphAlgebra.Sink.SinkTarget.Builder sinkTargetBuilder =
+                GraphAlgebra.Sink.SinkTarget.newBuilder();
         sinkTargetBuilder.setSinkDefault(GraphAlgebra.SinkDefault.newBuilder().build());
         sinkBuilder.setSinkTarget(sinkTargetBuilder);
         oprBuilder.setOpr(
