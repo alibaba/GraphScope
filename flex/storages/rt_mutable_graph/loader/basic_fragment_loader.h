@@ -23,11 +23,12 @@
 namespace gs {
 
 template <typename EDATA_T>
-TypedMutableCsrBase<EDATA_T>* create_typed_csr(EdgeStrategy es) {
+TypedMutableCsrBase<EDATA_T>* create_typed_csr(EdgeStrategy es,
+                                               PropertyType edge_property) {
   if (es == EdgeStrategy::kSingle) {
-    return new SingleMutableCsr<EDATA_T>();
+    return new SingleMutableCsr<EDATA_T>(edge_property);
   } else if (es == EdgeStrategy::kMultiple) {
-    return new MutableCsr<EDATA_T>();
+    return new MutableCsr<EDATA_T>(edge_property);
   } else if (es == EdgeStrategy::kNone) {
     return new EmptyCsr<EDATA_T>();
   }
@@ -80,8 +81,12 @@ class BasicFragmentLoader {
         src_label_name, dst_label_name, edge_label_name);
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
-    ie_[index] = create_typed_csr<EDATA_T>(ie_strategy);
-    oe_[index] = create_typed_csr<EDATA_T>(oe_strategy);
+    ie_[index] = create_typed_csr<EDATA_T>(
+        ie_strategy,
+        schema_.get_edge_property(src_label_id, dst_label_id, edge_label_id));
+    oe_[index] = create_typed_csr<EDATA_T>(
+        oe_strategy,
+        schema_.get_edge_property(src_label_id, dst_label_id, edge_label_id));
     ie_[index]->batch_init(
         ie_prefix(src_label_name, dst_label_name, edge_label_name),
         tmp_dir(work_dir_), {});
@@ -109,8 +114,12 @@ class BasicFragmentLoader {
         src_label_name, dst_label_name, edge_label_name);
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
-    auto ie_csr = create_typed_csr<EDATA_T>(ie_strategy);
-    auto oe_csr = create_typed_csr<EDATA_T>(oe_strategy);
+    auto ie_csr = create_typed_csr<EDATA_T>(
+        ie_strategy,
+        schema_.get_edge_property(src_label_id, dst_label_id, edge_label_id));
+    auto oe_csr = create_typed_csr<EDATA_T>(
+        oe_strategy,
+        schema_.get_edge_property(src_label_id, dst_label_id, edge_label_id));
     CHECK(ie_degree.size() == dst_indexer.size());
     CHECK(oe_degree.size() == src_indexer.size());
 

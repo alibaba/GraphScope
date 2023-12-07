@@ -26,23 +26,23 @@
 namespace gs {
 
 inline void serialize_field(grape::InArchive& arc, const Any& prop) {
-  if (prop.type == PropertyType::bool_()) {
+  if (prop.type == PropertyType::Bool()) {
     arc << prop.value.b;
-  } else if (prop.type == PropertyType::int32()) {
+  } else if (prop.type == PropertyType::Int32()) {
     arc << prop.value.i;
-  } else if (prop.type == PropertyType::uint32()) {
+  } else if (prop.type == PropertyType::UInt32()) {
     arc << prop.value.ui;
-  } else if (prop.type == PropertyType::date()) {
+  } else if (prop.type == PropertyType::Date()) {
     arc << prop.value.d.milli_second;
-  } else if (prop.type == PropertyType::string()) {
+  } else if (prop.type == PropertyType::String()) {
     arc << prop.value.s;
-  } else if (prop.type == PropertyType::int64()) {
+  } else if (prop.type == PropertyType::Int64()) {
     arc << prop.value.l;
-  } else if (prop.type == PropertyType::uint64()) {
+  } else if (prop.type == PropertyType::UInt64()) {
     arc << prop.value.ul;
-  } else if (prop.type == PropertyType::double_()) {
+  } else if (prop.type == PropertyType::Double()) {
     arc << prop.value.db;
-  } else if (prop.type == PropertyType::float_()) {
+  } else if (prop.type == PropertyType::Float()) {
     arc << prop.value.f;
   } else {
     LOG(FATAL) << "Unexpected property type";
@@ -50,23 +50,23 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
 }
 
 inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
-  if (prop.type == PropertyType::bool_()) {
+  if (prop.type == PropertyType::Bool()) {
     arc >> prop.value.b;
-  } else if (prop.type == PropertyType::int32()) {
+  } else if (prop.type == PropertyType::Int32()) {
     arc >> prop.value.i;
-  } else if (prop.type == PropertyType::uint32()) {
+  } else if (prop.type == PropertyType::UInt32()) {
     arc >> prop.value.ui;
-  } else if (prop.type == PropertyType::date()) {
+  } else if (prop.type == PropertyType::Date()) {
     arc >> prop.value.d.milli_second;
-  } else if (prop.type == PropertyType::string()) {
+  } else if (prop.type == PropertyType::String()) {
     arc >> prop.value.s;
-  } else if (prop.type == PropertyType::int64()) {
+  } else if (prop.type == PropertyType::Int64()) {
     arc >> prop.value.l;
-  } else if (prop.type == PropertyType::uint64()) {
+  } else if (prop.type == PropertyType::UInt64()) {
     arc >> prop.value.ul;
-  } else if (prop.type == PropertyType::double_()) {
+  } else if (prop.type == PropertyType::Double()) {
     arc >> prop.value.db;
-  } else if (prop.type == PropertyType::float_()) {
+  } else if (prop.type == PropertyType::Float()) {
     arc >> prop.value.f;
   } else {
     LOG(FATAL) << "Unexpected property type";

@@ -179,23 +179,23 @@ void template_set_tuple_value(results::Collection* collection,
 /////Sink Any
 
 void set_any_to_common_value(const Any& any, common::Value* value) {
-  if (any.type == PropertyType::bool_()) {
+  if (any.type == PropertyType::Bool()) {
     value->set_boolean(any.value.b);
-  } else if (any.type == PropertyType::int32()) {
+  } else if (any.type == PropertyType::Int32()) {
     value->set_i32(any.value.i);
-  } else if (any.type == PropertyType::uint32()) {
+  } else if (any.type == PropertyType::UInt32()) {
     value->set_i32(any.value.ui);
-  } else if (any.type == PropertyType::int64()) {
+  } else if (any.type == PropertyType::Int64()) {
     value->set_i64(any.value.l);
-  } else if (any.type == PropertyType::uint64()) {
+  } else if (any.type == PropertyType::UInt64()) {
     value->set_i64(any.value.ul);
-  } else if (any.type == PropertyType::double_()) {
+  } else if (any.type == PropertyType::Double()) {
     value->set_f64(any.value.db);
-  } else if (any.type == PropertyType::float_()) {
+  } else if (any.type == PropertyType::Float()) {
     value->set_f64(any.value.f);
-  } else if (any.type == PropertyType::date()) {
+  } else if (any.type == PropertyType::Date()) {
     value->set_i64(any.value.d.milli_second);
-  } else if (any.type == PropertyType::string()) {
+  } else if (any.type == PropertyType::String()) {
     value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
   } else {
     LOG(WARNING) << "Unexpected property type: "

@@ -77,7 +77,7 @@ The value of `max_length` should be less than `65536`.
 
 ```yaml
 property_type:
-  var_char:
+  varchar:
     max_length: 128
 ```
 

@@ -42,8 +42,8 @@ static constexpr const char* DT_STRING = "DT_STRING";
 static constexpr const char* DT_STRINGMAP = "DT_STRINGMAP";
 static constexpr const char* DT_DATE = "DT_DATE32";
 
-// VAR_CHAR
-static constexpr const char* VAR_CHAR = "VAR_CHAR";
+// VARCHAR
+static constexpr const char* VARCHAR = "VARCHAR";
 
 }  // namespace gs
 

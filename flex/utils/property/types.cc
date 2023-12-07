@@ -48,56 +48,60 @@ const PropertyType PropertyType::kStringMap =
     PropertyType(impl::PropertyTypeImpl::kStringMap);
 
 bool PropertyType::operator==(const PropertyType& other) const {
-  return type_enum == other.type_enum &&
-         additional_type_info.max_length ==
-             other.additional_type_info.max_length;
+  if (type_enum == impl::PropertyTypeImpl::kVarChar &&
+      other.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    return additional_type_info.max_length ==
+           other.additional_type_info.max_length;
+  }
+  return type_enum == other.type_enum;
 }
+
 bool PropertyType::operator!=(const PropertyType& other) const {
   return !(*this == other);
 }
 
 /////////////////////////////// Get Type Instance
 //////////////////////////////////
-PropertyType PropertyType::empty() {
+PropertyType PropertyType::Empty() {
   return PropertyType(impl::PropertyTypeImpl::kEmpty);
 }
-PropertyType PropertyType::bool_() {
+PropertyType PropertyType::Bool() {
   return PropertyType(impl::PropertyTypeImpl::kBool);
 }
-PropertyType PropertyType::uint8() {
+PropertyType PropertyType::UInt8() {
   return PropertyType(impl::PropertyTypeImpl::kUInt8);
 }
-PropertyType PropertyType::uint16() {
+PropertyType PropertyType::UInt16() {
   return PropertyType(impl::PropertyTypeImpl::kUInt16);
 }
-PropertyType PropertyType::int32() {
+PropertyType PropertyType::Int32() {
   return PropertyType(impl::PropertyTypeImpl::kInt32);
 }
-PropertyType PropertyType::uint32() {
+PropertyType PropertyType::UInt32() {
   return PropertyType(impl::PropertyTypeImpl::kUInt32);
 }
-PropertyType PropertyType::float_() {
+PropertyType PropertyType::Float() {
   return PropertyType(impl::PropertyTypeImpl::kFloat);
 }
-PropertyType PropertyType::int64() {
+PropertyType PropertyType::Int64() {
   return PropertyType(impl::PropertyTypeImpl::kInt64);
 }
-PropertyType PropertyType::uint64() {
+PropertyType PropertyType::UInt64() {
   return PropertyType(impl::PropertyTypeImpl::kUInt64);
 }
-PropertyType PropertyType::double_() {
+PropertyType PropertyType::Double() {
   return PropertyType(impl::PropertyTypeImpl::kDouble);
 }
-PropertyType PropertyType::date() {
+PropertyType PropertyType::Date() {
   return PropertyType(impl::PropertyTypeImpl::kDate);
 }
-PropertyType PropertyType::string() {
+PropertyType PropertyType::String() {
   return PropertyType(impl::PropertyTypeImpl::kString);
 }
-PropertyType PropertyType::string_map() {
+PropertyType PropertyType::StringMap() {
   return PropertyType(impl::PropertyTypeImpl::kStringMap);
 }
-PropertyType PropertyType::varchar(int32_t max_length) {
+PropertyType PropertyType::Varchar(int32_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
@@ -118,30 +122,38 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
   return out_archive;
 }
 
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const VarChar& value) {
+  return in_archive << value.data;
+}
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, VarChar& value) {
+  return out_archive >> value.data;
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
-  if (value.type == PropertyType::empty()) {
+  if (value.type == PropertyType::Empty()) {
     in_archive << value.type;
-  } else if (value.type == PropertyType::bool_()) {
+  } else if (value.type == PropertyType::Bool()) {
     in_archive << value.type << value.value.b;
-  } else if (value.type == PropertyType::uint8()) {
+  } else if (value.type == PropertyType::UInt8()) {
     in_archive << value.type << value.value.u8;
-  } else if (value.type == PropertyType::uint16()) {
+  } else if (value.type == PropertyType::UInt16()) {
     in_archive << value.type << value.value.u16;
-  } else if (value.type == PropertyType::int32()) {
+  } else if (value.type == PropertyType::Int32()) {
     in_archive << value.type << value.value.i;
-  } else if (value.type == PropertyType::uint32()) {
+  } else if (value.type == PropertyType::UInt32()) {
     in_archive << value.type << value.value.ui;
-  } else if (value.type == PropertyType::float_()) {
+  } else if (value.type == PropertyType::Float()) {
     in_archive << value.type << value.value.f;
-  } else if (value.type == PropertyType::int64()) {
+  } else if (value.type == PropertyType::Int64()) {
     in_archive << value.type << value.value.l;
-  } else if (value.type == PropertyType::uint64()) {
+  } else if (value.type == PropertyType::UInt64()) {
     in_archive << value.type << value.value.ul;
-  } else if (value.type == PropertyType::double_()) {
+  } else if (value.type == PropertyType::Double()) {
     in_archive << value.type << value.value.db;
-  } else if (value.type == PropertyType::date()) {
+  } else if (value.type == PropertyType::Date()) {
     in_archive << value.type << value.value.d.milli_second;
-  } else if (value.type == PropertyType::string()) {
+  } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
   } else if (value.type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     in_archive << value.type << value.value.vc;
@@ -154,28 +166,28 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
 
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
   out_archive >> value.type;
-  if (value.type == PropertyType::empty()) {
-  } else if (value.type == PropertyType::bool_()) {
+  if (value.type == PropertyType::Empty()) {
+  } else if (value.type == PropertyType::Bool()) {
     out_archive >> value.value.b;
-  } else if (value.type == PropertyType::uint8()) {
+  } else if (value.type == PropertyType::UInt8()) {
     out_archive >> value.value.u8;
-  } else if (value.type == PropertyType::uint16()) {
+  } else if (value.type == PropertyType::UInt16()) {
     out_archive >> value.value.u16;
-  } else if (value.type == PropertyType::int32()) {
+  } else if (value.type == PropertyType::Int32()) {
     out_archive >> value.value.i;
-  } else if (value.type == PropertyType::uint32()) {
+  } else if (value.type == PropertyType::UInt32()) {
     out_archive >> value.value.ui;
-  } else if (value.type == PropertyType::float_()) {
+  } else if (value.type == PropertyType::Float()) {
     out_archive >> value.value.f;
-  } else if (value.type == PropertyType::int64()) {
+  } else if (value.type == PropertyType::Int64()) {
     out_archive >> value.value.l;
-  } else if (value.type == PropertyType::uint64()) {
+  } else if (value.type == PropertyType::UInt64()) {
     out_archive >> value.value.ul;
-  } else if (value.type == PropertyType::double_()) {
+  } else if (value.type == PropertyType::Double()) {
     out_archive >> value.value.db;
-  } else if (value.type == PropertyType::date()) {
+  } else if (value.type == PropertyType::Date()) {
     out_archive >> value.value.d.milli_second;
-  } else if (value.type == PropertyType::string()) {
+  } else if (value.type == PropertyType::String()) {
     out_archive >> value.value.s;
   } else if (value.type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     out_archive >> value.value.vc;

@@ -16,28 +16,30 @@
 
 namespace gs {
 std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
-  if (type == PropertyType::bool_()) {
+  if (type == PropertyType::Bool()) {
     return arrow::boolean();
-  } else if (type == PropertyType::int32()) {
+  } else if (type == PropertyType::Int32()) {
     return arrow::int32();
-  } else if (type == PropertyType::int64()) {
+  } else if (type == PropertyType::Int64()) {
     return arrow::int64();
-  } else if (type == PropertyType::uint32()) {
+  } else if (type == PropertyType::UInt32()) {
     return arrow::uint32();
-  } else if (type == PropertyType::uint64()) {
+  } else if (type == PropertyType::UInt64()) {
     return arrow::uint64();
-  } else if (type == PropertyType::double_()) {
+  } else if (type == PropertyType::Double()) {
     return arrow::float64();
-  } else if (type == PropertyType::float_()) {
+  } else if (type == PropertyType::Float()) {
     return arrow::float32();
-  } else if (type == PropertyType::date()) {
+  } else if (type == PropertyType::Date()) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
-  } else if (type == PropertyType::string()) {
+  } else if (type == PropertyType::String()) {
     return arrow::large_utf8();
-  } else if (type == PropertyType::string_map()) {
+  } else if (type == PropertyType::StringMap()) {
     return arrow::large_utf8();
-  } else if (type == PropertyType::empty()) {
+  } else if (type == PropertyType::Empty()) {
     return arrow::null();
+  } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    return arrow::large_utf8();
   } else {
     LOG(FATAL) << "Unexpected property type: "
                << static_cast<int>(type.type_enum);

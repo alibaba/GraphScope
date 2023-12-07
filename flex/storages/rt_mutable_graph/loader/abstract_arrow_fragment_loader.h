@@ -38,6 +38,78 @@ class IRecordBatchSupplier {
 
 bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type);
 
+// For Primitive types.
+template <typename COL_T>
+void set_single_vertex_column(gs::ColumnBase* col,
+                              std::shared_ptr<arrow::ChunkedArray> array,
+                              const std::vector<vid_t>& vids) {
+  using arrow_array_type = typename gs::TypeConverter<COL_T>::ArrowArrayType;
+  auto array_type = array->type();
+  auto arrow_type = gs::TypeConverter<COL_T>::ArrowTypeValue();
+  CHECK(array_type->Equals(arrow_type))
+      << "Inconsistent data type, expect " << arrow_type->ToString()
+      << ", but got " << array_type->ToString();
+  size_t cur_ind = 0;
+  for (auto j = 0; j < array->num_chunks(); ++j) {
+    auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
+    for (auto k = 0; k < casted->length(); ++k) {
+      col->set_any(vids[cur_ind++],
+                   std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+    }
+  }
+}
+
+// For String types.
+template <typename COL_T>
+void set_vertex_column_from_string_array(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids,
+    std::function<COL_T(const arrow::util::string_view& view)> converter) {
+  auto type = array->type();
+  CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
+      << "Inconsistent data type, expect string, but got " << type->ToString();
+  size_t cur_ind = 0;
+  if (type->Equals(arrow::large_utf8())) {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        if constexpr (std::is_same_v<COL_T, VarChar>) {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<COL_T>::to_any(
+                           converter(str),
+                           col->type().additional_type_info.max_length)));
+        } else {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<COL_T>::to_any(converter(str))));
+        }
+      }
+    }
+  } else {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        if constexpr (std::is_same_v<COL_T, VarChar>) {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<COL_T>::to_any(
+                           converter(str),
+                           col->type().additional_type_info.max_length)));
+        } else {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<COL_T>::to_any(converter(str))));
+        }
+      }
+    }
+  }
+}
+
+void set_vertex_column_from_timestamp_array(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids);
+
 void set_vertex_properties(gs::ColumnBase* col,
                            std::shared_ptr<arrow::ChunkedArray> array,
                            const std::vector<vid_t>& vids);
@@ -107,6 +179,7 @@ static void append_edges(
     std::shared_ptr<arrow::Array> dst_col, const LFIndexer<vid_t>& src_indexer,
     const LFIndexer<vid_t>& dst_indexer,
     std::vector<std::shared_ptr<arrow::Array>>& edata_cols,
+    const PropertyType& edge_prop,
     std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
     std::vector<int32_t>& ie_degree, std::vector<int32_t>& oe_degree) {
   CHECK(src_col->length() == dst_col->length());
@@ -204,7 +277,14 @@ static void append_edges(
                                    arrow::StringArray>::value ||
                       std::is_same<arrow_array_type,
                                    arrow::LargeStringArray>::value) {
-          std::get<2>(parsed_edges[cur_ind++]) = data->GetView(j);
+          if constexpr (std::is_same_v<EDATA_T, VarChar>) {
+            auto tmp = data->GetView(j);
+            std::get<2>(parsed_edges[cur_ind++]) =
+                VarChar(tmp.data(), tmp.size(),
+                        edge_prop.additional_type_info.max_length);
+          } else {
+            std::get<2>(parsed_edges[cur_ind++]) = data->GetView(j);
+          }
         } else {
           std::get<2>(parsed_edges[cur_ind++]) = data->Value(j);
         }
@@ -413,30 +493,31 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         }
         CHECK(property_cols.size() <= 1)
             << "Currently only support at most one property on edge";
-
+        auto edge_property =
+            schema_.get_edge_property(src_label_id, dst_label_id, e_label_id);
         // add edges to vector
         CHECK(src_col->length() == dst_col->length());
         if (src_col_type->Equals(arrow::int64())) {
-          append_edges<int64_t, EDATA_T>(src_col, dst_col, src_indexer,
-                                         dst_indexer, property_cols,
-                                         parsed_edges, ie_degree, oe_degree);
+          append_edges<int64_t, EDATA_T>(
+              src_col, dst_col, src_indexer, dst_indexer, property_cols,
+              edge_property, parsed_edges, ie_degree, oe_degree);
         } else if (src_col_type->Equals(arrow::uint64())) {
-          append_edges<uint64_t, EDATA_T>(src_col, dst_col, src_indexer,
-                                          dst_indexer, property_cols,
-                                          parsed_edges, ie_degree, oe_degree);
+          append_edges<uint64_t, EDATA_T>(
+              src_col, dst_col, src_indexer, dst_indexer, property_cols,
+              edge_property, parsed_edges, ie_degree, oe_degree);
         } else if (src_col_type->Equals(arrow::int32())) {
-          append_edges<int32_t, EDATA_T>(src_col, dst_col, src_indexer,
-                                         dst_indexer, property_cols,
-                                         parsed_edges, ie_degree, oe_degree);
+          append_edges<int32_t, EDATA_T>(
+              src_col, dst_col, src_indexer, dst_indexer, property_cols,
+              edge_property, parsed_edges, ie_degree, oe_degree);
         } else if (src_col_type->Equals(arrow::uint32())) {
-          append_edges<uint32_t, EDATA_T>(src_col, dst_col, src_indexer,
-                                          dst_indexer, property_cols,
-                                          parsed_edges, ie_degree, oe_degree);
+          append_edges<uint32_t, EDATA_T>(
+              src_col, dst_col, src_indexer, dst_indexer, property_cols,
+              edge_property, parsed_edges, ie_degree, oe_degree);
         } else {
           // must be string
           append_edges<std::string_view, EDATA_T>(
               src_col, dst_col, src_indexer, dst_indexer, property_cols,
-              parsed_edges, ie_degree, oe_degree);
+              edge_property, parsed_edges, ie_degree, oe_degree);
         }
         first_batch = false;
       }

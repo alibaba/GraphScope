@@ -291,6 +291,19 @@ struct TypeConverter<Date> {
   }
 };
 
+template <>
+struct TypeConverter<VarChar> {
+  // static const PropertyType property_type = PropertyType::kDate;
+  static PropertyType property_type(int32_t max_length) {
+    return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
+  }
+  using ArrowType = arrow::LargeStringType;
+  using ArrowArrayType = arrow::LargeStringArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::large_utf8();
+  }
+};
+
 std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type);
 }  // namespace gs
 

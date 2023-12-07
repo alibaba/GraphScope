@@ -453,11 +453,12 @@ static bool parse_primitive_property_type(YAML::Node node,
   return true;
 }
 
-static bool parse_var_char_type(YAML::Node node, int32_t var_char_max_len) {
-  if (node[Schema::VAR_CHAR_KEY]) {
-    int32_t max_length = Schema::DEFAULT_VAR_CHAR_LENGTH;
-    if (node[Schema::VAR_CHAR_KEY]["max_length"]) {
-      max_length = node[Schema::VAR_CHAR_KEY]["max_length"].as<int32_t>();
+static bool parse_varchar_type(YAML::Node node, int32_t varchar_max_len) {
+  if (node[Schema::VARCHAR_KEY]) {
+    int32_t max_length = Schema::DEFAULT_VARCHAR_LENGTH;
+    if (node[Schema::VARCHAR_KEY][Schema::MAX_LENGTH_KEY]) {
+      max_length =
+          node[Schema::VARCHAR_KEY][Schema::MAX_LENGTH_KEY].as<int32_t>();
     }
     return true;
   } else {
@@ -496,15 +497,15 @@ static bool parse_vertex_properties(YAML::Node node,
     auto prop_type_node = node[i]["property_type"];
 
     if (!parse_primitive_property_type(prop_type_node, prop_type_str)) {
-      int32_t max_length = Schema::DEFAULT_VAR_CHAR_LENGTH;
-      if (!parse_var_char_type(prop_type_node, max_length)) {
+      int32_t max_length = Schema::DEFAULT_VARCHAR_LENGTH;
+      if (!parse_varchar_type(prop_type_node, max_length)) {
         LOG(ERROR) << "Fail to parse property type of vertex-" << label_name
                    << " prop-" << i << " ...";
         return false;
       } else {
         VLOG(10) << "Parse VarChar type of vertex-" << label_name << " prop-"
                  << i << ", max length: " << max_length;
-        types.emplace_back(PropertyType::varchar(max_length));
+        types.emplace_back(PropertyType::Varchar(max_length));
       }
     } else {
       types.push_back(StringToPropertyType(prop_type_str));
@@ -554,21 +555,19 @@ static bool parse_edge_properties(YAML::Node node,
     }
     auto prop_type_node = node[i]["property_type"];
     if (!parse_primitive_property_type(prop_type_node, prop_type_str)) {
-      int32_t max_length = Schema::DEFAULT_VAR_CHAR_LENGTH;
-      if (!parse_var_char_type(prop_type_node, max_length)) {
+      int32_t max_length = Schema::DEFAULT_VARCHAR_LENGTH;
+      if (!parse_varchar_type(prop_type_node, max_length)) {
         LOG(ERROR) << "Fail to parse property type of Edge-" << label_name
                    << " prop-" << i << " ...";
         return false;
       } else {
         VLOG(10) << "Parse VarChar type of Edge-" << label_name << " prop-" << i
                  << ", max length: " << max_length;
-        types.emplace_back(PropertyType::varchar(max_length));
+        types.emplace_back(PropertyType::Varchar(max_length));
       }
     } else {
       types.push_back(StringToPropertyType(prop_type_str));
     }
-
-    types.push_back(StringToPropertyType(prop_type_str));
     names.push_back(prop_name_str);
     VLOG(10) << "Edge Label" << label_name << " prop-" << i - 1
              << " name: " << prop_name_str << " type: " << prop_type_str;
