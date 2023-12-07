@@ -140,13 +140,19 @@ impl Debug for DateTime {
 }
 
 pub fn parse_datetime(val: &str) -> DateTime {
-    let utc_dt = val.parse::<CDateTime<Utc>>().unwrap();
-    let tz_hour = val[24..26].parse::<u32>().unwrap();
-    let tz_minute = val[27..29].parse::<u32>().unwrap();
-    let duration_hour = Duration::hours(tz_hour as i64);
-    let duration_minute = Duration::minutes(tz_minute as i64);
-    let dt = utc_dt + duration_hour + duration_minute;
-    DateTime::from_chrono_date_utc(dt)
+    let datetime = if let Ok(utc_dt) = val.parse::<CDateTime<Utc>>() {
+        let tz_hour = val[24..26].parse::<u32>().unwrap();
+        let tz_minute = val[27..29].parse::<u32>().unwrap();
+        let duration_hour = Duration::hours(tz_hour as i64);
+        let duration_minute = Duration::minutes(tz_minute as i64);
+        let dt = utc_dt + duration_hour + duration_minute;
+        DateTime::from_chrono_date_utc(dt)
+    } else if let Ok(timestamp) = val.parse::<i64>() {
+        DateTime::new(timestamp)
+    } else {
+        panic!("Failed to parse datetime {}", val);
+    };
+    datetime
 }
 
 impl Encode for DateTime {

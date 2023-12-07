@@ -18,6 +18,7 @@ use std::fmt::{Debug, Display, Formatter};
 use chrono::{Datelike, Duration, NaiveDate};
 use pegasus_common::codec::{Decode, Encode, ReadExt, WriteExt};
 
+use crate::date_time::DateTime;
 use crate::error::GDBResult;
 
 #[derive(Copy, Clone)]
@@ -99,8 +100,16 @@ impl Debug for Date {
 }
 
 pub fn parse_date(val: &str) -> GDBResult<Date> {
-    let year = val[0..4].parse::<i32>()?;
-    let month = val[5..7].parse::<u32>()?;
-    let day = val[8..10].parse::<u32>()?;
-    Ok(Date::new(year, month, day))
+    if let Ok(timestamp) = val.parse::<i64>() {
+        let datetime = DateTime::new(timestamp);
+        let year = datetime.year();
+        let month = datetime.month();
+        let day = datetime.day();
+        Ok(Date::new(year, month, day))
+    } else {
+        let year = val[0..4].parse::<i32>()?;
+        let month = val[5..7].parse::<u32>()?;
+        let day = val[8..10].parse::<u32>()?;
+        Ok(Date::new(year, month, day))
+    }
 }
