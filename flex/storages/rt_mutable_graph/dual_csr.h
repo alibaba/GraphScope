@@ -52,21 +52,6 @@ class DualCsrBase {
 
   virtual MutableCsrBase* GetInCsr() = 0;
   virtual MutableCsrBase* GetOutCsr() = 0;
-  /**
-  virtual std::shared_ptr<MutableCsrConstEdgeIterBase> get_incoming_edge_iter(
-      vid_t v, uint8_t col_id) const = 0;
-  virtual std::shared_ptr<MutableCsrConstEdgeIterBase> get_outgoing_edge_iter(
-      vid_t v, uint8_t col_id) const = 0;
-  virtual MutableCsrConstEdgeIterBase* get_incoming_edge_iter_raw(
-      vid_t v, uint8_t col_id) const = 0;
-  virtual MutableCsrConstEdgeIterBase* get_outgoing_edge_iter_raw(
-      vid_t v, uint8_t col_id) const = 0;
-
-  virtual std::shared_ptr<MutableCsrEdgeIterBase> get_incoming_edge_iter_mut(
-      vid_t v, uint8_t col_id) = 0;
-
-  virtual std::shared_ptr<MutableCsrEdgeIterBase> get_outgoing_edge_iter_mut(
-      vid_t v, uint8_t col_id) = 0;*/
 };
 
 template <typename EDATA_T>
