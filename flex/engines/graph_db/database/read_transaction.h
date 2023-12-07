@@ -27,71 +27,11 @@ namespace gs {
 
 class MutablePropertyFragment;
 class VersionManager;
-
 template <typename EDATA_T>
 class AdjListView {
   class nbr_iterator {
-    using nbr_t = MutableNbr<EDATA_T>;
-
-   public:
-    nbr_iterator(const nbr_t* ptr, const nbr_t* end, timestamp_t timestamp)
-        : ptr_(ptr), end_(end), timestamp_(timestamp) {
-      while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
-        ++ptr_;
-      }
-    }
-
-    const nbr_t& operator*() const { return *ptr_; }
-
-    const nbr_t* operator->() const { return ptr_; }
-
-    nbr_iterator& operator++() {
-      ++ptr_;
-      while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
-        ++ptr_;
-      }
-      return *this;
-    }
-
-    bool operator==(const nbr_iterator& rhs) const {
-      return (ptr_ == rhs.ptr_);
-    }
-
-    bool operator!=(const nbr_iterator& rhs) const {
-      return (ptr_ != rhs.ptr_);
-    }
-
-   private:
-    const nbr_t* ptr_;
-    const nbr_t* end_;
-    timestamp_t timestamp_;
-  };
-
- public:
-  using slice_t = MutableNbrSlice<EDATA_T>;
-
-  AdjListView(const slice_t& slice, timestamp_t timestamp)
-      : edges_(slice), timestamp_(timestamp) {}
-
-  nbr_iterator begin() const {
-    return nbr_iterator(edges_.begin(), edges_.end(), timestamp_);
-  }
-  nbr_iterator end() const {
-    return nbr_iterator(edges_.end(), edges_.end(), timestamp_);
-  }
-
-  int estimated_degree() const { return edges_.size(); }
-
- private:
-  slice_t edges_;
-  timestamp_t timestamp_;
-};
-
-template <>
-class AdjListView<std::string_view> {
-  class nbr_iterator {
-    using nbr_t = typename MutableNbrSlice<std::string_view>::nbr_t;
-    using nbr_t_ptr = typename MutableNbrSlice<std::string_view>::nbr_t_ptr;
+    using nbr_t = typename MutableNbrSlice<EDATA_T>::nbr_t;
+    using nbr_t_ptr = typename MutableNbrSlice<EDATA_T>::nbr_t_ptr;
 
    public:
     nbr_iterator(const nbr_t_ptr ptr, const nbr_t_ptr end,
@@ -129,7 +69,7 @@ class AdjListView<std::string_view> {
   };
 
  public:
-  using slice_t = MutableNbrSlice<std::string_view>;
+  using slice_t = MutableNbrSlice<EDATA_T>;
 
   AdjListView(const slice_t& slice, timestamp_t timestamp)
       : edges_(slice), timestamp_(timestamp) {}
