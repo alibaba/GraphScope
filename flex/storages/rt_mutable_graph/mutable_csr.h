@@ -569,7 +569,11 @@ class TypedMutableCsrEdgeIter<std::string_view>
   }
   timestamp_t get_timestamp() const override { return cur_.get_timestamp(); }
 
-  void set_data(const Any& value, timestamp_t ts) override {}
+  void set_data(const Any& value, timestamp_t ts) override {
+    auto index = cur_.get_index();
+    cur_.set_timestamp(ts);
+    cur_.set_data(value.AsStringView());
+  }
 
   size_t get_index() const { return cur_.get_index(); }
 
@@ -885,7 +889,8 @@ class MutableCsr<std::string_view>
   using slice_t = MutableNbrSlice<std::string_view>;
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
 
-  MutableCsr(StringColumn& column) : column_(column), locks_(nullptr) {}
+  MutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
+      : column_(column), column_idx_(column_idx), locks_(nullptr) {}
   ~MutableCsr() {
     if (locks_ != nullptr) {
       delete[] locks_;
@@ -1081,7 +1086,9 @@ class MutableCsr<std::string_view>
   size_t size() const override { return adj_lists_.size(); }
 
   void put_generic_edge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-                        Allocator& alloc) override {}
+                        Allocator& alloc) override {
+    LOG(FATAL) << "not implemented\n";
+  }
 
   void put_edge(vid_t src, vid_t dst, size_t data, timestamp_t ts,
                 Allocator& alloc) {
@@ -1111,12 +1118,18 @@ class MutableCsr<std::string_view>
 
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
                    Allocator& alloc) override {
-    std::string_view sw;
-    arc >> sw;
+    auto row_id = column_idx_.load();
+    put_edge(src, dst, row_id, ts, alloc);
   }
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                        timestamp_t ts, Allocator& alloc) override {}
+                        timestamp_t ts, Allocator& alloc) override {
+    std::string_view sw;
+    arc >> sw;
+    auto row_id = column_idx_.fetch_add(1);
+    column_.set_value(row_id, sw);
+    put_edge(src, dst, row_id, ts, alloc);
+  }
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
@@ -1137,6 +1150,7 @@ class MutableCsr<std::string_view>
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
   StringColumn& column_;
+  std::atomic<size_t>& column_idx_;
 };
 
 template <typename EDATA_T>
@@ -1313,7 +1327,8 @@ class SingleMutableCsr<std::string_view>
   using slice_t = MutableNbrSlice<std::string_view>;
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
 
-  SingleMutableCsr(StringColumn& column) : column_(column) {}
+  SingleMutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
+      : column_(column), column_idx_(column_idx) {}
   ~SingleMutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -1360,7 +1375,9 @@ class SingleMutableCsr<std::string_view>
   size_t size() const override { return nbr_list_.size(); }
 
   void put_generic_edge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-                        Allocator& alloc) override {}
+                        Allocator& alloc) override {
+    LOG(FATAL) << "not implemented\n";
+  }
 
   void put_edge(vid_t src, vid_t dst, size_t data, timestamp_t ts, Allocator&) {
     CHECK_LT(src, nbr_list_.size());
@@ -1402,12 +1419,18 @@ class SingleMutableCsr<std::string_view>
   }
 
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator& alloc) override {}
+                   Allocator& alloc) override {
+    auto row_id = column_idx_.load();
+    put_edge(src, dst, row_id, ts, alloc);
+  }
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
                         timestamp_t ts, Allocator& alloc) override {
     std::string_view sw;
     arc >> sw;
+    auto row_id = column_idx_.fetch_add(1);
+    column_.set_value(row_id, sw);
+    put_edge(src, dst, row_id, ts, alloc);
   }
   void put_edge_with_index(vid_t src, vid_t dst, size_t index, timestamp_t ts,
                            Allocator& alloc) override {
@@ -1471,6 +1494,7 @@ class SingleMutableCsr<std::string_view>
  private:
   mmap_array<nbr_t> nbr_list_;
   mutable MutableNbr<std::string_view> nbr_;
+  std::atomic<size_t>& column_idx_;
   StringColumn& column_;
 };
 
@@ -1538,7 +1562,8 @@ class EmptyCsr<std::string_view>
   using slice_t = MutableNbrSlice<std::string_view>;
 
  public:
-  EmptyCsr(StringColumn& column) : column_(column) {}
+  EmptyCsr(StringColumn& column, std::atomic<size_t>& column_idx)
+      : column_(column), column_idx_(column_idx) {}
   ~EmptyCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -1561,16 +1586,20 @@ class EmptyCsr<std::string_view>
   slice_t get_edges(vid_t i) const override { return slice_t::empty(column_); }
 
   void put_generic_edge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-                        Allocator&) override {}
-
-  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator&) override {
-    std::string_view value;
-    arc >> value;
+                        Allocator&) override {
+    LOG(FATAL) << "not implemented\n";
   }
 
+  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
+                   Allocator&) override {}
+
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                        const timestamp_t ts, Allocator&) override {}
+                        const timestamp_t ts, Allocator&) override {
+    std::string_view sw;
+    arc >> sw;
+    auto row_id = column_idx_.fetch_add(1);
+    column_.set_value(row_id, sw);
+  }
   void put_edge_with_index(vid_t src, vid_t dst, size_t index, timestamp_t ts,
                            Allocator& alloc) override {}
   void batch_put_edge_with_index(vid_t src, vid_t dst, const size_t& data,
@@ -1588,6 +1617,7 @@ class EmptyCsr<std::string_view>
     return std::make_shared<TypedMutableCsrEdgeIter<std::string_view>>(
         MutableNbrSliceMut<std::string_view>::empty(column_));
   }
+  std::atomic<size_t>& column_idx_;
   StringColumn& column_;
 };
 }  // namespace gs

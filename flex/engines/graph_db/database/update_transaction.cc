@@ -795,9 +795,6 @@ void UpdateTransaction::applyEdgesUpdates() {
           }
         }
 
-        MutableCsrBase* csr =
-            graph_.get_oe_csr(src_label, dst_label, edge_label);
-
         for (auto& pair : added_edges_[oe_csr_index]) {
           vid_t v = pair.first;
           auto& add_list = pair.second;
@@ -812,7 +809,11 @@ void UpdateTransaction::applyEdgesUpdates() {
               continue;
             auto u = add_list[idx];
             auto value = edge_data.at(u).first;
-            csr->put_generic_edge(v, u, value, timestamp_, alloc_);
+            grape::InArchive iarc;
+            serialize_field(iarc, value);
+            grape::OutArchive oarc(std::move(iarc));
+            graph_.IngestEdge(src_label, v, dst_label, u, edge_label,
+                              timestamp_, oarc, alloc_);
           }
         }
       }
@@ -846,22 +847,6 @@ void UpdateTransaction::applyEdgesUpdates() {
                            << edge.second.second << "\n";
               }
             }
-          }
-        }
-
-        MutableCsrBase* csr =
-            graph_.get_ie_csr(dst_label, src_label, edge_label);
-
-        for (auto& pair : added_edges_[ie_csr_index]) {
-          vid_t v = pair.first;
-          auto& add_list = pair.second;
-          if (add_list.empty()) {
-            continue;
-          }
-          auto& edge_data = updated_edge_data_[ie_csr_index].at(v);
-          for (auto u : add_list) {
-            auto value = edge_data.at(u).first;
-            csr->put_generic_edge(v, u, value, timestamp_, alloc_);
           }
         }
       }
