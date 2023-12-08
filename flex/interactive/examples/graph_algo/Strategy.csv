@@ -4,10 +4,14 @@ id|strategy
 2|Dense Representation
 3|Communication Pruning
 4|Subgraph-Centric
-5|Push-Pull Optimization
+5|Combination of Push and Pull Model
 6|Aggregation
 7|Navigation
-8|Trade-off between Global and Local Computation
+8|Local Computation
 9|Asynchronous
 10|Pruning
-11|Segmented Processing
+11|Segmentation
+12|Other (Load Balance)
+13|Other (Communication Overhead)
+14|Other (Parallelism)
+15|Other (Bandwidth)

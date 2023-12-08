@@ -45,7 +45,8 @@ class UnTypedEdgeSetIter {
       : src_vertices_(src_v),
         adj_lists_(std::move(adj_lists)),
         vid_ind_(ind),
-        iter_ind_(0) {
+        iter_ind_(0),
+        cur_ind_(0) {
     LOG(INFO) << "UnTypedEdgeSetIter init,size: " << adj_lists_.size()
               << ", vertices size: " << src_vertices_.size();
     if (vid_ind_ != src_vertices_.size()) {
@@ -90,10 +91,11 @@ class UnTypedEdgeSetIter {
 
   // Make sure this okay.
   inline index_ele_tuple_t GetIndexElement() const {
-    return std::make_tuple(vid_ind_, GetSrc(), GetDst(), GetData());
+    return std::make_tuple(cur_ind_, GetSrc(), GetDst(), GetData());
   }
 
   inline const self_type_t& operator++() {
+    ++cur_ind_;
     cur_iter_.Next();
     if (cur_iter_.IsValid()) {
       return *this;
@@ -146,6 +148,7 @@ class UnTypedEdgeSetIter {
   }
 
   size_t vid_ind_, iter_ind_;
+  size_t cur_ind_;
   edge_iter_t cur_iter_;
   const std::vector<vid_t>& src_vertices_;
   std::vector<std::vector<edge_iter_t>> adj_lists_;
