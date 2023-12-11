@@ -163,7 +163,6 @@ static size_t get_offset(
     offset++;
     base->next();
   }
-  size_t out = std::numeric_limits<size_t>::max();
   return std::numeric_limits<size_t>::max();
 }
 
