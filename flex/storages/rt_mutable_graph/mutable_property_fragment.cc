@@ -147,8 +147,10 @@ void MutablePropertyFragment::Open(const std::string& work_dir) {
                          tmp_dir_path, schema_.get_vertex_property_names(i),
                          schema_.get_vertex_properties(i),
                          schema_.get_vertex_storage_strategies(v_label_name));
-    vertex_data_[i].copy_to_tmp(vertex_table_prefix(v_label_name), snapshot_dir,
-                                tmp_dir_path);
+    if (!build_empty_graph) {
+      vertex_data_[i].copy_to_tmp(vertex_table_prefix(v_label_name),
+                                  snapshot_dir, tmp_dir_path);
+    }
     size_t vertex_capacity =
         schema_.get_max_vnum(v_label_name);  // lf_indexers_[i].capacity();
     if (build_empty_graph) {

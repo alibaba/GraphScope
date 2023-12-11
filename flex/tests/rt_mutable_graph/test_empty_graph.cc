@@ -1,3 +1,18 @@
+/** Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <glog/logging.h>
 
 #include <fstream>
@@ -31,7 +46,7 @@ int main(int argc, char** argv) {
                         {}, gs::EdgeStrategy::kMultiple,
                         gs::EdgeStrategy::kMultiple);
 
-  db.OpenEmptyGraph(schema, work_dir);
+  db.Open(schema, work_dir);
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto know_label_id = schema.get_edge_label_id("KNOWS");
 
@@ -46,7 +61,7 @@ int main(int argc, char** argv) {
                            gs::Any::From(std::to_string(vertex_data))}));
     }
     txn.Commit();
-    LOG(INFO) << "Add Vertex successful\n";
+    LOG(INFO) << "Add Vertex success\n";
   }
   {
     auto txn = db.GetInsertTransaction();
@@ -56,7 +71,6 @@ int main(int argc, char** argv) {
     }
     txn.Commit();
 
-    LOG(INFO) << "Add Edge successful\n";
+    LOG(INFO) << "Add Edge success\n";
   }
-  // db.Init(schema, {}, {}, {}, work_dir, thread_num);
 }

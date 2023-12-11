@@ -1,3 +1,18 @@
+/** Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include <glog/logging.h>
 
 #include <fstream>
@@ -131,7 +146,7 @@ void AtomicityInit(GraphDB& db, const std::string& work_dir, int thread_num) {
                         {}, gs::EdgeStrategy::kMultiple,
                         gs::EdgeStrategy::kMultiple);
 
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
 
@@ -274,7 +289,7 @@ void AtomicityCTest(const std::string& work_dir, int thread_num) {
   if (committed == finalstate) {
     LOG(INFO) << "AtomicityCTest passed";
   } else {
-    LOG(INFO) << "AtomicityCTest failed";
+    LOG(FATAL) << "AtomicityCTest failed";
   }
 }
 
@@ -316,7 +331,7 @@ void AtomicityRBTest(const std::string& work_dir, int thread_num) {
   if (committed == finalstate) {
     LOG(INFO) << "AtomicityRBTest passed";
   } else {
-    LOG(INFO) << "AtomicityRBTest failed";
+    LOG(FATAL) << "AtomicityRBTest failed";
   }
 }
 
@@ -347,7 +362,7 @@ void G0Init(GraphDB& db, const std::string& work_dir, int thread_num) {
                             PropertyType::kString,  // version history
                         },
                         {}, EdgeStrategy::kMultiple, EdgeStrategy::kMultiple);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto knows_label_id = schema.get_edge_label_id("KNOWS");
@@ -488,7 +503,7 @@ void G0Test(const std::string& work_dir, int thread_num) {
       p2_version_history == k_version_history) {
     LOG(INFO) << "G0Test passed";
   } else {
-    LOG(INFO) << "G0Test failed";
+    LOG(FATAL) << "G0Test failed";
   }
 }
 
@@ -506,7 +521,7 @@ void G1AInit(GraphDB& db, const std::string& work_dir, int thread_num) {
                           {std::tuple<gs::PropertyType, std::string, size_t>(
                               PropertyType::kInt64, "id", 0)},
                           {StorageStrategy::kMem, StorageStrategy::kMem}, 4096);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto txn = db.GetInsertTransaction();
@@ -568,7 +583,7 @@ void G1ATest(const std::string& work_dir, int thread_num) {
   if (num_incorrect_checks == 0) {
     LOG(INFO) << "G1ATest passed";
   } else {
-    LOG(INFO) << "G1ATest failed";
+    LOG(FATAL) << "G1ATest failed";
   }
 }
 
@@ -586,7 +601,7 @@ void G1BInit(GraphDB& db, const std::string& work_dir, int thread_num) {
                           {std::tuple<gs::PropertyType, std::string, size_t>(
                               PropertyType::kInt64, "id", 0)},
                           {StorageStrategy::kMem, StorageStrategy::kMem}, 4096);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto txn = db.GetInsertTransaction();
@@ -642,7 +657,7 @@ void G1BTest(const std::string& work_dir, int thread_num) {
   if (num_incorrect_checks == 0) {
     LOG(INFO) << "G1BTest passed";
   } else {
-    LOG(INFO) << "G1BTest failed";
+    LOG(FATAL) << "G1BTest failed";
   }
 }
 
@@ -659,7 +674,7 @@ void G1CInit(GraphDB& db, const std::string& work_dir, int thread_num) {
                           {std::tuple<gs::PropertyType, std::string, size_t>(
                               PropertyType::kInt64, "id", 0)},
                           {StorageStrategy::kMem, StorageStrategy::kMem}, 4096);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto txn = db.GetInsertTransaction();
@@ -736,7 +751,7 @@ void G1CTest(const std::string& work_dir, int thread_num) {
   if (num_incorrect_checks == 0) {
     LOG(INFO) << "G1CTest passed";
   } else {
-    LOG(INFO) << "G1CTest failed";
+    LOG(FATAL) << "G1CTest failed";
   }
 }
 
@@ -754,7 +769,7 @@ void IMPInit(GraphDB& db, const std::string& work_dir, int thread_num) {
                           {std::tuple<gs::PropertyType, std::string, size_t>(
                               PropertyType::kInt64, "id", 0)},
                           {StorageStrategy::kMem, StorageStrategy::kMem}, 4096);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto txn = db.GetInsertTransaction();
@@ -833,7 +848,7 @@ void IMPTest(const std::string& work_dir, int thread_num) {
   if (num_incorrect_checks == 0) {
     LOG(INFO) << "IMPTest passed";
   } else {
-    LOG(INFO) << "IMPTest failed";
+    LOG(FATAL) << "IMPTest failed";
   }
 }
 
@@ -860,7 +875,7 @@ void PMPInit(GraphDB& db, const std::string& work_dir, int thread_num) {
   schema.add_edge_label("PERSON", "POST", "LIKES", {}, {},
                         gs::EdgeStrategy::kMultiple,
                         gs::EdgeStrategy::kMultiple);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto post_label_id = schema.get_vertex_label_id("POST");
@@ -979,7 +994,7 @@ void PMPTest(const std::string& work_dir, int thread_num) {
   if (num_incorrect_checks == 0) {
     LOG(INFO) << "PMPTest passed";
   } else {
-    LOG(INFO) << "PMPTest failed";
+    LOG(FATAL) << "PMPTest failed";
   }
 }
 
@@ -1006,7 +1021,7 @@ void OTVInit(GraphDB& db, const std::string& work_dir, int thread_num) {
                         gs::EdgeStrategy::kMultiple,
                         gs::EdgeStrategy::kMultiple);
 
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
   auto knows_label_id = schema.get_edge_label_id("KNOWS");
@@ -1203,7 +1218,7 @@ void OTVTest(const std::string& work_dir, int thread_num) {
   if (num_incorrect_checks == 0) {
     LOG(INFO) << "OTVTest passed";
   } else {
-    LOG(INFO) << "OTVTest failed";
+    LOG(FATAL) << "OTVTest failed";
   }
 }
 
@@ -1252,7 +1267,7 @@ void FRTest(const std::string& work_dir, int thread_num) {
   if (num_incorrect_checks == 0) {
     LOG(INFO) << "FRTest passed";
   } else {
-    LOG(INFO) << "FRTest failed";
+    LOG(FATAL) << "FRTest failed";
   }
 }
 
@@ -1273,7 +1288,7 @@ void LUInit(GraphDB& db, const std::string& work_dir, int thread_num) {
       {std::tuple<gs::PropertyType, std::string, size_t>(
           gs::PropertyType::kInt64, "id", 0)},
       {gs::StorageStrategy::kMem, gs::StorageStrategy::kMem}, 4096);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
   auto person_label_id = schema.get_vertex_label_id("PERSON");
 
   auto txn = db.GetInsertTransaction();
@@ -1362,7 +1377,7 @@ void LUTest(const std::string& work_dir, int thread_num) {
   if (numFriends == expNumFriends) {
     LOG(INFO) << "LUTest passed";
   } else {
-    LOG(INFO) << "LUTest failed";
+    LOG(FATAL) << "LUTest failed";
   }
 }
 
@@ -1380,7 +1395,7 @@ void WSInit(GraphDB& db, const std::string& work_dir, int thread_num) {
                           {std::tuple<gs::PropertyType, std::string, size_t>(
                               PropertyType::kInt64, "id", 0)},
                           {StorageStrategy::kMem, StorageStrategy::kMem}, 4096);
-  db.OpenEmptyGraph(schema, work_dir, thread_num);
+  db.Open(schema, work_dir, thread_num);
 
   auto person_label_id = schema.get_vertex_label_id("PERSON");
 
@@ -1489,7 +1504,7 @@ void WSTest(const std::string& work_dir, int thread_num) {
   if (results.empty()) {
     LOG(INFO) << "WSTest passed";
   } else {
-    LOG(INFO) << "WSTest failed";
+    LOG(FATAL) << "WSTest failed";
     for (auto& tup : results) {
       LOG(INFO) << std::get<0>(tup) << " " << std::get<1>(tup) << " "
                 << std::get<2>(tup) << " " << std::get<3>(tup);

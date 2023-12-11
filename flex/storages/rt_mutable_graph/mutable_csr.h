@@ -659,8 +659,10 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
     mmap_array<int> degree_list;
-    degree_list.open(snapshot_dir + "/" + name + ".deg", true);
-    nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    if (snapshot_dir != "") {
+      degree_list.open(snapshot_dir + "/" + name + ".deg", true);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
 
@@ -924,8 +926,10 @@ class MutableCsr<std::string_view>
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
     mmap_array<int> degree_list;
-    degree_list.open(snapshot_dir + "/" + name + ".deg", true);
-    nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    if (snapshot_dir != "") {
+      degree_list.open(snapshot_dir + "/" + name + ".deg", true);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
 
