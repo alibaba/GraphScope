@@ -103,6 +103,40 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   return Result<bool>(true);
 }
 
+Result<bool> GraphDB::OpenEmptyGraph(const Schema& schema,
+                                     const std::string& data_dir,
+                                     int thread_num) {
+  std::filesystem::remove_all(data_dir);
+  graph_.mutable_schema() = schema;
+  try {
+    graph_.Open(data_dir);
+  } catch (std::exception& e) {
+    LOG(ERROR) << "Exception: " << e.what();
+    return Result<bool>(StatusCode::InternalError,
+                        "Exception: " + std::string(e.what()), false);
+  }
+  work_dir_ = data_dir;
+  thread_num_ = thread_num;
+
+  // Set the plugin info from schema to graph_.schema(), since the plugin info
+  // is not serialized and deserialized.
+  auto& mutable_schema = graph_.mutable_schema();
+  mutable_schema.SetPluginDir(schema.GetPluginDir());
+  std::vector<std::string> plugin_paths;
+  const auto& plugins = schema.GetPlugins();
+  for (auto plugin_pair : plugins) {
+    plugin_paths.emplace_back(plugin_pair.first);
+  }
+
+  std::sort(plugin_paths.begin(), plugin_paths.end(),
+            [&](const std::string& a, const std::string& b) {
+              return plugins.at(a).second < plugins.at(b).second;
+            });
+  mutable_schema.EmplacePlugins(plugin_paths);
+
+  openWalAndCreateContexts(data_dir);
+  return Result<bool>(true);
+}
 void GraphDB::Close() {
   //-----------Clear graph_db----------------
   graph_.Clear();

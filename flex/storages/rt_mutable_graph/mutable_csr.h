@@ -111,7 +111,7 @@ template <>
 class MutableNbrSlice<std::string_view> {
  public:
   struct MutableColumnNbr {
-    using const_nbr_t = MutableNbr<size_t>;
+    using const_nbr_t = const MutableNbr<size_t>;
     using const_nbr_ptr_t = const MutableNbr<size_t>*;
 
     MutableColumnNbr(const_nbr_ptr_t ptr, const StringColumn& column)
@@ -257,7 +257,7 @@ class MutableNbrSliceMut<std::string_view> {
 
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
     nbr_t* ptr_;
-    StringColumn & column_;
+    StringColumn& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 

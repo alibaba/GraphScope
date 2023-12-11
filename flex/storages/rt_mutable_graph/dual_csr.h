@@ -207,7 +207,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
     out_csr_->open(oe_name, snapshot_dir, work_dir);
     column_.open(edata_name, snapshot_dir, work_dir);
     column_idx_.store(column_.size());
-    column_.resize(column_.size() + (column_.size() + 4) / 5);
+    column_.resize(std::max(column_.size() + (column_.size() + 4) / 5, 4096ul));
   }
 
   void Dump(const std::string& oe_name, const std::string& ie_name,
