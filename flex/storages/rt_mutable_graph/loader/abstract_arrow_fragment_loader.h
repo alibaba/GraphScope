@@ -283,7 +283,9 @@ static void append_edges(
                 VarChar(tmp.data(), tmp.size(),
                         edge_prop.additional_type_info.max_length);
           } else {
-            std::get<2>(parsed_edges[cur_ind++]) = data->GetView(j);
+            auto str = data->GetView(j);
+            std::string_view str_view(str.data(), str.size());
+            std::get<2>(parsed_edges[cur_ind++]) = str_view;
           }
         } else {
           std::get<2>(parsed_edges[cur_ind++]) = data->Value(j);

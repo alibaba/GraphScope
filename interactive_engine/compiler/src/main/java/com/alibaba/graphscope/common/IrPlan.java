@@ -35,14 +35,18 @@ import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 import org.javatuples.Pair;
 
 import java.io.Closeable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
@@ -78,21 +82,16 @@ public class IrPlan implements Closeable {
                 // set index predicate
                 Optional<OpArg> ids = op.getIds();
                 if (ids.isPresent()) {
-                    Pointer idsPredicate = irCoreLib.initIndexPredicate();
                     List<FfiConst.ByValue> ffiIds = (List<FfiConst.ByValue>) ids.get().applyArg();
-                    for (int i = 0; i < ffiIds.size(); ++i) {
-                        FfiResult e2 =
-                                irCoreLib.orEquivPredicate(
-                                        idsPredicate, ArgUtils.asKey(ArgUtils.ID), ffiIds.get(i));
-                        if (e2.code != ResultCode.Success) {
+                    if (!ffiIds.isEmpty()) {
+                        FfiResult.ByValue res =
+                                irCoreLib.addIndexPredicatePb(scan, ffiIndexPredicate(ffiIds));
+                        if (res.code != ResultCode.Success) {
                             throw new InterOpIllegalArgException(
                                     baseOp.getClass(),
                                     "ids",
-                                    "orEquivPredicate returns " + e2.getMsg());
+                                    "addIndexPredicatePb returns " + res.getMsg());
                         }
-                    }
-                    if (!ffiIds.isEmpty()) {
-                        irCoreLib.addScanIndexPredicate(scan, idsPredicate);
                     }
                 }
 
@@ -106,6 +105,101 @@ public class IrPlan implements Closeable {
                     irCoreLib.setScanAlias(scan, alias);
                 }
                 return scan;
+            }
+
+            private FfiPbPointer.ByValue ffiIndexPredicate(List<FfiConst.ByValue> ffiIds) {
+                GraphAlgebra.IndexPredicate.Triplet.Builder tripletBuilder =
+                        GraphAlgebra.IndexPredicate.Triplet.newBuilder()
+                                .setKey(
+                                        OuterExpression.Property.newBuilder()
+                                                .setId(OuterExpression.IdKey.newBuilder().build())
+                                                .build());
+                if (ffiIds.size() == 1) {
+                    tripletBuilder.setCmp(OuterExpression.Logical.EQ);
+                } else {
+                    tripletBuilder.setCmp(OuterExpression.Logical.WITHIN);
+                }
+                tripletBuilder.setConst(protoValue(ffiIds));
+                return new FfiPbPointer.ByValue(
+                        GraphAlgebra.IndexPredicate.newBuilder()
+                                .addOrPredicates(
+                                        GraphAlgebra.IndexPredicate.AndPredicate.newBuilder()
+                                                .addPredicates(tripletBuilder))
+                                .build()
+                                .toByteArray());
+            }
+
+            private Common.Value protoValue(List<FfiConst.ByValue> ffiIds) {
+                Preconditions.checkArgument(!ffiIds.isEmpty(), "ffiIds should not be empty");
+                FfiConst.ByValue constVal = ffiIds.get(0);
+                if (ffiIds.size() == 1) {
+                    switch (constVal.dataType) {
+                        case I32:
+                            return Common.Value.newBuilder().setI32(constVal.int32).build();
+                        case I64:
+                            return Common.Value.newBuilder().setI64(constVal.int64).build();
+                        case Str:
+                            return Common.Value.newBuilder().setStr(constVal.cstr).build();
+                        case Boolean:
+                            return Common.Value.newBuilder().setBoolean(constVal.bool).build();
+                        case F64:
+                            return Common.Value.newBuilder().setF64(constVal.float64).build();
+                        case Unknown:
+                        default:
+                            throw new IllegalArgumentException(
+                                    "cannot convert "
+                                            + constVal.dataType
+                                            + " to basic type in proto");
+                    }
+                } else {
+                    switch (constVal.dataType) {
+                        case I32:
+                            return Common.Value.newBuilder()
+                                    .setI32Array(
+                                            Common.I32Array.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.int32)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        case I64:
+                            return Common.Value.newBuilder()
+                                    .setI64Array(
+                                            Common.I64Array.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.int64)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        case Str:
+                            return Common.Value.newBuilder()
+                                    .setStrArray(
+                                            Common.StringArray.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.cstr)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        case F64:
+                            return Common.Value.newBuilder()
+                                    .setF64Array(
+                                            Common.DoubleArray.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.float64)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        default:
+                            throw new IllegalArgumentException(
+                                    "cannot convert array of "
+                                            + constVal.dataType
+                                            + " to array type in proto");
+                    }
+                }
             }
         },
         SELECT_OP {
