@@ -45,4 +45,7 @@ public class FrontendConfig {
 
     public static final Config<Integer> QUERY_CACHE_SIZE =
             Config.intConfig("query.cache.size", 100);
+
+    public static final Config<String> GREMLIN_SCRIPT_LANGUAGE_NAME =
+            Config.stringConfig("gremlin.script.language.name", "gremlin-traversal");
 }

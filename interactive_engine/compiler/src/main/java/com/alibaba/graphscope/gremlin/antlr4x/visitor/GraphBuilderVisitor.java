@@ -18,6 +18,8 @@ package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -38,8 +40,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -63,6 +67,13 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
 
     public GraphBuilderVisitor(GraphBuilder builder) {
         this.builder = builder;
+    }
+
+    @Override
+    public GraphBuilder visitQuery(GremlinGSParser.QueryContext ctx) {
+        super.visitQuery(ctx);
+        // append tail project to indicate the columns to be output
+        return appendTailProject();
     }
 
     @Override
@@ -891,5 +902,19 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             }
         }
         return tags.isEmpty() ? null : tags.get(tags.size() - 1);
+    }
+
+    private GraphBuilder appendTailProject() {
+        Preconditions.checkArgument(builder.size() > 0, "builder should not be empty");
+        RelNode top = builder.peek();
+        if ((top instanceof Aggregate)
+                || (top instanceof GraphLogicalProject) && ((GraphLogicalProject) top).isAppend() == false) return builder;
+        List<RexNode> exprs = Lists.newArrayList();
+        List<String> aliases = Lists.newArrayList();
+        for (RelDataTypeField field : top.getRowType().getFieldList()) {
+            exprs.add(builder.variable(field.getName()));
+            aliases.add(field.getName() == AliasInference.DEFAULT_NAME ? null : field.getName());
+        }
+        return builder.project(exprs, aliases);
     }
 }

@@ -16,10 +16,12 @@
 
 package com.alibaba.graphscope.gremlin.service;
 
+import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.auth.AuthManager;
@@ -44,6 +46,7 @@ import java.io.InputStream;
 public class IrGremlinServer implements AutoCloseable {
     private final Configs configs;
     private final GraphPlanner graphPlanner;
+    private final ExecutionClient executionClient;
     private final ChannelFetcher channelFetcher;
     private final IrMetaQueryCallback metaQueryCallback;
     private final GraphProperties testGraph;
@@ -53,14 +56,20 @@ public class IrGremlinServer implements AutoCloseable {
     private final Graph graph;
     private final GraphTraversalSource g;
 
+    private final QueryIdGenerator idGenerator;
+
     public IrGremlinServer(
             Configs configs,
+            QueryIdGenerator idGenerator,
             GraphPlanner graphPlanner,
+            ExecutionClient executionClient,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
         this.configs = configs;
+        this.idGenerator = idGenerator;
         this.graphPlanner = graphPlanner;
+        this.executionClient = executionClient;
         this.channelFetcher = channelFetcher;
         this.metaQueryCallback = metaQueryCallback;
         this.testGraph = testGraph;
@@ -80,12 +89,21 @@ public class IrGremlinServer implements AutoCloseable {
     public void start() throws Exception {
         AbstractOpProcessor standardProcessor =
                 new IrStandardOpProcessor(
-                        configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g);
+                        configs,
+                        idGenerator,
+                        graphPlanner,
+                        executionClient,
+                        channelFetcher,
+                        metaQueryCallback,
+                        graph,
+                        g);
         IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
         AbstractOpProcessor testProcessor =
                 new IrTestOpProcessor(
                         configs,
+                        idGenerator,
                         graphPlanner,
+                        executionClient,
                         channelFetcher,
                         metaQueryCallback,
                         graph,

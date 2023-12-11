@@ -16,12 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static org.apache.calcite.linq4j.Nullness.castNonNull;
-
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -39,6 +36,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import static org.apache.calcite.linq4j.Nullness.castNonNull;
 
 /**
  * infer a new alias name from the query given one, and validate if the query given alias is duplicated.
@@ -137,7 +136,7 @@ public abstract class AliasInference {
         if (expr instanceof RexGraphVariable) {
             String name = ((RexGraphVariable) expr).getName();
             String[] nameArray = name.split(Pattern.quote(DELIMITER));
-            if (ObjectUtils.isEmpty(nameArray)) {
+            if (name.equals(AliasInference.SIMPLE_NAME(AliasInference.DEFAULT_NAME)) || ObjectUtils.isEmpty(nameArray)) {
                 return null;
             } else if (nameArray.length == 1) {
                 return nameArray[0];

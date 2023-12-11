@@ -16,10 +16,12 @@
 
 package com.alibaba.graphscope.gremlin.integration.processor;
 
+import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
@@ -59,13 +61,23 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
 
     public IrTestOpProcessor(
             Configs configs,
+            QueryIdGenerator idGenerator,
             GraphPlanner graphPlanner,
+            ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
             GraphTraversalSource g,
             GraphProperties testGraph) {
-        super(configs, graphPlanner, fetcher, metaQueryCallback, graph, g);
+        super(
+                configs,
+                idGenerator,
+                graphPlanner,
+                executionClient,
+                fetcher,
+                metaQueryCallback,
+                graph,
+                g);
         this.context = new SimpleScriptContext();
         Bindings globalBindings = new SimpleBindings();
         globalBindings.put("g", g);
@@ -94,7 +106,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             Traversal traversal =
                                     (Traversal) scriptEngine.eval(script, this.context);
                             applyStrategies(traversal);
-                            long jobId = graphPlanner.generateUniqueId();
+                            long jobId = idGenerator.generateId();
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
                                     createQueryStatusCallback(script, jobId);

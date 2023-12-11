@@ -26,12 +26,15 @@
 package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
+import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
@@ -40,6 +43,7 @@ import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
 import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.script.GremlinCalciteScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
@@ -50,7 +54,6 @@ import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -69,6 +72,7 @@ import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 
+import javax.script.SimpleBindings;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
@@ -77,8 +81,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
-
-import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
     protected Graph graph;
@@ -90,11 +92,15 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected RpcClient rpcClient;
 
     protected IrMetaQueryCallback metaQueryCallback;
+    protected final QueryIdGenerator idGenerator;
     protected final GraphPlanner graphPlanner;
+    protected final ExecutionClient executionClient;
 
     public IrStandardOpProcessor(
             Configs configs,
+            QueryIdGenerator idGenerator,
             GraphPlanner graphPlanner,
+            ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
@@ -104,7 +110,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.configs = configs;
         this.rpcClient = new RpcClient(fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
+        this.idGenerator = idGenerator;
         this.graphPlanner = graphPlanner;
+        this.executionClient = executionClient;
     }
 
     @Override
@@ -123,15 +131,37 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SUCCESS).create());
             return;
         }
-
-        String language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
-
-        long jobId = graphPlanner.generateUniqueId();
+        long jobId = idGenerator.generateId();
+        String jobName = idGenerator.generateName(jobId);
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
-        GremlinExecutor.LifeCycle lifeCycle =
-                createLifeCycle(
-                        ctx, gremlinExecutorSupplier, bindingsSupplier, irMeta, statusCallback);
+        String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
+        GremlinExecutor.LifeCycle lifeCycle;
+        switch (language) {
+            case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:
+                lifeCycle =
+                        createLifeCycle(
+                                ctx,
+                                gremlinExecutorSupplier,
+                                bindingsSupplier,
+                                irMeta,
+                                statusCallback);
+                break;
+            case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
+                lifeCycle =
+                        new LifeCycleSupplier(
+                                        ctx,
+                                        graphPlanner,
+                                        executionClient,
+                                        jobId,
+                                        jobName,
+                                        irMeta,
+                                        statusCallback)
+                                .get();
+                break;
+            default:
+                throw new IllegalArgumentException("invalid script language name: " + language);
+        }
         try {
             CompletableFuture<Object> evalFuture =
                     gremlinExecutor.eval(script, language, new SimpleBindings(), lifeCycle);

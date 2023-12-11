@@ -38,8 +38,8 @@ public class GraphBuilderTest {
     public void g_V_test() {
         RelNode node = eval("g.V()");
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n" +
+                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[DEFAULT], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -47,9 +47,8 @@ public class GraphBuilderTest {
     public void g_V_id_test() {
         RelNode node = eval("g.V(1, 2, 3)");
         Assert.assertEquals(
-                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
-                        + " Sarg[1, 2, 3])])",
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n" +
+                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id, Sarg[1, 2, 3])])",
                 node.explain().trim());
     }
 
