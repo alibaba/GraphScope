@@ -34,7 +34,8 @@
             }]
           }]
         }
-      }
+      },
+      "alias": -1
     }]
   }, {
     "opr": {
@@ -46,28 +47,32 @@
           }]
         },
         "alias": 0,
-        "expandOpt": "EDGE"
+        "expandOpt": "DEGREE"
       }
     },
     "metaData": [{
       "type": {
-        "graphType": {
-          "elementOpt": "EDGE",
-          "graphDataType": [{
-            "label": {
-              "srcLabel": 0,
-              "dstLabel": 0
-            },
-            "props": [{
-              "propId": {
-                "name": "weight"
-              },
-              "type": "DOUBLE"
-            }]
-          }]
-        }
+        "dataType": "INT64"
       },
       "alias": -1
+    }]
+  }, {
+    "opr": {
+      "groupBy": {
+        "functions": [{
+          "vars": [{
+            "nodeType": {
+              "dataType": "INT64"
+            }
+          }],
+          "alias": 0
+        }]
+      }
+    },
+    "metaData": [{
+      "type": {
+        "dataType": "INT64"
+      }
     }]
   }, {
     "opr": {

@@ -17,17 +17,9 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
-import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
-import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
+import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
-import com.alibaba.graphscope.common.ir.runtime.RegularPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -37,8 +29,8 @@ import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical.PhysicalOpr;
 import com.google.protobuf.util.JsonFormat;
 
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.logical.LogicalFilter;
-import org.apache.calcite.rel.logical.LogicalJoin;
+import org.apache.calcite.rel.RelVisitor;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,60 +40,40 @@ import java.util.Objects;
  * build physical plan from logical plan of a regular query, the physical plan
  * is a protobuf message {@code GraphAlgebraPhysical.PhysicalPlan}
  */
-public class GraphRelProtoPhysicalBuilder extends RegularPhysicalBuilder<PhysicalOpr> {
+public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
     private static final Logger logger =
             LoggerFactory.getLogger(GraphRelProtoPhysicalBuilder.class);
-    private final GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder;
+    protected GraphShuttle relShuttle;
+    GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder;
 
     public GraphRelProtoPhysicalBuilder(
             Configs graphConfig, IrMeta irMeta, LogicalPlan logicalPlan) {
-        super(
-                logicalPlan,
-                new GraphRelToProtoConverter(irMeta.getSchema().isColumnId(), graphConfig));
+        super(logicalPlan);
+        this.relShuttle =
+                new GraphRelToProtoConverter(irMeta.getSchema().isColumnId(), graphConfig);
         this.physicalBuilder = GraphAlgebraPhysical.PhysicalPlan.newBuilder();
-        initialize();
-    }
-
-    @Override
-    protected void appendNode(PhysicalNode<PhysicalOpr> node) {
-        RelNode original = node.getOriginal();
-        if (original instanceof GraphLogicalSource
-                || original instanceof GraphLogicalExpand
-                || original instanceof GraphLogicalGetV
-                || original instanceof GraphLogicalPathExpand
-                || original instanceof GraphLogicalProject
-                || original instanceof LogicalFilter
-                || original instanceof GraphLogicalSort
-                || original instanceof LogicalJoin) {
-            physicalBuilder.addPlan(node.getNode());
-        } else if (original instanceof GraphLogicalAggregate) {
-            // transform aggregate to project + dedup by key
-            if (((GraphLogicalAggregate) original).getAggCalls().isEmpty()) {
-                for (PhysicalOpr opr : node.getNodes()) {
-                    physicalBuilder.addPlan(opr);
-                }
-            } else {
-                physicalBuilder.addPlan(node.getNode());
-            }
-        } else if (original instanceof GraphLogicalSingleMatch
-                || original instanceof GraphLogicalMultiMatch) {
-            // TODO: will not append match.
-            throw new UnsupportedOperationException(
-                    "node type "
-                            + original.getClass()
-                            + " can not be appended to the physical plan");
-        } else {
-            throw new UnsupportedOperationException(
-                    "node type "
-                            + original.getClass()
-                            + " can not be appended to the physical plan");
-        }
     }
 
     @Override
     public PhysicalPlan build() {
         String plan = null;
         try {
+            RelNode regularQuery = this.logicalPlan.getRegularQuery();
+            RelVisitor relVisitor =
+                    new RelVisitor() {
+                        @Override
+                        public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
+                            if (node.getInputs().size() == 1) {
+                                super.visit(node, ordinal, parent);
+                            }
+                            PhysicalNode<PhysicalOpr> physicalNode =
+                                    (PhysicalNode<PhysicalOpr>) node.accept(relShuttle);
+                            for (PhysicalOpr opr : physicalNode.getNodes()) {
+                                physicalBuilder.addPlan(opr);
+                            }
+                        }
+                    };
+            relVisitor.go(regularQuery);
             appendDefaultSink();
             plan = getPlanAsJson(physicalBuilder.build());
             int planId = Objects.hash(logicalPlan);
@@ -110,7 +82,7 @@ public class GraphRelProtoPhysicalBuilder extends RegularPhysicalBuilder<Physica
             byte[] bytes = physicalPlan.toByteArray();
             return new PhysicalPlan(bytes, plan);
         } catch (Exception e) {
-            logger.error("ir core logical plan {}", plan);
+            logger.error("ir physical plan {}", plan);
             throw new RuntimeException(e);
         }
     }
@@ -138,7 +110,5 @@ public class GraphRelProtoPhysicalBuilder extends RegularPhysicalBuilder<Physica
     }
 
     @Override
-    public void close() throws Exception {
-        // TODO Auto-generated method stub
-    }
+    public void close() throws Exception {}
 }

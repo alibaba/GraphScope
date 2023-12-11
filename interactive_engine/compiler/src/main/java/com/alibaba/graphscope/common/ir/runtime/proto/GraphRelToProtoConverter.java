@@ -31,6 +31,8 @@ import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt.PhysicalGetVOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
@@ -120,8 +122,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.GetV getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
-        // TODO: may have some fusion of expand and getV. add this rule before
-        // converter.
+        // TODO: fuse expand and getv
         expandBaseBuilder.setEdgeExpand(expand);
         expandBaseBuilder.setGetV(getV);
         pathExpandBuilder.setBase(expandBaseBuilder);
@@ -134,6 +135,42 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setPath(pathExpandBuilder));
         return new PhysicalNode(pxd, oprBuilder.build());
+    }
+
+    @Override
+    public RelNode visit(GraphLogicalExpandDegree expandDegree) {
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.EdgeExpand edgeExpand =
+                buildEdgeExpandDegree(expandDegree.getFusedExpand());
+        oprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
+        oprBuilder.addAllMetaData(
+                Utils.physicalProtoRowType(expandDegree.getRowType(), isColumnId));
+        return new PhysicalNode(expandDegree, oprBuilder.build());
+    }
+
+    @Override
+    public RelNode visit(GraphPhysicalExpandGetV expandGetV) {
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphLogicalExpand expand = expandGetV.getFusedExpand();
+        GraphLogicalGetV getV = expandGetV.getFusedGetV();
+        GraphAlgebraPhysical.EdgeExpand edgeExpand = buildEdgeExpandVertex(expand);
+        oprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
+        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(expandGetV.getRowType(), isColumnId));
+        if (ObjectUtils.isNotEmpty(getV.getFilters())) {
+            GraphAlgebraPhysical.GetV auxilia = buildAuxilia(getV);
+            GraphAlgebraPhysical.PhysicalOpr.Builder auxiliaOprBuilder =
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+            auxiliaOprBuilder.setOpr(
+                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
+            return new PhysicalNode(
+                    expandGetV, ImmutableList.of(oprBuilder.build(), auxiliaOprBuilder.build()));
+        } else {
+            return new PhysicalNode(expandGetV, oprBuilder.build());
+        }
     }
 
     @Override
@@ -151,21 +188,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     }
 
     @Override
-    public RelNode visit(RelNode relNode) {
-        if (relNode instanceof GraphLogicalProject) {
-            return visit((GraphLogicalProject) relNode);
-        } else if (relNode instanceof GraphLogicalAggregate) {
-            return visit((GraphLogicalAggregate) relNode);
-        } else if (relNode instanceof GraphLogicalSort) {
-            return visit((GraphLogicalSort) relNode);
-        } else if (relNode instanceof GraphLogicalExpandDegree) {
-            return visit((GraphLogicalExpandDegree) relNode);
-        } else {
-            throw new UnsupportedOperationException(
-                    "node type " + relNode.getClass() + " is unsupported yet");
-        }
-    }
-
     public RelNode visit(GraphLogicalProject project) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
@@ -191,6 +213,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return new PhysicalNode(project, oprBuilder.build());
     }
 
+    @Override
     public RelNode visit(GraphLogicalAggregate aggregate) {
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
         List<GraphAggCall> groupCalls = aggregate.getAggCalls();
@@ -310,6 +333,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         }
     }
 
+    @Override
     public RelNode visit(GraphLogicalSort sort) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
@@ -452,23 +476,46 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return vars;
     }
 
-    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpand(GraphLogicalExpand expand) {
+    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpand(
+            GraphLogicalExpand expand, GraphOpt.PhysicalExpandOpt opt) {
         GraphAlgebraPhysical.EdgeExpand.Builder expandBuilder =
                 GraphAlgebraPhysical.EdgeExpand.newBuilder();
         expandBuilder.setDirection(Utils.protoExpandOpt(expand.getOpt()));
         expandBuilder.setParams(buildQueryParams(expand));
         expandBuilder.setAlias(Utils.asAliasId(expand.getAliasId()));
         expandBuilder.setVTag(Utils.asAliasId(expand.getStartAlias().getAliasId()));
+        expandBuilder.setExpandOpt(Utils.protoPhysicalExpandOpt(opt));
         return expandBuilder.build();
     }
 
+    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpand(GraphLogicalExpand expand) {
+        return buildEdgeExpand(expand, GraphOpt.PhysicalExpandOpt.EDGE);
+    }
+
+    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpandVertex(GraphLogicalExpand expand) {
+        return buildEdgeExpand(expand, GraphOpt.PhysicalExpandOpt.VERTEX);
+    }
+
+    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpandDegree(GraphLogicalExpand expand) {
+        return buildEdgeExpand(expand, GraphOpt.PhysicalExpandOpt.DEGREE);
+    }
+
+    private GraphAlgebraPhysical.GetV buildVertex(
+            GraphLogicalGetV getV, GraphOpt.PhysicalGetVOpt opt) {
+        GraphAlgebraPhysical.GetV.Builder vertexBuilder = GraphAlgebraPhysical.GetV.newBuilder();
+        vertexBuilder.setOpt(Utils.protoPhysicalGetVOpt(opt));
+        vertexBuilder.setParams(buildQueryParams(getV));
+        vertexBuilder.setAlias(Utils.asAliasId(getV.getAliasId()));
+        vertexBuilder.setTag(Utils.asAliasId(getV.getStartAlias().getAliasId()));
+        return vertexBuilder.build();
+    }
+
     private GraphAlgebraPhysical.GetV buildGetV(GraphLogicalGetV getV) {
-        GraphAlgebraPhysical.GetV.Builder getVBuilder = GraphAlgebraPhysical.GetV.newBuilder();
-        getVBuilder.setOpt(Utils.protoGetVOpt(getV.getOpt()));
-        getVBuilder.setParams(buildQueryParams(getV));
-        getVBuilder.setAlias(Utils.asAliasId(getV.getAliasId()));
-        getVBuilder.setTag(Utils.asAliasId(getV.getStartAlias().getAliasId()));
-        return getVBuilder.build();
+        return buildVertex(getV, PhysicalGetVOpt.valueOf(getV.getOpt().name()));
+    }
+
+    private GraphAlgebraPhysical.GetV buildAuxilia(GraphLogicalGetV getV) {
+        return buildVertex(getV, PhysicalGetVOpt.ITSELF);
     }
 
     private GraphAlgebra.Range buildRange(RexNode offset, RexNode fetch) {
@@ -534,18 +581,11 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     @Override
     public RelNode visit(GraphLogicalSingleMatch match) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visit'");
     }
 
     @Override
     public RelNode visit(GraphLogicalMultiMatch match) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'visit'");
-    }
-
-    public RelNode visit(GraphLogicalExpandDegree expandCount) {
-        // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'visit'");
     }
 }

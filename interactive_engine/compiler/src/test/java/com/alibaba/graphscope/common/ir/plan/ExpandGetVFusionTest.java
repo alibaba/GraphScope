@@ -46,62 +46,61 @@ public class ExpandGetVFusionTest {
                                         new LabelConfig(false).addLabel("person")))
                         .build();
         Assert.assertEquals(
-                     "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[DEFAULT], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 before.explain().trim());
-        RelOptPlanner planner =
-                Utils.mockPlanner(ExpandGetVFusionRule.Config.DEFAULT);
+        RelOptPlanner planner = Utils.mockPlanner(ExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                    "GraphPhysicalExpandGetV(tableConfig=[{isAll=false, tables=[knows]}],"
+                "GraphPhysicalExpandGetV(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 after.explain().trim());
     }
 
-       // g.V().hasLabel("person").outE("knows").as("a").inV(), can not be fused
-       @Test
-       public void expand_getv_fusion_1_test() {
-           GraphBuilder builder = Utils.mockGraphBuilder();
-           RelNode before =
-                   builder.source(
-                                   new SourceConfig(
-                                           GraphOpt.Source.VERTEX,
-                                           new LabelConfig(false).addLabel("person")))
-                           .expand(
-                                   new ExpandConfig(
-                                           GraphOpt.Expand.OUT,
-                                           new LabelConfig(false).addLabel("knows"), "a"))
-                           .getV(
-                                   new GetVConfig(
-                                           GraphOpt.GetV.END,
-                                           new LabelConfig(false).addLabel("person")))
-                           .build();
-           Assert.assertEquals(
-                        "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                           + " alias=[DEFAULT], opt=[END])\n"
-                           + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                           + " alias=[a], opt=[OUT])\n"
-                           + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                           + " alias=[DEFAULT], opt=[VERTEX])",
-                   before.explain().trim());
-           RelOptPlanner planner =
-                   Utils.mockPlanner(ExpandGetVFusionRule.Config.DEFAULT);
-           planner.setRoot(before);
-           RelNode after = planner.findBestExp();
-           Assert.assertEquals(
-                        "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                           + " alias=[DEFAULT], opt=[END])\n"
-                           + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                           + " alias=[a], opt=[OUT])\n"
-                           + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                           + " alias=[DEFAULT], opt=[VERTEX])",
-                   after.explain().trim());
-       }
+    // g.V().hasLabel("person").outE("knows").as("a").inV(), can not be fused
+    @Test
+    public void expand_getv_fusion_1_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows"),
+                                        "a"))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[a], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner = Utils.mockPlanner(ExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[a], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                after.explain().trim());
+    }
 }

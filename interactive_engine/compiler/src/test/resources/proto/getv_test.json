@@ -45,7 +45,8 @@
             "id": 0
           }]
         },
-        "alias": 0
+        "alias": 0,
+        "expandOpt": "EDGE"
       }
     },
     "metaData": [{

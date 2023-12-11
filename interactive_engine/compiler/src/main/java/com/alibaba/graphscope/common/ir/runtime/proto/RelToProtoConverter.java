@@ -32,6 +32,7 @@ import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
@@ -454,7 +455,8 @@ public class RelToProtoConverter implements GraphRelShuttle {
 
     private GraphAlgebraPhysical.GetV buildGetV(GraphLogicalGetV getV) {
         GraphAlgebraPhysical.GetV.Builder getVBuilder = GraphAlgebraPhysical.GetV.newBuilder();
-        getVBuilder.setOpt(Utils.protoGetVOpt(getV.getOpt()));
+        getVBuilder.setOpt(
+                Utils.protoPhysicalGetVOpt(GraphOpt.PhysicalGetVOpt.valueOf(getV.getOpt().name())));
         getVBuilder.setParams(buildQueryParams(getV));
         getVBuilder.setAlias(Utils.asAliasId(getV.getAliasId()));
         getVBuilder.setTag(Utils.asAliasId(getV.getStartAlias().getAliasId()));

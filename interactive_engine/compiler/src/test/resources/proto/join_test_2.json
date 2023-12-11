@@ -107,7 +107,8 @@
                     "id": 0
                   }]
                 },
-                "alias": 1
+                "alias": 1,
+                "expandOpt": "EDGE"
               }
             },
             "metaData": [{
@@ -227,7 +228,8 @@
                     "id": 1
                   }]
                 },
-                "alias": 4
+                "alias": 4,
+                "expandOpt": "EDGE"
               }
             },
             "metaData": [{

@@ -441,7 +441,23 @@ public abstract class Utils {
         }
     }
 
-    public static final GraphAlgebraPhysical.GetV.VOpt protoGetVOpt(GraphOpt.GetV opt) {
+    public static final GraphAlgebraPhysical.EdgeExpand.ExpandOpt protoPhysicalExpandOpt(
+            GraphOpt.PhysicalExpandOpt opt) {
+        switch (opt) {
+            case EDGE:
+                return GraphAlgebraPhysical.EdgeExpand.ExpandOpt.EDGE;
+            case VERTEX:
+                return GraphAlgebraPhysical.EdgeExpand.ExpandOpt.VERTEX;
+            case DEGREE:
+                return GraphAlgebraPhysical.EdgeExpand.ExpandOpt.DEGREE;
+            default:
+                throw new UnsupportedOperationException(
+                        "opt " + opt + " in expand is unsupported yet");
+        }
+    }
+
+    public static final GraphAlgebraPhysical.GetV.VOpt protoPhysicalGetVOpt(
+            GraphOpt.PhysicalGetVOpt opt) {
         switch (opt) {
             case START:
                 return GraphAlgebraPhysical.GetV.VOpt.START;
@@ -451,6 +467,8 @@ public abstract class Utils {
                 return GraphAlgebraPhysical.GetV.VOpt.OTHER;
             case BOTH:
                 return GraphAlgebraPhysical.GetV.VOpt.BOTH;
+            case ITSELF:
+                return GraphAlgebraPhysical.GetV.VOpt.ITSELF;
             default:
                 throw new UnsupportedOperationException(
                         "opt " + opt + " in getV is unsupported yet");
@@ -497,6 +515,8 @@ public abstract class Utils {
                         ? GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.TO_SET
                         : GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.TO_LIST;
             case SUM:
+                return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.SUM;
+            case SUM0:
                 return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.SUM;
             case AVG:
                 return GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate.AVG;
