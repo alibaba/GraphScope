@@ -153,6 +153,8 @@ void MutablePropertyFragment::Open(const std::string& work_dir) {
         schema_.get_max_vnum(v_label_name);  // lf_indexers_[i].capacity();
     if (build_empty_graph) {
       lf_indexers_[i].reserve(vertex_capacity);
+    } else {
+      vertex_capacity = lf_indexers_[i].capacity();
     }
     vertex_data_[i].resize(vertex_capacity);
     vertex_capacities[i] = vertex_capacity;
