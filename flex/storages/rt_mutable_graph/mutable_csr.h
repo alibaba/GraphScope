@@ -82,7 +82,7 @@ struct MutableNbr<grape::EmptyType> {
 template <typename EDATA_T>
 class MutableNbrSlice {
  public:
-  using const_nbr_t = MutableNbr<EDATA_T>;
+  using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
   MutableNbrSlice() = default;
   ~MutableNbrSlice() = default;

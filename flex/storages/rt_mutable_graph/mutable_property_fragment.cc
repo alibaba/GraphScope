@@ -111,15 +111,17 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
 void MutablePropertyFragment::Open(const std::string& work_dir) {
   std::string schema_file = schema_path(work_dir);
   std::string snapshot_dir{};
-
-  vertex_label_num_ = schema_.vertex_label_num();
-  edge_label_num_ = schema_.edge_label_num();
-  lf_indexers_.resize(vertex_label_num_);
   bool build_empty_graph = false;
   if (std::filesystem::exists(schema_file)) {
-    loadSchema(schema_path(work_dir));
+    loadSchema(schema_file);
+    vertex_label_num_ = schema_.vertex_label_num();
+    edge_label_num_ = schema_.edge_label_num();
+    lf_indexers_.resize(vertex_label_num_);
     snapshot_dir = get_latest_snapshot(work_dir);
   } else {
+    vertex_label_num_ = schema_.vertex_label_num();
+    edge_label_num_ = schema_.edge_label_num();
+    lf_indexers_.resize(vertex_label_num_);
     build_empty_graph = true;
     for (size_t i = 0; i < vertex_label_num_; ++i) {
       lf_indexers_[i].init(std::get<0>(schema_.get_vertex_primary_key(i)[0]));
