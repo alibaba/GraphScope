@@ -728,11 +728,7 @@ function do_gen_conf(){
   echo "  type: hiactor" >> ${output_config_file}
   echo "  workers:" >> ${output_config_file}
   echo "    - localhost:${DATABASE_COMPUTE_ENGINE_PORT}" >> ${output_config_file}
-<<<<<<< HEAD
   echo "  thread_num_per_worker: ${DATABASE_COMPUTE_ENGINE_THREAD_NUM_PER_WORKER}" >> ${output_config_file}
-=======
-  echo "  thread_num_per_worker: ${DATABASE_COMPUTE_ENGINE_SHARD_NUM}" >> ${output_config_file}
->>>>>>> origin/fix-interactive
 
 
   #compiler
