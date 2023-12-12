@@ -88,7 +88,7 @@ void grin_destroy_vertex_property(GRIN_GRAPH g, GRIN_VERTEX_PROPERTY vp) {}
  */
 GRIN_DATATYPE grin_get_vertex_property_datatype(GRIN_GRAPH g,
                                                 GRIN_VERTEX_PROPERTY vp) {
-  return (GRIN_DATATYPE)(vp >> 16);
+  return (GRIN_DATATYPE) (vp >> 16);
 }
 
 int grin_get_vertex_property_value_of_int32(GRIN_GRAPH g, GRIN_VERTEX v,
@@ -298,39 +298,84 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
   switch (type) {
   case GRIN_DATATYPE::Bool: {
     auto _col = static_cast<const gs::BoolColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::Int32: {
     auto _col = static_cast<const gs::IntColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::UInt32: {
     auto _col = static_cast<const gs::UIntColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::Int64: {
     auto _col = static_cast<const gs::LongColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::UInt64: {
     auto _col = static_cast<const gs::ULongColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::String: {
     auto _col = static_cast<const gs::StringColumn*>(col);
-    return _col->buffer()[vid].data();
+    auto view = _col->get_view(vid);
+    auto s = _col->get_view(vid);
+    auto len = s.size() + 1;
+    char* out = new char[len];
+    snprintf(out, len, "%s", s.data());
+    return out;
   }
   case GRIN_DATATYPE::Timestamp64: {
     auto _col = static_cast<const gs::DateColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::Double: {
     auto _col = static_cast<const gs::DoubleColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::Float: {
     auto _col = static_cast<const gs::FloatColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   default:
     grin_error_code = UNKNOWN_DATATYPE;

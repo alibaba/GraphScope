@@ -19,7 +19,17 @@ impl<D: Data> Count<D> for Stream<D> {
                             if let Some(end) = batch.take_end() {
                                 let mut session = output.new_session(&batch.tag)?;
                                 trace_worker!("local count {} of {:?}", cnt, batch.tag);
-                                session.give_last(cnt, end)?;
+                                if end.tag.len() > 0 {
+                                    let mut new_end = end.clone();
+                                    let mut new_peers = end.peers().clone();
+                                    let owner_index = batch.tag.current_uncheck()
+                                        % crate::worker_id::get_current_worker().total_peers();
+                                    new_peers.add_source(owner_index);
+                                    new_end.update_peers(new_peers);
+                                    session.give_last(cnt, new_end)?;
+                                } else {
+                                    session.give_last(cnt, end)?;
+                                }
                             } else {
                                 table.insert(batch.tag.clone(), cnt);
                             }
@@ -30,15 +40,36 @@ impl<D: Data> Count<D> for Stream<D> {
                             if let Some(cnt) = table.remove(&batch.tag) {
                                 let mut session = output.new_session(&batch.tag)?;
                                 trace_worker!("local count {} of {:?}", cnt, batch.tag);
-                                session.give_last(cnt, end)?;
+                                if end.tag.len() > 0 {
+                                    let mut new_end = end.clone();
+                                    let mut new_peers = end.peers().clone();
+                                    let owner_index = batch.tag.current_uncheck()
+                                        % crate::worker_id::get_current_worker().total_peers();
+                                    new_peers.add_source(owner_index);
+                                    new_end.update_peers(new_peers);
+                                    session.give_last(cnt, new_end)?;
+                                } else {
+                                    session.give_last(cnt, end)?;
+                                }
                             } else {
                                 let worker = crate::worker_id::get_current_worker().index;
-                                if end.contains_source(worker) {
+                                let new_end = if end.tag.len() > 0 {
+                                    let mut new_end = end.clone();
+                                    let mut new_peers = end.peers().clone();
+                                    let owner_index = batch.tag.current_uncheck()
+                                        % crate::worker_id::get_current_worker().total_peers();
+                                    new_peers.add_source(owner_index);
+                                    new_end.update_peers(new_peers);
+                                    new_end
+                                } else {
+                                    end
+                                };
+                                if new_end.contains_source(worker) {
                                     let mut session = output.new_session(&batch.tag)?;
                                     trace_worker!("local count {} of {:?}", 0, batch.tag);
-                                    session.give_last(0, end)?;
+                                    session.give_last(0, new_end)?;
                                 } else {
-                                    output.notify_end(end)?;
+                                    output.notify_end(new_end)?;
                                 }
                             }
                         }
