@@ -54,7 +54,7 @@ public class GraphAlgoQueries {
                         "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
                                 + " num: 21}>",
                         "Record<{category: \"Clustering\", challenge: \"Communication Overhead\","
-                            + " num: 12}>",
+                                + " num: 12}>",
                         "Record<{category: \"Cohesive_Subgraph\", challenge:"
                                 + " \"Communication Overhead\", num: 10}>",
                         "Record<{category: \"Centrality\", challenge:"
