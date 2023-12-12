@@ -160,6 +160,7 @@ static size_t get_offset(
     if (base->get_neighbor() == target) {
       return offset;
     }
+    offset++;
     base->next();
   }
   return std::numeric_limits<size_t>::max();
@@ -170,7 +171,7 @@ bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
                                 label_t edge_label, const Any& value) {
   vid_t src_lid, dst_lid;
   static constexpr size_t sentinel = std::numeric_limits<size_t>::max();
-  size_t offset_out, offset_in;
+  size_t offset_out = sentinel, offset_in = sentinel;
   if (graph_.get_lid(src_label, src, src_lid) &&
       graph_.get_lid(dst_label, dst, dst_lid)) {
     const auto& oe =

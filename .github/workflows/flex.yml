@@ -79,6 +79,17 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
         GLOG_v=10 ./tests/rt_mutable_graph/string_edge_property_test ${SCHEMA_FILE} /tmp/csr-data-dir/
 
+    - name: Test build empty graph
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        GLOG_v=10 ./tests/rt_mutable_graph/test_empty_graph /tmp/csr-data-dir/
+    - name: Test ACID
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        GLOG_v=10 ./tests/rt_mutable_graph/test_acid 8 /tmp/csr-data-dir/
+
     - name: Test Graph Loading on modern graph
       env:
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/

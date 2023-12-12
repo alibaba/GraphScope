@@ -82,7 +82,7 @@ struct MutableNbr<grape::EmptyType> {
 template <typename EDATA_T>
 class MutableNbrSlice {
  public:
-  using const_nbr_t = MutableNbr<EDATA_T>;
+  using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
   MutableNbrSlice() = default;
   ~MutableNbrSlice() = default;
@@ -111,7 +111,7 @@ template <>
 class MutableNbrSlice<std::string_view> {
  public:
   struct MutableColumnNbr {
-    using const_nbr_t = MutableNbr<size_t>;
+    using const_nbr_t = const MutableNbr<size_t>;
     using const_nbr_ptr_t = const MutableNbr<size_t>*;
 
     MutableColumnNbr(const_nbr_ptr_t ptr, const StringColumn& column)
@@ -257,7 +257,7 @@ class MutableNbrSliceMut<std::string_view> {
 
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
     nbr_t* ptr_;
-    StringColumn & column_;
+    StringColumn& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 
@@ -659,8 +659,10 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
     mmap_array<int> degree_list;
-    degree_list.open(snapshot_dir + "/" + name + ".deg", true);
-    nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    if (snapshot_dir != "") {
+      degree_list.open(snapshot_dir + "/" + name + ".deg", true);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
 
@@ -924,8 +926,10 @@ class MutableCsr<std::string_view>
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
     mmap_array<int> degree_list;
-    degree_list.open(snapshot_dir + "/" + name + ".deg", true);
-    nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    if (snapshot_dir != "") {
+      degree_list.open(snapshot_dir + "/" + name + ".deg", true);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
 
