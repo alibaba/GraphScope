@@ -188,7 +188,7 @@ HOST_DB_ENV_FILE="${HOST_DB_HOME}/.env"
 DOCKER_DB_GRAPHSCOPE_HOME="/opt/flex"
 DOCKER_DB_GIE_HOME="${DOCKER_DB_GRAPHSCOPE_HOME}"
 DOCKER_DB_SERVER_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/interactive_server"
-DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/graph_loader"
+DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/bulk_loader"
 DOCKER_DB_COMPILER_BIN="com.alibaba.graphscope.GraphServer"
 DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/load_plan_and_gen.sh"
 HOST_DB_TMP_DIR="/tmp/"
@@ -697,6 +697,7 @@ function do_gen_conf(){
   echo "  endpoint:"  >> ${output_config_file}
   echo "    default_listen_address: ${DATABASE_COMPILER_ENDPOINT_ADDRESS}" >> ${output_config_file}
   echo "    bolt_connector:" >> ${output_config_file}
+  echo "      disabled: false" >> ${output_config_file}
   echo "      port: ${DATABASE_COMPILER_BOLT_PORT}" >> ${output_config_file}
   echo "    gremlin_connector:" >> ${output_config_file}
   echo "      disabled: true" >> ${output_config_file}
@@ -1132,7 +1133,7 @@ function do_import(){
   # currently we can only overwrite the indices, so if it exists, remove it first
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -d ${docker_graph_data_dir} ] && rm -rf ${docker_graph_data_dir} || exit 0" || exit 1
 
-  cmd="${DOCKER_DB_GRAPH_IMPORT_BIN} ${docker_graph_schema_file} ${docker_bulk_load_file} ${docker_graph_data_dir}"
+  cmd="${DOCKER_DB_GRAPH_IMPORT_BIN} -g ${docker_graph_schema_file} -l ${docker_bulk_load_file} -d ${docker_graph_data_dir}"
   info "Running cmd: ${cmd}"
   # docker exec the cmd, fail if cmd fail
   if ! docker exec "${GIE_DB_CONTAINER_NAME}" bash -c  "${cmd} ||(echo -e \"${RED} Fail to import graph [${graph_name}]${NC}\" && exit 1 )"; then
@@ -1314,7 +1315,7 @@ function do_start(){
 
   # check if modern_graph exists in container, get the result as bool
   docker_graph_schema_file="${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
-  wal_file="${DATABASE_WORKSPACE}/data/${graph_name}/indices/init_snapshot.bin"
+  flag_file="${DATABASE_WORKSPACE}/data/${graph_name}/indices/schema"
   if [ -f "${HOST_DB_TMP_DIR}/graph_exists" ]; then
     if ! rm "${HOST_DB_TMP_DIR}/graph_exists"; then
       err "fail to remove ${HOST_DB_TMP_DIR}/graph_exists, please remove it manually, maybe sudo rm -rf ${HOST_DB_TMP_DIR}/graph_exists"
@@ -1328,7 +1329,7 @@ function do_start(){
     fi
   fi
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${docker_graph_schema_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_exists
-  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${wal_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_loaded
+  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${flag_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_loaded
   graph_exists=$(cat ${HOST_DB_TMP_DIR}/graph_exists)
   graph_loaded=$(cat ${HOST_DB_TMP_DIR}/graph_loaded)
   if [ "${graph_exists}" = "false" ]; then
