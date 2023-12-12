@@ -82,7 +82,17 @@ impl Partial {
                     Ok(())
                 }
             }
-            Partial::Predicates(_) => Ok(()),
+            Partial::Predicates(predicate) => match predicate {
+                // for unary operator like `isnull`, we transform the case of single item predicate into a partial predicate specifically.
+                // e.g., for the case of isnull(@.age), (@.age) will processed as a Predicates::SingleItem firstly, and when dealing with isnull,
+                // we further transform it to a partial predicate of `isnull @.age`.
+                Predicates::SingleItem(item) => {
+                    *self =
+                        Partial::SingleItem { left: Some(item.clone()), cmp: Some(logical), right: None };
+                    Ok(())
+                }
+                _ => Ok(()),
+            },
         }
     }
 
@@ -954,14 +964,16 @@ mod tests {
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
             "isNull @0.hobbies",                 // false
+            "isNull (@0.hobbies)",               // false
             "!(isNull @0.hobbies)",              // true
             "isNull @1.hobbies",                 // true
+            "isNull (@1.hobbies)",               // true
             "!(isNull @1.hobbies)",              // false
             "isNull true",                       // false
             "isNull false",                      // false
             "isNull @1.hobbies && @1.age == 26", // true
         ];
-        let expected: Vec<bool> = vec![false, true, true, false, false, false, true];
+        let expected: Vec<bool> = vec![false, false, true, true, true, false, false, false, true];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = PEvaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();

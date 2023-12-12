@@ -1101,8 +1101,10 @@ mod tests {
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
             "isNull @0.hobbies",                 // false
+            "isNull (@0.hobbies)",               // false
             "!(isNull @0.hobbies)",              // true
             "isNull @1.hobbies",                 // true
+            "isNull (@1.hobbies)",               // true
             "!(isNull @1.hobbies)",              // false
             "isNull true",                       // false
             "isNull false",                      // false
@@ -1111,6 +1113,8 @@ mod tests {
         ];
         let expected: Vec<Object> = vec![
             object!(false),
+            object!(false),
+            object!(true),
             object!(true),
             object!(true),
             object!(false),
