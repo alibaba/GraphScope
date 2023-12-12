@@ -52,14 +52,15 @@ public class GraphAlgoQueries {
         List<String> expected =
                 Arrays.asList(
                         "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
-                                + " num: 8}>",
-                        "Record<{category: \"Traversal\", challenge: \"Load Balance\", num: 8}>",
+                                + " num: 21}>",
+                        "Record<{category: \"Clustering\", challenge: \"Communication Overhead\","
+                                + " num: 12}>",
                         "Record<{category: \"Cohesive_Subgraph\", challenge:"
-                                + " \"Communication Overhead\", num: 8}>",
-                        "Record<{category: \"Cohesive_Subgraph\", challenge:"
-                                + " \"Parallelism\", num: 5}>",
-                        "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\", num:"
-                                + " 3}>");
+                                + " \"Communication Overhead\", num: 10}>",
+                        "Record<{category: \"Centrality\", challenge:"
+                                + " \"Parallelism\", num: 9}>",
+                        "Record<{category: \"Cohesive_Subgraph\", challenge: \"Parallelism\", num:"
+                                + " 9}>");
         return new QueryContext(query, expected);
     }
 
@@ -113,6 +114,36 @@ public class GraphAlgoQueries {
                         "Record<{edgeType: \"HasField\"}>",
                         "Record<{edgeType: \"HasField\"}>",
                         "Record<{edgeType: \"HasField\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_graph_algo_test6() {
+        String query =
+                "MATCH (p:Paper)-[:Resolve]->(ch:Challenge),\n"
+                        + "(p1:Paper)-[:Resolve]->(ch),\n"
+                        + "(p)-[c:Citation]->(p1) \n"
+                        + "RETURN COUNT(distinct c) AS count;";
+        List<String> expected = Arrays.asList("Record<{count: 38}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_graph_algo_test7() {
+
+        String query =
+                "MATCH (p:Paper)-[:Resolve]->(ch:Challenge),\n"
+                    + "      (p1:Paper)-[:Resolve]->(ch),\n"
+                    + "       (p)-[c:Citation]->(p1)\n"
+                    + "WITH DISTINCT p, c, p1\n"
+                    + "WITH p.id As paperId, p1.id As citationId\n"
+                    + "RETURN paperId, citationId ORDER BY paperId ASC, citationId ASC LIMIT 5;";
+
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{paperId: 0, citationId: 3}>",
+                        "Record<{paperId: 0, citationId: 4}>",
+                        "Record<{paperId: 0, citationId: 9}>",
+                        "Record<{paperId: 2, citationId: 3}>",
+                        "Record<{paperId: 3, citationId: 4}>");
         return new QueryContext(query, expected);
     }
 }

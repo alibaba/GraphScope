@@ -27,27 +27,28 @@ namespace gs {
 
 class MutablePropertyFragment;
 class VersionManager;
-
 template <typename EDATA_T>
 class AdjListView {
   class nbr_iterator {
-    using nbr_t = MutableNbr<EDATA_T>;
+    using const_nbr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_t;
+    using const_nbr_ptr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_ptr_t;
 
    public:
-    nbr_iterator(const nbr_t* ptr, const nbr_t* end, timestamp_t timestamp)
+    nbr_iterator(const_nbr_ptr_t ptr, const_nbr_ptr_t end,
+                 timestamp_t timestamp)
         : ptr_(ptr), end_(end), timestamp_(timestamp) {
-      while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
+      while (ptr_ != end_ && ptr_->get_timestamp() > timestamp_) {
         ++ptr_;
       }
     }
 
-    const nbr_t& operator*() const { return *ptr_; }
+    const_nbr_t& operator*() const { return *ptr_; }
 
-    const nbr_t* operator->() const { return ptr_; }
+    const_nbr_ptr_t operator->() const { return ptr_; }
 
     nbr_iterator& operator++() {
       ++ptr_;
-      while (ptr_ != end_ && ptr_->timestamp > timestamp_) {
+      while (ptr_ != end_ && ptr_->get_timestamp() > timestamp_) {
         ++ptr_;
       }
       return *this;
@@ -62,8 +63,8 @@ class AdjListView {
     }
 
    private:
-    const nbr_t* ptr_;
-    const nbr_t* end_;
+    const_nbr_ptr_t ptr_;
+    const_nbr_ptr_t end_;
     timestamp_t timestamp_;
   };
 

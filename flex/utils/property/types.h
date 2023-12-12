@@ -740,6 +740,11 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
 
 }  // namespace gs
 
+namespace boost {
+// override boost hash function for EmptyType
+inline std::size_t hash_value(const grape::EmptyType& value) { return 0; }
+}  // namespace boost
+
 namespace std {
 inline bool operator==(const grape::EmptyType& a, const grape::EmptyType& b) {
   return true;

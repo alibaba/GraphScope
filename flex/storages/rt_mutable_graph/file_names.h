@@ -79,6 +79,7 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     LOG(ERROR) << "file not exists: " << src;
     return;
   }
+#if USE_COPY_FILE_RANGE
   size_t len = std::filesystem::file_size(src);
   int src_fd = open(src.c_str(), O_RDONLY);
   bool creat = false;
@@ -94,8 +95,8 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     std::filesystem::permissions(dst, readWritePermission,
                                  std::filesystem::perm_options::add, errorCode);
     if (errorCode) {
-      LOG(INFO) << "Failed to set read/write permission for file: " << dst
-                << " " << errorCode.message() << std::endl;
+      LOG(ERROR) << "Failed to set read/write permission for file: " << dst
+                 << " " << errorCode.message() << std::endl;
     }
   }
   ssize_t ret;
@@ -109,6 +110,32 @@ inline void copy_file(const std::string& src, const std::string& dst) {
   } while (len > 0 && ret > 0);
   close(src_fd);
   close(dst_fd);
+#else
+  bool creat = false;
+  if (!std::filesystem::exists(dst)) {
+    creat = true;
+  }
+  std::error_code errorCode;
+  std::filesystem::copy_file(
+      src, dst, std::filesystem::copy_options::overwrite_existing, errorCode);
+  if (errorCode) {
+    LOG(ERROR) << "Failed to copy file from " << src << " to " << dst << " "
+               << errorCode.message() << std::endl;
+  }
+  if (creat) {
+    std::filesystem::perms readWritePermission =
+        std::filesystem::perms::owner_read |
+        std::filesystem::perms::owner_write;
+    std::error_code errorCode;
+    std::filesystem::permissions(dst, readWritePermission,
+                                 std::filesystem::perm_options::add, errorCode);
+    if (errorCode) {
+      LOG(INFO) << "Failed to set read/write permission for file: " << dst
+                << " " << errorCode.message() << std::endl;
+    }
+  }
+
+#endif
 }
 
 inline std::string schema_path(const std::string& work_dir) {
@@ -192,6 +219,11 @@ inline std::string oe_prefix(const std::string& src_label,
   return "oe_" + src_label + "_" + edge_label + "_" + dst_label;
 }
 
+inline std::string edata_prefix(const std::string& src_label,
+                                const std::string& dst_label,
+                                const std::string& edge_label) {
+  return "e_" + src_label + "_" + edge_label + "_" + dst_label + "_data";
+}
 inline std::string vertex_table_prefix(const std::string& label) {
   return "vertex_table_" + label;
 }

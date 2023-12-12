@@ -427,15 +427,51 @@ class CountBuilder {
   std::vector<size_t> vec_;
 };
 
-template <int tag_id, typename T>
+template <int tag_id, typename T, typename Enable = void>
 class DistinctCountBuilder;
 
-template <int tag_id, typename VID_T, typename LabelT, typename SUB_GRAPH_T>
-class DistinctCountBuilder<tag_id, UnTypedEdgeSet<VID_T, LabelT, SUB_GRAPH_T>> {
+// Count the distinct edges of UntypedEdgeSet.
+// We assume each edge  in UnTypeEdgeSet  is unique, so just count the index of
+// index_ele_tuple_t.
+template <int tag_id, typename EDGE_SET_T>
+class DistinctCountBuilder<
+    tag_id, EDGE_SET_T,
+    typename std::enable_if<(EDGE_SET_T::is_edge_set)>::type> {
  public:
-  using edge_set_t = UnTypedEdgeSet<VID_T, LabelT, SUB_GRAPH_T>;
+  using edge_set_t = EDGE_SET_T;
   using index_ele_t = typename edge_set_t::index_ele_tuple_t;
-  DistinctCountBuilder(const edge_set_t& edge_set) {}
+  DistinctCountBuilder(const edge_set_t& edge_set) {
+    edges_num_ = edge_set.Size();
+  }
+
+  template <typename ELE_TUPLE_T, typename DATA_TUPLE>
+  void insert(size_t ind, const ELE_TUPLE_T& tuple, const DATA_TUPLE& data) {
+    auto& cur_ind_ele = gs::get_from_tuple<tag_id>(tuple);
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(grape::Bitset(edges_num_));
+    }
+    auto& cur_bitset = vec_[ind];
+    auto cur_ind = std::get<0>(cur_ind_ele);
+    if (cur_ind < edges_num_) {
+      cur_bitset.set_bit(cur_ind);
+    } else {
+      LOG(FATAL) << "Invalid edge index: " << cur_ind
+                 << ", edges num: " << edges_num_;
+    }
+  }
+
+  Collection<size_t> Build() {
+    std::vector<size_t> res;
+    res.reserve(vec_.size());
+    for (auto& bitset : vec_) {
+      res.emplace_back(bitset.count());
+    }
+    return Collection<size_t>(std::move(res));
+  }
+
+ private:
+  std::vector<grape::Bitset> vec_;
+  size_t edges_num_;
 };
 
 // count the distinct number of recieved elements.

@@ -39,14 +39,14 @@ public class GraphAlgoTest {
     }
 
     @Test
-    public void run_movie_query1_test() {
+    public void run_graph_query1_test() {
         QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test1();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
     @Test
-    public void run_movie_query2_test() {
+    public void run_graph_query2_test() {
         QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test2();
         Result result = session.run(testQuery.getQuery());
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
