@@ -305,6 +305,7 @@ class LFIndexer {
                              const std::string& work_dir, size_t size) {
     keys_->open(filename + ".keys", "", work_dir);
     indices_.open(work_dir + "/" + filename + ".indices", false);
+
     num_elements_.store(0);
     indices_size_ = 0;
   }
@@ -438,7 +439,7 @@ class LFIndexer {
         copy_to_tmp(snapshot_dir + "/" + name, work_dir + "/" + name);
 
       } else {
-        build_empty_LFIndexer(name, work_dir, work_dir, 0);
+        build_empty_LFIndexer(name, "", work_dir, 0);
         num_elements_.store(0);
         indices_.open(work_dir + "/" + name + ".indices", false);
         indices_size_ = indices_.size();

@@ -185,7 +185,9 @@ class mmap_array {
 
   void touch(const std::string& filename) {
     if (read_only_) {
-      copy_file(filename_, filename);
+      if (filename_ != "") {
+        copy_file(filename_, filename);
+      }
       open(filename, false);
     }
   }
