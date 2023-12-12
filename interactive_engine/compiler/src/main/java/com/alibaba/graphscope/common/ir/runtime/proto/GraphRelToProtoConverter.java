@@ -93,7 +93,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     public RelNode visit(GraphLogicalExpand expand) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.EdgeExpand edgeExpand = buildEdgeExpand(expand);
+        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpand(expand);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(expand.getRowType(), isColumnId));
@@ -104,7 +104,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     public RelNode visit(GraphLogicalGetV getV) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.GetV getVertex = buildGetV(getV);
+        GraphAlgebraPhysical.GetV.Builder getVertex = buildGetV(getV);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(getVertex));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
@@ -117,9 +117,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.PathExpand.Builder pathExpandBuilder =
                 GraphAlgebraPhysical.PathExpand.newBuilder();
-        GraphAlgebraPhysical.EdgeExpand expand =
+        GraphAlgebraPhysical.EdgeExpand.Builder expand =
                 buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
-        GraphAlgebraPhysical.GetV getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
+        GraphAlgebraPhysical.GetV.Builder getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
         // TODO: fuse expand and getv
@@ -141,7 +141,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     public RelNode visit(GraphLogicalExpandDegree expandDegree) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.EdgeExpand edgeExpand =
+        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand =
                 buildEdgeExpandDegree(expandDegree.getFusedExpand());
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
@@ -156,12 +156,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphLogicalExpand expand = expandGetV.getFusedExpand();
         GraphLogicalGetV getV = expandGetV.getFusedGetV();
-        GraphAlgebraPhysical.EdgeExpand edgeExpand = buildEdgeExpandVertex(expand);
+        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpandVertex(expand);
+        edgeExpand.setAlias(Utils.asAliasId(expandGetV.getAliasId()));
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(expandGetV.getRowType(), isColumnId));
         if (ObjectUtils.isNotEmpty(getV.getFilters())) {
-            GraphAlgebraPhysical.GetV auxilia = buildAuxilia(getV);
+            GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(getV);
             GraphAlgebraPhysical.PhysicalOpr.Builder auxiliaOprBuilder =
                     GraphAlgebraPhysical.PhysicalOpr.newBuilder();
             auxiliaOprBuilder.setOpr(
@@ -476,7 +477,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return vars;
     }
 
-    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpand(
+    private GraphAlgebraPhysical.EdgeExpand.Builder buildEdgeExpand(
             GraphLogicalExpand expand, GraphOpt.PhysicalExpandOpt opt) {
         GraphAlgebraPhysical.EdgeExpand.Builder expandBuilder =
                 GraphAlgebraPhysical.EdgeExpand.newBuilder();
@@ -485,36 +486,38 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         expandBuilder.setAlias(Utils.asAliasId(expand.getAliasId()));
         expandBuilder.setVTag(Utils.asAliasId(expand.getStartAlias().getAliasId()));
         expandBuilder.setExpandOpt(Utils.protoPhysicalExpandOpt(opt));
-        return expandBuilder.build();
+        return expandBuilder;
     }
 
-    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpand(GraphLogicalExpand expand) {
+    private GraphAlgebraPhysical.EdgeExpand.Builder buildEdgeExpand(GraphLogicalExpand expand) {
         return buildEdgeExpand(expand, GraphOpt.PhysicalExpandOpt.EDGE);
     }
 
-    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpandVertex(GraphLogicalExpand expand) {
+    private GraphAlgebraPhysical.EdgeExpand.Builder buildEdgeExpandVertex(
+            GraphLogicalExpand expand) {
         return buildEdgeExpand(expand, GraphOpt.PhysicalExpandOpt.VERTEX);
     }
 
-    private GraphAlgebraPhysical.EdgeExpand buildEdgeExpandDegree(GraphLogicalExpand expand) {
+    private GraphAlgebraPhysical.EdgeExpand.Builder buildEdgeExpandDegree(
+            GraphLogicalExpand expand) {
         return buildEdgeExpand(expand, GraphOpt.PhysicalExpandOpt.DEGREE);
     }
 
-    private GraphAlgebraPhysical.GetV buildVertex(
+    private GraphAlgebraPhysical.GetV.Builder buildVertex(
             GraphLogicalGetV getV, GraphOpt.PhysicalGetVOpt opt) {
         GraphAlgebraPhysical.GetV.Builder vertexBuilder = GraphAlgebraPhysical.GetV.newBuilder();
         vertexBuilder.setOpt(Utils.protoPhysicalGetVOpt(opt));
         vertexBuilder.setParams(buildQueryParams(getV));
         vertexBuilder.setAlias(Utils.asAliasId(getV.getAliasId()));
         vertexBuilder.setTag(Utils.asAliasId(getV.getStartAlias().getAliasId()));
-        return vertexBuilder.build();
+        return vertexBuilder;
     }
 
-    private GraphAlgebraPhysical.GetV buildGetV(GraphLogicalGetV getV) {
+    private GraphAlgebraPhysical.GetV.Builder buildGetV(GraphLogicalGetV getV) {
         return buildVertex(getV, PhysicalGetVOpt.valueOf(getV.getOpt().name()));
     }
 
-    private GraphAlgebraPhysical.GetV buildAuxilia(GraphLogicalGetV getV) {
+    private GraphAlgebraPhysical.GetV.Builder buildAuxilia(GraphLogicalGetV getV) {
         return buildVertex(getV, PhysicalGetVOpt.ITSELF);
     }
 
