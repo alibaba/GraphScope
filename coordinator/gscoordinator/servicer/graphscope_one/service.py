@@ -358,7 +358,7 @@ class GraphScopeOneServiceServicer(
         except Exception as e:
             context.abort(
                 grpc.StatusCode.ABORTED,
-                f"${e}. The traceback is: {traceback.format_exc()}",
+                f"{e}. The traceback is: {traceback.format_exc()}",
             )
             return message_pb2.CreateAnalyticalInstanceResponse()
         return message_pb2.CreateAnalyticalInstanceResponse(

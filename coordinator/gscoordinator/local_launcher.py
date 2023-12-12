@@ -169,6 +169,10 @@ class LocalLauncher(AbstractLauncher):
 
         start_time = time.time()
         while is_free_port(rpc_port):
+            if process.poll() is not None:
+                msg = "Launch analytical engine failed: "
+                msg += "\n".join([line for line in stderr_watcher.poll_all()])
+                raise RuntimeError(msg)
             if self._timeout_seconds + start_time < time.time():
                 self._analytical_engine_process.kill()
                 raise RuntimeError("Launch analytical engine failed due to timeout.")
