@@ -407,9 +407,12 @@ impl Predicates {
     }
 
     fn merge_partial(
-        self, curr_cmp: Option<common_pb::Logical>, partial: Partial, is_not: bool,
+        self, curr_cmp: Option<common_pb::Logical>, mut partial: Partial, is_not: bool,
     ) -> ExprResult<Predicates> {
         use common_pb::Logical;
+        if let Some(Logical::Isnull) = curr_cmp {
+            partial.cmp(Logical::Isnull)?;
+        }
         let old_partial = partial.clone();
         if let Some(mut new_pred) = Option::<Predicates>::from(partial) {
             if is_not {
@@ -419,6 +422,7 @@ impl Predicates {
                 match cmp {
                     Logical::And => Ok(self.and(new_pred)),
                     Logical::Or => Ok(self.or(new_pred)),
+                    Logical::Isnull => Ok(new_pred),
                     _ => unreachable!(),
                 }
             } else {
@@ -460,8 +464,8 @@ fn process_predicates(
                             | Logical::Without
                             | Logical::Startswith
                             | Logical::Endswith
-                            | Logical::Isnull
                             | Logical::Regex => partial.cmp(logical)?,
+                            Logical::Isnull => curr_cmp = Some(logical),
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
@@ -949,13 +953,13 @@ mod tests {
         // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
-            "@0.hobbies isNull",                 // false
-            "!(@0.hobbies isNull)",              // true
-            "@1.hobbies isNull",                 // true
-            "!(@1.hobbies isNull)",              // false
-            "true isNull",                       // false
-            "false isNull",                      // false
-            "@1.hobbies isNull && @1.age == 26", // true
+            "isNull @0.hobbies",                 // false
+            "!(isNull @0.hobbies)",              // true
+            "isNull @1.hobbies",                 // true
+            "!(isNull @1.hobbies)",              // false
+            "isNull true",                       // false
+            "isNull false",                      // false
+            "isNull @1.hobbies && @1.age == 26", // true
         ];
         let expected: Vec<bool> = vec![false, true, true, false, false, false, true];
 
