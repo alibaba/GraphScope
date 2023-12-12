@@ -12,7 +12,7 @@ TARGETPLATFORM ?= $(shell arch)
 RUNNER_VERSION ?= 2.287.1
 DOCKER_VERSION ?= 20.10.12
 
-VINEYARD_VERSION ?= v0.16.4
+VINEYARD_VERSION ?= v0.18.2
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 
 # default list of platforms for which multiarch image is built
