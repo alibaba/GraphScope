@@ -18,16 +18,15 @@ package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.common.store.IrMeta;
-import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
+import com.alibaba.graphscope.gremlin.resultx.GremlinRecordParser;
+import com.alibaba.graphscope.gremlin.resultx.GremlinResultProcessor;
 import com.google.common.base.Preconditions;
 
-import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
-import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.Context;
 
@@ -82,49 +81,17 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                 statusCallback
                                         .getQueryLogger()
                                         .info("ir plan {}", summary.getPhysicalPlan().explain());
+                                RecordParser<Object> recordParser =
+                                        new GremlinRecordParser(
+                                                summary.getLogicalPlan().getOutputType());
                                 this.client.submit(
                                         new ExecutionRequest(
                                                 queryId,
                                                 queryName,
                                                 summary.getLogicalPlan(),
                                                 summary.getPhysicalPlan()),
-                                        new ExecutionResponseListener() {
-                                            @Override
-                                            public void onNext(IrResult.Record record) {
-                                                statusCallback
-                                                        .getQueryLogger()
-                                                        .info("record is {}", record);
-                                                ctx.writeAndFlush(
-                                                        ResponseMessage.build(
-                                                                        ctx.getRequestMessage())
-                                                                .code(
-                                                                        ResponseStatusCode
-                                                                                .PARTIAL_CONTENT)
-                                                                .result(record.toString())
-                                                                .create());
-                                            }
-
-                                            @Override
-                                            public void onCompleted() {
-                                                ctx.writeAndFlush(
-                                                        ResponseMessage.build(
-                                                                        ctx.getRequestMessage())
-                                                                .code(ResponseStatusCode.SUCCESS)
-                                                                .create());
-                                            }
-
-                                            @Override
-                                            public void onError(Throwable t) {
-                                                ctx.writeAndFlush(
-                                                        ResponseMessage.build(
-                                                                        ctx.getRequestMessage())
-                                                                .code(
-                                                                        ResponseStatusCode
-                                                                                .SERVER_ERROR)
-                                                                .statusMessage(t.getMessage())
-                                                                .create());
-                                            }
-                                        },
+                                        new GremlinResultProcessor(
+                                                ctx, statusCallback, recordParser),
                                         timeoutConfig);
                             } catch (Exception e) {
                                 throw new RuntimeException(e);

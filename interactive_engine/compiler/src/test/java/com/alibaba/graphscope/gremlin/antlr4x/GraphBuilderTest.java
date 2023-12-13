@@ -38,8 +38,8 @@ public class GraphBuilderTest {
     public void g_V_test() {
         RelNode node = eval("g.V()");
         Assert.assertEquals(
-                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[DEFAULT], opt=[VERTEX])",
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -47,8 +47,9 @@ public class GraphBuilderTest {
     public void g_V_id_test() {
         RelNode node = eval("g.V(1, 2, 3)");
         Assert.assertEquals(
-                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n" +
-                        "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}], alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id, Sarg[1, 2, 3])])",
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
+                        + " Sarg[1, 2, 3])])",
                 node.explain().trim());
     }
 
@@ -458,6 +459,19 @@ public class GraphBuilderTest {
     //    public void g_V_select_a_by_values_name_test() {
     //        RelNode node = eval("g.V().as('a').select('a').by(values('name'))");
     //    }
+
+    @Test
+    public void g_V_valueMap_label() {
+        //        RelNode node = eval("g.V().valueMap('id', 'name')");
+        //        System.out.println(node.explain());
+        //        System.out.println(node.getRowType());
+        //        RelNode node = eval("g.V().elementMap()");
+        //        System.out.println(node.explain());
+        //        RelNode node = eval("g.V().as('a').out().where(eq('a')).by(valueMap('name'))");
+        //        System.out.println(node.explain());
+        RelNode node = eval("g.V().as('a').out().where(not(eq('a')))");
+        System.out.println(node.explain());
+    }
 
     @Test
     public void g_V_order_test() {

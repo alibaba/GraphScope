@@ -18,19 +18,21 @@ package com.alibaba.graphscope.gremlin.plugin.script;
 
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.store.IrMeta;
+
 import org.apache.tinkerpop.gremlin.jsr223.AbstractGremlinScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngineFactory;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 
+import java.io.Reader;
+import java.util.Collections;
+import java.util.List;
+
 import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptException;
-import java.io.Reader;
-import java.util.Collections;
-import java.util.List;
 
 public class GremlinCalciteScriptEngineFactory extends AbstractGremlinScriptEngineFactory {
     private static final String PLAIN = "plain";

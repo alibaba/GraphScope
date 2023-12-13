@@ -31,8 +31,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
-    private final RexNode propertyKey;
-    private final GraphBuilder builder;
+    protected final RexNode propertyKey;
+    protected final GraphBuilder builder;
 
     public ExpressionVisitor(GraphBuilder builder, RexNode propertyKey) {
         this.builder = Objects.requireNonNull(builder);
@@ -158,7 +158,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
 
     @Override
     public RexNode visitTraversalPredicate_not(GremlinGSParser.TraversalPredicate_notContext ctx) {
-        return builder.not(visitChildren(ctx));
+        return builder.not(visitTraversalPredicate(ctx.traversalPredicate()));
     }
 
     @Override
@@ -244,7 +244,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     public RexNode visitTraversalPredicate_containing(
             GremlinGSParser.TraversalPredicate_containingContext ctx) {
         String posixRegex =
-                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "*.";
+                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + ".*";
         return builder.call(
                 GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
                 propertyKey,
@@ -255,7 +255,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     public RexNode visitTraversalPredicate_notContaining(
             GremlinGSParser.TraversalPredicate_notContainingContext ctx) {
         String posixRegex =
-                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + "*.";
+                ".*" + GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()) + ".*";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,

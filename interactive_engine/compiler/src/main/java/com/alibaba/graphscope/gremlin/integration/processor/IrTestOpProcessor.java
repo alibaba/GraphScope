@@ -18,24 +18,26 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
+import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
-import com.alibaba.graphscope.gremlin.integration.result.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
+import com.alibaba.graphscope.gremlin.resultx.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.resultx.GremlinTestRecordParser;
 
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
-import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.translator.GroovyTranslator;
 import org.apache.tinkerpop.gremlin.server.Context;
@@ -103,24 +105,28 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             Bytecode byteCode =
                                     (Bytecode) message.getArgs().get(Tokens.ARGS_GREMLIN);
                             String script = getScript(byteCode);
-                            Traversal traversal =
-                                    (Traversal) scriptEngine.eval(script, this.context);
-                            applyStrategies(traversal);
-                            long jobId = idGenerator.generateId();
+                            long queryId = idGenerator.generateId();
+                            String queryName = idGenerator.generateName(queryId);
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
-                                    createQueryStatusCallback(script, jobId);
-                            processTraversal(
-                                    traversal,
-                                    new GremlinTestResultProcessor(
+                                    createQueryStatusCallback(script, queryId);
+                            GraphPlanner.Summary summary =
+                                    this.graphPlanner.instance(script, irMeta).plan();
+                            this.executionClient.submit(
+                                    new ExecutionRequest(
+                                            queryId,
+                                            queryName,
+                                            summary.getLogicalPlan(),
+                                            summary.getPhysicalPlan()),
+                                    new GremlinResultProcessor(
                                             ctx,
-                                            traversal,
                                             statusCallback,
-                                            testGraph,
-                                            this.configs),
-                                    irMeta,
-                                    new QueryTimeoutConfig(ctx.getRequestTimeout()),
-                                    statusCallback.getQueryLogger());
+                                            new GremlinTestRecordParser(
+                                                    summary.getLogicalPlan().getOutputType(),
+                                                    testGraph.getProperties(configs))),
+                                    new QueryTimeoutConfig(
+                                            FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(
+                                                    configs)));
                             metaQueryCallback.afterExec(irMeta);
                         });
                 return op;
