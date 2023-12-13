@@ -1001,19 +1001,19 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_asXaX_out_asXbX_out_asXcX_path_fromXbX_toXcX_byXnameX",
         reason = "unsupported")
 
-// TODO: vineyard edge id has been changed
+// TODO(siyuan): vineyard edge id has been changed
 @Graph.OptOut(
-       test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-       method = "g_E",
-       reason = "edge id from vineyard has been changed")
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_E",
+        reason = "edge id from vineyard has been changed")
 @Graph.OptOut(
-       test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-       method = "g_VX1X_outE",
-       reason = "edge id from vineyard has been changed")
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VX1X_outE",
+        reason = "edge id from vineyard has been changed")
 @Graph.OptOut(
-       test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
-       method = "g_VX4X_bothE",
-       reason = "edge id from vineyard has been changed")
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
+        method = "g_VX4X_bothE",
+        reason = "edge id from vineyard has been changed")
 
 // todo: return label is integer
 // @Graph.OptOut(
