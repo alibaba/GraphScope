@@ -115,7 +115,6 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
   in_archive << value.type_enum;
   if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
     in_archive << value.additional_type_info.max_length;
-    LOG(INFO) << value.additional_type_info.max_length << "length\n";
   }
   return in_archive;
 }

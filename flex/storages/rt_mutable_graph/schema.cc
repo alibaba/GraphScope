@@ -320,17 +320,6 @@ bool Schema::Equals(const Schema& other) const {
       const auto& lhs = get_vertex_properties(label_name);
       const auto& rhs = other.get_vertex_properties(label_name);
       if (lhs != rhs) {
-        LOG(INFO) << "error" << lhs.size() << " " << rhs.size() << " "
-                  << "\n";
-        for (auto& x : lhs) {
-          LOG(INFO) << x << " ";
-        }
-        LOG(INFO) << "\n";
-        for (auto& x : rhs) {
-          LOG(INFO) << x.type_enum << " ";
-        }
-        LOG(INFO) << "\n";
-
         return false;
       }
     }
@@ -342,11 +331,9 @@ bool Schema::Equals(const Schema& other) const {
       }
     }
     if (get_max_vnum(label_name) != other.get_max_vnum(label_name)) {
-      LOG(INFO) << "error\n";
       return false;
     }
   }
-  LOG(INFO) << "no problem\n";
   for (label_t src_label = 0; src_label < vertex_label_num(); ++src_label) {
     for (label_t dst_label = 0; dst_label < vertex_label_num(); ++dst_label) {
       for (label_t edge_label = 0; edge_label < edge_label_num();
@@ -377,7 +364,6 @@ bool Schema::Equals(const Schema& other) const {
             auto rhs = other.get_incoming_edge_strategy(
                 src_label_name, dst_label_name, edge_label_name);
             if (lhs != rhs) {
-              LOG(INFO) << "error\n";
               return false;
             }
           }
@@ -387,7 +373,6 @@ bool Schema::Equals(const Schema& other) const {
             auto rhs = other.get_outgoing_edge_strategy(
                 src_label_name, dst_label_name, edge_label_name);
             if (lhs != rhs) {
-              LOG(INFO) << "error\n";
               return false;
             }
           }
@@ -395,7 +380,6 @@ bool Schema::Equals(const Schema& other) const {
       }
     }
   }
-  LOG(INFO) << "no problem\n";
   return true;
 }
 
@@ -427,7 +411,6 @@ static PropertyType StringToPropertyType(const std::string& str) {
   } else if (str.substr(0, 7) == "VARCHAR") {
     int max_len;
     sscanf(str.data(), "VARCHAR(%d)", &max_len);
-    LOG(INFO) << max_len << " max_len\n";
     return PropertyType::Varchar(max_len);
   } else {
     return PropertyType::kEmpty;
