@@ -29,20 +29,10 @@ const char* FlexException::what() const noexcept { return _err_msg.c_str(); }
 
 // get current executable's directory
 std::string get_current_dir() {
-  char buf[1024];
-  int dirfd = open("/proc/self/", O_RDONLY | O_DIRECTORY);
-  if (dirfd == -1) {
-    // Handle error
-  }
-
-  ssize_t len = readlinkat(dirfd, "exe", buf, sizeof(buf) - 1);
-  if (len == -1) {
-    // Handle error
-  }
-  buf[len] = '\0';
-  close(dirfd);
-  std::string exe_path(buf);
-  return exe_path.substr(0, exe_path.rfind('/'));
+  char result[1024];
+  ssize_t count = readlink("/proc/self/exe", result, 1024);
+  auto ret = (count > 0) ? std::string(result, count) : std::string();
+  return ret.substr(0, ret.rfind('/'));
 }
 
 std::string find_codegen_bin() {
