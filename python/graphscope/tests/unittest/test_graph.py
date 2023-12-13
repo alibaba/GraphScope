@@ -299,7 +299,6 @@ def test_add_vertices_edges(graphscope_session):
     assert graph.schema.edge_labels == ["knows", "created"]
 
 
-@pytest.mark.skip("unlock this when update")
 def test_extend_vertices_edges(graphscope_session):
     prefix = os.path.expandvars("${GS_TEST_DIR}/")
     verts = pd.read_csv(f"{prefix}/p2p_v.csv")
