@@ -29,6 +29,36 @@ bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type) {
   }
 }
 
+void set_vertex_column_from_string_array(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids) {
+  auto type = array->type();
+  CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
+      << "Inconsistent data type, expect string, but got " << type->ToString();
+  size_t cur_ind = 0;
+  if (type->Equals(arrow::large_utf8())) {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        std::string_view sw(str.data(), str.size());
+        col->set_any(vids[cur_ind++], std::move(sw));
+      }
+    }
+  } else {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        std::string_view sw(str.data(), str.size());
+        col->set_any(vids[cur_ind++], std::move(sw));
+      }
+    }
+  }
+}
+
 void set_vertex_properties(gs::ColumnBase* col,
                            std::shared_ptr<arrow::ChunkedArray> array,
                            const std::vector<vid_t>& vids) {
@@ -52,18 +82,11 @@ void set_vertex_properties(gs::ColumnBase* col,
     set_single_vertex_column<float>(col, array, vids);
   } else if (col_type == PropertyType::kString ||
              col_type == PropertyType::kStringMap) {
-    set_vertex_column_from_string_array<std::string_view>(
-        col, array, vids, [](const arrow::util::string_view& view) {
-          return std::string_view(view.data(), view.size());
-        });
+    set_vertex_column_from_string_array(col, array, vids);
   } else if (col_type == PropertyType::kDate) {
     set_vertex_column_from_timestamp_array(col, array, vids);
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
-    set_vertex_column_from_string_array<VarChar>(
-        col, array, vids, [col_type](const arrow::util::string_view& view) {
-          return VarChar(view.data(), view.size(),
-                         col_type.additional_type_info.max_length);
-        });
+    set_vertex_column_from_string_array(col, array, vids);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }
@@ -154,6 +177,9 @@ void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
     addVertexRecordBatchImpl<uint32_t>(v_label_id, v_files, supplier_creator);
   } else if (type == PropertyType::kUInt64) {
     addVertexRecordBatchImpl<uint64_t>(v_label_id, v_files, supplier_creator);
+  } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    addVertexRecordBatchImpl<std::string_view>(v_label_id, v_files,
+                                               supplier_creator);
   }
   VLOG(10) << "Finish init vertices for label " << v_label_name;
 }
@@ -268,11 +294,11 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
     }
   } else if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
     if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<VarChar>(
+      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
           src_label_i, dst_label_i, edge_label_i);
     } else {
-      addEdgesRecordBatchImpl<VarChar>(src_label_i, dst_label_i, edge_label_i,
-                                       filenames, supplier_creator);
+      addEdgesRecordBatchImpl<std::string_view>(
+          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type." << property_types[0];

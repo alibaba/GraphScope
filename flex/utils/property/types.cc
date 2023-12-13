@@ -50,8 +50,13 @@ const PropertyType PropertyType::kStringMap =
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
       other.type_enum == impl::PropertyTypeImpl::kVarChar) {
-    return additional_type_info.max_length ==
-           other.additional_type_info.max_length;
+    return true;
+  }
+  if ((type_enum == impl::PropertyTypeImpl::kString &&
+       other.type_enum == impl::PropertyTypeImpl::kVarChar) ||
+      (type_enum == impl::PropertyTypeImpl::kVarChar &&
+       other.type_enum == impl::PropertyTypeImpl::kString)) {
+    return true;
   }
   return type_enum == other.type_enum;
 }
@@ -101,7 +106,7 @@ PropertyType PropertyType::String() {
 PropertyType PropertyType::StringMap() {
   return PropertyType(impl::PropertyTypeImpl::kStringMap);
 }
-PropertyType PropertyType::Varchar(int32_t max_length) {
+PropertyType PropertyType::Varchar(size_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
@@ -110,6 +115,7 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
   in_archive << value.type_enum;
   if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
     in_archive << value.additional_type_info.max_length;
+    LOG(INFO) << value.additional_type_info.max_length << "length\n";
   }
   return in_archive;
 }
@@ -118,16 +124,10 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
   out_archive >> value.type_enum;
   if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
     out_archive >> value.additional_type_info.max_length;
+
+    LOG(INFO) << value.additional_type_info.max_length << "length\n";
   }
   return out_archive;
-}
-
-grape::InArchive& operator<<(grape::InArchive& in_archive,
-                             const VarChar& value) {
-  return in_archive << value.data;
-}
-grape::OutArchive& operator>>(grape::OutArchive& out_archive, VarChar& value) {
-  return out_archive >> value.data;
 }
 
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
@@ -155,8 +155,6 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.d.milli_second;
   } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
-  } else if (value.type.type_enum == impl::PropertyTypeImpl::kVarChar) {
-    in_archive << value.type << value.value.vc;
   } else {
     in_archive << PropertyType::kEmpty;
   }
@@ -189,8 +187,6 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     out_archive >> value.value.d.milli_second;
   } else if (value.type == PropertyType::String()) {
     out_archive >> value.value.s;
-  } else if (value.type.type_enum == impl::PropertyTypeImpl::kVarChar) {
-    out_archive >> value.value.vc;
   } else {
     value.type = PropertyType::kEmpty;
   }

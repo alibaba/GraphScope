@@ -494,9 +494,8 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
   using const_nbr_ptr_t = typename MutableNbrSlice<EDATA_T>::const_nbr_ptr_t;
 
  public:
-  explicit TypedMutableCsrConstEdgeIter(const MutableNbrSlice<EDATA_T>& slice,
-                                        PropertyType edge_prop_type)
-      : cur_(slice.begin()), end_(slice.end()), edge_prop_(edge_prop_type) {}
+  explicit TypedMutableCsrConstEdgeIter(const MutableNbrSlice<EDATA_T>& slice)
+      : cur_(slice.begin()), end_(slice.end()){}
   ~TypedMutableCsrConstEdgeIter() = default;
 
   vid_t get_neighbor() const override { return (*cur_).get_neighbor(); }
@@ -526,19 +525,13 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
   using nbr_t = MutableNbr<EDATA_T>;
 
  public:
-  explicit TypedMutableCsrEdgeIter(MutableNbrSliceMut<EDATA_T> slice,
-                                   PropertyType edge_prop_type)
-      : cur_(slice.begin()), end_(slice.end()), edge_prop_(edge_prop_type) {}
+  explicit TypedMutableCsrEdgeIter(MutableNbrSliceMut<EDATA_T> slice)
+      : cur_(slice.begin()), end_(slice.end()) {}
   ~TypedMutableCsrEdgeIter() = default;
 
   vid_t get_neighbor() const override { return cur_->neighbor; }
   Any get_data() const override {
-    if constexpr (std::is_same_v<EDATA_T, VarChar>) {
-      return AnyConverter<VarChar>::to_any(
-          cur_->data, edge_prop_.additional_type_info.max_length);
-    } else {
-      return AnyConverter<EDATA_T>::to_any(cur_->data);
-    }
+    return AnyConverter<EDATA_T>::to_any(cur_->data);
   }
   timestamp_t get_timestamp() const override { return cur_->timestamp.load(); }
 
@@ -562,7 +555,6 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
  private:
   nbr_t* cur_;
   nbr_t* end_;
-  PropertyType edge_prop_;
 };
 
 template <>
@@ -633,8 +625,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   using slice_t = MutableNbrSlice<EDATA_T>;
   using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
 
-  MutableCsr(PropertyType edge_prop_type)
-      : locks_(nullptr), edge_prop_(edge_prop_type) {}
+  MutableCsr()
+      : locks_(nullptr) {}
   ~MutableCsr() {
     if (locks_ != nullptr) {
       delete[] locks_;
@@ -874,23 +866,20 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v),
-                                                                   edge_prop_);
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v), edge_prop_);
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
   }
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v),
-                                                              edge_prop_);
+    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v));
   }
 
  private:
   grape::SpinLock* locks_;
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
-  PropertyType edge_prop_;
 };
 
 template <>
@@ -1288,17 +1277,15 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v),
-                                                                   edge_prop_);
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v), edge_prop_);
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
   }
 
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v),
-                                                              edge_prop_);
+    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v));
   }
 
   void warmup(int thread_num) const override {
@@ -1333,7 +1320,6 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
  private:
   mmap_array<nbr_t> nbr_list_;
-  PropertyType edge_prop_;
 };
 
 template <>
@@ -1562,15 +1548,15 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
     return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
-        MutableNbrSlice<EDATA_T>::empty(), PropertyType::Empty());
+        MutableNbrSlice<EDATA_T>::empty());
   }
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
     return new TypedMutableCsrConstEdgeIter<EDATA_T>(
-        MutableNbrSlice<EDATA_T>::empty(), PropertyType::Empty());
+        MutableNbrSlice<EDATA_T>::empty());
   }
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
     return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(
-        MutableNbrSliceMut<EDATA_T>::empty(), PropertyType::Empty());
+        MutableNbrSliceMut<EDATA_T>::empty());
   }
 };
 

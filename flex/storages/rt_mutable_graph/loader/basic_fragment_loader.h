@@ -62,9 +62,12 @@ class BasicFragmentLoader {
     CHECK(v_label < vertex_label_num_);
     std::string filename =
         vertex_map_prefix(schema_.get_vertex_label_name(v_label));
+    auto primary_keys = schema_.get_vertex_primary_key(v_label);
+    auto type = std::get<0>(primary_keys[0]);
+    
     build_lf_indexer<KEY_T, vid_t>(indexer, filename, lf_indexers_[v_label],
                                    snapshot_dir(work_dir_, 0),
-                                   tmp_dir(work_dir_));
+                                   tmp_dir(work_dir_), type);
   }
 
   template <typename EDATA_T>
@@ -81,7 +84,14 @@ class BasicFragmentLoader {
         src_label_name, dst_label_name, edge_label_name);
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
-    dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+    if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
+      const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
+                                                     edge_label_id);
+      dual_csr_list_[index] =
+          new DualCsr<std::string_view>(oe_strategy, ie_strategy, prop[0]);
+    } else {
+      dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+    }
     ie_[index] = dual_csr_list_[index]->GetInCsr();
     oe_[index] = dual_csr_list_[index]->GetOutCsr();
     dual_csr_list_[index]->BatchInit(
@@ -111,20 +121,43 @@ class BasicFragmentLoader {
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
 
-    auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
-    dual_csr_list_[index] = dual_csr;
-    ie_[index] = dual_csr_list_[index]->GetInCsr();
-    oe_[index] = dual_csr_list_[index]->GetOutCsr();
-    CHECK(ie_degree.size() == dst_indexer.size());
-    CHECK(oe_degree.size() == src_indexer.size());
-    dual_csr->BatchInit(
-        oe_prefix(src_label_name, dst_label_name, edge_label_name),
-        ie_prefix(src_label_name, dst_label_name, edge_label_name),
-        edata_prefix(src_label_name, dst_label_name, edge_label_name),
-        tmp_dir(work_dir_), oe_degree, ie_degree);
-    for (auto& edge : edges) {
-      dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
-                             std::get<2>(edge));
+    if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
+      const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
+                                                     edge_label_id);
+      auto dual_csr =
+          new DualCsr<std::string_view>(oe_strategy, ie_strategy, prop[0]);
+      dual_csr_list_[index] = dual_csr;
+      ie_[index] = dual_csr_list_[index]->GetInCsr();
+      oe_[index] = dual_csr_list_[index]->GetOutCsr();
+      CHECK(ie_degree.size() == dst_indexer.size());
+      CHECK(oe_degree.size() == src_indexer.size());
+      dual_csr->BatchInit(
+          oe_prefix(src_label_name, dst_label_name, edge_label_name),
+          ie_prefix(src_label_name, dst_label_name, edge_label_name),
+          edata_prefix(src_label_name, dst_label_name, edge_label_name),
+          tmp_dir(work_dir_), oe_degree, ie_degree);
+      for (auto& edge : edges) {
+        dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
+                               std::get<2>(edge));
+      }
+
+    } else {
+      auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+
+      dual_csr_list_[index] = dual_csr;
+      ie_[index] = dual_csr_list_[index]->GetInCsr();
+      oe_[index] = dual_csr_list_[index]->GetOutCsr();
+      CHECK(ie_degree.size() == dst_indexer.size());
+      CHECK(oe_degree.size() == src_indexer.size());
+      dual_csr->BatchInit(
+          oe_prefix(src_label_name, dst_label_name, edge_label_name),
+          ie_prefix(src_label_name, dst_label_name, edge_label_name),
+          edata_prefix(src_label_name, dst_label_name, edge_label_name),
+          tmp_dir(work_dir_), oe_degree, ie_degree);
+      for (auto& edge : edges) {
+        dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
+                               std::get<2>(edge));
+      }
     }
     VLOG(10) << "Finish adding edge batch of size: " << edges.size();
   }

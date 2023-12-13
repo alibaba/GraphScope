@@ -193,20 +193,21 @@ using ULongColumn = TypedColumn<uint64_t>;
 using DateColumn = TypedColumn<Date>;
 using DoubleColumn = TypedColumn<double>;
 using FloatColumn = TypedColumn<float>;
-using VarCharColumn = TypedColumn<VarChar>;
 
-class AbstractStringColumn {
+template <>
+class TypedColumn<std::string_view> : public ColumnBase {
  public:
-  AbstractStringColumn(StorageStrategy strategy, size_t width = 64)
-      : width_(width) {}  // width_ is the max length of string
-  ~AbstractStringColumn() { close(); }
+  TypedColumn(StorageStrategy strategy, size_t width = 64) : width_(width) {}
+  ~TypedColumn() { close(); }
+  void set_width(size_t width) { width_ = width; }
 
   void open(const std::string& name, const std::string& snapshot_dir,
-            const std::string& work_dir) {
+            const std::string& work_dir) override {
     std::string basic_path = snapshot_dir + "/" + name;
     if (std::filesystem::exists(basic_path + ".items")) {
       basic_buffer_.open(basic_path, true);
       basic_size_ = basic_buffer_.size();
+
     } else {
       basic_size_ = 0;
     }
@@ -216,12 +217,11 @@ class AbstractStringColumn {
     } else {
       extra_buffer_.open(work_dir + "/" + name, false);
       extra_size_ = extra_buffer_.size();
-
       pos_.store(extra_buffer_.data_size());
     }
   }
 
-  void touch(const std::string& filename) {
+  void touch(const std::string& filename) override {
     mmap_array<std::string_view> tmp;
     tmp.open(filename, false);
     tmp.resize(basic_size_ + extra_size_, (basic_size_ + extra_size_) * width_);
@@ -246,12 +246,13 @@ class AbstractStringColumn {
     pos_.store(offset);
   }
 
-  void close() {
+  void close() override {
     basic_buffer_.reset();
     extra_buffer_.reset();
   }
 
-  void copy_to_tmp(const std::string& cur_path, const std::string& tmp_path) {
+  void copy_to_tmp(const std::string& cur_path,
+                   const std::string& tmp_path) override {
     mmap_array<std::string_view> tmp;
     if (!std::filesystem::exists(cur_path + ".data")) {
       return;
@@ -268,7 +269,7 @@ class AbstractStringColumn {
     pos_.store(extra_buffer_.data_size());
   }
 
-  void dump(const std::string& filename) {
+  void dump(const std::string& filename) override {
     if (basic_size_ != 0 && extra_size_ == 0) {
       basic_buffer_.dump(filename);
     } else if (basic_size_ == 0 && extra_size_ != 0) {
@@ -295,9 +296,9 @@ class AbstractStringColumn {
     }
   }
 
-  size_t size() const { return basic_size_ + extra_size_; }
+  size_t size() const override { return basic_size_ + extra_size_; }
 
-  void resize(size_t size) {
+  void resize(size_t size) override {
     if (size < basic_buffer_.size()) {
       basic_size_ = size;
       extra_size_ = 0;
@@ -308,85 +309,12 @@ class AbstractStringColumn {
     }
   }
 
-  PropertyType type() const { return AnyConverter<std::string_view>::type(); }
+  PropertyType type() const override { return PropertyType::kString; }
 
   void set_value(size_t idx, const std::string_view& val) {
     assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
     size_t offset = pos_.fetch_add(val.size());
     extra_buffer_.set(idx - basic_size_, offset, val);
-  }
-
-  void set_any(size_t idx, const Any& value) {
-    set_value(idx, AnyConverter<std::string_view>::from_any(value));
-  }
-
-  void ingest(uint32_t index, grape::OutArchive& arc) {
-    std::string_view val;
-    arc >> val;
-    set_value(index, val);
-  }
-  const mmap_array<std::string_view>& basic_buffer() const {
-    return basic_buffer_;
-  }
-
-  StorageStrategy storage_strategy() const { return strategy_; }
-
-  size_t basic_buffer_size() const { return basic_size_; }
-
-  const mmap_array<std::string_view>& extra_buffer() const {
-    return extra_buffer_;
-  }
-
-  size_t extra_buffer_size() const { return extra_size_; }
-
- protected:
-  mmap_array<std::string_view> basic_buffer_;
-  size_t basic_size_;
-  mmap_array<std::string_view> extra_buffer_;
-  size_t extra_size_;
-  std::atomic<size_t> pos_;
-  StorageStrategy strategy_;
-  size_t width_;
-};
-
-template <>
-class TypedColumn<std::string_view> : public AbstractStringColumn,
-                                      public ColumnBase {
- public:
-  TypedColumn(StorageStrategy strategy, size_t width = 64)
-      : AbstractStringColumn(strategy, width) {}
-  ~TypedColumn() { close(); }
-
-  void open(const std::string& name, const std::string& snapshot_dir,
-            const std::string& work_dir) override {
-    AbstractStringColumn::open(name, snapshot_dir, work_dir);
-  }
-
-  void touch(const std::string& filename) override {
-    AbstractStringColumn::touch(filename);
-  }
-
-  void close() override { AbstractStringColumn::close(); }
-
-  void copy_to_tmp(const std::string& cur_path,
-                   const std::string& tmp_path) override {
-    AbstractStringColumn::copy_to_tmp(cur_path, tmp_path);
-  }
-
-  void dump(const std::string& filename) override {
-    AbstractStringColumn::dump(filename);
-  }
-
-  size_t size() const override { return AbstractStringColumn::size(); }
-
-  void resize(size_t size) override { AbstractStringColumn::resize(size); }
-
-  PropertyType type() const override {
-    return AnyConverter<std::string_view>::type();
-  }
-
-  void set_value(size_t idx, const std::string_view& val) {
-    AbstractStringColumn::set_value(idx, val);
   }
 
   void set_any(size_t idx, const Any& value) override {
@@ -403,112 +331,32 @@ class TypedColumn<std::string_view> : public AbstractStringColumn,
   }
 
   void ingest(uint32_t index, grape::OutArchive& arc) override {
-    AbstractStringColumn::ingest(index, arc);
+    std::string_view val;
+    arc >> val;
+    set_value(index, val);
   }
-
   const mmap_array<std::string_view>& basic_buffer() const {
-    return AbstractStringColumn::basic_buffer();
+    return basic_buffer_;
   }
 
-  StorageStrategy storage_strategy() const override {
-    return AbstractStringColumn::storage_strategy();
-  }
+  StorageStrategy storage_strategy() const override { return strategy_; }
 
-  size_t basic_buffer_size() const {
-    return AbstractStringColumn::basic_buffer_size();
-  }
+  size_t basic_buffer_size() const { return basic_size_; }
 
   const mmap_array<std::string_view>& extra_buffer() const {
-    return AbstractStringColumn::extra_buffer();
+    return extra_buffer_;
   }
 
-  size_t extra_buffer_size() const {
-    return AbstractStringColumn::extra_buffer_size();
-  }
-};
-
-// Should TypedColumn<VarChar> be a subclass of AbstractStringColumn?
-// Or should it use a mmap_array<VarChar>, in which we replace size(T) with
-// .elementSize() to allocate memory?
-template <>
-class TypedColumn<VarChar> : public AbstractStringColumn, public ColumnBase {
- public:
-  TypedColumn(int32_t max_length, StorageStrategy strategy, size_t width = 64)
-      : AbstractStringColumn(strategy, width), max_length_(max_length) {}
-  ~TypedColumn() { close(); }
-
-  void open(const std::string& name, const std::string& snapshot_dir,
-            const std::string& work_dir) override {
-    AbstractStringColumn::open(name, snapshot_dir, work_dir);
-  }
-
-  void touch(const std::string& filename) override {
-    AbstractStringColumn::touch(filename);
-  }
-
-  void close() override { AbstractStringColumn::close(); }
-
-  void copy_to_tmp(const std::string& cur_path,
-                   const std::string& tmp_path) override {
-    AbstractStringColumn::copy_to_tmp(cur_path, tmp_path);
-  }
-
-  void dump(const std::string& filename) override {
-    AbstractStringColumn::dump(filename);
-  }
-
-  size_t size() const override { return AbstractStringColumn::size(); }
-
-  void resize(size_t size) override { AbstractStringColumn::resize(size); }
-
-  PropertyType type() const override {
-    return AnyConverter<VarChar>::type(max_length_);
-  }
-
-  void set_value(size_t idx, const std::string_view& val) {
-    AbstractStringColumn::set_value(idx, val);
-  }
-
-  void set_any(size_t idx, const Any& value) override {
-    set_value(idx, AnyConverter<std::string_view>::from_any(value));
-  }
-
-  VarChar get_view(size_t idx) const {
-    auto view = idx < basic_size_ ? basic_buffer_.get(idx)
-                                  : extra_buffer_.get(idx - basic_size_);
-    return VarChar(view.data(), view.size(), max_length_);
-  }
-
-  Any get(size_t idx) const override {
-    return AnyConverter<VarChar>::to_any(get_view(idx), max_length_);
-  }
-
-  void ingest(uint32_t index, grape::OutArchive& arc) override {
-    AbstractStringColumn::ingest(index, arc);
-  }
-
-  const mmap_array<std::string_view>& basic_buffer() const {
-    return AbstractStringColumn::basic_buffer();
-  }
-
-  StorageStrategy storage_strategy() const override {
-    return AbstractStringColumn::storage_strategy();
-  }
-
-  size_t basic_buffer_size() const {
-    return AbstractStringColumn::basic_buffer_size();
-  }
-
-  const mmap_array<std::string_view>& extra_buffer() const {
-    return AbstractStringColumn::extra_buffer();
-  }
-
-  size_t extra_buffer_size() const {
-    return AbstractStringColumn::extra_buffer_size();
-  }
+  size_t extra_buffer_size() const { return extra_size_; }
 
  private:
-  int32_t max_length_;
+  mmap_array<std::string_view> basic_buffer_;
+  size_t basic_size_;
+  mmap_array<std::string_view> extra_buffer_;
+  size_t extra_size_;
+  std::atomic<size_t> pos_;
+  StorageStrategy strategy_;
+  size_t width_;
 };
 
 using StringColumn = TypedColumn<std::string_view>;

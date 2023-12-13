@@ -53,7 +53,7 @@ enum class PropertyTypeImpl {
 
 // Stores additional type information for PropertyTypeImpl
 union AdditionalTypeInfo {
-  int32_t max_length;  // for varchar
+  size_t max_length;  // for varchar
 };
 }  // namespace impl
 
@@ -65,7 +65,7 @@ struct PropertyType {
       : type_enum(impl::PropertyTypeImpl::kEmpty), additional_type_info() {}
   constexpr PropertyType(impl::PropertyTypeImpl type)
       : type_enum(type), additional_type_info() {}
-  constexpr PropertyType(impl::PropertyTypeImpl type, int32_t max_length)
+  constexpr PropertyType(impl::PropertyTypeImpl type, size_t max_length)
       : type_enum(type), additional_type_info({.max_length = max_length}) {
     assert(type == impl::PropertyTypeImpl::kVarChar);
   }
@@ -83,7 +83,7 @@ struct PropertyType {
   static PropertyType Date();
   static PropertyType String();
   static PropertyType StringMap();
-  static PropertyType Varchar(int32_t max_length);
+  static PropertyType Varchar(size_t max_length);
 
   static const PropertyType kEmpty;
   static const PropertyType kBool;
@@ -113,6 +113,7 @@ struct Date {
   int64_t milli_second;
 };
 
+/**
 // (TBD) A VarChar is a string with a maximum length.
 // We don't stored the max length, to reduce the size of the struct.
 // We assume that the max length is known when the VarChar is created.
@@ -134,6 +135,7 @@ struct VarChar {
     data = std::string_view(ptr, size);
   }
 };
+*/
 
 union AnyValue {
   AnyValue() {}
@@ -151,7 +153,6 @@ union AnyValue {
   double db;
   uint8_t u8;
   uint16_t u16;
-  VarChar vc;
 };
 
 template <typename T>
@@ -231,11 +232,6 @@ struct Any {
     value.u16 = v;
   }
 
-  void set_varchar(const VarChar& varchar, int32_t max_length) {
-    type = PropertyType::Varchar(max_length);
-    value.vc = varchar;
-  }
-
   std::string to_string() const {
     if (type == PropertyType::kInt32) {
       return std::to_string(value.i);
@@ -262,8 +258,6 @@ struct Any {
       return value.b ? "true" : "false";
     } else if (type == PropertyType::kFloat) {
       return std::to_string(value.f);
-    } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
-      return std::string(value.vc.data.data(), value.vc.data.size());
     } else {
       LOG(FATAL) << "Unexpected property type: "
                  << static_cast<int>(type.type_enum);
@@ -321,19 +315,7 @@ struct Any {
     return value.d;
   }
 
-  const VarChar& AsVarChar() const {
-    assert(type.type_enum == impl::PropertyTypeImpl::kVarChar);
-    return value.vc;
-  }
-
-  template <typename T, typename std::enable_if<
-                            std::is_same_v<T, VarChar>>::type* = nullptr>
-  static Any From(const T& value, int32_t max_length) {
-    return AnyConverter<T>::to_any(value, max_length);
-  }
-
-  template <typename T, typename std::enable_if<
-                            !std::is_same_v<T, VarChar>>::type* = nullptr>
+  template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
   }
@@ -364,7 +346,7 @@ struct Any {
         if (other.type.type_enum != impl::PropertyTypeImpl::kVarChar) {
           return false;
         }
-        return value.vc.data == other.value.vc.data;
+        return value.s == other.value.s;
       } else {
         return false;
       }
@@ -395,11 +377,6 @@ struct Any {
         return value.b < other.value.b;
       } else if (type == PropertyType::kFloat) {
         return value.f < other.value.f;
-      } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
-        if (other.type.type_enum != impl::PropertyTypeImpl::kVarChar) {
-          return false;
-        }
-        return value.vc.data < other.value.vc.data;
       } else {
         return false;
       }
@@ -505,14 +482,6 @@ struct ConvertAny<double> {
   static void to(const Any& value, double& out) {
     CHECK(value.type == PropertyType::kDouble);
     out = value.value.db;
-  }
-};
-
-template <>
-struct ConvertAny<VarChar> {
-  static void to(const Any& value, VarChar& out) {
-    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kVarChar);
-    out = value.value.vc;
   }
 };
 
@@ -832,42 +801,10 @@ struct AnyConverter<float> {
   static const float& from_any_value(const AnyValue& value) { return value.f; }
 };
 
-template <>
-struct AnyConverter<VarChar> {
-  static PropertyType type(int32_t max_length) {
-    return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
-  }
-
-  static Any to_any(const VarChar& value, int32_t max_length) {
-    Any ret;
-    ret.set_varchar(value, max_length);
-    return ret;
-  }
-
-  static AnyValue to_any_value(const VarChar& value) {
-    AnyValue ret;
-    ret.vc = value;
-    return ret;
-  }
-
-  static const VarChar& from_any(const Any& value) {
-    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kVarChar);
-    return value.value.vc;
-  }
-
-  static const VarChar& from_any_value(const AnyValue& value) {
-    return value.vc;
-  }
-};
-
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                               PropertyType& value);
-
-grape::InArchive& operator<<(grape::InArchive& in_archive,
-                             const VarChar& value);
-grape::OutArchive& operator>>(grape::OutArchive& out_archive, VarChar& value);
 
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value);

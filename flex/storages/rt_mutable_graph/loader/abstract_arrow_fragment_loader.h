@@ -60,51 +60,9 @@ void set_single_vertex_column(gs::ColumnBase* col,
 }
 
 // For String types.
-template <typename COL_T>
 void set_vertex_column_from_string_array(
     gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
-    const std::vector<vid_t>& vids,
-    std::function<COL_T(const arrow::util::string_view& view)> converter) {
-  auto type = array->type();
-  CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
-      << "Inconsistent data type, expect string, but got " << type->ToString();
-  size_t cur_ind = 0;
-  if (type->Equals(arrow::large_utf8())) {
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        auto str = casted->GetView(k);
-        if constexpr (std::is_same_v<COL_T, VarChar>) {
-          col->set_any(vids[cur_ind++],
-                       std::move(AnyConverter<COL_T>::to_any(
-                           converter(str),
-                           col->type().additional_type_info.max_length)));
-        } else {
-          col->set_any(vids[cur_ind++],
-                       std::move(AnyConverter<COL_T>::to_any(converter(str))));
-        }
-      }
-    }
-  } else {
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        auto str = casted->GetView(k);
-        if constexpr (std::is_same_v<COL_T, VarChar>) {
-          col->set_any(vids[cur_ind++],
-                       std::move(AnyConverter<COL_T>::to_any(
-                           converter(str),
-                           col->type().additional_type_info.max_length)));
-        } else {
-          col->set_any(vids[cur_ind++],
-                       std::move(AnyConverter<COL_T>::to_any(converter(str))));
-        }
-      }
-    }
-  }
-}
+    const std::vector<vid_t>& vids);
 
 void set_vertex_column_from_timestamp_array(
     gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
@@ -277,16 +235,9 @@ static void append_edges(
                                    arrow::StringArray>::value ||
                       std::is_same<arrow_array_type,
                                    arrow::LargeStringArray>::value) {
-          if constexpr (std::is_same_v<EDATA_T, VarChar>) {
-            auto tmp = data->GetView(j);
-            std::get<2>(parsed_edges[cur_ind++]) =
-                VarChar(tmp.data(), tmp.size(),
-                        edge_prop.additional_type_info.max_length);
-          } else {
-            auto str = data->GetView(j);
-            std::string_view str_view(str.data(), str.size());
-            std::get<2>(parsed_edges[cur_ind++]) = str_view;
-          }
+          auto str = data->GetView(j);
+          std::string_view str_view(str.data(), str.size());
+          std::get<2>(parsed_edges[cur_ind++]) = str_view;
         } else {
           std::get<2>(parsed_edges[cur_ind++]) = data->Value(j);
         }

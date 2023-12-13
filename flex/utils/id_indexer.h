@@ -187,7 +187,7 @@ template <typename KEY_T, typename INDEX_T>
 void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       const std::string& filename, LFIndexer<INDEX_T>& lf,
                       const std::string& snapshot_dir,
-                      const std::string& work_dir);
+                      const std::string& work_dir, PropertyType type);
 
 template <typename INDEX_T>
 class LFIndexer {
@@ -225,6 +225,9 @@ class LFIndexer {
       keys_ = new StringColumn(StorageStrategy::kMem);
     } else if (type == PropertyType::kStringMap) {
       keys_ = new StringMapColumn<uint8_t>(StorageStrategy::kMem);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      keys_ = new StringColumn(StorageStrategy::kMem,
+                               type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
     }
@@ -471,7 +474,7 @@ class LFIndexer {
                                const std::string& filename,
                                LFIndexer<_INDEX_T>& output,
                                const std::string& snapshot_dir,
-                               const std::string& work_dir);
+                               const std::string& work_dir, PropertyType type);
 };
 
 template <typename INDEX_T>
@@ -897,7 +900,7 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
                                const std::string& filename,
                                LFIndexer<_INDEX_T>& output,
                                const std::string& snapshot_dir,
-                               const std::string& work_dir);
+                               const std::string& work_dir, PropertyType type);
 };
 
 template <typename KEY_T, typename INDEX_T>
@@ -927,9 +930,9 @@ template <typename KEY_T, typename INDEX_T>
 void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       const std::string& filename, LFIndexer<INDEX_T>& lf,
                       const std::string& snapshot_dir,
-                      const std::string& work_dir) {
+                      const std::string& work_dir, PropertyType type) {
   size_t size = input.keys_.size();
-  lf.init(AnyConverter<KEY_T>::type());
+  lf.init(type);
   lf.keys_->open(filename + ".keys", "", work_dir);
   lf.keys_->resize(size);
   _move_data<KEY_T, INDEX_T>()(input.keys_, *lf.keys_, size);

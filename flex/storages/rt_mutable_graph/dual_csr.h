@@ -164,8 +164,12 @@ class DualCsr : public DualCsrBase {
 template <>
 class DualCsr<std::string_view> : public DualCsrBase {
  public:
-  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy)
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy,
+          PropertyType edge_type)
       : in_csr_(nullptr), out_csr_(nullptr), column_(StorageStrategy::kMem) {
+    if (edge_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      column_.set_width(edge_type.additional_type_info.max_length);
+    }
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<std::string_view>(column_, column_idx_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
