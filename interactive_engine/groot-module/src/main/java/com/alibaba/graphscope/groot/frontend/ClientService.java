@@ -44,13 +44,13 @@ import java.util.stream.Collectors;
 public class ClientService extends ClientGrpc.ClientImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientService.class);
 
-    private SnapshotCache snapshotCache;
-    private MetricsAggregator metricsAggregator;
-    private StoreIngestor storeIngestor;
-    private MetaService metaService;
-    private BatchDdlClient batchDdlClient;
+    private final SnapshotCache snapshotCache;
+    private final MetricsAggregator metricsAggregator;
+    private final StoreIngestor storeIngestor;
+    private final MetaService metaService;
+    private final BatchDdlClient batchDdlClient;
 
-    private StoreStateFetcher storeStateFetcher;
+    private final StoreStateFetcher storeStateFetcher;
 
     public ClientService(
             SnapshotCache snapshotCache,

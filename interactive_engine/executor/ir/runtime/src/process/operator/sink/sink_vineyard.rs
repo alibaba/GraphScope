@@ -36,24 +36,21 @@ pub struct GraphSinkEncoder {
 
 impl Accumulator<Record, Record> for GraphSinkEncoder {
     fn accum(&mut self, mut next: Record) -> FnExecResult<()> {
-        let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+        let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
         for sink_key in &self.sink_keys {
-            let entry = next
-                .take(sink_key.as_ref())
-                .ok_or(FnExecError::get_tag_error(&format!(
-                    "tag {:?} in GraphWriter on {:?}",
-                    sink_key, next
-                )))?;
+            let entry = next.take(sink_key.as_ref()).ok_or_else(|| {
+                FnExecError::get_tag_error(&format!("tag {:?} in GraphWriter on {:?}", sink_key, next))
+            })?;
             if let Some(v) = entry.as_vertex() {
-                let vertex_pk = graph
-                    .get_primary_key(&v.id())?
-                    .ok_or(GraphProxyError::query_store_error("get_primary_key() returns empty pk"))?;
-                let label = v
-                    .label()
-                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                let vertex_pk = graph.get_primary_key(&v.id())?.ok_or_else(|| {
+                    GraphProxyError::query_store_error("get_primary_key() returns empty pk")
+                })?;
+                let label = v.label().ok_or_else(|| {
+                    FnExecError::unexpected_data_error(&format!(
                         "label of vertex {:?} is None in sink_vineyard",
                         v.id()
-                    )))?;
+                    ))
+                })?;
                 loop {
                     if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
                         graph_writer_guard.add_vertex(label.clone(), vertex_pk, v.get_details().clone())?;
@@ -61,36 +58,38 @@ impl Accumulator<Record, Record> for GraphSinkEncoder {
                     }
                 }
             } else if let Some(e) = entry.as_edge() {
-                let src_vertex_pk =
-                    graph
-                        .get_primary_key(&e.src_id)?
-                        .ok_or(GraphProxyError::query_store_error(
+                let src_vertex_pk = graph
+                    .get_primary_key(&e.src_id)?
+                    .ok_or_else(|| {
+                        GraphProxyError::query_store_error(
                             "get_primary_key() of src_vertex returns empty pk",
-                        ))?;
-                let dst_vertex_pk =
-                    graph
-                        .get_primary_key(&e.dst_id)?
-                        .ok_or(GraphProxyError::query_store_error(
+                        )
+                    })?;
+                let dst_vertex_pk = graph
+                    .get_primary_key(&e.dst_id)?
+                    .ok_or_else(|| {
+                        GraphProxyError::query_store_error(
                             "get_primary_key() of src_vertex returns empty pk",
-                        ))?;
-                let label = e
-                    .label()
-                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                        )
+                    })?;
+                let label = e.label().ok_or_else(|| {
+                    FnExecError::unexpected_data_error(&format!(
                         "label of edge {:?} is None in sink_vineyard",
                         e.id()
-                    )))?;
-                let src_label = e
-                    .get_src_label()
-                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                    ))
+                })?;
+                let src_label = e.get_src_label().ok_or_else(|| {
+                    FnExecError::unexpected_data_error(&format!(
                         "src_label of edge {:?} is None in sink_vineyard",
                         e.id()
-                    )))?;
-                let dst_label = e
-                    .get_dst_label()
-                    .ok_or(FnExecError::unexpected_data_error(&format!(
+                    ))
+                })?;
+                let dst_label = e.get_dst_label().ok_or_else(|| {
+                    FnExecError::unexpected_data_error(&format!(
                         "dst_label of edge {:?} is None in sink_vineyard",
                         e.id()
-                    )))?;
+                    ))
+                })?;
                 loop {
                     if let Ok(mut graph_writer_guard) = self.graph_writer.try_lock() {
                         graph_writer_guard.add_edge(

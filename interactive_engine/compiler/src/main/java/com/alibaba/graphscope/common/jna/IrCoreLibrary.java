@@ -49,16 +49,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue appendScanOperator(
             Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
 
-    // set primary index
-    Pointer initIndexPredicate();
-
-    FfiResult.ByValue andEquivPredicate(
-            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
-
-    FfiResult.ByValue orEquivPredicate(
-            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
-
-    FfiResult.ByValue addScanIndexPredicate(Pointer scan, Pointer predicate);
+    FfiResult.ByValue addIndexPredicatePb(Pointer scan, FfiPbPointer.ByValue pbPointer);
 
     FfiResult.ByValue setScanParams(Pointer scan, Pointer params);
 
@@ -74,6 +65,8 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue setEdgexpdParams(Pointer edgeXpd, Pointer params);
 
     FfiResult.ByValue setEdgexpdAlias(Pointer edgeXpd, FfiAlias.ByValue alias);
+
+    FfiResult.ByValue setEdgexpdVtag(Pointer edgeXpd, FfiNameOrId.ByValue vTag);
 
     Pointer initLimitOperator();
 
@@ -163,6 +156,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
 
+    FfiResult.ByValue setGetvTag(Pointer getV, FfiNameOrId.ByValue vTag);
+
     FfiResult.ByValue appendGetvOperator(
             Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
 
@@ -181,6 +176,8 @@ public interface IrCoreLibrary extends Library {
             Pointer expand, Pointer getV, PathOpt pathOpt, ResultOpt resultOpt);
 
     FfiResult.ByValue setPathxpdAlias(Pointer pathXpd, FfiAlias.ByValue alias);
+
+    FfiResult.ByValue setPathxpdTag(Pointer pathXpd, FfiNameOrId.ByValue vTag);
 
     FfiResult.ByValue setPathxpdHops(Pointer pathXpd, int lower, int upper);
 

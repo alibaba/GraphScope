@@ -23,8 +23,8 @@
 #include <vector>
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/executor_group.actg.h"
-#include "flex/engines/http_server/generated/executor_ref.act.autogen.h"
-#include "flex/engines/http_server/graph_db_service.h"
+#include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
+#include "flex/engines/http_server/service/graph_db_service.h"
 
 namespace bpo = boost::program_options;
 using namespace std::chrono_literals;
@@ -155,9 +155,8 @@ int main(int argc, char** argv) {
       "version,v", "Display version")("shard-num,s",
                                       bpo::value<uint32_t>()->default_value(1),
                                       "shard number of actor system")(
-      "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
+      "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
       "warmup-num,w", bpo::value<uint32_t>()->default_value(0),
       "num of warmup reqs")("benchmark-num,b",
                             bpo::value<uint32_t>()->default_value(0),
@@ -185,7 +184,6 @@ int main(int argc, char** argv) {
 
   std::string graph_schema_path = "";
   std::string data_path = "";
-  std::string bulk_load_config_path = "";
 
   if (!vm.count("graph-config")) {
     LOG(ERROR) << "graph-config is required";
@@ -197,9 +195,6 @@ int main(int argc, char** argv) {
     return -1;
   }
   data_path = vm["data-path"].as<std::string>();
-  if (vm.count("bulk-load")) {
-    bulk_load_config_path = vm["bulk-load"].as<std::string>();
-  }
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -208,9 +203,7 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  auto loading_config =
-      gs::LoadingConfig::ParseFromYaml(schema, bulk_load_config_path);
-  db.Init(schema, loading_config, data_path, shard_num);
+  db.Open(schema, data_path, shard_num);
 
   t0 += grape::GetCurrentTime();
   uint32_t warmup_num = vm["warmup-num"].as<uint32_t>();

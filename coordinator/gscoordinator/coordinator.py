@@ -30,6 +30,7 @@ import grpc
 from graphscope.config import Config
 from graphscope.proto import coordinator_service_pb2_grpc
 
+from gscoordinator.monitor import Monitor
 from gscoordinator.servicer import init_graphscope_one_service_servicer
 from gscoordinator.utils import GS_GRPC_MAX_MESSAGE_LENGTH
 
@@ -142,6 +143,19 @@ def start_server(
     logger.info("Coordinator server listen at %s", endpoint)
 
     server.start()
+
+    if config.coordinator.monitor:
+        try:
+            Monitor.startServer(config.coordinator.monitor_port, "127.0.0.1")
+            logger.info(
+                "Coordinator monitor server listen at 127.0.0.1:%d",
+                config.coordinator.monitor_port,
+            )
+        except Exception:  # noqa: E722, pylint: disable=broad-except
+            logger.exception(
+                "Failed to start monitor server on '127.0.0.1:%s'",
+                config.coordinator.monitor_port,
+            )
 
     # handle SIGTERM signal
     def terminate(signum, frame):

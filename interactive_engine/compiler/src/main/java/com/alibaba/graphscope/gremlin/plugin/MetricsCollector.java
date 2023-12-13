@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.gremlin.plugin;
 
-import com.alibaba.graphscope.gremlin.Utils;
 import com.codahale.metrics.Timer;
 
 import java.util.concurrent.TimeUnit;
@@ -24,11 +23,12 @@ import java.util.concurrent.TimeUnit;
 // collect metrics per gremlin query
 public class MetricsCollector {
     private final Timer.Context timeContext;
-    private long startMillis;
+    private final long startMillis;
     private long elapsedMillis;
 
     public MetricsCollector(Timer timer) {
         this.timeContext = timer.time();
+        this.startMillis = System.currentTimeMillis();
     }
 
     public long getStartMillis() {
@@ -40,9 +40,6 @@ public class MetricsCollector {
     }
 
     public void stop() {
-        this.startMillis =
-                TimeUnit.NANOSECONDS.toMillis(
-                        Utils.getFieldValue(Timer.Context.class, timeContext, "startTime"));
         this.elapsedMillis = TimeUnit.NANOSECONDS.toMillis(timeContext.stop());
     }
 }

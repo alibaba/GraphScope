@@ -16,10 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel;
 
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 
@@ -34,6 +31,8 @@ public interface GraphRelShuttle {
     RelNode visit(GraphLogicalSource source);
 
     RelNode visit(GraphLogicalExpand expand);
+
+    RelNode visit(GraphLogicalExpandDegree expandCount);
 
     RelNode visit(GraphLogicalGetV getV);
 

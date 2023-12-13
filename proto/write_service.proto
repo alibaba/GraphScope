@@ -23,6 +23,16 @@ service ClientWrite {
   rpc getClientId(GetClientIdRequest) returns(GetClientIdResponse);
   rpc batchWrite(BatchWriteRequest) returns(BatchWriteResponse);
   rpc remoteFlush(RemoteFlushRequest) returns(RemoteFlushResponse);
+  rpc replayRecords(ReplayRecordsRequest) returns(ReplayRecordsResponse);
+}
+
+message ReplayRecordsRequest {
+    int64 offset = 1;
+    int64 timestamp = 2;
+}
+
+message ReplayRecordsResponse {
+    repeated int64 snapshot_id = 1;
 }
 
 message GetClientIdRequest {

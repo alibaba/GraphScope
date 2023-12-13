@@ -30,11 +30,11 @@ import java.util.concurrent.TimeUnit;
 public class LogRecycler {
     private static final Logger logger = LoggerFactory.getLogger(LogRecycler.class);
 
-    private LogService logService;
-    private SnapshotManager snapshotManager;
+    private final LogService logService;
+    private final SnapshotManager snapshotManager;
     private ScheduledExecutorService scheduler;
-    private boolean recycleEnable;
-    private long recycleIntervalSeconds;
+    private final boolean recycleEnable;
+    private final long recycleIntervalSeconds;
 
     public LogRecycler(Configs configs, LogService logService, SnapshotManager snapshotManager) {
         this.logService = logService;
@@ -45,7 +45,7 @@ public class LogRecycler {
 
     public void start() {
         if (!this.recycleEnable) {
-            logger.info("log recycler is disable");
+            logger.info("log recycler is disabled");
             return;
         }
         this.scheduler =
@@ -77,19 +77,18 @@ public class LogRecycler {
             }
             this.scheduler = null;
         }
-        logger.info("LogRecycler stopped");
+        logger.debug("LogRecycler stopped");
     }
 
     private void doRecycle() {
         List<Long> queueOffsets = this.snapshotManager.getQueueOffsets();
         for (int i = 0; i < queueOffsets.size(); i++) {
+            long offset = queueOffsets.get(i);
             try {
-                logService.deleteBeforeOffset(i, queueOffsets.get(i));
-                logger.info("recycled queue [" + i + "] offset [" + queueOffsets.get(i) + "]");
+                logService.deleteBeforeOffset(i, offset);
+                logger.info("recycled queue [{}] offset [{}]", i, offset);
             } catch (IOException e) {
-                logger.error(
-                        "error in delete queue [" + i + "] offset [" + queueOffsets.get(i) + "]",
-                        e);
+                logger.error("error in delete queue [{}] offset [{}]", i, offset, e);
             }
         }
     }

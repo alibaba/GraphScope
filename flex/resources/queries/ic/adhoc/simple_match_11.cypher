@@ -1,0 +1,1 @@
+MATCH(a)-[:REPLYOF*0..3]->(b) return a.content, b.content LIMIT 10;

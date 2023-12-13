@@ -168,7 +168,11 @@ void PropertyTableAppender::Apply(
     }
   }
   if (builder->GetField(0)->length() == builder->initial_capacity()) {
+#if defined(ARROW_VERSION) && ARROW_VERSION < 9000000
     CHECK_ARROW_ERROR(builder->Flush(&batch_out));
+#else
+    CHECK_ARROW_ERROR_AND_ASSIGN(batch_out, builder->Flush());
+#endif
   }
 }
 
@@ -215,7 +219,11 @@ void PropertyTableAppender::Apply(
     }
   }
   if (builder->GetField(0)->length() == builder->initial_capacity()) {
+#if defined(ARROW_VERSION) && ARROW_VERSION < 9000000
     CHECK_ARROW_ERROR(builder->Flush(&batch_out));
+#else
+    CHECK_ARROW_ERROR_AND_ASSIGN(batch_out, builder->Flush());
+#endif
   }
 }
 
@@ -223,7 +231,11 @@ void PropertyTableAppender::Flush(
     std::unique_ptr<arrow::RecordBatchBuilder>& builder,
     std::shared_ptr<arrow::RecordBatch>& batches_out, bool allow_empty) {
   if (allow_empty || builder->GetField(0)->length() != 0) {
+#if defined(ARROW_VERSION) && ARROW_VERSION < 9000000
     CHECK_ARROW_ERROR(builder->Flush(&batches_out));
+#else
+    CHECK_ARROW_ERROR_AND_ASSIGN(batches_out, builder->Flush());
+#endif
   } else {
     batches_out = nullptr;
   }
@@ -322,8 +334,13 @@ int PropertyGraphOutStream::AddEdge(VertexId src_id,
     auto schema = edge_schemas_[label]->WithMetadata(metadata);
 
     std::unique_ptr<arrow::RecordBatchBuilder> builder = nullptr;
+#if defined(ARROW_VERSION) && ARROW_VERSION < 9000000
     CHECK_ARROW_ERROR(arrow::RecordBatchBuilder::Make(
         schema, arrow::default_memory_pool(), kDefaultBufferSize, &builder));
+#else
+    ARROW_CHECK_OK_AND_ASSIGN(builder, arrow::RecordBatchBuilder::Make(
+        schema, arrow::default_memory_pool(), kDefaultBufferSize));
+#endif
     edge_builders_[label][src_dst_key].reset(builder.release());
   }
   auto &builder = edge_builders_[label][src_dst_key];
@@ -424,8 +441,13 @@ void PropertyGraphOutStream::initialTables() {
 #endif
 
     std::unique_ptr<arrow::RecordBatchBuilder> builder = nullptr;
+#if defined(ARROW_VERSION) && ARROW_VERSION < 9000000
     CHECK_ARROW_ERROR(arrow::RecordBatchBuilder::Make(
         schema, arrow::default_memory_pool(), kDefaultBufferSize, &builder));
+#else
+    ARROW_CHECK_OK_AND_ASSIGN(builder, arrow::RecordBatchBuilder::Make(
+        schema, arrow::default_memory_pool(), kDefaultBufferSize));
+#endif
     vertex_builders_.emplace(entry.id, std::move(builder));
     vertex_schemas_.emplace(entry.id, schema);
     vertex_appenders_.emplace(
@@ -477,8 +499,13 @@ void PropertyGraphOutStream::initialTables() {
         auto subschema = schema->WithMetadata(metadata);
 
         std::unique_ptr<arrow::RecordBatchBuilder> builder = nullptr;
+#if defined(ARROW_VERSION) && ARROW_VERSION < 9000000
         CHECK_ARROW_ERROR(arrow::RecordBatchBuilder::Make(
             subschema, arrow::default_memory_pool(), kDefaultBufferSize, &builder));
+#else
+        ARROW_CHECK_OK_AND_ASSIGN(builder, arrow::RecordBatchBuilder::Make(
+            subschema, arrow::default_memory_pool(), kDefaultBufferSize));
+#endif
         edge_builders_[entry.id][src_dst_key].reset(builder.release());
       }
     }

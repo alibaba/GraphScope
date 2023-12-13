@@ -205,8 +205,7 @@ public class StoreService implements MetricsAgent {
                     () -> {
                         try {
                             long partitionSnapshotId = partition.recover();
-                            snapshotId.updateAndGet(
-                                    x -> x < partitionSnapshotId ? x : partitionSnapshotId);
+                            snapshotId.updateAndGet(x -> Math.min(x, partitionSnapshotId));
                         } catch (Exception e) {
                             logger.error("partition #[] recover failed");
                             snapshotId.set(-1L);
@@ -406,6 +405,9 @@ public class StoreService implements MetricsAgent {
     }
 
     private void garbageCollectInternal(long snapshotId) throws IOException {
+        if (snapshotId % 3600 != 0) { // schedule every 1 hour
+            return;
+        }
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
             GraphPartition partition = entry.getValue();
             partition.garbageCollect(snapshotId);

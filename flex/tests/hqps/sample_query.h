@@ -16,7 +16,6 @@
 #ifndef TESTS_HQPS_SAMPLE_QUERY_H_
 #define TESTS_HQPS_SAMPLE_QUERY_H_
 
-#include "flex/engines/hqps_db/app/hqps_app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/utils/app_utils.h"
 
@@ -33,17 +32,21 @@ struct Expression1 {
   int64_t oid_;
 };
 
-class SampleQuery : public HqpsAppBase<gs::MutableCSRInterface> {
+class SampleQuery : public AppBase {
  public:
   using GRAPH_INTERFACE = gs::MutableCSRInterface;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
-  results::CollectiveResults Query(const GRAPH_INTERFACE& graph,
-                                   Decoder& input) const override {
+  SampleQuery(const GraphDBSession& session) : graph(session) {}
+  bool Query(Decoder& input, Encoder& output) override {
     int64_t id = input.get_long();
     int64_t maxDate = input.get_long();
-    return Query(graph, id, maxDate);
+    auto res = Query(graph, id, maxDate);
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    output.put_string(res_str);
+    return true;
   }
 
   results::CollectiveResults Query(const GRAPH_INTERFACE& graph, int64_t id,
@@ -103,6 +106,7 @@ class SampleQuery : public HqpsAppBase<gs::MutableCSRInterface> {
                    std::move(mapper7)});
     return Engine::Sink(graph, ctx5);
   }
+  gs::MutableCSRInterface graph;
 };
 }  // namespace gs
 #endif  // TESTS_HQPS_SAMPLE_QUERY_H_

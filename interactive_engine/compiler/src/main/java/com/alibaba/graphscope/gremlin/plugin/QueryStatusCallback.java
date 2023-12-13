@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.gremlin.plugin;
 
+import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 public class QueryStatusCallback {
     private final MetricsCollector metricsCollector;
     private final QueryLogger queryLogger;
@@ -27,14 +30,15 @@ public class QueryStatusCallback {
 
     public void onStart() {}
 
-    public void onEnd(boolean isSucceed) {
+    public void onEnd(boolean isSucceed, @Nullable String msg) {
         this.metricsCollector.stop();
         queryLogger.info("total execution time is {} ms", metricsCollector.getElapsedMillis());
         queryLogger.metricsInfo(
-                "{} | {} | {}",
+                "{} | {} | {} | {}",
                 isSucceed,
                 metricsCollector.getElapsedMillis(),
-                metricsCollector.getStartMillis());
+                metricsCollector.getStartMillis(),
+                msg != null ? msg : StringUtils.EMPTY);
     }
 
     public QueryLogger getQueryLogger() {

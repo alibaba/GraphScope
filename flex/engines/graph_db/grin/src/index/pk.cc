@@ -39,6 +39,21 @@ GRIN_VERTEX grin_get_vertex_by_primary_keys_row(GRIN_GRAPH g,
     if (!_g->g.get_lid(label, oid, vid)) {
       return GRIN_NULL_VERTEX;
     }
+  } else if (type == gs::PropertyType::kInt32) {
+    auto oid = *static_cast<const int32_t*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
+  } else if (type == gs::PropertyType::kUInt32) {
+    auto oid = *static_cast<const uint32_t*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
+  } else if (type == gs::PropertyType::kUInt64) {
+    auto oid = *static_cast<const uint64_t*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
   } else if (type == gs::PropertyType::kString) {
     auto oid = *static_cast<const std::string_view*>((*_r)[0]);
     if (!_g->g.get_lid(label, oid, vid)) {

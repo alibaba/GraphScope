@@ -42,13 +42,13 @@ public class SchemaManager {
 
     private static final Logger logger = LoggerFactory.getLogger(SchemaManager.class);
 
-    private SnapshotManager snapshotManager;
-    private DdlWriter ddlWriter;
-    private DdlExecutors ddlExecutors;
-    private GraphDefFetcher graphDefFetcher;
+    private final SnapshotManager snapshotManager;
+    private final DdlWriter ddlWriter;
+    private final DdlExecutors ddlExecutors;
+    private final GraphDefFetcher graphDefFetcher;
 
-    private AtomicReference<GraphDef> graphDefRef;
-    private int partitionCount;
+    private final AtomicReference<GraphDef> graphDefRef;
+    private final int partitionCount;
     private volatile boolean ready = false;
 
     private ExecutorService singleThreadExecutor;
@@ -126,12 +126,10 @@ public class SchemaManager {
             DdlRequestBatch ddlRequestBatch,
             CompletionCallback<Long> callback) {
         logger.info(
-                "submitBatchDdl requestId ["
-                        + requestId
-                        + "], sessionId ["
-                        + sessionId
-                        + "]. Request Body: "
-                        + ddlRequestBatch.toProto().toString());
+                "submitBatchDdl requestId [{}], sessionId [{}], request body [{}]",
+                requestId,
+                sessionId,
+                ddlRequestBatch.toProto());
         if (!ready) {
             callback.onError(new IllegalStateException("SchemaManager is recovering"));
             return;
@@ -175,11 +173,9 @@ public class SchemaManager {
                         callback.onCompleted(snapshotId);
                     } catch (Exception e) {
                         logger.error(
-                                "Error in Ddl requestId ["
-                                        + requestId
-                                        + "], sessionId ["
-                                        + sessionId
-                                        + "]",
+                                "Error in Ddl requestId [{}], sessionId [{}]",
+                                requestId,
+                                sessionId,
                                 e);
                         this.ready = false;
                         callback.onError(e);

@@ -11,12 +11,13 @@ use crate::db::api::{GraphError, GraphResult};
 #[derive(Clone)]
 pub struct UnsafeBytesReader<'a> {
     buf: *const u8,
+    len: usize,
     _phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> UnsafeBytesReader<'a> {
     pub fn new(buf: &[u8]) -> Self {
-        UnsafeBytesReader { buf: buf.as_ptr(), _phantom: Default::default() }
+        UnsafeBytesReader { buf: buf.as_ptr(), len: buf.len(), _phantom: Default::default() }
     }
 
     pub fn read_u8(&self, offset: usize) -> u8 {
@@ -54,6 +55,9 @@ impl<'a> UnsafeBytesReader<'a> {
     }
     pub fn read_bytes(&self, offset: usize, len: usize) -> &'a [u8] {
         unsafe { ::std::slice::from_raw_parts(self.buf.offset(offset as isize), len) }
+    }
+    pub fn len(&self) -> usize {
+        self.len
     }
 }
 

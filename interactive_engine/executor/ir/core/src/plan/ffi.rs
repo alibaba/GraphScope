@@ -64,7 +64,7 @@ use prost::Message;
 
 use crate::error::IrError;
 use crate::plan::logical::{LogicalPlan, NodeId};
-use crate::plan::meta::{set_schema_from_json, KeyType};
+use crate::plan::meta::set_schema_from_json;
 use crate::plan::physical::AsPhysical;
 
 #[repr(i32)]
@@ -457,6 +457,47 @@ impl TryFrom<FfiConst> for common_pb::Value {
     }
 }
 
+#[repr(i32)]
+#[derive(Copy, Clone, Debug)]
+pub enum FfiLogicalOpt {
+    // A binary equality operator
+    EQ = 0,
+    // A binary inequality operator
+    NE = 1,
+    // A binary less-than operator
+    LT = 2,
+    // A binary less-than-equal operator
+    LE = 3,
+    // A binary greater-than operator
+    GT = 4,
+    // A binary greater-than-equal operator
+    GE = 5,
+    // A binary containment check operator, e.g 1 WITHIN [1, 2, 3, 4]
+    WITHIN = 6,
+    // A binary not-containment check operator, e.g 5 WITHOUT [1, 2, 3, 4]
+    WITHOUT = 7,
+    // A binary operator to verify whether a string is a prefix of another string
+    STARTSWITH = 8,
+    // A binary operator to verify whether a string is a suffix of another string
+    ENDSWITH = 9,
+    // A binary logical and operator.
+    AND = 10,
+    // A binary logical or operator.
+    OR = 11,
+    // A unary logical not operator.
+    NOT = 12,
+    // A unary logical isnull operator
+    ISNULL = 13,
+    // A binary operator to verify whether a string matches a regular expression
+    REGEX = 14,
+}
+
+impl Default for FfiLogicalOpt {
+    fn default() -> Self {
+        Self::EQ
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn boolean_as_const(boolean: bool) -> FfiConst {
     let mut ffi = FfiConst::default();
@@ -519,43 +560,32 @@ pub enum FfiKeyType {
     Column = 2,
 }
 
-impl From<FfiKeyType> for KeyType {
-    fn from(t: FfiKeyType) -> Self {
-        match t {
-            FfiKeyType::Entity => KeyType::Entity,
-            FfiKeyType::Relation => KeyType::Relation,
-            FfiKeyType::Column => KeyType::Column,
-        }
-    }
-}
-
-/// Query prop_name by given prop_id
+/// Query entity/relation/property name by given id
 #[no_mangle]
 pub extern "C" fn get_key_name(key_id: i32, key_type: FfiKeyType) -> FfiResult {
     use super::meta::STORE_META;
     if let Ok(meta) = STORE_META.read() {
         if let Some(schema) = &meta.schema {
             let key_name = match key_type {
-                FfiKeyType::Entity => schema
-                    .get_entity_name(key_id)
-                    .ok_or(FfiResult::new(
+                FfiKeyType::Entity => schema.get_entity_name(key_id).ok_or_else(|| {
+                    FfiResult::new(
                         ResultCode::TableNotExistError,
                         format!("entity label_id {:?} is not found", key_id),
-                    )),
-                FfiKeyType::Relation => schema
-                    .get_relation_name(key_id)
-                    .ok_or(FfiResult::new(
+                    )
+                }),
+                FfiKeyType::Relation => schema.get_relation_name(key_id).ok_or_else(|| {
+                    FfiResult::new(
                         ResultCode::TableNotExistError,
                         format!("relation label_id {:?} is not found", key_id),
-                    )),
-                FfiKeyType::Column => schema
-                    .get_column_name(key_id)
-                    .ok_or(FfiResult::new(
+                    )
+                }),
+                FfiKeyType::Column => schema.get_column_name(key_id).ok_or_else(|| {
+                    FfiResult::new(
                         ResultCode::ColumnNotExistError,
                         format!("prop_id {:?} is not found", key_id),
-                    )),
+                    )
+                }),
             };
-
             match key_name {
                 Ok(key_name) => {
                     let key_name_cstr = string_to_cstr(key_name.clone());
@@ -1024,6 +1054,11 @@ mod params {
         std::mem::forget(params);
 
         result
+    }
+
+    #[no_mangle]
+    pub extern "C" fn destroy_query_params(ptr: *const c_void) {
+        destroy_ptr::<pb::QueryParams>(ptr)
     }
 }
 
@@ -1762,20 +1797,34 @@ mod scan {
     }
 
     fn parse_equiv_predicate(
-        key: FfiProperty, value: FfiConst,
+        key: FfiProperty, value: FfiConst, cmp: FfiLogicalOpt,
     ) -> Result<pb::index_predicate::Triplet, FfiResult> {
+        let cmp = match cmp {
+            FfiLogicalOpt::EQ => unsafe {
+                std::mem::transmute::<common_pb::Logical, i32>(common_pb::Logical::Eq)
+            },
+            FfiLogicalOpt::WITHIN => unsafe {
+                std::mem::transmute::<common_pb::Logical, i32>(common_pb::Logical::Within)
+            },
+            _ => {
+                return Err(FfiResult::new(
+                    ResultCode::UnSupported,
+                    format!("unsupported logical cmp opt in predicate {:?}", cmp),
+                ))
+            }
+        };
         Ok(pb::index_predicate::Triplet {
             key: key.try_into()?,
             value: Some(pb::index_predicate::triplet::Value::Const(value.try_into()?)),
-            cmp: None,
+            cmp,
         })
     }
 
     #[no_mangle]
     pub extern "C" fn and_equiv_predicate(
-        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
+        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst, cmp: FfiLogicalOpt,
     ) -> FfiResult {
-        let equiv_pred_result = parse_equiv_predicate(key, value);
+        let equiv_pred_result = parse_equiv_predicate(key, value, cmp);
         match equiv_pred_result {
             Ok(equiv_pred) => {
                 let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
@@ -1801,9 +1850,9 @@ mod scan {
 
     #[no_mangle]
     pub extern "C" fn or_equiv_predicate(
-        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst,
+        ptr_predicate: *const c_void, key: FfiProperty, value: FfiConst, cmp: FfiLogicalOpt,
     ) -> FfiResult {
-        let equiv_pred_result = parse_equiv_predicate(key, value);
+        let equiv_pred_result = parse_equiv_predicate(key, value, cmp);
         match equiv_pred_result {
             Ok(equiv_pred) => {
                 let mut predicate = unsafe { Box::from_raw(ptr_predicate as *mut pb::IndexPredicate) };
@@ -1828,6 +1877,24 @@ mod scan {
         std::mem::forget(scan);
 
         FfiResult::success()
+    }
+
+    #[no_mangle]
+    pub extern "C" fn add_index_predicate_pb(
+        ptr_scan: *const c_void, ptr_predicate: FfiPbPointer,
+    ) -> FfiResult {
+        let mut result = FfiResult::success();
+        let mut scan = unsafe { Box::from_raw(ptr_scan as *mut pb::Scan) };
+        let predicate = ptr_to_pb::<pb::IndexPredicate>(ptr_predicate);
+        match predicate {
+            Ok(predicate) => {
+                scan.idx_predicate = Some(predicate);
+            }
+            Err(e) => result = e,
+        }
+        std::mem::forget(scan);
+
+        result
     }
 
     #[no_mangle]

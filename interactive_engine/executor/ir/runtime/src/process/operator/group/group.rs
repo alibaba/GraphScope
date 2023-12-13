@@ -36,9 +36,9 @@ impl GroupGen<Record, RecordKey, Record> for pb::GroupBy {
     fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(RecordKey, Record), Record>>> {
         let mut key_aliases = Vec::with_capacity(self.mappings.len());
         for key_alias in self.mappings.iter() {
-            let alias = key_alias
-                .alias
-                .ok_or(ParsePbError::from(format!("key alias cannot be None in group opr {:?}", self)))?;
+            let alias = key_alias.alias.ok_or_else(|| {
+                ParsePbError::from(format!("key alias cannot be None in group opr {:?}", self))
+            })?;
             key_aliases.push(alias);
         }
         let group_map = GroupMap { key_aliases };

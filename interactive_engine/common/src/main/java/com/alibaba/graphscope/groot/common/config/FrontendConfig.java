@@ -25,4 +25,7 @@ public class FrontendConfig {
             Config.intConfig(
                     "frontend.service.thread.count",
                     Math.max(Math.min(Runtime.getRuntime().availableProcessors() / 2, 64), 4));
+
+    public static final Config<Boolean> ENABLE_HASH_GENERATE_EID =
+            Config.boolConfig("enable.hash.generate.eid", false);
 }

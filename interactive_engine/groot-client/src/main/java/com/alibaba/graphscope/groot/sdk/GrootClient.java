@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.sdk;
 
+import com.alibaba.graphscope.groot.sdk.api.Writer;
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
 import com.alibaba.graphscope.groot.sdk.schema.Schema;
 import com.alibaba.graphscope.groot.sdk.schema.Vertex;
@@ -31,7 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class GrootClient {
+public class GrootClient implements Writer {
     private final ClientGrpc.ClientBlockingStub clientStub;
     private final ClientWriteGrpc.ClientWriteBlockingStub writeStub;
     private final ClientWriteGrpc.ClientWriteStub asyncWriteStub;
@@ -74,11 +75,18 @@ public class GrootClient {
      * Block until this snapshot becomes available.
      * @param snapshotId the snapshot id to be flushed
      */
-    public void remoteFlush(long snapshotId) {
-        if (snapshotId != 0) {
-            this.writeStub.remoteFlush(
-                    RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
-        }
+    public boolean remoteFlush(long snapshotId) {
+        RemoteFlushResponse resp =
+                this.writeStub.remoteFlush(
+                        RemoteFlushRequest.newBuilder().setSnapshotId(snapshotId).build());
+        return resp.getSuccess();
+    }
+
+    public List<Long> replayRecords(long offset, long timestamp) {
+        ReplayRecordsRequest req =
+                ReplayRecordsRequest.newBuilder().setOffset(offset).setTimestamp(timestamp).build();
+        ReplayRecordsResponse resp = writeStub.replayRecords(req);
+        return resp.getSnapshotIdList();
     }
 
     private long modifyVertex(Vertex vertex, WriteTypePb writeType) {

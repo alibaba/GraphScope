@@ -141,7 +141,8 @@ public class Frontend extends NodeBase {
                         edgeIdGenerator,
                         this.metaService,
                         ingestorWriteClients,
-                        metricsCollector);
+                        metricsCollector,
+                        configs);
         WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
         ClientWriteService clientWriteService =
                 new ClientWriteService(writeSessionGenerator, graphWriter);

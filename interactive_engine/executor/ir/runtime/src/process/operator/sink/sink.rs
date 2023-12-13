@@ -28,7 +28,7 @@ use pegasus::api::function::{FnResult, MapFunction};
 use pegasus_common::downcast::AsAny;
 use prost::Message;
 
-use crate::error::{FnGenResult, FnExecResult, FnExecError};
+use crate::error::{FnExecError, FnExecResult, FnGenResult};
 use crate::process::entry::{CollectionEntry, DynEntry, Entry, EntryType, PairEntry};
 use crate::process::operator::map::IntersectionEntry;
 use crate::process::operator::sink::{SinkGen, Sinker};
@@ -144,8 +144,11 @@ impl RecordSinkEncoder {
                 let val_pb = self.element_to_pb(pair.get_right());
                 key_values.push(result_pb::key_values::KeyValue { key: Some(key_pb), value: Some(val_pb) })
             } else {
-                Err(FnExecError::unsupported_error(&format!("only support map result with object key, while it is {:?}", pair.get_left())))?
-             }
+                Err(FnExecError::unsupported_error(&format!(
+                    "only support map result with object key, while it is {:?}",
+                    pair.get_left()
+                )))?
+            }
         }
         Ok(result_pb::KeyValues { key_values })
     }

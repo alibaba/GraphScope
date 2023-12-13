@@ -449,7 +449,7 @@ impl LogicalPlan {
                             id_map
                                 .get(&old)
                                 .cloned()
-                                .ok_or(IrError::ParentNodeNotExist(old))
+                                .ok_or_else(|| IrError::ParentNodeNotExist(old))
                         })
                         .collect::<IrResult<Vec<NodeId>>>()?
                 };
@@ -473,7 +473,7 @@ impl LogicalPlan {
         let inner_opr = opr
             .opr
             .as_ref()
-            .ok_or(IrError::MissingData("Operator::opr".to_string()))?;
+            .ok_or_else(|| IrError::MissingData("Operator::opr".to_string()))?;
 
         let is_sink = if let pb::logical_plan::operator::Opr::Sink(_) = inner_opr { true } else { false };
 
@@ -508,7 +508,7 @@ impl LogicalPlan {
                     let is_pattern_source_whole_graph = self
                         .get_opr(parent_ids[0])
                         .map(|pattern_source| is_whole_graph(&pattern_source))
-                        .ok_or(IrError::ParentNodeNotExist(parent_ids[0]))?;
+                        .ok_or_else(|| IrError::ParentNodeNotExist(parent_ids[0]))?;
                     let extend_strategy = if is_pattern_source_whole_graph {
                         ExtendStrategy::init(&pattern, &self.meta)
                     } else {
@@ -904,36 +904,18 @@ fn triplet_to_index_predicate(
         match item {
             common_pb::expr_opr::Item::Const(c) => {
                 if is_within {
-                    let or_predicates = match c.item.clone().unwrap() {
-                        common_pb::value::Item::I32Array(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        common_pb::value::Item::I64Array(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        common_pb::value::Item::F64Array(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        common_pb::value::Item::StrArray(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        _ => Err(IrError::Unsupported(format!(
-                            "unsupported value type for within: {:?}",
-                            c
-                        )))?,
+                    let within_pred = pb::IndexPredicate {
+                        or_predicates: vec![build_and_predicate(
+                            key,
+                            c.clone(),
+                            common_pb::Logical::Within,
+                        )],
                     };
-                    return Ok(Some(pb::IndexPredicate { or_predicates }));
+                    return Ok(Some(within_pred));
                 } else {
-                    let idx_pred =
-                        pb::IndexPredicate { or_predicates: vec![build_and_predicate(key, c.clone())] };
+                    let idx_pred = pb::IndexPredicate {
+                        or_predicates: vec![build_and_predicate(key, c.clone(), common_pb::Logical::Eq)],
+                    };
                     return Ok(Some(idx_pred));
                 }
             }
@@ -944,7 +926,11 @@ fn triplet_to_index_predicate(
                         predicates: vec![pb::index_predicate::Triplet {
                             key,
                             value: Some(param.clone().into()),
-                            cmp: None,
+                            cmp: if is_within {
+                                unsafe { std::mem::transmute(common_pb::Logical::Within) }
+                            } else {
+                                unsafe { std::mem::transmute(common_pb::Logical::Eq) }
+                            },
                         }],
                     }],
                 };
@@ -959,16 +945,16 @@ fn triplet_to_index_predicate(
 }
 
 fn build_and_predicate(
-    key: Option<common_pb::Property>, value: common_pb::Value,
+    key: Option<common_pb::Property>, value: common_pb::Value, cmp: common_pb::Logical,
 ) -> pb::index_predicate::AndPredicate {
     pb::index_predicate::AndPredicate {
-        predicates: vec![pb::index_predicate::Triplet { key, value: Some(value.into()), cmp: None }],
+        predicates: vec![pb::index_predicate::Triplet { key, value: Some(value.into()), cmp: cmp as i32 }],
     }
 }
 
 fn get_table_id_from_pb(schema: &Schema, name: &common_pb::NameOrId) -> Option<KeyId> {
     name.item.as_ref().and_then(|item| match item {
-        common_pb::name_or_id::Item::Name(name) => schema.get_table_id(name),
+        common_pb::name_or_id::Item::Name(name) => schema.get_entity_or_relation_id(name),
         common_pb::name_or_id::Item::Id(id) => Some(*id),
     })
 }
@@ -1027,8 +1013,8 @@ fn preprocess_label(
                     common_pb::value::Item::Str(name) => {
                         let new_item = common_pb::value::Item::I32(
                             schema
-                                .get_table_id(name)
-                                .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
+                                .get_entity_or_relation_id(name)
+                                .ok_or_else(|| IrError::TableNotExist(NameOrId::Str(name.to_string())))?,
                         );
                         debug!("table: {:?} -> {:?}", item, new_item);
                         *item = new_item;
@@ -1040,8 +1026,10 @@ fn preprocess_label(
                                 .iter()
                                 .map(|name| {
                                     schema
-                                        .get_table_id(name)
-                                        .ok_or(IrError::TableNotExist(NameOrId::Str(name.to_string())))
+                                        .get_entity_or_relation_id(name)
+                                        .ok_or_else(|| {
+                                            IrError::TableNotExist(NameOrId::Str(name.to_string()))
+                                        })
                                 })
                                 .collect::<IrResult<Vec<_>>>()?,
                         });
@@ -1123,11 +1111,12 @@ fn preprocess_params(
     if let Some(schema) = &meta.schema {
         if schema.is_table_id() {
             for table in params.tables.iter_mut() {
-                let new_table = get_table_id_from_pb(schema, table)
-                    .ok_or(IrError::TableNotExist(table.clone().try_into()?))?
-                    .into();
-                debug!("table: {:?} -> {:?}", table, new_table);
-                *table = new_table;
+                if let Some(new_table) = get_table_id_from_pb(schema, table) {
+                    debug!("table: {:?} -> {:?}", table, new_table);
+                    *table = new_table.into();
+                } else {
+                    return Err(IrError::TableNotExist(table.clone().try_into()?));
+                }
             }
         }
     }
@@ -1476,7 +1465,13 @@ fn is_whole_graph(operator: &pb::logical_plan::Operator) -> bool {
                     && scan
                         .params
                         .as_ref()
-                        .map(|params| !params.is_queryable() && is_params_all_labels(params))
+                        .map(|params| {
+                            !(params.has_columns()
+                                || params.has_predicates()
+                                || params.has_sample()
+                                || params.has_limit())
+                                && is_params_all_labels(params)
+                        })
                         .unwrap_or(true)
             }
             pb::logical_plan::operator::Opr::Root(_) => true,
@@ -1495,7 +1490,7 @@ fn is_params_all_labels(params: &pb::QueryParams) -> bool {
             .as_ref()
             .and_then(|store_meta| store_meta.schema.as_ref())
         {
-            let params_label_ids: BTreeSet<LabelId> = params
+            let mut params_label_ids: Vec<LabelId> = params
                 .tables
                 .iter()
                 .filter_map(|name_or_id| {
@@ -1508,11 +1503,11 @@ fn is_params_all_labels(params: &pb::QueryParams) -> bool {
                     }
                 })
                 .collect();
-            let meta_label_ids: BTreeSet<LabelId> = schema
-                .entity_labels_iter()
-                .map(|(_, label_id)| label_id)
-                .collect();
-            params_label_ids.eq(&meta_label_ids)
+
+            params_label_ids.sort();
+            params_label_ids.dedup();
+
+            schema.check_all_entity_labels(&params_label_ids)
         } else {
             false
         }
@@ -2228,7 +2223,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some("John".to_string().into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2275,7 +2270,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some("John".to_string().into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2331,7 +2326,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some(dyn_param.into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2371,26 +2366,22 @@ mod test {
         assert_eq!(
             scan.idx_predicate.unwrap(),
             pb::IndexPredicate {
-                or_predicates: vec![
-                    pb::index_predicate::AndPredicate {
-                        predicates: vec![pb::index_predicate::Triplet {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Key("name".into())),
-                            }),
-                            value: Some("John".to_string().into()),
-                            cmp: None,
-                        }]
-                    },
-                    pb::index_predicate::AndPredicate {
-                        predicates: vec![pb::index_predicate::Triplet {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Key("name".into())),
-                            }),
-                            value: Some("Josh".to_string().into()),
-                            cmp: None,
-                        }]
-                    }
-                ]
+                or_predicates: vec![pb::index_predicate::AndPredicate {
+                    predicates: vec![pb::index_predicate::Triplet {
+                        key: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Key("name".into())),
+                        }),
+                        value: Some(
+                            common_pb::Value {
+                                item: Some(common_pb::value::Item::StrArray(common_pb::StringArray {
+                                    item: vec!["John".to_string(), "Josh".to_string()].into(),
+                                })),
+                            }
+                            .into()
+                        ),
+                        cmp: common_pb::Logical::Within as i32,
+                    }]
+                }]
             }
         );
     }

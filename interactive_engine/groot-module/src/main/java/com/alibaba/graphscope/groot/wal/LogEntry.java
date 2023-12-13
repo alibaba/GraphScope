@@ -16,9 +16,11 @@ package com.alibaba.graphscope.groot.wal;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.proto.groot.LogEntryPb;
 
+import java.util.Objects;
+
 public class LogEntry {
-    private long snapshotId;
-    private OperationBatch operationBatch;
+    private final long snapshotId;
+    private final OperationBatch operationBatch;
 
     public LogEntry(long snapshotId, OperationBatch operationBatch) {
         this.snapshotId = snapshotId;
@@ -54,8 +56,6 @@ public class LogEntry {
         LogEntry logEntry = (LogEntry) o;
 
         if (snapshotId != logEntry.snapshotId) return false;
-        return operationBatch != null
-                ? operationBatch.equals(logEntry.operationBatch)
-                : logEntry.operationBatch == null;
+        return Objects.equals(operationBatch, logEntry.operationBatch);
     }
 }

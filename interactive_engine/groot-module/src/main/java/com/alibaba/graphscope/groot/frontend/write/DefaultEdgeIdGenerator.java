@@ -3,9 +3,11 @@ package com.alibaba.graphscope.groot.frontend.write;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.util.PkHashUtils;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class DefaultEdgeIdGenerator extends RoleClients<IdAllocateClient>
@@ -33,6 +35,14 @@ public class DefaultEdgeIdGenerator extends RoleClients<IdAllocateClient>
             }
         }
         return getNextId();
+    }
+
+    @Override
+    public long getHashId(long srcId, long dstId, int labelId, List<byte[]> pks) {
+        if (pks != null && pks.size() > 0) {
+            return PkHashUtils.hash(srcId, dstId, labelId, pks);
+        }
+        return PkHashUtils.hash(srcId, dstId, labelId, System.nanoTime());
     }
 
     private void allocateNewIds() {
