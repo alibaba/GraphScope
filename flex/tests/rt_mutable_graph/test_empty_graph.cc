@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
   schema.add_vertex_label(
       "PERSON",
       {
-          gs::PropertyType::kString,  // name
-          gs::PropertyType::kString,  // emails
+          gs::PropertyType::Varchar(16),  // name
+          gs::PropertyType::Varchar(32),  // emails
       },
       {"name", "emails"},
       {std::tuple<gs::PropertyType, std::string, size_t>(
