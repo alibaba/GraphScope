@@ -296,7 +296,7 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
   BOOST_LEAF_AUTO(compact_edges, params.Get<bool>(rpc::COMPACT_EDGES, false));
   BOOST_LEAF_AUTO(use_perfect_hash,
                   params.Get<bool>(rpc::USE_PERFECT_HASH, false));
-  BOOST_LEAF_AUTO(extend_type, params.Get<int64_t>(rpc::EXTEND_LABEL_DATA));
+  BOOST_LEAF_AUTO(extend_type, params.Get<int64_t>(rpc::EXTEND_LABEL_DATA, 0));
 
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
