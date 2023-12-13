@@ -29,12 +29,11 @@ const char* FlexException::what() const noexcept { return _err_msg.c_str(); }
 
 // get current executable's directory
 std::string get_current_dir() {
-    char result[1024];
-    ssize_t count = readlink("/proc/self/exe", result, 1024);
-    auto ret =  (count > 0) ? std::string(result, count) : std::string();
-    return ret.substr(0, ret.rfind('/'));
+  char result[1024];
+  ssize_t count = readlink("/proc/self/exe", result, 1024);
+  auto ret = (count > 0) ? std::string(result, count) : std::string();
+  return ret.substr(0, ret.rfind('/'));
 }
-
 
 std::string find_codegen_bin() {
   // first check whether flex_home env exists
