@@ -395,7 +395,8 @@ static PropertyType StringToPropertyType(const std::string& str) {
   } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
   } else if (str == "String" || str == DT_STRING) {
-    return PropertyType::kString;
+    // DT_STRING is a alias for VARCHAR(DEFAULT_VARCHAR_LENGTH);
+    return PropertyType::Varchar(Schema::DEFAULT_VARCHAR_LENGTH);
   } else if (str == DT_STRINGMAP) {
     return PropertyType::kStringMap;
   } else if (str == "Empty") {
