@@ -233,12 +233,15 @@ class LFIndexer {
 
   void build_empty_LFIndexer(const std::string& filename,
                              const std::string& snapshot_dir,
-                             const std::string& work_dir, size_t size) {
+                             const std::string& work_dir) {
     keys_->open(filename + ".keys", "", work_dir);
     indices_.open(work_dir + "/" + filename + ".indices", false);
 
     num_elements_.store(0);
     indices_size_ = 0;
+    dump_meta(work_dir + "/" + filename + ".meta");
+    indices_.reset();
+    keys_->close();
   }
 
   void reserve(size_t size) { rehash(std::max(size, num_elements_.load())); }
@@ -345,20 +348,12 @@ class LFIndexer {
 
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) {
-    if (!std::filesystem::exists(work_dir + "/" + name + ".meta")) {
-      if (std::filesystem::exists(snapshot_dir + "/" + name + ".meta")) {
-        copy_to_tmp(snapshot_dir + "/" + name, work_dir + "/" + name);
-
-      } else {
-        build_empty_LFIndexer(name, "", work_dir, 0);
-        num_elements_.store(0);
-        indices_.open(work_dir + "/" + name + ".indices", false);
-        indices_size_ = indices_.size();
-        dump_meta(work_dir + "/" + name + ".meta");
-        indices_.reset();
-        keys_->close();
-      }
+    if (std::filesystem::exists(snapshot_dir + "/" + name + ".meta")) {
+      copy_to_tmp(snapshot_dir + "/" + name, work_dir + "/" + name);
+    } else {
+      build_empty_LFIndexer(name, "", work_dir);
     }
+
     load_meta(work_dir + "/" + name + ".meta");
     keys_->open(name + ".keys", "", work_dir);
     indices_.open(work_dir + "/" + name + ".indices", false);
