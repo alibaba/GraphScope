@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "warmup,w", bpo::value<bool>()->default_value(false),
       "warmup graph data")("memory-only,m",
-                           bpo::value<bool>()->default_value(false));
+                           bpo::value<bool>()->default_value(true));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -59,6 +59,11 @@ int main(int argc, char** argv) {
   bool enable_dpdk = false;
   bool warmup = vm["warmup"].as<bool>();
   bool memory_only = vm["memory-only"].as<bool>();
+  if (memory_only) {
+    LOG(INFO) << "memory only";
+  } else {
+    LOG(INFO) << "disk";
+  }
   uint32_t shard_num = vm["shard-num"].as<uint32_t>();
   uint16_t http_port = vm["http-port"].as<uint16_t>();
 
