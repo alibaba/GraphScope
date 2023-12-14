@@ -65,6 +65,10 @@ bool PropertyType::operator!=(const PropertyType& other) const {
   return !(*this == other);
 }
 
+bool PropertyType::IsVarchar() const {
+  return type_enum == impl::PropertyTypeImpl::kVarChar;
+}
+
 /////////////////////////////// Get Type Instance
 //////////////////////////////////
 PropertyType PropertyType::Empty() {

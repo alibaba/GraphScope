@@ -314,6 +314,41 @@ int main(int argc, char** argv) {
     data_path = vm["data-path"].as<std::string>();
 
     auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
+    // FIXME(zhanglei): Remove this check after VARCHAR is supported in
+    // interactive.
+    {
+      auto vertex_label_num = schema.vertex_label_num();
+      for (auto i = 0; i < vertex_label_num; ++i) {
+        auto& properties = schema.get_vertex_properties(i);
+        for (auto& property : properties) {
+          if (property.IsVarchar()) {
+            LOG(FATAL) << "VARCHAR is currently not supported in interactive";
+          }
+        }
+      }
+      auto edge_label_num = schema.edge_label_num();
+      for (auto i = 0; i < edge_label_num; ++i) {
+        auto edge_label_nam = schema.get_edge_label_name(i);
+        for (auto src_label = 0; src_label < vertex_label_num; ++src_label) {
+          auto src_label_name = schema.get_vertex_label_name(src_label);
+          for (auto dst_label = 0; dst_label < vertex_label_num; ++dst_label) {
+            auto dst_label_name = schema.get_vertex_label_name(dst_label);
+            if (schema.has_edge_label(src_label_name, dst_label_name,
+                                      edge_label_nam)) {
+              auto& properties =
+                  schema.get_edge_properties(src_label, dst_label, i);
+              for (auto& property : properties) {
+                if (property.IsVarchar()) {
+                  LOG(FATAL)
+                      << "VARCHAR is currently not supported in interactive";
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     // Ths schema is loaded just to get the plugin dir and plugin list
     gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
     db.Close();

@@ -70,6 +70,8 @@ struct PropertyType {
     assert(type == impl::PropertyTypeImpl::kVarChar);
   }
 
+  bool IsVarchar() const;
+
   static PropertyType Empty();
   static PropertyType Bool();
   static PropertyType UInt8();
@@ -112,30 +114,6 @@ struct Date {
 
   int64_t milli_second;
 };
-
-/**
-// (TBD) A VarChar is a string with a maximum length.
-// We don't stored the max length, to reduce the size of the struct.
-// We assume that the max length is known when the VarChar is created.
-//
-// 1. VarChar's maximum length should be runtime specified, not compile time, to
-// avoid each template instantiation for each max_length.
-// 2. When allocating VarChar on mmap, we should allocate a fixed size for each
-// VarChar, and use the first byte to store the actual length, so that we can
-// use std::string_view to refer to the VarChar.
-struct VarChar {
-  std::string_view data;
-  VarChar() : data() {}
-
-  VarChar(const char* ptr, size_t size, int32_t max_length) {
-    if (size > max_length) {
-      LOG(FATAL) << "Data size [" << size << "] is larger than max length ["
-                 << max_length << "]";
-    }
-    data = std::string_view(ptr, size);
-  }
-};
-*/
 
 union AnyValue {
   AnyValue() {}
