@@ -89,7 +89,7 @@ impl FromStreamExt<Vec<u8>> for RpcSink {
         self.had_error.store(true, Ordering::SeqCst);
         let status = if let Some(e) = error.downcast_ref::<JobExecError>() {
             match e.kind {
-                ErrorKind::WouldBlock => {
+                ErrorKind::WouldBlock(_) => {
                     Status::internal(format!("[Execution Error] WouldBlock: {}", error))
                 }
                 ErrorKind::Interrupted => {
