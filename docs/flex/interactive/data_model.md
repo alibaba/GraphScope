@@ -67,8 +67,6 @@ property_type:
   primitive_type: DT_STRING
 ```
 
-Please note that we currently do not support the use of string data type for properties on edges.
-
 ### Array Types
 
 Array types are currently not supported, but are planned to be supported in the near future.
