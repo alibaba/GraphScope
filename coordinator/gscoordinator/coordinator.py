@@ -151,11 +151,10 @@ def start_server(
                 "Coordinator monitor server listen at 127.0.0.1:%d",
                 config.coordinator.monitor_port,
             )
-        except Exception as e:
-            logger.error(
-                "Failed to start monitor server 127.0.0.1:{0} : {1}".format(
-                    config.coordinator.monitor_port, e
-                )
+        except Exception:  # noqa: E722, pylint: disable=broad-except
+            logger.exception(
+                "Failed to start monitor server on '127.0.0.1:%s'",
+                config.coordinator.monitor_port,
             )
 
     # handle SIGTERM signal
