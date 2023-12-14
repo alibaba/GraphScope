@@ -594,24 +594,25 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                         : listCtx.getRuleContexts(
                                 GremlinGSParser.TraversalMethod_orderbyContext.class);
         List<RexNode> exprs = Lists.newArrayList();
-        for (GremlinGSParser.TraversalMethod_orderbyContext byCtx : byCtxs) {
-            List<RexNode> byExprs = convertOrderByCtx(byCtx);
-            Order orderOpt = Order.asc;
-            if (byCtx.traversalOrder() != null) {
-                orderOpt =
-                        TraversalEnumParser.parseTraversalEnumFromContext(
-                                Order.class, byCtx.traversalOrder());
-            }
-            for (RexNode expr : byExprs) {
-                if (orderOpt == Order.desc) {
-                    exprs.add(builder.desc(expr));
-                } else {
-                    exprs.add(expr);
+        if (byCtxs.isEmpty()) {
+            exprs.add(builder.variable((String) null));
+        } else {
+            for (GremlinGSParser.TraversalMethod_orderbyContext byCtx : byCtxs) {
+                List<RexNode> byExprs = convertOrderByCtx(byCtx);
+                Order orderOpt = Order.asc;
+                if (byCtx.traversalOrder() != null) {
+                    orderOpt =
+                            TraversalEnumParser.parseTraversalEnumFromContext(
+                                    Order.class, byCtx.traversalOrder());
+                }
+                for (RexNode expr : byExprs) {
+                    if (orderOpt == Order.desc) {
+                        exprs.add(builder.desc(expr));
+                    } else if (orderOpt == Order.asc) {
+                        exprs.add(expr);
+                    }
                 }
             }
-        }
-        if (exprs.isEmpty()) {
-            exprs.add(builder.variable((String) null));
         }
         return builder.sortLimit(null, null, exprs);
     }
@@ -944,9 +945,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             }
             exprs.add(rex);
         } else {
-            throw new UnsupportedEvalException(
-                    GremlinGSParser.TraversalMethod_orderbyContext.class,
-                    byCtx.getText() + " is unsupported yet");
+            exprs.add(builder.variable((String) null));
         }
         return exprs;
     }

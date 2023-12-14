@@ -38,7 +38,7 @@ public class GremlinCalciteScriptEngineFactory extends AbstractGremlinScriptEngi
     private static final String PLAIN = "plain";
     private static final List<String> EXTENSIONS = Collections.singletonList("gremlin");
 
-    public static final String LANGUAGE_NAME = "gremlin-calcite";
+    public static final String LANGUAGE_NAME = "antlr_gremlin_calcite";
 
     public GremlinCalciteScriptEngineFactory() {
         super(LANGUAGE_NAME, LANGUAGE_NAME, EXTENSIONS, Collections.singletonList(PLAIN));

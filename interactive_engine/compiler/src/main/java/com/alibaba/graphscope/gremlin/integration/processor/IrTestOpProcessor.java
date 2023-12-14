@@ -27,17 +27,21 @@ import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
+import com.alibaba.graphscope.gremlin.integration.resultx.GremlinTestRecordParser;
+import com.alibaba.graphscope.gremlin.integration.resultx.GremlinTestResultProcessor;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.processor.IrStandardOpProcessor;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngine;
-import com.alibaba.graphscope.gremlin.resultx.GremlinResultProcessor;
-import com.alibaba.graphscope.gremlin.resultx.GremlinTestRecordParser;
+import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.script.GremlinCalciteScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.resultx.ResultSchema;
 
 import org.apache.tinkerpop.gremlin.driver.Tokens;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.process.traversal.Bytecode;
+import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.translator.GroovyTranslator;
 import org.apache.tinkerpop.gremlin.server.Context;
@@ -110,23 +114,52 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
                                     createQueryStatusCallback(script, queryId);
-                            GraphPlanner.Summary summary =
-                                    this.graphPlanner.instance(script, irMeta).plan();
-                            this.executionClient.submit(
-                                    new ExecutionRequest(
-                                            queryId,
-                                            queryName,
-                                            summary.getLogicalPlan(),
-                                            summary.getPhysicalPlan()),
-                                    new GremlinResultProcessor(
-                                            ctx,
-                                            statusCallback,
-                                            new GremlinTestRecordParser(
-                                                    summary.getLogicalPlan().getOutputType(),
-                                                    testGraph.getProperties(configs))),
-                                    new QueryTimeoutConfig(
-                                            FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(
-                                                    configs)));
+                            String language =
+                                    FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
+                            switch (language) {
+                                case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:
+                                    Traversal traversal =
+                                            (Traversal) scriptEngine.eval(script, this.context);
+                                    applyStrategies(traversal);
+                                    processTraversal(
+                                            traversal,
+                                            new com.alibaba.graphscope.gremlin.integration.result
+                                                    .GremlinTestResultProcessor(
+                                                    ctx,
+                                                    traversal,
+                                                    statusCallback,
+                                                    testGraph,
+                                                    this.configs),
+                                            irMeta,
+                                            new QueryTimeoutConfig(ctx.getRequestTimeout()),
+                                            statusCallback.getQueryLogger());
+                                    break;
+                                case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
+                                    GraphPlanner.Summary summary =
+                                            this.graphPlanner.instance(script, irMeta).plan();
+                                    ResultSchema resultSchema =
+                                            new ResultSchema(summary.getLogicalPlan());
+                                    this.executionClient.submit(
+                                            new ExecutionRequest(
+                                                    queryId,
+                                                    queryName,
+                                                    summary.getLogicalPlan(),
+                                                    summary.getPhysicalPlan()),
+                                            new GremlinTestResultProcessor(
+                                                    ctx,
+                                                    statusCallback,
+                                                    new GremlinTestRecordParser(
+                                                            resultSchema,
+                                                            testGraph.getProperties(configs)),
+                                                    resultSchema),
+                                            new QueryTimeoutConfig(
+                                                    FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(
+                                                            configs)));
+                                    break;
+                                default:
+                                    throw new IllegalArgumentException(
+                                            "invalid script language name: " + language);
+                            }
                             metaQueryCallback.afterExec(irMeta);
                         });
                 return op;

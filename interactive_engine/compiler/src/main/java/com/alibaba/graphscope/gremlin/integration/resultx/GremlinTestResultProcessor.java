@@ -14,39 +14,31 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.resultx;
+package com.alibaba.graphscope.gremlin.integration.resultx;
 
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
+import com.alibaba.graphscope.gremlin.resultx.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.resultx.ResultSchema;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
+import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 import org.apache.tinkerpop.gremlin.server.Context;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-public class GremlinResultProcessor implements ExecutionResponseListener {
-    protected final Context ctx;
-    protected final QueryStatusCallback statusCallback;
-    protected final RecordParser<Object> recordParser;
-    protected final ResultSchema resultSchema;
-    protected final Map<Object, Object> reducer;
-
-    public GremlinResultProcessor(
+public class GremlinTestResultProcessor extends GremlinResultProcessor {
+    public GremlinTestResultProcessor(
             Context ctx,
             QueryStatusCallback statusCallback,
             RecordParser recordParser,
             ResultSchema resultSchema) {
-        this.ctx = ctx;
-        this.statusCallback = statusCallback;
-        this.recordParser = recordParser;
-        this.resultSchema = resultSchema;
-        this.reducer = Maps.newLinkedHashMap();
+        super(ctx, statusCallback, recordParser, resultSchema);
     }
 
     @Override
@@ -64,7 +56,10 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
             ctx.writeAndFlush(
                     ResponseMessage.build(ctx.getRequestMessage())
                             .code(ResponseStatusCode.PARTIAL_CONTENT)
-                            .result(results)
+                            .result(
+                                    results.stream()
+                                            .map(k -> new DefaultRemoteTraverser(k, 1l))
+                                            .collect(Collectors.toList()))
                             .create());
         }
     }
@@ -73,21 +68,12 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
     public void onCompleted() {
         List<Object> results = Lists.newArrayList();
         if (resultSchema.isGroupBy) {
-            results.add(reducer);
+            results.add(new DefaultRemoteTraverser(reducer, 1l));
         }
         ctx.writeAndFlush(
                 ResponseMessage.build(ctx.getRequestMessage())
                         .code(ResponseStatusCode.SUCCESS)
                         .result(results)
-                        .create());
-    }
-
-    @Override
-    public void onError(Throwable t) {
-        ctx.writeAndFlush(
-                ResponseMessage.build(ctx.getRequestMessage())
-                        .code(ResponseStatusCode.SERVER_ERROR)
-                        .statusMessage(t.getMessage())
                         .create());
     }
 }

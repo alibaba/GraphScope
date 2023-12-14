@@ -46,33 +46,62 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GremlinRecordParser implements RecordParser<Object> {
-    private final RelDataType outputType;
+    protected final ResultSchema resultSchema;
 
-    public GremlinRecordParser(RelDataType outputType) {
-        this.outputType = outputType;
+    public GremlinRecordParser(ResultSchema resultSchema) {
+        this.resultSchema = resultSchema;
     }
 
     @Override
     public List<Object> parseFrom(IrResult.Record record) {
+        RelDataType outputType = resultSchema.outputType;
         Preconditions.checkArgument(
                 record.getColumnsCount() == outputType.getFieldCount(),
                 "column size of results "
                         + record.getColumnsCount()
                         + " should be consistent with output type "
                         + outputType.getFieldCount());
-        Map<String, Object> mapValue = Maps.newLinkedHashMap();
-        for (int i = 0; i < record.getColumnsCount(); i++) {
-            IrResult.Column column = record.getColumns(i);
-            RelDataTypeField field = outputType.getFieldList().get(i);
-            mapValue.put(field.getName(), parseEntry(column.getEntry(), field.getType()));
+        Map<Object, Object> mapValue = Maps.newLinkedHashMap();
+        if (resultSchema.isGroupBy) {
+            Preconditions.checkArgument(
+                    resultSchema.groupKeyCount <= outputType.getFieldCount(),
+                    "invalid group key count " + resultSchema.groupKeyCount);
+            List<Object> groupKeys = Lists.newArrayList();
+            for (int i = 0; i < resultSchema.groupKeyCount; i++) {
+                IrResult.Column column = record.getColumns(i);
+                RelDataTypeField field = outputType.getFieldList().get(i);
+                groupKeys.add(parseEntry(column.getEntry(), field.getType()));
+            }
+            List<Object> groupValues = Lists.newArrayList();
+            for (int i = resultSchema.groupKeyCount; i < record.getColumnsCount(); i++) {
+                IrResult.Column column = record.getColumns(i);
+                RelDataTypeField field = outputType.getFieldList().get(i);
+                Object value = parseEntry(column.getEntry(), field.getType());
+                if (value != null) {
+                    groupValues.add(value);
+                }
+            }
+            if (!groupValues.isEmpty() && !groupKeys.isEmpty()) {
+                mapValue.put(
+                        groupKeys.size() == 1 ? groupKeys.get(0) : groupKeys,
+                        groupValues.size() == 1 ? groupValues.get(0) : groupValues);
+            }
+        } else {
+            for (int i = 0; i < record.getColumnsCount(); i++) {
+                IrResult.Column column = record.getColumns(i);
+                RelDataTypeField field = outputType.getFieldList().get(i);
+                mapValue.put(field.getName(), parseEntry(column.getEntry(), field.getType()));
+            }
         }
         return Lists.newArrayList(
-                mapValue.size() == 1 ? mapValue.values().iterator().next() : mapValue);
+                !resultSchema.isGroupBy && mapValue.size() == 1
+                        ? mapValue.values().iterator().next()
+                        : mapValue);
     }
 
     @Override
     public RelDataType schema() {
-        return this.outputType;
+        return this.resultSchema.outputType;
     }
 
     private Object parseEntry(IrResult.Entry entry, RelDataType type) {

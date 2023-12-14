@@ -20,11 +20,11 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
-import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.resultx.GremlinRecordParser;
 import com.alibaba.graphscope.gremlin.resultx.GremlinResultProcessor;
+import com.alibaba.graphscope.gremlin.resultx.ResultSchema;
 import com.google.common.base.Preconditions;
 
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
@@ -81,9 +81,8 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                 statusCallback
                                         .getQueryLogger()
                                         .info("ir plan {}", summary.getPhysicalPlan().explain());
-                                RecordParser<Object> recordParser =
-                                        new GremlinRecordParser(
-                                                summary.getLogicalPlan().getOutputType());
+                                ResultSchema resultSchema =
+                                        new ResultSchema(summary.getLogicalPlan());
                                 this.client.submit(
                                         new ExecutionRequest(
                                                 queryId,
@@ -91,7 +90,10 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                                 summary.getLogicalPlan(),
                                                 summary.getPhysicalPlan()),
                                         new GremlinResultProcessor(
-                                                ctx, statusCallback, recordParser),
+                                                ctx,
+                                                statusCallback,
+                                                new GremlinRecordParser(resultSchema),
+                                                resultSchema),
                                         timeoutConfig);
                             } catch (Exception e) {
                                 throw new RuntimeException(e);

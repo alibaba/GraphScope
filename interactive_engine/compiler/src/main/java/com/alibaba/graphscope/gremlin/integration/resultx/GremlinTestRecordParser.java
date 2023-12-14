@@ -14,35 +14,28 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.resultx;
+package com.alibaba.graphscope.gremlin.integration.resultx;
 
 import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.alibaba.graphscope.gremlin.resultx.GremlinRecordParser;
+import com.alibaba.graphscope.gremlin.resultx.ResultSchema;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.type.RelDataType;
-import org.apache.tinkerpop.gremlin.process.remote.traversal.DefaultRemoteTraverser;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class GremlinTestRecordParser extends GremlinRecordParser {
     private static final String VERTEX_PROPERTIES = "vertex_properties";
     private static final String EDGE_PROPERTIES = "edge_properties";
     private final Map<String, Object> cachedProperties;
 
-    public GremlinTestRecordParser(RelDataType outputType, Map<String, Object> cachedProperties) {
-        super(outputType);
+    public GremlinTestRecordParser(
+            ResultSchema resultSchema, Map<String, Object> cachedProperties) {
+        super(resultSchema);
         this.cachedProperties = cachedProperties;
-    }
-
-    @Override
-    public List<Object> parseFrom(IrResult.Record record) {
-        return super.parseFrom(record).stream()
-                .map(k -> new DefaultRemoteTraverser(k, 1l))
-                .collect(Collectors.toList());
     }
 
     @Override

@@ -469,7 +469,9 @@ public class GraphBuilderTest {
         //        System.out.println(node.explain());
         //        RelNode node = eval("g.V().as('a').out().where(eq('a')).by(valueMap('name'))");
         //        System.out.println(node.explain());
-        RelNode node = eval("g.V().as('a').out().where(not(eq('a')))");
+        //        RelNode node = eval("g.V().as('a').out().where(not(eq('a')))");
+        //        System.out.println(node.explain());
+        RelNode node = eval("g.V().order().by(shuffle).by('name')");
         System.out.println(node.explain());
     }
 
