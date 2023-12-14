@@ -76,6 +76,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   }
 
   if ((!create_empty_graph) && (!graph_.schema().Equals(schema))) {
+    LOG(ERROR) << "Schema inconsistent..\n";
     return Result<bool>(StatusCode::InternalError,
                         "Schema of work directory is not compatible with the "
                         "graph schema",

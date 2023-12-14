@@ -30,6 +30,7 @@ using timestamp_t = uint32_t;
 using vid_t = uint32_t;
 using label_t = uint8_t;
 
+// primitive types
 static constexpr const char* DT_SIGNED_INT32 = "DT_SIGNED_INT32";
 static constexpr const char* DT_UNSIGNED_INT32 = "DT_UNSIGNED_INT32";
 static constexpr const char* DT_SIGNED_INT64 = "DT_SIGNED_INT64";

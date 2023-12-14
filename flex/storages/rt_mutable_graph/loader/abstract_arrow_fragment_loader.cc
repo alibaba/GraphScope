@@ -29,142 +29,86 @@ bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type) {
   }
 }
 
+void set_vertex_column_from_string_array(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids) {
+  auto type = array->type();
+  CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
+      << "Inconsistent data type, expect string, but got " << type->ToString();
+  size_t cur_ind = 0;
+  if (type->Equals(arrow::large_utf8())) {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        std::string_view sw(str.data(), str.size());
+        col->set_any(vids[cur_ind++], std::move(sw));
+      }
+    }
+  } else {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        auto str = casted->GetView(k);
+        std::string_view sw(str.data(), str.size());
+        col->set_any(vids[cur_ind++], std::move(sw));
+      }
+    }
+  }
+}
+
 void set_vertex_properties(gs::ColumnBase* col,
                            std::shared_ptr<arrow::ChunkedArray> array,
                            const std::vector<vid_t>& vids) {
   auto type = array->type();
   auto col_type = col->type();
-  size_t cur_ind = 0;
+
+  // TODO(zhanglei): reduce the dummy code here with a template function.
   if (col_type == PropertyType::kBool) {
-    CHECK(type->Equals(arrow::boolean()))
-        << "Inconsistent data type, expect bool, but got " << type->ToString();
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::BooleanArray>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<bool>::to_any(casted->Value(k))));
-      }
-    }
+    set_single_vertex_column<bool>(col, array, vids);
   } else if (col_type == PropertyType::kInt64) {
-    CHECK(type->Equals(arrow::int64()))
-        << "Inconsistent data type, expect int64, but got " << type->ToString();
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(
-            vids[cur_ind++],
-            std::move(AnyConverter<int64_t>::to_any(casted->Value(k))));
-      }
-    }
+    set_single_vertex_column<int64_t>(col, array, vids);
   } else if (col_type == PropertyType::kInt32) {
-    CHECK(type->Equals(arrow::int32()))
-        << "Inconsistent data type, expect int32, but got " << type->ToString();
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::Int32Array>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(
-            vids[cur_ind++],
-            std::move(AnyConverter<int32_t>::to_any(casted->Value(k))));
-      }
-    }
+    set_single_vertex_column<int32_t>(col, array, vids);
   } else if (col_type == PropertyType::kUInt64) {
-    CHECK(type->Equals(arrow::uint64()))
-        << "Inconsistent data type, expect uint64, but got "
-        << type->ToString();
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::UInt64Array>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(
-            vids[cur_ind++],
-            std::move(AnyConverter<uint64_t>::to_any(casted->Value(k))));
-      }
-    }
+    set_single_vertex_column<uint64_t>(col, array, vids);
   } else if (col_type == PropertyType::kUInt32) {
-    CHECK(type->Equals(arrow::uint32()))
-        << "Inconsistent data type, expect uint32, but got "
-        << type->ToString();
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::UInt32Array>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(
-            vids[cur_ind++],
-            std::move(AnyConverter<uint32_t>::to_any(casted->Value(k))));
-      }
-    }
+    set_single_vertex_column<uint32_t>(col, array, vids);
   } else if (col_type == PropertyType::kDouble) {
-    CHECK(type->Equals(arrow::float64()))
-        << "Inconsistent data type, expect double, but got "
-        << type->ToString();
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::DoubleArray>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<double>::to_any(casted->Value(k))));
-      }
-    }
+    set_single_vertex_column<double>(col, array, vids);
   } else if (col_type == PropertyType::kFloat) {
-    CHECK(type->Equals(arrow::float32()))
-        << "Inconsistent data type, expect float, but got " << type->ToString();
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted =
-          std::static_pointer_cast<arrow::FloatArray>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<float>::to_any(casted->Value(k))));
-      }
-    }
-  } else if (col_type == PropertyType::kString ||
-             col_type == PropertyType::kStringMap) {
-    CHECK(type->Equals(arrow::large_utf8()) || type->Equals(arrow::utf8()))
-        << "Inconsistent data type, expect string, but got "
-        << type->ToString();
-    if (type->Equals(arrow::large_utf8())) {
-      for (auto j = 0; j < array->num_chunks(); ++j) {
-        auto casted =
-            std::static_pointer_cast<arrow::LargeStringArray>(array->chunk(j));
-        for (auto k = 0; k < casted->length(); ++k) {
-          auto str = casted->GetView(k);
-          std::string_view str_view(str.data(), str.size());
-          col->set_any(
-              vids[cur_ind++],
-              std::move(AnyConverter<std::string_view>::to_any(str_view)));
-        }
-      }
-    } else {
-      for (auto j = 0; j < array->num_chunks(); ++j) {
-        auto casted =
-            std::static_pointer_cast<arrow::StringArray>(array->chunk(j));
-        for (auto k = 0; k < casted->length(); ++k) {
-          auto str = casted->GetView(k);
-          std::string_view str_view(str.data(), str.size());
-          col->set_any(
-              vids[cur_ind++],
-              std::move(AnyConverter<std::string_view>::to_any(str_view)));
-        }
-      }
-    }
+    set_single_vertex_column<float>(col, array, vids);
+  } else if (col_type == PropertyType::kStringMap) {
+    set_vertex_column_from_string_array(col, array, vids);
   } else if (col_type == PropertyType::kDate) {
-    if (type->Equals(arrow::timestamp(arrow::TimeUnit::type::MILLI))) {
-      for (auto j = 0; j < array->num_chunks(); ++j) {
-        auto casted =
-            std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
-        for (auto k = 0; k < casted->length(); ++k) {
-          col->set_any(vids[cur_ind++],
-                       std::move(AnyConverter<Date>::to_any(casted->Value(k))));
-        }
-      }
-    } else {
-      LOG(FATAL) << "Not implemented: converting " << type->ToString() << " to "
-                 << col_type;
-    }
+    set_vertex_column_from_timestamp_array(col, array, vids);
+  } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    set_vertex_column_from_string_array(col, array, vids);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
+  }
+}
+
+void set_vertex_column_from_timestamp_array(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids) {
+  auto type = array->type();
+  auto col_type = col->type();
+  size_t cur_ind = 0;
+  if (type->Equals(arrow::timestamp(arrow::TimeUnit::type::MILLI))) {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        col->set_any(vids[cur_ind++],
+                     std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+      }
+    }
+  } else {
+    LOG(FATAL) << "Not implemented: converting " << type->ToString() << " to "
+               << col_type;
   }
 }
 
@@ -223,15 +167,15 @@ void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
 
   if (type == PropertyType::kInt64) {
     addVertexRecordBatchImpl<int64_t>(v_label_id, v_files, supplier_creator);
-  } else if (type == PropertyType::kString) {
-    addVertexRecordBatchImpl<std::string_view>(v_label_id, v_files,
-                                               supplier_creator);
   } else if (type == PropertyType::kInt32) {
     addVertexRecordBatchImpl<int32_t>(v_label_id, v_files, supplier_creator);
   } else if (type == PropertyType::kUInt32) {
     addVertexRecordBatchImpl<uint32_t>(v_label_id, v_files, supplier_creator);
   } else if (type == PropertyType::kUInt64) {
     addVertexRecordBatchImpl<uint64_t>(v_label_id, v_files, supplier_creator);
+  } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    addVertexRecordBatchImpl<std::string_view>(v_label_id, v_files,
+                                               supplier_creator);
   }
   VLOG(10) << "Finish init vertices for label " << v_label_name;
 }
@@ -320,14 +264,6 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       addEdgesRecordBatchImpl<uint64_t>(src_label_i, dst_label_i, edge_label_i,
                                         filenames, supplier_creator);
     }
-  } else if (property_types[0] == PropertyType::kString) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
-    }
   } else if (property_types[0] == PropertyType::kDouble) {
     if (filenames.empty()) {
       basic_fragment_loader_.AddNoPropEdgeBatch<double>(
@@ -343,6 +279,14 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
     } else {
       addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
                                      filenames, supplier_creator);
+    }
+  } else if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
+    if (filenames.empty()) {
+      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
+          src_label_i, dst_label_i, edge_label_i);
+    } else {
+      addEdgesRecordBatchImpl<std::string_view>(
+          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type." << property_types[0];
