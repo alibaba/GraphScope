@@ -42,9 +42,6 @@ static constexpr const char* DT_STRING = "DT_STRING";
 static constexpr const char* DT_STRINGMAP = "DT_STRINGMAP";
 static constexpr const char* DT_DATE = "DT_DATE32";
 
-// VARCHAR
-static constexpr const char* VARCHAR = "VARCHAR";
-
 }  // namespace gs
 
 #endif  // STORAGES_RT_MUTABLE_GRAPH_TYPES_H_
