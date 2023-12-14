@@ -408,10 +408,6 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kFloat;
   } else if (str == "double" || str == DT_DOUBLE) {
     return PropertyType::kDouble;
-  } else if (str.substr(0, 7) == "VARCHAR") {
-    int max_len;
-    sscanf(str.data(), "VARCHAR(%d)", &max_len);
-    return PropertyType::Varchar(max_len);
   } else {
     return PropertyType::kEmpty;
   }
@@ -439,6 +435,32 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
   }
 }
 
+static bool parse_property_type(const YAML::Node& node, PropertyType& type) {
+  std::string prop_type_str{};
+  if (node["primitive_type"]) {
+    if (!get_scalar(node, "primitive_type", prop_type_str)) {
+      return false;
+    }
+  } else if (node["varchar"]) {
+    auto varchar_node = node["varchar"];
+    std::string length_str{};
+    if (!varchar_node["max_length"] ||
+        !get_scalar(varchar_node["max_length"], "max_length", length_str)) {
+      return false;
+    }
+    int len = std::atoi(length_str.c_str());
+    type = PropertyType::Varchar(len);
+    LOG(INFO) << "Varchar" << len << "\n";
+    return true;
+  } else if (node["date"]) {
+    auto format = node["date"].as<std::string>();
+    prop_type_str = DT_DATE;
+  } else {
+    return false;
+  }
+  type = StringToPropertyType(prop_type_str);
+  return true;
+}
 static bool parse_vertex_properties(YAML::Node node,
                                     const std::string& label_name,
                                     std::vector<PropertyType>& types,
@@ -456,7 +478,7 @@ static bool parse_vertex_properties(YAML::Node node,
   }
 
   for (int i = 0; i < prop_num; ++i) {
-    std::string prop_type_str, strategy_str, prop_name_str;
+    std::string strategy_str, prop_name_str;
     if (!get_scalar(node[i], "property_name", prop_name_str)) {
       LOG(ERROR) << "Name of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
@@ -468,17 +490,9 @@ static bool parse_vertex_properties(YAML::Node node,
       return false;
     }
     auto prop_type_node = node[i]["property_type"];
-    if (prop_type_node["primitive_type"]) {
-      if (!get_scalar(prop_type_node, "primitive_type", prop_type_str)) {
-        LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
-                   << " is not specified...";
-        return false;
-      }
-    } else if (prop_type_node["date"]) {
-      auto format = prop_type_node["date"].as<std::string>();
-      prop_type_str = DT_DATE;
-    } else {
-      LOG(ERROR) << "Unknown type of vertex-" << label_name << " prop-" << i - 1
+    PropertyType prop_type;
+    if (!parse_property_type(prop_type_node, prop_type)) {
+      LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
@@ -487,10 +501,10 @@ static bool parse_vertex_properties(YAML::Node node,
         get_scalar(node[i]["x_csr_params"], "storage_strategy", strategy_str);
       }
     }
-    types.push_back(StringToPropertyType(prop_type_str));
+    types.push_back(prop_type);
     strategies.push_back(StringToStorageStrategy(strategy_str));
     VLOG(10) << "prop-" << i - 1 << " name: " << prop_name_str
-             << " type: " << prop_type_str << " strategy: " << strategy_str;
+             << " type: " << prop_type << " strategy: " << strategy_str;
     names.push_back(prop_name_str);
   }
 
@@ -514,19 +528,15 @@ static bool parse_edge_properties(YAML::Node node,
   int prop_num = node.size();
 
   for (int i = 0; i < prop_num; ++i) {
-    std::string prop_type_str, strategy_str, prop_name_str;
-    if (node[i]["property_type"]) {
-      if (!get_scalar(node[i]["property_type"], "primitive_type",
-                      prop_type_str)) {
-        if (!get_scalar(node[i]["property_type"], "date", prop_type_str)) {
-          LOG(ERROR) << "Fail to parse property type of edge-" << label_name
-                     << " prop-" << i << " ...";
-          return false;
-        } else {
-          prop_type_str = DT_DATE;
-        }
-      }
-    } else {
+    std::string strategy_str, prop_name_str;
+    if (!node[i]["property_type"]) {
+      LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
+                 << " is not specified...";
+      return false;
+    }
+    auto prop_type_node = node[i]["property_type"];
+    PropertyType prop_type;
+    if (!parse_property_type(prop_type_node, prop_type)) {
       LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
@@ -537,7 +547,7 @@ static bool parse_edge_properties(YAML::Node node,
       return false;
     }
 
-    types.push_back(StringToPropertyType(prop_type_str));
+    types.push_back(prop_type);
     names.push_back(prop_name_str);
   }
 

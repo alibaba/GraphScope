@@ -60,7 +60,8 @@ class TypedEmptyColumn : public ColumnBase {
 template <>
 class TypedEmptyColumn<std::string_view> : public ColumnBase {
  public:
-  TypedEmptyColumn(int32_t max_length = 64) : max_length_(max_length) {}
+  TypedEmptyColumn(int32_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH)
+      : max_length_(max_length) {}
   ~TypedEmptyColumn() {}
 
   void open(const std::string& name, const std::string& snapshot_dir,
@@ -125,8 +126,6 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<FloatEmptyColumn>();
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateEmptyColumn>();
-    } else if (type == PropertyType::kString) {
-      return std::make_shared<StringEmptyColumn>();
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringEmptyColumn>();
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
@@ -154,8 +153,6 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<FloatColumn>(strategy);
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateColumn>(strategy);
-    } else if (type == PropertyType::kString) {
-      return std::make_shared<StringColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringMapColumn<uint8_t>>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {

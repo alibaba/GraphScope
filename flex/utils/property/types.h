@@ -53,11 +53,12 @@ enum class PropertyTypeImpl {
 
 // Stores additional type information for PropertyTypeImpl
 union AdditionalTypeInfo {
-  size_t max_length;  // for varchar
+  uint16_t max_length;  // for varchar
 };
 }  // namespace impl
 
 struct PropertyType {
+  static constexpr const uint16_t STRING_DEFAULT_MAX_LENGTH = 256;
   impl::PropertyTypeImpl type_enum;
   impl::AdditionalTypeInfo additional_type_info;
 
@@ -65,7 +66,7 @@ struct PropertyType {
       : type_enum(impl::PropertyTypeImpl::kEmpty), additional_type_info() {}
   constexpr PropertyType(impl::PropertyTypeImpl type)
       : type_enum(type), additional_type_info() {}
-  constexpr PropertyType(impl::PropertyTypeImpl type, size_t max_length)
+  constexpr PropertyType(impl::PropertyTypeImpl type, uint16_t max_length)
       : type_enum(type), additional_type_info({.max_length = max_length}) {
     assert(type == impl::PropertyTypeImpl::kVarChar);
   }
@@ -83,7 +84,7 @@ struct PropertyType {
   static PropertyType Date();
   static PropertyType String();
   static PropertyType StringMap();
-  static PropertyType Varchar(size_t max_length);
+  static PropertyType Varchar(uint16_t max_length);
 
   static const PropertyType kEmpty;
   static const PropertyType kBool;

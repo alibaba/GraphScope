@@ -197,9 +197,10 @@ using FloatColumn = TypedColumn<float>;
 template <>
 class TypedColumn<std::string_view> : public ColumnBase {
  public:
-  TypedColumn(StorageStrategy strategy, size_t width = 64) : width_(width) {}
+  TypedColumn(StorageStrategy strategy,
+              uint16_t width = PropertyType::STRING_DEFAULT_MAX_LENGTH)
+      : width_(width) {}
   ~TypedColumn() { close(); }
-  void set_width(size_t width) { width_ = width; }
 
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
@@ -309,7 +310,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     }
   }
 
-  PropertyType type() const override { return PropertyType::kString; }
+  PropertyType type() const override { return PropertyType::Varchar(width_); }
 
   void set_value(size_t idx, const std::string_view& val) {
     assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
@@ -356,7 +357,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   size_t extra_size_;
   std::atomic<size_t> pos_;
   StorageStrategy strategy_;
-  size_t width_;
+  uint16_t width_;
 };
 
 using StringColumn = TypedColumn<std::string_view>;

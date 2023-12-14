@@ -64,7 +64,7 @@ class BasicFragmentLoader {
         vertex_map_prefix(schema_.get_vertex_label_name(v_label));
     auto primary_keys = schema_.get_vertex_primary_key(v_label);
     auto type = std::get<0>(primary_keys[0]);
-    
+
     build_lf_indexer<KEY_T, vid_t>(indexer, filename, lf_indexers_[v_label],
                                    snapshot_dir(work_dir_, 0),
                                    tmp_dir(work_dir_), type);
@@ -87,8 +87,8 @@ class BasicFragmentLoader {
     if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
-      dual_csr_list_[index] =
-          new DualCsr<std::string_view>(oe_strategy, ie_strategy, prop[0]);
+      dual_csr_list_[index] = new DualCsr<std::string_view>(
+          oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
     } else {
       dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
     }
@@ -124,8 +124,8 @@ class BasicFragmentLoader {
     if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
-      auto dual_csr =
-          new DualCsr<std::string_view>(oe_strategy, ie_strategy, prop[0]);
+      auto dual_csr = new DualCsr<std::string_view>(
+          oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
       dual_csr_list_[index] = dual_csr;
       ie_[index] = dual_csr_list_[index]->GetInCsr();
       oe_[index] = dual_csr_list_[index]->GetOutCsr();

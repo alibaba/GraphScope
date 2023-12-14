@@ -106,7 +106,7 @@ PropertyType PropertyType::String() {
 PropertyType PropertyType::StringMap() {
   return PropertyType(impl::PropertyTypeImpl::kStringMap);
 }
-PropertyType PropertyType::Varchar(size_t max_length) {
+PropertyType PropertyType::Varchar(uint16_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
@@ -123,8 +123,6 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
   out_archive >> value.type_enum;
   if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
     out_archive >> value.additional_type_info.max_length;
-
-    LOG(INFO) << value.additional_type_info.max_length << "length\n";
   }
   return out_archive;
 }

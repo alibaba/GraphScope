@@ -80,8 +80,7 @@ void set_vertex_properties(gs::ColumnBase* col,
     set_single_vertex_column<double>(col, array, vids);
   } else if (col_type == PropertyType::kFloat) {
     set_single_vertex_column<float>(col, array, vids);
-  } else if (col_type == PropertyType::kString ||
-             col_type == PropertyType::kStringMap) {
+  } else if (col_type == PropertyType::kStringMap) {
     set_vertex_column_from_string_array(col, array, vids);
   } else if (col_type == PropertyType::kDate) {
     set_vertex_column_from_timestamp_array(col, array, vids);
@@ -168,9 +167,6 @@ void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
 
   if (type == PropertyType::kInt64) {
     addVertexRecordBatchImpl<int64_t>(v_label_id, v_files, supplier_creator);
-  } else if (type == PropertyType::kString) {
-    addVertexRecordBatchImpl<std::string_view>(v_label_id, v_files,
-                                               supplier_creator);
   } else if (type == PropertyType::kInt32) {
     addVertexRecordBatchImpl<int32_t>(v_label_id, v_files, supplier_creator);
   } else if (type == PropertyType::kUInt32) {
@@ -267,14 +263,6 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
     } else {
       addEdgesRecordBatchImpl<uint64_t>(src_label_i, dst_label_i, edge_label_i,
                                         filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kString) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
     }
   } else if (property_types[0] == PropertyType::kDouble) {
     if (filenames.empty()) {
