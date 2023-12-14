@@ -72,7 +72,7 @@ impl TryFrom<algebra_pb::OrderBy> for RecordCompare {
         for order_pair in order_pb.pairs {
             let key = order_pair
                 .key
-                .ok_or(ParsePbError::EmptyFieldError("key is empty in order".to_string()))?
+                .ok_or_else(|| ParsePbError::EmptyFieldError("key is empty in order".to_string()))?
                 .try_into()?;
             let order: Order = unsafe { ::std::mem::transmute(order_pair.order) };
             tag_key_order.push((key, order));

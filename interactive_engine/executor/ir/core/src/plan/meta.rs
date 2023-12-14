@@ -27,7 +27,6 @@ use ir_common::{KeyId, OneOrMany};
 use ir_common::{LabelId, NameOrId};
 
 use crate::error::{IrError, IrResult};
-use crate::glogue::DynIter;
 use crate::plan::logical::NodeId;
 use crate::JsonIO;
 
@@ -103,31 +102,22 @@ impl From<LabelMeta> for schema_pb::LabelMeta {
     }
 }
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub enum KeyType {
-    Entity = 0,
-    Relation = 1,
-    Column = 2,
-}
-
-impl Default for KeyType {
-    fn default() -> Self {
-        Self::Entity
-    }
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct Schema {
-    /// A map from table (Entity or Relation) name to its internally encoded id
-    /// In the concept of graph database, this is also known as label
-    table_name_to_id: BTreeMap<String, (KeyType, LabelId)>,
+    /// A map from entity name to its internally encoded id
+    /// In the concept of graph database, this is also known as vertex label
+    entity_name_to_id: BTreeMap<String, LabelId>,
+    /// A map from relation name to its internally encoded id
+    /// In the concept of graph database, this is also known as vertex label
+    relation_name_to_id: BTreeMap<String, LabelId>,
     /// A map from column name to its store-encoded id
     /// In the concept of graph database, this is also known as property
     column_name_to_id: BTreeMap<String, KeyId>,
     /// Record the primary keys of each table
     primary_keys: BTreeMap<String, BTreeSet<String>>,
-    /// A reversed map of `id` to `name` mapping
-    id_to_name: BTreeMap<(KeyType, KeyId), String>,
+    /// A reversed map of `id` to `name` mapping.
+    /// 0, entity; 1, relation; 2, column
+    id_to_name: BTreeMap<(u8, KeyId), String>,
     /// The entities' labels that are bound a certain type of relations
     relation_bound_labels: BTreeMap<KeyId, Vec<(LabelMeta, LabelMeta)>>,
     /// Is the table name mapped as id
@@ -151,19 +141,15 @@ impl Schema {
         if schema.is_table_id {
             for (name, id) in entities.into_iter() {
                 schema
-                    .table_name_to_id
-                    .insert(name.clone(), (KeyType::Entity, id));
-                schema
-                    .id_to_name
-                    .insert((KeyType::Entity, id), name);
+                    .entity_name_to_id
+                    .insert(name.clone(), id);
+                schema.id_to_name.insert((0, id), name);
             }
             for (name, id) in relations.into_iter() {
                 schema
-                    .table_name_to_id
-                    .insert(name.clone(), (KeyType::Relation, id));
-                schema
-                    .id_to_name
-                    .insert((KeyType::Relation, id), name);
+                    .relation_name_to_id
+                    .insert(name.clone(), id);
+                schema.id_to_name.insert((1, id), name);
             }
         }
         if schema.is_column_id {
@@ -171,19 +157,26 @@ impl Schema {
                 schema
                     .column_name_to_id
                     .insert(name.clone(), id);
-                schema
-                    .id_to_name
-                    .insert((KeyType::Column, id), name);
+                schema.id_to_name.insert((2, id), name);
             }
         }
 
         schema
     }
 
-    pub fn get_table_id(&self, name: &str) -> Option<LabelId> {
-        self.table_name_to_id
+    pub fn get_entity_id(&self, name: &str) -> Option<LabelId> {
+        self.entity_name_to_id.get(name).map(|id| *id)
+    }
+
+    pub fn get_relation_id(&self, name: &str) -> Option<LabelId> {
+        self.relation_name_to_id.get(name).map(|id| *id)
+    }
+
+    pub fn get_entity_or_relation_id(&self, name: &str) -> Option<LabelId> {
+        self.entity_name_to_id
             .get(name)
-            .map(|(_, id)| *id)
+            .map(|id| *id)
+            .or_else(|| self.relation_name_to_id.get(name).map(|id| *id))
     }
 
     pub fn get_column_id(&self, name: &str) -> Option<KeyId> {
@@ -191,15 +184,15 @@ impl Schema {
     }
 
     pub fn get_entity_name(&self, id: KeyId) -> Option<&String> {
-        self.id_to_name.get(&(KeyType::Entity, id))
+        self.id_to_name.get(&(0, id))
     }
 
     pub fn get_relation_name(&self, id: KeyId) -> Option<&String> {
-        self.id_to_name.get(&(KeyType::Relation, id))
+        self.id_to_name.get(&(1, id))
     }
 
     pub fn get_column_name(&self, id: KeyId) -> Option<&String> {
-        self.id_to_name.get(&(KeyType::Column, id))
+        self.id_to_name.get(&(2, id))
     }
 
     /// To get the entities' labels that are bound to a relation of given type
@@ -215,18 +208,18 @@ impl Schema {
         self.is_table_id
     }
 
-    pub fn entity_labels_iter(&self) -> DynIter<(String, LabelId)> {
-        Box::new(
-            self.table_name_to_id
-                .iter()
-                .filter_map(|(name, (key_type, label_id))| {
-                    if let KeyType::Entity = key_type {
-                        Some((name.clone(), *label_id))
-                    } else {
-                        None
-                    }
-                }),
-        )
+    /// Check whether the given entity labels contain all entity labels in the schema
+    pub fn check_all_entity_labels(&self, label_ids: &Vec<LabelId>) -> bool {
+        if self.entity_name_to_id.len() != label_ids.len() {
+            false
+        } else {
+            for label_id in label_ids {
+                if !self.id_to_name.contains_key(&(0, *label_id)) {
+                    return false;
+                }
+            }
+            true
+        }
     }
 
     /// Check whether a given table contains a given column as a primary key.
@@ -247,7 +240,7 @@ impl From<Schema> for schema_pb::Schema {
         } else {
             let mut entities = Vec::new();
             for (&(ty, id), name) in &schema.id_to_name {
-                if ty == KeyType::Entity {
+                if ty == 0 {
                     entities.push(schema_pb::EntityMeta {
                         label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
                         columns: vec![],
@@ -262,7 +255,7 @@ impl From<Schema> for schema_pb::Schema {
         } else {
             let mut relations = Vec::new();
             for (&(ty, id), name) in &schema.id_to_name {
-                if ty == KeyType::Relation {
+                if ty == 1 {
                     let mut relation_meta = schema_pb::RelationMeta {
                         label: Some(schema_pb::LabelMeta { id, name: name.to_string() }),
                         entity_pairs: vec![],
@@ -304,15 +297,15 @@ impl From<schema_pb::Schema> for Schema {
             if schema_pb.is_table_id {
                 if let Some(label) = &entity.label {
                     if !schema
-                        .table_name_to_id
+                        .entity_name_to_id
                         .contains_key(&label.name)
                     {
                         schema
-                            .table_name_to_id
-                            .insert(label.name.clone(), (KeyType::Entity, label.id));
+                            .entity_name_to_id
+                            .insert(label.name.clone(), label.id);
                         schema
                             .id_to_name
-                            .insert((KeyType::Entity, label.id), label.name.clone());
+                            .insert((0, label.id), label.name.clone());
                     }
                 }
             }
@@ -326,7 +319,7 @@ impl From<schema_pb::Schema> for Schema {
                                 .insert(key.name.clone(), key.id);
                             schema
                                 .id_to_name
-                                .insert((KeyType::Column, key.id), key.name.clone());
+                                .insert((2, key.id), key.name.clone());
                         }
                     }
                     if column.is_primary_key {
@@ -346,15 +339,15 @@ impl From<schema_pb::Schema> for Schema {
             if schema_pb.is_table_id {
                 if let Some(label) = &rel.label {
                     if !schema
-                        .table_name_to_id
+                        .relation_name_to_id
                         .contains_key(&label.name)
                     {
                         schema
-                            .table_name_to_id
-                            .insert(label.name.clone(), (KeyType::Relation, label.id));
+                            .relation_name_to_id
+                            .insert(label.name.clone(), label.id);
                         schema
                             .id_to_name
-                            .insert((KeyType::Relation, label.id), label.name.clone());
+                            .insert((1, label.id), label.name.clone());
                     }
                 }
             }
@@ -368,7 +361,7 @@ impl From<schema_pb::Schema> for Schema {
                                 .insert(key.name.clone(), key.id);
                             schema
                                 .id_to_name
-                                .insert((KeyType::Column, key.id), key.name.clone());
+                                .insert((2, key.id), key.name.clone());
                         }
                     }
                     if column.is_primary_key {

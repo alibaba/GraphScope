@@ -16,7 +16,6 @@
 #ifndef TESTS_HQPS_MATCH_QUERY_H_
 #define TESTS_HQPS_MATCH_QUERY_H_
 
-#include "flex/engines/hqps_db/app/hqps_app_base.h"
 #include "flex/engines/hqps_db/core/sync_engine.h"
 #include "flex/utils/app_utils.h"
 
@@ -52,18 +51,25 @@ struct Query5expr1 {
  private:
 };
 
-class MatchQuery : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery : public AppBase {
  public:
   using GRAPH_INTERFACE = gs::MutableCSRInterface;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
 
  public:
-  results::CollectiveResults Query(const GRAPH_INTERFACE& graph,
-                                   Decoder& input) const override {
-    return Query(graph);
+  MatchQuery(const GraphDBSession& session) : graph(session) {}
+  bool Query(Decoder& decoder, Encoder& encoder) override {
+    // decoding params from decoder, and call real query func
+
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
 
-  results::CollectiveResults Query(const GRAPH_INTERFACE& graph) const {
+  results::CollectiveResults Query() const {
     using label_id_t = typename GRAPH_INTERFACE::label_id_t;
     using Engine = SyncEngine<GRAPH_INTERFACE>;
 
@@ -117,15 +123,17 @@ class MatchQuery : public HqpsAppBase<gs::MutableCSRInterface> {
 
     return Engine::Sink(graph, ctx3, std::array<int32_t, 2>{0, 1});
   }
+  gs::MutableCSRInterface graph;
 };
 
-class MatchQuery1 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery1 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  MatchQuery1(const GraphDBSession& session) : graph(session) {}
+  results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, std::array<label_id_t, 8>{0, 1, 2, 3, 4, 5, 6, 7},
         Filter<TruePredicate>());
@@ -154,21 +162,28 @@ class MatchQuery1 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{0});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
-class MatchQuery2 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery2 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery2(const GraphDBSession& session) : graph(session) {}
+
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, std::array<label_id_t, 7>{1, 2, 3, 4, 5, 6, 7},
@@ -210,21 +225,27 @@ class MatchQuery2 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
-class MatchQuery3 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery3 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery3(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, std::array<label_id_t, 7>{1, 2, 3, 4, 5, 6, 7},
         Filter<TruePredicate>());
@@ -278,22 +299,28 @@ class MatchQuery3 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx6, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
 // Query4
-class MatchQuery4 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery4 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery4(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, 0, std::move(expr0));
@@ -374,19 +401,26 @@ class MatchQuery4 : public HqpsAppBase<gs::MutableCSRInterface> {
   }
 
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
-    return Query(graph);
+
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
-class MatchQuery5 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery5 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery5(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto expr0 =
         gs::make_filter(Query5expr0(), gs::PropertySelector<int64_t>("id"));
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
@@ -423,21 +457,27 @@ class MatchQuery5 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
-class MatchQuery7 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery7 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery7(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, 1, Filter<TruePredicate>());
 
@@ -467,21 +507,27 @@ class MatchQuery7 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx5, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
-class MatchQuery9 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery9 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery9(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, 4, std::move(expr0));
@@ -510,12 +556,17 @@ class MatchQuery9 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx4, std::array<int32_t, 1>{3});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
 // test path expand
@@ -543,13 +594,14 @@ struct Query10expr1 {
 
  private:
 };
-class MatchQuery10 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery10 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery10(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(
         Query10expr0(), gs::PropertySelector<std::string_view>("firstName"),
         gs::PropertySelector<int64_t>("id"));
@@ -614,12 +666,17 @@ class MatchQuery10 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx7, std::array<int32_t, 4>{4, 5, 6, 7});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
 struct MatchQuery11Expr0 {
@@ -643,13 +700,14 @@ struct MatchQuery11Expr1 {
  private:
 };
 
-class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery11 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery11(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(MatchQuery11Expr0(),
                                  gs::PropertySelector<int64_t>("id"));
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
@@ -734,21 +792,27 @@ class MatchQuery11 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx4, std::array<int32_t, 2>{0, 1});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
-class MatchQuery12 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery12 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery12(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, 1, Filter<TruePredicate>());
 
@@ -762,12 +826,17 @@ class MatchQuery12 : public HqpsAppBase<gs::MutableCSRInterface> {
     return res;
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
 };
 
 struct MatchQuery13Expr0 {
@@ -794,13 +863,14 @@ struct MatchQuery13Expr1 {
  private:
 };
 
-class MatchQuery13 : public HqpsAppBase<gs::MutableCSRInterface> {
+class MatchQuery13 : public AppBase {
  public:
   using Engine = SyncEngine<gs::MutableCSRInterface>;
   using label_id_t = typename gs::MutableCSRInterface::label_id_t;
   using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery13(const GraphDBSession& session) : graph(session) {}
   // Query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph) const {
+  results::CollectiveResults Query() const {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, 1, Filter<TruePredicate>());
 
@@ -820,12 +890,147 @@ class MatchQuery13 : public HqpsAppBase<gs::MutableCSRInterface> {
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class
-  results::CollectiveResults Query(const gs::MutableCSRInterface& graph,
-                                   Decoder& decoder) const override {
+  bool Query(Decoder& decoder, Encoder& encoder) override {
     // decoding params from decoder, and call real query func
 
-    return Query(graph);
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
   }
+  gs::MutableCSRInterface graph;
+};
+
+// Auto generated query class definition
+class MatchQuery14 : public AppBase {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery14(const GraphDBSession& session) : graph(session) {}
+  // Query function for query class
+  results::CollectiveResults Query() const {
+    auto expr0 = gs::make_filter(Query0expr0());
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, 2, std::move(expr0));
+
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
+        gs::Direction::Out, (label_id_t) 2,
+        std::array<label_id_t, 2>{(label_id_t) 2, (label_id_t) 3});
+
+    auto get_v_opt0 = make_getv_opt(
+        gs::VOpt::Itself,
+        std::array<label_id_t, 2>{(label_id_t) 2, (label_id_t) 3});
+
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(0, 3));
+    auto ctx1 = Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+    auto ctx2 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx1),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<int64_t>("id")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<int64_t>("id"))});
+    return Engine::Sink(graph, ctx2, std::array<int32_t, 2>{2, 3});
+  }
+  // Wrapper query function for query class
+  bool Query(Decoder& decoder, Encoder& encoder) override {
+    // decoding params from decoder, and call real query func
+
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
+  }
+  gs::MutableCSRInterface graph;
+};
+
+class MatchQuery15 : public AppBase {
+ public:
+  using Engine = SyncEngine<gs::MutableCSRInterface>;
+  using label_id_t = typename gs::MutableCSRInterface::label_id_t;
+  using vertex_id_t = typename gs::MutableCSRInterface::vertex_id_t;
+  MatchQuery15(const GraphDBSession& session) : graph(session) {}
+  // Query function for query class
+  results::CollectiveResults Query() const {
+    auto expr0 = gs::make_filter(Query0expr0());
+    auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
+        graph, std::array<label_id_t, 8>{0, 1, 2, 3, 4, 5, 6, 7},
+        std::move(expr0));
+
+    auto edge_expand_opt1 = gs::make_edge_expand_multiv_opt(
+        gs::Direction::Out, std::vector<std::array<label_id_t, 3>>{
+                                std::array<label_id_t, 3>{2, 2, 2},
+                                std::array<label_id_t, 3>{2, 3, 2},
+                                std::array<label_id_t, 3>{1, 7, 6},
+                                std::array<label_id_t, 3>{6, 6, 13},
+                                std::array<label_id_t, 3>{4, 3, 3},
+                                std::array<label_id_t, 3>{2, 0, 7},
+                                std::array<label_id_t, 3>{1, 0, 7},
+                                std::array<label_id_t, 3>{3, 0, 7},
+                                std::array<label_id_t, 3>{5, 0, 7},
+                                std::array<label_id_t, 3>{1, 1, 8},
+                                std::array<label_id_t, 3>{1, 2, 9},
+                                std::array<label_id_t, 3>{1, 3, 9},
+                                std::array<label_id_t, 3>{0, 0, 11},
+                                std::array<label_id_t, 3>{7, 6, 12},
+                                std::array<label_id_t, 3>{2, 1, 0},
+                                std::array<label_id_t, 3>{3, 1, 0},
+                                std::array<label_id_t, 3>{1, 5, 10},
+                                std::array<label_id_t, 3>{4, 1, 4},
+                                std::array<label_id_t, 3>{1, 5, 14},
+                                std::array<label_id_t, 3>{3, 7, 1},
+                                std::array<label_id_t, 3>{4, 1, 5}});
+
+    auto get_v_opt0 = make_getv_opt(
+        gs::VOpt::Itself,
+        std::array<label_id_t, 21>{
+            (label_id_t) 2, (label_id_t) 3, (label_id_t) 7, (label_id_t) 6,
+            (label_id_t) 3, (label_id_t) 0, (label_id_t) 0, (label_id_t) 0,
+            (label_id_t) 0, (label_id_t) 1, (label_id_t) 2, (label_id_t) 3,
+            (label_id_t) 0, (label_id_t) 6, (label_id_t) 1, (label_id_t) 1,
+            (label_id_t) 5, (label_id_t) 1, (label_id_t) 5, (label_id_t) 7,
+            (label_id_t) 1});
+
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(0, 2));
+    auto ctx1 = Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+    auto ctx2 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx1),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<int64_t>("id")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<int64_t>("id"))});
+    auto ctx3 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx2),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<grape::EmptyType>("")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<grape::EmptyType>(""))});
+    auto ctx4 = Engine::Sort(
+        graph, std::move(ctx3), gs::Range(0, 10),
+        std::tuple{gs::OrderingPropPair<gs::SortOrder::ASC, 0, int64_t>(""),
+                   gs::OrderingPropPair<gs::SortOrder::ASC, 1, int64_t>("")});
+    return Engine::Sink(graph, ctx4, std::array<int32_t, 2>{2, 3});
+  }
+  // Wrapper query function for query class
+  bool Query(Decoder& decoder, Encoder& encoder) override {
+    // decoding params from decoder, and call real query func
+
+    auto res = Query();
+    // dump results to string
+    std::string res_str = res.SerializeAsString();
+    // encode results to encoder
+    encoder.put_string(res_str);
+    return true;
+  }
+  gs::MutableCSRInterface graph;
 };
 
 }  // namespace gs

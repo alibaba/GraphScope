@@ -131,7 +131,7 @@ impl SourceOperator {
 
 impl SourceOperator {
     pub fn gen_source(self, worker_index: usize) -> FnGenResult<Box<dyn Iterator<Item = Record> + Send>> {
-        let graph = get_graph().ok_or(FnGenError::NullGraphError)?;
+        let graph = get_graph().ok_or_else(|| FnGenError::NullGraphError)?;
 
         match self.source_type {
             SourceType::Vertex => {
@@ -149,7 +149,7 @@ impl SourceOperator {
                         ));
                     }
                 } else if let Some(pkvs) = &self.primary_key_values {
-                    if self.query_params.labels.is_empty() {
+                    if !self.query_params.has_labels() {
                         Err(FnGenError::unsupported_error(
                             "Empty label in `IndexScan` self.query_params.labels",
                         ))?

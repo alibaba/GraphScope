@@ -180,11 +180,24 @@ void template_set_tuple_value(results::Collection* collection,
 
 void set_any_to_common_value(const Any& any, common::Value* value) {
   switch (any.type) {
+  case gs::PropertyType::kBool:
+    value->set_boolean(any.value.b);
+    break;
   case gs::PropertyType::kInt32:
-    value->set_i64(any.value.i);
+    value->set_i32(any.value.i);
     break;
   case gs::PropertyType::kInt64:
     value->set_i64(any.value.l);
+    break;
+  case gs::PropertyType::kUInt32:
+    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+    // changed
+    value->set_i32(any.value.ui);
+    break;
+  case gs::PropertyType::kUInt64:
+    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+    // changed
+    value->set_i64(any.value.ul);
     break;
   case gs::PropertyType::kDate:
     value->set_i64(any.value.d.milli_second);
@@ -194,6 +207,9 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
     break;
   case gs::PropertyType::kDouble:
     value->set_f64(any.value.db);
+    break;
+  case gs::PropertyType::kFloat:
+    value->set_f64(any.value.f);
     break;
   default:
     LOG(WARNING) << "Unsupported type: " << any.type;
@@ -377,9 +393,9 @@ class SinkOp {
         }
         vertex->mutable_label()->set_id(label);
         // set properties.
-        auto column_ptrs = column_ptrs[label];
-        for (auto j = 0; j < column_ptrs.size(); ++j) {
-          auto& column_ptr = column_ptrs[j];
+        auto columns = column_ptrs[label];
+        for (auto j = 0; j < columns.size(); ++j) {
+          auto& column_ptr = columns[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = vertex->add_properties();
@@ -418,9 +434,9 @@ class SinkOp {
           vertex->mutable_label()->set_id(label);
           vertex->mutable_label()->set_id(label);
           // set properties.
-          auto column_ptrs = column_ptrs[label];
-          for (auto j = 0; j < column_ptrs.size(); ++j) {
-            auto& column_ptr = column_ptrs[j];
+          auto columns = column_ptrs[label];
+          for (auto j = 0; j < columns.size(); ++j) {
+            auto& column_ptr = columns[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = vertex->add_properties();
@@ -720,16 +736,16 @@ class SinkOp {
   }
 
   // sink general vertex, we only return vertex ids.
-  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT>
-  static void sink_col_impl(const GRAPH_INTERFACE& graph,
-                            results::CollectiveResults& results_vec,
-                            const GeneralVertexSet<VID_T, LabelT>& vertex_set,
-                            const std::vector<size_t>& repeat_offsets,
-                            int32_t tag_id) {
+  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT,
+            typename... SET_T>
+  static void sink_col_impl(
+      const GRAPH_INTERFACE& graph, results::CollectiveResults& results_vec,
+      const GeneralVertexSet<VID_T, LabelT, SET_T...>& vertex_set,
+      const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
     auto& schema = graph.schema();
     auto vertices_vec = vertex_set.GetVertices();
     auto labels_vec = vertex_set.GetLabels();
-    auto bitsets = vertex_set.GetBitsets();
+    auto& bitsets = vertex_set.GetBitsets();
     CHECK(vertices_vec.size() == labels_vec.size());
     std::vector<std::vector<std::string>> prop_names;
     for (auto i = 0; i < labels_vec.size(); ++i) {
@@ -775,9 +791,9 @@ class SinkOp {
         }
         mutable_vertex->mutable_label()->set_id(label);
         // label must be set
-        auto column_ptrs = column_ptrs[label];
-        for (auto j = 0; j < column_ptrs.size(); ++j) {
-          auto& column_ptr = column_ptrs[j];
+        auto columns = column_ptrs[label];
+        for (auto j = 0; j < columns.size(); ++j) {
+          auto& column_ptr = columns[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = mutable_vertex->add_properties();
@@ -807,9 +823,9 @@ class SinkOp {
           }
           mutable_vertex->mutable_label()->set_id(label);
           // label must be set
-          auto column_ptrs = column_ptrs[label];
-          for (auto j = 0; j < column_ptrs.size(); ++j) {
-            auto& column_ptr = column_ptrs[j];
+          auto columns = column_ptrs[label];
+          for (auto j = 0; j < columns.size(); ++j) {
+            auto& column_ptr = columns[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = mutable_vertex->add_properties();

@@ -20,15 +20,11 @@
 
 namespace gs {
 
-enum class FragmentLoaderType { kCSVFragmentLoader };
-
 // For different input format, we should implement different fragment loader.
 class IFragmentLoader {
  public:
   virtual ~IFragmentLoader() = default;
-  // get the fragment loader type
-  virtual FragmentLoaderType GetFragmentLoaderType() const = 0;
-  virtual void LoadFragment(MutablePropertyFragment& fragment) = 0;
+  virtual void LoadFragment() = 0;
 };
 
 }  // namespace gs

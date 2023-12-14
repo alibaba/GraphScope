@@ -30,7 +30,9 @@ import com.alibaba.graphscope.grammar.GremlinGSLexer;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.GremlinAntlrToJava;
 
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.tinkerpop.gremlin.jsr223.GremlinScriptEngine;
@@ -43,7 +45,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Reader;
 
-import javax.script.*;
+import javax.script.AbstractScriptEngine;
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.SimpleBindings;
 
 public class AntlrGremlinScriptEngine extends AbstractScriptEngine implements GremlinScriptEngine {
     private Logger logger = LoggerFactory.getLogger(AntlrGremlinScriptEngine.class);
@@ -54,7 +59,7 @@ public class AntlrGremlinScriptEngine extends AbstractScriptEngine implements Gr
         logger.debug("antlr-gremlin start to eval \"{}\"", script);
         Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
         GraphTraversalSource g = (GraphTraversalSource) globalBindings.get("g");
-        GremlinAntlrToJava antlrToJava = GremlinAntlrToJava.getInstance(g);
+        GremlinAntlrToJava antlrToJava = new GremlinAntlrToJava(g);
 
         GremlinGSLexer lexer = new GremlinGSLexer(CharStreams.fromString(script));
         // reset error listeners on lexer

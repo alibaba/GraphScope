@@ -17,20 +17,20 @@
 #define GRAPHSCOPE_DATABASE_SINGLE_VERTEX_INSERT_TRANSACTION_H_
 
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/allocators.h"
 #include "flex/utils/property/types.h"
 #include "grape/serialization/in_archive.h"
 
 namespace gs {
 
 class MutablePropertyFragment;
-class ArenaAllocator;
 class WalWriter;
 class VersionManager;
 
 class SingleVertexInsertTransaction {
  public:
   SingleVertexInsertTransaction(MutablePropertyFragment& graph,
-                                ArenaAllocator& alloc, WalWriter& logger,
+                                Allocator& alloc, WalWriter& logger,
                                 VersionManager& vm, timestamp_t timestamp);
   ~SingleVertexInsertTransaction();
 
@@ -58,7 +58,9 @@ class SingleVertexInsertTransaction {
   std::vector<vid_t> parsed_endpoints_;
 
   MutablePropertyFragment& graph_;
-  ArenaAllocator& alloc_;
+
+  Allocator& alloc_;
+
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

@@ -44,8 +44,8 @@ public class GrootDdlService extends GrootDdlServiceGrpc.GrootDdlServiceImplBase
 
     public static final int FORMAT_VERSION = 1;
 
-    private SnapshotCache snapshotCache;
-    private BatchDdlClient batchDdlClient;
+    private final SnapshotCache snapshotCache;
+    private final BatchDdlClient batchDdlClient;
 
     public GrootDdlService(SnapshotCache snapshotCache, BatchDdlClient batchDdlClient) {
         this.snapshotCache = snapshotCache;

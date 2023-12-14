@@ -316,8 +316,7 @@ compile_hqps_so() {
   fi
   # check output_dir doesn't contains output_so_name
   if [ -f ${dst_so_path} ]; then
-    err "Output dir ${output_dir} already contains ${procedure_name}.so, please remove it first."
-    exit 1
+    emph "Output dir ${output_dir} already contains ${procedure_name}.so,overriding it."
   fi
   cp ${output_so_path} ${output_dir}
   #check dst_so_path exists
@@ -438,8 +437,7 @@ compile_pegasus_so() {
   fi
   # check output_dir doesn't contains output_so_name
   if [ -f ${dst_so_path} ]; then
-    err "Output dir ${output_dir} already contains ${query_name}.so, please remove it first."
-    exit 1
+    err "Output dir ${output_dir} already contains ${query_name}.so, overriding it."
   fi
   cp ${output_so_path} ${output_dir}
   #check dst_so_path exists

@@ -274,7 +274,26 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
         }
 
     def make_edges_set(edges):
-        return {item.get("eid", [None])[0]: item for item in edges}
+        from gremlin_python.process.traversal import Enum as GremlinEnum
+
+        edge_list, attr_keys = [], set()
+        for item in edges:
+            elements = dict()
+            for k, v in item.items():
+                if isinstance(k, GremlinEnum):
+                    elements[k.name] = v
+                else:
+                    elements[k] = v
+                    attr_keys.add(k)
+            edge_list.append(elements)
+        edge_set = []
+        for item in edge_list:
+            edge = []
+            for k in attr_keys:
+                edge.append((k, item[k]))
+            edge_set.append(edge)
+        edge_set.sort()
+        return edge_set
 
     def subgraph_roundtrip_and_pk_scan(num_workers, threads_per_worker):
         logger.info(
@@ -299,7 +318,7 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
 
         # test subgraph
         vquery = "g.V().valueMap()"
-        equery = "g.E().valueMap()"
+        equery = "g.E().elementMap()"  # introduce labels into the result
 
         nodes = interactive0.execute(vquery).all().result()
         edges = interactive0.execute(equery).all().result()

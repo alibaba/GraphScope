@@ -28,6 +28,7 @@ import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
@@ -67,6 +68,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -144,7 +146,13 @@ public class GraphBuilder extends RelBuilder {
                         input,
                         config.getOpt(),
                         getTableConfig(config.getLabels(), GraphOpt.Source.EDGE),
-                        config.getAlias());
+                        config.getAlias(),
+                        getAliasNameWithId(
+                                config.getStartAlias(),
+                                (RelDataType type) ->
+                                        (type instanceof GraphSchemaType)
+                                                && ((GraphSchemaType) type).getScanOpt()
+                                                        == GraphOpt.Source.VERTEX));
         replaceTop(expand);
         return this;
     }
@@ -164,7 +172,14 @@ public class GraphBuilder extends RelBuilder {
                         input,
                         config.getOpt(),
                         getTableConfig(config.getLabels(), GraphOpt.Source.VERTEX),
-                        config.getAlias());
+                        config.getAlias(),
+                        getAliasNameWithId(
+                                config.getStartAlias(),
+                                (RelDataType type) ->
+                                        (type instanceof GraphSchemaType)
+                                                        && ((GraphSchemaType) type).getScanOpt()
+                                                                == GraphOpt.Source.EDGE
+                                                || type instanceof GraphPathType));
         replaceTop(getV);
         return this;
     }
@@ -200,7 +215,13 @@ public class GraphBuilder extends RelBuilder {
                         fetchNode,
                         pxdConfig.getResultOpt(),
                         pxdConfig.getPathOpt(),
-                        pxdConfig.getAlias());
+                        pxdConfig.getAlias(),
+                        getAliasNameWithId(
+                                pxdConfig.getStartAlias(),
+                                (RelDataType type) ->
+                                        (type instanceof GraphSchemaType)
+                                                && ((GraphSchemaType) type).getScanOpt()
+                                                        == GraphOpt.Source.VERTEX));
         replaceTop(pathExpand);
         return this;
     }
@@ -230,6 +251,18 @@ public class GraphBuilder extends RelBuilder {
                     "cannot infer label types from the query given config");
         }
         return new TableConfig(relOptTables).isAll(labelConfig.isAll());
+    }
+
+    private AliasNameWithId getAliasNameWithId(
+            @Nullable String aliasName, Predicate<RelDataType> checkType) {
+        aliasName = (aliasName == null) ? AliasInference.DEFAULT_NAME : aliasName;
+        RexGraphVariable variable = variable(aliasName);
+        Preconditions.checkArgument(
+                checkType.test(variable.getType()),
+                "object with tag=%s mismatch with the expected type, current type is %s",
+                aliasName,
+                variable.getType());
+        return new AliasNameWithId(aliasName, variable.getAliasId());
     }
 
     /**
@@ -1118,6 +1151,27 @@ public class GraphBuilder extends RelBuilder {
 
     public AggCall collect(Iterable<? extends RexNode> operands) {
         return collect(false, null, operands);
+    }
+
+    /**
+     *  {@code sum0} is an aggregator which returns the sum of the values which
+     *  go into it like {@code sum}. It differs in that return zero for the null values instead of null.
+     */
+    public AggCall sum0(RexNode operand) {
+        return this.sum(false, null, operand);
+    }
+
+    public AggCall sum0(boolean distinct, @Nullable String alias, RexNode operand) {
+        return aggregateCall(
+                GraphStdOperatorTable.SUM0,
+                distinct,
+                false,
+                false,
+                null,
+                null,
+                ImmutableList.of(),
+                alias,
+                ImmutableList.of(operand));
     }
 
     @Override

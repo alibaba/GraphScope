@@ -117,13 +117,16 @@ class PathExpandOpBuilder {
           throw std::runtime_error("Expect edge graph type");
         }
         auto& edge_type = act_graph_type.graph_data_type();
-        if (edge_type.size() != 1) {
-          throw std::runtime_error("Expect only one edge type");
+        if (edge_type.size() == 0) {
+          throw std::runtime_error("Expect edge type size > 0");
         }
-        auto& edge_type0 = edge_type[0];
-        auto& edge_labels = edge_type0.label();
-        auto src_label = edge_labels.src_label().value();
-        auto dst_label = edge_labels.dst_label().value();
+        std::vector<int32_t> src_labels, dst_labels;
+        for (auto i = 0; i < edge_type.size(); ++i) {
+          auto& edge_type_i = edge_type[i];
+          auto& edge_labels_i = edge_type_i.label();
+          src_labels.push_back(edge_labels_i.src_label().value());
+          dst_labels.push_back(edge_labels_i.dst_label().value());
+        }
 
         // if find edge triplets, we clear current
         VLOG(10) << "Clear current dst labels:"
@@ -131,12 +134,30 @@ class PathExpandOpBuilder {
         dst_vertex_labels_.clear();
 
         if (direction_ == internal::Direction::kBoth) {
-          CHECK(src_label == dst_label);
-          dst_vertex_labels_.emplace_back(src_label);
+          // if direction is both, we need to check src_label == dst_label
+          // dedup src_labels
+          std::sort(src_labels.begin(), src_labels.end());
+          src_labels.erase(std::unique(src_labels.begin(), src_labels.end()),
+                           src_labels.end());
+          // dedup dst_labels
+          std::sort(dst_labels.begin(), dst_labels.end());
+          dst_labels.erase(std::unique(dst_labels.begin(), dst_labels.end()),
+                           dst_labels.end());
+          for (auto i = 0; i < src_labels.size(); ++i) {
+            if (src_labels[i] != dst_labels[i]) {
+              throw std::runtime_error(
+                  "Expect src_label == dst_label for both direction");
+            }
+            dst_vertex_labels_.emplace_back(dst_labels[i]);
+          }
         } else if (direction_ == internal::Direction::kOut) {
-          dst_vertex_labels_.emplace_back(dst_label);
+          for (auto i = 0; i < dst_labels.size(); ++i) {
+            dst_vertex_labels_.emplace_back(dst_labels[i]);
+          }
         } else if (direction_ == internal::Direction::kIn) {
-          dst_vertex_labels_.emplace_back(src_label);
+          for (auto i = 0; i < src_labels.size(); ++i) {
+            dst_vertex_labels_.emplace_back(src_labels[i]);
+          }
         } else {
           throw std::runtime_error("Unknown direction");
         }
@@ -175,12 +196,26 @@ class PathExpandOpBuilder {
       auto expand_opt = edge_expand_pb.expand_opt();
       CHECK(dst_vertex_labels_.size() > 0) << "no dst lables found";
 
-      physical::PhysicalOpr::MetaData meta_data;
-      // pass an empty meta_data, since we need no meta_data for
-      // edge_expand_opt.
-      std::tie(edge_expand_opt_name_, edge_expand_opt_) =
-          BuildOneLabelEdgeExpandOpt(ctx_, direction_, params,
-                                     dst_vertex_labels_, expand_opt, meta_data);
+      if (params.tables().size() < 1) {
+        throw std::runtime_error("no edge labels found");
+      } else if (params.tables().size() == 1) {
+        physical::PhysicalOpr::MetaData meta_data;
+        // pass an empty meta_data, since we need no meta_data for
+        std::tie(edge_expand_opt_name_, edge_expand_opt_) =
+            BuildOneLabelEdgeExpandOpt(ctx_, direction_, params,
+                                       dst_vertex_labels_, expand_opt,
+                                       meta_data);
+      } else {
+        // get the first meta_data
+        if (meta_data_pb.size() < 1) {
+          throw std::runtime_error("no meta_data found");
+        }
+        auto& meta_data = meta_data_pb[0];
+        std::tie(edge_expand_opt_name_, edge_expand_opt_) =
+            BuildMultiLabelEdgeExpandOpt(ctx_, direction_, params, expand_opt,
+                                         meta_data);
+      }
+
       VLOG(10) << "edge_expand_opt_name_: " << edge_expand_opt_name_;
       VLOG(10) << "edge_expand_opt_: " << edge_expand_opt_;
     }

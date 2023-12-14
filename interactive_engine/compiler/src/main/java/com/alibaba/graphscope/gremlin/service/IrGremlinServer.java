@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.manager.RateLimitExecutor;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.auth.AuthManager;
 import com.alibaba.graphscope.gremlin.auth.AuthManagerReference;
@@ -38,10 +39,12 @@ import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.AbstractOpProcessor;
 import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
+import org.apache.tinkerpop.gremlin.server.util.ThreadFactoryUtil;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 
 import java.io.InputStream;
+import java.util.concurrent.*;
 
 public class IrGremlinServer implements AutoCloseable {
     private final Configs configs;
@@ -114,7 +117,7 @@ public class IrGremlinServer implements AutoCloseable {
         AuthManager authManager = new DefaultAuthManager(configs);
         AuthManagerReference.setAuthManager(authManager);
 
-        this.gremlinServer = new GremlinServer(settings);
+        this.gremlinServer = new GremlinServer(settings, createRateLimitExecutor());
         ServerGremlinExecutor serverGremlinExecutor =
                 Utils.getFieldValue(
                         GremlinServer.class, this.gremlinServer, "serverGremlinExecutor");
@@ -122,6 +125,23 @@ public class IrGremlinServer implements AutoCloseable {
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
 
         this.gremlinServer.start().join();
+    }
+
+    private ExecutorService createRateLimitExecutor() {
+        if (settings.gremlinPool == 0) {
+            settings.gremlinPool = Runtime.getRuntime().availableProcessors();
+        }
+        ThreadFactory threadFactoryGremlin = ThreadFactoryUtil.create("exec-%d");
+        BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(settings.maxWorkQueueSize);
+        return new RateLimitExecutor(
+                configs,
+                settings.gremlinPool,
+                settings.gremlinPool,
+                0L,
+                TimeUnit.MILLISECONDS,
+                queue,
+                threadFactoryGremlin,
+                new ThreadPoolExecutor.AbortPolicy());
     }
 
     @Override

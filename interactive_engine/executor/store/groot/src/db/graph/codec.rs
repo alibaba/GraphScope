@@ -186,23 +186,26 @@ impl Decoder {
     fn decode_var_len_property_at<'a>(
         &self, reader: &UnsafeBytesReader<'a>, idx: usize,
     ) -> Option<ValueRef<'a>> {
-        let info = &self.src.props[idx];
-        let offset = self.src.offsets[idx];
-        let end_off = bytes_to_len(reader.read_bytes(offset, 3));
-        let mut start_off = 0;
+        let end_off = bytes_to_len(reader.read_bytes(self.src.offsets[idx], 3));
+        let mut start_off = 0; // idx == self.src.fixed_len_prop_count
         if idx > self.src.fixed_len_prop_count {
-            let offset = self.src.offsets[idx - 1];
-            start_off = bytes_to_len(reader.read_bytes(offset, 3));
+            start_off = bytes_to_len(reader.read_bytes(self.src.offsets[idx - 1], 3));
         }
-        let len = end_off - start_off;
-        if len > bytes_to_len(reader.read_bytes(*self.src.offsets.last().unwrap(), 3)) {
-            let msg = format!("fatal error! This codec cannot decode the bytes");
-            let err = gen_graph_err!(GraphErrorCode::DecodeError, msg);
-            error!("{:?}", err);
+        if end_off <= start_off {
+            error!("fatal error! This codec cannot decode the bytes: idx {}, end_off: {}, start_off: {}, props: {:?}, ", idx, end_off, start_off, self.src.props);
             return None;
         }
+        let len = end_off - start_off;
         let start_off = start_off + self.src.var_len_prop_start_offset;
+        if start_off + len > reader.len() {
+            error!(
+                "fatal error! This codec cannot decode the bytes: idx {}, len: {}, props: {:?}, ",
+                idx, len, self.src.props
+            );
+            return None;
+        }
         let bytes = reader.read_bytes(start_off, len);
+        let info = &self.src.props[idx];
         let ret = ValueRef::new(info.r#type, bytes);
         Some(ret)
     }

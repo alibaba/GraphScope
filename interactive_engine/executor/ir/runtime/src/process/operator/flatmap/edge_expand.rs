@@ -79,7 +79,7 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                 EntryType::Path => {
                     let graph_path = entry
                         .as_graph_path()
-                        .ok_or(FnExecError::Unreachable)?;
+                        .ok_or_else(|| FnExecError::Unreachable)?;
                     let iter = self.stmt.exec(graph_path.get_path_end().id())?;
                     let curr_path = graph_path.clone();
                     Ok(Box::new(RecordPathExpandIter::new(input, curr_path, iter)))
@@ -99,7 +99,7 @@ impl FlatMapFuncGen for pb::EdgeExpand {
     fn gen_flat_map(
         self,
     ) -> FnGenResult<Box<dyn FlatMapFunction<Record, Record, Target = DynIter<Record>>>> {
-        let graph = get_graph().ok_or(FnGenError::NullGraphError)?;
+        let graph = get_graph().ok_or_else(|| FnGenError::NullGraphError)?;
         let start_v_tag = self.v_tag;
         let edge_or_end_v_tag = self.alias;
         let direction_pb: pb::edge_expand::Direction = unsafe { ::std::mem::transmute(self.direction) };
