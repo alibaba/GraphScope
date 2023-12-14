@@ -257,7 +257,7 @@ class MutableNbrSliceMut<std::string_view> {
 
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
     nbr_t* ptr_;
-    StringColumn& column_;
+    StringColumn & column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 
@@ -464,6 +464,8 @@ class MutableCsrBase {
 
   virtual void open(const std::string& name, const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
+
+  virtual void open_in_memory(const std::string& prefix) = 0;
 
   virtual void dump(const std::string& name,
                     const std::string& new_spanshot_dir) = 0;
@@ -703,7 +705,6 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       for (auto& thrd : threads) {
         thrd.join();
       }
-
     } else {
       nbr_t* ptr = nbr_list_.data();
       for (size_t i = 0; i < degree_list.size(); ++i) {
@@ -711,6 +712,23 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
         adj_lists_[i].init(ptr, degree, degree);
         ptr += degree;
       }
+    }
+  }
+
+  void open_in_memory(const std::string& prefix) override {
+    mmap_array<int> degree_list;
+    degree_list.open_in_memory(prefix + ".deg");
+    nbr_list_.open_in_memory(prefix + ".nbr");
+
+    adj_lists_.reset();
+    adj_lists_.resize(degree_list.size());
+    locks_ = new grape::SpinLock[degree_list.size()];
+
+    nbr_t* ptr = nbr_list_.data();
+    for (size_t i = 0; i < degree_list.size(); ++i) {
+      int degree = degree_list[i];
+      adj_lists_[i].init(ptr, degree, degree);
+      ptr += degree;
     }
   }
 
@@ -969,7 +987,6 @@ class MutableCsr<std::string_view>
       for (auto& thrd : threads) {
         thrd.join();
       }
-
     } else {
       nbr_t* ptr = nbr_list_.data();
       for (size_t i = 0; i < degree_list.size(); ++i) {
@@ -977,6 +994,22 @@ class MutableCsr<std::string_view>
         adj_lists_[i].init(ptr, degree, degree);
         ptr += degree;
       }
+    }
+  }
+
+  void open_in_memory(const std::string& prefix) override {
+    mmap_array<int> degree_list;
+    degree_list.open_in_memory(prefix + ".deg");
+    nbr_list_.open_in_memory(prefix + ".nbr");
+    adj_lists_.reset();
+    adj_lists_.resize(degree_list.size());
+    locks_ = new grape::SpinLock[degree_list.size()];
+
+    nbr_t* ptr = nbr_list_.data();
+    for (size_t i = 0; i < degree_list.size(); ++i) {
+      int degree = degree_list[i];
+      adj_lists_[i].init(ptr, degree, degree);
+      ptr += degree;
     }
   }
 
@@ -1187,6 +1220,10 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     nbr_list_.open(work_dir + "/" + name + ".snbr", false);
   }
 
+  void open_in_memory(const std::string& prefix) override {
+    nbr_list_.open_in_memory(prefix + ".snbr");
+  }
+
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
     assert(!nbr_list_.filename().empty() &&
@@ -1354,6 +1391,10 @@ class SingleMutableCsr<std::string_view>
     nbr_list_.open(work_dir + "/" + name + ".snbr", false);
   }
 
+  void open_in_memory(const std::string& prefix) override {
+    nbr_list_.open_in_memory(prefix + ".snbr");
+  }
+
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
     assert(!nbr_list_.filename().empty() &&
@@ -1518,6 +1559,8 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
 
+  void open_in_memory(const std::string& prefix) override {}
+
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}
 
@@ -1577,6 +1620,8 @@ class EmptyCsr<std::string_view>
 
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
+
+  void open_in_memory(const std::string& prefix) override {}
 
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}

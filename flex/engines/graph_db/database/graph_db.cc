@@ -54,7 +54,7 @@ GraphDB& GraphDB::get() {
 }
 
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
-                           int32_t thread_num, bool warmup) {
+                           int32_t thread_num, bool warmup, bool memory_only) {
   if (!std::filesystem::exists(data_dir)) {
     std::filesystem::create_directories(data_dir);
   }
@@ -68,7 +68,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   work_dir_ = data_dir;
   thread_num_ = thread_num;
   try {
-    graph_.Open(data_dir);
+    graph_.Open(data_dir, memory_only);
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
     return Result<bool>(StatusCode::InternalError,

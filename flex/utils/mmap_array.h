@@ -32,7 +32,12 @@ template <typename T>
 class mmap_array {
  public:
   mmap_array()
-      : filename_(""), fd_(-1), data_(NULL), size_(0), read_only_(true) {}
+      : filename_(""),
+        fd_(-1),
+        data_(NULL),
+        size_(0),
+        read_only_(false),
+        memory_only_(true) {}
   mmap_array(mmap_array&& rhs) : mmap_array() { swap(rhs); }
   ~mmap_array() {}
 
@@ -47,13 +52,15 @@ class mmap_array {
       fd_ = -1;
     }
     size_ = 0;
-    read_only_ = true;
+    read_only_ = false;
+    memory_only_ = true;
   }
 
   void open(const std::string& filename, bool read_only) {
     reset();
     filename_ = filename;
     read_only_ = read_only;
+    memory_only_ = false;
     if (read_only) {
       if (!std::filesystem::exists(filename)) {
         LOG(ERROR) << "file not exists: " << filename;
@@ -112,6 +119,26 @@ class mmap_array {
     madvise(data_, size_ * sizeof(T), MADV_RANDOM | MADV_WILLNEED);
   }
 
+  void open_in_memory(const std::string& filename) {
+    reset();
+    filename_ = filename;
+    if (!filename_.empty() && std::filesystem::exists(filename_)) {
+      size_t file_size = std::filesystem::file_size(filename_);
+      fd_ = ::open(filename_.c_str(), O_RDWR);
+      size_ = file_size / sizeof(T);
+      if (size_ != 0) {
+        size_t size_in_bytes = size_ * sizeof(T);
+        data_ = reinterpret_cast<T*>(mmap(NULL, size_in_bytes,
+                                          PROT_READ | PROT_WRITE,
+                                          MAP_PRIVATE | MAP_NORESERVE, fd_, 0));
+        if (data_ == MAP_FAILED) {
+          LOG(FATAL) << "mmap failed " << filename_ << " " << strerror(errno)
+                     << "..\n";
+        }
+      }
+    }
+  }
+
   void dump(const std::string& filename) {
     assert(!filename_.empty());
     assert(std::filesystem::exists(filename_));
@@ -135,49 +162,71 @@ class mmap_array {
   }
 
   void resize(size_t size) {
-    assert(fd_ != -1);
-
     if (size == size_) {
       return;
     }
 
-    if (read_only_) {
+    if (memory_only_) {
       if (size < size_) {
-        munmap(data_, size_ * sizeof(T));
         size_ = size;
-        data_ = reinterpret_cast<T*>(
-            mmap(NULL, size_ * sizeof(T), PROT_READ, MAP_PRIVATE, fd_, 0));
-
-      } else if (size * sizeof(T) < std::filesystem::file_size(filename_)) {
+        return;
+      }
+      T* new_data = static_cast<T*>(
+          mmap(NULL, size * sizeof(T), PROT_READ | PROT_WRITE,
+               MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0));
+      if (new_data == MAP_FAILED) {
+        LOG(FATAL) << "mmap failed " << strerror(errno) << "..\n";
+      }
+      if (data_ != NULL) {
+        memcpy(new_data, data_, size_ * sizeof(T));
         munmap(data_, size_ * sizeof(T));
-        size_ = size;
-        data_ = reinterpret_cast<T*>(
-            mmap(NULL, size_ * sizeof(T), PROT_READ, MAP_PRIVATE, fd_, 0));
-
-      } else {
-        LOG(FATAL)
-            << "cannot resize read-only mmap_array to larger size than file";
+      }
+      data_ = new_data;
+      size_ = size;
+      if (fd_ != -1) {
+        filename_.clear();
+        close(fd_);
+        fd_ = -1;
       }
     } else {
-      if (data_ != NULL) {
-        munmap(data_, size_ * sizeof(T));
-      }
-      int rt = ftruncate(fd_, size * sizeof(T));
-      if (rt == -1) {
-        LOG(FATAL) << "ftruncate failed: " << rt << " " << strerror(errno)
-                   << "\n";
-      }
-      if (size == 0) {
-        data_ = NULL;
+      if (read_only_) {
+        if (size < size_) {
+          munmap(data_, size_ * sizeof(T));
+          size_ = size;
+          data_ = reinterpret_cast<T*>(
+              mmap(NULL, size_ * sizeof(T), PROT_READ, MAP_PRIVATE, fd_, 0));
+
+        } else if (size * sizeof(T) < std::filesystem::file_size(filename_)) {
+          munmap(data_, size_ * sizeof(T));
+          size_ = size;
+          data_ = reinterpret_cast<T*>(
+              mmap(NULL, size_ * sizeof(T), PROT_READ, MAP_PRIVATE, fd_, 0));
+
+        } else {
+          LOG(FATAL)
+              << "cannot resize read-only mmap_array to larger size than file";
+        }
       } else {
-        data_ =
-            static_cast<T*>(::mmap(NULL, size * sizeof(T),
-                                   PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0));
+        if (data_ != NULL) {
+          munmap(data_, size_ * sizeof(T));
+        }
+        int rt = ftruncate(fd_, size * sizeof(T));
+        if (rt == -1) {
+          LOG(FATAL) << "ftruncate failed: " << rt << " " << strerror(errno)
+                     << "\n";
+        }
+        if (size == 0) {
+          data_ = NULL;
+        } else {
+          data_ = static_cast<T*>(::mmap(NULL, size * sizeof(T),
+                                         PROT_READ | PROT_WRITE, MAP_SHARED,
+                                         fd_, 0));
+        }
+        size_ = size;
       }
-      size_ = size;
-    }
-    if (data_ == MAP_FAILED) {
-      LOG(FATAL) << "mmap failed " << strerror(errno) << "\n";
+      if (data_ == MAP_FAILED) {
+        LOG(FATAL) << "mmap failed " << strerror(errno) << "\n";
+      }
     }
   }
 
@@ -210,6 +259,7 @@ class mmap_array {
     std::swap(data_, rhs.data_);
     std::swap(size_, rhs.size_);
     std::swap(read_only_, rhs.read_only_);
+    std::swap(memory_only_, rhs.memory_only_);
   }
 
   const std::string& filename() const { return filename_; }
@@ -221,6 +271,7 @@ class mmap_array {
   size_t size_;
 
   bool read_only_;
+  bool memory_only_;
 };
 
 struct string_item {
@@ -243,6 +294,11 @@ class mmap_array<std::string_view> {
   void open(const std::string& filename, bool read_only) {
     items_.open(filename + ".items", read_only);
     data_.open(filename + ".data", read_only);
+  }
+
+  void open_in_memory(const std::string& filename) {
+    items_.open_in_memory(filename + ".items");
+    data_.open_in_memory(filename + ".data");
   }
 
   bool read_only() const { return items_.read_only(); }

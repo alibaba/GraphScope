@@ -56,7 +56,8 @@ class GraphDB {
    * @param warmup Whether to warmup the graph db.
    */
   Result<bool> Open(const Schema& schema, const std::string& data_dir,
-                    int32_t thread_num = 1, bool warmup = false);
+                    int32_t thread_num = 1, bool warmup = false,
+                    bool memory_only = true);
 
   /**
    * @brief Close the current opened graph.

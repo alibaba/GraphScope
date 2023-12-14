@@ -364,6 +364,19 @@ class LFIndexer {
     indices_size_ = indices_.size();
   }
 
+  void open_in_memory(const std::string& name) {
+    if (std::filesystem::exists(name + ".meta")) {
+      load_meta(name + ".meta");
+    } else {
+      num_elements_.store(0);
+    }
+    keys_->open_in_memory(name + ".keys");
+    indices_.open_in_memory(name + ".indices");
+    indices_size_ = indices_.size();
+    size_t num_elements = num_elements_.load();
+    keys_->resize(num_elements + (num_elements >> 2));
+  }
+
   void dump(const std::string& name, const std::string& snapshot_dir) {
     keys_->resize(num_elements_.load());
     keys_->dump(snapshot_dir + "/" + name + ".keys");

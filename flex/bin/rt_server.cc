@@ -38,7 +38,8 @@ int main(int argc, char** argv) {
                                     "graph schema config file")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "warmup,w", bpo::value<bool>()->default_value(false),
-      "warmup graph data");
+      "warmup graph data")("memory-only,m",
+                           bpo::value<bool>()->default_value(false));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -57,6 +58,7 @@ int main(int argc, char** argv) {
 
   bool enable_dpdk = false;
   bool warmup = vm["warmup"].as<bool>();
+  bool memory_only = vm["memory-only"].as<bool>();
   uint32_t shard_num = vm["shard-num"].as<uint32_t>();
   uint16_t http_port = vm["http-port"].as<uint16_t>();
 
@@ -81,7 +83,7 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  db.Open(schema, data_path, shard_num, warmup);
+  db.Open(schema, data_path, shard_num, warmup, memory_only);
 
   t0 += grape::GetCurrentTime();
 
