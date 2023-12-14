@@ -14,7 +14,7 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            primitive_type: VARCHAR(64)
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: age
           property_type:
@@ -33,11 +33,11 @@ schema:
         - property_id: 1
           property_name: name
           property_type:
-            primitive_type: VARCHAR(64)
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: lang
           property_type:
-            primitive_type: VARCHAR(64)
+            primitive_type: DT_STRING
       primary_keys:
         - id
   edge_types:
@@ -68,4 +68,4 @@ schema:
         - property_id: 0
           property_name: weight
           property_type:
-            primitive_type: VARCHAR(64)
+            primitive_type: DT_STRING
