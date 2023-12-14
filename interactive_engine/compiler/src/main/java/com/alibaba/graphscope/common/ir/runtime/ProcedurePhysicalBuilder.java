@@ -16,8 +16,11 @@
 
 package com.alibaba.graphscope.common.ir.runtime;
 
-import com.alibaba.graphscope.common.ir.runtime.proto.Utils;
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.StoredProcedure;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -31,12 +34,18 @@ import java.util.List;
 public class ProcedurePhysicalBuilder extends PhysicalBuilder {
     private final StoredProcedure.Query.Builder builder;
 
-    public ProcedurePhysicalBuilder(LogicalPlan logicalPlan) {
+    public ProcedurePhysicalBuilder(Configs configs, IrMeta irMeta, LogicalPlan logicalPlan) {
         super(logicalPlan);
         this.builder = StoredProcedure.Query.newBuilder();
         RexCall procedureCall = (RexCall) logicalPlan.getProcedureCall();
         setStoredProcedureName(procedureCall, builder);
-        setStoredProcedureArgs(procedureCall, builder);
+        setStoredProcedureArgs(
+                procedureCall,
+                builder,
+                new RexToProtoConverter(
+                        true,
+                        irMeta.getSchema().isColumnId(),
+                        GraphPlanner.rexBuilderFactory.apply(configs)));
     }
 
     private void setStoredProcedureName(
@@ -46,14 +55,16 @@ public class ProcedurePhysicalBuilder extends PhysicalBuilder {
     }
 
     private void setStoredProcedureArgs(
-            RexCall procedureCall, StoredProcedure.Query.Builder builder) {
+            RexCall procedureCall,
+            StoredProcedure.Query.Builder builder,
+            RexToProtoConverter converter) {
         List<RexNode> operands = procedureCall.getOperands();
         for (int i = 0; i < operands.size(); ++i) {
             builder.addArguments(
                     StoredProcedure.Argument.newBuilder()
                             // param name is omitted
                             .setParamInd(i)
-                            .setValue(Utils.protoValue((RexLiteral) operands.get(i)))
+                            .setValue(operands.get(i).accept(converter).getOperators(0).getConst())
                             .build());
         }
     }

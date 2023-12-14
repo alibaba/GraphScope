@@ -31,6 +31,7 @@ import com.google.protobuf.Int32Value;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
@@ -113,6 +114,85 @@ public abstract class Utils {
             default:
                 throw new UnsupportedOperationException(
                         "literal type " + literal.getTypeName() + " is unsupported yet");
+        }
+    }
+
+    public static final Common.Value protoValue(List<RexNode> literals, RelDataType literalType) {
+        switch (literalType.getSqlTypeName()) {
+            case INTEGER:
+                return Common.Value.newBuilder()
+                        .setI32Array(
+                                Common.I32Array.newBuilder()
+                                        .addAllItem(
+                                                literals.stream()
+                                                        .map(
+                                                                k ->
+                                                                        ((Number)
+                                                                                        ((RexLiteral)
+                                                                                                        k)
+                                                                                                .getValue())
+                                                                                .intValue())
+                                                        .collect(Collectors.toList())))
+                        .build();
+            case BIGINT:
+                return Common.Value.newBuilder()
+                        .setI64Array(
+                                Common.I64Array.newBuilder()
+                                        .addAllItem(
+                                                literals.stream()
+                                                        .map(
+                                                                k ->
+                                                                        ((Number)
+                                                                                        ((RexLiteral)
+                                                                                                        k)
+                                                                                                .getValue())
+                                                                                .longValue())
+                                                        .collect(Collectors.toList())))
+                        .build();
+            case FLOAT:
+            case DOUBLE:
+                return Common.Value.newBuilder()
+                        .setF64Array(
+                                Common.DoubleArray.newBuilder()
+                                        .addAllItem(
+                                                literals.stream()
+                                                        .map(
+                                                                k ->
+                                                                        ((Number)
+                                                                                        ((RexLiteral)
+                                                                                                        k)
+                                                                                                .getValue())
+                                                                                .doubleValue())
+                                                        .collect(Collectors.toList())))
+                        .build();
+            case CHAR:
+                return Common.Value.newBuilder()
+                        .setStrArray(
+                                Common.StringArray.newBuilder()
+                                        .addAllItem(
+                                                literals.stream()
+                                                        .map(
+                                                                k -> {
+                                                                    RexLiteral literal =
+                                                                            (RexLiteral) k;
+                                                                    if (literal.getValue()
+                                                                            instanceof NlsString) {
+                                                                        return ((NlsString)
+                                                                                        literal
+                                                                                                .getValue())
+                                                                                .getValue();
+                                                                    } else {
+                                                                        return (String)
+                                                                                literal.getValue();
+                                                                    }
+                                                                })
+                                                        .collect(Collectors.toList())))
+                        .build();
+            default:
+                throw new UnsupportedOperationException(
+                        "list of literal type "
+                                + literalType.getSqlTypeName()
+                                + " can not be converted to ir core array");
         }
     }
 

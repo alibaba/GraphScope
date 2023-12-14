@@ -28,6 +28,7 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.util.Sarg;
 
 import java.util.List;
@@ -88,6 +89,20 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
     }
 
     private OuterExpression.Expression visitArrayValueConstructor(RexCall call) {
+        // convert to literal if operands have the same primitive type
+        if (call.getOperands().stream().allMatch(k -> k instanceof RexLiteral)
+                && call.getType() instanceof ArraySqlType) {
+            return OuterExpression.Expression.newBuilder()
+                    .addOperators(
+                            OuterExpression.ExprOpr.newBuilder()
+                                    .setConst(
+                                            Utils.protoValue(
+                                                    call.getOperands(),
+                                                    ((ArraySqlType) call.getType())
+                                                            .getComponentType()))
+                                    .build())
+                    .build();
+        }
         OuterExpression.VariableKeys.Builder varsBuilder =
                 OuterExpression.VariableKeys.newBuilder();
         call.getOperands()
