@@ -395,8 +395,8 @@ static PropertyType StringToPropertyType(const std::string& str) {
   } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
   } else if (str == "String" || str == DT_STRING) {
-    // DT_STRING is a alias for VARCHAR(DEFAULT_VARCHAR_LENGTH);
-    return PropertyType::Varchar(Schema::DEFAULT_VARCHAR_LENGTH);
+    // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
+    return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
   } else if (str == DT_STRINGMAP) {
     return PropertyType::kStringMap;
   } else if (str == "Empty") {
@@ -436,7 +436,7 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
   }
 }
 
-static bool parse_property_type(const YAML::Node& node, PropertyType& type) {
+static bool parse_property_type(YAML::Node node, PropertyType& type) {
   std::string prop_type_str{};
   if (node["primitive_type"]) {
     if (!get_scalar(node, "primitive_type", prop_type_str)) {
@@ -444,14 +444,12 @@ static bool parse_property_type(const YAML::Node& node, PropertyType& type) {
     }
   } else if (node["varchar"]) {
     auto varchar_node = node["varchar"];
-    std::string length_str{};
+    int length{};
     if (!varchar_node["max_length"] ||
-        !get_scalar(varchar_node["max_length"], "max_length", length_str)) {
+        !get_scalar(varchar_node, "max_length", length)) {
       return false;
     }
-    int len = std::atoi(length_str.c_str());
-    type = PropertyType::Varchar(len);
-    LOG(INFO) << "Varchar" << len << "\n";
+    type = PropertyType::Varchar(length);
     return true;
   } else if (node["date"]) {
     auto format = node["date"].as<std::string>();

@@ -50,7 +50,8 @@ const PropertyType PropertyType::kStringMap =
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
       other.type_enum == impl::PropertyTypeImpl::kVarChar) {
-    return true;
+    return additional_type_info.max_length ==
+           other.additional_type_info.max_length;
   }
   if ((type_enum == impl::PropertyTypeImpl::kString &&
        other.type_enum == impl::PropertyTypeImpl::kVarChar) ||
