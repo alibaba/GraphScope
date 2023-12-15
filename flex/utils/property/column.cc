@@ -157,6 +157,8 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<DateColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringMapColumn<uint8_t>>(strategy);
+    } else if (type == PropertyType::kString) {
+      return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);
