@@ -104,7 +104,7 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
       return new DualCsr<std::string_view>(
           oes, ies, properties[0].additional_type_info.max_length);
     } else if (properties[0] == PropertyType::kString) {
-      return new DualCsr<std::string_view>(oes, ies);
+      return new DualCsr<std::string_view>(oes, ies, 4096);
     }
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
