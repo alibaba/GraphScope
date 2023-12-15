@@ -30,8 +30,7 @@ class ArenaAllocator {
   static constexpr size_t batch_size = 128 * 1024 * 1024;
 
  public:
-  ArenaAllocator(const std::string& prefix)
-      : prefix_(prefix), cur_loc_(0), cur_size_(0) {}
+  ArenaAllocator() : cur_loc_(0), cur_size_(0) {}
   ~ArenaAllocator() {
     for (auto ptr : buffers_) {
       free(ptr);
@@ -74,7 +73,6 @@ class ArenaAllocator {
   }
 
  private:
-  std::string prefix_;
   std::vector<void*> buffers_;
 
   void* cur_buffer_;
