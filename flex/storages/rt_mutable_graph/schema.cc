@@ -715,7 +715,8 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
     if (get_scalar(cur_node, "relation", relation_str)) {
       RelationToEdgeStrategy(relation_str, cur_ie, cur_oe);
     } else {
-      LOG(WARNING) << "relation not defined, using default ie/oe strategy ";
+      LOG(WARNING) << "relation not defined, using default ie strategy: "
+                   << cur_ie << ", oe strategy: " << cur_oe;
     }
 
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
