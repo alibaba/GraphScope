@@ -718,6 +718,35 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
       LOG(WARNING) << "relation not defined, using default ie strategy: "
                    << cur_ie << ", oe strategy: " << cur_oe;
     }
+    // check if x_csr_params presents
+    if (cur_node["x_csr_params"]) {
+      auto csr_node = cur_node["x_csr_params"];
+      if (csr_node["edge_storage_strategy"]) {
+        std::string edge_storage_strategy_str;
+        if (get_scalar(csr_node, "edge_storage_strategy",
+                       edge_storage_strategy_str)) {
+          if (edge_storage_strategy_str == "OnlyIn") {
+            cur_oe = EdgeStrategy::kNone;
+            VLOG(10) << "Store only in edges for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+          } else if (edge_storage_strategy_str == "OnlyOut") {
+            cur_ie = EdgeStrategy::kNone;
+            VLOG(10) << "Store only out edges for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+          } else if (edge_storage_strategy_str == "BothOutIn" ||
+                     edge_storage_strategy_str == "BothInOut") {
+            VLOG(10) << "Store both in and out edges for edge: "
+                     << src_label_name << "-[" << edge_label_name << "]->"
+                     << dst_label_name;
+          } else {
+            LOG(ERROR) << "edge_storage_strategy is not set properly for edge: "
+                       << src_label_name << "-[" << edge_label_name << "]->"
+                       << dst_label_name;
+            return false;
+          }
+        }
+      }
+    }
 
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
              << " to " << dst_label_name << " with " << property_types.size()

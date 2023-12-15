@@ -59,7 +59,6 @@ schema:
           property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
-          x_csr_params:
         - property_id: 1
           property_name: name
           property_type:
@@ -76,6 +75,8 @@ schema:
         source_vertex: person
         destination_vertex: person
         relation: MANY_TO_MANY
+        x_csr_params:
+          edge_storage_strategy: BothOutIn
       properties:
         - property_id: 0
           property_name: weight
@@ -100,6 +101,10 @@ Notes:
   - `max_vertex_num` limit the number of vertices of this type:
     - The limit number is used to `mmap` memory, so it only takes virtual memory before vertices are actually inserted.
     - If `max_vertex_num` is not set, a default large number (e.g.: 2^48) will be used.
+  - `edge_storage_strategy` specifies the storing strategy of the incoming or outgoing edges of this type, there are 3 kinds of strategies
+    - OnlyIn: Only incoming edges are stored.
+    - OnlyOut: Only outgoing edges are stored.
+    - BothOutIn(default): Both direction of edges are stored.
 
 ## 3. Vertex Management
 
