@@ -413,16 +413,26 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kEmpty;
   }
 }
-
-EdgeStrategy StringToEdgeStrategy(const std::string& str) {
-  if (str == "None") {
-    return EdgeStrategy::kNone;
-  } else if (str == "Single") {
-    return EdgeStrategy::kSingle;
-  } else if (str == "Multiple") {
-    return EdgeStrategy::kMultiple;
+void RelationToEdgeStrategy(const std::string& rel_str,
+                            EdgeStrategy& ie_strategy,
+                            EdgeStrategy& oe_strategy) {
+  if (rel_str == "ONE_TO_MANY") {
+    ie_strategy = EdgeStrategy::kSingle;
+    oe_strategy = EdgeStrategy::kMultiple;
+  } else if (rel_str == "ONE_TO_ONE") {
+    ie_strategy = EdgeStrategy::kSingle;
+    oe_strategy = EdgeStrategy::kSingle;
+  } else if (rel_str == "MANY_TO_ONE") {
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kSingle;
+  } else if (rel_str == "MANY_TO_MANY") {
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kMultiple;
   } else {
-    return EdgeStrategy::kMultiple;
+    LOG(WARNING) << "relation " << rel_str
+                 << " is not valid, using default value: kMultiple";
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kMultiple;
   }
 }
 
@@ -700,17 +710,44 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                  << "] to [" << dst_label_name << "] already exists";
       return false;
     }
-    // if x_csr_params presents, overwrite the default strategy
+
+    std::string relation_str;
+    if (get_scalar(cur_node, "relation", relation_str)) {
+      RelationToEdgeStrategy(relation_str, cur_ie, cur_oe);
+    } else {
+      LOG(WARNING) << "relation not defined, using default ie strategy: "
+                   << cur_ie << ", oe strategy: " << cur_oe;
+    }
+    // check if x_csr_params presents
     if (cur_node["x_csr_params"]) {
       auto csr_node = cur_node["x_csr_params"];
-      std::string ie_str, oe_str;
-      if (get_scalar(csr_node, "outgoing_edge_strategy", oe_str)) {
-        cur_oe = StringToEdgeStrategy(oe_str);
-      }
-      if (get_scalar(csr_node, "incoming_edge_strategy", ie_str)) {
-        cur_ie = StringToEdgeStrategy(ie_str);
+      if (csr_node["edge_storage_strategy"]) {
+        std::string edge_storage_strategy_str;
+        if (get_scalar(csr_node, "edge_storage_strategy",
+                       edge_storage_strategy_str)) {
+          if (edge_storage_strategy_str == "ONLY_IN") {
+            cur_oe = EdgeStrategy::kNone;
+            VLOG(10) << "Store only in edges for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+          } else if (edge_storage_strategy_str == "ONLY_OUT") {
+            cur_ie = EdgeStrategy::kNone;
+            VLOG(10) << "Store only out edges for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+          } else if (edge_storage_strategy_str == "BOTH_OUT_IN" ||
+                     edge_storage_strategy_str == "BOTH_IN_OUT") {
+            VLOG(10) << "Store both in and out edges for edge: "
+                     << src_label_name << "-[" << edge_label_name << "]->"
+                     << dst_label_name;
+          } else {
+            LOG(ERROR) << "edge_storage_strategy is not set properly for edge: "
+                       << src_label_name << "-[" << edge_label_name << "]->"
+                       << dst_label_name;
+            return false;
+          }
+        }
       }
     }
+
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
              << " to " << dst_label_name << " with " << property_types.size()
              << " properties";
