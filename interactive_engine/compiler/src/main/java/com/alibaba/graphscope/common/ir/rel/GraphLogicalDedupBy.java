@@ -54,4 +54,10 @@ public class GraphLogicalDedupBy extends SingleRel {
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("dedupByKeys", dedupByKeys);
     }
+
+    @Override
+    public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        return new GraphLogicalDedupBy(
+                this.getCluster(), traitSet, inputs.get(0), this.dedupByKeys);
+    }
 }

@@ -1035,11 +1035,46 @@ public class GraphBuilder extends RelBuilder {
                 nodeList.set(i, simplifier.simplifyPreservingType(nodeList.get(i)));
             }
         }
-        fieldNameList =
-                AliasInference.inferProject(
-                        nodeList,
-                        fieldNameList,
-                        AliasInference.getUniqueAliasList(input, isAppend));
+
+        PREPARE_PROJECT_ARGS:
+        {
+            AliasNameWithId oneTag = projectOneTag(nodeList, fieldNameList, isAppend);
+            if (oneTag != null) {
+                fieldNameList = ImmutableList.of(AliasInference.DEFAULT_NAME);
+                break PREPARE_PROJECT_ARGS;
+            } else if (input instanceof Project) {
+                AliasNameWithId inputOneTag =
+                        projectOneTag(
+                                ((Project) input).getProjects(),
+                                input.getRowType().getFieldNames(),
+                                ((GraphLogicalProject) input).isAppend());
+                if (inputOneTag != null
+                        && projectPropertyOfTags(
+                                nodeList,
+                                ImmutableList.of(
+                                        AliasInference.DEFAULT_ID, inputOneTag.getAliasId()))) {
+                    RexVariableAliasConverter converter =
+                            new RexVariableAliasConverter(
+                                    true,
+                                    this,
+                                    inputOneTag.getAliasName(),
+                                    inputOneTag.getAliasId());
+                    nodeList =
+                            nodeList.stream()
+                                    .map(k -> k.accept(converter))
+                                    .collect(Collectors.toList());
+                    // remove the input project
+                    input = input.getInput(0);
+                }
+            }
+
+            fieldNameList =
+                    AliasInference.inferProject(
+                            nodeList,
+                            fieldNameList,
+                            AliasInference.getUniqueAliasList(input, isAppend));
+        }
+
         RelNode project =
                 GraphLogicalProject.create(
                         (GraphOptCluster) getCluster(),
@@ -1049,10 +1084,42 @@ public class GraphBuilder extends RelBuilder {
                         deriveType(nodeList, fieldNameList, input, isAppend),
                         isAppend);
         replaceTop(project);
-        // todo: when isAppend is true and there is only one expression, the project actually
-        // denotes the operator `select('a')` in gremlin
-        // todo: remove useless `select('a')` to avoid extra execution overhead
         return this;
+    }
+
+    /**
+     * check if the {@code exprs} are actually the pattern of `select('a')` in gremlin, return the tag if it is.
+     * @param exprs
+     * @param aliases
+     * @return
+     */
+    private @Nullable AliasNameWithId projectOneTag(
+            List<RexNode> exprs, List<String> aliases, boolean isAppend) {
+        if (isAppend
+                && exprs.size() == 1
+                && exprs.get(0) instanceof RexGraphVariable
+                && ((RexGraphVariable) exprs.get(0)).getProperty() == null
+                && (aliases.isEmpty()
+                        || aliases.get(0) == null
+                        || aliases.get(0) == AliasInference.DEFAULT_NAME)) {
+            RexGraphVariable var = (RexGraphVariable) exprs.get(0);
+            String[] splits = var.getName().split(Pattern.quote(AliasInference.DELIMITER));
+            String aliasName = splits.length > 0 ? splits[0] : AliasInference.DEFAULT_NAME;
+            return new AliasNameWithId(aliasName, var.getAliasId());
+        }
+        return null;
+    }
+
+    /**
+     * check if the {@code exprs} denotes the properties projection of the specified {@code tagIds}, return true if it is.
+     * @param exprs
+     * @param tagIds
+     * @return
+     */
+    private boolean projectPropertyOfTags(List<RexNode> exprs, List<Integer> tagIds) {
+        RexVariableAliasCollector<Integer> collector =
+                new RexVariableAliasCollector<>(true, (RexGraphVariable var) -> var.getAliasId());
+        return exprs.stream().allMatch(k -> tagIds.containsAll(k.accept(collector)));
     }
 
     /**

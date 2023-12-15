@@ -900,7 +900,8 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                 return aggCalls;
             }
         }
-        return ImmutableList.of(builder.collect(false, defaultAlias, builder.variable((String) null)));
+        return ImmutableList.of(
+                builder.collect(false, defaultAlias, builder.variable((String) null)));
     }
 
     private RexNode convertDedupByCtx(

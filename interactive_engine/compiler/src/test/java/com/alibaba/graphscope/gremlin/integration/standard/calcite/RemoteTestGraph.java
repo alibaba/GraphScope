@@ -1528,6 +1528,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX",
         reason = "union is unsupported yet")
 @Graph.OptOut(
+        method = "g_V_haslabel_union_identity_out_values",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "union is unsupported yet")
+@Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
         method = "g_V_hasLabelXpersonX_hasLabelXsoftwareX",
         reason = "throw schema errors instead of returning empty results")
@@ -1564,6 +1568,22 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_order_byXoutE_count_descX",
         reason = "sub query is unsupported yet")
 @Graph.OptOut(
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        method = "g_V_group_by_outE_count_test",
+        reason = "sub query is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_asXaX_whereXoutXknowsXX_selectXaX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        reason = "sub query is unsupported yet")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
+        method = "g_V_group_byXoutE_countX_byXnameX",
+        reason = "sub query is unsupported yet")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest",
+        method = "g_V_groupCount_byXbothE_countX",
+        reason = "sub query is unsupported yet")
+@Graph.OptOut(
         method =
                 "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_asXfakeX_inV_hasXname_joshX_selectXhereX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
@@ -1585,10 +1605,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_valueMap_selectXa_bX",
         reason = "throw alias not found errors instead of returning empty results")
 @Graph.OptOut(
-        method = "g_V_asXaX_whereXoutXknowsXX_selectXaX",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        reason = "sub query is unsupported yet")
-@Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_valueMap_selectXaX",
         reason = "throw alias not found errors instead of returning empty results")
@@ -1600,14 +1616,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_valueMapXname_ageX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
         reason = "results of the valueMap are inconsistent with the official gremlin")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
-        method = "g_V_group_byXoutE_countX_byXnameX",
-        reason = "sub query is unsupported yet")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupCountTest",
-        method = "g_V_groupCount_byXbothE_countX",
-        reason = "sub query is unsupported yet")
 @Graph.OptOut(
         method = "g_V_matchXb_created_c__a_knows_bX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
@@ -1644,6 +1652,50 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_matchXa_knows_b__b_created_c__a_created_cX_dedupXa_b_cX_selectXaX_byXnameX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
         reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_in_b__b_out_c__not_c_out_aX",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_has_fold_select_as_unfold_select_unfold_values",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "unfold is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_has_fold_select_as_unfold_values",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "unfold is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_has_select_unfold_values",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "unfold is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_fold_a_unfold_values",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "unfold is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_fold_unfold_values",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "unfold is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_fold_a_unfold_select_a_unfold_values",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "unfold is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_a_out_b_select_by_elementMap",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "nested map is unsupported in runtime")
+@Graph.OptOut(
+        method = "g_V_sample_by_2",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "sample is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_sample_by_7",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "sample is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_coin_by_ratio",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+        reason = "coin is unsupported yet")
 public class RemoteTestGraph
         extends com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph {
     public RemoteTestGraph(@Nullable Configuration configuration) {

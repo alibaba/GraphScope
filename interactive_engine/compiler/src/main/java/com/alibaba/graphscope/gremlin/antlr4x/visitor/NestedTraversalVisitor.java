@@ -22,6 +22,7 @@ import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
@@ -49,9 +50,8 @@ public class NestedTraversalVisitor extends GremlinGSBaseVisitor<RexNode> {
         RelNode commonRel = parentBuilder.peek();
         nestedBuilder.push(commonRel);
         if (tag != null) {
-            // isAppend is set to false, the variable is the only column the sub query can have
-            // access to
-            nestedBuilder.project(nestedBuilder.variable(tag));
+            nestedBuilder.project(
+                    ImmutableList.of(nestedBuilder.variable(tag)), ImmutableList.of(), true);
         }
         GraphBuilderVisitor visitor = new GraphBuilderVisitor(nestedBuilder);
         RelNode subRel = visitor.visitNestedTraversal(ctx).build();
