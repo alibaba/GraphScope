@@ -49,9 +49,9 @@ Note:
     - The limit number is used to `mmap` memory, so it only takes virtual memory before vertices are actually inserted.
     - If `max_vertex_num` is not set, a default large number (e.g.: 2^48) will be used.
   - `edge_storage_strategy` specifies the storing strategy of the incoming or outgoing edges of this type, there are 3 kinds of strategies
-    - OnlyIn: Only incoming edges are stored.
-    - OnlyOut: Only outgoing edges are stored.
-    - BothOutIn(default): Both direction of edges are stored.
+    - `ONLY_IN`: Only incoming edges are stored.
+    - `ONLY_OUT`: Only outgoing edges are stored.
+    - `BOTH_OUT_IN`(default): Both direction of edges are stored.
  
 
 ## Entity Data

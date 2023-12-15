@@ -725,16 +725,16 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
         std::string edge_storage_strategy_str;
         if (get_scalar(csr_node, "edge_storage_strategy",
                        edge_storage_strategy_str)) {
-          if (edge_storage_strategy_str == "OnlyIn") {
+          if (edge_storage_strategy_str == "ONLY_IN") {
             cur_oe = EdgeStrategy::kNone;
             VLOG(10) << "Store only in edges for edge: " << src_label_name
                      << "-[" << edge_label_name << "]->" << dst_label_name;
-          } else if (edge_storage_strategy_str == "OnlyOut") {
+          } else if (edge_storage_strategy_str == "ONLY_OUT") {
             cur_ie = EdgeStrategy::kNone;
             VLOG(10) << "Store only out edges for edge: " << src_label_name
                      << "-[" << edge_label_name << "]->" << dst_label_name;
-          } else if (edge_storage_strategy_str == "BothOutIn" ||
-                     edge_storage_strategy_str == "BothInOut") {
+          } else if (edge_storage_strategy_str == "BOTH_OUT_IN" ||
+                     edge_storage_strategy_str == "BOTH_IN_OUT") {
             VLOG(10) << "Store both in and out edges for edge: "
                      << src_label_name << "-[" << edge_label_name << "]->"
                      << dst_label_name;
