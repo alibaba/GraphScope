@@ -413,28 +413,26 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kEmpty;
   }
 }
-
-EdgeStrategy RelationToEdgeStrategy(const std::string& str, bool is_ie) {
-  if (str == "ONE_TO_MANY") {
-    if (is_ie) {
-      return EdgeStrategy::kSingle;
-    } else {
-      return EdgeStrategy::kMultiple;
-    }
-  } else if (str == "ONE_TO_ONE") {
-    return EdgeStrategy::kSingle;
-  } else if (str == "MANY_TO_ONE") {
-    if (is_ie) {
-      return EdgeStrategy::kMultiple;
-    } else {
-      return EdgeStrategy::kSingle;
-    }
-  } else if (str == "MANY_TO_MANY") {
-    return EdgeStrategy::kMultiple;
+void RelationToEdgeStrategy(const std::string& rel_str,
+                            EdgeStrategy& ie_strategy,
+                            EdgeStrategy& oe_strategy) {
+  if (rel_str == "ONE_TO_MANY") {
+    ie_strategy = EdgeStrategy::kSingle;
+    oe_strategy = EdgeStrategy::kMultiple;
+  } else if (rel_str == "ONE_TO_ONE") {
+    ie_strategy = EdgeStrategy::kSingle;
+    oe_strategy = EdgeStrategy::kSingle;
+  } else if (rel_str == "MANY_TO_ONE") {
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kSingle;
+  } else if (rel_str == "MANY_TO_MANY") {
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kMultiple;
   } else {
-    LOG(WARNING) << "relation " << str
+    LOG(WARNING) << "relation " << rel_str
                  << " is not valid, using default value: kMultiple";
-    return EdgeStrategy::kMultiple;
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kMultiple;
   }
 }
 
@@ -715,8 +713,7 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
 
     std::string relation_str;
     if (get_scalar(cur_node, "relation", relation_str)) {
-      cur_ie = RelationToEdgeStrategy(relation_str, true);
-      cur_oe = RelationToEdgeStrategy(relation_str, false);
+      RelationToEdgeStrategy(relation_str, cur_ie, cur_oe);
     } else {
       LOG(WARNING) << "relation not defined, using default ie/oe strategy ";
     }
