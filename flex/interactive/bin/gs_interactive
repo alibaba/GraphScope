@@ -965,10 +965,7 @@ function do_init(){
 
   GIE_DB_IMAGE_NAME_TAG="${GIE_DB_IMAGE_NAME}:${DATABASE_VERSION}"
   cmd="docker run -it -d --privileged --name ${GIE_DB_CONTAINER_NAME}"
-  # if current os is macos, append option --platform linux/amd64
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    cmd="${cmd} --platform linux/amd64"
-  fi
+
   # create user in container
   cmd="${cmd} ${port_cmd} ${mount_cmd} ${GIE_DB_IMAGE_NAME_TAG} bash"
   
