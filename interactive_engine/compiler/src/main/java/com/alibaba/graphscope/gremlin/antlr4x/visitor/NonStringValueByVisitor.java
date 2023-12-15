@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalDedupBy;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
@@ -44,8 +45,25 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
                                 byCtx.traversalMethod_as().stringLiteral())
                         : null;
         if (byCtx.traversalMethod_dedup() != null) {
+            GraphBuilder nestedBuilder =
+                    (GraphBuilder)
+                            GraphPlanner.relBuilderFactory.create(
+                                    builder.getCluster(), builder.getRelOptSchema());
+            Preconditions.checkArgument(builder.size() > 0, "parent builder should not be empty");
+            GraphBuilderVisitor nestedVisitor =
+                    new GraphBuilderVisitor(nestedBuilder.push(this.builder.peek()));
+            GraphLogicalDedupBy dedupBy =
+                    (GraphLogicalDedupBy)
+                            nestedVisitor
+                                    .visitTraversalMethod_dedup(byCtx.traversalMethod_dedup())
+                                    .build();
+            if (byCtx.traversalMethod_count() != null) {
+                return builder.count(true, alias, dedupBy.getDedupByKeys());
+            } else if (byCtx.traversalMethod_fold() != null) {
+                return builder.collect(true, alias, dedupBy.getDedupByKeys());
+            }
             throw new UnsupportedEvalException(
-                    byCtx.getClass(), "dedup is unsupported yet in group value by");
+                    byCtx.getClass(), byCtx.getText() + " is unsupported yet in group value by");
         } else if (byCtx.traversalMethod_aggregate_func() != null) {
             RexNode expr;
             if (byCtx.traversalMethod_select() != null || byCtx.traversalMethod_values() != null) {

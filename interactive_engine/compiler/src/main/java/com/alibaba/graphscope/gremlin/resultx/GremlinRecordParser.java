@@ -161,9 +161,10 @@ public class GremlinRecordParser implements RecordParser<Object> {
                 .getKeyValuesList()
                 .forEach(
                         entry -> {
-                            valueMap.put(
-                                    parseMapKey(entry.getKey().getStr()),
-                                    parseElement(entry.getValue(), valueType));
+                            Object value = parseElement(entry.getValue(), valueType);
+                            if (value != null) {
+                                valueMap.put(parseMapKey(entry.getKey().getStr()), value);
+                            }
                         });
         return valueMap;
     }
@@ -182,9 +183,10 @@ public class GremlinRecordParser implements RecordParser<Object> {
         Map<Object, Object> valueMap = Maps.newLinkedHashMap();
         for (int i = 0; i < entries.size(); ++i) {
             IrResult.KeyValues.KeyValue entry = entries.get(i);
-            valueMap.put(
-                    parseMapKey(entry.getKey().getStr()),
-                    parseElement(entry.getValue(), valueTypes.get(i)));
+            Object value = parseElement(entry.getValue(), valueTypes.get(i));
+            if (value != null) {
+                valueMap.put(parseMapKey(entry.getKey().getStr()), value);
+            }
         }
         return valueMap;
     }

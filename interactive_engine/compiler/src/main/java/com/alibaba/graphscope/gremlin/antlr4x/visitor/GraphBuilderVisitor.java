@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -832,12 +833,16 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
 
     private RelBuilder.GroupKey convertGroupKeyBy(
             GremlinGSParser.TraversalMethod_group_keybyContext keyCtx) {
+        String defaultAlias = Column.keys.name();
         if (keyCtx != null) {
             if (keyCtx.stringLiteral() != null) {
                 return builder.groupKey(
-                        builder.variable(
-                                null,
-                                GenericLiteralVisitor.getStringLiteral(keyCtx.stringLiteral())));
+                        ImmutableList.of(
+                                builder.variable(
+                                        null,
+                                        GenericLiteralVisitor.getStringLiteral(
+                                                keyCtx.stringLiteral()))),
+                        ImmutableList.of(defaultAlias));
             } else if (keyCtx.nonStringKeyByList() != null) {
                 List<RexNode> exprs = Lists.newArrayList();
                 List<@Nullable String> aliases = Lists.newArrayList();
@@ -851,27 +856,37 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                                             .visitNestedTraversal(byCtx.nestedTraversal()));
                     exprs.add(exprWithAlias.getValue0());
                     String alias = exprWithAlias.getValue1();
-                    aliases.add(
-                            alias == null || alias == AliasInference.DEFAULT_NAME ? null : alias);
+                    aliases.add(alias == AliasInference.DEFAULT_NAME ? null : alias);
+                }
+                if (exprs.size() == 1) {
+                    if (aliases.isEmpty()) {
+                        aliases.add(defaultAlias);
+                    } else if (aliases.get(0) == null) {
+                        aliases.set(0, defaultAlias);
+                    }
                 }
                 return builder.groupKey(exprs, aliases);
             }
         }
-        return builder.groupKey(builder.variable((String) null));
+        return builder.groupKey(
+                ImmutableList.of(builder.variable((String) null)), ImmutableList.of(defaultAlias));
     }
 
     private List<RelBuilder.AggCall> convertGroupValueBy(
             GremlinGSParser.TraversalMethod_group_valuebyContext valueCtx) {
+        String defaultAlias = Column.values.name();
         if (valueCtx != null) {
             if (valueCtx.stringLiteral() != null) {
                 return ImmutableList.of(
                         builder.collect(
+                                false,
+                                defaultAlias,
                                 builder.variable(
                                         null,
                                         GenericLiteralVisitor.getStringLiteral(
                                                 valueCtx.stringLiteral()))));
             } else if (valueCtx.nonStringValueByList() != null) {
-                ImmutableList.Builder<RelBuilder.AggCall> aggCalls = ImmutableList.builder();
+                List<RelBuilder.AggCall> aggCalls = Lists.newArrayList();
                 for (int i = 0; i < valueCtx.nonStringValueByList().getChildCount(); ++i) {
                     GremlinGSParser.NonStringValueByContext byCtx =
                             valueCtx.nonStringValueByList().nonStringValueBy(i);
@@ -879,10 +894,13 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                     aggCalls.add(
                             new NonStringValueByVisitor(this.builder).visitNonStringValueBy(byCtx));
                 }
-                return aggCalls.build();
+                if (aggCalls.size() == 1 && ((GraphAggCall) aggCalls.get(0)).getAlias() == null) {
+                    aggCalls.set(0, ((GraphAggCall) aggCalls.get(0)).as(defaultAlias));
+                }
+                return aggCalls;
             }
         }
-        return ImmutableList.of(builder.collect(builder.variable((String) null)));
+        return ImmutableList.of(builder.collect(false, defaultAlias, builder.variable((String) null)));
     }
 
     private RexNode convertDedupByCtx(
