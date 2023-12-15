@@ -414,14 +414,26 @@ static PropertyType StringToPropertyType(const std::string& str) {
   }
 }
 
-EdgeStrategy StringToEdgeStrategy(const std::string& str) {
-  if (str == "None") {
-    return EdgeStrategy::kNone;
-  } else if (str == "Single") {
+EdgeStrategy RelationToEdgeStrategy(const std::string& str, bool is_ie) {
+  if (str == "ONE_TO_MANY") {
+    if (is_ie) {
+      return EdgeStrategy::kSingle;
+    } else {
+      return EdgeStrategy::kMultiple;
+    }
+  } else if (str == "ONE_TO_ONE") {
     return EdgeStrategy::kSingle;
-  } else if (str == "Multiple") {
+  } else if (str == "MANY_TO_ONE") {
+    if (is_ie) {
+      return EdgeStrategy::kMultiple;
+    } else {
+      return EdgeStrategy::kSingle;
+    }
+  } else if (str == "MANY_TO_MANY") {
     return EdgeStrategy::kMultiple;
   } else {
+    LOG(WARNING) << "relation " << str
+                 << " is not valid, using default value: kMultiple";
     return EdgeStrategy::kMultiple;
   }
 }
@@ -700,17 +712,15 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                  << "] to [" << dst_label_name << "] already exists";
       return false;
     }
-    // if x_csr_params presents, overwrite the default strategy
-    if (cur_node["x_csr_params"]) {
-      auto csr_node = cur_node["x_csr_params"];
-      std::string ie_str, oe_str;
-      if (get_scalar(csr_node, "outgoing_edge_strategy", oe_str)) {
-        cur_oe = StringToEdgeStrategy(oe_str);
-      }
-      if (get_scalar(csr_node, "incoming_edge_strategy", ie_str)) {
-        cur_ie = StringToEdgeStrategy(ie_str);
-      }
+
+    std::string relation_str;
+    if (get_scalar(cur_node, "relation", relation_str)) {
+      cur_ie = RelationToEdgeStrategy(relation_str, true);
+      cur_oe = RelationToEdgeStrategy(relation_str, false);
+    } else {
+      LOG(WARNING) << "relation not defined, using default ie/oe strategy ";
     }
+
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
              << " to " << dst_label_name << " with " << property_types.size()
              << " properties";

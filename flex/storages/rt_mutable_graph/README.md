@@ -76,9 +76,6 @@ schema:
         source_vertex: person
         destination_vertex: person
         relation: MANY_TO_MANY
-        x_csr_params:
-          incoming_edge_strategy: Multiple
-          outgoing_edge_strategy: Multiple
       properties:
         - property_id: 0
           property_name: weight
@@ -88,10 +85,7 @@ schema:
       vertex_type_pair_relations:
         source_vertex: person
         destination_vertex: software
-        relation: ONE_TO_MANY
-        x_csr_params: 
-          incoming_edge_strategy: Multiple
-          outgoing_edge_strategy: Single
+        relation: ONE_TO_MANY 
       properties:
         - property_id: 0
           property_name: weight
@@ -106,10 +100,6 @@ Notes:
   - `max_vertex_num` limit the number of vertices of this type:
     - The limit number is used to `mmap` memory, so it only takes virtual memory before vertices are actually inserted.
     - If `max_vertex_num` is not set, a default large number (e.g.: 2^48) will be used.
-  - `incoming/outgoing_edge_strategy` specifies the storing strategy of the incoming or outgoing edges of this type, there are 3 kinds of strategies
-    - None: no edge will be stored
-    - Single: only one edge will be stored
-    - Multiple(default): multiple edges will be stored
 
 ## 3. Vertex Management
 
