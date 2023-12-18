@@ -914,25 +914,27 @@ class MatchQuery14 : public AppBase {
   results::CollectiveResults Query() const {
     auto expr0 = gs::make_filter(Query0expr0());
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
-        graph, 0, std::move(expr0));
+        graph, 2, std::move(expr0));
 
-    auto edge_expand_opt0 = gs::make_edge_expande_opt<grape::EmptyType>(
-        gs::PropNameArray<grape::EmptyType>{""}, gs::Direction::Out,
-        (label_id_t) 11, (label_id_t) 0);
-    auto ctx1 =
-        Engine::template EdgeExpandE<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
-            graph, std::move(ctx0), std::move(edge_expand_opt0));
+    auto edge_expand_opt1 = gs::make_edge_expandv_opt(
+        gs::Direction::Out, (label_id_t) 2,
+        std::array<label_id_t, 2>{(label_id_t) 2, (label_id_t) 3});
 
-    auto get_v_opt1 =
-        make_getv_opt(gs::VOpt::End, std::array<label_id_t, 1>{(label_id_t) 0});
-    auto ctx2 = Engine::template GetV<gs::AppendOpt::Persist, INPUT_COL_ID(-1)>(
-        graph, std::move(ctx1), std::move(get_v_opt1));
-    auto ctx3 = Engine::Project<PROJ_TO_NEW>(
-        graph, std::move(ctx2),
-        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
-            gs::PropertySelector<grape::EmptyType>(""))});
-    auto ctx4 = Engine::Limit(std::move(ctx3), 0, 5);
-    return Engine::Sink(graph, ctx4, std::array<int32_t, 1>{1});
+    auto get_v_opt0 = make_getv_opt(
+        gs::VOpt::Itself,
+        std::array<label_id_t, 2>{(label_id_t) 2, (label_id_t) 3});
+
+    auto path_opt2 = gs::make_path_expandv_opt(
+        std::move(edge_expand_opt1), std::move(get_v_opt0), gs::Range(0, 3));
+    auto ctx1 = Engine::PathExpandV<gs::AppendOpt::Persist, INPUT_COL_ID(0)>(
+        graph, std::move(ctx0), std::move(path_opt2));
+    auto ctx2 = Engine::Project<PROJ_TO_NEW>(
+        graph, std::move(ctx1),
+        std::tuple{gs::make_mapper_with_variable<INPUT_COL_ID(0)>(
+                       gs::PropertySelector<int64_t>("id")),
+                   gs::make_mapper_with_variable<INPUT_COL_ID(1)>(
+                       gs::PropertySelector<int64_t>("id"))});
+    return Engine::Sink(graph, ctx2, std::array<int32_t, 2>{2, 3});
   }
   // Wrapper query function for query class
   bool Query(Decoder& decoder, Encoder& encoder) override {
@@ -1029,31 +1031,6 @@ class MatchQuery15 : public AppBase {
     return true;
   }
   gs::MutableCSRInterface graph;
-};
-
-struct MatchQuery16expr0 {
- public:
-  using result_t = bool;
-  MatchQuery16expr0() {}
-
-  inline auto operator()(LabelKey label) const {
-    return label<WithIn> std::array<int64_t, 1>{0};
-  }
-
- private:
-};
-
-struct MatchQuery16expr1 {
- public:
-  using result_t = bool;
-  MatchQuery16expr1() {}
-
-  inline auto operator()(LabelKey label, LabelKey label_0) const {
-    return (label<WithIn> std::array<int64_t, 1>{0}) &&
-           (label_0<WithIn> std::array<int64_t, 6>{0, 1, 2, 3, 4, 5});
-  }
-
- private:
 };
 
 }  // namespace gs
