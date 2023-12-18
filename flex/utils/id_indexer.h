@@ -141,76 +141,6 @@ struct KeyBuffer<std::string_view> {
     }
   }
 };
-// Implicit conversion for OID_T
-// For example, we need to convert int64_t to int32_t, or int32_t to int64_t.
-struct ConvertHelper {
-  static inline bool convert(const Any& from, PropertyType to_type, Any& to) {
-    // currently only support convert primary key types.
-    // int32_t to int64_t, uint32_t, uint64_t,
-
-    // uint32_t to uint64_t, int64_t, int32_t,
-    // uint64_t to uint32_t, int64_t, int32_t,
-    if (from.type == to.type) {
-      to = from;
-      return true;
-    }
-    if (from.type == PropertyType::kInt32) {
-      if (to_type == PropertyType::kInt64) {
-        to = Any::From(static_cast<int64_t>(from.value.i));
-        return true;
-      } else if (to_type == PropertyType::kUInt32) {
-        to = Any::From(static_cast<uint32_t>(from.value.i));
-        return true;
-      } else if (to_type == PropertyType::kUInt64) {
-        to = Any::From(static_cast<uint64_t>(from.value.i));
-        return true;
-      }
-      return false;
-    } else if (from.type == PropertyType::kInt64) {
-      // int64_t to int32_t, uint32_t, uint64_t,
-      if (to_type == PropertyType::kInt32) {
-        to = Any::From(static_cast<int32_t>(from.value.l));
-        return true;
-      } else if (to_type == PropertyType::kUInt32) {
-        to = Any::From(static_cast<uint32_t>(from.value.l));
-        return true;
-      } else if (to_type == PropertyType::kUInt64) {
-        to = Any::From(static_cast<uint64_t>(from.value.l));
-        return true;
-      } else {
-        return false;
-      }
-    } else if (from.type == PropertyType::kUInt32) {
-      if (to_type == PropertyType::kInt32) {
-        to = Any::From(static_cast<int32_t>(from.value.ui));
-        return true;
-      } else if (to_type == PropertyType::kInt64) {
-        to = Any::From(static_cast<int64_t>(from.value.ui));
-        return true;
-      } else if (to_type == PropertyType::kUInt64) {
-        to = Any::From(static_cast<uint64_t>(from.value.ui));
-        return true;
-      } else {
-        return false;
-      }
-    } else if (from.type == PropertyType::kUInt64) {
-      if (to_type == PropertyType::kInt32) {
-        to = Any::From(static_cast<int32_t>(from.value.ul));
-        return true;
-      } else if (to_type == PropertyType::kInt64) {
-        to = Any::From(static_cast<int64_t>(from.value.ul));
-        return true;
-      } else if (to_type == PropertyType::kUInt32) {
-        to = Any::From(static_cast<uint32_t>(from.value.ul));
-        return true;
-      } else {
-        return false;
-      }
-    } else {
-      return false;
-    }
-  }
-};
 
 }  // namespace id_indexer_impl
 
@@ -368,26 +298,15 @@ class LFIndexer {
   }
 
   INDEX_T get_index(const Any& oid) const {
-    Any real_oid = oid;
-    if (oid.type != get_type()) {
-      // First try implicit conversion.
-      // If it fails, throw an exception.
-      if (!id_indexer_impl::ConvertHelper::convert(oid, get_type(), real_oid)) {
-        throw std::runtime_error("oid type not match: " +
-                                 std::to_string(static_cast<int>(oid.type)) +
-                                 std::string(" vs ") +
-                                 std::to_string(static_cast<int>(get_type())));
-      }
-    }
+    assert(oid.type == get_type());
     size_t index =
-        hash_policy_.index_for_hash(hasher_(real_oid), num_slots_minus_one_);
+        hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
     while (true) {
       INDEX_T ind = indices_.get(index);
       if (ind == sentinel) {
-        LOG(FATAL) << "cannot find " << real_oid.to_string()
-                   << " in lf_indexer";
-      } else if (keys_->get(ind) == real_oid) {
+        LOG(FATAL) << "cannot find " << oid.to_string() << " in lf_indexer";
+      } else if (keys_->get(ind) == oid) {
         return ind;
       } else {
         index = (index + 1) % (num_slots_minus_one_ + 1);
@@ -396,24 +315,17 @@ class LFIndexer {
   }
 
   bool get_index(const Any& oid, INDEX_T& ret) const {
-    Any real_oid = oid;
     if (oid.type != get_type()) {
-      if (!id_indexer_impl::ConvertHelper::convert(oid, get_type(), real_oid)) {
-        throw std::runtime_error("oid type not match: " +
-                                 std::to_string(static_cast<int>(oid.type)) +
-                                 std::string(" vs ") +
-                                 std::to_string(static_cast<int>(get_type())));
-      }
       return false;
     }
     size_t index =
-        hash_policy_.index_for_hash(hasher_(real_oid), num_slots_minus_one_);
+        hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
     while (true) {
       INDEX_T ind = indices_.get(index);
       if (ind == sentinel) {
         return false;
-      } else if (keys_->get(ind) == real_oid) {
+      } else if (keys_->get(ind) == oid) {
         ret = ind;
         return true;
       } else {
