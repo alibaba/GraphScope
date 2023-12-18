@@ -90,9 +90,7 @@ impl Partial {
                     Ok(())
                 }
             }
-            Partial::Predicates(predicate) => match predicate {
-                _ => Ok(()),
-            },
+            Partial::Predicates(_) => Ok(()),
         }
     }
 
@@ -880,6 +878,57 @@ mod tests {
                     }))
                 )
             ),
+            PEvaluator::General(_) => panic!("should be predicate"),
+        }
+
+        let expr = str_to_expr_pb("isnull @a.name".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        match &p_eval {
+            PEvaluator::Predicates(pred) => {
+                assert_eq!(
+                    pred.clone(),
+                    Predicates::Unary(UnaryPredicate {
+                        left: Operand::Var {
+                            tag: Some("a".into()),
+                            prop_key: Some(PropKey::Key("name".into()))
+                        },
+                        cmp: common_pb::Logical::Isnull,
+                    })
+                );
+            }
+            PEvaluator::General(_) => panic!("should be predicate"),
+        }
+
+        let expr = str_to_expr_pb("isnull @a.name && @a.age > 2 || isnull @b.age".to_string()).unwrap();
+        let p_eval = PEvaluator::try_from(expr).unwrap();
+        match &p_eval {
+            PEvaluator::Predicates(pred) => {
+                assert_eq!(
+                    pred.clone(),
+                    Predicates::Unary(UnaryPredicate {
+                        left: Operand::Var {
+                            tag: Some("a".into()),
+                            prop_key: Some(PropKey::Key("name".into()))
+                        },
+                        cmp: common_pb::Logical::Isnull,
+                    })
+                    .and(Predicates::Binary(Predicate {
+                        left: Operand::Var {
+                            tag: Some("a".into()),
+                            prop_key: Some(PropKey::Key("age".into()))
+                        },
+                        cmp: common_pb::Logical::Gt,
+                        right: Operand::Const(object!(2)),
+                    }))
+                    .or(Predicates::Unary(UnaryPredicate {
+                        left: Operand::Var {
+                            tag: Some("b".into()),
+                            prop_key: Some(PropKey::Key("age".into()))
+                        },
+                        cmp: common_pb::Logical::Isnull,
+                    }))
+                );
+            }
             PEvaluator::General(_) => panic!("should be predicate"),
         }
     }
