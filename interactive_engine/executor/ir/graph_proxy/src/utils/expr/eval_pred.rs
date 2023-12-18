@@ -33,7 +33,7 @@ pub trait EvalPred {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct UnaryPredicate {
-    pub(crate) left: Operand,
+    pub(crate) operand: Operand,
     pub(crate) cmp: common_pb::Logical,
 }
 
@@ -134,7 +134,7 @@ impl From<Partial> for Option<Predicates> {
                     Some(Predicates::SingleItem(left.unwrap()))
                 } else if right.is_none() {
                     // the case of unary operator
-                    Some(Predicates::Unary(UnaryPredicate { left: left.unwrap(), cmp: cmp.unwrap() }))
+                    Some(Predicates::Unary(UnaryPredicate { operand: left.unwrap(), cmp: cmp.unwrap() }))
                 } else {
                     // the case of binary operator
                     Some(Predicates::Binary(Predicate {
@@ -338,7 +338,7 @@ impl EvalPred for UnaryPredicate {
         use common_pb::Logical;
         match self.cmp {
             Logical::Isnull => {
-                let left = match self.left.eval(context) {
+                let left = match self.operand.eval(context) {
                     Ok(left) => Ok(left),
                     Err(err) => match err {
                         ExprEvalError::GetNoneFromContext => Ok(Object::None),
@@ -888,7 +888,7 @@ mod tests {
                 assert_eq!(
                     pred.clone(),
                     Predicates::Unary(UnaryPredicate {
-                        left: Operand::Var {
+                        operand: Operand::Var {
                             tag: Some("a".into()),
                             prop_key: Some(PropKey::Key("name".into()))
                         },
@@ -906,7 +906,7 @@ mod tests {
                 assert_eq!(
                     pred.clone(),
                     Predicates::Unary(UnaryPredicate {
-                        left: Operand::Var {
+                        operand: Operand::Var {
                             tag: Some("a".into()),
                             prop_key: Some(PropKey::Key("name".into()))
                         },
@@ -921,7 +921,7 @@ mod tests {
                         right: Operand::Const(object!(2)),
                     }))
                     .or(Predicates::Unary(UnaryPredicate {
-                        left: Operand::Var {
+                        operand: Operand::Var {
                             tag: Some("b".into()),
                             prop_key: Some(PropKey::Key("age".into()))
                         },

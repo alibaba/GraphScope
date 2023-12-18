@@ -72,9 +72,9 @@ impl Predicate {
 
 impl UnaryPredicate {
     fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
-        let left = self.left.get_var_prop_id();
-        match left {
-            Ok(left) => Some(vec![left]),
+        let prop_id = self.operand.get_var_prop_id();
+        match prop_id {
+            Ok(prop_id) => Some(vec![prop_id]),
             _ => None,
         }
     }
