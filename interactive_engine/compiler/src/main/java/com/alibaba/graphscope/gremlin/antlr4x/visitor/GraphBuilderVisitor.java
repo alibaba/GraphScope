@@ -642,7 +642,8 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         return (GraphBuilder)
                 builder.aggregate(
                         convertGroupKeyBy(ctx.traversalMethod_group_keyby()),
-                        builder.count(builder.variable((String) null)));
+                        builder.count(
+                                false, Column.values.name(), builder.variable((String) null)));
     }
 
     @Override
