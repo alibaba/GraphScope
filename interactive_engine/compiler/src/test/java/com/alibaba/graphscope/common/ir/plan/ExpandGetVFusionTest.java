@@ -103,4 +103,42 @@ public class ExpandGetVFusionTest {
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 after.explain().trim());
     }
+
+    // g.V().hasLabel("person").outE("knows").inV().as("a")
+    @Test
+    public void expand_getv_fusion_2_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner = Utils.mockPlanner(ExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphPhysicalExpandGetV(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[a])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                after.explain().trim());
+    }
 }
