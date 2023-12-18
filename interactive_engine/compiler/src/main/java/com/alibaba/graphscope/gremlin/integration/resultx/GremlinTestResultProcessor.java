@@ -58,7 +58,7 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
                             .code(ResponseStatusCode.PARTIAL_CONTENT)
                             .result(
                                     results.stream()
-                                            .map(k -> new DefaultRemoteTraverser(k, 1l))
+                                            .map(k -> new DefaultRemoteTraverser(k, 1L))
                                             .collect(Collectors.toList()))
                             .create());
         }
@@ -68,7 +68,7 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
     public void onCompleted() {
         List<Object> results = Lists.newArrayList();
         if (resultSchema.isGroupBy) {
-            results.add(new DefaultRemoteTraverser(reducer, 1l));
+            results.add(new DefaultRemoteTraverser(reducer, 1L));
         }
         ctx.writeAndFlush(
                 ResponseMessage.build(ctx.getRequestMessage())
