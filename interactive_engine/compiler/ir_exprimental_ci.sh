@@ -20,7 +20,7 @@ ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print 
 export gremlin.script.language.name=antlr_gremlin_calcite
 cd ${base_dir} && make run &
 sleep 5s
-# run gremlin standard tests
+# run gremlin standard tests to test calcite-based IR layer
 cd ${base_dir} && make gremlin_calcite_test
 exit_code=$?
 # report test result
