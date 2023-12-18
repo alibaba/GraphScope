@@ -41,6 +41,8 @@ pub struct Predicate {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 enum Partial {
+    // a single item can represent an operand (if only left is_some()), a unary operator (if both left and cmp is_some()),
+    // or a binary operator (if all left, cmp and right is_some())
     SingleItem { left: Option<Operand>, cmp: Option<common_pb::Logical>, right: Option<Operand> },
     Predicates(Predicates),
 }
@@ -74,8 +76,8 @@ impl Partial {
 
     pub fn cmp(&mut self, logical: common_pb::Logical) -> ExprResult<()> {
         match self {
-            Partial::SingleItem { left, cmp, right: _ } => {
-                if left.is_none() || cmp.is_some() {
+            Partial::SingleItem { left: _, cmp, right: _ } => {
+                if cmp.is_some() {
                     Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, logical)))
                 } else {
                     *cmp = Some(logical);
@@ -83,14 +85,6 @@ impl Partial {
                 }
             }
             Partial::Predicates(predicate) => match predicate {
-                // for unary operator like `isnull`, we transform the case of single item predicate into a partial predicate specifically.
-                // e.g., for the case of isnull(@.age), (@.age) will processed as a Predicates::SingleItem firstly, and when dealing with isnull,
-                // we further transform it to a partial predicate of `isnull @.age`.
-                Predicates::SingleItem(item) => {
-                    *self =
-                        Partial::SingleItem { left: Some(item.clone()), cmp: Some(logical), right: None };
-                    Ok(())
-                }
                 _ => Ok(()),
             },
         }
@@ -132,14 +126,17 @@ impl From<Partial> for Option<Predicates> {
                 if left.is_none() {
                     None
                 } else if cmp.is_none() {
+                    // the case of operand
                     Some(Predicates::SingleItem(left.unwrap()))
                 } else if right.is_some() {
+                    // the case of binary operator
                     Some(Predicates::Predicate(Predicate {
                         left: left.unwrap(),
                         cmp: cmp.unwrap(),
                         right: right.unwrap(),
                     }))
                 } else if right.is_none() {
+                    // the case of unary operator
                     if cmp.unwrap() == common_pb::Logical::Isnull {
                         Some(Predicates::Predicate(Predicate {
                             left: left.unwrap(),
@@ -474,8 +471,8 @@ fn process_predicates(
                             | Logical::Without
                             | Logical::Startswith
                             | Logical::Endswith
-                            | Logical::Regex => partial.cmp(logical)?,
-                            Logical::Isnull => curr_cmp = Some(logical),
+                            | Logical::Regex
+                            | Logical::Isnull => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
@@ -964,16 +961,14 @@ mod tests {
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
             "isNull @0.hobbies",                 // false
-            "isNull (@0.hobbies)",               // false
             "!(isNull @0.hobbies)",              // true
             "isNull @1.hobbies",                 // true
-            "isNull (@1.hobbies)",               // true
             "!(isNull @1.hobbies)",              // false
             "isNull true",                       // false
             "isNull false",                      // false
             "isNull @1.hobbies && @1.age == 26", // true
         ];
-        let expected: Vec<bool> = vec![false, false, true, true, true, false, false, false, true];
+        let expected: Vec<bool> = vec![false, true, true, false, false, false, true];
 
         for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
             let eval = PEvaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
