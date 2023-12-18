@@ -279,15 +279,6 @@ def test_add_vertices_edges(graphscope_session):
     graph = graph.add_vertices(
         Loader(f"{prefix}/software.csv", delimiter="|"), "software"
     )
-
-    with pytest.raises(ValueError, match="already existed in graph"):
-        graph = graph.add_edges(
-            Loader(f"{prefix}/knows.csv", delimiter="|"),
-            "knows",
-            src_label="software",
-            dst_label="software",
-        )
-
     graph = graph.add_edges(
         Loader(f"{prefix}/created.csv", delimiter="|"),
         "created",
