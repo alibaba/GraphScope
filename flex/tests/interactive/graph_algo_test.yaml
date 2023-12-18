@@ -131,7 +131,7 @@ schema:
       vertex_type_pair_relations:
         - source_vertex: Paper
           destination_vertex: Strategy
-          relation: MANY_TO_ONE
+          relation: MANY_TO_MANY
     - type_id: 5
       type_name: ApplyOn
       vertex_type_pair_relations:
