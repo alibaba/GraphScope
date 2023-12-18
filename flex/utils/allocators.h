@@ -30,7 +30,15 @@ class ArenaAllocator {
   static constexpr size_t batch_size = 128 * 1024 * 1024;
 
  public:
-  ArenaAllocator() : cur_loc_(0), cur_size_(0) {}
+  ArenaAllocator()
+      : cur_loc_(0),
+        cur_size_(0)
+#ifdef MONITOR_SESSIONS
+        ,
+        allocated_memory_(0)
+#endif
+  {
+  }
   ~ArenaAllocator() {
     for (auto ptr : buffers_) {
       free(ptr);
@@ -58,6 +66,10 @@ class ArenaAllocator {
   }
 
   void* allocate(size_t size) {
+#ifdef MONITOR_SESSIONS
+    allocated_memory_ += size;
+#endif
+
     if (cur_size_ - cur_loc_ >= size) {
       void* ret = (char*) cur_buffer_ + cur_loc_;
       cur_loc_ += size;
@@ -72,12 +84,20 @@ class ArenaAllocator {
     }
   }
 
+#ifdef MONITOR_SESSIONS
+  size_t allocated_memory() const { return allocated_memory_; }
+#endif
+
  private:
   std::vector<void*> buffers_;
 
   void* cur_buffer_;
   size_t cur_loc_;
   size_t cur_size_;
+
+#ifdef MONITOR_SESSIONS
+  size_t allocated_memory_;
+#endif
 };
 
 class MMapAllocator {

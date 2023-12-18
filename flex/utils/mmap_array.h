@@ -167,10 +167,6 @@ class mmap_array {
     }
 
     if (memory_only_) {
-      if (size < size_) {
-        size_ = size;
-        return;
-      }
       T* new_data = static_cast<T*>(
           mmap(NULL, size * sizeof(T), PROT_READ | PROT_WRITE,
                MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0));
@@ -178,7 +174,10 @@ class mmap_array {
         LOG(FATAL) << "mmap failed " << strerror(errno) << "..\n";
       }
       if (data_ != NULL) {
-        memcpy(new_data, data_, size_ * sizeof(T));
+        size_t copy_size = std::min(size, size_);
+        if (copy_size > 0) {
+          memcpy(new_data, data_, copy_size * sizeof(T));
+        }
         munmap(data_, size_ * sizeof(T));
       }
       data_ = new_data;

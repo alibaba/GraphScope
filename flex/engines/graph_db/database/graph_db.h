@@ -139,6 +139,11 @@ class GraphDB {
 
   std::array<std::string, 256> app_paths_;
   std::array<std::shared_ptr<AppFactoryBase>, 256> app_factories_;
+
+#ifdef MONITOR_SESSIONS
+  std::thread monitor_thread_;
+  bool monitor_thread_running_;
+#endif
 };
 
 }  // namespace gs
