@@ -129,9 +129,9 @@ void AtomicityInit(GraphDB& db, const std::string& work_dir, int thread_num) {
   Schema schema;
   schema.add_vertex_label("PERSON",
                           {
-                              PropertyType::kInt64,
-                              PropertyType::kString,  // name
-                              PropertyType::kString,  // emails
+                              PropertyType::kInt64,        // id
+                              PropertyType::Varchar(256),  // name
+                              PropertyType::Varchar(256),  // emails
                           },
                           {"id", "name", "emails"},
                           {std::tuple<gs::PropertyType, std::string, size_t>(
@@ -341,8 +341,8 @@ void G0Init(GraphDB& db, const std::string& work_dir, int thread_num) {
   Schema schema;
   schema.add_vertex_label("PERSON",
                           {
-                              PropertyType::kInt64,   // id
-                              PropertyType::kString,  // version history
+                              PropertyType::kInt64,        // id
+                              PropertyType::Varchar(256),  // version history
                           },
                           {
                               "id",
@@ -359,7 +359,7 @@ void G0Init(GraphDB& db, const std::string& work_dir, int thread_num) {
                           4096);
   schema.add_edge_label("PERSON", "PERSON", "KNOWS",
                         {
-                            PropertyType::kString,  // version history
+                            PropertyType::Varchar(256),  // version history
                         },
                         {}, EdgeStrategy::kMultiple, EdgeStrategy::kMultiple);
   db.Open(schema, work_dir, thread_num);
@@ -470,7 +470,7 @@ std::tuple<std::string, std::string, std::string> G0Check(GraphDB& db,
   }
   CHECK(oeit.IsValid());
   Any k_version_history_field = oeit.GetData();
-  CHECK(k_version_history_field.type == PropertyType::kString);
+  CHECK(k_version_history_field.type == PropertyType::Varchar(256));
   std::string k_version_history(k_version_history_field.value.s);
 
   return std::make_tuple(p1_version_history, p2_version_history,
@@ -594,7 +594,7 @@ void G1BInit(GraphDB& db, const std::string& work_dir, int thread_num) {
 
   schema.add_vertex_label("PERSON",
                           {
-                              PropertyType::kInt64,
+                              PropertyType::kInt64,  // id
                               PropertyType::kInt64,  // version
                           },
                           {"id", "version"},
@@ -667,7 +667,7 @@ void G1CInit(GraphDB& db, const std::string& work_dir, int thread_num) {
   Schema schema;
   schema.add_vertex_label("PERSON",
                           {
-                              PropertyType::kInt64,
+                              PropertyType::kInt64,  // id
                               PropertyType::kInt64,  // version
                           },
                           {"id", "version"},
@@ -1004,9 +1004,9 @@ void OTVInit(GraphDB& db, const std::string& work_dir, int thread_num) {
   Schema schema;
   schema.add_vertex_label("PERSON",
                           {
-                              PropertyType::kInt64,   // id
-                              PropertyType::kString,  // name
-                              PropertyType::kInt64,   // version
+                              PropertyType::kInt64,        // id
+                              PropertyType::Varchar(256),  // name
+                              PropertyType::kInt64,        // version
                           },
                           {"id", "name", "version"},
                           {std::tuple<gs::PropertyType, std::string, size_t>(

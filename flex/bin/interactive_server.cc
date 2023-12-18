@@ -314,6 +314,7 @@ int main(int argc, char** argv) {
     data_path = vm["data-path"].as<std::string>();
 
     auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
+
     // Ths schema is loaded just to get the plugin dir and plugin list
     gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
     db.Close();
