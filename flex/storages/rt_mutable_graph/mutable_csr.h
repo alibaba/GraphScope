@@ -467,7 +467,7 @@ class MutableCsrBase {
   virtual void open(const std::string& name, const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
 
-  virtual void open_in_memory(const std::string& prefix) = 0;
+  virtual void open_in_memory(const std::string& prefix, size_t v_cap = 0) = 0;
 
   virtual void dump(const std::string& name,
                     const std::string& new_spanshot_dir) = 0;
@@ -693,7 +693,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     }
   }
 
-  void open_in_memory(const std::string& prefix) override {
+  void open_in_memory(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
     degree_list.open_in_memory(prefix + ".deg");
     mmap_array<int>* cap_list = &degree_list;
@@ -705,8 +705,9 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     nbr_list_.open_in_memory(prefix + ".nbr");
 
     adj_lists_.reset();
-    adj_lists_.resize(degree_list.size());
-    locks_ = new grape::SpinLock[degree_list.size()];
+    v_cap = std::max(v_cap, degree_list.size());
+    adj_lists_.resize(v_cap);
+    locks_ = new grape::SpinLock[v_cap];
 
     nbr_t* ptr = nbr_list_.data();
     for (size_t i = 0; i < degree_list.size(); ++i) {
@@ -714,6 +715,9 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       int cap = (*cap_list)[i];
       adj_lists_[i].init(ptr, cap, degree);
       ptr += cap;
+    }
+    for (size_t i = degree_list.size(); i < v_cap; ++i) {
+      adj_lists_[i].init(ptr, 0, 0);
     }
 
     if (cap_list != &degree_list) {
@@ -927,7 +931,7 @@ class MutableCsr<std::string_view>
     }
   }
 
-  void open_in_memory(const std::string& prefix) override {
+  void open_in_memory(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
     degree_list.open_in_memory(prefix + ".deg");
     nbr_list_.open_in_memory(prefix + ".nbr");
@@ -1126,8 +1130,19 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     nbr_list_.open(work_dir + "/" + name + ".snbr", false);
   }
 
-  void open_in_memory(const std::string& prefix) override {
+  void open_in_memory(const std::string& prefix, size_t v_cap) override {
     nbr_list_.open_in_memory(prefix + ".snbr");
+    if (nbr_list_.size() < v_cap) {
+      size_t old_size = nbr_list_.size();
+      nbr_list_.reset();
+      nbr_list_.resize(v_cap);
+      FILE* fin = fopen((prefix + ".snbr").c_str(), "r");
+      fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin);
+      fclose(fin);
+      for (size_t k = old_size; k != v_cap; ++k) {
+        nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
+      }
+    }
   }
 
   void dump(const std::string& name,
@@ -1299,7 +1314,7 @@ class SingleMutableCsr<std::string_view>
     nbr_list_.open(work_dir + "/" + name + ".snbr", false);
   }
 
-  void open_in_memory(const std::string& prefix) override {
+  void open_in_memory(const std::string& prefix, size_t v_cap) override {
     nbr_list_.open_in_memory(prefix + ".snbr");
   }
 
@@ -1468,7 +1483,7 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
 
-  void open_in_memory(const std::string& prefix) override {}
+  void open_in_memory(const std::string& prefix, size_t v_cap) override {}
 
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}
@@ -1531,7 +1546,7 @@ class EmptyCsr<std::string_view>
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
 
-  void open_in_memory(const std::string& prefix) override {}
+  void open_in_memory(const std::string& prefix, size_t v_cap) override {}
 
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}

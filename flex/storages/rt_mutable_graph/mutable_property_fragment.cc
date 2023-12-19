@@ -217,7 +217,8 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
           dual_csr_list_[index]->OpenInMemory(
               oe_prefix(src_label, dst_label, edge_label),
               ie_prefix(src_label, dst_label, edge_label),
-              edata_prefix(src_label, dst_label, edge_label), snapshot_dir);
+              edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
+              vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
         } else {
           dual_csr_list_[index]->Open(
               oe_prefix(src_label, dst_label, edge_label),
