@@ -762,13 +762,22 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {
     size_t vnum = adj_lists_.size();
+    bool reuse_nbr_list = true;
     mmap_array<int> degree_list;
     std::vector<int> cap_list;
     degree_list.open(new_spanshot_dir + "/" + name + ".deg", false);
     degree_list.resize(vnum);
     cap_list.resize(vnum);
     bool need_cap_list = false;
+    size_t offset = 0;
     for (size_t i = 0; i < vnum; ++i) {
+      if (adj_lists_[i].size() != 0) {
+        if (!(adj_lists_[i].data() == nbr_list_.data() + offset &&
+              offset < nbr_list_.data())) {
+          reuse_nbr_list = false;
+        }
+      }
+
       degree_list[i] = adj_lists_[i].size();
       cap_list[i] = adj_lists_[i].capacity();
       if (degree_list[i] != cap_list[i]) {
@@ -784,12 +793,19 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       fclose(fcap_out);
     }
 
-    FILE* fout = fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
-    for (size_t i = 0; i < vnum; ++i) {
-      fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].size(), fout);
+    if (reuse_nbr_list && !nbr_list_.filename().empty() &&
+        std::filesystem::exists(nbr_list_.filename())) {
+      std::filesystem::create_hard_link(nbr_list_.filename(),
+                                        new_spanshot_dir + "/" + name + ".nbr");
+    } else {
+      FILE* fout =
+          fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
+      for (size_t i = 0; i < vnum; ++i) {
+        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].size(), fout);
+      }
+      fflush(fout);
+      fclose(fout);
     }
-    fflush(fout);
-    fclose(fout);
   }
 
   void resize(vid_t vnum) override {
