@@ -773,7 +773,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     for (size_t i = 0; i < vnum; ++i) {
       if (adj_lists_[i].size() != 0) {
         if (!(adj_lists_[i].data() == nbr_list_.data() + offset &&
-              offset < nbr_list_.data())) {
+              offset < nbr_list_.size())) {
           reuse_nbr_list = false;
         }
       }
