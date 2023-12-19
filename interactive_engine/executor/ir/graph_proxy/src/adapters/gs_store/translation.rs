@@ -11,6 +11,7 @@ use ir_common::NameOrId;
 
 use crate::apis::PropKey;
 use crate::utils::expr::eval::Operand;
+use crate::utils::expr::eval_pred::UnaryPredicate;
 use crate::utils::expr::eval_pred::{PEvaluator, Predicate, Predicates};
 use crate::{GraphProxyError, GraphProxyResult};
 
@@ -69,6 +70,16 @@ impl Predicate {
     }
 }
 
+impl UnaryPredicate {
+    fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
+        let prop_id = self.operand.get_var_prop_id();
+        match prop_id {
+            Ok(prop_id) => Some(vec![prop_id]),
+            _ => None,
+        }
+    }
+}
+
 impl Predicates {
     pub(crate) fn extract_prop_ids(&self) -> Option<Vec<PropId>> {
         match self {
@@ -77,7 +88,8 @@ impl Predicates {
                 .get_var_prop_id()
                 .map(|id| Some(vec![id]))
                 .unwrap_or(None),
-            Predicates::Predicate(pred) => pred.extract_prop_ids(),
+            Predicates::Unary(upred) => upred.extract_prop_ids(),
+            Predicates::Binary(pred) => pred.extract_prop_ids(),
             Predicates::Not(pred) => pred.extract_prop_ids(),
             Predicates::And((left, right)) => {
                 let left = left.extract_prop_ids();
@@ -160,7 +172,11 @@ impl TryFrom<&Predicates> for Option<Condition> {
                 builder.and(Condition::new(pred));
                 Ok(builder.build())
             }
-            Predicates::Predicate(pred) => {
+            Predicates::Unary(upred) => Err(GraphProxyError::FilterPushDownError(format!(
+                "Haven't support Unary(Evaluator) yet {:?}",
+                upred
+            )))?,
+            Predicates::Binary(pred) => {
                 let pred: StorePredCondition = pred.try_into()?;
                 builder.and(Condition::new(pred));
                 Ok(builder.build())
@@ -255,7 +271,7 @@ mod test {
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Eq;
 
-        let pred = &Predicates::Predicate(Predicate { left, cmp, right });
+        let pred = &Predicates::Binary(Predicate { left, cmp, right });
 
         let target = ConditionBuilder::new()
             .and(Condition::Pred(StorePredCondition::new_predicate(
@@ -273,7 +289,7 @@ mod test {
         let right = Operand::Const(Object::String("hello world".to_owned()));
         let cmp = common_pb::Logical::Startswith;
 
-        let pred = &Predicates::Predicate(Predicate { left, cmp, right });
+        let pred = &Predicates::Binary(Predicate { left, cmp, right });
 
         let target = ConditionBuilder::new()
             .and(Condition::Pred(StorePredCondition::new_predicate(
@@ -307,13 +323,13 @@ mod test {
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Ge;
 
-        let pred_left = Predicates::Predicate(Predicate { left, cmp, right });
+        let pred_left = Predicates::Binary(Predicate { left, cmp, right });
 
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(20)));
         let cmp = common_pb::Logical::Le;
 
-        let pred_right = Predicates::Predicate(Predicate { left, cmp, right });
+        let pred_right = Predicates::Binary(Predicate { left, cmp, right });
 
         let pred = &Predicates::And((Box::new(pred_left), Box::new(pred_right)));
 
@@ -341,13 +357,13 @@ mod test {
         let right = Operand::Const(Object::Primitive(Primitives::Integer(10)));
         let cmp = common_pb::Logical::Ge;
 
-        let pred_left = Predicates::Predicate(Predicate { left, cmp, right });
+        let pred_left = Predicates::Binary(Predicate { left, cmp, right });
 
         let left = Operand::Var { tag: None, prop_key: Some(PropKey::Key(NameOrId::Id(1))) };
         let right = Operand::Const(Object::Primitive(Primitives::Integer(20)));
         let cmp = common_pb::Logical::Le;
 
-        let pred_right = Predicates::Predicate(Predicate { left, cmp, right });
+        let pred_right = Predicates::Binary(Predicate { left, cmp, right });
 
         let pred = &Predicates::Or((Box::new(pred_left), Box::new(pred_right)));
 
