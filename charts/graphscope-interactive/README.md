@@ -3,13 +3,16 @@
 ## QuickStart
 
 ```bash
-$ helm repo add graphscope https://graphscope.oss-cn-beijing.aliyuncs.com/charts/
-$ helm install {your-release-name} graphscope/graphscope-interactive
+$ helm install {your-release-name} .
 ```
 
 Now you can the endpoint via
 ```bash
-$ kubectl describe svc {your-release-name} -gie-standalone-frontend | grep "Endpoints:" | awk -F' ' '{print $2}'
+$ kubectl describe svc {your-release-name} -graphscope-interactive-frontend | grep "Endpoints:" | awk -F' ' '{print $2}'
+#192.168.0.44:8182
+#192.168.0.44:7687
+# the first is the gremlin endpoint(currently not supported)
+# the second is the cypher endpoint
 ```
 
 Delete the deployment via 
@@ -28,7 +31,7 @@ To offer higher throughput and query performance, we also support launching pods
 ## Customize Graph Data.
 
 By default we provide builtin `modern_graph` for `Interactive`. We also support customizing graph data by providing raw graph data via `csv` files. 
-For detail about Graph Model and DataLoading, please check []();
+For detail about Graph Model and DataLoading, please check [Interactive Data Model](https://graphscope.io/docs/latest/flex/interactive/data_model);
 
 ### Single Node
 
@@ -37,10 +40,9 @@ If you just want to deploy Interactive on a single node, then you can just put a
 Then you can create a PV on the node, via the following commands
 ```bash
 # 0. Download the template pvc configuration
-curl -O -S https://raw.githubusercontent.com/shirly121/GraphScope/add_gie_deploy/charts/gie-standalone/tools/pvc_hostpath.yaml
 
 # 1. Customize the pvc configuration
-vim pvc.yaml
+vim pvc/pvc.yaml
 #hostPath:
 #  path: {} # use the directory where your raw data exists.
 
@@ -52,22 +54,9 @@ kubectl apply -f pvc.yaml
 
 If you want to deploy Interactive on multiple nodes, then you need something like `nfs` to store you raw graph data, such that all k8s nodes can share the access to same files.
 
-```bash
-# 0. Download the template pvc configuration
-curl -O -S https://raw.githubusercontent.com/shirly121/GraphScope/add_gie_deploy/charts/gie-standalone/tools/pvc_hostpath.yaml
-
-# 1. Customize the pvc configuration
-vim pvc.yaml
-#hostPath:
-#  path: {} # path to raw data on your nfs
-
-# 2. Create the persistent volume on the single node.
-kubectl apply -f pvc_nfs.yaml
-```
+TODO
 
 ### Customize `Values.yaml`
-
-- deploy_mode: single_node or multi_node
 
 - docker artifacts
 
@@ -77,14 +66,14 @@ engine:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
-    tag: "0.20.0"
+    tag: "v0.2.4"
 
 # docker artifacts for frontend
 frontend:
   image:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
-    tag: "0.20.0"
+    tag: "v0.2.4"
 ```
 
 - pvc
@@ -112,15 +101,8 @@ frontend:
 executor:
   replicaCount: 1 # executor num
 
-# job config
-pegasusWorkerNum: 2
-pegasusTimeout: 240000
-pegasusBatchSize: 1024
-pegasusOutputCapacity: 16
+# hiactor config
+hiactorWorkerNum: 1 # currently only support 1.
+hiactorTimeout: 240000
 
-
-# data path where the inner pod read graph data from
-storeDataPath: "/tmp/data"
-# hdfs path is supported in vineyard
-# storeDataPath: "hdfs://{ip}:{port}"
 ```

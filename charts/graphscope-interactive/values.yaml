@@ -37,7 +37,7 @@ defaultGraph: modern_graph
 # htapLoaderConfig: "v6d_modern_loader.json"
 
 ## Pegasus Config
-hiactorWorkerNum: 2
+hiactorWorkerNum: 1
 
 hiactorTimeout: 240000
 
