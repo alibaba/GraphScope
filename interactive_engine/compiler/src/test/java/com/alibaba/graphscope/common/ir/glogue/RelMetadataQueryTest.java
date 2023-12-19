@@ -23,7 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuer
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.planner.GraphIOProcessor;
-import com.alibaba.graphscope.common.ir.planner.GraphOptimizer;
+import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.rules.ExtendIntersectRule;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
@@ -143,10 +143,11 @@ public class RelMetadataQueryTest {
                                 ImmutableMap.of(
                                         "graph.planner.is.on", "true",
                                         "graph.planner.opt", "CBO",
-                                        "graph.planner.rules", "ExtendIntersectRule")));
-        GraphOptimizer optimizer = new GraphOptimizer(plannerConfig);
+                                        "graph.planner.rules",
+                                                "FilterMatchRule, ExtendIntersectRule")));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(plannerConfig);
         RelOptCluster optCluster =
-                GraphOptCluster.create(optimizer.getGraphOptPlanner(), Utils.rexBuilder);
+                GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
         optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
         GraphBuilder builder =
                 (GraphBuilder)
@@ -155,8 +156,8 @@ public class RelMetadataQueryTest {
                                 new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
         RelNode node =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "Match (p1:person)-[:knows]-(p2:person)-[:knows]-(p3:person) Return"
-                                        + " p1, p2",
+                                "Match (p1:person)-[:knows]-(p2:person)-[:knows]-(p3:person) Where"
+                                        + " p1.id = 1 Return p1, p2",
                                 builder)
                         .build();
         System.out.println(node.explain());
