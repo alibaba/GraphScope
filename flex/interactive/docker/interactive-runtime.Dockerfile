@@ -19,7 +19,7 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   cargo --version
 
 # install flex
-RUN . ${HOME}/.cargo/env  && cd ${HOME} && git clone https://github.com/zhanglei1949/GraphScope.git -b helm-deploy --single-branch && cd GraphScope/flex && \
+RUN . ${HOME}/.cargo/env  && cd ${HOME} && git clone https://github.com/alibaba/GraphScope.git -b helm-deploy --single-branch && cd GraphScope/flex && \
     git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
@@ -51,7 +51,7 @@ COPY --from=builder /opt/flex /opt/flex
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
-COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
+COPY --from=builder ${HOME}/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
