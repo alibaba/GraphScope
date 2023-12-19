@@ -284,6 +284,23 @@ public class FfiLogicalPlanTest {
         }
     }
 
+    @Test
+    public void logical_plan_9_test() throws Exception {
+        RelNode node =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a) Return count(distinct a.name, a.age)")
+                        .build();
+        System.out.println(node.getRowType());
+        try (PhysicalBuilder ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
+            PhysicalPlan physicalPlan = ffiBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("ffi_logical_plan_9.json"),
+                    physicalPlan.explain());
+        }
+    }
+
     private Configs getMockGraphConfig() {
         return new Configs(ImmutableMap.of("servers", "1", "workers", "1"));
     }
