@@ -20,7 +20,7 @@ import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.manager.RateLimitExecutor;
@@ -48,7 +48,7 @@ import java.util.concurrent.*;
 
 public class IrGremlinServer implements AutoCloseable {
     private final Configs configs;
-    private final GraphPlanner graphPlanner;
+    private final QueryCache queryCache;
     private final ExecutionClient executionClient;
     private final ChannelFetcher channelFetcher;
     private final IrMetaQueryCallback metaQueryCallback;
@@ -64,14 +64,14 @@ public class IrGremlinServer implements AutoCloseable {
     public IrGremlinServer(
             Configs configs,
             QueryIdGenerator idGenerator,
-            GraphPlanner graphPlanner,
+            QueryCache queryCache,
             ExecutionClient executionClient,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
         this.configs = configs;
         this.idGenerator = idGenerator;
-        this.graphPlanner = graphPlanner;
+        this.queryCache = queryCache;
         this.executionClient = executionClient;
         this.channelFetcher = channelFetcher;
         this.metaQueryCallback = metaQueryCallback;
@@ -94,7 +94,7 @@ public class IrGremlinServer implements AutoCloseable {
                 new IrStandardOpProcessor(
                         configs,
                         idGenerator,
-                        graphPlanner,
+                        queryCache,
                         executionClient,
                         channelFetcher,
                         metaQueryCallback,
@@ -105,7 +105,7 @@ public class IrGremlinServer implements AutoCloseable {
                 new IrTestOpProcessor(
                         configs,
                         idGenerator,
-                        graphPlanner,
+                        queryCache,
                         executionClient,
                         channelFetcher,
                         metaQueryCallback,

@@ -84,11 +84,12 @@ public class GraphServer {
                                             new GraphBuilderVisitor(builder)
                                                     .visit(new GremlinAntlr4Parser().parse(query))
                                                     .build()));
+            QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.gremlinServer =
                     new IrGremlinServer(
                             configs,
                             idGenerator,
-                            graphPlanner,
+                            queryCache,
                             executionClient,
                             channelFetcher,
                             metaQueryCallback,

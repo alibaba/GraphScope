@@ -19,13 +19,16 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.resultx.GremlinTestRecordParser;
 import com.alibaba.graphscope.gremlin.integration.resultx.GremlinTestResultProcessor;
@@ -68,7 +71,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
     public IrTestOpProcessor(
             Configs configs,
             QueryIdGenerator idGenerator,
-            GraphPlanner graphPlanner,
+            QueryCache queryCache,
             ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
@@ -78,7 +81,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
         super(
                 configs,
                 idGenerator,
-                graphPlanner,
+                queryCache,
                 executionClient,
                 fetcher,
                 metaQueryCallback,
@@ -135,26 +138,35 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             statusCallback.getQueryLogger());
                                     break;
                                 case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
-                                    GraphPlanner.Summary summary =
-                                            this.graphPlanner.instance(script, irMeta).plan();
+                                    QueryCache.Value value =
+                                            queryCache.get(queryCache.createKey(script, irMeta));
+                                    GraphPlanner.Summary summary = value.summary;
                                     ResultSchema resultSchema =
                                             new ResultSchema(summary.getLogicalPlan());
-                                    this.executionClient.submit(
-                                            new ExecutionRequest(
-                                                    queryId,
-                                                    queryName,
-                                                    summary.getLogicalPlan(),
-                                                    summary.getPhysicalPlan()),
+                                    ExecutionResponseListener listener =
                                             new GremlinTestResultProcessor(
                                                     ctx,
                                                     statusCallback,
                                                     new GremlinTestRecordParser(
                                                             resultSchema,
                                                             testGraph.getProperties(configs)),
-                                                    resultSchema),
-                                            new QueryTimeoutConfig(
-                                                    FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(
-                                                            configs)));
+                                                    resultSchema);
+                                    if (value.result != null && value.result.isCompleted) {
+                                        List<IrResult.Results> records = value.result.records;
+                                        records.forEach(k -> listener.onNext(k.getRecord()));
+                                        listener.onCompleted();
+                                    } else {
+                                        executionClient.submit(
+                                                new ExecutionRequest(
+                                                        queryId,
+                                                        queryName,
+                                                        summary.getLogicalPlan(),
+                                                        summary.getPhysicalPlan()),
+                                                listener,
+                                                new QueryTimeoutConfig(
+                                                        FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS
+                                                                .get(configs)));
+                                    }
                                     break;
                                 default:
                                     throw new IllegalArgumentException(

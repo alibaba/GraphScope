@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.plugin.script;
 
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.store.IrMeta;
 
 import org.apache.tinkerpop.gremlin.jsr223.AbstractGremlinScriptEngineFactory;
@@ -28,6 +28,7 @@ import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import java.io.Reader;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.script.AbstractScriptEngine;
 import javax.script.Bindings;
@@ -64,10 +65,15 @@ public class GremlinCalciteScriptEngineFactory extends AbstractGremlinScriptEngi
 
         @Override
         public Object eval(String script, ScriptContext ctx) throws ScriptException {
-            Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
-            GraphPlanner planner = (GraphPlanner) globalBindings.get("graph.planner");
-            IrMeta irMeta = (IrMeta) globalBindings.get("graph.meta");
-            return planner.instance(script, irMeta).plan();
+            try {
+                Bindings globalBindings = ctx.getBindings(ScriptContext.ENGINE_SCOPE);
+                QueryCache queryCache = (QueryCache) globalBindings.get("graph.query.cache");
+                IrMeta irMeta = (IrMeta) globalBindings.get("graph.meta");
+                QueryCache.Key cacheKey = queryCache.createKey(script, irMeta);
+                return queryCache.get(cacheKey);
+            } catch (ExecutionException e) {
+                return new RuntimeException(e);
+            }
         }
 
         @Override

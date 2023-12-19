@@ -33,7 +33,7 @@ import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -90,23 +90,23 @@ import java.util.function.Supplier;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    protected Graph graph;
-    protected GraphTraversalSource g;
-    protected Configs configs;
+    protected final Graph graph;
+    protected final GraphTraversalSource g;
+    protected final Configs configs;
     /**
      * todo: replace with {@link com.alibaba.graphscope.common.client.ExecutionClient} after unifying Gremlin into the Calcite stack
      */
-    protected RpcClient rpcClient;
+    protected final RpcClient rpcClient;
 
-    protected IrMetaQueryCallback metaQueryCallback;
+    protected final IrMetaQueryCallback metaQueryCallback;
     protected final QueryIdGenerator idGenerator;
-    protected final GraphPlanner graphPlanner;
+    protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
 
     public IrStandardOpProcessor(
             Configs configs,
             QueryIdGenerator idGenerator,
-            GraphPlanner graphPlanner,
+            QueryCache queryCache,
             ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
@@ -118,7 +118,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.rpcClient = new RpcClient(fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
         this.idGenerator = idGenerator;
-        this.graphPlanner = graphPlanner;
+        this.queryCache = queryCache;
         this.executionClient = executionClient;
     }
 
@@ -158,7 +158,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 lifeCycle =
                         new LifeCycleSupplier(
                                         ctx,
-                                        graphPlanner,
+                                        queryCache,
                                         executionClient,
                                         jobId,
                                         jobName,

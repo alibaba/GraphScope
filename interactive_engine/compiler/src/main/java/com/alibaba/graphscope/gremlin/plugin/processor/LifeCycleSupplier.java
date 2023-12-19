@@ -18,9 +18,12 @@ package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
 import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.resultx.GremlinRecordParser;
 import com.alibaba.graphscope.gremlin.resultx.GremlinResultProcessor;
@@ -30,10 +33,11 @@ import com.google.common.base.Preconditions;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.server.Context;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
-    private final GraphPlanner planner;
+    private final QueryCache queryCache;
     private final ExecutionClient client;
     private final Context ctx;
     private final long queryId;
@@ -43,14 +47,14 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
 
     public LifeCycleSupplier(
             Context ctx,
-            GraphPlanner planner,
+            QueryCache queryCache,
             ExecutionClient client,
             long queryId,
             String queryName,
             IrMeta meta,
             QueryStatusCallback statusCallback) {
         this.ctx = ctx;
-        this.planner = planner;
+        this.queryCache = queryCache;
         this.client = client;
         this.queryId = queryId;
         this.queryName = queryName;
@@ -65,36 +69,45 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                 .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
                 .beforeEval(
                         b -> {
-                            b.put("graph.planner", planner);
+                            b.put("graph.query.cache", queryCache);
                             b.put("graph.meta", meta);
                         })
                 .withResult(
                         o -> {
                             try {
                                 Preconditions.checkArgument(
-                                        o instanceof GraphPlanner.Summary,
+                                        o instanceof QueryCache.Value,
                                         "input of 'withResult' is invalid, expect type=%s, actual"
                                                 + " type=%s",
-                                        GraphPlanner.Summary.class,
+                                        QueryCache.Value.class,
                                         o.getClass());
-                                GraphPlanner.Summary summary = (GraphPlanner.Summary) o;
+                                QueryCache.Value value = (QueryCache.Value) o;
+                                GraphPlanner.Summary summary = value.summary;
                                 statusCallback
                                         .getQueryLogger()
                                         .info("ir plan {}", summary.getPhysicalPlan().explain());
                                 ResultSchema resultSchema =
                                         new ResultSchema(summary.getLogicalPlan());
-                                this.client.submit(
-                                        new ExecutionRequest(
-                                                queryId,
-                                                queryName,
-                                                summary.getLogicalPlan(),
-                                                summary.getPhysicalPlan()),
+                                ExecutionResponseListener listener =
                                         new GremlinResultProcessor(
                                                 ctx,
                                                 statusCallback,
                                                 new GremlinRecordParser(resultSchema),
-                                                resultSchema),
-                                        timeoutConfig);
+                                                resultSchema);
+                                if (value.result != null && value.result.isCompleted) {
+                                    List<IrResult.Results> records = value.result.records;
+                                    records.forEach(k -> listener.onNext(k.getRecord()));
+                                    listener.onCompleted();
+                                } else {
+                                    this.client.submit(
+                                            new ExecutionRequest(
+                                                    queryId,
+                                                    queryName,
+                                                    summary.getLogicalPlan(),
+                                                    summary.getPhysicalPlan()),
+                                            listener,
+                                            timeoutConfig);
+                                }
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }
