@@ -1,4 +1,4 @@
-# Default values for graphscope-store.
+# Default values for graphscope-interactive.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -30,20 +30,11 @@ workspace: "/tmp/interactive_workspace"
 ## default graph
 defaultGraph: modern_graph
 
-## schema needed by compiler when using experimental store
-# schemaConfig: "expr_modern_schema.json"
 
-## mappings from csv to data type in vineyard store
-# htapLoaderConfig: "v6d_modern_loader.json"
-
-## Pegasus Config
 hiactorWorkerNum: 1
 
 hiactorTimeout: 240000
 
-#pegasusBatchSize: 1024
-
-#pegasusOutputCapacity: 16
 
 # ## need by vineyard in distributed env
 # etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
@@ -116,29 +107,29 @@ engine:
   # Number of thread each worker will use
   threadNumPerWorker: 1
 
-  ## updateStrategy for GraphScope Store statefulset
+  ## updateStrategy for GraphScope Interactive statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
   ##
   updateStrategy: RollingUpdate
 
-  ## GraphScope Store pod annotations
+  ## GraphScope Interactive pod annotations
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
   podAnnotations: {}
 
-  ## GraphScope Store pod affinity preset
+  ## GraphScope Interactive pod affinity preset
   ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
   ## Allowed values: soft, hard
   ##
   podAffinityPreset: ""
 
-  ## GraphScope Store pod anti-affinity preset
+  ## GraphScope Interactive pod anti-affinity preset
   ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
   ## Allowed values: soft, hard
   ##
   podAntiAffinityPreset: soft
 
-  ## Affinity for Graphscope store pods assignment
+  ## Affinity for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
@@ -152,31 +143,31 @@ engine:
   #           values:
   #           - interactive_single_node
 
-  ## Node labels for GraphScope store pods assignment
+  ## Node labels for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
   nodeSelector: {}
 
-  ## Tolerations for GraphScope store pods assignment
+  ## Tolerations for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
   tolerations: []
 
-  ## GraphScope store Pod security context
+  ## GraphScope Interactive Pod security context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
   ##
   podSecurityContext:
     enabled: false
     fsGroup: 1001
 
-  ## GraphScope store container security context
+  ## GraphScope Interactive container security context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
   ##
   containerSecurityContext:
     enabled: false
     runAsUser: 1001
 
-  ## GraphScope store container's resource requests and limits
+  ## GraphScope Interactive container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
   resources: {}
@@ -191,7 +182,7 @@ engine:
     #   cpu: 100m
     #   memory: 128Mi
 
-  ## GraphScope store container's liveness and readiness probes
+  ## GraphScope Interactive container's liveness and readiness probes
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
   livenessProbe:
@@ -216,7 +207,7 @@ engine:
     ## If true, use a Persistent Volume Claim, If false, use emptyDir
     ##
     enabled: true
-    ## Name of existing PVC to hold GraphScope store data
+    ## Name of existing PVC to hold GraphScope Interactive data
     ## NOTE: When it's set the rest of persistence parameters are ignored
     ##
     existingClaim: "graphscope-interactive-pvc"
@@ -293,7 +284,7 @@ engine:
     ##
     annotations: {}
 
-  ## GraphScope store Pod Disruption Budget configuration
+  ## GraphScope Interactive Pod Disruption Budget configuration
   ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   ##
   pdb:
@@ -305,7 +296,7 @@ engine:
     ##
     # maxUnavailable: 1
 
-  ## GraphScope store pod label. If labels are same as commonLabels , this will take precedence.
+  ## GraphScope Interactive pod label. If labels are same as commonLabels , this will take precedence.
   ##
   podLabels: {}
 
@@ -332,29 +323,29 @@ frontend:
 
   replicaCount: 1
 
-  ## updateStrategy for GraphScope Store statefulset
+  ## updateStrategy for GraphScope Interactive statefulset
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
   ##
   updateStrategy: RollingUpdate
 
-  ## GraphScope Store pod annotations
+  ## GraphScope Interactive pod annotations
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
   ##
   podAnnotations: {}
 
-  ## GraphScope Store pod affinity preset
+  ## GraphScope Interactive pod affinity preset
   ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
   ## Allowed values: soft, hard
   ##
   podAffinityPreset: ""
 
-  ## GraphScope Store pod anti-affinity preset
+  ## GraphScope Interactive pod anti-affinity preset
   ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
   ## Allowed values: soft, hard
   ##
   podAntiAffinityPreset: soft
 
-  ## Affinity for Graphscope store pods assignment
+  ## Affinity for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
@@ -369,17 +360,17 @@ frontend:
   #           values:
   #           - interactive_single_node
 
-  ## Node labels for GraphScope store pods assignment
+  ## Node labels for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/user-guide/node-selection/
   ##
   nodeSelector: {}
 
-  ## Tolerations for GraphScope store pods assignment
+  ## Tolerations for GraphScope Interactive pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
   ##
   tolerations: []
 
-  ## GraphScope store container's resource requests and limits
+  ## GraphScope Interactive container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
   resources: {}
@@ -394,7 +385,7 @@ frontend:
     #   cpu: 100m
     #   memory: 128Mi
 
-  ## GraphScope store container's liveness and readiness probes
+  ## GraphScope Interactive container's liveness and readiness probes
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ##
   livenessProbe:
@@ -464,7 +455,7 @@ frontend:
     ##
     annotations: {}
 
-  ## GraphScope store Pod Disruption Budget configuration
+  ## GraphScope Interactive Pod Disruption Budget configuration
   ## ref: https://kubernetes.io/docs/tasks/run-application/configure-pdb/
   ##
   pdb:
@@ -476,7 +467,7 @@ frontend:
     ##
     # maxUnavailable: 1
 
-  ## GraphScope store pod label. If labels are same as commonLabels , this will take precedence.
+  ## GraphScope Interactive pod label. If labels are same as commonLabels , this will take precedence.
   ##
   podLabels: {}
 
