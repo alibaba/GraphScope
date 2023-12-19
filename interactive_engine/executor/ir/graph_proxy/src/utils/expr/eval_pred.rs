@@ -80,10 +80,10 @@ impl Partial {
         }
     }
 
-    pub fn cmp(&mut self, logical: common_pb::Logical, is_binary: bool) -> ExprResult<()> {
+    pub fn cmp(&mut self, logical: common_pb::Logical) -> ExprResult<()> {
         match self {
-            Partial::SingleItem { left, cmp, right: _ } => {
-                if is_binary && left.is_none() || cmp.is_some() {
+            Partial::SingleItem { left: _, cmp, right: _ } => {
+                if cmp.is_some() {
                     Err(ExprError::OtherErr(format!("invalid predicate: {:?}, {:?}", self, logical)))
                 } else {
                     *cmp = Some(logical);
@@ -123,9 +123,11 @@ impl Partial {
     }
 }
 
-impl From<Partial> for Option<Predicates> {
-    fn from(partial: Partial) -> Option<Predicates> {
-        match partial {
+impl TryFrom<Partial> for Predicates {
+    type Error = ParsePbError;
+    fn try_from(partial: Partial) -> Result<Self, Self::Error> {
+        let partical_old = partial.clone();
+        let predicate = match partial {
             Partial::SingleItem { left, cmp, right } => {
                 if left.is_none() {
                     None
@@ -134,18 +136,30 @@ impl From<Partial> for Option<Predicates> {
                     Some(Predicates::SingleItem(left.unwrap()))
                 } else if right.is_none() {
                     // the case of unary operator
-                    Some(Predicates::Unary(UnaryPredicate { operand: left.unwrap(), cmp: cmp.unwrap() }))
+                    if !cmp.unwrap().is_unary() {
+                        None
+                    } else {
+                        Some(Predicates::Unary(UnaryPredicate {
+                            operand: left.unwrap(),
+                            cmp: cmp.unwrap(),
+                        }))
+                    }
                 } else {
                     // the case of binary operator
-                    Some(Predicates::Binary(Predicate {
-                        left: left.unwrap(),
-                        cmp: cmp.unwrap(),
-                        right: right.unwrap(),
-                    }))
+                    if !cmp.unwrap().is_binary() {
+                        None
+                    } else {
+                        Some(Predicates::Binary(Predicate {
+                            left: left.unwrap(),
+                            cmp: cmp.unwrap(),
+                            right: right.unwrap(),
+                        }))
+                    }
                 }
             }
             Partial::Predicates(pred) => Some(pred),
-        }
+        };
+        predicate.ok_or_else(|| ParsePbError::ParseError(format!("invalid predicate: {:?}", partical_old)))
     }
 }
 
@@ -186,12 +200,11 @@ impl TryFrom<pb::index_predicate::Triplet> for Predicates {
                 .key
                 .map(|var| var.try_into())
                 .transpose()?,
-            cmp: Some(common_pb::Logical::Eq),
+            cmp: Some(unsafe { std::mem::transmute(triplet.cmp) }),
             right: value.map(|val| val.try_into()).transpose()?,
         };
 
-        Option::<Predicates>::from(partial)
-            .ok_or_else(|| (ParsePbError::ParseError("invalid `Triplet` in `IndexPredicate`".to_string())))
+        partial.try_into()
     }
 }
 
@@ -425,22 +438,18 @@ impl Predicates {
         self, curr_cmp: Option<common_pb::Logical>, partial: Partial, is_not: bool,
     ) -> ExprResult<Predicates> {
         use common_pb::Logical;
-        let old_partial = partial.clone();
-        if let Some(mut new_pred) = Option::<Predicates>::from(partial) {
-            if is_not {
-                new_pred = new_pred.not()
-            };
-            if let Some(cmp) = curr_cmp {
-                match cmp {
-                    Logical::And => Ok(self.and(new_pred)),
-                    Logical::Or => Ok(self.or(new_pred)),
-                    _ => unreachable!(),
-                }
-            } else {
-                Ok(new_pred)
+        let mut new_pred = Predicates::try_from(partial)?;
+        if is_not {
+            new_pred = new_pred.not()
+        };
+        if let Some(cmp) = curr_cmp {
+            match cmp {
+                Logical::And => Ok(self.and(new_pred)),
+                Logical::Or => Ok(self.or(new_pred)),
+                _ => unreachable!(),
             }
         } else {
-            Err(ExprError::OtherErr(format!("invalid predicate: {:?}", old_partial)))
+            Ok(new_pred)
         }
     }
 }
@@ -475,8 +484,8 @@ fn process_predicates(
                             | Logical::Without
                             | Logical::Startswith
                             | Logical::Endswith
-                            | Logical::Regex => partial.cmp(logical, true)?,
-                            Logical::Isnull => partial.cmp(logical, false)?,
+                            | Logical::Regex
+                            | Logical::Isnull => partial.cmp(logical)?,
                             Logical::Not => is_not = true,
                             Logical::And | Logical::Or => {
                                 predicates = predicates.merge_partial(curr_cmp, partial, is_not)?;
