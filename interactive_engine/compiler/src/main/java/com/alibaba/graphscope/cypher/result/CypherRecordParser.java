@@ -44,6 +44,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class CypherRecordParser implements RecordParser<AnyValue> {
@@ -427,9 +428,12 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     }
 
     private RelDataType getEdgeType(RelDataType graphPathType) {
-        return (graphPathType instanceof GraphPathType)
-                ? ((GraphPathType) graphPathType).getComponentType().getExpandType()
-                : graphPathType;
+        if (graphPathType instanceof GraphPathType) {
+            return Objects.requireNonNull(
+                    ((GraphPathType) graphPathType).getComponentType().getExpandType(),
+                    "cannot get expand type from graph path " + graphPathType);
+        }
+        return graphPathType;
     }
 
     private String parseLabelValue(Common.Value value, GraphLabelType type) {
