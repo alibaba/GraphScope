@@ -968,8 +968,7 @@ impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::
 impl common_pb::Logical {
     pub fn is_unary(&self) -> bool {
         match self {
-            common_pb::Logical::Not => true,
-            &common_pb::Logical::Isnull => true,
+            common_pb::Logical::Not | common_pb::Logical::Isnull => true,
             _ => false,
         }
     }
