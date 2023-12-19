@@ -1,6 +1,6 @@
 package com.alibaba.graphscope.common.ir.planner.rules;
 
-import com.alibaba.graphscope.common.ir.rel.PushFilterShuttle;
+import com.alibaba.graphscope.common.ir.rel.PushFilterVisitor;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 
@@ -33,9 +33,9 @@ public class FilterMatchRule<C extends FilterMatchRule.Config> extends RelRule<C
         GraphBuilder graphBuilder = (GraphBuilder) call.builder();
         for (Iterator<RexNode> it = conjunctions.iterator(); it.hasNext(); ) {
             RexNode condition = it.next();
-            PushFilterShuttle shuttle = new PushFilterShuttle(graphBuilder, condition);
-            match = (AbstractLogicalMatch) match.accept(shuttle);
-            if (shuttle.isPushed()) {
+            PushFilterVisitor visitor = new PushFilterVisitor(graphBuilder, condition);
+            match = (AbstractLogicalMatch) match.accept(visitor);
+            if (visitor.isPushed()) {
                 it.remove();
             }
         }

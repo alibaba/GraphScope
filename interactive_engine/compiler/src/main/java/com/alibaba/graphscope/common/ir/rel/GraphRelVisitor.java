@@ -16,23 +16,27 @@
 
 package com.alibaba.graphscope.common.ir.rel;
 
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 
-public abstract class GraphShuttle extends RelShuttleImpl {
+/**
+ * the class is used to visit a graph relation tree
+ */
+public abstract class GraphRelVisitor extends RelShuttleImpl {
     public RelNode visit(GraphLogicalSource source) {
         return source;
     }
 
     public RelNode visit(GraphLogicalExpand expand) {
         return visitChildren(expand);
+    }
+
+    public RelNode visit(GraphLogicalExpandDegree degree) {
+        return visitChildren(degree);
     }
 
     public RelNode visit(GraphLogicalGetV getV) {
@@ -49,5 +53,17 @@ public abstract class GraphShuttle extends RelShuttleImpl {
 
     public RelNode visit(GraphLogicalMultiMatch match) {
         return match;
+    }
+
+    public RelNode visit(GraphLogicalAggregate aggregate) {
+        return visitChildren(aggregate);
+    }
+
+    public RelNode visit(GraphLogicalProject project) {
+        return visitChildren(project);
+    }
+
+    public RelNode visit(GraphLogicalSort sort) {
+        return visitChildren(sort);
     }
 }

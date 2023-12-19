@@ -23,7 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
-import com.alibaba.graphscope.common.ir.rel.PushFilterShuttle;
+import com.alibaba.graphscope.common.ir.rel.PushFilterVisitor;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
@@ -873,6 +873,14 @@ public class GraphBuilder extends RelBuilder {
         return tableScan;
     }
 
+    /**
+     * fuse label filters into the {@code match} if possible
+     * @param match
+     * @param condition
+     * @param extraFilters
+     * @param builder
+     * @return
+     */
     private AbstractLogicalMatch fuseFilters(
             AbstractLogicalMatch match,
             RexNode condition,
@@ -887,9 +895,9 @@ public class GraphBuilder extends RelBuilder {
             }
         }
         for (RexNode labelFilter : labelFilters) {
-            PushFilterShuttle shuttle = new PushFilterShuttle(builder, labelFilter);
-            match = (AbstractLogicalMatch) match.accept(shuttle);
-            if (!shuttle.isPushed()) {
+            PushFilterVisitor visitor = new PushFilterVisitor(builder, labelFilter);
+            match = (AbstractLogicalMatch) match.accept(visitor);
+            if (!visitor.isPushed()) {
                 extraFilters.add(labelFilter);
             }
         }

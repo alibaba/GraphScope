@@ -34,13 +34,16 @@ import org.apache.calcite.rex.RexNode;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PushFilterShuttle extends GraphShuttle {
+/**
+ * visit a graph relation tree and push filter to the corresponding source
+ */
+public class PushFilterVisitor extends GraphRelVisitor {
     private final GraphBuilder builder;
     private final RexNode condition;
     private final List<Integer> distinctAliasIds;
     private boolean pushed;
 
-    public PushFilterShuttle(GraphBuilder builder, RexNode condition) {
+    public PushFilterVisitor(GraphBuilder builder, RexNode condition) {
         this.builder = builder;
         this.condition = condition;
         this.distinctAliasIds =

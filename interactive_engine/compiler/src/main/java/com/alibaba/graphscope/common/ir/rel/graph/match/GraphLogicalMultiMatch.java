@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph.match;
 
-import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 
@@ -95,8 +95,8 @@ public class GraphLogicalMultiMatch extends AbstractLogicalMatch {
 
     @Override
     public RelNode accept(RelShuttle shuttle) {
-        if (shuttle instanceof GraphShuttle) {
-            return ((GraphShuttle) shuttle).visit(this);
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
         }
         return shuttle.visit(this);
     }
