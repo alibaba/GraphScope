@@ -99,7 +99,6 @@ public class RpcClient {
 
         @Override
         public void onCompleted() {
-            logger.info("finish get job response from one server");
             if (counter.decrementAndGet() == 0) {
                 logger.info("finish get job response from all servers");
                 processor.finish();

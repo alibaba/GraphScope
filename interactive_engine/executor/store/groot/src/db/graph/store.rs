@@ -75,8 +75,8 @@ impl MultiVersionGraph for GraphStore {
         &self, si: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::V>> {
-        debug!("get_vertex {:?}, {:?}, {:?}", vertex_id, label_id, property_ids);
         if let Some(label_id) = label_id {
+        debug!("get_vertex {:?}, {:?}, {:?}", vertex_id, label_id, property_ids);
             self.get_vertex_from_label(si, vertex_id, label_id, property_ids)
         } else {
             let guard = epoch::pin();
@@ -646,6 +646,14 @@ impl GraphStore {
                     Self::init(config, storage, path)
                 });
                 res_unwrap!(res, open, config, path)
+            },
+            "rocksdb_as_secondary" => {
+                let secondary_path = config.get_storage_option("store.data.secondary.path").expect("invalid config, missing store.data.secondary.path");
+                let res = RocksDB::open_as_secondary(config.get_storage_options(), path, secondary_path).and_then(|db| {
+                    let storage = Arc::new(db);
+                    Self::init(config, storage, path)
+                });
+                res_unwrap!(res, open, config, path)
             }
             unknown => {
                 let msg = format!("unknown storage {}", unknown);
@@ -653,6 +661,10 @@ impl GraphStore {
                 Err(err)
             }
         }
+    }
+
+    pub fn try_catch_up_with_primary(&self) -> GraphResult<()> {
+        self.storage.try_catch_up_with_primary()
     }
 
     fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>, path: &str) -> GraphResult<Self> {

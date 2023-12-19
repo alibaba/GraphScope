@@ -55,6 +55,7 @@ impl<T: 'static> ResultSink<T> {
                     info_worker!("Job is canceled");
                     let msg = "Job is canceled".to_string();
                     let err = JobExecError::from(msg);
+                    warn_worker!("Job is canceled");
                     tx.on_error(Box::new(err));
                 }
                 _ => (),

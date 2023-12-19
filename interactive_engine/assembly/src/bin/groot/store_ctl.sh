@@ -100,7 +100,7 @@ start_server() {
             -XX:+UseGCLogFileRotation
             -XX:NumberOfGCLogFiles=4
             -XX:GCLogFileSize=64m"
-
+	export RUST_BACKTRACE=full
 	java ${java_opt} \
 		-Dlogback.configurationFile="${GROOT_LOGBACK_FILE}" \
 		-Dconfig.file="${GROOT_CONF_FILE}" \
