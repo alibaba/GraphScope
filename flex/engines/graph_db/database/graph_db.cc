@@ -23,13 +23,12 @@
 namespace gs {
 
 struct SessionLocalContext {
-  SessionLocalContext(GraphDB& db, const std::string& work_dir, int thread_id)
-      :
-#ifdef USE_MMAPALLOC
-        allocator(thread_local_allocator_prefix(work_dir, thread_id)),
-#endif
-        session(db, allocator, logger, work_dir, thread_id) {
-  }
+  SessionLocalContext(GraphDB& db, const std::string& work_dir, int thread_id,
+                      bool memory_only)
+      : allocator(memory_only
+                      ? ""
+                      : thread_local_allocator_prefix(work_dir, thread_id)),
+        session(db, allocator, logger, work_dir, thread_id) {}
   ~SessionLocalContext() { logger.close(); }
   Allocator allocator;
   char _padding0[128 - sizeof(Allocator) % 128];
@@ -98,7 +97,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
             });
   mutable_schema.EmplacePlugins(plugin_paths);
 
-  openWalAndCreateContexts(data_dir);
+  openWalAndCreateContexts(data_dir, memory_only);
 
   if ((!create_empty_graph) && warmup) {
     graph_.Warmup(thread_num_);
@@ -269,7 +268,8 @@ void GraphDB::initApps(
             << ", from " << plugins.size();
 }
 
-void GraphDB::openWalAndCreateContexts(const std::string& data_dir) {
+void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
+                                       bool memory_only) {
   std::string wal_dir_path = wal_dir(data_dir);
   if (!std::filesystem::exists(wal_dir_path)) {
     std::filesystem::create_directory(wal_dir_path);
@@ -284,7 +284,7 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir) {
       aligned_alloc(4096, sizeof(SessionLocalContext) * thread_num_));
   std::filesystem::create_directories(allocator_dir(data_dir));
   for (int i = 0; i < thread_num_; ++i) {
-    new (&contexts_[i]) SessionLocalContext(*this, data_dir, i);
+    new (&contexts_[i]) SessionLocalContext(*this, data_dir, i, memory_only);
   }
   ingestWals(wal_files, data_dir, thread_num_);
 
