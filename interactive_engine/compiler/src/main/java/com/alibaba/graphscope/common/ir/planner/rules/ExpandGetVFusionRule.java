@@ -18,9 +18,11 @@ package com.alibaba.graphscope.common.ir.planner.rules;
 
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpandGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
-import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -29,99 +31,227 @@ import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.rules.TransformationRule;
 import org.apache.calcite.tools.RelBuilderFactory;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ExpandGetVFusionRule<C extends ExpandGetVFusionRule.Config> extends RelRule<C>
+// This rule try to fuse GraphLogicalExpand and GraphLogicalGetV if GraphLogicalExpand has no alias
+// (that it won't be visited individually later):
+// 1. if GraphLogicalGetV has no filters, then:
+//      GraphLogicalExpand + GraphLogicalGetV -> GraphPhysicalExpand(ExpandV)
+// 2. if GraphLogicalGetV has filters, then:
+//      GraphLogicalExpand + GraphLogicalGetV -> GraphPhysicalExpand(ExpandV)  +
+// GraphPhysicalGetV(VertexFilter)
+public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends RelRule<C>
         implements TransformationRule {
 
     protected ExpandGetVFusionRule(C config) {
         super(config);
     }
 
-    protected RelNode transform(
-            GraphLogicalGetV getV, GraphLogicalExpand expand, GraphBuilder builder) {
-        RelNode expandGetV =
-                GraphPhysicalExpandGetV.create(
-                        (GraphOptCluster) expand.getCluster(),
-                        ImmutableList.of(),
-                        expand.getInput(0),
-                        expand,
-                        getV,
-                        getV.getAliasName());
-
-        return expandGetV;
+    protected RelNode transform(GraphLogicalGetV getV, GraphLogicalExpand expand, RelNode input) {
+        if (ObjectUtils.isEmpty(getV.getFilters())) {
+            return GraphPhysicalExpand.create(
+                    input, expand, getV, getV.getAliasName(), GraphOpt.PhysicalExpandOpt.VERTEX);
+        } else {
+            GraphPhysicalExpand physicalExpand =
+                    GraphPhysicalExpand.create(
+                            input,
+                            expand,
+                            getV,
+                            expand.getAliasName(),
+                            GraphOpt.PhysicalExpandOpt.VERTEX);
+            GraphPhysicalGetV physicalGetV =
+                    GraphPhysicalGetV.create(physicalExpand, getV, GraphOpt.PhysicalGetVOpt.ITSELF);
+            return physicalGetV;
+        }
     }
 
-    @Override
-    public void onMatch(RelOptRuleCall call) {
-        GraphLogicalGetV getV = call.rel(0);
-        GraphLogicalExpand expand = call.rel(1);
-        GraphBuilder builder = (GraphBuilder) call.builder();
-        call.transformTo(transform(getV, expand, builder));
+    // transform expande + getv to GraphPhysicalExpandGetV
+    public static class BasicExpandGetVFusionRule
+            extends ExpandGetVFusionRule<BasicExpandGetVFusionRule.Config> {
+        protected BasicExpandGetVFusionRule(Config config) {
+            super(config);
+        }
+
+        @Override
+        public void onMatch(RelOptRuleCall call) {
+            GraphLogicalGetV getV = call.rel(0);
+            GraphLogicalExpand expand = call.rel(1);
+            call.transformTo(transform(getV, expand, expand.getInput(0)));
+        }
+
+        public static class Config implements RelRule.Config {
+            public static BasicExpandGetVFusionRule.Config DEFAULT =
+                    new Config()
+                            .withOperandSupplier(
+                                    b0 ->
+                                            b0.operand(GraphLogicalGetV.class)
+                                                    .oneInput(
+                                                            b1 ->
+                                                                    b1.operand(
+                                                                                    GraphLogicalExpand
+                                                                                            .class)
+                                                                            .predicate(
+                                                                                    (GraphLogicalExpand
+                                                                                                    expand) -> {
+                                                                                        int alias =
+                                                                                                expand
+                                                                                                        .getAliasId();
+                                                                                        return alias
+                                                                                                == AliasInference
+                                                                                                        .DEFAULT_ID;
+                                                                                    })
+                                                                            .anyInputs()));
+
+            private RelRule.OperandTransform operandSupplier;
+            private @Nullable String description;
+            private RelBuilderFactory builderFactory;
+
+            @Override
+            public RelRule toRule() {
+                return new BasicExpandGetVFusionRule(this);
+            }
+
+            @Override
+            public Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
+                this.builderFactory = relBuilderFactory;
+                return this;
+            }
+
+            @Override
+            public Config withDescription(
+                    @org.checkerframework.checker.nullness.qual.Nullable String s) {
+                this.description = s;
+                return this;
+            }
+
+            @Override
+            public Config withOperandSupplier(OperandTransform operandTransform) {
+                this.operandSupplier = operandTransform;
+                return this;
+            }
+
+            @Override
+            public OperandTransform operandSupplier() {
+                return this.operandSupplier;
+            }
+
+            @Override
+            public @org.checkerframework.checker.nullness.qual.Nullable String description() {
+                return this.description;
+            }
+
+            @Override
+            public RelBuilderFactory relBuilderFactory() {
+                return this.builderFactory;
+            }
+        }
     }
 
-    public static class Config implements RelRule.Config {
-        public static ExpandGetVFusionRule.Config DEFAULT =
-                new Config()
-                        .withOperandSupplier(
-                                b0 ->
-                                        b0.operand(GraphLogicalGetV.class)
-                                                .oneInput(
-                                                        b1 ->
-                                                                b1.operand(GraphLogicalExpand.class)
-                                                                        .predicate(
-                                                                                (GraphLogicalExpand
-                                                                                                expand) -> {
-                                                                                    int alias =
-                                                                                            expand
-                                                                                                    .getAliasId();
-                                                                                    return alias
-                                                                                            == AliasInference
-                                                                                                    .DEFAULT_ID;
-                                                                                })
-                                                                        .anyInputs()));
-
-        private RelRule.OperandTransform operandSupplier;
-        private @Nullable String description;
-        private RelBuilderFactory builderFactory;
-
-        @Override
-        public RelRule toRule() {
-            return new ExpandGetVFusionRule(this);
+    // transform expande + getv to GraphPhysicalExpandGetV in PathExpand
+    public static class PathBaseExpandGetVFusionRule
+            extends ExpandGetVFusionRule<PathBaseExpandGetVFusionRule.Config> {
+        protected PathBaseExpandGetVFusionRule(Config config) {
+            super(config);
         }
 
         @Override
-        public Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
-            this.builderFactory = relBuilderFactory;
-            return this;
+        public void onMatch(RelOptRuleCall call) {
+            GraphLogicalPathExpand pathExpand = call.rel(0);
+            GraphLogicalGetV getV = (GraphLogicalGetV) pathExpand.getGetV();
+            GraphLogicalExpand expand = (GraphLogicalExpand) pathExpand.getExpand();
+            RelNode fused = transform(getV, expand, null);
+            GraphLogicalPathExpand afterPathExpand =
+                    GraphLogicalPathExpand.create(
+                            (GraphOptCluster) pathExpand.getCluster(),
+                            ImmutableList.of(),
+                            pathExpand.getInput(0),
+                            fused,
+                            pathExpand.getOffset(),
+                            pathExpand.getFetch(),
+                            pathExpand.getResultOpt(),
+                            pathExpand.getPathOpt(),
+                            pathExpand.getAliasName(),
+                            pathExpand.getStartAlias());
+            call.transformTo(afterPathExpand);
         }
 
-        @Override
-        public Config withDescription(
-                @org.checkerframework.checker.nullness.qual.Nullable String s) {
-            this.description = s;
-            return this;
-        }
+        public static class Config implements RelRule.Config {
+            public static PathBaseExpandGetVFusionRule.Config DEFAULT =
+                    new Config()
+                            .withOperandSupplier(
+                                    b0 ->
+                                            b0.operand(GraphLogicalPathExpand.class)
+                                                    .predicate(
+                                                            (GraphLogicalPathExpand pathExpand) -> {
+                                                                if (GraphOpt.PathExpandResult
+                                                                        .ALL_V_E
+                                                                        .equals(
+                                                                                pathExpand
+                                                                                        .getResultOpt())) {
+                                                                    return false;
+                                                                } else {
+                                                                    if (pathExpand.getExpand()
+                                                                            instanceof
+                                                                            GraphLogicalExpand) {
+                                                                        GraphLogicalExpand expand =
+                                                                                (GraphLogicalExpand)
+                                                                                        pathExpand
+                                                                                                .getExpand();
+                                                                        int alias =
+                                                                                expand.getAliasId();
+                                                                        return alias
+                                                                                == AliasInference
+                                                                                        .DEFAULT_ID;
+                                                                    } else {
+                                                                        return false;
+                                                                    }
+                                                                }
+                                                            })
+                                                    .anyInputs());
 
-        @Override
-        public Config withOperandSupplier(OperandTransform operandTransform) {
-            this.operandSupplier = operandTransform;
-            return this;
-        }
+            private RelRule.OperandTransform operandSupplier;
+            private @Nullable String description;
+            private RelBuilderFactory builderFactory;
 
-        @Override
-        public OperandTransform operandSupplier() {
-            return this.operandSupplier;
-        }
+            @Override
+            public RelRule toRule() {
+                return new PathBaseExpandGetVFusionRule(this);
+            }
 
-        @Override
-        public @org.checkerframework.checker.nullness.qual.Nullable String description() {
-            return this.description;
-        }
+            @Override
+            public Config withRelBuilderFactory(RelBuilderFactory relBuilderFactory) {
+                this.builderFactory = relBuilderFactory;
+                return this;
+            }
 
-        @Override
-        public RelBuilderFactory relBuilderFactory() {
-            return this.builderFactory;
+            @Override
+            public Config withDescription(
+                    @org.checkerframework.checker.nullness.qual.Nullable String s) {
+                this.description = s;
+                return this;
+            }
+
+            @Override
+            public Config withOperandSupplier(OperandTransform operandTransform) {
+                this.operandSupplier = operandTransform;
+                return this;
+            }
+
+            @Override
+            public OperandTransform operandSupplier() {
+                return this.operandSupplier;
+            }
+
+            @Override
+            public @org.checkerframework.checker.nullness.qual.Nullable String description() {
+                return this.description;
+            }
+
+            @Override
+            public RelBuilderFactory relBuilderFactory() {
+                return this.builderFactory;
+            }
         }
     }
 }

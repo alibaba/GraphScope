@@ -498,12 +498,13 @@ public class GraphRelToProtoTest {
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 before.explain().trim());
-        RelOptPlanner planner = Utils.mockPlanner(ExpandGetVFusionRule.Config.DEFAULT);
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpandGetV(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT])\n"
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
+                        + " opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 after.explain().trim());

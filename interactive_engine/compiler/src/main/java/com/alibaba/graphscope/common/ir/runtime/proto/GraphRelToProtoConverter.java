@@ -151,27 +151,27 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     }
 
     @Override
-    public RelNode visit(GraphPhysicalExpandGetV expandGetV) {
+    public RelNode visit(GraphPhysicalExpand physicalExpand) {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphLogicalExpand expand = expandGetV.getFusedExpand();
-        GraphLogicalGetV getV = expandGetV.getFusedGetV();
-        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpandVertex(expand);
-        edgeExpand.setAlias(Utils.asAliasId(expandGetV.getAliasId()));
+        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpandVertex(physicalExpand);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
-        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(expandGetV.getRowType(), isColumnId));
-        if (ObjectUtils.isNotEmpty(getV.getFilters())) {
-            GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(getV);
-            GraphAlgebraPhysical.PhysicalOpr.Builder auxiliaOprBuilder =
-                    GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-            auxiliaOprBuilder.setOpr(
-                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
-            return new PhysicalNode(
-                    expandGetV, ImmutableList.of(oprBuilder.build(), auxiliaOprBuilder.build()));
-        } else {
-            return new PhysicalNode(expandGetV, oprBuilder.build());
-        }
+        oprBuilder.addAllMetaData(
+                Utils.physicalProtoRowType(physicalExpand.getRowType(), isColumnId));
+        return new PhysicalNode(physicalExpand, oprBuilder.build());
+    }
+
+    @Override
+    public RelNode visit(GraphPhysicalGetV physicalGetV) {
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(physicalGetV);
+        oprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
+        oprBuilder.addAllMetaData(
+                Utils.physicalProtoRowType(physicalGetV.getRowType(), isColumnId));
+        return new PhysicalNode(physicalGetV, oprBuilder.build());
     }
 
     @Override

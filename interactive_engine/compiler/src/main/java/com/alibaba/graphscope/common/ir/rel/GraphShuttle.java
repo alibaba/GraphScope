@@ -21,7 +21,8 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpandDegree;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpandGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 
@@ -72,7 +73,11 @@ public abstract class GraphShuttle extends RelShuttleImpl {
         return visitChildren(logicalExpandDegree);
     }
 
-    public RelNode visit(GraphPhysicalExpandGetV logicalExpandDegree) {
-        return visitChildren(logicalExpandDegree);
+    public RelNode visit(GraphPhysicalExpand physicalExpand) {
+        return visitChildren(physicalExpand);
+    }
+
+    public RelNode visit(GraphPhysicalGetV physicalGetV) {
+        return visitChildren(physicalGetV);
     }
 }
