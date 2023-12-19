@@ -395,7 +395,8 @@ static PropertyType StringToPropertyType(const std::string& str) {
   } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
   } else if (str == "String" || str == DT_STRING) {
-    return PropertyType::kString;
+    // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
+    return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
   } else if (str == DT_STRINGMAP) {
     return PropertyType::kStringMap;
   } else if (str == "Empty") {
@@ -412,16 +413,26 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kEmpty;
   }
 }
-
-EdgeStrategy StringToEdgeStrategy(const std::string& str) {
-  if (str == "None") {
-    return EdgeStrategy::kNone;
-  } else if (str == "Single") {
-    return EdgeStrategy::kSingle;
-  } else if (str == "Multiple") {
-    return EdgeStrategy::kMultiple;
+void RelationToEdgeStrategy(const std::string& rel_str,
+                            EdgeStrategy& ie_strategy,
+                            EdgeStrategy& oe_strategy) {
+  if (rel_str == "ONE_TO_MANY") {
+    ie_strategy = EdgeStrategy::kSingle;
+    oe_strategy = EdgeStrategy::kMultiple;
+  } else if (rel_str == "ONE_TO_ONE") {
+    ie_strategy = EdgeStrategy::kSingle;
+    oe_strategy = EdgeStrategy::kSingle;
+  } else if (rel_str == "MANY_TO_ONE") {
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kSingle;
+  } else if (rel_str == "MANY_TO_MANY") {
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kMultiple;
   } else {
-    return EdgeStrategy::kMultiple;
+    LOG(WARNING) << "relation " << rel_str
+                 << " is not valid, using default value: kMultiple";
+    ie_strategy = EdgeStrategy::kMultiple;
+    oe_strategy = EdgeStrategy::kMultiple;
   }
 }
 
@@ -435,6 +446,30 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
   }
 }
 
+static bool parse_property_type(YAML::Node node, PropertyType& type) {
+  std::string prop_type_str{};
+  if (node["primitive_type"]) {
+    if (!get_scalar(node, "primitive_type", prop_type_str)) {
+      return false;
+    }
+  } else if (node["varchar"]) {
+    auto varchar_node = node["varchar"];
+    int length{};
+    if (!varchar_node["max_length"] ||
+        !get_scalar(varchar_node, "max_length", length)) {
+      return false;
+    }
+    type = PropertyType::Varchar(length);
+    return true;
+  } else if (node["date"]) {
+    auto format = node["date"].as<std::string>();
+    prop_type_str = DT_DATE;
+  } else {
+    return false;
+  }
+  type = StringToPropertyType(prop_type_str);
+  return true;
+}
 static bool parse_vertex_properties(YAML::Node node,
                                     const std::string& label_name,
                                     std::vector<PropertyType>& types,
@@ -452,9 +487,9 @@ static bool parse_vertex_properties(YAML::Node node,
   }
 
   for (int i = 0; i < prop_num; ++i) {
-    std::string prop_type_str, strategy_str, prop_name_str;
+    std::string strategy_str, prop_name_str;
     if (!get_scalar(node[i], "property_name", prop_name_str)) {
-      LOG(ERROR) << "name of vertex-" << label_name << " prop-" << i - 1
+      LOG(ERROR) << "Name of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
@@ -464,17 +499,9 @@ static bool parse_vertex_properties(YAML::Node node,
       return false;
     }
     auto prop_type_node = node[i]["property_type"];
-    if (prop_type_node["primitive_type"]) {
-      if (!get_scalar(prop_type_node, "primitive_type", prop_type_str)) {
-        LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
-                   << " is not specified...";
-        return false;
-      }
-    } else if (prop_type_node["date"]) {
-      auto format = prop_type_node["date"].as<std::string>();
-      prop_type_str = DT_DATE;
-    } else {
-      LOG(ERROR) << "Unknown type of vertex-" << label_name << " prop-" << i - 1
+    PropertyType prop_type;
+    if (!parse_property_type(prop_type_node, prop_type)) {
+      LOG(ERROR) << "type of vertex-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
     }
@@ -483,10 +510,10 @@ static bool parse_vertex_properties(YAML::Node node,
         get_scalar(node[i]["x_csr_params"], "storage_strategy", strategy_str);
       }
     }
-    types.push_back(StringToPropertyType(prop_type_str));
+    types.push_back(prop_type);
     strategies.push_back(StringToStorageStrategy(strategy_str));
     VLOG(10) << "prop-" << i - 1 << " name: " << prop_name_str
-             << " type: " << prop_type_str << " strategy: " << strategy_str;
+             << " type: " << prop_type << " strategy: " << strategy_str;
     names.push_back(prop_name_str);
   }
 
@@ -510,19 +537,15 @@ static bool parse_edge_properties(YAML::Node node,
   int prop_num = node.size();
 
   for (int i = 0; i < prop_num; ++i) {
-    std::string prop_type_str, strategy_str, prop_name_str;
-    if (node[i]["property_type"]) {
-      if (!get_scalar(node[i]["property_type"], "primitive_type",
-                      prop_type_str)) {
-        if (!get_scalar(node[i]["property_type"], "date", prop_type_str)) {
-          LOG(ERROR) << "Fail to parse property type of edge-" << label_name
-                     << " prop-" << i << " ...";
-          return false;
-        } else {
-          prop_type_str = DT_DATE;
-        }
-      }
-    } else {
+    std::string strategy_str, prop_name_str;
+    if (!node[i]["property_type"]) {
+      LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
+                 << " is not specified...";
+      return false;
+    }
+    auto prop_type_node = node[i]["property_type"];
+    PropertyType prop_type;
+    if (!parse_property_type(prop_type_node, prop_type)) {
       LOG(ERROR) << "type of edge-" << label_name << " prop-" << i - 1
                  << " is not specified...";
       return false;
@@ -533,7 +556,7 @@ static bool parse_edge_properties(YAML::Node node,
       return false;
     }
 
-    types.push_back(StringToPropertyType(prop_type_str));
+    types.push_back(prop_type);
     names.push_back(prop_name_str);
   }
 
@@ -687,17 +710,44 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
                  << "] to [" << dst_label_name << "] already exists";
       return false;
     }
-    // if x_csr_params presents, overwrite the default strategy
+
+    std::string relation_str;
+    if (get_scalar(cur_node, "relation", relation_str)) {
+      RelationToEdgeStrategy(relation_str, cur_ie, cur_oe);
+    } else {
+      LOG(WARNING) << "relation not defined, using default ie strategy: "
+                   << cur_ie << ", oe strategy: " << cur_oe;
+    }
+    // check if x_csr_params presents
     if (cur_node["x_csr_params"]) {
       auto csr_node = cur_node["x_csr_params"];
-      std::string ie_str, oe_str;
-      if (get_scalar(csr_node, "outgoing_edge_strategy", oe_str)) {
-        cur_oe = StringToEdgeStrategy(oe_str);
-      }
-      if (get_scalar(csr_node, "incoming_edge_strategy", ie_str)) {
-        cur_ie = StringToEdgeStrategy(ie_str);
+      if (csr_node["edge_storage_strategy"]) {
+        std::string edge_storage_strategy_str;
+        if (get_scalar(csr_node, "edge_storage_strategy",
+                       edge_storage_strategy_str)) {
+          if (edge_storage_strategy_str == "ONLY_IN") {
+            cur_oe = EdgeStrategy::kNone;
+            VLOG(10) << "Store only in edges for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+          } else if (edge_storage_strategy_str == "ONLY_OUT") {
+            cur_ie = EdgeStrategy::kNone;
+            VLOG(10) << "Store only out edges for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+          } else if (edge_storage_strategy_str == "BOTH_OUT_IN" ||
+                     edge_storage_strategy_str == "BOTH_IN_OUT") {
+            VLOG(10) << "Store both in and out edges for edge: "
+                     << src_label_name << "-[" << edge_label_name << "]->"
+                     << dst_label_name;
+          } else {
+            LOG(ERROR) << "edge_storage_strategy is not set properly for edge: "
+                       << src_label_name << "-[" << edge_label_name << "]->"
+                       << dst_label_name;
+            return false;
+          }
+        }
       }
     }
+
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
              << " to " << dst_label_name << " with " << property_types.size()
              << " properties";

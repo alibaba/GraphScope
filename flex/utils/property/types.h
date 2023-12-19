@@ -32,7 +32,9 @@ enum class StorageStrategy {
   kMem,
 };
 
-enum class PropertyType {
+namespace impl {
+
+enum class PropertyTypeImpl {
   kInt32,
   kDate,
   kString,
@@ -46,6 +48,62 @@ enum class PropertyType {
   kUInt8,
   kUInt16,
   kStringMap,
+  kVarChar,
+};
+
+// Stores additional type information for PropertyTypeImpl
+union AdditionalTypeInfo {
+  uint16_t max_length;  // for varchar
+};
+}  // namespace impl
+
+struct PropertyType {
+  static constexpr const uint16_t STRING_DEFAULT_MAX_LENGTH = 256;
+  impl::PropertyTypeImpl type_enum;
+  impl::AdditionalTypeInfo additional_type_info;
+
+  constexpr PropertyType()
+      : type_enum(impl::PropertyTypeImpl::kEmpty), additional_type_info() {}
+  constexpr PropertyType(impl::PropertyTypeImpl type)
+      : type_enum(type), additional_type_info() {}
+  constexpr PropertyType(impl::PropertyTypeImpl type, uint16_t max_length)
+      : type_enum(type), additional_type_info({.max_length = max_length}) {
+    assert(type == impl::PropertyTypeImpl::kVarChar);
+  }
+
+  bool IsVarchar() const;
+
+  static PropertyType Empty();
+  static PropertyType Bool();
+  static PropertyType UInt8();
+  static PropertyType UInt16();
+  static PropertyType Int32();
+  static PropertyType UInt32();
+  static PropertyType Float();
+  static PropertyType Int64();
+  static PropertyType UInt64();
+  static PropertyType Double();
+  static PropertyType Date();
+  static PropertyType String();
+  static PropertyType StringMap();
+  static PropertyType Varchar(uint16_t max_length);
+
+  static const PropertyType kEmpty;
+  static const PropertyType kBool;
+  static const PropertyType kUInt8;
+  static const PropertyType kUInt16;
+  static const PropertyType kInt32;
+  static const PropertyType kUInt32;
+  static const PropertyType kFloat;
+  static const PropertyType kInt64;
+  static const PropertyType kUInt64;
+  static const PropertyType kDouble;
+  static const PropertyType kDate;
+  static const PropertyType kString;
+  static const PropertyType kStringMap;
+
+  bool operator==(const PropertyType& other) const;
+  bool operator!=(const PropertyType& other) const;
 };
 
 struct Date {
@@ -180,7 +238,8 @@ struct Any {
     } else if (type == PropertyType::kFloat) {
       return std::to_string(value.f);
     } else {
-      LOG(FATAL) << "Unexpected property type: " << static_cast<int>(type);
+      LOG(FATAL) << "Unexpected property type: "
+                 << static_cast<int>(type.type_enum);
       return "";
     }
   }
@@ -262,6 +321,11 @@ struct Any {
         return value.b == other.value.b;
       } else if (type == PropertyType::kFloat) {
         return value.f == other.value.f;
+      } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+        if (other.type.type_enum != impl::PropertyTypeImpl::kVarChar) {
+          return false;
+        }
+        return value.s == other.value.s;
       } else {
         return false;
       }
@@ -296,8 +360,9 @@ struct Any {
         return false;
       }
     } else {
-      LOG(FATAL) << "Type [" << static_cast<int>(type) << "] and ["
-                 << static_cast<int>(other.type) << "] cannot be compared..";
+      LOG(FATAL) << "Type [" << static_cast<int>(type.type_enum) << "] and ["
+                 << static_cast<int>(other.type.type_enum)
+                 << "] cannot be compared..";
     }
   }
 
@@ -405,7 +470,7 @@ struct AnyConverter {};
 // specialization for bool
 template <>
 struct AnyConverter<bool> {
-  static constexpr PropertyType type = PropertyType::kBool;
+  static PropertyType type() { return PropertyType::kBool; }
 
   static Any to_any(const bool& value) {
     Any ret;
@@ -429,7 +494,7 @@ struct AnyConverter<bool> {
 
 template <>
 struct AnyConverter<uint8_t> {
-  static constexpr PropertyType type = PropertyType::kUInt8;
+  static PropertyType type() { return PropertyType::kUInt8; }
   static Any to_any(const uint8_t& value) {
     Any ret;
     ret.set_u8(value);
@@ -443,7 +508,7 @@ struct AnyConverter<uint8_t> {
 
 template <>
 struct AnyConverter<uint16_t> {
-  static constexpr PropertyType type = PropertyType::kUInt16;
+  static PropertyType type() { return PropertyType::kUInt16; }
   static Any to_any(const uint16_t& value) {
     Any ret;
     ret.set_u16(value);
@@ -457,7 +522,7 @@ struct AnyConverter<uint16_t> {
 
 template <>
 struct AnyConverter<int32_t> {
-  static constexpr PropertyType type = PropertyType::kInt32;
+  static PropertyType type() { return PropertyType::kInt32; }
 
   static Any to_any(const int32_t& value) {
     Any ret;
@@ -483,7 +548,7 @@ struct AnyConverter<int32_t> {
 
 template <>
 struct AnyConverter<uint32_t> {
-  static constexpr PropertyType type = PropertyType::kUInt32;
+  static PropertyType type() { return PropertyType::kUInt32; }
 
   static Any to_any(const uint32_t& value) {
     Any ret;
@@ -508,7 +573,7 @@ struct AnyConverter<uint32_t> {
 };
 template <>
 struct AnyConverter<int64_t> {
-  static constexpr PropertyType type = PropertyType::kInt64;
+  static PropertyType type() { return PropertyType::kInt64; }
 
   static Any to_any(const int64_t& value) {
     Any ret;
@@ -534,7 +599,7 @@ struct AnyConverter<int64_t> {
 
 template <>
 struct AnyConverter<uint64_t> {
-  static constexpr PropertyType type = PropertyType::kUInt64;
+  static PropertyType type() { return PropertyType::kUInt64; }
 
   static Any to_any(const uint64_t& value) {
     Any ret;
@@ -560,7 +625,7 @@ struct AnyConverter<uint64_t> {
 
 template <>
 struct AnyConverter<Date> {
-  static constexpr PropertyType type = PropertyType::kDate;
+  static PropertyType type() { return PropertyType::kDate; }
 
   static Any to_any(const Date& value) {
     Any ret;
@@ -590,7 +655,7 @@ struct AnyConverter<Date> {
 
 template <>
 struct AnyConverter<std::string_view> {
-  static constexpr PropertyType type = PropertyType::kString;
+  static PropertyType type() { return PropertyType::kString; }
 
   static Any to_any(const std::string_view& value) {
     Any ret;
@@ -616,7 +681,7 @@ struct AnyConverter<std::string_view> {
 
 template <>
 struct AnyConverter<std::string> {
-  static constexpr PropertyType type = PropertyType::kString;
+  static PropertyType type() { return PropertyType::kString; }
 
   static Any to_any(const std::string& value) {
     Any ret;
@@ -642,7 +707,7 @@ struct AnyConverter<std::string> {
 
 template <>
 struct AnyConverter<grape::EmptyType> {
-  static constexpr PropertyType type = PropertyType::kEmpty;
+  static PropertyType type() { return PropertyType::kEmpty; }
 
   static Any to_any(const grape::EmptyType& value) {
     Any ret;
@@ -666,7 +731,7 @@ struct AnyConverter<grape::EmptyType> {
 
 template <>
 struct AnyConverter<double> {
-  static constexpr PropertyType type = PropertyType::kDouble;
+  static PropertyType type() { return PropertyType::kDouble; }
 
   static Any to_any(const double& value) {
     Any ret;
@@ -693,7 +758,7 @@ struct AnyConverter<double> {
 // specilization for float
 template <>
 struct AnyConverter<float> {
-  static constexpr PropertyType type = PropertyType::kFloat;
+  static PropertyType type() { return PropertyType::kFloat; }
 
   static Any to_any(const float& value) {
     Any ret;
@@ -715,6 +780,11 @@ struct AnyConverter<float> {
   static const float& from_any_value(const AnyValue& value) { return value.f; }
 };
 
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const PropertyType& value);
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              PropertyType& value);
+
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value);
 
@@ -733,40 +803,36 @@ inline ostream& operator<<(ostream& os, const gs::Date& dt) {
 }
 
 inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
-  switch (pt) {
-  case gs::PropertyType::kBool:
+  if (pt == gs::PropertyType::Bool()) {
     os << "bool";
-    break;
-  case gs::PropertyType::kInt32:
+  } else if (pt == gs::PropertyType::Empty()) {
+    os << "empty";
+  } else if (pt == gs::PropertyType::UInt8()) {
+    os << "uint8";
+  } else if (pt == gs::PropertyType::UInt16()) {
+    os << "uint16";
+  } else if (pt == gs::PropertyType::Int32()) {
     os << "int32";
-    break;
-  case gs::PropertyType::kUInt32:
+  } else if (pt == gs::PropertyType::UInt32()) {
     os << "uint32";
-    break;
-  case gs::PropertyType::kInt64:
-    os << "int64";
-    break;
-  case gs::PropertyType::kUInt64:
-    os << "uint64";
-    break;
-  case gs::PropertyType::kDate:
-    os << "Date";
-    break;
-  case gs::PropertyType::kString:
-    os << "String";
-    break;
-  case gs::PropertyType::kEmpty:
-    os << "Empty";
-    break;
-  case gs::PropertyType::kDouble:
-    os << "double";
-    break;
-  case gs::PropertyType::kFloat:
+  } else if (pt == gs::PropertyType::Float()) {
     os << "float";
-    break;
-  default:
-    os << "Unknown";
-    break;
+  } else if (pt == gs::PropertyType::Int64()) {
+    os << "int64";
+  } else if (pt == gs::PropertyType::UInt64()) {
+    os << "uint64";
+  } else if (pt == gs::PropertyType::Double()) {
+    os << "double";
+  } else if (pt == gs::PropertyType::Date()) {
+    os << "date";
+  } else if (pt == gs::PropertyType::String()) {
+    os << "string";
+  } else if (pt == gs::PropertyType::StringMap()) {
+    os << "string_map";
+  } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kVarChar) {
+    os << "varchar(" << pt.additional_type_info.max_length << ")";
+  } else {
+    os << "unknown";
   }
   return os;
 }

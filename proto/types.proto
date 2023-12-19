@@ -201,6 +201,9 @@ enum ParamKey {
   IS_FROM_GAR = 70;
   GRAPH_INFO_PATH = 71;
 
+  // Extend label data
+  EXTEND_LABEL_DATA = 80;
+
   APP_NAME = 100;
   APP_ALGO = 101;
   APP_LIBRARY_PATH = 102;

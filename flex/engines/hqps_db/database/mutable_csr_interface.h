@@ -852,7 +852,7 @@ class MutableCSRInterface {
           *std::dynamic_pointer_cast<TypedColumn<float>>(column));
     } else {
       LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type);
+                 << static_cast<int>(type.type_enum);
       return nullptr;
     }
   }

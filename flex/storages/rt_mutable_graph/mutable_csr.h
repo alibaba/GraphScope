@@ -495,7 +495,7 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
 
  public:
   explicit TypedMutableCsrConstEdgeIter(const MutableNbrSlice<EDATA_T>& slice)
-      : cur_(slice.begin()), end_(slice.end()) {}
+      : cur_(slice.begin()), end_(slice.end()){}
   ~TypedMutableCsrConstEdgeIter() = default;
 
   vid_t get_neighbor() const override { return (*cur_).get_neighbor(); }
@@ -625,7 +625,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   using slice_t = MutableNbrSlice<EDATA_T>;
   using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
 
-  MutableCsr() : locks_(nullptr) {}
+  MutableCsr()
+      : locks_(nullptr) {}
   ~MutableCsr() {
     if (locks_ != nullptr) {
       delete[] locks_;
@@ -865,8 +866,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
-        get_edges(v));
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
@@ -1277,8 +1277,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
-        get_edges(v));
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
