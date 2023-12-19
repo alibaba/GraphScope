@@ -54,8 +54,6 @@ spec:
         - name: frontend
           image: {{ include "graphscope-interactive.frontend.image" . }}
           imagePullPolicy: {{ .Values.frontend.image.pullPolicy | quote }}
-          # command: [ "sleep"]
-          # args: [ "infinity" ]
           command:
             - /bin/bash
             - -c

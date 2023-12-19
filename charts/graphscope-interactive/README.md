@@ -61,7 +61,6 @@ TODO
 - docker artifacts
 
 ```yaml
-# docker artifacts for vineyard store
 engine:
   image:
     registry: registry.cn-hongkong.aliyuncs.com

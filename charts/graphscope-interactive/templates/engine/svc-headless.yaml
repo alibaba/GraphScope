@@ -24,9 +24,6 @@ spec:
   {{- if and (eq .Values.engine.service.type "LoadBalancer") .Values.engine.service.loadBalancerSourceRanges }}
   loadBalancerSourceRanges: {{- toYaml .Values.engine.service.loadBalancerSourceRanges | nindent 4 }}
   {{- end }}
-  # type: ClusterIP
-  # clusterIP: None
-  # publishNotReadyAddresses: true
   ports:
     - name: admin-port
       port: {{ .Values.engine.service.adminPort }}

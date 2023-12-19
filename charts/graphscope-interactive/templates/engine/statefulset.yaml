@@ -54,8 +54,6 @@ spec:
         - name: engine
           image: {{ include "graphscope-interactive.engine.image" . }}
           imagePullPolicy: {{ .Values.engine.image.pullPolicy | quote }}
-          # command: [ "sleep"]
-          # args: [ "infinity" ]
           command:
             - /bin/bash
             - -c
