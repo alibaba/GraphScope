@@ -904,36 +904,18 @@ fn triplet_to_index_predicate(
         match item {
             common_pb::expr_opr::Item::Const(c) => {
                 if is_within {
-                    let or_predicates = match c.item.clone().unwrap() {
-                        common_pb::value::Item::I32Array(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        common_pb::value::Item::I64Array(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        common_pb::value::Item::F64Array(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        common_pb::value::Item::StrArray(array) => array
-                            .item
-                            .into_iter()
-                            .map(|val| build_and_predicate(key.clone(), val.into()))
-                            .collect(),
-                        _ => Err(IrError::Unsupported(format!(
-                            "unsupported value type for within: {:?}",
-                            c
-                        )))?,
+                    let within_pred = pb::IndexPredicate {
+                        or_predicates: vec![build_and_predicate(
+                            key,
+                            c.clone(),
+                            common_pb::Logical::Within,
+                        )],
                     };
-                    return Ok(Some(pb::IndexPredicate { or_predicates }));
+                    return Ok(Some(within_pred));
                 } else {
-                    let idx_pred =
-                        pb::IndexPredicate { or_predicates: vec![build_and_predicate(key, c.clone())] };
+                    let idx_pred = pb::IndexPredicate {
+                        or_predicates: vec![build_and_predicate(key, c.clone(), common_pb::Logical::Eq)],
+                    };
                     return Ok(Some(idx_pred));
                 }
             }
@@ -944,7 +926,11 @@ fn triplet_to_index_predicate(
                         predicates: vec![pb::index_predicate::Triplet {
                             key,
                             value: Some(param.clone().into()),
-                            cmp: None,
+                            cmp: if is_within {
+                                unsafe { std::mem::transmute(common_pb::Logical::Within) }
+                            } else {
+                                unsafe { std::mem::transmute(common_pb::Logical::Eq) }
+                            },
                         }],
                     }],
                 };
@@ -959,10 +945,10 @@ fn triplet_to_index_predicate(
 }
 
 fn build_and_predicate(
-    key: Option<common_pb::Property>, value: common_pb::Value,
+    key: Option<common_pb::Property>, value: common_pb::Value, cmp: common_pb::Logical,
 ) -> pb::index_predicate::AndPredicate {
     pb::index_predicate::AndPredicate {
-        predicates: vec![pb::index_predicate::Triplet { key, value: Some(value.into()), cmp: None }],
+        predicates: vec![pb::index_predicate::Triplet { key, value: Some(value.into()), cmp: cmp as i32 }],
     }
 }
 
@@ -2237,7 +2223,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some("John".to_string().into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2284,7 +2270,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some("John".to_string().into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2340,7 +2326,7 @@ mod test {
                             item: Some(common_pb::property::Item::Key("name".into())),
                         }),
                         value: Some(dyn_param.into()),
-                        cmp: None,
+                        cmp: common_pb::Logical::Eq as i32,
                     }]
                 }]
             }
@@ -2380,26 +2366,22 @@ mod test {
         assert_eq!(
             scan.idx_predicate.unwrap(),
             pb::IndexPredicate {
-                or_predicates: vec![
-                    pb::index_predicate::AndPredicate {
-                        predicates: vec![pb::index_predicate::Triplet {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Key("name".into())),
-                            }),
-                            value: Some("John".to_string().into()),
-                            cmp: None,
-                        }]
-                    },
-                    pb::index_predicate::AndPredicate {
-                        predicates: vec![pb::index_predicate::Triplet {
-                            key: Some(common_pb::Property {
-                                item: Some(common_pb::property::Item::Key("name".into())),
-                            }),
-                            value: Some("Josh".to_string().into()),
-                            cmp: None,
-                        }]
-                    }
-                ]
+                or_predicates: vec![pb::index_predicate::AndPredicate {
+                    predicates: vec![pb::index_predicate::Triplet {
+                        key: Some(common_pb::Property {
+                            item: Some(common_pb::property::Item::Key("name".into())),
+                        }),
+                        value: Some(
+                            common_pb::Value {
+                                item: Some(common_pb::value::Item::StrArray(common_pb::StringArray {
+                                    item: vec!["John".to_string(), "Josh".to_string()].into(),
+                                })),
+                            }
+                            .into()
+                        ),
+                        cmp: common_pb::Logical::Within as i32,
+                    }]
+                }]
             }
         );
     }

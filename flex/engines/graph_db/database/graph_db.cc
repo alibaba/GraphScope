@@ -56,12 +56,14 @@ GraphDB& GraphDB::get() {
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int32_t thread_num, bool warmup) {
   if (!std::filesystem::exists(data_dir)) {
-    return Result<bool>(StatusCode::NotExists, "Data directory does not exist");
+    std::filesystem::create_directories(data_dir);
   }
 
   std::string schema_file = schema_path(data_dir);
+  bool create_empty_graph = false;
   if (!std::filesystem::exists(schema_file)) {
-    return Result<bool>(StatusCode::NotExists, "Schema file does not exist");
+    create_empty_graph = true;
+    graph_.mutable_schema() = schema;
   }
   work_dir_ = data_dir;
   thread_num_ = thread_num;
@@ -73,7 +75,8 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                         "Exception: " + std::string(e.what()), false);
   }
 
-  if (!graph_.schema().Equals(schema)) {
+  if ((!create_empty_graph) && (!graph_.schema().Equals(schema))) {
+    LOG(ERROR) << "Schema inconsistent..\n";
     return Result<bool>(StatusCode::InternalError,
                         "Schema of work directory is not compatible with the "
                         "graph schema",
@@ -97,7 +100,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
 
   openWalAndCreateContexts(data_dir);
 
-  if (warmup) {
+  if ((!create_empty_graph) && warmup) {
     graph_.Warmup(thread_num_);
   }
   return Result<bool>(true);

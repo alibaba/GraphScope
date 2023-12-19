@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphPathType;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
@@ -44,6 +45,9 @@ import java.util.Objects;
 public class GraphLogicalPathExpand extends SingleRel {
     private final RelNode expand;
     private final RelNode getV;
+
+    // fuse expand with getV to a single operator
+    private final RelNode fused;
 
     private final @Nullable RexNode offset;
     private final @Nullable RexNode fetch;
@@ -72,6 +76,33 @@ public class GraphLogicalPathExpand extends SingleRel {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
+        this.fused = null;
+        this.offset = offset;
+        this.fetch = fetch;
+        this.resultOpt = resultOpt;
+        this.pathOpt = pathOpt;
+        this.aliasName =
+                AliasInference.inferDefault(
+                        aliasName, AliasInference.getUniqueAliasList(input, true));
+        this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
+        this.startAlias = Objects.requireNonNull(startAlias);
+    }
+
+    protected GraphLogicalPathExpand(
+            GraphOptCluster cluster,
+            @Nullable List<RelHint> hints,
+            RelNode input,
+            RelNode fused,
+            @Nullable RexNode offset,
+            @Nullable RexNode fetch,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
+            @Nullable String aliasName,
+            AliasNameWithId startAlias) {
+        super(cluster, RelTraitSet.createEmpty(), input);
+        this.expand = null;
+        this.getV = null;
+        this.fused = Objects.requireNonNull(fused);
         this.offset = offset;
         this.fetch = fetch;
         this.resultOpt = resultOpt;
@@ -109,11 +140,39 @@ public class GraphLogicalPathExpand extends SingleRel {
                 startAlias);
     }
 
+    public static GraphLogicalPathExpand create(
+            GraphOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            RelNode fused,
+            @Nullable RexNode offset,
+            @Nullable RexNode fetch,
+            GraphOpt.PathExpandResult resultOpt,
+            GraphOpt.PathExpandPath pathOpt,
+            String aliasName,
+            AliasNameWithId startAlias) {
+        Preconditions.checkArgument(
+                resultOpt != GraphOpt.PathExpandResult.ALL_V_E,
+                "can not fuse expand with getV if result opt is set to " + resultOpt.name());
+        return new GraphLogicalPathExpand(
+                cluster,
+                hints,
+                input,
+                fused,
+                offset,
+                fetch,
+                resultOpt,
+                pathOpt,
+                aliasName,
+                startAlias);
+    }
+
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw)
-                .item("expand", RelOptUtil.toString(expand))
-                .item("getV", RelOptUtil.toString(getV))
+                .itemIf("expand", RelOptUtil.toString(expand), expand != null)
+                .itemIf("getV", RelOptUtil.toString(getV), getV != null)
+                .itemIf("fused", RelOptUtil.toString(fused), fused != null)
                 .itemIf("offset", offset, offset != null)
                 .itemIf("fetch", fetch, fetch != null)
                 .item("path_opt", getPathOpt())
@@ -163,29 +222,66 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     @Override
     protected RelDataType deriveRowType() {
-        ObjectUtils.requireNonEmpty(
-                this.expand.getRowType().getFieldList(),
-                "data type of expand operator should have at least one column field");
-        ObjectUtils.requireNonEmpty(
-                this.getV.getRowType().getFieldList(),
-                "data type of getV operator should have at least one column field");
         return new RelRecordType(
                 ImmutableList.of(
                         new RelDataTypeFieldImpl(
                                 getAliasName(),
                                 getAliasId(),
-                                new GraphPathType(
-                                        new GraphPathType.ElementType(
-                                                this.expand
-                                                        .getRowType()
-                                                        .getFieldList()
-                                                        .get(0)
-                                                        .getType(),
-                                                this.getV
-                                                        .getRowType()
-                                                        .getFieldList()
-                                                        .get(0)
-                                                        .getType())))));
+                                new GraphPathType(getElementType()))));
+    }
+
+    private GraphPathType.ElementType getElementType() {
+        switch (resultOpt) {
+            case ALL_V:
+            case END_V:
+                RelNode getV = this.fused != null ? this.fused : this.getV;
+                ObjectUtils.requireNonEmpty(
+                        getV.getRowType().getFieldList(),
+                        "data type of getV operator should have at least one column field");
+                return new GraphPathType.ElementType(
+                        getV.getRowType().getFieldList().get(0).getType());
+            case ALL_V_E:
+            default:
+                ObjectUtils.requireNonEmpty(
+                        this.expand.getRowType().getFieldList(),
+                        "data type of expand operator should have at least one column field");
+                ObjectUtils.requireNonEmpty(
+                        this.getV.getRowType().getFieldList(),
+                        "data type of getV operator should have at least one column field");
+                return new GraphPathType.ElementType(
+                        this.expand.getRowType().getFieldList().get(0).getType(),
+                        this.getV.getRowType().getFieldList().get(0).getType());
+        }
+    }
+
+    @Override
+    public GraphLogicalPathExpand copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        if (this.fused != null) {
+            return new GraphLogicalPathExpand(
+                    (GraphOptCluster) getCluster(),
+                    ImmutableList.of(),
+                    inputs.get(0),
+                    this.fused,
+                    getOffset(),
+                    getFetch(),
+                    getResultOpt(),
+                    getPathOpt(),
+                    getAliasName(),
+                    getStartAlias());
+        } else {
+            return new GraphLogicalPathExpand(
+                    (GraphOptCluster) getCluster(),
+                    ImmutableList.of(),
+                    inputs.get(0),
+                    this.expand,
+                    this.getV,
+                    getOffset(),
+                    getFetch(),
+                    getResultOpt(),
+                    getPathOpt(),
+                    getAliasName(),
+                    getStartAlias());
+        }
     }
 
     @Override

@@ -20,6 +20,9 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.sql.type.AbstractSqlType;
 import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.util.Objects;
 
 public class GraphPathType extends ArraySqlType {
     public GraphPathType(ElementType elementType) {
@@ -35,17 +38,21 @@ public class GraphPathType extends ArraySqlType {
      * each element type of path expand
      */
     public static class ElementType extends AbstractSqlType {
-        private final RelDataType expandType;
+        private final @Nullable RelDataType expandType;
         private final RelDataType getVType;
+
+        public ElementType(RelDataType getVType) {
+            this(null, getVType);
+        }
 
         public ElementType(RelDataType expandType, RelDataType getVType) {
             super(SqlTypeName.OTHER, false, null);
             this.expandType = expandType;
-            this.getVType = getVType;
+            this.getVType = Objects.requireNonNull(getVType);
             computeDigest();
         }
 
-        public RelDataType getExpandType() {
+        public @Nullable RelDataType getExpandType() {
             return expandType;
         }
 

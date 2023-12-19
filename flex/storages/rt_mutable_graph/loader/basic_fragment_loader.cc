@@ -28,6 +28,8 @@ BasicFragmentLoader::BasicFragmentLoader(const Schema& schema,
   vertex_data_.resize(vertex_label_num_);
   ie_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
   oe_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
+  dual_csr_list_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_,
+                        NULL);
   lf_indexers_.resize(vertex_label_num_);
   std::filesystem::create_directories(runtime_dir(prefix));
   std::filesystem::create_directories(snapshot_dir(prefix, 0));
@@ -76,14 +78,11 @@ void BasicFragmentLoader::LoadFragment() {
         size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                        dst_label * edge_label_num_ + edge_label;
         if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
-          if (ie_[index] != NULL) {
-            ie_[index]->dump(
-                ie_prefix(src_label_name, dst_label_name, edge_label_name),
-                snapshot_dir(work_dir_, 0));
-          }
-          if (oe_[index] != NULL) {
-            oe_[index]->dump(
+          if (dual_csr_list_[index] != NULL) {
+            dual_csr_list_[index]->Dump(
                 oe_prefix(src_label_name, dst_label_name, edge_label_name),
+                ie_prefix(src_label_name, dst_label_name, edge_label_name),
+                edata_prefix(src_label_name, dst_label_name, edge_label_name),
                 snapshot_dir(work_dir_, 0));
           }
         }

@@ -27,6 +27,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -68,14 +69,19 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
 
     @Override
     public GraphLogicalExpand copy(RelTraitSet traitSet, List<RelNode> inputs) {
-        return new GraphLogicalExpand(
-                (GraphOptCluster) getCluster(),
-                getHints(),
-                inputs.get(0),
-                this.getOpt(),
-                this.tableConfig,
-                this.getAliasName(),
-                this.getStartAlias());
+        GraphLogicalExpand copy =
+                new GraphLogicalExpand(
+                        (GraphOptCluster) getCluster(),
+                        getHints(),
+                        inputs.get(0),
+                        this.getOpt(),
+                        this.tableConfig,
+                        this.getAliasName(),
+                        this.getStartAlias());
+        if (ObjectUtils.isNotEmpty(this.getFilters())) {
+            copy.setFilters(this.getFilters());
+        }
+        return copy;
     }
 
     @Override

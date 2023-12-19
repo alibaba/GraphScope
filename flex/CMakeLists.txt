@@ -13,13 +13,22 @@ project (
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
-option(USE_MMAPALLOC "Whether to use mmap allocator." OFF)
+option(USE_MMAPALLOC "Whether to use mmap allocator" OFF)
+option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
+
+execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
+string(STRIP ${LINUX_KERNEL_VERSION} LINUX_KERNEL_VERSION)
+message(${LINUX_KERNEL_VERSION})
+if(LINUX_KERNEL_VERSION VERSION_GREATER_EQUAL "4.5")
+    message("Use copy file range")
+    add_definitions(-DUSE_COPY_FILE_RANGE)
+endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -mno-avx512f -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
 set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0")
 
 
@@ -103,6 +112,10 @@ if (NOT EXISTS ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include/nloh
                          "please run `git submodule update --init` to download third_party")
 endif()
 include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/nlohmann-json/single_include)
+
+if (BUILD_ODPS_FRAGMENT_LOADER)
+    include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
+endif()
 
 add_subdirectory(utils)
 add_subdirectory(codegen)

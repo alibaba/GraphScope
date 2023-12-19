@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
@@ -56,7 +57,7 @@ public abstract class ExternalStorage {
     public void downloadDataWithMove(String srcPath, String dstPath) throws IOException {
         String tmpPath = dstPath + "." + generateRandomString(6);
         downloadDataSimple(srcPath, tmpPath);
-        Files.move(Path.of(tmpPath), Path.of(dstPath));
+        Files.move(Path.of(tmpPath), Path.of(dstPath), StandardCopyOption.REPLACE_EXISTING);
     }
 
     public void downloadDataWithRetry(String srcPath, String dstPath) throws IOException {

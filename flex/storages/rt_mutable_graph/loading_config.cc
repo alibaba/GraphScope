@@ -28,10 +28,10 @@ namespace config_parsing {
 
 // fetch the primary key of the src and dst vertex label in the edge file,
 // also check whether the primary key exists in the schema, and number equals.
-static bool fetch_src_dst_column_mapping(const Schema& schema, YAML::Node node,
-                                         label_t label_id,
-                                         const std::string& key,
-                                         std::vector<size_t>& column_inds) {
+static bool fetch_src_dst_column_mapping(
+    const Schema& schema, YAML::Node node, label_t label_id,
+    const std::string& key,
+    std::vector<std::pair<std::string, size_t>>& columns) {
   if (node[key]) {
     auto column_mappings = node[key];
     if (!column_mappings.IsSequence()) {
@@ -46,20 +46,28 @@ static bool fetch_src_dst_column_mapping(const Schema& schema, YAML::Node node,
                 << schema.get_vertex_label_name(label_id);
       return false;
     }
-    column_inds.resize(column_mappings.size());
+    columns.resize(column_mappings.size());
     for (auto i = 0; i < column_mappings.size(); ++i) {
       auto column_mapping = column_mappings[i]["column"];
-      auto name = column_mapping["name"].as<std::string>();
-      if (name != std::get<1>(schema_primary_key[i])) {
-        LOG(ERROR) << "Expect column name ["
-                   << std::get<1>(schema_primary_key[i])
-                   << "] for source vertex mapping, at index: " << i
-                   << ", got: " << name;
-        return false;
-      }
-      if (!get_scalar(column_mapping, "index", column_inds[i])) {
+
+      if (!get_scalar(column_mapping, "index", columns[i].second)) {
         LOG(ERROR) << "Expect column index for source vertex mapping";
         return false;
+      }
+      if (get_scalar(column_mapping, "name", columns[i].first)) {
+        VLOG(10) << "Column name for col_id: " << columns[i].second
+                 << " is set to: " << columns[i].first;
+      }
+
+      std::string property_name;
+      if (get_scalar(column_mappings[i], "property", property_name)) {
+        if (property_name != std::get<1>(schema_primary_key[i])) {
+          LOG(ERROR) << "Expect mapped property name ["
+                     << std::get<1>(schema_primary_key[i])
+                     << "] for source vertex mapping, at index: " << i
+                     << ", got: " << property_name;
+          return false;
+        }
       }
     }
     return true;
@@ -141,9 +149,24 @@ static bool parse_column_mappings(
   return true;
 }
 
+static void set_default_csv_loading_config(
+    std::unordered_map<std::string, std::string>& metadata) {
+  metadata[reader_options::DELIMITER] = "|";
+  metadata[reader_options::HEADER_ROW] = "true";
+  metadata[reader_options::QUOTING] = "false";
+  metadata[reader_options::QUOTE_CHAR] = "\"";
+  metadata[reader_options::DOUBLE_QUOTE] = "false";
+  metadata[reader_options::ESCAPE_CHAR] = "\\";
+  metadata[reader_options::ESCAPING] = "false";
+  metadata[reader_options::BATCH_READER] = "true";
+  metadata[reader_options::BATCH_SIZE_KEY] =
+      std::to_string(reader_options::DEFAULT_BLOCK_SIZE);
+}
+
 // These files share the same column mapping.
 static bool parse_vertex_files(
-    YAML::Node node, const Schema& schema, const std::string& data_location,
+    YAML::Node node, const Schema& schema, const std::string& scheme,
+    const std::string& data_location,
     std::unordered_map<label_t, std::vector<std::string>>& files,
     std::unordered_map<
         label_t, std::vector<std::tuple<size_t, std::string, std::string>>>&
@@ -200,12 +223,20 @@ static bool parse_vertex_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
-      if (!access_file(data_location, file_path)) {
-        LOG(ERROR) << "vertex file - " << file_path << " file not found...";
-        return false;
+      if (scheme == "file") {
+        if (!access_file(data_location, file_path)) {
+          LOG(ERROR) << "vertex file - " << file_path << " file not found...";
+          return false;
+        }
+        std::filesystem::path path(file_path);
+        files[label_id].emplace_back(std::filesystem::canonical(path));
+      } else {
+        // append file_path to data_location
+        if (!data_location.empty()) {
+          file_path = data_location + "/" + file_path;
+        }
+        files[label_id].emplace_back(file_path);
       }
-      std::filesystem::path path(file_path);
-      files[label_id].emplace_back(std::filesystem::canonical(path));
     }
     return true;
   } else {
@@ -215,7 +246,8 @@ static bool parse_vertex_files(
 }
 
 static bool parse_vertices_files_schema(
-    YAML::Node node, const Schema& schema, const std::string& data_location,
+    YAML::Node node, const Schema& schema, const std::string& scheme,
+    const std::string& data_location,
     std::unordered_map<label_t, std::vector<std::string>>& files,
     std::unordered_map<
         label_t, std::vector<std::tuple<size_t, std::string, std::string>>>&
@@ -226,7 +258,7 @@ static bool parse_vertices_files_schema(
   }
   int num = node.size();
   for (int i = 0; i < num; ++i) {
-    if (!parse_vertex_files(node[i], schema, data_location, files,
+    if (!parse_vertex_files(node[i], schema, scheme, data_location, files,
                             column_mappings)) {
       return false;
     }
@@ -235,7 +267,8 @@ static bool parse_vertices_files_schema(
 }
 
 static bool parse_edge_files(
-    YAML::Node node, const Schema& schema, const std::string& data_location,
+    YAML::Node node, const Schema& schema, const std::string& scheme,
+    const std::string& data_location,
     std::unordered_map<
         std::tuple<label_t, label_t, label_t>, std::vector<std::string>,
         boost::hash<std::tuple<label_t, label_t, label_t>>>& files,
@@ -244,7 +277,8 @@ static bool parse_edge_files(
         std::vector<std::tuple<size_t, std::string, std::string>>,
         boost::hash<typename LoadingConfig::edge_triplet_type>>& edge_mapping,
     std::unordered_map<typename LoadingConfig::edge_triplet_type,
-                       std::pair<std::vector<size_t>, std::vector<size_t>>,
+                       std::pair<std::vector<std::pair<std::string, size_t>>,
+                                 std::vector<std::pair<std::string, size_t>>>,
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_src_dst_col) {
   if (!node["type_triplet"]) {
@@ -301,14 +335,14 @@ static bool parse_edge_files(
   // parse the vertex mapping. currently we only need one column to identify the
   // vertex.
   {
-    std::vector<size_t> src_columns, dst_columns;
+    std::vector<std::pair<std::string, size_t>> src_columns, dst_columns;
 
     if (!fetch_src_dst_column_mapping(schema, node, src_label_id,
                                       "source_vertex_mappings", src_columns)) {
       LOG(WARNING) << "Field [source_vertex_mappings] is not set for edge ["
                    << src_label << "->[" << edge_label << "]->" << dst_label
                    << "], using default choice: column_id 0";
-      src_columns.push_back(0);
+      src_columns.emplace_back("", 0);
     }
     if (!fetch_src_dst_column_mapping(schema, node, dst_label_id,
                                       "destination_vertex_mappings",
@@ -316,7 +350,7 @@ static bool parse_edge_files(
       LOG(WARNING) << "Field [destination_vertex_mappings] is not set for edge["
                    << src_label << "->[" << edge_label << "]->" << dst_label
                    << "], using default choice: column_id 1";
-      dst_columns.push_back(1);
+      dst_columns.emplace_back("", 1);
     }
 
     VLOG(10) << "src: " << src_label << ", dst: " << dst_label
@@ -358,14 +392,24 @@ static bool parse_edge_files(
     int num = files_node.size();
     for (int i = 0; i < num; ++i) {
       std::string file_path = files_node[i].as<std::string>();
-      if (!access_file(data_location, file_path)) {
-        LOG(ERROR) << "edge file - " << file_path << " file not found...";
+      if (scheme == "file") {
+        if (!access_file(data_location, file_path)) {
+          LOG(ERROR) << "edge file - " << file_path << " file not found...";
+          return false;
+        }
+        std::filesystem::path path(file_path);
+        VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
+                 << edge_label << " path " << std::filesystem::canonical(path);
+        files[std::tuple{src_label_id, dst_label_id, edge_label_id}]
+            .emplace_back(std::filesystem::canonical(path));
+      } else {
+        // append file_path to data_location
+        if (!data_location.empty()) {
+          file_path = data_location + "/" + file_path;
+        }
+        files[std::tuple{src_label_id, dst_label_id, edge_label_id}]
+            .emplace_back(file_path);
       }
-      std::filesystem::path path(file_path);
-      VLOG(10) << "src " << src_label << " dst " << dst_label << " edge "
-               << edge_label << " path " << std::filesystem::canonical(path);
-      files[std::tuple{src_label_id, dst_label_id, edge_label_id}].emplace_back(
-          std::filesystem::canonical(path));
     }
   } else {
     LOG(ERROR) << "No edge files found for edge " << edge_label << "...";
@@ -374,7 +418,8 @@ static bool parse_edge_files(
 }
 
 static bool parse_edges_files_schema(
-    YAML::Node node, const Schema& schema, const std::string& data_location,
+    YAML::Node node, const Schema& schema, const std::string& scheme,
+    const std::string& data_location,
     std::unordered_map<
         std::tuple<label_t, label_t, label_t>, std::vector<std::string>,
         boost::hash<std::tuple<label_t, label_t, label_t>>>& files,
@@ -383,7 +428,8 @@ static bool parse_edges_files_schema(
         std::vector<std::tuple<size_t, std::string, std::string>>,
         boost::hash<typename LoadingConfig::edge_triplet_type>>& edge_mapping,
     std::unordered_map<std::tuple<label_t, label_t, label_t>,
-                       std::pair<std::vector<size_t>, std::vector<size_t>>,
+                       std::pair<std::vector<std::pair<std::string, size_t>>,
+                                 std::vector<std::pair<std::string, size_t>>>,
                        boost::hash<typename LoadingConfig::edge_triplet_type>>&
         edge_src_dst_col) {
   if (!node.IsSequence()) {
@@ -393,8 +439,8 @@ static bool parse_edges_files_schema(
   int num = node.size();
   LOG(INFO) << " Try to parse " << num << " edge configuration";
   for (int i = 0; i < num; ++i) {
-    if (!parse_edge_files(node[i], schema, data_location, files, edge_mapping,
-                          edge_src_dst_col)) {
+    if (!parse_edge_files(node[i], schema, scheme, data_location, files,
+                          edge_mapping, edge_src_dst_col)) {
       return false;
     }
   }
@@ -427,55 +473,67 @@ static bool parse_bulk_load_config_yaml(const YAML::Node& root,
     auto format_node = loading_config_node["format"];
     // default format is csv
     if (format_node) {
+      // TODO: support other format, and make clear which args are csv specific
+      //  What if format node is not specified?
       get_scalar(format_node, "type", load_config.format_);
-    } else {
-      LOG(WARNING) << "No format is set, use default csv format";
-      load_config.format_ = "csv";
-    }
-    if (load_config.format_ == "csv") {
-      // set default delimiter before we parsing meta_data
-      load_config.metadata_[reader_options::DELIMITER] = "|";
-      load_config.metadata_[reader_options::HEADER_ROW] = "true";
-      load_config.metadata_[reader_options::QUOTING] = "false";
-      load_config.metadata_[reader_options::QUOTE_CHAR] = "\"";
-      load_config.metadata_[reader_options::DOUBLE_QUOTE] = "false";
-      load_config.metadata_[reader_options::ESCAPE_CHAR] = "\\";
-      load_config.metadata_[reader_options::ESCAPING] = "false";
-      load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
-          std::to_string(reader_options::DEFAULT_BLOCK_SIZE);
-      load_config.metadata_[reader_options::BATCH_READER] = "false";
-      // put all key values in meta_data into metadata_
-      if (format_node["metadata"]) {
-        auto meta_data_node = format_node["metadata"];
-        if (!meta_data_node.IsMap()) {
-          LOG(ERROR) << "metadata should be a map";
-          return false;
-        }
-        for (auto it = meta_data_node.begin(); it != meta_data_node.end();
-             ++it) {
-          // override previous settings.
-          auto key = it->first.as<std::string>();
-          VLOG(1) << "Got metadata key: " << key
-                  << " value: " << it->second.as<std::string>();
-          if (reader_options::CSV_META_KEY_WORDS.find(key) !=
-              reader_options::CSV_META_KEY_WORDS.end()) {
-            if (key == reader_options::BATCH_SIZE_KEY) {
-              // special case for block size
-              // parse block size (MB, b, KB, B) to bytes
-              auto block_size_str = it->second.as<std::string>();
-              auto block_size = parse_block_size(block_size_str);
-              load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
-                  std::to_string(block_size);
-            } else {
-              load_config.metadata_[key] = it->second.as<std::string>();
+      if (load_config.format_ == "csv") {
+        // set default delimiter before we parsing meta_data
+        set_default_csv_loading_config(load_config.metadata_);
+
+        // put all key values in meta_data into metadata_
+        if (format_node["metadata"]) {
+          auto meta_data_node = format_node["metadata"];
+          if (!meta_data_node.IsMap()) {
+            LOG(ERROR) << "metadata should be a map";
+            return false;
+          }
+          for (auto it = meta_data_node.begin(); it != meta_data_node.end();
+               ++it) {
+            // override previous settings.
+            auto key = it->first.as<std::string>();
+            VLOG(1) << "Got metadata key: " << key
+                    << " value: " << it->second.as<std::string>();
+            if (reader_options::CSV_META_KEY_WORDS.find(key) !=
+                reader_options::CSV_META_KEY_WORDS.end()) {
+              if (key == reader_options::BATCH_SIZE_KEY) {
+                // special case for block size
+                // parse block size (MB, b, KB, B) to bytes
+                auto block_size_str = it->second.as<std::string>();
+                auto block_size = parse_block_size(block_size_str);
+                load_config.metadata_[reader_options::BATCH_SIZE_KEY] =
+                    std::to_string(block_size);
+              } else {
+                load_config.metadata_[key] = it->second.as<std::string>();
+              }
             }
+          }
+        }
+      } else {
+        // for other format, put customized metadata into metadata_
+        if (format_node["metadata"]) {
+          LOG(INFO) << "Setting metadata for format: " << load_config.format_;
+          auto meta_data_node = format_node["metadata"];
+          if (!meta_data_node.IsMap()) {
+            LOG(ERROR) << "metadata should be a map";
+            return false;
+          }
+          for (auto it = meta_data_node.begin(); it != meta_data_node.end();
+               ++it) {
+            // override previous settings.
+            auto key = it->first.as<std::string>();
+            VLOG(1) << "Got metadata key: " << key
+                    << " value: " << it->second.as<std::string>();
+            load_config.metadata_[key] = it->second.as<std::string>();
           }
         }
       }
     } else {
-      LOG(ERROR) << "Only support csv format now";
-      return false;
+      LOG(INFO) << "No format is specified, using default csv format";
+      set_default_csv_loading_config(load_config.metadata_);
     }
+  } else {
+    LOG(ERROR) << "loading_config is not set";
+    return false;
   }
   if (load_config.method_ != "init") {
     LOG(ERROR) << "Only support init method now";
@@ -487,10 +545,6 @@ static bool parse_bulk_load_config_yaml(const YAML::Node& root,
                     "are give in absolute path";
   }
 
-  if (load_config.scheme_ != "file") {
-    LOG(ERROR) << "Only support [file] data source now";
-    return false;
-  }
   LOG(INFO) << "scheme: " << load_config.scheme_
             << ", data_location: " << data_location
             << ", method: " << load_config.method_ << ", delimiter: "
@@ -501,7 +555,7 @@ static bool parse_bulk_load_config_yaml(const YAML::Node& root,
   if (root["vertex_mappings"]) {
     VLOG(10) << "vertex_mappings is set";
     if (!parse_vertices_files_schema(root["vertex_mappings"], schema,
-                                     data_location,
+                                     load_config.scheme_, data_location,
                                      load_config.vertex_loading_meta_,
                                      load_config.vertex_column_mappings_)) {
       return false;
@@ -509,10 +563,10 @@ static bool parse_bulk_load_config_yaml(const YAML::Node& root,
   }
   if (root["edge_mappings"]) {
     VLOG(10) << "edge_mappings is set";
-    if (!parse_edges_files_schema(root["edge_mappings"], schema, data_location,
-                                  load_config.edge_loading_meta_,
-                                  load_config.edge_column_mappings_,
-                                  load_config.edge_src_dst_col_)) {
+    if (!parse_edges_files_schema(
+            root["edge_mappings"], schema, load_config.scheme_, data_location,
+            load_config.edge_loading_meta_, load_config.edge_column_mappings_,
+            load_config.edge_src_dst_col_)) {
       return false;
     }
   }
@@ -648,6 +702,13 @@ bool LoadingConfig::GetIsBatchReader() const {
   return str == "true" || str == "True" || str == "TRUE";
 }
 
+std::string LoadingConfig::GetMetaData(const std::string& key) const {
+  if (metadata_.find(key) == metadata_.end()) {
+    return "";
+  }
+  return metadata_.at(key);
+}
+
 const std::unordered_map<LoadingConfig::schema_label_type,
                          std::vector<std::string>>&
 LoadingConfig::GetVertexLoadingMeta() const {
@@ -676,7 +737,8 @@ LoadingConfig::GetEdgeColumnMappings(label_t src_label_id, label_t dst_label_id,
   return edge_column_mappings_.at(key);
 }
 
-const std::pair<std::vector<size_t>, std::vector<size_t>>&
+const std::pair<std::vector<std::pair<std::string, size_t>>,
+                std::vector<std::pair<std::string, size_t>>>&
 LoadingConfig::GetEdgeSrcDstCol(label_t src_label_id, label_t dst_label_id,
                                 label_t edge_label_id) const {
   auto key = std::make_tuple(src_label_id, dst_label_id, edge_label_id);

@@ -248,7 +248,7 @@ class UnTypedEdgeSet {
     while (iter != end_iter) {
       auto edata = iter.GetData();
       PropT prop;
-      if (edata.type == TypeConverter<PropT>::property_type) {
+      if (edata.type == TypeConverter<PropT>::property_type()) {
         ConvertAny<PropT>::to(edata, prop);
       }
       CHECK(cur_ind < sum) << "cur: " << cur_ind << ", sum: " << sum;

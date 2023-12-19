@@ -179,41 +179,31 @@ void template_set_tuple_value(results::Collection* collection,
 /////Sink Any
 
 void set_any_to_common_value(const Any& any, common::Value* value) {
-  switch (any.type) {
-  case gs::PropertyType::kBool:
+  if (any.type == PropertyType::Bool()) {
     value->set_boolean(any.value.b);
-    break;
-  case gs::PropertyType::kInt32:
+  } else if (any.type == PropertyType::Int32()) {
     value->set_i32(any.value.i);
-    break;
-  case gs::PropertyType::kInt64:
-    value->set_i64(any.value.l);
-    break;
-  case gs::PropertyType::kUInt32:
-    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+  } else if (any.type == PropertyType::UInt32()) {
+    // FIXME(zhanglei): temporarily use i32, fix this after common.proto is
     // changed
     value->set_i32(any.value.ui);
-    break;
-  case gs::PropertyType::kUInt64:
+  } else if (any.type == PropertyType::Int64()) {
+    value->set_i64(any.value.l);
+  } else if (any.type == PropertyType::UInt64()) {
     // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
     // changed
     value->set_i64(any.value.ul);
-    break;
-  case gs::PropertyType::kDate:
-    value->set_i64(any.value.d.milli_second);
-    break;
-  case gs::PropertyType::kString:
-    value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
-    break;
-  case gs::PropertyType::kDouble:
+  } else if (any.type == PropertyType::Double()) {
     value->set_f64(any.value.db);
-    break;
-  case gs::PropertyType::kFloat:
+  } else if (any.type == PropertyType::Float()) {
     value->set_f64(any.value.f);
-    break;
-  default:
-    LOG(WARNING) << "Unsupported type: " << any.type;
-    break;
+  } else if (any.type == PropertyType::Date()) {
+    value->set_i64(any.value.d.milli_second);
+  } else if (any.type == PropertyType::String()) {
+    value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
+  } else {
+    LOG(WARNING) << "Unexpected property type: "
+                 << static_cast<int>(any.type.type_enum);
   }
 }
 

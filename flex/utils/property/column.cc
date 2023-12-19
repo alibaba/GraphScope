@@ -37,7 +37,7 @@ class TypedEmptyColumn : public ColumnBase {
   size_t size() const override { return 0; }
   void resize(size_t size) override {}
 
-  PropertyType type() const override { return AnyConverter<T>::type; }
+  PropertyType type() const override { return AnyConverter<T>::type(); }
 
   void set_value(size_t index, const T& val) {}
 
@@ -55,6 +55,46 @@ class TypedEmptyColumn : public ColumnBase {
   StorageStrategy storage_strategy() const override {
     return StorageStrategy::kNone;
   }
+};
+
+template <>
+class TypedEmptyColumn<std::string_view> : public ColumnBase {
+ public:
+  TypedEmptyColumn(int32_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH)
+      : max_length_(max_length) {}
+  ~TypedEmptyColumn() {}
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {}
+  void touch(const std::string& filename) override {}
+  void dump(const std::string& filename) override {}
+  void copy_to_tmp(const std::string& cur_path,
+                   const std::string& tmp_path) override {}
+  void close() override {}
+  size_t size() const override { return 0; }
+  void resize(size_t size) override {}
+
+  PropertyType type() const override { return PropertyType::kString; }
+
+  void set_value(size_t index, const std::string_view& val) {}
+
+  void set_any(size_t index, const Any& value) override {}
+
+  std::string_view get_view(size_t index) const { return std::string_view{}; }
+
+  Any get(size_t index) const override { return Any(); }
+
+  void ingest(uint32_t index, grape::OutArchive& arc) override {
+    std::string_view val;
+    arc >> val;
+  }
+
+  StorageStrategy storage_strategy() const override {
+    return StorageStrategy::kNone;
+  }
+
+ private:
+  int32_t max_length_;
 };
 
 using IntEmptyColumn = TypedEmptyColumn<int32_t>;
@@ -86,13 +126,14 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<FloatEmptyColumn>();
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateEmptyColumn>();
-    } else if (type == PropertyType::kString) {
-      return std::make_shared<StringEmptyColumn>();
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringEmptyColumn>();
+    } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      return std::make_shared<StringEmptyColumn>(
+          type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type);
+                 << static_cast<int>(type.type_enum);
       return nullptr;
     }
   } else {
@@ -112,13 +153,14 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<FloatColumn>(strategy);
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateColumn>(strategy);
-    } else if (type == PropertyType::kString) {
-      return std::make_shared<StringColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringMapColumn<uint8_t>>(strategy);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      return std::make_shared<StringColumn>(
+          strategy, type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type);
+                 << static_cast<int>(type.type_enum);
       return nullptr;
     }
   }

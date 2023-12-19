@@ -187,7 +187,7 @@ template <typename KEY_T, typename INDEX_T>
 void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       const std::string& filename, LFIndexer<INDEX_T>& lf,
                       const std::string& snapshot_dir,
-                      const std::string& work_dir);
+                      const std::string& work_dir, PropertyType type);
 
 template <typename INDEX_T>
 class LFIndexer {
@@ -221,10 +221,11 @@ class LFIndexer {
       keys_ = new TypedColumn<uint64_t>(StorageStrategy::kMem);
     } else if (type == PropertyType::kUInt32) {
       keys_ = new TypedColumn<uint32_t>(StorageStrategy::kMem);
-    } else if (type == PropertyType::kString) {
-      keys_ = new StringColumn(StorageStrategy::kMem);
     } else if (type == PropertyType::kStringMap) {
       keys_ = new StringMapColumn<uint8_t>(StorageStrategy::kMem);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      keys_ = new StringColumn(StorageStrategy::kMem,
+                               type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
     }
@@ -232,11 +233,15 @@ class LFIndexer {
 
   void build_empty_LFIndexer(const std::string& filename,
                              const std::string& snapshot_dir,
-                             const std::string& work_dir, size_t size) {
+                             const std::string& work_dir) {
     keys_->open(filename + ".keys", "", work_dir);
     indices_.open(work_dir + "/" + filename + ".indices", false);
+
     num_elements_.store(0);
     indices_size_ = 0;
+    dump_meta(work_dir + "/" + filename + ".meta");
+    indices_.reset();
+    keys_->close();
   }
 
   void reserve(size_t size) { rehash(std::max(size, num_elements_.load())); }
@@ -343,20 +348,12 @@ class LFIndexer {
 
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) {
-    if (!std::filesystem::exists(work_dir + "/" + name + ".meta")) {
-      if (std::filesystem::exists(snapshot_dir + "/" + name + ".meta")) {
-        copy_to_tmp(snapshot_dir + "/" + name, work_dir + "/" + name);
-
-      } else {
-        build_empty_LFIndexer(name, work_dir, work_dir, 0);
-        num_elements_.store(0);
-        indices_.open(work_dir + "/" + name + ".indices", false);
-        indices_size_ = indices_.size();
-        dump_meta(work_dir + "/" + name + ".meta");
-        indices_.reset();
-        keys_->close();
-      }
+    if (std::filesystem::exists(snapshot_dir + "/" + name + ".meta")) {
+      copy_to_tmp(snapshot_dir + "/" + name, work_dir + "/" + name);
+    } else {
+      build_empty_LFIndexer(name, "", work_dir);
     }
+
     load_meta(work_dir + "/" + name + ".meta");
     keys_->open(name + ".keys", "", work_dir);
     indices_.open(work_dir + "/" + name + ".indices", false);
@@ -470,7 +467,7 @@ class LFIndexer {
                                const std::string& filename,
                                LFIndexer<_INDEX_T>& output,
                                const std::string& snapshot_dir,
-                               const std::string& work_dir);
+                               const std::string& work_dir, PropertyType type);
 };
 
 template <typename INDEX_T>
@@ -495,7 +492,7 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
   IdIndexer() : hasher_() { reset_to_empty_state(); }
   ~IdIndexer() {}
 
-  PropertyType get_type() const override { return AnyConverter<KEY_T>::type; }
+  PropertyType get_type() const override { return AnyConverter<KEY_T>::type(); }
 
   void _add(const Any& oid) override {
     assert(get_type() == oid.type);
@@ -896,7 +893,7 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
                                const std::string& filename,
                                LFIndexer<_INDEX_T>& output,
                                const std::string& snapshot_dir,
-                               const std::string& work_dir);
+                               const std::string& work_dir, PropertyType type);
 };
 
 template <typename KEY_T, typename INDEX_T>
@@ -926,9 +923,9 @@ template <typename KEY_T, typename INDEX_T>
 void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
                       const std::string& filename, LFIndexer<INDEX_T>& lf,
                       const std::string& snapshot_dir,
-                      const std::string& work_dir) {
+                      const std::string& work_dir, PropertyType type) {
   size_t size = input.keys_.size();
-  lf.init(AnyConverter<KEY_T>::type);
+  lf.init(type);
   lf.keys_->open(filename + ".keys", "", work_dir);
   lf.keys_->resize(size);
   _move_data<KEY_T, INDEX_T>()(input.keys_, *lf.keys_, size);
