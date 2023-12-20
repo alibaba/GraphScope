@@ -80,7 +80,7 @@ In this example, we use graph traversal to count the number of papers two given 
 
 ```python
 # get the endpoint for submitting interactive queries on graph g.
-interactive = graphscope.interactive(g)
+interactive = graphscope.gremlin(g)
 
 # Gremlin query for counting the number of papers two authors (with id 2 and 4307) have co-authored
 papers = interactive.execute("g.V().has('author', 'id', 2).out('writes').where(__.in('writes').has('id', 4307)).count()").one()
