@@ -90,7 +90,10 @@ class BasicFragmentLoader {
       dual_csr_list_[index] = new DualCsr<std::string_view>(
           oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
     } else {
-      dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+      dual_csr_list_[index] = new DualCsr<EDATA_T>(
+          oe_strategy, ie_strategy,
+          schema_.get_edge_mutability(src_label_name, dst_label_name,
+                                      edge_label_name));
     }
     ie_[index] = dual_csr_list_[index]->GetInCsr();
     oe_[index] = dual_csr_list_[index]->GetOutCsr();
@@ -140,9 +143,11 @@ class BasicFragmentLoader {
         dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge),
                                std::get<2>(edge));
       }
-
     } else {
-      auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+      bool mutability = schema_.get_edge_mutability(
+          src_label_name, dst_label_name, edge_label_name);
+      auto dual_csr =
+          new DualCsr<EDATA_T>(oe_strategy, ie_strategy, mutability);
 
       dual_csr_list_[index] = dual_csr;
       ie_[index] = dual_csr_list_[index]->GetInCsr();

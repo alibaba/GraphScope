@@ -21,7 +21,6 @@
 
 #include "flat_hash_map/flat_hash_map.hpp"
 #include "flex/engines/graph_db/database/transaction_utils.h"
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/allocators.h"
 #include "flex/utils/id_indexer.h"

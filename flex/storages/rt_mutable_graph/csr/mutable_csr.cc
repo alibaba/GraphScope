@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
