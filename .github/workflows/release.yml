@@ -200,6 +200,11 @@ jobs:
                   -e ${{ env.OSS_ENDPOINT }} \
                   cp -r oss://graphscope/charts ./charts
 
+        # ossutil64 will downloads contents to folder ./charts/charts
+        pushd charts/
+        mv charts/*.tgz charts/*.yaml ./
+        popd
+
     - name: Package Charts
       run: |
         # download helm
