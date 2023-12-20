@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.integration.standard.calcite;
+package com.alibaba.graphscope.gremlin.integration.graph.calcite;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.tinkerpop.gremlin.structure.Graph;

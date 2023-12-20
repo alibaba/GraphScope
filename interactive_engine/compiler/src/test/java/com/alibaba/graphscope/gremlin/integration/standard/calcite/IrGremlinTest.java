@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.integration.standard.calcite;
 
 import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraphProvider;
+import com.alibaba.graphscope.gremlin.integration.graph.calcite.RemoteTestGraph;
 import com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite;
 
 import org.apache.tinkerpop.gremlin.GraphProviderClass;
