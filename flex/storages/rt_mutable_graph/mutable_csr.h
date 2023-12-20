@@ -777,6 +777,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
           reuse_nbr_list = false;
         }
       }
+      offset += adj_lists_[i].capacity();
 
       degree_list[i] = adj_lists_[i].size();
       cap_list[i] = adj_lists_[i].capacity();
@@ -801,7 +802,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       FILE* fout =
           fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
-        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].size(), fout);
+        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].capacity(),
+               fout);
       }
       fflush(fout);
       fclose(fout);

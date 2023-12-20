@@ -167,25 +167,29 @@ class mmap_array {
     }
 
     if (memory_only_) {
-      T* new_data = static_cast<T*>(
-          mmap(NULL, size * sizeof(T), PROT_READ | PROT_WRITE,
-               MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0));
-      if (new_data == MAP_FAILED) {
-        LOG(FATAL) << "mmap failed " << strerror(errno) << "..\n";
-      }
-      if (data_ != NULL) {
-        size_t copy_size = std::min(size, size_);
-        if (copy_size > 0) {
-          memcpy(new_data, data_, copy_size * sizeof(T));
+      if (size == 0) {
+        reset();
+      } else {
+        T* new_data = static_cast<T*>(
+            mmap(NULL, size * sizeof(T), PROT_READ | PROT_WRITE,
+                 MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0));
+        if (new_data == MAP_FAILED) {
+          LOG(FATAL) << "mmap failed " << strerror(errno) << "..\n";
         }
-        munmap(data_, size_ * sizeof(T));
-      }
-      data_ = new_data;
-      size_ = size;
-      if (fd_ != -1) {
-        filename_.clear();
-        close(fd_);
-        fd_ = -1;
+        if (data_ != NULL) {
+          size_t copy_size = std::min(size, size_);
+          if (copy_size > 0) {
+            memcpy(new_data, data_, copy_size * sizeof(T));
+          }
+          munmap(data_, size_ * sizeof(T));
+        }
+        data_ = new_data;
+        size_ = size;
+        if (fd_ != -1) {
+          filename_.clear();
+          close(fd_);
+          fd_ = -1;
+        }
       }
     } else {
       if (read_only_) {
