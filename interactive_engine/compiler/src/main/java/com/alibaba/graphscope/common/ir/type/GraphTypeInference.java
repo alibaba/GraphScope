@@ -39,6 +39,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * check and infer graph schema type for each graph operator in a {@code Match} node
+ */
 public class GraphTypeInference {
     private final GraphBuilder builder;
 
@@ -46,10 +49,23 @@ public class GraphTypeInference {
         this.builder = builder;
     }
 
+    /**
+     * check and infer graph schema type for each graph operator in a single sentence.
+     * i.e. for the query 'Match (a)-[:knows]->(b)', types of a and b can be derived from 'knows' as 'person'
+     * @param top
+     * @return
+     */
     public RelNode inferTypes(RelNode top) {
         return visitRels(ImmutableList.of(top)).get(0);
     }
 
+    /**
+     * check and infer graph schema type for each graph operator in multiple sentences.
+     * i.e. for the query 'Match (a)-[:knows]->(b), (b)-[c]->(d)', firstly types of a and b can be derived from 'knows' as 'person',
+     * then types of c and d can be derived from 'b' further, which should be 'knows' and 'person'.
+     * @param sentences
+     * @return
+     */
     public List<RelNode> inferTypes(List<RelNode> sentences) {
         return visitRels(sentences);
     }

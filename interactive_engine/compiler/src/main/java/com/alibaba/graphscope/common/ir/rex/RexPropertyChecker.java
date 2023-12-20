@@ -24,6 +24,9 @@ import org.apache.calcite.rex.RexVisitorImpl;
 
 import java.util.regex.Pattern;
 
+/**
+ * check property existence for each {@code RexGraphVariable} in a expression
+ */
 public class RexPropertyChecker extends RexVisitorImpl<Void> {
     private final GraphBuilder builder;
 
