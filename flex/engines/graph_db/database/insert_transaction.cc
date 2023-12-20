@@ -55,6 +55,9 @@ bool InsertTransaction::AddVertex(label_t label, const Any& id,
   for (int col_i = 0; col_i != col_num; ++col_i) {
     auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
+      if (prop.type == PropertyType::kString &&
+          types[col_i] == PropertyType::kStringMap)
+        continue;
       arc_.Resize(arc_size);
       std::string label_name = graph_.schema().get_vertex_label_name(label);
       LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
