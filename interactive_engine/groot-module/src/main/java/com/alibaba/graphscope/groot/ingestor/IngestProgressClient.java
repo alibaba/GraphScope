@@ -25,7 +25,7 @@ import java.util.List;
 /** ingestor -> coordinator */
 public class IngestProgressClient extends RpcClient {
 
-    private IngestProgressGrpc.IngestProgressBlockingStub stub;
+    private final IngestProgressGrpc.IngestProgressBlockingStub stub;
 
     public IngestProgressClient(ManagedChannel channel) {
         super(channel);

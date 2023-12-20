@@ -918,13 +918,17 @@ class EdgeExpand {
         auto cur_src_label = label_vec[i];
         // for all this type of vertices, emplace back subgraph
         auto& real_sub_graphs = label_to_subgraphs[cur_src_label];
-        for (auto j = 0; j < real_sub_graphs.size(); ++j) {
-          for (auto k = 0; k < vertices.size(); ++k) {
-            if (label_indices[k] != i) {
-              continue;
-            }
-            grouped_edge_iters[k].emplace_back(
-                real_sub_graphs[j].get_edges(vertices[k]));
+        for (auto k = 0; k < vertices.size(); ++k) {
+          if (label_indices[k] != i) {
+            continue;
+          }
+
+          for (auto j = 0; j < real_sub_graphs.size(); ++j) {
+            auto cur_edges = real_sub_graphs[j].get_edges(vertices[k]);
+            VLOG(10) << "vid index: " << k << " label ind: " << i
+                     << " cur label: " << gs::to_string(cur_src_label)
+                     << " real subgraphs:[" << j << "]: " << cur_edges.Size();
+            grouped_edge_iters[k].emplace_back(cur_edges);
           }
         }
       }
@@ -1306,7 +1310,8 @@ class EdgeExpand {
     auto prop_names = state.prop_names_;
     auto& cur_set = state.cur_vertex_set_;
     VLOG(10) << "[EdgeExpandESingleLabelSrcImpl]" << prop_names.size()
-             << ", set size: " << cur_set.Size();
+             << ", set size: " << cur_set.Size()
+             << ", direction: " << gs::to_string(state.direction_);
     for (auto v : prop_names) {
       VLOG(10) << "prop:" << v;
     }

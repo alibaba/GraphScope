@@ -809,12 +809,13 @@ gs::Result<std::string> WorkDirManipulator::dump_graph_schema(
 gs::Result<std::string> WorkDirManipulator::LoadGraph(
     const std::string& config_file_path, const std::string& graph_name,
     int32_t loading_thread_num) {
-  // TODO: call graph_loader.
+  // TODO: call GRAPH_LOADER_BIN.
   auto schema_file = GetGraphSchemaPath(graph_name);
   auto cur_indices_dir = GetGraphIndicesDir(graph_name);
-  // system call to graph_loader schema_file, loading_config, cur_indices_dir
-  std::string cmd_string = "graph_loader " + schema_file + " " +
-                           config_file_path + " " + cur_indices_dir + " " +
+  // system call to GRAPH_LOADER_BIN schema_file, loading_config,
+  // cur_indices_dir
+  std::string cmd_string = GRAPH_LOADER_BIN + " -g " + schema_file + " -l " +
+                           config_file_path + " -d " + cur_indices_dir + " " +
                            std::to_string(loading_thread_num);
   LOG(INFO) << "Call graph_loader: " << cmd_string;
   auto res = std::system(cmd_string.c_str());
@@ -860,7 +861,12 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     const nlohmann::json& json) {
   LOG(INFO) << "Generate procedure: " << json.dump();
   auto codegen_bin = gs::find_codegen_bin();
-  auto work_directory = std::string(server::CodegenProxy::DEFAULT_CODEGEN_DIR);
+  auto temp_codegen_directory =
+      std::string(server::CodegenProxy::DEFAULT_CODEGEN_DIR);
+  // mkdir -p temp_codegen_directory
+  if (!std::filesystem::exists(temp_codegen_directory)) {
+    std::filesystem::create_directory(temp_codegen_directory);
+  }
   // dump json["query"] to file.
   auto query = json["query"].get<std::string>();
   auto name = json["name"].get<std::string>();
@@ -868,9 +874,9 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   auto bounded_graph = json["bound_graph"].get<std::string>();
   std::string query_file;
   if (type == "cypher" || type == "CYPHER") {
-    query_file = work_directory + "/" + name + ".cypher";
+    query_file = temp_codegen_directory + "/" + name + ".cypher";
   } else if (type == "CPP" || type == "cpp") {
-    query_file = work_directory + "/" + name + ".cpp";
+    query_file = temp_codegen_directory + "/" + name + ".cpp";
   } else {
     return seastar::make_exception_future<seastar::sstring>(
         "Procedure type is not supported: " + type);
@@ -901,7 +907,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
   auto schema_path = GetGraphSchemaPath(bounded_graph);
   auto engine_config = get_engine_config_path();
 
-  return CodegenProxy::CallCodegenCmd(query_file, name, work_directory,
+  return CodegenProxy::CallCodegenCmd(query_file, name, temp_codegen_directory,
                                       output_dir, schema_path, engine_config,
                                       codegen_bin)
       .then_wrapped([name, output_dir](auto&& f) {
@@ -1276,5 +1282,6 @@ const std::string WorkDirManipulator::CONF_ENGINE_CONFIG_FILE_NAME =
     "engine_config.yaml";
 const std::string WorkDirManipulator::RUNNING_GRAPH_FILE_NAME = "RUNNING";
 const std::string WorkDirManipulator::TMP_DIR = "/tmp";
+const std::string WorkDirManipulator::GRAPH_LOADER_BIN = "bulk_loader";
 
 }  // namespace server

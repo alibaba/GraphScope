@@ -2,6 +2,10 @@
 
 In our guide on [using custom graph data](./custom_graph_data.md), we introduced the basics of importing graph data using a simple YAML configuration. This section delves deeper, providing a thorough exploration of the extensive configuration options available for data import.
 
+## Supported data source
+
+Currently we only support import data to graph from local `csv` files or `odps` table. See configuration `loading_config.data_source.scheme`.
+
 ## Sample Configuration for the "Modern" Graph
 
 To illustrate, let's examine the `examples/modern_import_full.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
@@ -9,6 +13,7 @@ To illustrate, let's examine the `examples/modern_import_full.yaml` file. This c
 ``` yaml
 loading_config: 
   data_source:
+    scheme: file
     location: /home/modern_graph/ 
   format: 
     metadata: 
@@ -101,7 +106,8 @@ The table below offers a detailed breakdown of each configuration item. In this 
 | -------- | -------- | -------- |-------- |
 | **loading_config**    | N/A     | Loading configurations     |  Yes   |
 | loading_config.data_source    | N/A     | Place that maintains the raw data     |  Yes   |
-|loading_config.data_source.location |	N/A | Path to the data source in the container, which must be mapped from the host machine while intializing the service |	Yes
+| loading_config.data_source.location |	N/A | Path to the data source in the container, which must be mapped from the host machine while intializing the service |	Yes
+| loading_config.scheme | file | The source of input data. Currently only `file` and `odps` are supported | No |
 | loading_config.format    | N/A     | The format of the raw data in CSV    |  Yes   |
 | loading_config.format.metadata    | N/A    | Mainly for configuring the options for reading CSV   |  Yes   |
 | loading_config.format.metadata.delimiter | '\|' | Delimiter used to split a row of data | Yes | 

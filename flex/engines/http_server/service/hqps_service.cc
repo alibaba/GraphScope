@@ -110,4 +110,22 @@ void HQPSService::run_and_wait_for_exit() {
 
 void HQPSService::set_exit_state() { running_.store(false); }
 
+seastar::future<> HQPSService::stop_query_actors() {
+  if (query_hdl_) {
+    return query_hdl_->stop_query_actors();
+  } else {
+    std::cerr << "Query handler has not been inited!" << std::endl;
+    return seastar::make_exception_future<>(
+        std::runtime_error("Query handler has not been inited!"));
+  }
+}
+
+void HQPSService::start_query_actors() {
+  if (query_hdl_) {
+    query_hdl_->start_query_actors();
+  } else {
+    std::cerr << "Query handler has not been inited!" << std::endl;
+    return;
+  }
+}
 }  // namespace server

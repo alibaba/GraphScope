@@ -98,6 +98,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
                                     createQueryStatusCallback(script, jobId);
+                            QueryTimeoutConfig timeoutConfig =
+                                    new QueryTimeoutConfig(ctx.getRequestTimeout());
                             processTraversal(
                                     traversal,
                                     new GremlinTestResultProcessor(
@@ -105,7 +107,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             traversal,
                                             statusCallback,
                                             testGraph,
-                                            this.configs),
+                                            this.configs,
+                                            timeoutConfig),
                                     irMeta,
                                     new QueryTimeoutConfig(ctx.getRequestTimeout()),
                                     statusCallback.getQueryLogger());

@@ -401,9 +401,9 @@ class SortOp {
       const ORDER_PAIR& ordering_pair,
       const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set,
       const GRAPH_INTERFACE& graph) {
-    return FlatEdgeSetPropGetter<
-        ORDER_PAIR::tag_id,
-        typename FlatEdgeSet<VID_T, LabelT, EDATA_T>::index_ele_tuple_t>();
+    return create_prop_getter_impl<ORDER_PAIR::tag_id,
+                                   typename ORDER_PAIR::prop_t>(
+        set, graph, ordering_pair.name);
   }
 
   template <typename ORDER_PAIR, size_t N, typename GI, typename VID_T,
@@ -412,10 +412,9 @@ class SortOp {
       const ORDER_PAIR& ordering_pair,
       const GeneralEdgeSet<N, GI, VID_T, LabelT, EDATA_T...>& set,
       const GRAPH_INTERFACE& graph) {
-    return GeneralEdgeSetPropGetter<
-        ORDER_PAIR::tag_id,
-        typename GeneralEdgeSet<N, GI, VID_T, LabelT,
-                                EDATA_T...>::index_ele_tuple_t>();
+    return create_prop_getter_impl<ORDER_PAIR::tag_id,
+                                   typename ORDER_PAIR::prop_t>(
+        set, graph, ordering_pair.name);
   }
 
   template <typename ORDER_PAIR, typename T>

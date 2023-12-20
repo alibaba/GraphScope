@@ -25,8 +25,8 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
     private static final Logger logger =
             LoggerFactory.getLogger(IngestorWriteSnapshotIdNotifier.class);
 
-    private RoleClients<IngestorSnapshotClient> ingestorSnapshotClients;
-    private int ingestorCount;
+    private final RoleClients<IngestorSnapshotClient> ingestorSnapshotClients;
+    private final int ingestorCount;
 
     public IngestorWriteSnapshotIdNotifier(
             Configs configs, RoleClients<IngestorSnapshotClient> ingestorSnapshotClients) {
@@ -48,31 +48,26 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
                                     public void onCompleted(Long previousSnapshotId) {
                                         if (previousSnapshotId > snapshotId) {
                                             logger.error(
-                                                    "unexpected previousSnapshotId ["
-                                                            + previousSnapshotId
-                                                            + "], "
-                                                            + "should <= ["
-                                                            + snapshotId
-                                                            + "]. "
-                                                            + "target realtimeWriter ["
-                                                            + realtimeWriterId
-                                                            + "]");
+                                                    "unexpected previousSnapshotId [{}], should <="
+                                                            + " [{}]. target realtime writer [{}]",
+                                                    previousSnapshotId,
+                                                    snapshotId,
+                                                    realtimeWriterId);
                                         }
                                     }
 
                                     @Override
                                     public void onError(Throwable t) {
                                         logger.error(
-                                                "error in advanceIngestSnapshotId ["
-                                                        + snapshotId
-                                                        + "]. realtimeWriter ["
-                                                        + realtimeWriterId
-                                                        + "]",
-                                                t);
+                                                "error in advanceIngestSnapshotId [{}]. realtime"
+                                                        + " writer [{}], reason [{}]",
+                                                snapshotId,
+                                                realtimeWriterId,
+                                                t.getMessage());
                                     }
                                 });
             } catch (Exception e) {
-                logger.warn("update writeSnapshotId failed. realtimeWriter [" + i + "]", e);
+                logger.warn("update writeSnapshotId failed. realtimeWriter [{}]", i, e);
             }
         }
     }

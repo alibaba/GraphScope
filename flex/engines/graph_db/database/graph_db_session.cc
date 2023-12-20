@@ -67,8 +67,13 @@ SingleEdgeInsertTransaction GraphDBSession::GetSingleEdgeInsertTransaction() {
 
 UpdateTransaction GraphDBSession::GetUpdateTransaction() {
   uint32_t ts = db_.version_manager_.acquire_update_timestamp();
-  return UpdateTransaction(db_.graph_, alloc_, logger_, db_.version_manager_,
-                           ts);
+  return UpdateTransaction(db_.graph_, alloc_, work_dir_, logger_,
+                           db_.version_manager_, ts);
+}
+
+bool GraphDBSession::BatchUpdate(UpdateBatch& batch) {
+  GetUpdateTransaction().batch_commit(batch);
+  return true;
 }
 
 const MutablePropertyFragment& GraphDBSession::graph() const {
@@ -152,7 +157,9 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
 
     LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_
               << "] retry - " << i << " / " << MAX_RETRY;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    if (i + 1 < MAX_RETRY) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
     decoder.reset(str_data, str_len);
     result_buffer.clear();

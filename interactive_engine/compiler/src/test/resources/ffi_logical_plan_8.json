@@ -36,30 +36,16 @@
                           "Id": {}
                         }
                       },
-                      "cmp": null,
+                      "cmp": 6,
                       "value": {
                         "Const": {
                           "item": {
-                            "I32": 1
-                          }
-                        }
-                      }
-                    }
-                  ]
-                },
-                {
-                  "predicates": [
-                    {
-                      "key": {
-                        "item": {
-                          "Id": {}
-                        }
-                      },
-                      "cmp": null,
-                      "value": {
-                        "Const": {
-                          "item": {
-                            "I32": 2
+                            "I32Array": {
+                              "item": [
+                                1,
+                                2
+                              ]
+                            }
                           }
                         }
                       }

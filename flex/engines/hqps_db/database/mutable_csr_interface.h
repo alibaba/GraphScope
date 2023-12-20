@@ -508,15 +508,15 @@ class MutableCSRInterface {
           csr, {src_label_id, dst_label_id, edge_label_id}, prop_names}};
     } else if (direction_str == "in" || direction_str == "In" ||
                direction_str == "IN") {
-      csr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
+      csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
                                            edge_label_id);
       return std::vector<sub_graph_t>{sub_graph_t{
-          csr, {src_label_id, dst_label_id, edge_label_id}, prop_names}};
+          csr, {dst_label_id, src_label_id, edge_label_id}, prop_names}};
     } else if (direction_str == "both" || direction_str == "Both" ||
                direction_str == "BOTH") {
       csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                            edge_label_id);
-      other_csr = db_session_.graph().get_ie_csr(src_label_id, dst_label_id,
+      other_csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
                                                  edge_label_id);
       return std::vector<sub_graph_t>{
           sub_graph_t{
@@ -797,6 +797,9 @@ class MutableCSRInterface {
       const label_t& label_id, const std::string& prop_name) const {
     using column_t = std::shared_ptr<TypedRefColumn<T>>;
     column_t column;
+    if constexpr (std::is_same_v<T, LabelKey>) {
+      return std::make_shared<TypedRefColumn<LabelKey>>(label_id);
+    }
     if (prop_name == "id" || prop_name == "ID" || prop_name == "Id") {
       column = std::dynamic_pointer_cast<TypedRefColumn<T>>(
           db_session_.get_vertex_id_column(label_id));
@@ -816,6 +819,8 @@ class MutableCSRInterface {
       const label_t& label_id, const std::string& prop_name) const {
     if (prop_name == "id" || prop_name == "ID" || prop_name == "Id") {
       return db_session_.get_vertex_id_column(label_id);
+    } else if (prop_name == "Label" || prop_name == "LabelKey") {
+      return std::make_shared<TypedRefColumn<LabelKey>>(label_id);
     } else {
       return create_ref_column(
           db_session_.get_vertex_property_column(label_id, prop_name));
@@ -852,7 +857,7 @@ class MutableCSRInterface {
           *std::dynamic_pointer_cast<TypedColumn<float>>(column));
     } else {
       LOG(FATAL) << "unexpected type to create column, "
-                 << static_cast<int>(type);
+                 << static_cast<int>(type.type_enum);
       return nullptr;
     }
   }

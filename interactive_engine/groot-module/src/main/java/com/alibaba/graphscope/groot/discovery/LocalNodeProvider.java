@@ -23,9 +23,9 @@ import java.util.function.Function;
 
 public class LocalNodeProvider implements Function<Integer, GrootNode> {
 
-    private Configs configs;
-    private RoleType roleType;
-    private AtomicReference<GrootNode> localNodeRef = new AtomicReference<>();
+    private final Configs configs;
+    private final RoleType roleType;
+    private final AtomicReference<GrootNode> localNodeRef = new AtomicReference<>();
 
     public LocalNodeProvider(Configs configs) {
         this(RoleType.fromName(CommonConfig.ROLE_NAME.get(configs)), configs);

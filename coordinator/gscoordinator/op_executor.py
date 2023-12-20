@@ -343,8 +343,8 @@ class OperationExecutor:
             ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
         # Check connectivity, otherwise the stub is useless
-        delay = 2
-        for retry in range(8):  # approximated 255s
+        max_retries, backoff, err = 8, 2, ""
+        for retry in range(max_retries):  # approximated 255s
             try:
                 channel = grpc.insecure_channel(
                     self._launcher.analytical_engine_endpoint, options=options
@@ -353,16 +353,18 @@ class OperationExecutor:
                 stub.HeartBeat(message_pb2.HeartBeatRequest())
                 return stub
             except grpc.RpcError as e:
-                logger.warning(
-                    "Connecting to analytical engine... tried %d time, will retry in %d seconds",
+                err = f"Error code: {e.code()}, details {e.details()}"
+                logger.debug(
+                    "Connecting to analytical engine failed, tried %d time, will retry in %d seconds, error is %s",
                     retry + 1,
-                    delay,
+                    backoff,
+                    err,
                 )
-                logger.warning("Error code: %s, details %s", e.code(), e.details())
-                time.sleep(delay)
-                delay *= 2  # back off
+                time.sleep(backoff)
+                backoff *= 2  # exponential backoff
         raise RuntimeError(
-            "Failed to connect to engine in a reasonable time, deployment may failed. Please check coordinator log for details"
+            f"Failed to connect to engine in a reasonable time, deployment may failed: '{err}'. "
+            "Please check coordinator log for more details"
         )
 
     @property
