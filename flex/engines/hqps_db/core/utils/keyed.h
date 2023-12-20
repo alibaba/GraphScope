@@ -179,7 +179,8 @@ struct KeyedAggT<GI, RowVertexSet<LabelT, VID_T, T...>, AggFunc::COUNT_DISTINCT,
                  std::integer_sequence<int32_t, tag_id>> {
   using agg_res_t = Collection<size_t>;
   // build a counter array.
-  using aggregate_res_builder_t = DistinctCountBuilder<1, tag_id, VID_T>;
+  using vertex_set_t = RowVertexSet<LabelT, VID_T, T...>;
+  using aggregate_res_builder_t = DistinctCountBuilder<tag_id, vertex_set_t>;
 
   static aggregate_res_builder_t create_agg_builder(
       const RowVertexSet<LabelT, VID_T, T...>& set, const GI& graph,
@@ -211,7 +212,8 @@ struct KeyedAggT<GI, TwoLabelVertexSet<VID_T, LabelT, T...>,
                  std::integer_sequence<int32_t, tag_id>> {
   using agg_res_t = Collection<size_t>;
   // build a counter array.
-  using aggregate_res_builder_t = DistinctCountBuilder<2, tag_id, VID_T>;
+  using vertex_set_t = TwoLabelVertexSet<VID_T, LabelT, T...>;
+  using aggregate_res_builder_t = DistinctCountBuilder<tag_id, vertex_set_t>;
 
   static aggregate_res_builder_t create_agg_builder(
       const TwoLabelVertexSet<VID_T, LabelT, T...>& set, const GI& graph,
@@ -384,6 +386,21 @@ struct KeyedAggT<GI, UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>,
   }
 };
 
+template <typename GI, typename VID_T, typename LabelT, typename SET_T,
+          int tag_id>
+struct KeyedAggT<GI, SingleLabelEdgeSet<VID_T, LabelT, SET_T>, AggFunc::COUNT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using aggregate_res_builder_t = CountBuilder<tag_id>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const SingleLabelEdgeSet<VID_T, LabelT, SET_T>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return CountBuilder<tag_id>();
+  }
+};
+
 template <typename GI, typename VID_T, typename LabelT, typename EDATA_T,
           int tag_id>
 struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>, AggFunc::COUNT,
@@ -396,6 +413,55 @@ struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>, AggFunc::COUNT,
       const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set, const GI& graph,
       std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     return CountBuilder<tag_id>();
+  }
+};
+
+// COUNT DISTINCT for EdgeSets.
+template <typename GI, typename VID_T, typename LabelT, int tag_id>
+struct KeyedAggT<GI, UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>,
+                 AggFunc::COUNT_DISTINCT, std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using edge_set_t = UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>;
+  using aggregate_res_builder_t = DistinctCountBuilder<tag_id, edge_set_t>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>& set,
+      const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return aggregate_res_builder_t(set);
+  }
+};
+
+template <typename GI, typename VID_T, typename LabelT, typename SET_T,
+          int tag_id>
+struct KeyedAggT<GI, SingleLabelEdgeSet<VID_T, LabelT, SET_T>,
+                 AggFunc::COUNT_DISTINCT, std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using edge_set_t = SingleLabelEdgeSet<VID_T, LabelT, SET_T>;
+  using aggregate_res_builder_t = DistinctCountBuilder<tag_id, edge_set_t>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const SingleLabelEdgeSet<VID_T, LabelT, SET_T>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return aggregate_res_builder_t(set);
+  }
+};
+
+template <typename GI, typename VID_T, typename LabelT, typename EDATA_T,
+          int tag_id>
+struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>,
+                 AggFunc::COUNT_DISTINCT, std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using edge_set_t = FlatEdgeSet<VID_T, LabelT, EDATA_T>;
+  using aggregate_res_builder_t = DistinctCountBuilder<tag_id, edge_set_t>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return aggregate_res_builder_t(set);
   }
 };
 

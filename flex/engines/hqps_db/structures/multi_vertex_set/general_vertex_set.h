@@ -78,7 +78,7 @@ auto general_project_vertices_impl(
             break;
           }
         } else {
-          if (expr(std::get<0>(eles))) {
+          if (std::apply(expr, eles)) {
             res_bitsets[label_id].set_bit(res_vec.size());
             res_vec.push_back(old_vec[i]);
             break;
@@ -162,7 +162,7 @@ auto general_project_vertices_impl(
             break;
           }
         } else {
-          if (expr(std::get<0>(eles))) {
+          if (std::apply(expr, eles)) {
             res_bitsets[label_id].set_bit(res_vec.size());
             res_vec.push_back(old_vec[i]);
             res_data_vec.push_back(old_data_vec[i]);

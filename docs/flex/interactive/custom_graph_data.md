@@ -207,3 +207,8 @@ Note: Stopping a prior service is necessary to start a new service with an alter
 
 
 Now you can move to [Stored Procedure](./stored_procedures) to explore querying via stored procedures.
+
+
+## Try other graphs
+
+In addition to `movies` graph, we have also prepared the `graph_algo` graph. You can find the raw CSV files, graph.yaml, and import.yaml in the `./examples/graph_algo/` directory. You can import the `graph_algo` graph just like importing the `movies` graph.

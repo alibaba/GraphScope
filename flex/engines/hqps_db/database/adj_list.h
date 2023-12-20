@@ -95,6 +95,7 @@ class SubGraph {
     return iterator(label_triplet_, nullptr, &prop_names_);
   }
 
+  // here the src, dst, refer the src, dst of the csr, not the direction.
   label_id_t GetSrcLabel() const { return label_triplet_[0]; }
   label_id_t GetEdgeLabel() const { return label_triplet_[2]; }
   label_id_t GetDstLabel() const { return label_triplet_[1]; }
@@ -205,26 +206,27 @@ class Adj<T> {
 };
 
 template <>
-class Adj<> {
+class Adj<grape::EmptyType> {
  public:
   Adj() = default;
   ~Adj() = default;
 
-  Adj(const Adj<>& other) : neighbor_(other.neighbor_), prop_(other.prop_) {}
-  Adj(Adj<>&& other)
+  Adj(const Adj<grape::EmptyType>& other)
+      : neighbor_(other.neighbor_), prop_(other.prop_) {}
+  Adj(Adj<grape::EmptyType>&& other)
       : neighbor_(other.neighbor_), prop_(std::move(other.prop_)) {}
 
-  inline Adj<>& operator=(const Adj<>& from) {
+  inline Adj<grape::EmptyType>& operator=(const Adj<grape::EmptyType>& from) {
     this->neighbor_ = from.neighbor_;
     this->prop_ = from.prop_;
     return *this;
   }
 
   vid_t neighbor() const { return neighbor_; }
-  const std::tuple<>& properties() const { return prop_; }
+  const std::tuple<grape::EmptyType>& properties() const { return prop_; }
 
   vid_t neighbor_;
-  std::tuple<> prop_;
+  std::tuple<grape::EmptyType> prop_;
 };
 
 template <typename... T>
@@ -358,7 +360,7 @@ class AdjList<T> {
 };
 
 template <>
-class AdjList<> {
+class AdjList<grape::EmptyType> {
   using nbr_t = MutableNbr<grape::EmptyType>;
   class Iterator {
    public:
@@ -389,8 +391,8 @@ class AdjList<> {
 
     vid_t neighbor() const { return cur_.neighbor(); }
 
-    const Adj<>& operator*() const { return cur_; }
-    const Adj<>* operator->() const { return &cur_; }
+    const Adj<grape::EmptyType>& operator*() const { return cur_; }
+    const Adj<grape::EmptyType>* operator->() const { return &cur_; }
 
     Iterator& operator++() {
       if (begin0_ < end0_) {
@@ -424,7 +426,7 @@ class AdjList<> {
     }
 
    private:
-    Adj<> cur_;
+    Adj<grape::EmptyType> cur_;
     const nbr_t *begin0_, *begin1_;
     const nbr_t *end0_, *end1_;
   };
@@ -438,11 +440,11 @@ class AdjList<> {
   AdjList(const slice_t& slice0, const slice_t& slice1)
       : slice0_(slice0), slice1_(slice1) {}
 
-  AdjList(AdjList<>&& adj_list)
+  AdjList(AdjList<grape::EmptyType>&& adj_list)
       : slice0_(std::move(adj_list.slice0_)),
         slice1_(std::move(adj_list.slice1_)) {}
 
-  AdjList(const AdjList<>& adj_list)
+  AdjList(const AdjList<grape::EmptyType>& adj_list)
       : slice0_(adj_list.slice0_), slice1_(adj_list.slice1_) {}
 
   Iterator begin() const {
@@ -454,7 +456,7 @@ class AdjList<> {
   }
   size_t size() const { return slice0_.size() + slice1_.size(); }
 
-  AdjList<>& operator=(const AdjList<>& other) {
+  AdjList<grape::EmptyType>& operator=(const AdjList<grape::EmptyType>& other) {
     slice0_ = other.slice0_;
     slice1_ = other.slice1_;
     return *this;
@@ -548,7 +550,7 @@ class AdjListArray<T> {
 };
 
 template <>
-class AdjListArray<> {
+class AdjListArray<grape::EmptyType> {
  public:
   using csr_base_t = MutableCsrBase;
   using typed_csr_base_t = MutableCsr<grape::EmptyType>;
@@ -559,9 +561,12 @@ class AdjListArray<> {
     slices_.reserve(vids.size());
     const typed_csr_base_t* casted_csr =
         dynamic_cast<const typed_csr_base_t*>(csr);
-    for (auto v : vids) {
-      auto edges = casted_csr->get_edges(v);
-      slices_.emplace_back(std::make_pair(casted_csr->get_edges(v), slice_t()));
+    if (casted_csr) {
+      for (auto v : vids) {
+        auto edges = casted_csr->get_edges(v);
+        slices_.emplace_back(
+            std::make_pair(casted_csr->get_edges(v), slice_t()));
+      }
     }
   }
 
@@ -575,31 +580,41 @@ class AdjListArray<> {
         dynamic_cast<const typed_csr_base_t*>(csr1);
 
     for (auto v : vids) {
-      slices_.emplace_back(
-          std::make_pair(casted_csr0->get_edges(v), casted_csr1->get_edges(v)));
+      if (casted_csr0 && casted_csr1) {
+        slices_.emplace_back(std::make_pair(casted_csr0->get_edges(v),
+                                            casted_csr1->get_edges(v)));
+      } else if (casted_csr0 && !casted_csr1) {
+        slices_.emplace_back(
+            std::make_pair(casted_csr0->get_edges(v), slice_t()));
+      } else if (!casted_csr0 && casted_csr1) {
+        slices_.emplace_back(
+            std::make_pair(slice_t(), casted_csr1->get_edges(v)));
+      } else {
+        slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
+      }
     }
   }
   // move constructor
-  AdjListArray(AdjListArray<>&& adj_list)
+  AdjListArray(AdjListArray<grape::EmptyType>&& adj_list)
       : slices_(std::move(adj_list.slices_)), flag_(adj_list.flag_) {}
 
   size_t size() const { return slices_.size(); }
 
   void resize(size_t new_size) { slices_.resize(new_size); }
 
-  void set(size_t i, const AdjList<>& slice) {
+  void set(size_t i, const AdjList<grape::EmptyType>& slice) {
     slices_[i] = std::make_pair(slice.slice0(), slice.slice1());
   }
 
-  AdjList<> get(size_t i) const {
+  AdjList<grape::EmptyType> get(size_t i) const {
     if (flag_) {
-      return AdjList<>(slices_[i].first, slices_[i].second);
+      return AdjList<grape::EmptyType>(slices_[i].first, slices_[i].second);
     } else {
-      return AdjList<>(slices_[i].first);
+      return AdjList<grape::EmptyType>(slices_[i].first);
     }
   }
 
-  void swap(AdjListArray<>& adj_list) {
+  void swap(AdjListArray<grape::EmptyType>& adj_list) {
     this->slices_.swap(adj_list.slices_);
     bool tmp_flag = flag_;
     flag_ = adj_list.flag_;
