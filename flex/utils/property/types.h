@@ -116,6 +116,21 @@ struct Date {
   int64_t milli_second;
 };
 
+struct LabelKey {
+  using label_data_type = uint8_t;
+  int32_t label_id;
+  LabelKey() = default;
+  LabelKey(label_data_type id) : label_id(id) {}
+  LabelKey(LabelKey&&) = default;
+  LabelKey(const LabelKey&) = default;
+
+  // operator=
+  LabelKey& operator=(const LabelKey& other) {
+    label_id = other.label_id;
+    return *this;
+  }
+};
+
 union AnyValue {
   AnyValue() {}
   ~AnyValue() {}
@@ -795,7 +810,19 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
 
 }  // namespace gs
 
+namespace boost {
+// override boost hash function for EmptyType
+inline std::size_t hash_value(const grape::EmptyType& value) { return 0; }
+}  // namespace boost
+
 namespace std {
+inline bool operator==(const grape::EmptyType& a, const grape::EmptyType& b) {
+  return true;
+}
+
+inline bool operator!=(const grape::EmptyType& a, const grape::EmptyType& b) {
+  return false;
+}
 
 inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   os << dt.to_string();

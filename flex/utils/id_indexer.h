@@ -319,7 +319,9 @@ class LFIndexer {
   }
 
   bool get_index(const Any& oid, INDEX_T& ret) const {
-    assert(oid.type == get_type());
+    if (oid.type != get_type()) {
+      return false;
+    }
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();

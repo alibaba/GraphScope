@@ -200,9 +200,17 @@ static codegen::ParamConst variable_to_param_const(const common::Variable& var,
                                                    BuildingContext& ctx) {
   codegen::ParamConst param_const;
   if (var.has_property()) {
-    param_const.var_name = var.property().key().name();
-    param_const.type =
-        common_data_type_pb_2_data_type(var.node_type().data_type());
+    auto& var_property = var.property();
+    if (var_property.has_label()) {
+      param_const.var_name = "label";
+      param_const.type = codegen::DataType::kLabelId;
+    } else if (var_property.has_key()) {
+      param_const.var_name = var.property().key().name();
+      param_const.type =
+          common_data_type_pb_2_data_type(var.node_type().data_type());
+    } else {
+      LOG(FATAL) << "Unexpected property type";
+    }
   } else if (var.has_tag()) {
     // check is vertex or is edge from node_type
     if (var.has_node_type()) {
