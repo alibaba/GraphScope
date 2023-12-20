@@ -3,17 +3,26 @@
 ## Build Base Image
 
 ```bash
-docker buildx build --platform linux/amd64,linux/arm64 -f interactive-base.Dockerfile -t registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base --push .
+make interactive-base 
+# will be interactive-base to a multi-platform images, amd64 and arm64, and push to the remote
 ```
 
 ## Build Runtime Image with latest GraphScope
 
 ```bash
-docker buildx build --platform linux/amd64,linux/arm64 -f interactive-runtime.Dockerfile --target final_image -t interactive --no-cache .
+# get the current commit id
+commit_id=$(git rev-parse --short HEAD)
+# on a arm machine
+make interactive-runtime VERSION=${commit_id} # build and push to the remote 
+# on a x86 machine
+make interactive-runtime VERSION=${commit_id} # build and push to the remote 
 ```
 
-## Tag the image
+## Create and Push Docker Manifest 
 
 ```bash
-docker tag interactive:latest registry.cn-hongkong.aliyuncs.com/graphscope/interactive:{version}
+VERSION=${real_tag}
+sudo docker manifest create registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${VERSION} --amend registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${commit_id}-x86_64 --amend registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${commit_id}-aarch64
+
+sudo docker manifest push registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${VERSION}
 ```

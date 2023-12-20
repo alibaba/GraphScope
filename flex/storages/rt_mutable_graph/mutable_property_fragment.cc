@@ -100,8 +100,9 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
       return new DualCsr<double>(oes, ies);
     } else if (properties[0] == PropertyType::kFloat) {
       return new DualCsr<float>(oes, ies);
-    } else if (properties[0] == PropertyType::kString) {
-      return new DualCsr<std::string_view>(oes, ies);
+    } else if (properties[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
+      return new DualCsr<std::string_view>(
+          oes, ies, properties[0].additional_type_info.max_length);
     }
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
@@ -109,22 +110,37 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
 }
 
 void MutablePropertyFragment::Open(const std::string& work_dir) {
-  loadSchema(schema_path(work_dir));
-  vertex_label_num_ = schema_.vertex_label_num();
-  edge_label_num_ = schema_.edge_label_num();
+  std::string schema_file = schema_path(work_dir);
+  std::string snapshot_dir{};
+  bool build_empty_graph = false;
+  if (std::filesystem::exists(schema_file)) {
+    loadSchema(schema_file);
+    vertex_label_num_ = schema_.vertex_label_num();
+    edge_label_num_ = schema_.edge_label_num();
+    lf_indexers_.resize(vertex_label_num_);
+    snapshot_dir = get_latest_snapshot(work_dir);
+  } else {
+    vertex_label_num_ = schema_.vertex_label_num();
+    edge_label_num_ = schema_.edge_label_num();
+    lf_indexers_.resize(vertex_label_num_);
+    build_empty_graph = true;
+    for (size_t i = 0; i < vertex_label_num_; ++i) {
+      lf_indexers_[i].init(std::get<0>(schema_.get_vertex_primary_key(i)[0]));
+    }
+  }
 
-  lf_indexers_.resize(vertex_label_num_);
   vertex_data_.resize(vertex_label_num_);
-  std::string snapshot_dir = get_latest_snapshot(work_dir);
   std::string tmp_dir_path = tmp_dir(work_dir);
   if (std::filesystem::exists(tmp_dir_path)) {
     std::filesystem::remove_all(tmp_dir_path);
   }
-  std::filesystem::create_directory(tmp_dir_path);
+
+  std::filesystem::create_directories(tmp_dir_path);
 
   std::vector<size_t> vertex_capacities(vertex_label_num_, 0);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     std::string v_label_name = schema_.get_vertex_label_name(i);
+
     lf_indexers_[i].open(vertex_map_prefix(v_label_name), snapshot_dir,
                          tmp_dir_path);
 
@@ -132,9 +148,17 @@ void MutablePropertyFragment::Open(const std::string& work_dir) {
                          tmp_dir_path, schema_.get_vertex_property_names(i),
                          schema_.get_vertex_properties(i),
                          schema_.get_vertex_storage_strategies(v_label_name));
-    vertex_data_[i].copy_to_tmp(vertex_table_prefix(v_label_name), snapshot_dir,
-                                tmp_dir_path);
-    size_t vertex_capacity = lf_indexers_[i].capacity();
+    if (!build_empty_graph) {
+      vertex_data_[i].copy_to_tmp(vertex_table_prefix(v_label_name),
+                                  snapshot_dir, tmp_dir_path);
+    }
+    size_t vertex_capacity =
+        schema_.get_max_vnum(v_label_name);  // lf_indexers_[i].capacity();
+    if (build_empty_graph) {
+      lf_indexers_[i].reserve(vertex_capacity);
+    } else {
+      vertex_capacity = lf_indexers_[i].capacity();
+    }
     vertex_data_[i].resize(vertex_capacity);
     vertex_capacities[i] = vertex_capacity;
   }

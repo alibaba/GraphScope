@@ -26,74 +26,53 @@
 namespace gs {
 
 inline void serialize_field(grape::InArchive& arc, const Any& prop) {
-  switch (prop.type) {
-  case PropertyType::kBool:
+  if (prop.type == PropertyType::Bool()) {
     arc << prop.value.b;
-    break;
-  case PropertyType::kInt32:
+  } else if (prop.type == PropertyType::Int32()) {
     arc << prop.value.i;
-    break;
-  case PropertyType::kUInt32:
+  } else if (prop.type == PropertyType::UInt32()) {
     arc << prop.value.ui;
-    break;
-  case PropertyType::kDate:
+  } else if (prop.type == PropertyType::Date()) {
     arc << prop.value.d.milli_second;
-    break;
-  case PropertyType::kString:
+  } else if (prop.type == PropertyType::String()) {
     arc << prop.value.s;
-    break;
-  case PropertyType::kEmpty:
-    break;
-  case PropertyType::kInt64:
+  } else if (prop.type == PropertyType::Int64()) {
     arc << prop.value.l;
-    break;
-  case PropertyType::kUInt64:
+  } else if (prop.type == PropertyType::UInt64()) {
     arc << prop.value.ul;
-    break;
-  case PropertyType::kDouble:
+  } else if (prop.type == PropertyType::Double()) {
     arc << prop.value.db;
-    break;
-  case PropertyType::kFloat:
+  } else if (prop.type == PropertyType::Float()) {
     arc << prop.value.f;
-    break;
-  default:
-    LOG(FATAL) << "Unexpected property type";
+  } else if (prop.type == PropertyType::Empty()) {
+  } else {
+    LOG(FATAL) << "Unexpected property type" << int(prop.type.type_enum);
   }
 }
 
 inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
-  switch (prop.type) {
-  case PropertyType::kBool:
+  if (prop.type == PropertyType::Bool()) {
     arc >> prop.value.b;
-    break;
-  case PropertyType::kInt32:
+  } else if (prop.type == PropertyType::Int32()) {
     arc >> prop.value.i;
-    break;
-  case PropertyType::kUInt32:
+  } else if (prop.type == PropertyType::UInt32()) {
     arc >> prop.value.ui;
-    break;
-  case PropertyType::kDate:
+  } else if (prop.type == PropertyType::Date()) {
     arc >> prop.value.d.milli_second;
-    break;
-  case PropertyType::kString:
+  } else if (prop.type == PropertyType::String()) {
     arc >> prop.value.s;
-    break;
-  case PropertyType::kEmpty:
-    break;
-  case PropertyType::kInt64:
+  } else if (prop.type == PropertyType::Int64()) {
     arc >> prop.value.l;
-    break;
-  case PropertyType::kUInt64:
+  } else if (prop.type == PropertyType::UInt64()) {
     arc >> prop.value.ul;
-    break;
-  case PropertyType::kDouble:
+  } else if (prop.type == PropertyType::Double()) {
     arc >> prop.value.db;
-    break;
-  case PropertyType::kFloat:
+  } else if (prop.type == PropertyType::Float()) {
     arc >> prop.value.f;
-    break;
-  default:
-    LOG(FATAL) << "Unexpected property type";
+  } else if (prop.type == PropertyType::Empty()) {
+  } else {
+    LOG(FATAL) << "Unexpected property type: "
+               << static_cast<int>(prop.type.type_enum);
   }
 }
 

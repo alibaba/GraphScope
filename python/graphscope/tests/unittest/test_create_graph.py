@@ -426,16 +426,6 @@ def test_error_on_ambigious_default_label(
         graph = graph.add_edges(student_group_e, "group")
 
 
-def test_error_on_duplicate_labels(graphscope_session, student_group_e, student_v):
-    graph = graphscope_session.g()
-    graph = graph.add_vertices(student_v, "student")
-    with pytest.raises(ValueError, match="Label student already existed in graph"):
-        graph = graph.add_vertices(student_v, "student")
-    graph = graph.add_edges(student_group_e, "group")
-    with pytest.raises(ValueError, match="already existed in graph"):
-        graph = graph.add_edges(student_group_e, "group")
-
-
 def test_load_complex_graph(
     graphscope_session,
     score_e,

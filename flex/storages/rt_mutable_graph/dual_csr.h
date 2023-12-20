@@ -164,8 +164,10 @@ class DualCsr : public DualCsrBase {
 template <>
 class DualCsr<std::string_view> : public DualCsrBase {
  public:
-  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy)
-      : in_csr_(nullptr), out_csr_(nullptr), column_(StorageStrategy::kMem) {
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, uint16_t width)
+      : in_csr_(nullptr),
+        out_csr_(nullptr),
+        column_(StorageStrategy::kMem, width) {
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<std::string_view>(column_, column_idx_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
@@ -207,7 +209,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
     out_csr_->open(oe_name, snapshot_dir, work_dir);
     column_.open(edata_name, snapshot_dir, work_dir);
     column_idx_.store(column_.size());
-    column_.resize(column_.size() + (column_.size() + 4) / 5);
+    column_.resize(std::max(column_.size() + (column_.size() + 4) / 5, 4096ul));
   }
 
   void Dump(const std::string& oe_name, const std::string& ie_name,

@@ -82,7 +82,7 @@ struct MutableNbr<grape::EmptyType> {
 template <typename EDATA_T>
 class MutableNbrSlice {
  public:
-  using const_nbr_t = MutableNbr<EDATA_T>;
+  using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
   MutableNbrSlice() = default;
   ~MutableNbrSlice() = default;
@@ -111,7 +111,7 @@ template <>
 class MutableNbrSlice<std::string_view> {
  public:
   struct MutableColumnNbr {
-    using const_nbr_t = MutableNbr<size_t>;
+    using const_nbr_t = const MutableNbr<size_t>;
     using const_nbr_ptr_t = const MutableNbr<size_t>*;
 
     MutableColumnNbr(const_nbr_ptr_t ptr, const StringColumn& column)
@@ -257,7 +257,7 @@ class MutableNbrSliceMut<std::string_view> {
 
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
     nbr_t* ptr_;
-    StringColumn & column_;
+    StringColumn& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 
@@ -495,7 +495,7 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
 
  public:
   explicit TypedMutableCsrConstEdgeIter(const MutableNbrSlice<EDATA_T>& slice)
-      : cur_(slice.begin()), end_(slice.end()) {}
+      : cur_(slice.begin()), end_(slice.end()){}
   ~TypedMutableCsrConstEdgeIter() = default;
 
   vid_t get_neighbor() const override { return (*cur_).get_neighbor(); }
@@ -625,7 +625,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   using slice_t = MutableNbrSlice<EDATA_T>;
   using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
 
-  MutableCsr() : locks_(nullptr) {}
+  MutableCsr()
+      : locks_(nullptr) {}
   ~MutableCsr() {
     if (locks_ != nullptr) {
       delete[] locks_;
@@ -659,8 +660,10 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
     mmap_array<int> degree_list;
-    degree_list.open(snapshot_dir + "/" + name + ".deg", true);
-    nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    if (snapshot_dir != "") {
+      degree_list.open(snapshot_dir + "/" + name + ".deg", true);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
 
@@ -863,8 +866,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
-        get_edges(v));
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
@@ -924,8 +926,10 @@ class MutableCsr<std::string_view>
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {
     mmap_array<int> degree_list;
-    degree_list.open(snapshot_dir + "/" + name + ".deg", true);
-    nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    if (snapshot_dir != "") {
+      degree_list.open(snapshot_dir + "/" + name + ".deg", true);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+    }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
 
@@ -1273,8 +1277,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
-        get_edges(v));
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {

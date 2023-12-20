@@ -1,6 +1,8 @@
-FROM interactive-base:latest AS builder
+ARG ARCH=x86_64
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:latest AS builder
 
 ARG CI=false
+ARG ARCH
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
@@ -19,16 +21,16 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   cargo --version
 
 # install flex
-RUN . ${HOME}/.cargo/env  &&  git clone https://github.com/alibaba/GraphScope.git -b main --single-branch && cd GraphScope/flex && \
-    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
+RUN . ${HOME}/.cargo/env  && cd ${HOME} && git clone https://github.com/alibaba/GraphScope.git -b main --single-branch && cd GraphScope/flex && \
+    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \
     ls ~/GraphScope/interactive_engine/executor/ir && \
-    cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/ && \
-    rm -rf ~/GraphScope 
+    cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
 from ubuntu:20.04 as final_image
+ARG ARCH
 
 RUN apt-get update && apt-get install -y sudo
 
@@ -49,40 +51,47 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # copy builder's /opt/flex to final image
 COPY --from=builder /opt/flex /opt/flex
-# remov bin/run_app
+
+# copy the builtin graph, modern_graph
+RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
+COPY --from=builder ${HOME}/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
+
+# remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
 
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libprotobuf*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libsnappy*.so* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libsnappy*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/include/arrow /usr/include/arrow
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libgflags*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libglog*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libyaml-cpp*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libmpi*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_program_options*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_thread*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libcrypto*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libopen-rte*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libhwloc*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libunwind*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libarrow.so.600 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libopen-pal*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libltdl*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libevent*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libutf8proc*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libre2*.so* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libgflags*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libglog*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libyaml-cpp*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libmpi*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_program_options*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_thread*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libcrypto*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-rte*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libhwloc*.so* /usr/lib/$ARCH-linux-gnu/
+
+
+#COPY --from=builder /usr/lib/$ARCH-linux-gnu/libunwind*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libarrow.so.600 /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-pal*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libltdl*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libevent*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libutf8proc*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libre2*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libprotobuf* /usr/lib/$ARCH-linux-gnu/
 
-COPY --from=builder /usr/lib/x86_64-linux-gnu/openmpi/include/ /opt/flex/include
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/openmpi/include/ /opt/flex/include
 COPY --from=builder /usr/include/boost /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 
-RUN sudo rm -rf /usr/lib/x86_64-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
-    sudo rm -rf /usr/lib/x86_64-linux-gnu/lib/libcuda.so && \
-    sudo rm -rf /usr/lib/x86_64-linux-gnu/lib/libcudart.so && \
-    sudo rm -rf /usr/lib/x86_64-linux-gnu/lib/libicudata.so*
+RUN sudo rm -rf /usr/lib/$ARCH-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
+    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcuda.so && \
+    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcudart.so && \
+    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libicudata.so*
 
 RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
   && sudo ln -sfn /opt/flex/include/* /usr/local/include/ \
@@ -91,5 +100,5 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 
 RUN chmod +x /opt/flex/bin/*
 
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
 
