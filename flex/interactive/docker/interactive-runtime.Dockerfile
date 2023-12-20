@@ -19,14 +19,13 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   cargo --version
 
 # install flex
-RUN . ${HOME}/.cargo/env  &&  git clone https://github.com/alibaba/GraphScope.git -b main --single-branch && cd GraphScope/flex && \
-    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
+RUN . ${HOME}/.cargo/env  && cd ${HOME} && git clone https://github.com/alibaba/GraphScope.git -b main --single-branch && cd GraphScope/flex && \
+    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \
     ls ~/GraphScope/interactive_engine/executor/ir && \
-    cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/ && \
-    rm -rf ~/GraphScope 
+    cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
 from ubuntu:20.04 as final_image
 
@@ -49,7 +48,12 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 # copy builder's /opt/flex to final image
 COPY --from=builder /opt/flex /opt/flex
-# remov bin/run_app
+
+# copy the builtin graph, modern_graph
+RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
+COPY --from=builder ${HOME}/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
+
+# remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
 
 COPY --from=builder /usr/lib/x86_64-linux-gnu/libprotobuf*.so* /usr/lib/x86_64-linux-gnu/
@@ -91,5 +95,5 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 
 RUN chmod +x /opt/flex/bin/*
 
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
 

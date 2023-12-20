@@ -65,6 +65,7 @@ class GraphInterface(metaclass=ABCMeta):
         self._vertex_map = graph_def_pb2.GLOBAL_VERTEX_MAP
         self._compact_edges = False
         self._use_perfect_hash = False
+        self._extend_label_data = 0
 
     @property
     def session_id(self):
@@ -215,6 +216,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.VERTEX_MAP_TYPE] = utils.i_to_attr(self._vertex_map)
         config[types_pb2.COMPACT_EDGES] = utils.b_to_attr(self._compact_edges)
         config[types_pb2.USE_PERFECT_HASH] = utils.b_to_attr(self._use_perfect_hash)
+        config[types_pb2.EXTEND_LABEL_DATA] = utils.i_to_attr(self._extend_label_data)
         return dag_utils.create_graph(
             self.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=None, attrs=config
         )
@@ -304,6 +306,11 @@ class GraphDAGNode(DAGNode, GraphInterface):
         self._vertex_map = utils.vertex_map_type_to_enum(vertex_map)
         self._compact_edges = compact_edges
         self._use_perfect_hash = use_perfect_hash
+        # for need to extend label in 'eager mode' when add_vertices and add_edges
+        # 0 - not extending label
+        # 1 - extend vertex label
+        # 2 - extend edge label
+        self._extend_label_data = 0
 
         # list of pair <parent_op_key, VertexLabel/EdgeLabel>
         self._unsealed_vertices_and_edges = list()
@@ -505,10 +512,15 @@ class GraphDAGNode(DAGNode, GraphInterface):
                 "Cannot incrementally add vertices to graphs with compacted edges, "
                 "please use `graphscope.load_from()` instead."
             )
-        if label in self._v_labels:
-            raise ValueError(f"Label {label} already existed in graph.")
         if not self._v_labels and self._e_labels:
             raise ValueError("Cannot manually add vertices after inferred vertices.")
+        # currently not support local_vertex_map
+        if label in self._v_labels:
+            self._extend_label_data = 1
+            warnings.warn(
+                f"Label {label} already existed in graph"
+                ", origin label data will be extend."
+            )
         unsealed_vertices_and_edges = deepcopy(self._unsealed_vertices_and_edges)
         vertex_label = VertexLabel(
             label=label,
@@ -520,7 +532,8 @@ class GraphDAGNode(DAGNode, GraphInterface):
         )
         unsealed_vertices_and_edges.append((self.op.key, vertex_label))
         v_labels = deepcopy(self._v_labels)
-        v_labels.append(label)
+        if self._extend_label_data == 0:
+            v_labels.append(label)
         # generate and add a loader op to dag
         loader_op = dag_utils.create_loader(vertex_label)
         self._session.dag.add_op(loader_op)
@@ -616,7 +629,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
 
         if self.evaluated:
             if label in self._e_labels:
-                raise ValueError(f"Label {label} already existed in graph")
+                self._extend_label_data = 2
 
         unsealed_vertices = list()
         unsealed_edges = list()
@@ -634,7 +647,7 @@ class GraphDAGNode(DAGNode, GraphInterface):
             v_labels.append(dst_label)
 
         parent = self
-        if label in self.e_labels:
+        if not self.evaluated and label in self.e_labels:
             # aggregate op with the same edge label
             fork = False
             unsealed_vertices_and_edges = list()

@@ -1,0 +1,165 @@
+{{- $frontendFullname := include "graphscope-interactive.frontend.fullname" . }}
+{{- $engineFullName := include "graphscope-interactive.engine.fullname" . }}
+{{- $releaseNamespace := .Release.Namespace }}
+{{- $clusterDomain := .Values.clusterDomain }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "graphscope-interactive.frontend.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: frontend
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.frontend.replicaCount }}
+  selector:
+    matchLabels: {{ include "graphscope-interactive.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: frontend
+  serviceName: {{ include "graphscope-interactive.frontend.fullname" . }}-headless
+  updateStrategy:
+    type: {{ .Values.frontend.updateStrategy }}
+    {{- if (eq "Recreate" .Values.frontend.updateStrategy) }}
+    rollingUpdate: null
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.frontend.podAnnotations }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.frontend.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+      labels: {{- include "graphscope-interactive.labels" . | nindent 8 }}
+        app.kubernetes.io/component: frontend
+        {{- if .Values.commonLabels }}
+        {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "graphscope-interactive.serviceAccountName" . }}
+      {{- if .Values.frontend.affinity }}
+      affinity: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.frontend.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.frontend.initContainers }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.frontend.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: frontend
+          image: {{ include "graphscope-interactive.frontend.image" . }}
+          imagePullPolicy: {{ .Values.frontend.image.pullPolicy | quote }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              echo "Starting frontend..."
+              
+              # first check engine_config.yaml exists
+              if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
+                #error exit
+                echo "${ENGINE_CONFIG_PATH} not found, exiting..."
+                exit 1
+              fi
+              # check lib path has more than 1 file
+              if [ ! "$(ls -A ${COMPILER_CLASS_PATH})" ]; then
+                #error exit
+                echo "class path: ${COMPILER_CLASS_PATH} is empty, exiting..."
+                exit 1
+              fi
+              # setup the template engine_config.yaml
+              bash /etc/interactive/setup.sh
+              if [ ! -f ${REAL_ENGINE_CONFIG_PATH} ]; then
+                #error exit
+                echo "${REAL_ENGINE_CONFIG_PATH} not found, exiting..."
+                exit 1
+              fi
+
+              # get graph schema file
+              cmd="java -cp \"${COMPILER_CLASS_PATH}\" -Djna.library.path=${COMPILER_LIBRARY_PATH} "
+              cmd="${cmd}  -Dgraph.schema=${GRAPH_SCHEMA_PATH} "
+              cmd="${cmd} com.alibaba.graphscope.GraphServer ${REAL_ENGINE_CONFIG_PATH}"
+              echo "Start compiler with command: ${cmd}"
+              eval ${cmd}
+          env:
+            - name: ENGINE_SERVICE_HOST
+              value: {{ $engineFullName }}-headless.{{ $releaseNamespace }}.svc.{{ $clusterDomain }}
+            - name: TIMEOUT
+              value: {{ .Values.hiactorTimeout | quote }}
+            - name: ENGINE_CONFIG_PATH
+              value: {{ include "graphscope-interactive.engineConfigPath" . }}
+            - name: REAL_ENGINE_CONFIG_PATH
+              value: {{ include "graphscope-interactive.realEngineConfigPath" . }}
+            - name: COMPILER_CLASS_PATH
+              value: {{ include "graphscope-interactive.classPath" . }}
+            - name: COMPILER_LIBRARY_PATH
+              value: {{ include "graphscope-interactive.libraryPath" . }}
+            - name: GRAPH_SCHEMA_PATH
+              value: {{ include "graphscope-interactive.graphSchemaPath" . }}
+          ports:
+            - name: gremlin
+              containerPort: {{ .Values.frontend.service.gremlinPort }}
+            - name: cypher
+              containerPort: {{ .Values.frontend.service.cypherPort }}
+          {{- if .Values.frontend.readinessProbe.enabled }}
+          readinessProbe:
+            tcpSocket:
+              port: {{ .Values.frontend.service.gremlinPort }}
+            initialDelaySeconds: {{ .Values.frontend.readinessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.frontend.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.frontend.readinessProbe.failureThreshold }}
+            periodSeconds: {{ .Values.frontend.readinessProbe.periodSeconds }}
+            successThreshold: {{ .Values.frontend.readinessProbe.successThreshold }}
+          {{- end }}
+          {{- if .Values.frontend.resources }}
+          resources: {{- toYaml .Values.frontend.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: workspace
+              mountPath: {{ .Values.workspace }}
+            - name: config
+              mountPath: {{ include "graphscope-interactive.engineConfigPath" . }}
+              subPath: engine_config.yaml
+            - name: config
+              mountPath: /etc/interactive/setup.sh
+              subPath: setup.sh
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "graphscope-interactive.configmapName" . }}
+            defaultMode: 0755
+  {{- if and .Values.engine.persistence.enabled .Values.engine.persistence.existingClaim }}
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ tpl .Values.engine.persistence.existingClaim . }}
+  {{- else if not .Values.engine.persistence.enabled }}
+        - name: workspace
+          emptyDir: {}
+  {{- else if and .Values.engine.persistence.enabled (not .Values.engine.persistence.existingClaim) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+        {{- if .Values.persistence.annotations }}
+        annotations: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
+        {{- end }}
+        {{- if .Values.persistence.labels }}
+        labels: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- range .Values.engine.persistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.engine.persistence.size | quote }}
+        {{ include "graphscope-interactive.storageClass" . | nindent 8 }}
+        {{- if .Values.engine.persistence.selector }}
+        selector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.engine.persistence.selector "context" $) | nindent 10 }}
+        {{- end -}}
+  {{- end }}

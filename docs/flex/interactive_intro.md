@@ -19,4 +19,5 @@ interactive/data_model
 interactive/data_import
 interactive/dev_guide
 interactive/glossary
+interactive/deployment
 ```
