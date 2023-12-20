@@ -290,7 +290,6 @@ public class FfiLogicalPlanTest {
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
                                 "Match (a) Return count(distinct a.name, a.age)")
                         .build();
-        System.out.println(node.getRowType());
         try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
