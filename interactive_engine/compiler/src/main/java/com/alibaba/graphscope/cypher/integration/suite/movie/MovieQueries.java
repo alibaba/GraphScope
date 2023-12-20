@@ -333,4 +333,17 @@ public class MovieQueries {
                 Arrays.asList("Record<{value: {tagline: \"Welcome to the Real World\", id: 0}}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_movie_query21_test() {
+        String query = "Match (n) Where labels(n)='Movie' Return distinct labels(n) as label;";
+        List<String> expected = Arrays.asList("Record<{label: \"Movie\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query22_test() {
+        String query =
+                "Match (n)-[m]->(c) Where type(m)='ACTED_IN' Return distinct type(m) as type;";
+        List<String> expected = Arrays.asList("Record<{type: \"ACTED_IN\"}>");
+        return new QueryContext(query, expected);
+    }
 }
