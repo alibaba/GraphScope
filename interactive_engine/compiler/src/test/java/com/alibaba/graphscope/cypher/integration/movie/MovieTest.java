@@ -16,8 +16,11 @@
 
 package com.alibaba.graphscope.cypher.integration.movie;
 
+import static org.junit.Assume.assumeTrue;
+
 import com.alibaba.graphscope.cypher.integration.suite.QueryContext;
 import com.alibaba.graphscope.cypher.integration.suite.movie.MovieQueries;
+
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -25,8 +28,6 @@ import org.junit.Test;
 import org.neo4j.driver.GraphDatabase;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
-
-import static org.junit.Assume.assumeTrue;
 
 public class MovieTest {
 
