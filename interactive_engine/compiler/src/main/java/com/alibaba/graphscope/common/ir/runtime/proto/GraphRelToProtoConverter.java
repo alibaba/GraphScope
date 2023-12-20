@@ -579,6 +579,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             paramsBuilder.setPredicate(expression);
         }
+        // TODO: currently no sample rate fused into tableScan, so directly set as 1.0 for tmp.
+        paramsBuilder.setSampleRatio(1.0);
         return paramsBuilder.build();
     }
 
