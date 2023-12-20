@@ -1,0 +1,1 @@
+MATCH(v)-[e]-() return distinct type(e) AS edgeType order by edgeType ASC;
