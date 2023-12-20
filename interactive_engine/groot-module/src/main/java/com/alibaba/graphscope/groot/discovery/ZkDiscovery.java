@@ -100,11 +100,10 @@ public class ZkDiscovery implements NodeDiscovery {
                             .serializer(serializer)
                             .thisInstance(instance)
                             .build();
-            logger.debug(
-                    "Start to add node "
-                            + localNode
-                            + " to discovery with base path "
-                            + discoveryBasePath);
+            logger.info(
+                    "Start to add node {} to discovery with base path {}",
+                    localNode,
+                    discoveryBasePath);
             this.serviceDiscovery.start();
 
             RoleType[] roleTypes = RoleType.values();

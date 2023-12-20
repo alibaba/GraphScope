@@ -26,6 +26,17 @@ public class CommonConfig {
 
     public static final Config<Integer> RPC_PORT = Config.intConfig("rpc.port", 0);
 
+    public static final Config<String> GAIA_RPC_PORT = Config.stringConfig("gaia.rpc.port", "");
+    public static final Config<String> GAIA_ENGINE_PORT =
+            Config.stringConfig("gaia.engine.port", "");
+    public static final Config<String> FRONTEND_RPC_PORT =
+            Config.stringConfig("frontend.rpc.port", "");
+    public static final Config<String> COORDINATOR_RPC_PORT =
+            Config.stringConfig("coordinator.rpc.port", "");
+    public static final Config<String> INGESTOR_RPC_PORT =
+            Config.stringConfig("ingestor.rpc.port", "");
+    public static final Config<String> STORE_RPC_PORT = Config.stringConfig("store.rpc.port", "");
+
     public static final Config<Integer> RPC_THREAD_COUNT =
             Config.intConfig(
                     "rpc.thread.count",

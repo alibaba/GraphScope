@@ -34,6 +34,7 @@ public class QueryLogger {
     public void debug(String format, Object... args) {
         defaultLogger.debug(this + " : " + format, args);
     }
+
     public void info(String format, Object... args) {
         defaultLogger.info(this + " : " + format, args);
     }

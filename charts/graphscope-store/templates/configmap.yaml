@@ -65,10 +65,6 @@ data:
     dns.name.prefix.coordinator=COORDINATOR
     dns.name.prefix.store=STORE
 
-    executor.graph.port=55556
-    executor.query.port=55557
-    executor.engine.port=55558
-
     log4rs.config=LOG4RS_CONFIG
 
     ## GAIA Config

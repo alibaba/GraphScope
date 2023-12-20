@@ -325,7 +325,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         long jobId = queryLogger.getQueryId();
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
-         queryLogger.debug("ir plan {}", irPlan.getPlanAsJson());
+        queryLogger.debug("ir plan {}", irPlan.getPlanAsJson());
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
         irPlan.close();
 

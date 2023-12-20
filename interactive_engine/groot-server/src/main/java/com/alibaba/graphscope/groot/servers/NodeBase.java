@@ -54,22 +54,6 @@ public abstract class NodeBase implements Closeable {
         int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         return Configs.newBuilder(configs)
                 .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_ENGINE.getName()),
-                        String.valueOf(storeCount))
-                .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_GRAPH.getName()),
-                        String.valueOf(storeCount))
-                .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_MANAGE.getName()),
-                        String.valueOf(storeCount))
-                .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_QUERY.getName()),
-                        String.valueOf(storeCount))
-                .put(
                         String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_RPC.getName()),
                         String.valueOf(storeCount))
                 .put(

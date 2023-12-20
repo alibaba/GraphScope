@@ -271,7 +271,11 @@ public class StoreService implements MetricsAgent {
                                         .add(afterWriteTime - beforeWriteTime);
                             }
                         } catch (Exception ex) {
-                            logger.error("write to partition [{}] failed, snapshotId [{}].", partitionId, snapshotId, ex);
+                            logger.error(
+                                    "write to partition [{}] failed, snapshotId [{}].",
+                                    partitionId,
+                                    snapshotId,
+                                    ex);
                             String msg = "Not supported operation in secondary mode";
                             if (ex.getMessage().contains(msg)) {
                                 logger.warn("Ignored write in secondary instance, {}", msg);
