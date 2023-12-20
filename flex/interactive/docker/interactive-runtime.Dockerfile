@@ -6,7 +6,7 @@ ARG CI=false
 SHELL ["/bin/bash", "-c"]
 
 # install arrow
-RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget && \
+RUN cd /tmp && sudo apt-get install -y -V ca-certificates lsb-release wget && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
     sudo apt-get update && sudo apt-get install -y libarrow-dev=6.0.1-1
