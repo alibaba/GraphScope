@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.rpc;
 
+import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
 import com.alibaba.graphscope.groot.common.exception.NodeConnectException;
@@ -45,54 +46,6 @@ public class ChannelManager {
         this.configs = configs;
         this.nameResolverFactory = nameResolverFactory;
         this.rpcMaxBytes = CommonConfig.RPC_MAX_BYTES_MB.get(configs) * 1024 * 1024;
-    }
-
-    private String getHostTemplate(RoleType role) {
-        switch (role) {
-            case FRONTEND:
-                return DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
-            case INGESTOR:
-                return DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(configs);
-            case COORDINATOR:
-                return DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
-            case STORE:
-            case GAIA_RPC:
-            case GAIA_ENGINE:
-                return DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
-            default:
-                throw new IllegalArgumentException("invalid role [" + role + "]");
-        }
-    }
-
-    private int getPort(RoleType role, int idx) {
-        String s;
-        switch (role) {
-            case FRONTEND:
-                s = CommonConfig.FRONTEND_RPC_PORT.get(configs);
-                break;
-            case INGESTOR:
-                s = CommonConfig.INGESTOR_RPC_PORT.get(configs);
-                break;
-            case COORDINATOR:
-                s = CommonConfig.COORDINATOR_RPC_PORT.get(configs);
-                break;
-            case STORE:
-                s = CommonConfig.STORE_RPC_PORT.get(configs);
-                break;
-            case GAIA_RPC:
-                s = CommonConfig.GAIA_RPC_PORT.get(configs);
-                break;
-            case GAIA_ENGINE:
-                s = CommonConfig.GAIA_ENGINE_PORT.get(configs);
-                break;
-            default:
-                throw new IllegalArgumentException("invalid role [" + role + "]");
-        }
-        String[] array = s.split(",");
-        if (idx >= array.length) {
-            throw new IllegalArgumentException("Invalid index " + idx + " of " + s);
-        }
-        return Integer.parseInt(array[idx]);
     }
 
     public void start() {
@@ -149,8 +102,8 @@ public class ChannelManager {
             throw new NodeConnectException("invalid role [" + role + "]");
         }
         if (idToChannel.get(idx) == null) {
-            String host = getHostTemplate(role).replace("{}", String.valueOf(idx));
-            int port = getPort(role, idx);
+            String host = Utils.getHostTemplate(configs, role).replace("{}", String.valueOf(idx));
+            int port = Utils.getPort(configs, role, idx);
             logger.info("Create channel to {}#{}, {}:{}", role.getName(), idx, host, port);
             ManagedChannel channel =
                     ManagedChannelBuilder.forAddress(host, port)

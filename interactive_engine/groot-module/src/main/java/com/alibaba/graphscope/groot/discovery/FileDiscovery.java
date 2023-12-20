@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.discovery;
 
 import static com.alibaba.graphscope.groot.common.RoleType.*;
 
+import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
 
@@ -77,41 +78,11 @@ public class FileDiscovery implements NodeDiscovery {
         }
     }
 
-    private int getPort(RoleType role, int idx) {
-        String s;
-        switch (role) {
-            case FRONTEND:
-                s = CommonConfig.FRONTEND_RPC_PORT.get(configs);
-                break;
-            case INGESTOR:
-                s = CommonConfig.INGESTOR_RPC_PORT.get(configs);
-                break;
-            case COORDINATOR:
-                s = CommonConfig.COORDINATOR_RPC_PORT.get(configs);
-                break;
-            case STORE:
-                s = CommonConfig.STORE_RPC_PORT.get(configs);
-                break;
-            case GAIA_RPC:
-                s = CommonConfig.GAIA_RPC_PORT.get(configs);
-                break;
-            case GAIA_ENGINE:
-                s = CommonConfig.GAIA_ENGINE_PORT.get(configs);
-                break;
-            default:
-                throw new IllegalArgumentException("invalid role [" + role + "]");
-        }
-        String[] array = s.split(",");
-        if (idx >= array.length) {
-            throw new IllegalArgumentException("Invalid index " + idx + " of " + s);
-        }
-        return Integer.parseInt(array[idx]);
-    }
 
     private Map<Integer, GrootNode> makeRoleNodes(int nodeCount, String namePrefix, RoleType role) {
         Map<Integer, GrootNode> nodes = new HashMap<>();
         for (int i = 0; i < nodeCount; i++) {
-            int port = getPort(role, i);
+            int port = Utils.getPort(configs, role, i);
             String host = namePrefix.replace("{}", String.valueOf(i));
             nodes.put(i, new GrootNode(role.getName(), i, host, port));
         }
