@@ -29,6 +29,7 @@ use hyper::server::accept::Accept;
 use hyper::server::conn::{AddrIncoming, AddrStream};
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
+use pegasus::errors::{ErrorKind, JobExecError};
 use pegasus::result::{FromStreamExt, ResultSink};
 use pegasus::{Configuration, Data, JobConf, ServerConf};
 use pegasus_network::config::ServerAddr;
@@ -86,7 +87,27 @@ impl Clone for RpcSink {
 impl FromStreamExt<Vec<u8>> for RpcSink {
     fn on_error(&mut self, error: Box<dyn Error + Send>) {
         self.had_error.store(true, Ordering::SeqCst);
-        let status = Status::unknown(format!("execution_error: {}", error));
+        let status = if let Some(e) = error.downcast_ref::<JobExecError>() {
+            match e.kind {
+                ErrorKind::WouldBlock(_) => {
+                    Status::internal(format!("[Execution Error] WouldBlock: {}", error))
+                }
+                ErrorKind::Interrupted => {
+                    Status::internal(format!("[Execution Error] Interrupted: {}", error))
+                }
+                ErrorKind::IOError => Status::internal(format!("[Execution Error] IOError: {}", error)),
+                ErrorKind::IllegalScopeInput => {
+                    Status::internal(format!("[Execution Error] IllegalScopeInput: {}", error))
+                }
+                ErrorKind::Canceled => {
+                    Status::deadline_exceeded(format!("[Execution Error] Canceled: {}", error))
+                }
+                _ => Status::unknown(format!("[Execution Error]: {}", error)),
+            }
+        } else {
+            Status::unknown(format!("[Unknown Error]: {}", error))
+        };
+
         self.tx.send(Err(status)).ok();
     }
 }
