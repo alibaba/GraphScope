@@ -54,7 +54,6 @@ run:
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
-	  -Dquery.execution.timeout.ms=${query.execution.timeout.ms} \
 	  com.alibaba.graphscope.GraphServer ${config.path}
 
 # make physical_plan config.path='<path to the config file>'
