@@ -59,7 +59,7 @@ void Schema::add_edge_label(const std::string& src_label,
                             const std::string& edge_label,
                             const std::vector<PropertyType>& properties,
                             const std::vector<std::string>& prop_names,
-                            EdgeStrategy oe, EdgeStrategy ie) {
+                            EdgeStrategy oe, EdgeStrategy ie, bool mutability) {
   label_t src_label_id = vertex_label_to_index(src_label);
   label_t dst_label_id = vertex_label_to_index(dst_label);
   label_t edge_label_id = edge_label_to_index(edge_label);
@@ -70,6 +70,7 @@ void Schema::add_edge_label(const std::string& src_label,
   oe_strategy_[label_id] = oe;
   ie_strategy_[label_id] = ie;
   eprop_names_[label_id] = prop_names;
+  e_mutability_[label_id] = mutability;
 }
 
 label_t Schema::vertex_label_num() const {
@@ -676,6 +677,7 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
   }
   EdgeStrategy default_ie = EdgeStrategy::kMultiple;
   EdgeStrategy default_oe = EdgeStrategy::kMultiple;
+  bool default_mutability = true;
 
   // get vertex type pair relation
   auto vertex_type_pair_node = node["vertex_type_pair_relations"];
@@ -746,13 +748,33 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
           }
         }
       }
+      if (csr_node["mutability"]) {
+        std::string mutability_str;
+        if (get_scalar(csr_node, "mutability", mutability_str)) {
+          // mutability_str to upper_case
+          std::transform(mutability_str.begin(), mutability_str.end(),
+                         mutability_str.begin(), ::toupper);
+          if (mutability_str == "IMMUTABLE") {
+            default_mutability = false;
+          } else if (mutability_str == "MUTABLE") {
+            default_mutability = true;
+          } else {
+            LOG(ERROR) << "mutability is not set properly for edge: "
+                       << src_label_name << "-[" << edge_label_name << "]->"
+                       << dst_label_name
+                       << ", expect IMMUTABLE/MUTABLE, got:" << mutability_str;
+            return false;
+          }
+        }
+      }
     }
 
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
              << " to " << dst_label_name << " with " << property_types.size()
              << " properties";
     schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
-                          property_types, prop_names, cur_oe, cur_ie);
+                          property_types, prop_names, cur_oe, cur_ie,
+                          default_mutability);
   }
 
   // check the type_id equals to storage's label_id
@@ -985,6 +1007,22 @@ bool Schema::edge_has_property(const std::string& src_label,
   auto& e_prop_names = eprop_names_.at(label_id);
   return std::find(e_prop_names.begin(), e_prop_names.end(), prop) !=
          e_prop_names.end();
+}
+
+bool Schema::get_edge_mutability(const std::string& src_label,
+                                 const std::string& dst_label,
+                                 const std::string& edge_label) const {
+  auto e_label_id = get_edge_label_id(edge_label);
+  auto src_label_id = get_vertex_label_id(src_label);
+  auto dst_label_id = get_vertex_label_id(dst_label);
+  auto label_id = generate_edge_label(src_label_id, dst_label_id, e_label_id);
+  if (e_mutability_.find(label_id) == e_mutability_.end()) {
+    LOG(FATAL) << "edge label " << edge_label << ": (" << src_label << ", "
+               << dst_label << ") not found,  e_label_id "
+               << std::to_string(label_id)
+               << ", total size: " << e_mutability_.size();
+  }
+  return e_mutability_.at(label_id);
 }
 
 bool Schema::has_vertex_label(const std::string& label) const {
