@@ -133,7 +133,14 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  db.Open(schema, data_path, shard_num, warmup);
+  db.Open(schema, data_path, shard_num, warmup, true);
+
+  t0 += grape::GetCurrentTime();
+
+  LOG(INFO) << "Finished loading graph, elapsed " << t0 << " s";
+  gs::TestStringEdgeProperty(db).test();
+  db.Close();
+  db.Open(schema, data_path, shard_num, warmup, false);
 
   t0 += grape::GetCurrentTime();
 
