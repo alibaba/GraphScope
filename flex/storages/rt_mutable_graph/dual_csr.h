@@ -37,6 +37,11 @@ class DualCsrBase {
                     const std::string& edata_name,
                     const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
+  virtual void OpenInMemory(const std::string& oe_name,
+                            const std::string& ie_name,
+                            const std::string& edata_name,
+                            const std::string& snapshot_dir,
+                            size_t src_vertex_cap, size_t dst_vertex_cap) = 0;
   virtual void Dump(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& new_snapshot_dir) = 0;
@@ -95,6 +100,14 @@ class DualCsr : public DualCsrBase {
             const std::string& work_dir) override {
     in_csr_->open(ie_name, snapshot_dir, work_dir);
     out_csr_->open(oe_name, snapshot_dir, work_dir);
+  }
+
+  void OpenInMemory(const std::string& oe_name, const std::string& ie_name,
+                    const std::string& edata_name,
+                    const std::string& snapshot_dir, size_t src_vertex_cap,
+                    size_t dst_vertex_cap) override {
+    in_csr_->open_in_memory(snapshot_dir + "/" + ie_name, dst_vertex_cap);
+    out_csr_->open_in_memory(snapshot_dir + "/" + oe_name, src_vertex_cap);
   }
 
   void Dump(const std::string& oe_name, const std::string& ie_name,
@@ -208,6 +221,17 @@ class DualCsr<std::string_view> : public DualCsrBase {
     in_csr_->open(ie_name, snapshot_dir, work_dir);
     out_csr_->open(oe_name, snapshot_dir, work_dir);
     column_.open(edata_name, snapshot_dir, work_dir);
+    column_idx_.store(column_.size());
+    column_.resize(std::max(column_.size() + (column_.size() + 4) / 5, 4096ul));
+  }
+
+  void OpenInMemory(const std::string& oe_name, const std::string& ie_name,
+                    const std::string& edata_name,
+                    const std::string& snapshot_dir, size_t src_vertex_cap,
+                    size_t dst_vertex_cap) override {
+    in_csr_->open_in_memory(snapshot_dir + "/" + ie_name, dst_vertex_cap);
+    out_csr_->open_in_memory(snapshot_dir + "/" + oe_name, src_vertex_cap);
+    column_.open_in_memory(snapshot_dir + "/" + edata_name);
     column_idx_.store(column_.size());
     column_.resize(std::max(column_.size() + (column_.size() + 4) / 5, 4096ul));
   }

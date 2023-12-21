@@ -43,6 +43,11 @@ class Table {
             const std::vector<PropertyType>& property_types,
             const std::vector<StorageStrategy>& strategies_);
 
+  void open_in_memory(const std::string& name, const std::string& snapshot_dir,
+                      const std::vector<std::string>& col_name,
+                      const std::vector<PropertyType>& property_types,
+                      const std::vector<StorageStrategy>& strategies_);
+
   void touch(const std::string& name, const std::string& work_dir);
 
   void copy_to_tmp(const std::string& name, const std::string& snapshot_dir,
