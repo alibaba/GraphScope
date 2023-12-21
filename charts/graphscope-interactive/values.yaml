@@ -86,7 +86,7 @@ engine:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "v0.0.2.4"
+    tag: "v0.0.3"
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
@@ -307,7 +307,7 @@ frontend:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "v0.0.2.4"
+    tag: "v0.0.3"
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
