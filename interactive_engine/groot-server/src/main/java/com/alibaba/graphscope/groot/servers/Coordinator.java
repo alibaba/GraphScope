@@ -31,7 +31,7 @@ import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 
 import io.grpc.NameResolver;
 
@@ -80,7 +80,8 @@ public class Coordinator extends NodeBase {
                         this.channelManager, RoleType.INGESTOR, IngestorSnapshotClient::new);
         WriteSnapshotIdNotifier writeSnapshotIdNotifier =
                 new IngestorWriteSnapshotIdNotifier(configs, ingestorSnapshotClients);
-        LogService logService = new KafkaLogService(configs);
+
+        LogService logService = LogServiceFactory.makeLogService(configs);
         this.snapshotManager =
                 new SnapshotManager(configs, metaStore, logService, writeSnapshotIdNotifier);
         DdlExecutors ddlExecutors = new DdlExecutors();

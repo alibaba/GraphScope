@@ -35,7 +35,7 @@ import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 
 import io.grpc.NameResolver;
 
@@ -66,7 +66,7 @@ public class Ingestor extends NodeBase {
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
-        LogService logService = new KafkaLogService(configs);
+        LogService logService = LogServiceFactory.makeLogService(configs);
         IngestProgressFetcher ingestProgressClients =
                 new RemoteIngestProgressFetcher(this.channelManager);
         StoreWriter storeWriteClients =

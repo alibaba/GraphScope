@@ -36,9 +36,6 @@ public abstract class NodeBase implements Closeable {
     public NodeBase(Configs configs) {
         this.roleType = RoleType.fromName(CommonConfig.ROLE_NAME.get(configs));
         this.idx = CommonConfig.NODE_IDX.get(configs);
-        if (idx == 0) {
-            logger.info("Configs {}", configs);
-        }
     }
 
     public NodeBase(Configs configs, RoleType roleType) {

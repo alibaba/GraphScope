@@ -86,4 +86,7 @@ public class CommonConfig {
     // Whether to create test kafka cluster on MaxNode
     public static final Config<Boolean> KAFKA_TEST_CLUSTER_ENABLE =
             Config.boolConfig("kafka.test.cluster.enable", true);
+
+    public static final Config<Boolean> IS_SECONDARY_INSTANCE =
+            Config.boolConfig("is_secondary_instance", false);
 }

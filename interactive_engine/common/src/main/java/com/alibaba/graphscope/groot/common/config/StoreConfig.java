@@ -31,4 +31,10 @@ public class StoreConfig {
 
     public static final Config<Boolean> STORE_GC_ENABLE =
             Config.boolConfig("store.gc.enable", true);
+
+    // set by IS_SECONDARY_INSTANCE, used in graph.rs
+    public static final Config<String> STORE_STORAGE_ENGINE =
+            Config.stringConfig("store.storage.engine", "rocksdb");
+    public static final Config<String> STORE_SECONDARY_DATA_PATH =
+            Config.stringConfig("store.secondary.data.path", "./data_secondary");
 }
