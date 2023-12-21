@@ -638,7 +638,7 @@ impl MultiVersionGraph for GraphStore {
 
 impl GraphStore {
     pub fn open(config: &GraphConfig, path: &str) -> GraphResult<Self> {
-        info!("open graph store at {}, with config: {:?}", path, config);
+        info!("open graph store at {}", path);
         match config.get_storage_engine() {
             "rocksdb" => {
                 let res = RocksDB::open(config.get_storage_options(), path).and_then(|db| {

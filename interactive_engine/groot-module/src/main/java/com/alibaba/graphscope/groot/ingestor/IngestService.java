@@ -132,7 +132,7 @@ public class IngestService implements NodeDiscovery.Listener {
 
         long delay = IngestorConfig.INGESTOR_CHECK_PROCESSOR_INTERVAL_MS.get(configs);
         this.scheduler.scheduleWithFixedDelay(
-                this::tryStartProcessors, 0, delay, TimeUnit.MILLISECONDS);
+                this::tryStartProcessors, 2000, delay, TimeUnit.MILLISECONDS);
         this.started = true;
         logger.info("IngestService started");
     }
@@ -247,6 +247,16 @@ public class IngestService implements NodeDiscovery.Listener {
                                 callback.onError(e);
                             }
                         });
+            } catch (IllegalStateException e) {
+                if (finished.getAndSet(true)) {
+                    return;
+                }
+                logger.warn(
+                        "ingest marker failed. queue#{}, snapshotId {}, {}",
+                        queue,
+                        snapshotId,
+                        e.getMessage());
+                callback.onError(e);
             } catch (Exception e) {
                 if (finished.getAndSet(true)) {
                     return;

@@ -137,7 +137,7 @@ public class IngestProcessor implements MetricsAgent {
     }
 
     public void stop() {
-        logger.info("stopping ingestProcessor queue#[" + queueId + "]");
+        logger.debug("stopping ingestProcessor queue#[" + queueId + "]");
         this.shouldStop = true;
         this.started = false;
         if (this.ingestThread != null && this.ingestThread.isAlive()) {
@@ -150,7 +150,7 @@ public class IngestProcessor implements MetricsAgent {
             this.ingestThread = null;
         }
         this.batchSender.stop();
-        logger.info("ingestProcessor queue#[" + queueId + "] stopped");
+        logger.debug("ingestProcessor queue#[" + queueId + "] stopped");
     }
 
     private void checkStarted() {

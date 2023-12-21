@@ -78,7 +78,6 @@ public class FileDiscovery implements NodeDiscovery {
         }
     }
 
-
     private Map<Integer, GrootNode> makeRoleNodes(int nodeCount, String namePrefix, RoleType role) {
         Map<Integer, GrootNode> nodes = new HashMap<>();
         for (int i = 0; i < nodeCount; i++) {

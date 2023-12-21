@@ -11,7 +11,6 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.alibaba.graphscope.groot;
 
 import com.alibaba.graphscope.groot.common.RoleType;
@@ -48,6 +47,7 @@ public class Utils {
             return CommonConfig.RPC_PORT.get(configs);
         }
     }
+
     public static int getPort(Configs configs, RoleType role, int idx) {
         String s;
         switch (role) {
@@ -76,7 +76,9 @@ public class Utils {
         if (idx >= array.length) {
             throw new IllegalArgumentException("Invalid index " + idx + " of " + s);
         }
+        if (array[idx].isEmpty()) {
+            throw new IllegalArgumentException("Invalid port " + array[idx] + " of " + role);
+        }
         return Integer.parseInt(array[idx]);
     }
-
 }

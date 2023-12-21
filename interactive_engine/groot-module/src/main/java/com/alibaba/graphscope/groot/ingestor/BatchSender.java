@@ -162,11 +162,21 @@ public class BatchSender implements MetricsAgent {
 
     class SendTask {
         int storeId;
+        int retryCount = 0;
         List<StoreDataBatch> dataToRetry;
 
         public SendTask(int storeId, List<StoreDataBatch> dataToRetry) {
+            this(storeId, 0, dataToRetry);
+        }
+
+        public SendTask(int storeId, int retryCount, List<StoreDataBatch> dataToRetry) {
             this.storeId = storeId;
+            this.retryCount = retryCount;
             this.dataToRetry = dataToRetry;
+        }
+
+        public void retry() {
+            retryCount += 1;
         }
     }
 
@@ -183,7 +193,14 @@ public class BatchSender implements MetricsAgent {
         }
 
         int storeId = sendTask.storeId;
+        int retryCount = sendTask.retryCount;
         List<StoreDataBatch> dataToSend = sendTask.dataToRetry;
+
+        if (retryCount > 5) {
+            logger.error("Failed to send batch of {}", dataToSend);
+            return;
+        }
+
         if (dataToSend == null) {
             dataToSend = new ArrayList<>();
             BlockingQueue<StoreDataBatch> buffer = this.storeSendBuffer.get(storeId);
@@ -236,23 +253,20 @@ public class BatchSender implements MetricsAgent {
                             long finishTime = System.nanoTime();
                             callbackLatencyMetrics.get(storeId).add(finishTime - beforeWriteTime);
                             if (suc) {
-                                addTask(storeId, null);
+                                addTask(storeId, 0, null);
                             } else {
-                                addTask(storeId, finalDataToSend);
+                                addTask(storeId, retryCount + 1, finalDataToSend);
                             }
                         }
                     });
         } else {
-            addTask(storeId, null);
+            addTask(storeId, 0, null);
         }
     }
 
-    private void addTask(int storeId, List<StoreDataBatch> dataToRetry) {
-        if (!sendTasks.offer(new SendTask(storeId, dataToRetry))) {
-            logger.error(
-                    "Unexpected error, failed to add send task to queue. storeId ["
-                            + storeId
-                            + "]");
+    private void addTask(int storeId, int retryCount, List<StoreDataBatch> dataToRetry) {
+        if (!sendTasks.offer(new SendTask(storeId, retryCount, dataToRetry))) {
+            logger.error("failed to add task. storeId [{}]", storeId);
         }
     }
 
