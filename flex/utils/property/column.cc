@@ -29,6 +29,7 @@ class TypedEmptyColumn : public ColumnBase {
 
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
+  void open_in_memory(const std::string& name) override {}
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
   void copy_to_tmp(const std::string& cur_path,
@@ -66,6 +67,7 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
 
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
+  void open_in_memory(const std::string& name) override {}
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
   void copy_to_tmp(const std::string& cur_path,
@@ -155,6 +157,8 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<DateColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
       return std::make_shared<StringMapColumn<uint8_t>>(strategy);
+    } else if (type == PropertyType::kString) {
+      return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);

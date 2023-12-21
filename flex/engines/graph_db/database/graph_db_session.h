@@ -44,7 +44,13 @@ class GraphDBSession {
         alloc_(alloc),
         logger_(logger),
         work_dir_(work_dir),
-        thread_id_(thread_id) {
+        thread_id_(thread_id)
+#ifdef MONITOR_SESSIONS
+        ,
+        eval_duration_(0),
+        query_num_(0)
+#endif
+  {
     for (auto& app : apps_) {
       app = nullptr;
     }
@@ -87,6 +93,11 @@ class GraphDBSession {
 
   int SessionId() const;
 
+#ifdef MONITOR_SESSIONS
+  double eval_duration() const;
+  int64_t query_num() const;
+#endif
+
  private:
   GraphDB& db_;
   Allocator& alloc_;
@@ -96,6 +107,11 @@ class GraphDBSession {
 
   std::array<AppWrapper, 256> app_wrappers_;
   std::array<AppBase*, 256> apps_;
+
+#ifdef MONITOR_SESSIONS
+  std::atomic<int64_t> eval_duration_;
+  std::atomic<int64_t> query_num_;
+#endif
 };
 
 }  // namespace gs

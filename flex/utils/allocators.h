@@ -27,81 +27,25 @@
 namespace gs {
 
 class ArenaAllocator {
-  static constexpr size_t batch_size = 4096;
-
- public:
-  ArenaAllocator() : cur_buffer_(nullptr), cur_loc_(0), cur_size_(0) {}
-  ~ArenaAllocator() {
-    if (cur_buffer_ != nullptr) {
-      free(cur_buffer_);
-    }
-    for (auto ptr : buffers_) {
-      if (ptr != nullptr) {
-        free(ptr);
-      }
-    }
-    for (auto& t : typed_allocations_) {
-      void* data = std::get<0>(t);
-      size_t span = std::get<1>(t);
-      size_t num = std::get<2>(t);
-      auto& func = std::get<3>(t);
-
-      char* ptr = static_cast<char*>(data);
-      for (size_t i = 0; i < num; ++i) {
-        func(ptr);
-        ptr += span;
-      }
-
-      free(data);
-    }
-  }
-
-  void reserve(size_t cap) {
-    if (cur_size_ - cur_loc_ >= cap) {
-      return;
-    }
-    buffers_.push_back(cur_buffer_);
-    cap = (cap + batch_size - 1) ^ (batch_size - 1);
-    cur_buffer_ = malloc(cap);
-    cur_loc_ = 0;
-    cur_size_ = cap;
-  }
-
-  void* allocate(size_t size) {
-    reserve(size);
-    void* ret = (char*) cur_buffer_ + cur_loc_;
-    cur_loc_ += size;
-    return ret;
-  }
-
-  void* allocate_typed(size_t span, size_t num,
-                       const std::function<void(void*)>& dtor) {
-    void* data = malloc(span * num);
-    typed_allocations_.emplace_back(data, span, num, dtor);
-    return data;
-  }
-
- private:
-  std::vector<void*> buffers_;
-  void* cur_buffer_;
-  size_t cur_loc_;
-  size_t cur_size_;
-
-  std::vector<std::tuple<void*, size_t, size_t, std::function<void(void*)>>>
-      typed_allocations_;
-};
-
-class MMapAllocator {
   static constexpr size_t batch_size = 128 * 1024 * 1024;
 
  public:
-  MMapAllocator(const std::string& prefix)
-      : prefix_(prefix), cur_loc_(0), cur_size_(0) {}
-  ~MMapAllocator() {
-    for (auto ptr : buffers_) {
-      if (ptr != nullptr) {
-        delete ptr;
-      }
+  ArenaAllocator(const std::string& prefix)
+      : prefix_(prefix),
+        cur_loc_(0),
+        cur_size_(0)
+#ifdef MONITOR_SESSIONS
+        ,
+        allocated_memory_(0)
+#endif
+  {
+  }
+  ~ArenaAllocator() {
+    for (auto ptr : malloc_buffers_) {
+      free(ptr);
+    }
+    for (auto ptr : mmap_buffers_) {
+      delete ptr;
     }
   }
 
@@ -109,64 +53,65 @@ class MMapAllocator {
     if (cur_size_ - cur_loc_ >= cap) {
       return;
     }
-    size_t old = cap;
-    mmap_array<char>* buf = new mmap_array<char>();
-    buf->open(prefix_ + std::to_string(buffers_.size()), false);
     cap = (cap + batch_size - 1) ^ (batch_size - 1);
-    buf->resize(cap);
-    buffers_.push_back(buf);
-    cur_buffer_ = static_cast<void*>(buf->data());
+    cur_buffer_ = allocate_batch(cap);
     cur_loc_ = 0;
     cur_size_ = cap;
   }
 
-  void* allocate_large(size_t size) {
-    mmap_array<char>* buf = new mmap_array<char>();
-    buf->open(prefix_ + std::to_string(buffers_.size()), false);
-    buf->resize(size);
-    buffers_.push_back(buf);
-    return static_cast<void*>(buf->data());
-  }
-
-  void allocate_new_batch() {
-    mmap_array<char>* buf = new mmap_array<char>();
-    buf->open(prefix_ + std::to_string(buffers_.size()), false);
-    buf->resize(batch_size);
-    buffers_.push_back(buf);
-    cur_buffer_ = static_cast<void*>(buf->data());
-    cur_loc_ = 0;
-    cur_size_ = batch_size;
-  }
-
   void* allocate(size_t size) {
+#ifdef MONITOR_SESSIONS
+    allocated_memory_ += size;
+#endif
     if (cur_size_ - cur_loc_ >= size) {
       void* ret = (char*) cur_buffer_ + cur_loc_;
       cur_loc_ += size;
       return ret;
     } else if (size >= batch_size / 2) {
-      return allocate_large(size);
+      return allocate_batch(size);
     } else {
-      allocate_new_batch();
-      void* ret = (char*) cur_buffer_ + cur_loc_;
-      cur_loc_ += size;
+      cur_buffer_ = allocate_batch(batch_size);
+      void* ret = cur_buffer_;
+      cur_loc_ = size;
+      cur_size_ = batch_size;
       return ret;
     }
   }
 
+#ifdef MONITOR_SESSIONS
+  size_t allocated_memory() const { return allocated_memory_; }
+#endif
+
  private:
+  void* allocate_batch(size_t size) {
+    if (prefix_.empty()) {
+      void* ret = malloc(size);
+      malloc_buffers_.push_back(ret);
+      return ret;
+    } else {
+      mmap_array<char>* buf = new mmap_array<char>();
+      buf->open(prefix_ + std::to_string(mmap_buffers_.size()), false);
+      buf->resize(size);
+      mmap_buffers_.push_back(buf);
+      return static_cast<void*>(buf->data());
+    }
+  }
+
   std::string prefix_;
-  std::vector<mmap_array<char>*> buffers_;
+  std::vector<mmap_array<char>*> mmap_buffers_;
+  std::vector<void*> malloc_buffers_;
 
   void* cur_buffer_;
   size_t cur_loc_;
   size_t cur_size_;
+
+#ifdef MONITOR_SESSIONS
+  size_t allocated_memory_;
+#endif
 };
 
-#ifdef USE_MMAPALLOC
-using Allocator = MMapAllocator;
-#else
 using Allocator = ArenaAllocator;
-#endif
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_UTILS_ALLOCATORS_H_

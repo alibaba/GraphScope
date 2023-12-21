@@ -69,7 +69,7 @@ GRIN_GRAPH grin_get_graph_from_storage(const char* uri) {
 
   GRIN_GRAPH_T* g = new GRIN_GRAPH_T();
 
-  g->g.Open(data_dir);
+  g->g.Open(data_dir, false);
   init_cache(g);
   return g;
 }

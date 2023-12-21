@@ -56,7 +56,8 @@ class GraphDB {
    * @param warmup Whether to warmup the graph db.
    */
   Result<bool> Open(const Schema& schema, const std::string& data_dir,
-                    int32_t thread_num = 1, bool warmup = false);
+                    int32_t thread_num = 1, bool warmup = false,
+                    bool memory_only = true);
 
   /**
    * @brief Close the current opened graph.
@@ -124,7 +125,8 @@ class GraphDB {
       const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
           plugins);
 
-  void openWalAndCreateContexts(const std::string& data_dir_path);
+  void openWalAndCreateContexts(const std::string& data_dir_path,
+                                bool memory_only);
 
   friend class GraphDBSession;
 
@@ -138,6 +140,11 @@ class GraphDB {
 
   std::array<std::string, 256> app_paths_;
   std::array<std::shared_ptr<AppFactoryBase>, 256> app_factories_;
+
+#ifdef MONITOR_SESSIONS
+  std::thread monitor_thread_;
+  bool monitor_thread_running_;
+#endif
 };
 
 }  // namespace gs
