@@ -21,7 +21,7 @@ fi
 cd ${base_dir}/../executor/ir/target/release && DATA_PATH=/tmp/gstest/movie_graph_exp_bin RUST_LOG=info ./start_rpc_server --config ${base_dir}/../executor/ir/integrated/config &
 sleep 5s
 # start compiler service
-cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/movie_schema.json query.execution.timeout.ms:=20000 &
+cd ${base_dir} && make run graph.schema:=../executor/ir/core/resource/movie_schema.json &
 sleep 10s
 export ENGINE_TYPE=pegasus
 # run cypher movie tests

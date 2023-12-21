@@ -33,6 +33,7 @@ pub enum ErrorKind {
     Interrupted,
     IOError,
     IllegalScopeInput,
+    Canceled,
     Others,
 }
 
@@ -43,6 +44,7 @@ impl Debug for ErrorKind {
             ErrorKind::Interrupted => write!(f, "Interrupted, retry later"),
             ErrorKind::IOError => write!(f, "IOError"),
             ErrorKind::IllegalScopeInput => write!(f, "IllegalScopeInput"),
+            ErrorKind::Canceled => write!(f, "Job is canceled"),
             ErrorKind::Others => write!(f, "Unknown"),
         }
     }
