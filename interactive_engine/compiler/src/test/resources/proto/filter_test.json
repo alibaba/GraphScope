@@ -35,7 +35,8 @@
                 "dataType": "STRING"
               }
             }]
-          }
+          },
+          "sampleRatio": 1.0
         }
       }
     },

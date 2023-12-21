@@ -20,12 +20,15 @@ import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -41,8 +44,12 @@ public class GraphPhysicalGetV extends GraphLogicalGetV {
             TableConfig tableConfig,
             @Nullable String alias,
             AliasNameWithId startAlias,
+            @Nullable ImmutableList<RexNode> filters,
             GraphOpt.PhysicalGetVOpt physicalOpt) {
         super(cluster, hints, input, opt, tableConfig, alias, startAlias);
+        if (filters != null) {
+            setFilters(filters);
+        }
         this.physicalOpt = physicalOpt;
     }
 
@@ -56,6 +63,7 @@ public class GraphPhysicalGetV extends GraphLogicalGetV {
                 innerGetV.getTableConfig(),
                 innerGetV.getAliasName(),
                 innerGetV.getStartAlias(),
+                innerGetV.getFilters(),
                 physicalOpt);
     }
 
@@ -66,6 +74,22 @@ public class GraphPhysicalGetV extends GraphLogicalGetV {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw).item("physicalOpt", getPhysicalOpt());
+    }
+
+    @Override
+    public GraphPhysicalGetV copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        GraphPhysicalGetV copy =
+                new GraphPhysicalGetV(
+                        (GraphOptCluster) getCluster(),
+                        getHints(),
+                        inputs.get(0),
+                        this.getOpt(),
+                        this.getTableConfig(),
+                        this.getAliasName(),
+                        this.getStartAlias(),
+                        getFilters(),
+                        getPhysicalOpt());
+        return copy;
     }
 
     @Override

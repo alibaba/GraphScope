@@ -186,9 +186,11 @@ public class ExpandGetVFusionTest {
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[a],"
-                        + " opt=[OUT], physicalOpt=[VERTEX])\n"
-                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 after.explain().trim());
     }

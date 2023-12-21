@@ -6,7 +6,8 @@
         "params": {
           "tables": [{
             "id": 0
-          }]
+          }],
+          "sampleRatio": 1.0
         }
       }
     },
@@ -45,7 +46,8 @@
             "params": {
               "tables": [{
                 "id": 0
-              }]
+              }],
+              "sampleRatio": 1.0
             },
             "alias": 0,
             "expandOpt": "EDGE"
@@ -56,7 +58,8 @@
             "params": {
               "tables": [{
                 "id": 0
-              }]
+              }],
+              "sampleRatio": 1.0
             },
             "alias": 0
           }

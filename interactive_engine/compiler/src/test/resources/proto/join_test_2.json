@@ -68,7 +68,8 @@
                 "params": {
                   "tables": [{
                     "id": 0
-                  }]
+                  }],
+                  "sampleRatio": 1.0
                 }
               }
             },
@@ -105,7 +106,8 @@
                 "params": {
                   "tables": [{
                     "id": 0
-                  }]
+                  }],
+                  "sampleRatio": 1.0
                 },
                 "alias": 1,
                 "expandOpt": "EDGE"
@@ -139,7 +141,8 @@
                 "params": {
                   "tables": [{
                     "id": 0
-                  }]
+                  }],
+                  "sampleRatio": 1.0
                 },
                 "alias": 2
               }
@@ -181,7 +184,8 @@
                 "params": {
                   "tables": [{
                     "id": 1
-                  }]
+                  }],
+                  "sampleRatio": 1.0
                 }
               }
             },
@@ -226,7 +230,8 @@
                 "params": {
                   "tables": [{
                     "id": 1
-                  }]
+                  }],
+                  "sampleRatio": 1.0
                 },
                 "alias": 4,
                 "expandOpt": "EDGE"
@@ -260,7 +265,8 @@
                 "params": {
                   "tables": [{
                     "id": 0
-                  }]
+                  }],
+                  "sampleRatio": 1.0
                 },
                 "alias": 2
               }
