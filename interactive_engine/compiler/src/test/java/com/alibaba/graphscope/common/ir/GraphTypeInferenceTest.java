@@ -205,7 +205,11 @@ public class GraphTypeInferenceTest {
         } catch (Exception e) {
             Assert.assertTrue(
                     e.getMessage()
-                            .contains("graph schema type error: unable to find common labels"));
+                            .equals(
+                                    "graph schema type error: unable to find getV with [opt=END,"
+                                            + " type=[VertexLabel(PERSON)]] from expand with"
+                                            + " [type=[EdgeLabel(REPLYOF, COMMENT, COMMENT),"
+                                            + " EdgeLabel(REPLYOF, COMMENT, POST)]]"));
             return;
         }
         Assert.fail();

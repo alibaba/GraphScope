@@ -234,7 +234,11 @@ public class GraphTypeInference {
                             new GraphLabelType(commonLabels),
                             ImmutableList.of());
             RelDataType newExpandType =
-                    restrictChild(relGraph, pxd.getExpand(), pxd.getGetV(), newGetVType);
+                    restrictChild(
+                            relGraph,
+                            pxd.getExpand().copy(pxd.getTraitSet(), pxd.getInputs()),
+                            pxd.getGetV(),
+                            newGetVType);
             return new GraphPathType(new GraphPathType.ElementType(newExpandType, newGetVType));
         }
         throw new IllegalArgumentException(
@@ -453,12 +457,29 @@ public class GraphTypeInference {
             }
         }
         commonLabels = commonLabels.stream().distinct().collect(Collectors.toList());
-        Preconditions.checkArgument(
-                !commonLabels.isEmpty(),
-                "graph schema type error: unable to find common labels between expand type %s and"
-                        + " getV type %s",
-                expandType,
-                getVType);
+        String errorMsg;
+        if (commonLabels.isEmpty()) {
+            switch (getVOpt) {
+                case OTHER:
+                    errorMsg =
+                            String.format(
+                                    "graph schema type error: unable to find expand with [type=%s]"
+                                            + " between getV with [type=%s] and getV with [opt=%s,"
+                                            + " type=%s]",
+                                    expandType, otherVType, getVOpt, getVType);
+                    break;
+                case START:
+                case END:
+                case BOTH:
+                default:
+                    errorMsg =
+                            String.format(
+                                    "graph schema type error: unable to find getV with [opt=%s,"
+                                            + " type=%s] from expand with [type=%s]",
+                                    getVOpt, getVType, expandType);
+            }
+            throw new IllegalArgumentException(errorMsg);
+        }
         return commonLabels;
     }
 
@@ -493,9 +514,10 @@ public class GraphTypeInference {
         commonLabels = commonLabels.stream().distinct().collect(Collectors.toList());
         Preconditions.checkArgument(
                 !commonLabels.isEmpty(),
-                "graph schema type error: unable to find common labels between getV type %s and"
-                        + " expand type %s",
+                "graph schema type error: unable to find getV with [type=%s] from expand with"
+                        + " [opt=%s, type=%s]",
                 getVType,
+                expandOpt,
                 expandType);
         return commonLabels;
     }
