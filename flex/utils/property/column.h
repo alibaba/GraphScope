@@ -394,7 +394,8 @@ class StringMapColumn : public ColumnBase {
   StringMapColumn(StorageStrategy strategy)
       : index_col_(strategy), meta_map_(nullptr) {
     meta_map_ = new LFIndexer<INDEX_T>();
-    meta_map_->init(PropertyType::kString);
+    meta_map_->init(
+        PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH));
   }
 
   ~StringMapColumn() {

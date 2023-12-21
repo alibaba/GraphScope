@@ -30,23 +30,26 @@ int main(int argc, char** argv) {
     std::filesystem::remove_all(work_dir);
     gs::GraphDB db;
     gs::Schema schema;
-    schema.add_vertex_label(
-        "PERSON",
-        {
-            gs::PropertyType::Varchar(16),  // name
-            gs::PropertyType::Varchar(32),  // emails
-        },
-        {"name", "emails"},
-        {std::tuple<gs::PropertyType, std::string, size_t>(
-            gs::PropertyType::kInt64, "id", 0)},
-        {gs::StorageStrategy::kMem, gs::StorageStrategy::kMem}, 4096);
+    schema.add_vertex_label("PERSON",
+                            {
+                                gs::PropertyType::Varchar(16),  // name
+                                gs::PropertyType::Varchar(32),  // emails
+                                gs::PropertyType::kStringMap,   // sex
+                            },
+                            {
+                                "name",
+                                "emails",
+                                "sex",
+                            },
+                            {std::tuple<gs::PropertyType, std::string, size_t>(
+                                gs::PropertyType::kInt64, "id", 0)},
+                            {}, 4096);
     schema.add_edge_label("PERSON", "PERSON", "KNOWS",
                           {
                               gs::PropertyType::kInt64,  // since
                           },
                           {}, gs::EdgeStrategy::kMultiple,
                           gs::EdgeStrategy::kMultiple);
-
     db.Open(schema, work_dir);
     auto person_label_id = schema.get_vertex_label_id("PERSON");
     auto know_label_id = schema.get_edge_label_id("KNOWS");
@@ -57,9 +60,11 @@ int main(int argc, char** argv) {
       auto txn = db.GetInsertTransaction();
       for (int i = 0; i < 100; ++i) {
         int64_t vertex_id_property = i + 1;
-        CHECK(txn.AddVertex(person_label_id, id++,
-                            {gs::Any::From(std::to_string(vertex_id_property)),
-                             gs::Any::From(std::to_string(vertex_data))}));
+        std::string s = std::to_string(i % 16);
+        CHECK(txn.AddVertex(
+            person_label_id, id++,
+            {gs::Any::From(std::to_string(vertex_id_property)),
+             gs::Any::From(std::to_string(vertex_data)), gs::Any::From(s)}));
       }
       txn.Commit();
       LOG(INFO) << "Add Vertex success\n";
@@ -86,12 +91,12 @@ int main(int argc, char** argv) {
             gs::PropertyType::Varchar(32),  // emails
             gs::PropertyType::kStringMap,   // sex
         },
-        {"name", "emails"},
+        {"name", "emails", "sex"},
         {
             std::tuple<gs::PropertyType, std::string, size_t>(
                 gs::PropertyType::Varchar(32), "id", 0),
         },
-        {gs::StorageStrategy::kMem, gs::StorageStrategy::kMem}, 4096);
+        {}, 4096);
     schema.add_edge_label("PERSON", "PERSON", "KNOWS",
                           {
                               gs::PropertyType::Varchar(32),  // since
@@ -99,7 +104,7 @@ int main(int argc, char** argv) {
                           {}, gs::EdgeStrategy::kMultiple,
                           gs::EdgeStrategy::kMultiple);
 
-    db.Open(schema, work_dir);
+    db.Open(schema, work_dir, 1, false, false);
     auto person_label_id = schema.get_vertex_label_id("PERSON");
     auto know_label_id = schema.get_edge_label_id("KNOWS");
 

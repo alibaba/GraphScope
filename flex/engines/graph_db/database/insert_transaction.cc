@@ -56,14 +56,15 @@ bool InsertTransaction::AddVertex(label_t label, const Any& id,
     auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
       if (prop.type == PropertyType::kString &&
-          types[col_i] == PropertyType::kStringMap)
-        continue;
-      arc_.Resize(arc_size);
-      std::string label_name = graph_.schema().get_vertex_label_name(label);
-      LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
-                 << "] property type not match, expected " << types[col_i]
-                 << ", but got " << prop.type;
-      return false;
+          types[col_i] == PropertyType::kStringMap) {
+      } else {
+        arc_.Resize(arc_size);
+        std::string label_name = graph_.schema().get_vertex_label_name(label);
+        LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
+                   << "] property type not match, expected " << types[col_i]
+                   << ", but got " << prop.type;
+        return false;
+      }
     }
     serialize_field(arc_, prop);
   }

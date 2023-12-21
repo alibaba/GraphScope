@@ -221,8 +221,6 @@ class LFIndexer {
       keys_ = new TypedColumn<uint64_t>(StorageStrategy::kMem);
     } else if (type == PropertyType::kUInt32) {
       keys_ = new TypedColumn<uint32_t>(StorageStrategy::kMem);
-    } else if (type == PropertyType::kStringMap) {
-      keys_ = new StringMapColumn<uint8_t>(StorageStrategy::kMem);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       keys_ = new StringColumn(StorageStrategy::kMem,
                                type.additional_type_info.max_length);
