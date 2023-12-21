@@ -21,6 +21,8 @@ import sys
 
 try:
     sys.path.insert(0, os.path.dirname(__file__))
-    import interactive_client
+    import hiactor_client
 except ImportError:
     raise
+
+from gscoordinator.servicer.flex.interactive.hiactor import *

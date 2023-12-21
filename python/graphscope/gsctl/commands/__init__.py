@@ -17,23 +17,33 @@
 #
 
 import click
+import sys
 
-from graphscope.gsctl.commands.common import cli as common_cli
-from graphscope.gsctl.commands.dev import cli as dev_cli
-from graphscope.gsctl.commands.interactive import cli as interactive_cli
 from graphscope.gsctl.config import Context
-from graphscope.gsctl.config import FLEX_INTERACTIVE
+
+from graphscope.gsctl.commands.common import cli as common
+from graphscope.gsctl.commands.dev import cli as dev
+from graphscope.gsctl.commands.interactive import cli as interactive
+from graphscope.gsctl.client.rpc import get_grpc_client
 
 
 def get_command_collection(context: Context):
     if context is None:
         # treat gsctl as an utility script, providing hepler functions or utilities. e.g.
         # initialize and manage cluster, install the dependencies required to build graphscope locally
-        commands = click.CommandCollection(sources=[common_cli, dev_cli])
+        return click.CommandCollection(sources=[common, dev])
 
-    elif context.solution == FLEX_INTERACTIVE:
-        commands = click.CommandCollection(sources=[common_cli, interactive_cli])
+    grpc_client = get_grpc_client(context.coordinator_endpoint)
+    solution = grpc_client.connection_available()
+    # in general, we should use 'solution' returned from the coordinator
+    # to determine the behavior in gsctl, but sometimes coordinator may crash
+    # or be closed manually, thus, we use the 'solution' exists in the client
+    # as default.
+    if solution is None:
+        solution = context.solution
 
+    if solution == "interactive":
+        commands = click.CommandCollection(sources=[common, interactive])
     else:
         raise RuntimeError(
             f"Failed to get command collection with context {context.name}"

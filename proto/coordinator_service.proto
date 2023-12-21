@@ -16,8 +16,8 @@
 syntax = "proto3";
 package gs.rpc;
 
+import "flex.proto";
 import "message.proto";
-import "interactive.proto";
 
 service CoordinatorService {
   // Connect a session.
@@ -53,11 +53,13 @@ service CoordinatorService {
   // service functions under FLEX architecture
   rpc Connect(ConnectRequest) returns (ConnectResponse);
 
+  rpc ListGraph(ListGraphRequest) returns (ListGraphResponse);
+
+  // end
+
   rpc CreateInteractiveGraph(CreateInteractiveGraphRequest) returns (ApiResponse);
 
   rpc RemoveInteractiveGraph(RemoveInteractiveGraphRequest) returns (ApiResponse);
-
-  rpc ListInteractiveGraph(ListInteractiveGraphRequest) returns (ListInteractiveGraphResponse);
 
   rpc ImportInteractiveGraph(ImportInteractiveGraphRequest) returns (ApiResponse);
 

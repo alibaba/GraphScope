@@ -27,13 +27,14 @@ from graphscope.client.utils import handle_grpc_error
 from graphscope.gsctl.config import GS_CONFIG_DEFAULT_LOCATION
 from graphscope.gsctl.config import get_current_context
 from graphscope.proto import coordinator_service_pb2_grpc
-from graphscope.proto import interactive_pb2
+from graphscope.proto import flex_pb2
 from graphscope.proto import message_pb2
 from graphscope.version import __version__
 
 
 class GRPCClient(object):
     def __init__(self, endpoint):
+        self._endpoint = endpoint
         # create the grpc stub
         options = [
             ("grpc.max_send_message_length", GS_GRPC_MAX_MESSAGE_LENGTH),
@@ -57,17 +58,29 @@ class GRPCClient(object):
             except Exception as e:
                 msg = f"code: {e.code().name}, details: {e.details()}"
                 click.secho(
-                    f"Failed to connect coordinator: {e}, try after second...",
+                    f"Couldn't connect to current server: {self._endpoint}: i/o timeout",
                     fg="yellow",
                 )
                 if time.time() - begin_time >= timeout_seconds:
-                    raise ConnectionError(f"Connect coordinator timeout, {msg}")
-                time.sleep(1)
-
+                    click.secho(f"Unable to connect to server: {msg}", fg="yellow")
+                    return None
+                time.sleep(8)
         return response.solution
 
-    def connect(self, timeout_seconds=10):
+    @property
+    def coordinator_endpoint(self):
+        return self._endpoint
+
+    def connect(self, timeout_seconds=24):
         return self._connect_impl(timeout_seconds)
+
+    def connection_available(self):
+        try:
+            request = message_pb2.ConnectRequest(version=__version__)
+            response = self._stub.Connect(request)
+            return response.solution
+        except:  # noqa: E722
+            return None
 
     def close(self):
         try:
@@ -76,81 +89,75 @@ class GRPCClient(object):
             pass
 
     @handle_grpc_error
-    def create_interactive_graph(self, graph_def: interactive_pb2.GraphProto):
-        request = interactive_pb2.CreateInteractiveGraphRequest(graph_def=graph_def)
+    def create_interactive_graph(self, graph_def: flex_pb2.GraphProto):
+        request = flex_pb2.CreateInteractiveGraphRequest(graph_def=graph_def)
         return self._stub.CreateInteractiveGraph(request)
 
     @handle_grpc_error
     def remove_interactive_graph(self, graph: str):
-        request = interactive_pb2.RemoveInteractiveGraphRequest(graph_name=graph)
+        request = flex_pb2.RemoveInteractiveGraphRequest(graph_name=graph)
         return self._stub.RemoveInteractiveGraph(request)
 
     @handle_grpc_error
-    def list_interactive_graph(self):
-        request = interactive_pb2.ListInteractiveGraphRequest()
-        return self._stub.ListInteractiveGraph(request)
+    def list_graph(self):
+        request = flex_pb2.ListGraphRequest()
+        return self._stub.ListGraph(request)
 
     @handle_grpc_error
-    def import_interactive_graph(self, schema_mapping: interactive_pb2.SchemaMapping):
-        request = interactive_pb2.ImportInteractiveGraphRequest(
-            schema_mapping=schema_mapping
-        )
+    def import_interactive_graph(self, schema_mapping: flex_pb2.SchemaMapping):
+        request = flex_pb2.ImportInteractiveGraphRequest(schema_mapping=schema_mapping)
         return self._stub.ImportInteractiveGraph(request)
 
     @handle_grpc_error
     def list_interactive_job(self):
-        request = interactive_pb2.ListInteractiveJobRequest()
+        request = flex_pb2.ListInteractiveJobRequest()
         return self._stub.ListInteractiveJob(request)
 
     @handle_grpc_error
-    def create_interactive_procedure(self, procedure: interactive_pb2.Procedure):
-        request = interactive_pb2.CreateInteractiveProcedureRequest(
-            procedure_def=procedure
-        )
+    def create_interactive_procedure(self, procedure: flex_pb2.Procedure):
+        request = flex_pb2.CreateInteractiveProcedureRequest(procedure_def=procedure)
         return self._stub.CreateInteractiveProcedure(request)
 
     @handle_grpc_error
     def list_interactive_procedure(self, graph: str):
-        request = interactive_pb2.ListInteractiveProcedureRequest(graph_name=graph)
+        request = flex_pb2.ListInteractiveProcedureRequest(graph_name=graph)
         return self._stub.ListInteractiveProcedure(request)
 
     @handle_grpc_error
-    def update_interactive_procedure(self, procedures: List[interactive_pb2.Procedure]):
-        request = interactive_pb2.UpdateInteractiveProcedureRequest(
-            procedures=procedures
-        )
+    def update_interactive_procedure(self, procedures: List[flex_pb2.Procedure]):
+        request = flex_pb2.UpdateInteractiveProcedureRequest(procedures=procedures)
         return self._stub.UpdateInteractiveProcedure(request)
 
     @handle_grpc_error
     def remove_interactive_procedure(self, graph: str, procedure: str):
-        request = interactive_pb2.RemoveInteractiveProcedureRequest(
+        request = flex_pb2.RemoveInteractiveProcedureRequest(
             graph_name=graph, procedure_name=procedure
         )
         return self._stub.RemoveInteractiveProcedure(request)
 
     @handle_grpc_error
     def get_interactive_service_status(self):
-        request = interactive_pb2.GetInteractiveServiceStatusRequest()
+        request = flex_pb2.GetInteractiveServiceStatusRequest()
         return self._stub.GetInteractiveServiceStatus(request)
 
     @handle_grpc_error
-    def start_interactive_service(self, service: interactive_pb2.Service):
-        request = interactive_pb2.StartInteractiveServiceRequest(service_def=service)
+    def start_interactive_service(self, service: flex_pb2.Service):
+        request = flex_pb2.StartInteractiveServiceRequest(service_def=service)
         return self._stub.StartInteractiveService(request)
 
     @handle_grpc_error
     def stop_interactive_service(self):
-        request = interactive_pb2.StopInteractiveServiceRequest()
+        request = flex_pb2.StopInteractiveServiceRequest()
         return self._stub.StopInteractiveService(request)
 
     @handle_grpc_error
     def restart_interactive_service(self):
-        request = interactive_pb2.RestartInteractiveServiceRequest()
+        request = flex_pb2.RestartInteractiveServiceRequest()
         return self._stub.RestartInteractiveService(request)
 
     @handle_grpc_error
     def get_node_status(self):
-        request = interactive_pb2.GetNodeStatusRequest()
+        request = flex_pb2.GetNodeStatusRequest()
         return self._stub.GetNodeStatus(request)
 
 
@@ -161,9 +168,13 @@ def get_grpc_client(coordinator_endpoint=None):
     # use the latest context in config file
     current_context = get_current_context()
     if current_context is None:
-        raise RuntimeError(
-            "No available context found in {0}, please connect to a launched coordinator first.".format(
-                GS_CONFIG_DEFAULT_LOCATION
-            )
+        command = "gsctl connect --coordinator-endpoint <endpoint>"
+        click.secho(
+            "No available context found, you may want to connect to a coordinator by: {0}".format(
+                command
+            ),
+            fg="blue",
         )
+        return None
+
     return GRPCClient(current_context.coordinator_endpoint)

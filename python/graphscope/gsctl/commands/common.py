@@ -22,6 +22,7 @@ import click
 
 from graphscope.gsctl.config import Context
 from graphscope.gsctl.config import load_gs_config
+from graphscope.gsctl.config import GS_CONFIG_DEFAULT_LOCATION
 from graphscope.gsctl.client.rpc import get_grpc_client
 
 
@@ -33,23 +34,33 @@ def cli():
 
 @cli.command()
 @click.option(
+    "-c",
     "--coordinator-endpoint",
-    help="Coordinator endpoint which gsctl connect to, e.g. http://127.0.0.1:9527",
+    help="Coordinator endpoint which gsctl connect to, e.g. 127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to the launched coordinator by ~/.graphscope/config
+    """Connect to a launched coordinator
 
     If '--coordinator-endpoint' is specified, use it as the current context
     and override the config file.
     """
-    if coordinator_endpoint is not None:
+    grpc_client = get_grpc_client(coordinator_endpoint)
+    if grpc_client is None:
+        return
+
+    if coordinator_endpoint is None:
         click.secho(
-            f"Connect to the coordinator at {coordinator_endpoint}.", fg="green"
+            "Find context from {0}, connect to coordinator at {1}".format(
+                GS_CONFIG_DEFAULT_LOCATION, grpc_client.coordinator_endpoint
+            ),
+            fg="blue",
         )
 
-    grpc_client = get_grpc_client(coordinator_endpoint)
     solution = grpc_client.connect()
+    if solution is None:
+        return
 
+    # coordinator connected, set the context
     if coordinator_endpoint is not None:
         context = Context(solution=solution, coordinator_endpoint=coordinator_endpoint)
         config = load_gs_config()

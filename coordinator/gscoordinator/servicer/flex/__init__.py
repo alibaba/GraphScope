@@ -15,6 +15,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-from gscoordinator.servicer.flex.service import *
-from gscoordinator.servicer.graphscope_one.service import *

@@ -29,21 +29,11 @@ GS_CONFIG_DEFAULT_LOCATION = os.environ.get(
     "GSCONFIG", os.path.expanduser("~/.graphscope/config")
 )
 
-FLEX_INTERACTIVE = "Interactive"
-
 
 class Context(object):
-    def __init__(self, solution, coordinator_endpoint, name=None):
-        self.supported_solutions = [FLEX_INTERACTIVE]
-        if solution not in self.supported_solutions:
-            raise RuntimeError(
-                "The solution {0} in context {1} is not supported yet.".format(
-                    solution, name
-                )
-            )
-
+    def __init__(self, coordinator_endpoint, solution, name=None):
         if name is None:
-            name = "context_" + "".join(random.choices(ascii_letters, k=6))
+            name = "context_" + "".join(random.choices(ascii_letters, k=8))
 
         self.name = name
         self.solution = solution
@@ -72,7 +62,7 @@ class GSConfig(object):
         return self._contexts[self._current_context]
 
     def set_and_write(self, context: Context):
-        # treat the same endpoint as the same coordinator
+        # treat the same endpoint with same services as the same coordinator
         for _, v in self._contexts.items():
             if (
                 context.coordinator_endpoint == v.coordinator_endpoint

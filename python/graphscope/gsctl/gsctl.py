@@ -45,7 +45,8 @@ def cli():
     # get the specified commands under the FLEX architecture
     commands = get_command_collection(context)
     # serve the command
-    commands()
+    if commands is not None:
+        commands()
 
 
 if __name__ == "__main__":
