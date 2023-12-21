@@ -48,7 +48,6 @@ void BasicFragmentLoader::init_vertex_data() {
     v_data.init(vertex_table_prefix(label_name), tmp_dir(work_dir_),
                 property_names, property_types,
                 schema_.get_vertex_storage_strategies(label_name));
-    // v_data.resize(schema_.get_max_vnum(label_name));
   }
   VLOG(10) << "Finish init vertex data";
 }

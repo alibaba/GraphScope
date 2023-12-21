@@ -302,8 +302,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
     _add_vertex<KEY_T>()(primary_key_col, indexer, vids);
 
-    size_t len = indexer.size();
-    basic_fragment_loader_.GetVertexTable(v_label_id).resize(len);
+    basic_fragment_loader_.GetVertexTable(v_label_id).resize(indexer.size());
 
     for (auto j = 0; j < property_cols.size(); ++j) {
       auto array = property_cols[j];
