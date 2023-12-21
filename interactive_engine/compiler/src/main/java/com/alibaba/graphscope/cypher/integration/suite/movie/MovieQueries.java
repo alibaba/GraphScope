@@ -335,12 +335,39 @@ public class MovieQueries {
     }
 
     public static QueryContext get_movie_query21_test() {
+        String query =
+                "Match (tom:Person {name: 'Tom Hanks'})-[:ACTED_IN]->(movie1:Movie) Return"
+                        + " count(tom, movie1);";
+        List<String> expected = Arrays.asList("Record<{$f0: 12}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query22_test() {
+        String query =
+                "Match (tom:Person {name: 'Tom"
+                        + " Hanks'})-[:ACTED_IN]->(movie1:Movie)<-[:ACTED_IN]-(p2:Person) Return"
+                        + " count(distinct tom, p2);";
+        List<String> expected = Arrays.asList("Record<{$f0: 35}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query23_test() {
+        String query =
+                "Match (tom:Person {name: 'Tom"
+                    + " Hanks'})-[:ACTED_IN]->(movie1:Movie)<-[:ACTED_IN]-(p2:Person {name: \"Tom"
+                    + " Hanks\"}) Return distinct tom.name, p2.name;";
+        List<String> expected =
+                Arrays.asList("Record<{name: \"Tom Hanks\", name0: \"Tom Hanks\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query24_test() {
         String query = "Match (n) Where labels(n)='Movie' Return distinct labels(n) as label;";
         List<String> expected = Arrays.asList("Record<{label: \"Movie\"}>");
         return new QueryContext(query, expected);
     }
 
-    public static QueryContext get_movie_query22_test() {
+    public static QueryContext get_movie_query25_test() {
         String query =
                 "Match (n)-[m]->(c) Where type(m)='ACTED_IN' Return distinct type(m) as type;";
         List<String> expected = Arrays.asList("Record<{type: \"ACTED_IN\"}>");

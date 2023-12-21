@@ -62,19 +62,37 @@ struct GroupKeyResT<CTX_T, GroupKey<col_id, T>> {
   using result_t = typename KeyedT<set_t, PropertySelector<T>>::keyed_set_t;
 };
 
-template <typename CTX_T, typename AGG_T>
+template <typename CTX_T, typename AGG_T, typename Enable = void>
 struct GroupValueResT;
 
+// The SET_T could b a single set or a tuple of sets.
 template <typename SET_T, AggFunc agg_func, typename SELECTOR_TUPLE>
 struct GroupValueResTImpl;
 
-template <typename CTX_T, AggFunc agg_func, typename... SELECTOR, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<agg_func, std::tuple<SELECTOR...>,
-                                           std::integer_sequence<int, Is>>> {
+// Specialize for single set
+template <typename CTX_T, AggFunc agg_func, typename... SELECTOR, int... Is>
+struct GroupValueResT<CTX_T,
+                      AggregateProp<agg_func, std::tuple<SELECTOR...>,
+                                    std::integer_sequence<int, Is...>>,
+                      typename std::enable_if<(sizeof...(Is) == 1)>::type> {
   using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<Is>())>>;
+      std::declval<CTX_T>().template GetNode<FirstElement<Is...>::value>())>>;
   using result_t =
       typename GroupValueResTImpl<old_set_t, agg_func,
+                                  std::tuple<SELECTOR...>>::result_t;
+};
+
+// Specialize for multiple sets
+template <typename CTX_T, AggFunc agg_func, typename... SELECTOR, int... Is>
+struct GroupValueResT<CTX_T,
+                      AggregateProp<agg_func, std::tuple<SELECTOR...>,
+                                    std::integer_sequence<int, Is...>>,
+                      typename std::enable_if<(sizeof...(Is) > 1)>::type> {
+  using old_set_tuple_t =
+      std::tuple<std::remove_const_t<std::remove_reference_t<decltype(
+          std::declval<CTX_T>().template GetNode<Is>())>>...>;
+  using result_t =
+      typename GroupValueResTImpl<old_set_tuple_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
 };
 
@@ -89,6 +107,18 @@ struct GroupValueResTImpl<SET_T, AggFunc::COUNT,
 template <typename SET_T>
 struct GroupValueResTImpl<SET_T, AggFunc::COUNT_DISTINCT,
                           std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<size_t>;
+};
+
+// PropSelectorTuple doesn't effect the result type.
+template <typename SET_TUPLE_T, typename PropSelectorTuple>
+struct GroupValueResTImpl<SET_TUPLE_T, AggFunc::COUNT_DISTINCT,
+                          PropSelectorTuple> {
+  using result_t = Collection<size_t>;
+};
+
+template <typename SET_TUPLE_T, typename PropSelectorTuple>
+struct GroupValueResTImpl<SET_TUPLE_T, AggFunc::COUNT, PropSelectorTuple> {
   using result_t = Collection<size_t>;
 };
 
@@ -571,7 +601,7 @@ class GroupByOp {
 
   template <typename... SET_T, typename HEAD_T, AggFunc _agg_func, typename T,
             int tag_id>
-  static auto create_keyed_value_set_builder(
+  static auto create_keyed_value_set_builder_single_tag(
       const GRAPH_INTERFACE& graph, const std::tuple<SET_T...>& tuple,
       const HEAD_T& head,
       AggregateProp<_agg_func, std::tuple<PropertySelector<T>>,
@@ -588,6 +618,43 @@ class GroupByOp {
       return KeyedAggT<GRAPH_INTERFACE, HEAD_T, _agg_func, std::tuple<T>,
                        std::integer_sequence<int32_t, tag_id>>::
           create_agg_builder(head, graph, agg.selectors_);
+    }
+  }
+
+  // For aggregate on multiple tags, we currently only support count distinct
+  // and count.
+  template <typename... SET_T, typename HEAD_T, AggFunc _agg_func,
+            typename PROP_TUPLE_T, int... tag_id>
+  static auto create_keyed_value_set_builder_multi_tag(
+      const GRAPH_INTERFACE& graph, const std::tuple<SET_T...>& tuple,
+      const HEAD_T& head,
+      AggregateProp<_agg_func, PROP_TUPLE_T,
+                    std::integer_sequence<int32_t, tag_id...>>& agg) {
+    // create const ref tuple from tuple and head using std::cref
+    // construct a const ref tuple from tuple
+    auto const_ref_tuple = make_tuple_of_const_refs(tuple);
+
+    auto old_set = std::tuple_cat(const_ref_tuple, std::tie(head));
+    // get the tuple from old_set, with tag_ids
+    auto old_set_tuple = std::tuple{gs::get_from_tuple<tag_id>(old_set)...};
+
+    return KeyedAggMultiColT<GRAPH_INTERFACE, decltype(old_set_tuple),
+                             _agg_func, PROP_TUPLE_T,
+                             std::integer_sequence<int32_t, tag_id...>>::
+        create_agg_builder(old_set_tuple, graph, agg.selectors_);
+  }
+
+  template <typename... SET_T, typename HEAD_T, AggFunc _agg_func,
+            typename PROP_SELECTOR_TUPLE, int... tag_ids>
+  static auto create_keyed_value_set_builder(
+      const GRAPH_INTERFACE& graph, const std::tuple<SET_T...>& tuple,
+      const HEAD_T& head,
+      AggregateProp<_agg_func, PROP_SELECTOR_TUPLE,
+                    std::integer_sequence<int32_t, tag_ids...>>& agg) {
+    if constexpr (sizeof...(tag_ids) == 1) {
+      return create_keyed_value_set_builder_single_tag(graph, tuple, head, agg);
+    } else {
+      return create_keyed_value_set_builder_multi_tag(graph, tuple, head, agg);
     }
   }
 
