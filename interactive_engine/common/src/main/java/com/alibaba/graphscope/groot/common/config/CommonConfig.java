@@ -87,6 +87,6 @@ public class CommonConfig {
     public static final Config<Boolean> KAFKA_TEST_CLUSTER_ENABLE =
             Config.boolConfig("kafka.test.cluster.enable", true);
 
-    public static final Config<Boolean> IS_SECONDARY_INSTANCE =
-            Config.boolConfig("is_secondary_instance", false);
+    public static final Config<Boolean> SECONDARY_INSTANCE_ENABLED =
+            Config.boolConfig("secondary.instance.enabled", false);
 }

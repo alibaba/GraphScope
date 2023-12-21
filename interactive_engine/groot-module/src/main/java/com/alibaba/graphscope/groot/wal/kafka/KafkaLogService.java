@@ -52,6 +52,7 @@ public class KafkaLogService implements LogService {
         this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
         this.replicationFactor = KafkaConfig.KAFKA_REPLICATION_FACTOR.get(configs);
         this.maxMessageMb = KafkaConfig.KAFKA_MAX_MESSAGE_MB.get(configs);
+        logger.info("Initialized KafkaLogService");
     }
 
     @Override

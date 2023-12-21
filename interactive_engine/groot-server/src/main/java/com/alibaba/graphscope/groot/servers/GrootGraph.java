@@ -28,7 +28,7 @@ public class GrootGraph {
     public static void main(String[] args) throws IOException {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
-        if (CommonConfig.IS_SECONDARY_INSTANCE.get(conf)) {
+        if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(conf)) {
             conf =
                     Configs.newBuilder(conf)
                             .put(StoreConfig.STORE_STORAGE_ENGINE.getKey(), "rocksdb_as_secondary")

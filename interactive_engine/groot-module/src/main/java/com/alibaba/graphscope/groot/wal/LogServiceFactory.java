@@ -20,7 +20,7 @@ import com.alibaba.graphscope.groot.wal.mock.MockLogService;
 
 public class LogServiceFactory {
     public static LogService makeLogService(Configs configs) {
-        if (CommonConfig.IS_SECONDARY_INSTANCE.get(configs)) {
+        if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs)) {
             return new MockLogService();
         } else {
             return new KafkaLogService(configs);

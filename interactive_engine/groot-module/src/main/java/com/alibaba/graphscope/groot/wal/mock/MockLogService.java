@@ -17,10 +17,17 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 
 public class MockLogService implements LogService {
-    public MockLogService() {}
+    private static final Logger logger = LoggerFactory.getLogger(MockLogService.class);
+
+    public MockLogService() {
+        logger.info("Initialized MockLogService");
+    }
 
     @Override
     public void init() {}

@@ -158,8 +158,9 @@ public class Frontend extends NodeBase {
                         clientWriteService,
                         clientBackupService);
 
+        boolean isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
         WrappedSchemaFetcher wrappedSchemaFetcher =
-                new WrappedSchemaFetcher(snapshotCache, metaService);
+                new WrappedSchemaFetcher(snapshotCache, metaService, isSecondary);
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
         this.graphService = serviceProducer.makeGraphService(wrappedSchemaFetcher, channelManager);
     }
