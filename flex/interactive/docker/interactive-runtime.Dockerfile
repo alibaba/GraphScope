@@ -1,12 +1,14 @@
-FROM interactive-base:latest AS builder
+ARG ARCH=x86_64
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:latest AS builder
 
 ARG CI=false
+ARG ARCH
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
 
 # install arrow
-RUN cd /tmp && sudo apt-get install -y -V ca-certificates lsb-release wget && \
+RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
     sudo apt-get update && sudo apt-get install -y libarrow-dev=6.0.1-1
@@ -28,6 +30,7 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME} && git clone https://github.com/alibaba/
     cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
 from ubuntu:20.04 as final_image
+ARG ARCH
 
 RUN apt-get update && apt-get install -y sudo
 
@@ -56,37 +59,40 @@ COPY --from=builder ${HOME}/GraphScope/flex/interactive/examples/modern_graph/* 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
 
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libprotobuf*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libsnappy*.so* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libsnappy*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/include/arrow /usr/include/arrow
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libgflags*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libglog*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libyaml-cpp*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libmpi*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_program_options*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libboost_thread*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libcrypto*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libopen-rte*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libhwloc*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libunwind*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libarrow.so.600 /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libopen-pal*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libltdl*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libevent*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libutf8proc*.so* /usr/lib/x86_64-linux-gnu/
-COPY --from=builder /usr/lib/x86_64-linux-gnu/libre2*.so* /usr/lib/x86_64-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libgflags*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libglog*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libyaml-cpp*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libmpi*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_program_options*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_thread*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libcrypto*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-rte*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libhwloc*.so* /usr/lib/$ARCH-linux-gnu/
+
+
+# libunwind for arm64 seems not installed here, and seems not needed for aarch64(tested)
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libunwind*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libarrow.so.600 /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-pal*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libltdl*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libevent*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libutf8proc*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libre2*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/include/glog /usr/include/glog
 COPY --from=builder /usr/include/gflags /usr/include/gflags
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libprotobuf* /usr/lib/$ARCH-linux-gnu/
 
-COPY --from=builder /usr/lib/x86_64-linux-gnu/openmpi/include/ /opt/flex/include
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/openmpi/include/ /opt/flex/include
 COPY --from=builder /usr/include/boost /usr/include/boost
 COPY --from=builder /usr/include/google /usr/include/google
 COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
 
-RUN sudo rm -rf /usr/lib/x86_64-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
-    sudo rm -rf /usr/lib/x86_64-linux-gnu/lib/libcuda.so && \
-    sudo rm -rf /usr/lib/x86_64-linux-gnu/lib/libcudart.so && \
-    sudo rm -rf /usr/lib/x86_64-linux-gnu/lib/libicudata.so*
+RUN sudo rm -rf /usr/lib/$ARCH-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
+    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcuda.so && \
+    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libcudart.so && \
+    sudo rm -rf /usr/lib/$ARCH-linux-gnu/lib/libicudata.so*
 
 RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
   && sudo ln -sfn /opt/flex/include/* /usr/local/include/ \

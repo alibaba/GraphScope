@@ -293,7 +293,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     processTraversal(
                                             traversal,
                                             new GremlinResultProcessor(
-                                                    ctx, traversal, statusCallback),
+                                                    ctx, traversal, statusCallback, timeoutConfig),
                                             irMeta,
                                             timeoutConfig,
                                             statusCallback.getQueryLogger());

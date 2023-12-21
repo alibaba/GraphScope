@@ -62,9 +62,19 @@ static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
   }
   int real_tag_ind = ctx.GetTagInd(tag_id);
   if (var.has_property()) {
-    std::string prop_name = var.property().key().name();
-    std::string prop_type = data_type_2_string(
-        common_data_type_pb_2_data_type(var.node_type().data_type()));
+    auto var_property = var.property();
+    std::string prop_name, prop_type;
+    if (var_property.has_label()) {
+      prop_name = "label";
+      prop_type = data_type_2_string(codegen::DataType::kLabelId);
+    } else if (var_property.has_key()) {
+      prop_name = var.property().key().name();
+      prop_type = data_type_2_string(
+          common_data_type_pb_2_data_type(var.node_type().data_type()));
+    } else {
+      LOG(FATAL) << "Unexpected property type: " << var.DebugString();
+    }
+
     boost::format formater(PROPERTY_SELECTOR);
     formater % prop_type % prop_name;
 
@@ -267,28 +277,7 @@ class ExprBuilder {
     VLOG(10) << "Adding expr of size: " << size;
     for (auto i = 0; i < size;) {
       auto expr = expr_ops[i];
-      if (expr.has_var() && expr.var().property().has_label()) {
-        VLOG(10) << "Found label in expr, skip this check";
-        int j = i;
-        for (; j < size; ++j) {
-          if (expr_ops[j].item_case() == common::ExprOpr::kBrace &&
-              expr_ops[j].brace() ==
-                  common::ExprOpr::Brace::ExprOpr_Brace_RIGHT_BRACE) {
-            VLOG(10) << "Found right brace at ind: " << j
-                     << ", started at: " << i;
-            AddExprOpr(std::string("true"));
-            AddExprOpr(expr_ops[j]);
-            i = j + 1;
-            break;
-          }
-        }
-        if (j == size) {
-          LOG(WARNING) << "no right brace found" << j << "size: " << size;
-          // just add true, since the current expresion has no other expr_ops
-          AddExprOpr(std::string("true"));
-          i = j;
-        }
-      } else if (expr.has_extract()) {
+      if (expr.has_extract()) {
         // special case for extract
         auto extract = expr.extract();
         if (i + 1 >= size) {

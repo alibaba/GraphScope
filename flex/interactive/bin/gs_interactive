@@ -36,118 +36,166 @@ emph(){
 
 ################## Some Util Functions ##################
 
+###############################################################################
+#
 # source: https://github.com/mrbaseman/parse_yaml.git
-function parse_yaml {
-   local prefix=$2
-   local separator=${3:-_}
+#
+###############################################################################
+# Parses a YAML file and outputs variable assigments.  Can optionally accept a 
+# variable name prefix and a variable name separator
+#
+# Usage:
+#   parse_yaml file [prefix] [separator]
+###############################################################################
 
-   local indexfix
-   # Detect awk flavor
-   if awk --version 2>&1 | grep -q "GNU Awk" ; then
+function parse_yaml {
+  unset i
+  unset fs
+  local prefix=$2
+  local separator=${3:-_}
+
+  local indexfix=-1
+  # Detect awk flavor
+  if awk --version 2>&1 | grep -q "GNU Awk" ; then
       # GNU Awk detected
       indexfix=-1
-   elif awk -Wv 2>&1 | grep -q "mawk" ; then
+  elif awk -Wv 2>&1 | grep -q "mawk" ; then
       # mawk detected
       indexfix=0
-   fi
+  fi
 
-   local s='[[:space:]]*' sm='[ \t]*' w='[a-zA-Z0-9_]*' fs=${fs:-$(echo @|tr @ '\034')} i=${i:-  }
-   cat $1 | \
-   awk -F$fs "{multi=0; 
-       if(match(\$0,/$sm\|$sm$/)){multi=1; sub(/$sm\|$sm$/,\"\");}
-       if(match(\$0,/$sm>$sm$/)){multi=2; sub(/$sm>$sm$/,\"\");}
-       while(multi>0){
-           str=\$0; gsub(/^$sm/,\"\", str);
-           indent=index(\$0,str);
-           indentstr=substr(\$0, 0, indent+$indexfix) \"$i\";
-           obuf=\$0;
-           getline;
-           while(index(\$0,indentstr)){
-               obuf=obuf substr(\$0, length(indentstr)+1);
-               if (multi==1){obuf=obuf \"\\\\n\";}
-               if (multi==2){
-                   if(match(\$0,/^$sm$/))
-                       obuf=obuf \"\\\\n\";
-                       else obuf=obuf \" \";
-               }
-               getline;
-           }
-           sub(/$sm$/,\"\",obuf);
-           print obuf;
-           multi=0;
-           if(match(\$0,/$sm\|$sm$/)){multi=1; sub(/$sm\|$sm$/,\"\");}
-           if(match(\$0,/$sm>$sm$/)){multi=2; sub(/$sm>$sm$/,\"\");}
-       }
-   print}" | \
-   sed  -e "s|^\($s\)?|\1-|" \
-       -ne "s|^$s#.*||;s|$s#[^\"']*$||;s|^\([^\"'#]*\)#.*|\1|;t1;t;:1;s|^$s\$||;t2;p;:2;d" | \
-   sed -ne "s|,$s\]$s\$|]|" \
-        -e ":1;s|^\($s\)\($w\)$s:$s\(&$w\)\?$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1\2: \3[\4]\n\1$i- \5|;t1" \
-        -e "s|^\($s\)\($w\)$s:$s\(&$w\)\?$s\[$s\(.*\)$s\]|\1\2: \3\n\1$i- \4|;" \
-        -e ":2;s|^\($s\)-$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1- [\2]\n\1$i- \3|;t2" \
-        -e "s|^\($s\)-$s\[$s\(.*\)$s\]|\1-\n\1$i- \2|;p" | \
-   sed -ne "s|,$s}$s\$|}|" \
-        -e ":1;s|^\($s\)-$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1- {\2}\n\1$i\3: \4|;t1" \
-        -e "s|^\($s\)-$s{$s\(.*\)$s}|\1-\n\1$i\2|;" \
-        -e ":2;s|^\($s\)\($w\)$s:$s\(&$w\)\?$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1\2: \3 {\4}\n\1$i\5: \6|;t2" \
-        -e "s|^\($s\)\($w\)$s:$s\(&$w\)\?$s{$s\(.*\)$s}|\1\2: \3\n\1$i\4|;p" | \
-   sed  -e "s|^\($s\)\($w\)$s:$s\(&$w\)\(.*\)|\1\2:\4\n\3|" \
-        -e "s|^\($s\)-$s\(&$w\)\(.*\)|\1- \3\n\2|" | \
-   sed -ne "s|^\($s\):|\1|" \
-        -e "s|^\($s\)\(---\)\($s\)||" \
-        -e "s|^\($s\)\(\.\.\.\)\($s\)||" \
-        -e "s|^\($s\)-${s}[\"']\(.*\)[\"']$s\$|\1$fs$fs\2|p;t" \
-        -e "s|^\($s\)\($w\)$s:${s}[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p;t" \
-        -e "s|^\($s\)-$s\(.*\)$s\$|\1$fs$fs\2|" \
-        -e "s|^\($s\)\($w\)$s:${s}[\"']\?\(.*\)$s\$|\1$fs\2$fs\3|" \
-        -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)[\"']$s\$|\1$fs$fs$fs\2|" \
-        -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)$s\$|\1$fs$fs$fs\2|" \
-        -e "s|$s\$||p" | \
-   awk -F$fs "{
+  local s='[[:space:]]*' sm='[ \t]*' w='[a-zA-Z0-9_]*' fs=${fs:-$(echo @|tr @ '\034')} i=${i:-  }
+
+  ###############################################################################
+  # cat:   read the yaml file into the stream
+  # awk 1: process multi-line text
+  # sed 1: remove comments and empty lines
+  # sed 2: process lists
+  # sed 3: process dictionaries
+  # sed 4: rearrange anchors
+  # sed 5: remove '---'/'...'/quotes, add file separator to create fields for awk 2
+  # awk 2: convert the formatted data to variable assignments
+  ###############################################################################
+
+  cat $1 | \
+  awk -F$fs "{multi=0;
+      if(match(\$0,/$sm\|$sm$/)){multi=1; sub(/$sm\|$sm$/,\"\");}
+      if(match(\$0,/$sm>$sm$/)){multi=2; sub(/$sm>$sm$/,\"\");}
+      while(multi>0){
+          str=\$0; gsub(/^$sm/,\"\", str);
+          indent=index(\$0,str);
+          indentstr=substr(\$0, 0, indent+$indexfix) \"$i\";
+          obuf=\$0;
+          getline;
+          while(index(\$0,indentstr)){
+              obuf=obuf substr(\$0, length(indentstr)+1);
+              if (multi==1){obuf=obuf \"\\\\n\";}
+              if (multi==2){
+                  if(match(\$0,/^$sm$/))
+                      obuf=obuf \"\\\\n\";
+                      else obuf=obuf \" \";
+              }
+              getline;
+          }
+          sub(/$sm$/,\"\",obuf);
+          print obuf;
+          multi=0;
+          if(match(\$0,/$sm\|$sm$/)){multi=1; sub(/$sm\|$sm$/,\"\");}
+          if(match(\$0,/$sm>$sm$/)){multi=2; sub(/$sm>$sm$/,\"\");}
+      }
+  print}" | \
+  sed -e "s|^\($s\)?|\1-|" \
+      -ne "s|^\($s\)-$s\($w\)$s:$s\(.*\)|\1-\n\1 \2: \3|" \
+      -ne "s|^$s#.*||;s|$s#[^\"']*$||;s|^\([^\"'#]*\)#.*|\1|;t 1" \
+      -ne "t" \
+      -ne ":1" \
+      -ne "s|^$s\$||;t 2" \
+      -ne "p" \
+      -ne ":2" \
+      -ne "d" | \
+  sed -ne "s|,$s\]|]|g" \
+      -e ":1" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1\2: \3[\4]\n\1$i- \5|;t 1" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s\[$s\(.*\)$s\]|\1\2: \3\n\1$i- \4|;" \
+      -e ":2" \
+      -e "s|^\($s\)\($w\)$s:$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1\2: [\3]\n\1$i- \4|;t 2" \
+      -e "s|^\($s\)\($w\)$s:$s\[$s\(.*\)$s\]|\1\2:\n\1$i- \3|;" \
+      -e ":3" \
+      -e "s|^\($s\)-$s\[$s\(.*\)$s,$s\(.*\)$s\]|\1- [\2]\n\1$i- \3|;t 3" \
+      -e "s|^\($s\)-$s\[$s\(.*\)$s\]|\1-\n\1$i- \2|;p" | \
+  sed -ne "s|,$s}|}|g" \
+      -e ":1" \
+      -e "s|^\($s\)-$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1- {\2}\n\1$i\3: \4|;t 1" \
+      -e "s|^\($s\)-$s{$s\(.*\)$s}|\1-\n\1$i\2|;" \
+      -e ":2" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1\2: \3 {\4}\n\1$i\5: \6|;t 2" \
+      -e "s|^\($s\)\($w\)$s:$s\(&$w\)$s{$s\(.*\)$s}|\1\2: \3\n\1$i\4|;" \
+      -e ":3" \
+      -e "s|^\($s\)\($w\)$s:$s{$s\(.*\)$s,$s\($w\)$s:$s\(.*\)$s}|\1\2: {\3}\n\1$i\4: \5|;t 3" \
+      -e "s|^\($s\)\($w\)$s:$s{$s\(.*\)$s}|\1\2:\n\1$i\3|;p" | \
+  sed -e "s|^\($s\)\($w\)$s:$s\(&$w\)\(.*\)|\1\2:\4\n\3|" \
+      -e "s|^\($s\)-$s\(&$w\)\(.*\)|\1- \3\n\2|" | \
+  sed -ne "s|^\($s\):|\1|" \
+      -e "s|^\($s\)\(---\)\($s\)||" \
+      -e "s|^\($s\)\(\.\.\.\)\($s\)||" \
+      -e "s|^\($s\)-$s[\"']\(.*\)[\"']$s\$|\1$fs$fs\2|p;t" \
+      -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p;t" \
+      -e "s|^\($s\)-$s\(.*\)$s\$|\1$fs$fs\2|" \
+      -e "s|^\($s\)\($w\)$s:$s[\"']\?\(.*\)$s\$|\1$fs\2$fs\3|" \
+      -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)[\"']$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)[\"']\?\([^&][^$fs]\+\)$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)$s\$|\1$fs\2$fs\3|" \
+      -e "s|^\($s\)[\"']\([^&][^$fs]*\)[\"']$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)[\"']\([^&][^$fs]*\)$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|" \
+      -e "s|^\($s\)\([^&][^$fs]*\)[\"']$s\$|\1$fs$fs$fs\2|" \
+      -e "s|^\($s\)\([^&][^$fs]*\)$s\$|\1$fs$fs$fs\2|" \
+      -e "s|$s\$||p" | \
+  awk -F$fs "{
       gsub(/\t/,\"        \",\$1);
       if(NF>3){if(value!=\"\"){value = value \" \";}value = value  \$4;}
       else {
-        if(match(\$1,/^&/)){anchor[substr(\$1,2)]=full_vn;getline};
-        indent = length(\$1)/length(\"$i\");
-        vname[indent] = \$2;
-        value= \$3;
-        for (i in vname) {if (i > indent) {delete vname[i]; idx[i]=0}}
-        if(length(\$2)== 0){  vname[indent]= ++idx[indent] };
-        vn=\"\"; for (i=0; i<indent; i++) { vn=(vn)(vname[i])(\"$separator\")}
-        vn=\"$prefix\" vn;
-        full_vn=vn vname[indent];
-        if(vn==\"$prefix\")vn=\"$prefix$separator\";
-        if(vn==\"_\")vn=\"__\";
+          if(match(\$1,/^&/)){anchor[substr(\$1,2)]=full_vn;getline};
+          indent = length(\$1)/length(\"$i\");
+          vname[indent] = \$2;
+          value= \$3;
+          for (i in vname) {if (i > indent) {delete vname[i]; idx[i]=0}}
+          if(length(\$2)== 0){  vname[indent]= ++idx[indent] };
+          vn=\"\"; for (i=0; i<indent; i++) { vn=(vn)(vname[i])(\"$separator\")}
+          vn=\"$prefix\" vn;
+          full_vn=vn vname[indent];
+          if(vn==\"$prefix\")vn=\"$prefix$separator\";
+          if(vn==\"_\")vn=\"__\";
       }
       assignment[full_vn]=value;
       if(!match(assignment[vn], full_vn))assignment[vn]=assignment[vn] \" \" full_vn;
       if(match(value,/^\*/)){
-         ref=anchor[substr(value,2)];
-         if(length(ref)==0){
-           printf(\"%s=\\\"%s\\\"\n\", full_vn, value);
-         } else {
-           for(val in assignment){
-              if((length(ref)>0)&&index(val, ref)==1){
-                 tmpval=assignment[val];
-                 sub(ref,full_vn,val);
-                 if(match(val,\"$separator\$\")){
-                    gsub(ref,full_vn,tmpval);
-                 } else if (length(tmpval) > 0) {
-                    printf(\"%s=\\\"%s\\\"\n\", val, tmpval);
-                 }
-                 assignment[val]=tmpval;
+          ref=anchor[substr(value,2)];
+          if(length(ref)==0){
+              printf(\"%s=\\\"%s\\\"\n\", full_vn, value);
+          } else {
+              for(val in assignment){
+                  if((length(ref)>0)&&index(val, ref)==1){
+                      tmpval=assignment[val];
+                      sub(ref,full_vn,val);
+                      if(match(val,\"$separator\$\")){
+                          gsub(ref,full_vn,tmpval);
+                      } else if (length(tmpval) > 0) {
+                          printf(\"%s=\\\"%s\\\"\n\", val, tmpval);
+                      }
+                      assignment[val]=tmpval;
+                  }
               }
-           }
-         }
+          }
       } else if (length(value) > 0) {
-         printf(\"%s=\\\"%s\\\"\n\", full_vn, value);
+          printf(\"%s=\\\"%s\\\"\n\", full_vn, value);
       }
-   }END{
+  }END{
       for(val in assignment){
-         if(match(val,\"$separator\$\"))
-            printf(\"%s=\\\"%s\\\"\n\", val, assignment[val]);
+          if(match(val,\"$separator\$\"))
+              printf(\"%s=\\\"%s\\\"\n\", val, assignment[val]);
       }
-   }"
+  }"
 }
 
 # check if the file exists, if not, exit.
@@ -188,13 +236,13 @@ HOST_DB_ENV_FILE="${HOST_DB_HOME}/.env"
 DOCKER_DB_GRAPHSCOPE_HOME="/opt/flex"
 DOCKER_DB_GIE_HOME="${DOCKER_DB_GRAPHSCOPE_HOME}"
 DOCKER_DB_SERVER_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/interactive_server"
-DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/graph_loader"
+DOCKER_DB_GRAPH_IMPORT_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/bulk_loader"
 DOCKER_DB_COMPILER_BIN="com.alibaba.graphscope.GraphServer"
 DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/load_plan_and_gen.sh"
-HOST_DB_TMP_DIR="/tmp"
+HOST_DB_TMP_DIR="/tmp/"
 
 #################### DEFINE DEFAULT CONSTATNS ####################
-DATABASE_VERSION="v0.0.2.4"
+DATABASE_VERSION="v0.0.3"
 DATABASE_DEFAULT_GRAPH_NAME="gs_interactive_default_graph"
 DATABASE_CURRENT_GRAPH_NAME=${DATABASE_DEFAULT_GRAPH_NAME}
 DATABASE_DEFAULT_GRAPH_DOCKER_PATH="/home/graphscope/${DATABASE_DEFAULT_GRAPH_NAME}"
@@ -214,7 +262,7 @@ DATABASE_COMPILER_QUERY_TIMEOUT="20000"
 ## hiactor related default configuration
 DATABASE_COMPUTE_ENGINE_PORT="10000"
 DATABASE_ADMIN_PORT="7777"
-DATABASE_COMPUTE_ENGINE_SHARD_NUM=1
+DATABASE_COMPUTE_ENGINE_THREAD_NUM_PER_WORKER=1
 
 ## directories
 DATABASE_WORKSPACE="/home/graphscope/workspace/"
@@ -282,7 +330,7 @@ function check_process_running_in_container(){
   local container_name=$1
   local process_name=$2
   local error_msg=$3
-  local process_id=$(docker top  "${container_name}" | grep "${process_name}" | awk '{print $2}\')
+  local process_id=$(docker top  "${container_name}" | grep "${process_name}" | awk '{print $2}')
   if [ -z "${process_id}" ]; then
     err "process ${process_name} is not running in container ${container_name}"
     err "${error_msg}"
@@ -295,7 +343,7 @@ function check_process_not_running_in_container(){
   local container_name=$1
   local process_name=$2
   local error_msg=$3
-  local process_id=$(docker top  "${container_name}" | grep "${process_name}" | awk '{print $2}\')
+  local process_id=$(docker top  "${container_name}" | grep "${process_name}" | awk '{print $2}')
   if [ -z "${process_id}" ]; then
     info "process ${process_name} is not running in container ${container_name}"
   else
@@ -373,8 +421,8 @@ function update_engine_config_from_yaml(){
     DATABASE_CURRENT_GRAPH_NAME="${default_graph}"
   fi
   # update hiactor shard num
-  if [[ -n "${compute_engine_shard_num}" ]]; then
-    DATABASE_COMPUTE_ENGINE_SHARD_NUM="${compute_engine_shard_num}"
+  if [[ -n "${compute_engine_thread_num_per_worker}" ]]; then
+    DATABASE_COMPUTE_ENGINE_THREAD_NUM_PER_WORKER="${compute_engine_thread_num_per_worker}"
   fi
   # compiler
   if [[ -n ${compiler_planner_is_on} ]]; then 
@@ -680,8 +728,7 @@ function do_gen_conf(){
   echo "  type: hiactor" >> ${output_config_file}
   echo "  workers:" >> ${output_config_file}
   echo "    - localhost:${DATABASE_COMPUTE_ENGINE_PORT}" >> ${output_config_file}
-  echo "  admin_endpoint:${DATABASE_ADMIN_PORT} " >> ${output_config_file}
-  echo "  shard_num: ${DATABASE_COMPUTE_ENGINE_SHARD_NUM}" >> ${output_config_file}
+  echo "  thread_num_per_worker: ${DATABASE_COMPUTE_ENGINE_THREAD_NUM_PER_WORKER}" >> ${output_config_file}
 
 
   #compiler
@@ -698,11 +745,19 @@ function do_gen_conf(){
   echo "  endpoint:"  >> ${output_config_file}
   echo "    default_listen_address: ${DATABASE_COMPILER_ENDPOINT_ADDRESS}" >> ${output_config_file}
   echo "    bolt_connector:" >> ${output_config_file}
+  echo "      disabled: false" >> ${output_config_file}
   echo "      port: ${DATABASE_COMPILER_BOLT_PORT}" >> ${output_config_file}
   echo "    gremlin_connector:" >> ${output_config_file}
   echo "      disabled: true" >> ${output_config_file}
   echo "      port: 8182" >> ${output_config_file}
   echo "  query_timeout: ${DATABASE_COMPILER_QUERY_TIMEOUT}" >> ${output_config_file}
+
+  #echo http_service
+  echo "http_service:" >> ${output_config_file}
+  echo "  default_listen_address: localhost" >> ${output_config_file}
+  echo "  admin_port: ${DATABASE_ADMIN_PORT}" >> ${output_config_file}
+  echo "  query_port: ${DATABASE_COMPUTE_ENGINE_PORT}" >> ${output_config_file}
+
   info "Finish generate config file ${output_config_file}"
 }
 
@@ -910,6 +965,7 @@ function do_init(){
 
   GIE_DB_IMAGE_NAME_TAG="${GIE_DB_IMAGE_NAME}:${DATABASE_VERSION}"
   cmd="docker run -it -d --privileged --name ${GIE_DB_CONTAINER_NAME}"
+
   # create user in container
   cmd="${cmd} ${port_cmd} ${mount_cmd} ${GIE_DB_IMAGE_NAME_TAG} bash"
   
@@ -1127,7 +1183,7 @@ function do_import(){
   # currently we can only overwrite the indices, so if it exists, remove it first
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "[ -d ${docker_graph_data_dir} ] && rm -rf ${docker_graph_data_dir} || exit 0" || exit 1
 
-  cmd="${DOCKER_DB_GRAPH_IMPORT_BIN} ${docker_graph_schema_file} ${docker_bulk_load_file} ${docker_graph_data_dir}"
+  cmd="${DOCKER_DB_GRAPH_IMPORT_BIN} -g ${docker_graph_schema_file} -l ${docker_bulk_load_file} -d ${docker_graph_data_dir}"
   info "Running cmd: ${cmd}"
   # docker exec the cmd, fail if cmd fail
   if ! docker exec "${GIE_DB_CONTAINER_NAME}" bash -c  "${cmd} ||(echo -e \"${RED} Fail to import graph [${graph_name}]${NC}\" && exit 1 )"; then
@@ -1233,8 +1289,8 @@ function do_start(){
   info "Starting database..."
 
   # check whether the .running file exists, if exists, exit
-  local compiler_process_id=$(docker top "${GIE_DB_CONTAINER_NAME}" | grep "${DOCKER_DB_COMPILER_BIN}" | awk '{print $2}\')
-  local server_process_id=$(docker top "${GIE_DB_CONTAINER_NAME}" | grep "${DOCKER_DB_SERVER_BIN}" | awk '{print $2}\')
+  local compiler_process_id=$(docker top "${GIE_DB_CONTAINER_NAME}" | grep "${DOCKER_DB_COMPILER_BIN}" | awk '{print $2}')
+  local server_process_id=$(docker top "${GIE_DB_CONTAINER_NAME}" | grep "${DOCKER_DB_SERVER_BIN}" | awk '{print $2}')
   # if both process are running, exit
   # if only one process is running, kill the process
   if [ -n "${compiler_process_id}" ] && [ -n "${server_process_id}" ]; then
@@ -1309,7 +1365,7 @@ function do_start(){
 
   # check if modern_graph exists in container, get the result as bool
   docker_graph_schema_file="${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
-  wal_file="${DATABASE_WORKSPACE}/data/${graph_name}/indices/init_snapshot.bin"
+  flag_file="${DATABASE_WORKSPACE}/data/${graph_name}/indices/schema"
   if [ -f "${HOST_DB_TMP_DIR}/graph_exists" ]; then
     if ! rm "${HOST_DB_TMP_DIR}/graph_exists"; then
       err "fail to remove ${HOST_DB_TMP_DIR}/graph_exists, please remove it manually, maybe sudo rm -rf ${HOST_DB_TMP_DIR}/graph_exists"
@@ -1323,7 +1379,7 @@ function do_start(){
     fi
   fi
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${docker_graph_schema_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_exists
-  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${wal_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_loaded
+  docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "( [ -f ${flag_file} ] && echo \"true\" e) || echo \"false\"" > ${HOST_DB_TMP_DIR}/graph_loaded
   graph_exists=$(cat ${HOST_DB_TMP_DIR}/graph_exists)
   graph_loaded=$(cat ${HOST_DB_TMP_DIR}/graph_loaded)
   if [ "${graph_exists}" = "false" ]; then
@@ -2126,7 +2182,3 @@ while [[ $# -gt 0 ]]; do
     ;;
   esac
 done
-
-
-
-
