@@ -32,7 +32,9 @@ public class QueryStatusCallback {
 
     public void onEnd(boolean isSucceed, @Nullable String msg) {
         this.metricsCollector.stop();
-        queryLogger.info("total execution time is {} ms", metricsCollector.getElapsedMillis());
+        if (isSucceed) {
+            queryLogger.info("total execution time is {} ms", metricsCollector.getElapsedMillis());
+        }
         queryLogger.metricsInfo(
                 "{} | {} | {} | {}",
                 isSucceed,
