@@ -101,7 +101,7 @@ public class GraphAlgoQueries {
     public static QueryContext get_graph_algo_test5() {
         String query =
                 "MATCH(c: CCFField)<-[e]-(p:Paper) where type(e) = 'HasField' return type(e) As"
-                    + " edgeType ORDER BY edgeType ASC LIMIT 10;";
+                        + " edgeType ORDER BY edgeType ASC LIMIT 10;";
         List<String> expected =
                 Arrays.asList(
                         "Record<{edgeType: \"HasField\"}>",
