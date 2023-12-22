@@ -127,11 +127,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addGroupbyKeyPbAlias(
             Pointer groupBy, FfiPbPointer.ByValue pbPointer, FfiAlias.ByValue alias);
 
-    FfiResult.ByValue addGroupbyAggFnPb(
-            Pointer group,
-            FfiPbPointer.ByValue pbPointer,
-            FfiAggOpt aggOpt,
-            FfiAlias.ByValue alias);
+    FfiResult.ByValue addGroupbyAggFnPb(Pointer group, FfiPbPointer.ByValue pbPointer);
 
     FfiResult.ByValue appendGroupbyOperator(
             Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);

@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -26,6 +27,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
@@ -184,5 +186,13 @@ public class GraphLogicalPathExpand extends SingleRel {
                                                         .getFieldList()
                                                         .get(0)
                                                         .getType())))));
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
     }
 }
