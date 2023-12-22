@@ -36,5 +36,5 @@ public class StoreConfig {
     public static final Config<String> STORE_STORAGE_ENGINE =
             Config.stringConfig("store.storage.engine", "rocksdb");
     public static final Config<String> STORE_SECONDARY_DATA_PATH =
-            Config.stringConfig("store.secondary.data.path", "./data_secondary");
+            Config.stringConfig("store.data.secondary.path", "./data_secondary");
 }

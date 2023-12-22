@@ -26,7 +26,10 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
+import com.alibaba.graphscope.groot.wal.mock.MockLogReader;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +61,7 @@ public class IngestProcessor implements MetricsAgent {
     private final int bufferSize;
     private BlockingQueue<IngestTask> ingestBuffer;
     private Thread ingestThread;
+    private Thread tailWALThread;
     private final AtomicLong ingestSnapshotId;
 
     private final LogService logService;
@@ -131,6 +135,18 @@ public class IngestProcessor implements MetricsAgent {
                             }
                         });
         this.ingestThread.setDaemon(true);
+        this.ingestThread.start();
+
+        this.tailWALThread =
+                new Thread(
+                        () -> {
+                            try {
+                                tailWAL();
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+        this.tailWALThread.setDaemon(true);
         this.ingestThread.start();
         started = true;
         logger.info("ingestProcessor queue#[" + queueId + "] started");
@@ -255,6 +271,31 @@ public class IngestProcessor implements MetricsAgent {
     public void setTailOffset(long offset) {
         logger.info("IngestProcessor of queue #[{}] set tail offset to [{}]", queueId, offset);
         this.tailOffset = offset;
+    }
+
+    public void tailWAL() throws IOException {
+        List<OperationType> types = new ArrayList<>();
+        types.add(OperationType.CREATE_VERTEX_TYPE);
+        types.add(OperationType.CREATE_EDGE_TYPE);
+        types.add(OperationType.ADD_EDGE_KIND);
+        types.add(OperationType.DROP_VERTEX_TYPE);
+        types.add(OperationType.DROP_EDGE_TYPE);
+        types.add(OperationType.REMOVE_EDGE_KIND);
+        types.add(OperationType.PREPARE_DATA_LOAD);
+        types.add(OperationType.COMMIT_DATA_LOAD);
+        try (MockLogReader reader = (MockLogReader) logService.createReader(queueId, 0)) {
+            while (!shouldStop) {
+                ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
+                for (ConsumerRecord<LogEntry, LogEntry> record : records) {
+                    long offset = record.offset();
+                    LogEntry logEntry = record.value();
+                    long snapshotId = logEntry.getSnapshotId();
+                    OperationBatch batch = logEntry.getOperationBatch();
+                    this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
+                    logger.info("Applied batch {}", batch.toProto());
+                }
+            }
+        }
     }
 
     public void replayWAL(long tailOffset) throws IOException {

@@ -13,13 +13,46 @@
  */
 package com.alibaba.graphscope.groot.wal.mock;
 
+import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
+import com.alibaba.graphscope.groot.wal.kafka.LogEntryDeserializer;
+
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.*;
 
 public class MockLogReader implements LogReader {
-    public MockLogReader() {}
+
+    private static final Logger logger = LoggerFactory.getLogger(MockLogReader.class);
+
+    private static final LogEntryDeserializer deSer = new LogEntryDeserializer();
+    private final Consumer<LogEntry, LogEntry> consumer;
+
+    public MockLogReader(String servers, String topicName, int partitionId) throws IOException {
+        Map<String, Object> kafkaConfigs = new HashMap<>();
+        kafkaConfigs.put("bootstrap.servers", servers);
+
+        TopicPartition partition = new TopicPartition(topicName, partitionId);
+
+        consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
+        consumer.assign(List.of(partition));
+        consumer.seekToEnd(consumer.assignment());
+        logger.info("Created MockLogReader");
+    }
+
+    public ConsumerRecords<LogEntry, LogEntry> getLatestUpdates() {
+        ConsumerRecords<LogEntry, LogEntry> consumerRecords =
+                consumer.poll(Duration.ofMillis(1000L));
+        return consumerRecords;
+    }
 
     @Override
     public ReadLogEntry readNext() {

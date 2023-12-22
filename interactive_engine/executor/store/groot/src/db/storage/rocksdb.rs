@@ -265,6 +265,9 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     ret.set_max_background_jobs(6);
     ret.set_write_buffer_size(256 << 20);
     ret.set_max_open_files(-1);
+    ret.set_max_log_file_size(1024 << 10);
+    ret.set_keep_log_file_num(10);
+
 
     if let Some(conf_str) = options.get("store.rocksdb.compression.type") {
         match conf_str.as_str() {

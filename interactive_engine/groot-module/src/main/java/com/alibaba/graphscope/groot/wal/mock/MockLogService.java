@@ -13,6 +13,8 @@
  */
 package com.alibaba.graphscope.groot.wal.mock;
 
+import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.KafkaConfig;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
@@ -24,8 +26,12 @@ import java.io.IOException;
 
 public class MockLogService implements LogService {
     private static final Logger logger = LoggerFactory.getLogger(MockLogService.class);
+    private final String servers;
+    private final String topic;
 
-    public MockLogService() {
+    public MockLogService(Configs configs) {
+        this.servers = KafkaConfig.KAFKA_SERVERS.get(configs);
+        this.topic = KafkaConfig.KAKFA_TOPIC.get(configs);
         logger.info("Initialized MockLogService");
     }
 
@@ -47,12 +53,12 @@ public class MockLogService implements LogService {
 
     @Override
     public LogReader createReader(int queueId, long offset) throws IOException {
-        return new MockLogReader();
+        return createReader(queueId, offset, -1);
     }
 
     @Override
     public LogReader createReader(int queueId, long offset, long timestamp) throws IOException {
-        return new MockLogReader();
+        return new MockLogReader(servers, topic, queueId);
     }
 
     @Override
