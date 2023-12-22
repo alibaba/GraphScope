@@ -405,6 +405,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     VLOG(10) << "src indexer size: " << src_indexer.size()
              << " dst indexer size: " << dst_indexer.size();
 
+    std::vector<std::shared_ptr<arrow::Array>> property_str_types;
     for (auto filename : e_files) {
       auto record_batch_supplier = supplier_creator(
           src_label_id, dst_label_id, e_label_id, filename, loading_config_);
@@ -442,6 +443,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
         std::vector<std::shared_ptr<arrow::Array>> property_cols;
         for (auto i = 2; i < columns.size(); ++i) {
+          if (columns[i]->type()->Equals(arrow::large_utf8()) ||
+              columns[i]->type()->Equals(arrow::utf8())) {
+            property_str_types.emplace_back(columns[i]);
+          }
           property_cols.emplace_back(columns[i]);
         }
         CHECK(property_cols.size() <= 1)
@@ -484,7 +489,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
     basic_fragment_loader_.PutEdges(src_label_id, dst_label_id, e_label_id,
                                     parsed_edges, ie_degree, oe_degree);
-
+    property_str_types.clear();
     VLOG(10) << "Finish putting: " << parsed_edges.size() << " edges";
   }
 

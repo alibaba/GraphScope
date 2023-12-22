@@ -49,6 +49,7 @@ enum class PropertyTypeImpl {
   kUInt16,
   kStringMap,
   kVarChar,
+  kFixedChar,
 };
 
 // Stores additional type information for PropertyTypeImpl
@@ -68,7 +69,8 @@ struct PropertyType {
       : type_enum(type), additional_type_info() {}
   constexpr PropertyType(impl::PropertyTypeImpl type, uint16_t max_length)
       : type_enum(type), additional_type_info({.max_length = max_length}) {
-    assert(type == impl::PropertyTypeImpl::kVarChar);
+    assert(type == impl::PropertyTypeImpl::kVarChar ||
+           type == impl::PropertyTypeImpl::kFixedChar);
   }
 
   bool IsVarchar() const;
@@ -87,6 +89,7 @@ struct PropertyType {
   static PropertyType String();
   static PropertyType StringMap();
   static PropertyType Varchar(uint16_t max_length);
+  static PropertyType FixedChar(uint16_t max_length);
 
   static const PropertyType kEmpty;
   static const PropertyType kBool;
@@ -115,6 +118,27 @@ struct Date {
 
   int64_t milli_second;
 };
+
+struct fixedChar {
+  fixedChar() = default;
+  fixedChar(const void* p, uint16_t l) : ptr(p), len(l) {}
+  fixedChar(const std::string_view& sv) : ptr(sv.data()), len(sv.size()) {}
+  fixedChar(const std::string& s) : ptr(s.data()), len(s.size()) {}
+  operator std::string_view() const {
+    return std::string_view(static_cast<const char* const>(ptr), len);
+  }
+  const void* ptr;
+  uint16_t len;
+};
+
+template <typename T, typename = void>
+struct is_col_property_type : std::false_type {};
+
+template <>
+struct is_col_property_type<std::string_view> : std::true_type {};
+
+template <>
+struct is_col_property_type<fixedChar> : std::true_type {};
 
 struct LabelKey {
   using label_data_type = uint8_t;
@@ -147,6 +171,7 @@ union AnyValue {
   double db;
   uint8_t u8;
   uint16_t u16;
+  const void* ptr;
 };
 
 template <typename T>
@@ -252,6 +277,9 @@ struct Any {
       return value.b ? "true" : "false";
     } else if (type == PropertyType::kFloat) {
       return std::to_string(value.f);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+      return std::string(static_cast<const char*>(value.ptr),
+                         type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "Unexpected property type: "
                  << static_cast<int>(type.type_enum);
@@ -309,6 +337,11 @@ struct Any {
     return value.d;
   }
 
+  fixedChar AsfixedChar() const {
+    assert(type.type_enum == impl::PropertyTypeImpl::kFixedChar);
+    return fixedChar(value.ptr, type.additional_type_info.max_length);
+  }
+
   template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
@@ -341,6 +374,19 @@ struct Any {
           return false;
         }
         return value.s == other.value.s;
+      } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+        if (other.type.type_enum != impl::PropertyTypeImpl::kFixedChar) {
+          return false;
+        }
+        if (type.additional_type_info.max_length !=
+            other.type.additional_type_info.max_length) {
+          return false;
+        }
+        auto s1 = std::string_view(static_cast<const char*>(value.ptr),
+                                   type.additional_type_info.max_length);
+        auto s2 = std::string_view(static_cast<const char*>(other.value.ptr),
+                                   other.type.additional_type_info.max_length);
+        return s1 == s2;
       } else {
         return false;
       }
@@ -476,6 +522,15 @@ struct ConvertAny<double> {
   static void to(const Any& value, double& out) {
     CHECK(value.type == PropertyType::kDouble);
     out = value.value.db;
+  }
+};
+
+template <>
+struct ConvertAny<fixedChar> {
+  static void to(const Any& value, fixedChar& out) {
+    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kFixedChar);
+    out =
+        fixedChar(value.value.ptr, value.type.additional_type_info.max_length);
   }
 };
 
@@ -795,6 +850,24 @@ struct AnyConverter<float> {
   static const float& from_any_value(const AnyValue& value) { return value.f; }
 };
 
+template <>
+struct AnyConverter<fixedChar> {
+  // static PropertyType type() { return PropertyType::kDouble; }
+
+  static Any to_any(const fixedChar& value) {
+    Any ret;
+    ret.type = PropertyType::FixedChar(value.len);
+    ret.value.ptr = value.ptr;
+    return ret;
+  }
+
+  static fixedChar from_any(const Any& value) {
+    CHECK(value.type.type_enum == impl::PropertyTypeImpl::kFixedChar);
+    return fixedChar(value.value.ptr,
+                     value.type.additional_type_info.max_length);
+  }
+};
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
@@ -808,6 +881,8 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                               std::string_view& value);
 
+grape::InArchive& operator<<(grape::InArchive& in_archive, const fixedChar& e);
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, fixedChar& e);
 }  // namespace gs
 
 namespace boost {
@@ -858,6 +933,8 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "string_map";
   } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kVarChar) {
     os << "varchar(" << pt.additional_type_info.max_length << ")";
+  } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kFixedChar) {
+    os << "fixed_length_Array(" << pt.additional_type_info.max_length << ")";
   } else {
     os << "unknown";
   }

@@ -461,6 +461,14 @@ static bool parse_property_type(YAML::Node node, PropertyType& type) {
     }
     type = PropertyType::Varchar(length);
     return true;
+  } else if (node["fixedchar"]) {
+    auto cur_node = node["fixedchar"];
+    int length{};
+    if (!cur_node["length"] || !get_scalar(cur_node, "length", length)) {
+      return false;
+    }
+    type = PropertyType::FixedChar(length);
+    return true;
   } else if (node["date"]) {
     auto format = node["date"].as<std::string>();
     prop_type_str = DT_DATE;

@@ -59,7 +59,7 @@ class DualCsrBase {
   virtual MutableCsrBase* GetOutCsr() = 0;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class DualCsr : public DualCsrBase {
  public:
   DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy)
@@ -174,26 +174,27 @@ class DualCsr : public DualCsrBase {
   TypedMutableCsrBase<EDATA_T>* out_csr_;
 };
 
-template <>
-class DualCsr<std::string_view> : public DualCsrBase {
+template <typename EDATA_T>
+class DualCsr<EDATA_T, std::enable_if_t<is_col_property_type<EDATA_T>::value>>
+    : public DualCsrBase {
  public:
   DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, uint16_t width)
       : in_csr_(nullptr),
         out_csr_(nullptr),
         column_(StorageStrategy::kMem, width) {
     if (ie_strategy == EdgeStrategy::kNone) {
-      in_csr_ = new EmptyCsr<std::string_view>(column_, column_idx_);
+      in_csr_ = new EmptyCsr<EDATA_T>(column_, column_idx_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MutableCsr<std::string_view>(column_, column_idx_);
+      in_csr_ = new MutableCsr<EDATA_T>(column_, column_idx_);
     } else if (ie_strategy == EdgeStrategy::kSingle) {
-      in_csr_ = new SingleMutableCsr<std::string_view>(column_, column_idx_);
+      in_csr_ = new SingleMutableCsr<EDATA_T>(column_, column_idx_);
     }
     if (oe_strategy == EdgeStrategy::kNone) {
-      out_csr_ = new EmptyCsr<std::string_view>(column_, column_idx_);
+      out_csr_ = new EmptyCsr<EDATA_T>(column_, column_idx_);
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MutableCsr<std::string_view>(column_, column_idx_);
+      out_csr_ = new MutableCsr<EDATA_T>(column_, column_idx_);
     } else if (oe_strategy == EdgeStrategy::kSingle) {
-      out_csr_ = new SingleMutableCsr<std::string_view>(column_, column_idx_);
+      out_csr_ = new SingleMutableCsr<EDATA_T>(column_, column_idx_);
     }
   }
   ~DualCsr() {
@@ -249,7 +250,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
   MutableCsrBase* GetOutCsr() override { return out_csr_; }
   void PutEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
                Allocator& alloc) override {
-    std::string_view val = data.AsStringView();
+    EDATA_T val = AnyConverter<EDATA_T>::from_any(data);
     size_t row_id = column_idx_.fetch_add(1);
     column_.set_value(row_id, val);
     in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
@@ -259,9 +260,8 @@ class DualCsr<std::string_view> : public DualCsrBase {
   void UpdateEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
                   Allocator& alloc) override {
     auto oe_ptr = out_csr_->edge_iter_mut(src);
-    std::string_view prop = data.AsStringView();
-    auto oe =
-        dynamic_cast<TypedMutableCsrEdgeIter<std::string_view>*>(oe_ptr.get());
+    EDATA_T prop = AnyConverter<EDATA_T>::from_any(data);
+    auto oe = dynamic_cast<TypedMutableCsrEdgeIter<EDATA_T>*>(oe_ptr.get());
     size_t index = std::numeric_limits<size_t>::max();
     while (oe != nullptr && oe->is_valid()) {
       if (oe->get_neighbor() == dst) {
@@ -272,8 +272,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
       oe->next();
     }
     auto ie_ptr = in_csr_->edge_iter_mut(dst);
-    auto ie =
-        dynamic_cast<TypedMutableCsrEdgeIter<std::string_view>*>(ie_ptr.get());
+    auto ie = dynamic_cast<TypedMutableCsrEdgeIter<EDATA_T>*>(ie_ptr.get());
     while (ie != nullptr && ie->is_valid()) {
       if (ie->get_neighbor() == src) {
         ie->set_timestamp(ts);
@@ -294,7 +293,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
 
   void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
                   Allocator& alloc) override {
-    std::string_view prop;
+    EDATA_T prop;
     oarc >> prop;
     size_t row_id = column_idx_.fetch_add(1);
     column_.set_value(row_id, prop);
@@ -302,7 +301,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
     out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
   }
 
-  void BatchPutEdge(vid_t src, vid_t dst, const std::string_view& data) {
+  void BatchPutEdge(vid_t src, vid_t dst, const EDATA_T& data) {
     size_t row_id = column_idx_.fetch_add(1);
     column_.set_value(row_id, data);
     in_csr_->batch_put_edge_with_index(dst, src, row_id);
@@ -318,10 +317,10 @@ class DualCsr<std::string_view> : public DualCsrBase {
   }
 
  private:
-  TypedMutableCsrBase<std::string_view>* in_csr_;
-  TypedMutableCsrBase<std::string_view>* out_csr_;
+  TypedMutableCsrBase<EDATA_T>* in_csr_;
+  TypedMutableCsrBase<EDATA_T>* out_csr_;
   std::atomic<size_t> column_idx_;
-  StringColumn column_;
+  TypedColumn<EDATA_T> column_;
 };
 
 }  // namespace gs

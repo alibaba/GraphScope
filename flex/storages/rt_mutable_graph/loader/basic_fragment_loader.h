@@ -89,6 +89,11 @@ class BasicFragmentLoader {
                                                      edge_label_id);
       dual_csr_list_[index] = new DualCsr<std::string_view>(
           oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
+    } else if constexpr (std::is_same_v<EDATA_T, fixedChar>) {
+      const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
+                                                     edge_label_id);
+      dual_csr_list_[index] = new DualCsr<fixedChar>(
+          oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
     } else {
       dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
     }
@@ -121,10 +126,11 @@ class BasicFragmentLoader {
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
 
-    if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
+    if constexpr (std::is_same_v<EDATA_T, std::string_view> ||
+                  std::is_same_v<EDATA_T, fixedChar>) {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
-      auto dual_csr = new DualCsr<std::string_view>(
+      auto dual_csr = new DualCsr<EDATA_T>(
           oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
       dual_csr_list_[index] = dual_csr;
       ie_[index] = dual_csr_list_[index]->GetInCsr();

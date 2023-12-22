@@ -385,6 +385,173 @@ class TypedColumn<std::string_view> : public ColumnBase {
 };
 
 using StringColumn = TypedColumn<std::string_view>;
+
+template <>
+class TypedColumn<fixedChar> : public ColumnBase {
+ public:
+  TypedColumn(StorageStrategy strategy, uint16_t width) : width_(width) {}
+  ~TypedColumn() { close(); }
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {
+    std::string basic_path = snapshot_dir + "/" + name;
+    if (std::filesystem::exists(basic_path)) {
+      basic_buffer_.open(basic_path, true);
+      basic_size_ = basic_buffer_.size() / width_;
+    } else {
+      basic_size_ = 0;
+    }
+    if (work_dir == "") {
+      extra_size_ = 0;
+    } else {
+      extra_buffer_.open(work_dir + "/" + name, false);
+      extra_size_ = extra_buffer_.size() / width_;
+    }
+  }
+
+  void open_in_memory(const std::string& prefix) override {
+    basic_buffer_.open_in_memory(prefix);
+    basic_size_ = basic_buffer_.size() / width_;
+    extra_buffer_.reset();
+    extra_size_ = 0;
+  }
+
+  void touch(const std::string& filename) override {
+    mmap_array<char> tmp;
+    tmp.open(filename, false);
+    tmp.resize((basic_size_ + extra_size_) * width_);
+    size_t offset = 0;
+    char* tmp_ptr = tmp.data();
+    char* base_ptr = basic_buffer_.data();
+    memcpy(tmp_ptr, base_ptr, basic_size_ * width_);
+    char* extra_ptr = extra_buffer_.data();
+    memcpy(tmp_ptr + basic_size_ * width_, extra_ptr, extra_size_ * width_);
+    basic_size_ = 0;
+    basic_buffer_.reset();
+    extra_size_ = tmp.size();
+    extra_buffer_.swap(tmp);
+    tmp.reset();
+  }
+
+  void close() override {
+    basic_buffer_.reset();
+    extra_buffer_.reset();
+  }
+
+  void copy_to_tmp(const std::string& cur_path,
+                   const std::string& tmp_path) override {
+    mmap_array<char> tmp;
+    if (!std::filesystem::exists(cur_path)) {
+      return;
+    }
+    copy_file(cur_path, tmp_path);
+    extra_size_ = basic_size_ + extra_size_;
+    basic_size_ = 0;
+    basic_buffer_.reset();
+    tmp.open(tmp_path, false);
+    extra_buffer_.swap(tmp);
+    tmp.reset();
+  }
+
+  void dump(const std::string& filename) override {
+    if (basic_size_ != 0 && extra_size_ == 0) {
+      basic_buffer_.dump(filename);
+    } else if (basic_size_ == 0 && extra_size_ != 0) {
+      extra_buffer_.resize(extra_size_ * width_);
+      extra_buffer_.dump(filename);
+    } else {
+      mmap_array<char> tmp;
+      tmp.open(filename, false);
+      tmp.resize((basic_size_ + extra_size_) * width_);
+      char* tmp_ptr = tmp.data();
+      char* basic_ptr = basic_buffer_.data();
+      memcpy(tmp_ptr, basic_ptr, basic_size_ * width_);
+      char* extra_ptr = extra_buffer_.data();
+      memcpy(tmp_ptr + basic_size_ * width_, extra_ptr, extra_size_ * width_);
+      tmp.reset();
+    }
+  }
+
+  size_t size() const override { return basic_size_ + extra_size_; }
+
+  void resize(size_t size) override {
+    if (size < basic_buffer_.size() / width_) {
+      basic_size_ = size;
+      extra_size_ = 0;
+    } else {
+      basic_size_ = basic_buffer_.size() / width_;
+      extra_size_ = size - basic_size_;
+      extra_buffer_.resize(extra_size_ * width_);
+    }
+  }
+
+  PropertyType type() const override { return PropertyType::FixedChar(width_); }
+
+  void set_value(size_t idx, const void* ptr) {
+    char* cur = extra_buffer_.data();
+    memcpy(cur + (idx - basic_size_) * width_, ptr, width_);
+  }
+
+  void set_value(size_t idx, const fixedChar& val) {
+    assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
+
+    char* cur = extra_buffer_.data();
+    int len = std::min(width_, val.len);
+    memcpy(cur + (idx - basic_size_) * width_, val.ptr, len);
+  }
+
+  void set_any(size_t idx, const Any& value) override {
+    if (value.type == PropertyType::kString) {
+      set_value(idx, value.value.s);
+    } else if (value.type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+      set_value(idx, fixedChar(value.value.ptr,
+                               value.type.additional_type_info.max_length));
+    } else {
+      LOG(ERROR) << "type inconsistent " << value.type << "..";
+    }
+  }
+
+  const fixedChar get_view(size_t idx) const {
+    const void* ptr = idx < basic_size_
+                          ? basic_buffer_.data() + idx * width_
+                          : extra_buffer_.data() + (idx - basic_size_) * width_;
+    return fixedChar(ptr, width_);
+  }
+
+  Any get(size_t idx) const override {
+    Any val;
+    val.type = PropertyType::FixedChar(width_);
+    val.value.ptr = idx < basic_size_
+                        ? basic_buffer_.data() + idx * width_
+                        : extra_buffer_.data() + (idx - basic_size_) * width_;
+    return val;
+    // return AnyConverter<std::string_view>::to_any(get_view(idx));
+  }
+
+  void ingest(uint32_t index, grape::OutArchive& arc) override {
+    fixedChar e;
+    arc >> e;
+    set_value(index, e);
+  }
+  const mmap_array<char>& basic_buffer() const { return basic_buffer_; }
+
+  StorageStrategy storage_strategy() const override { return strategy_; }
+
+  size_t basic_buffer_size() const { return basic_size_; }
+
+  const mmap_array<char>& extra_buffer() const { return extra_buffer_; }
+
+  size_t extra_buffer_size() const { return extra_size_; }
+
+ private:
+  mmap_array<char> basic_buffer_;
+  size_t basic_size_;
+  mmap_array<char> extra_buffer_;
+  size_t extra_size_;
+  StorageStrategy strategy_;
+  uint16_t width_;
+};
+
 template <typename INDEX_T>
 class LFIndexer;
 

@@ -86,6 +86,8 @@ void set_vertex_properties(gs::ColumnBase* col,
     set_vertex_column_from_timestamp_array(col, array, vids);
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_vertex_column_from_string_array(col, array, vids);
+  } else if (col_type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    set_vertex_column_from_string_array(col, array, vids);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }
@@ -287,6 +289,15 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
     } else {
       addEdgesRecordBatchImpl<std::string_view>(
           src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
+    }
+  } else if (property_types[0].type_enum ==
+             impl::PropertyTypeImpl::kFixedChar) {
+    if (filenames.empty()) {
+      basic_fragment_loader_.AddNoPropEdgeBatch<fixedChar>(
+          src_label_i, dst_label_i, edge_label_i);
+    } else {
+      addEdgesRecordBatchImpl<fixedChar>(src_label_i, dst_label_i, edge_label_i,
+                                         filenames, supplier_creator);
     }
   } else {
     LOG(FATAL) << "Unsupported edge property type." << property_types[0];

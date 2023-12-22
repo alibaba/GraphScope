@@ -272,6 +272,15 @@ struct TypeConverter<std::string_view> {
 };
 
 template <>
+struct TypeConverter<fixedChar> {
+  // static PropertyType property_type() { return PropertyType::kString; }
+  using ArrowType = arrow::LargeStringType;
+  using ArrowArrayType = arrow::LargeStringArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::large_utf8();
+  }
+};
+template <>
 struct TypeConverter<Date> {
   static PropertyType property_type() { return PropertyType::kDate; }
   using ArrowType = arrow::TimestampType;
