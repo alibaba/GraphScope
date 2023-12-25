@@ -117,6 +117,9 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                             IrMeta irMeta = metaQueryCallback.beforeExec();
                             QueryStatusCallback statusCallback =
                                     createQueryStatusCallback(script, queryId);
+                            QueryTimeoutConfig timeoutConfig =
+                                    new QueryTimeoutConfig(
+                                            FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS.get(configs));
                             String language =
                                     FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
                             switch (language) {
@@ -132,7 +135,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                                     traversal,
                                                     statusCallback,
                                                     testGraph,
-                                                    this.configs),
+                                                    this.configs,
+                                                    timeoutConfig),
                                             irMeta,
                                             new QueryTimeoutConfig(ctx.getRequestTimeout()),
                                             statusCallback.getQueryLogger());
@@ -163,9 +167,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                                         summary.getLogicalPlan(),
                                                         summary.getPhysicalPlan()),
                                                 listener,
-                                                new QueryTimeoutConfig(
-                                                        FrontendConfig.QUERY_EXECUTION_TIMEOUT_MS
-                                                                .get(configs)));
+                                                timeoutConfig);
                                     }
                                     break;
                                 default:
