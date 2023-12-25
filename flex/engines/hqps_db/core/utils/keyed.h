@@ -149,12 +149,20 @@ struct KeyedT<Collection<T>, PropertySelector<grape::EmptyType>> {
 // when keyed with aggregation function, (which we currently only support
 // collection)
 
-/// @brief Helper to get keyed set type with aggregation fnc
+/// @brief Helper to get keyed set type with aggregation func
 /// @tparam T
 /// @tparam ValueT Keyed prop type
 template <typename GI, typename T, AggFunc agg_func, typename Props,
           typename Tags>
 struct KeyedAggT;
+
+/// @brief Helper to get keyed set type with aggregation func, which is applied
+/// on multiple column
+/// @tparam T
+/// @tparam ValueT Keyed prop type
+template <typename GI, typename SET_TUPLE_T, AggFunc agg_func, typename Props,
+          typename Tags>
+struct KeyedAggMultiColT;
 
 template <typename GI, typename LabelT, typename VID_T, typename... T,
           typename PropT, int tag_id>
@@ -462,6 +470,39 @@ struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>,
       const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set, const GI& graph,
       std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     return aggregate_res_builder_t(set);
+  }
+};
+
+template <typename GI, typename... SET_T, typename... PropSelectorT,
+          int... tag_ids>
+struct KeyedAggMultiColT<GI, std::tuple<SET_T...>, AggFunc::COUNT_DISTINCT,
+                         std::tuple<PropSelectorT...>,
+                         std::integer_sequence<int32_t, tag_ids...>> {
+  using agg_res_t = Collection<size_t>;
+  // get the tuple of sets from the tuple of tags.
+  using aggregate_res_builder_t =
+      MultiColDistinctCountBuilder<std::tuple<SET_T...>, tag_ids...>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const std::tuple<SET_T...>& set, const GI& graph,
+      std::tuple<PropSelectorT...>& selectors) {
+    return aggregate_res_builder_t();
+  }
+};
+
+template <typename GI, typename... SET_T, typename... PropSelectorT,
+          int... tag_ids>
+struct KeyedAggMultiColT<GI, std::tuple<SET_T...>, AggFunc::COUNT,
+                         std::tuple<PropSelectorT...>,
+                         std::integer_sequence<int32_t, tag_ids...>> {
+  using agg_res_t = Collection<size_t>;
+  // get the tuple of sets from the tuple of tags.
+  using aggregate_res_builder_t = MultiColCountBuilder<tag_ids...>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const std::tuple<SET_T...>& set, const GI& graph,
+      std::tuple<PropSelectorT...>& selectors) {
+    return aggregate_res_builder_t();
   }
 };
 
