@@ -170,14 +170,12 @@ public class GraphTypeInference {
             }
             if (parent instanceof GraphLogicalExpand) {
                 GraphLogicalExpand expand = (GraphLogicalExpand) parent;
-                GraphLabelType childLabelType = ((GraphSchemaType) getType(child)).getLabelType();
+                GraphSchemaType childType = (GraphSchemaType) getType(child);
+                GraphLabelType childLabelType = childType.getLabelType();
                 GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
                 List<GraphLabelType.Entry> commonLabels =
                         commonLabels(childLabelType, parentLabelType, expand.getOpt(), true);
-                return new GraphSchemaType(
-                        GraphOpt.Source.VERTEX,
-                        new GraphLabelType(commonLabels),
-                        ImmutableList.of());
+                return createSchemaType(GraphOpt.Source.VERTEX, commonLabels, childType);
             }
             throw new IllegalArgumentException(
                     "graph generic type error: unable to establish an extension relationship"
@@ -196,7 +194,8 @@ public class GraphTypeInference {
                     child,
                     parent);
             GraphLogicalGetV getV = (GraphLogicalGetV) parent;
-            GraphLabelType childLabelType = ((GraphSchemaType) getType(child)).getLabelType();
+            GraphSchemaType childType = (GraphSchemaType) getType(child);
+            GraphLabelType childLabelType = childType.getLabelType();
             GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
             GraphLabelType otherVLabelType = null;
             if (getV.getOpt() == GraphOpt.GetV.OTHER) {
@@ -211,8 +210,7 @@ public class GraphTypeInference {
             List<GraphLabelType.Entry> commonLabels =
                     commonLabels(
                             otherVLabelType, childLabelType, parentLabelType, getV.getOpt(), true);
-            return new GraphSchemaType(
-                    GraphOpt.Source.EDGE, new GraphLabelType(commonLabels), ImmutableList.of());
+            return createSchemaType(GraphOpt.Source.EDGE, commonLabels, childType);
         }
         if (child instanceof GraphLogicalPathExpand) {
             Preconditions.checkArgument(
@@ -229,10 +227,8 @@ public class GraphTypeInference {
             List<GraphLabelType.Entry> commonLabels =
                     commonLabels(innerGetVLabelType, outerGetVLabelType);
             RelDataType newGetVType =
-                    new GraphSchemaType(
-                            GraphOpt.Source.VERTEX,
-                            new GraphLabelType(commonLabels),
-                            ImmutableList.of());
+                    createSchemaType(
+                            GraphOpt.Source.VERTEX, commonLabels, (GraphSchemaType) innerGetVType);
             RelDataType newExpandType =
                     restrictChild(
                             relGraph,
@@ -268,8 +264,8 @@ public class GraphTypeInference {
                 GraphLabelType parentLabelType = ((GraphSchemaType) parentType).getLabelType();
                 List<GraphLabelType.Entry> commonLabels =
                         commonLabels(childLabelType, parentLabelType, expand.getOpt(), false);
-                return new GraphSchemaType(
-                        GraphOpt.Source.EDGE, new GraphLabelType(commonLabels), ImmutableList.of());
+                return createSchemaType(
+                        GraphOpt.Source.EDGE, commonLabels, (GraphSchemaType) parentType);
             }
             if (parent instanceof GraphLogicalPathExpand) {
                 GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) parent;
@@ -323,8 +319,8 @@ public class GraphTypeInference {
             List<GraphLabelType.Entry> commonLabels =
                     commonLabels(
                             otherVLabelType, childLabelType, parentLabelType, getV.getOpt(), false);
-            return new GraphSchemaType(
-                    GraphOpt.Source.VERTEX, new GraphLabelType(commonLabels), ImmutableList.of());
+            return createSchemaType(
+                    GraphOpt.Source.VERTEX, commonLabels, (GraphSchemaType) parentType);
         }
         if (child instanceof GraphLogicalPathExpand) {
             Preconditions.checkArgument(
@@ -340,8 +336,8 @@ public class GraphTypeInference {
             GraphLabelType outerGetVLabelType = ((GraphSchemaType) parentType).getLabelType();
             List<GraphLabelType.Entry> commonLabels =
                     commonLabels(innerGetVLabelType, outerGetVLabelType);
-            return new GraphSchemaType(
-                    GraphOpt.Source.VERTEX, new GraphLabelType(commonLabels), ImmutableList.of());
+            return createSchemaType(
+                    GraphOpt.Source.VERTEX, commonLabels, (GraphSchemaType) parentType);
         }
         throw new IllegalArgumentException(
                 "graph generic type error: unable to establish an extension relationship between"
@@ -368,10 +364,10 @@ public class GraphTypeInference {
                 GraphLabelType relLabelType = ((GraphSchemaType) relType).getLabelType();
                 sharedLabelType = new GraphLabelType(commonLabels(relLabelType, sharedLabelType));
             }
-            return new GraphSchemaType(
+            return createSchemaType(
                     ((GraphSchemaType) sharedType).getScanOpt(),
-                    sharedLabelType,
-                    ImmutableList.of());
+                    sharedLabelType.getLabelsEntry(),
+                    (GraphSchemaType) sharedType);
         }
         if (sharedType instanceof GraphPathType) {
             List<RelNode> expandRels = Lists.newArrayList();
@@ -640,6 +636,28 @@ public class GraphTypeInference {
             return node.getRowType().getFieldList().get(0).getType();
         }
         return node.getRowType();
+    }
+
+    private GraphSchemaType createSchemaType(
+            GraphOpt.Source opt,
+            List<GraphLabelType.Entry> newLabels,
+            @Nullable GraphSchemaType originalType) {
+        boolean isNullable = originalType == null ? false : originalType.isNullable();
+        if (newLabels.size() == 1) {
+            return new GraphSchemaType(
+                    opt, new GraphLabelType(newLabels), ImmutableList.of(), isNullable);
+        } else {
+            List<GraphSchemaType> fuzzyTypes =
+                    newLabels.stream()
+                            .map(
+                                    k ->
+                                            new GraphSchemaType(
+                                                    opt,
+                                                    new GraphLabelType(ImmutableList.of(k)),
+                                                    ImmutableList.of()))
+                            .collect(Collectors.toList());
+            return GraphSchemaType.create(fuzzyTypes, builder.getTypeFactory(), isNullable);
+        }
     }
 
     private class RelGraph {
