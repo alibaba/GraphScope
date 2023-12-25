@@ -23,7 +23,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
 public class IngestorSnapshotClient extends RpcClient {
-    private IngestorSnapshotGrpc.IngestorSnapshotStub stub;
+    private final IngestorSnapshotGrpc.IngestorSnapshotStub stub;
 
     public IngestorSnapshotClient(ManagedChannel channel) {
         super(channel);

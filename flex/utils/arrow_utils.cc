@@ -16,21 +16,33 @@
 
 namespace gs {
 std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
-  switch (type) {
-  case PropertyType::kInt32:
+  if (type == PropertyType::Bool()) {
+    return arrow::boolean();
+  } else if (type == PropertyType::Int32()) {
     return arrow::int32();
-  case PropertyType::kInt64:
+  } else if (type == PropertyType::Int64()) {
     return arrow::int64();
-  case PropertyType::kDouble:
+  } else if (type == PropertyType::UInt32()) {
+    return arrow::uint32();
+  } else if (type == PropertyType::UInt64()) {
+    return arrow::uint64();
+  } else if (type == PropertyType::Double()) {
     return arrow::float64();
-  case PropertyType::kDate:
+  } else if (type == PropertyType::Float()) {
+    return arrow::float32();
+  } else if (type == PropertyType::Date()) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
-  case PropertyType::kString:
+  } else if (type == PropertyType::String()) {
     return arrow::large_utf8();
-  case PropertyType::kEmpty:
+  } else if (type == PropertyType::StringMap()) {
+    return arrow::large_utf8();
+  } else if (type == PropertyType::Empty()) {
     return arrow::null();
-  default:
-    LOG(FATAL) << "Unexpected property type: " << static_cast<int>(type);
+  } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    return arrow::large_utf8();
+  } else {
+    LOG(FATAL) << "Unexpected property type: "
+               << static_cast<int>(type.type_enum);
     return nullptr;
   }
 }
@@ -38,7 +50,7 @@ std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
 template <typename T>
 void emplace_into_vector(const std::shared_ptr<arrow::ChunkedArray>& array,
                          std::vector<Any>& vec) {
-  using arrow_array_type = typename gs::CppTypeToArrowType<T>::ArrayType;
+  using arrow_array_type = typename gs::TypeConverter<T>::ArrowArrayType;
   for (auto i = 0; i < array->num_chunks(); ++i) {
     auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(i));
     for (auto k = 0; k < casted->length(); ++k) {

@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -147,8 +148,6 @@ public class ParserUtils {
                     return result.getMsg();
                 }
             default:
-                // throw new GremlinResultParserException("key type " + key.getItemCase().name() + "
-                // is invalid");
                 logger.error("{}", "key type is not set");
                 return "";
         }
@@ -166,6 +165,17 @@ public class ParserUtils {
                                         .filter(k -> !(k instanceof EmptyValue))
                                         .collect(Collectors.toList());
                 return notNull.isEmpty() ? EmptyValue.INSTANCE : notNull;
+            case MAP:
+                Map valueMap = new LinkedHashMap();
+                entry.getMap()
+                        .getKeyValuesList()
+                        .forEach(
+                                k -> {
+                                    valueMap.put(
+                                            ParserUtils.parseCommonValue(k.getKey()),
+                                            ParserUtils.parseElement(k.getValue()));
+                                });
+                return valueMap;
             default:
                 throw new GremlinResultParserException("invalid " + entry.getInnerCase().name());
         }

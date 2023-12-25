@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.transform;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.ArgVariable;
 import com.alibaba.graphscope.common.intermediate.operator.InterOpBase;
 import com.alibaba.graphscope.common.intermediate.operator.ProjectOp;
 import com.alibaba.graphscope.common.jna.type.FfiAggOpt;
@@ -245,6 +246,22 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
         return ArgUtils.asVar(tag, property);
     }
 
+    default ArgVariable getExpressionAsArgVar(String expr) {
+        if (expr.startsWith("{") && expr.endsWith("}")) {
+            throw new OpArgIllegalException(
+                    OpArgIllegalException.Cause.INVALID_TYPE,
+                    "can not convert expression of valueMap to variable");
+        }
+        String[] splitExpr = expr.split("\\.");
+        if (splitExpr.length == 0) {
+            throw new OpArgIllegalException(
+                    OpArgIllegalException.Cause.INVALID_TYPE, "expr " + expr + " is invalid");
+        }
+        String tag = (splitExpr[0].length() > 0) ? splitExpr[0].substring(1) : splitExpr[0];
+        String property = (splitExpr.length > 1) ? splitExpr[1] : "";
+        return new ArgVariable(tag, property);
+    }
+
     default Map<String, Traversal.Admin> getProjectTraversals(TraversalParent parent) {
         if (parent instanceof SelectOneStep) {
             SelectOneStep step = (SelectOneStep) parent;
@@ -272,9 +289,6 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
     // AliasManager in an automatic way or is given by the query)
     // and get aggregate variable, set to NONE by default
     default ArgAggFn getAggFn(Step step, int stepIdx, int subId) {
-        FfiAlias.ByValue alias =
-                AliasManager.getFfiAlias(
-                        new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx, subId));
         FfiAggOpt aggOpt;
         if (step instanceof CountGlobalStep) {
             aggOpt = FfiAggOpt.Count;
@@ -293,11 +307,16 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
                     OpArgIllegalException.Cause.UNSUPPORTED_TYPE,
                     "invalid aggFn " + step.getClass());
         }
+        FfiAlias.ByValue alias;
         // group().by(..).by(count().as("a")), "a" is the query given alias of group value
         Set<String> labels = step.getLabels();
         if (labels != null && !labels.isEmpty()) {
             String label = labels.iterator().next();
             alias = ArgUtils.asAlias(label, true);
+        } else {
+            alias =
+                    AliasManager.getFfiAlias(
+                            new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx, subId));
         }
         // set to NONE by default
         return new ArgAggFn(aggOpt, alias);

@@ -52,6 +52,8 @@ pub enum Operand {
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<Operand>),
     VarMap(Vec<Operand>),
+    // TODO: this is the new definition of VarMap. Will replace VarMap soon.
+    Map(Vec<(Object, Operand)>),
 }
 
 #[derive(Debug, Clone)]
@@ -176,37 +178,42 @@ pub(crate) fn apply_function<'a>(
             Interval::Year => Ok(a
                 .as_date_format()?
                 .year()
-                .ok_or(ExprEvalError::GetNoneFromContext)?
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
                 .into()),
             Interval::Month => Ok((a
                 .as_date_format()?
                 .month()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Day => Ok((a
                 .as_date_format()?
                 .day()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Hour => Ok((a
                 .as_date_format()?
                 .hour()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Minute => Ok((a
                 .as_date_format()?
                 .minute()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Second => Ok((a
                 .as_date_format()?
                 .second()
-                .ok_or(ExprEvalError::GetNoneFromContext)? as i32)
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
                 .into()),
             Interval::Millisecond => Ok((a
                 .as_date_format()?
                 .millisecond()
-                .ok_or(ExprEvalError::GetNoneFromContext)?
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
                 as i32)
                 .into()),
         },
@@ -536,6 +543,25 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     }
                     Ok(Self::VarMap(vec))
                 }
+
+                Map(key_vals) => {
+                    let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+                    for key_val in key_vals.key_vals {
+                        let (_key, _value) = (key_val.key, key_val.value);
+                        let key = if let Some(key) = _key {
+                            Object::try_from(key)?
+                        } else {
+                            return Err(ParsePbError::from("empty key provided in Map"));
+                        };
+                        let value = if let Some(value) = _value {
+                            Operand::try_from(value)?
+                        } else {
+                            return Err(ParsePbError::from("empty value provided in Map"));
+                        };
+                        vec.push((key, value));
+                    }
+                    Ok(Self::Map(vec))
+                }
                 _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {
@@ -584,13 +610,13 @@ impl Evaluate for Operand {
                             } else {
                                 let graph_element = element
                                     .as_graph_element()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
+                                    .ok_or_else(|| ExprEvalError::UnexpectedDataType(self.into()))?;
                                 match property {
                                     PropKey::Id => graph_element.id().into(),
                                     PropKey::Label => graph_element
                                         .label()
                                         .map(|label| label.into())
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Len => unreachable!(),
                                     PropKey::All => graph_element
                                         .get_all_properties()
@@ -606,23 +632,27 @@ impl Evaluate for Operand {
                                                 .collect::<Vec<(Object, Object)>>()
                                                 .into()
                                         })
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Key(key) => graph_element
                                         .get_property(key)
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
                                         .try_to_owned()
-                                        .ok_or(ExprEvalError::OtherErr(
-                                            "cannot get `Object` from `BorrowObject`".to_string(),
-                                        ))?,
+                                        .ok_or_else(|| {
+                                            ExprEvalError::OtherErr(
+                                                "cannot get `Object` from `BorrowObject`".to_string(),
+                                            )
+                                        })?,
                                 }
                             }
                         } else {
                             element
                                 .as_borrow_object()
                                 .try_to_owned()
-                                .ok_or(ExprEvalError::OtherErr(
-                                    "cannot get `Object` from `BorrowObject`".to_string(),
-                                ))?
+                                .ok_or_else(|| {
+                                    ExprEvalError::OtherErr(
+                                        "cannot get `Object` from `BorrowObject`".to_string(),
+                                    )
+                                })?
                         };
 
                         Ok(result)
@@ -672,6 +702,13 @@ impl Evaluate for Operand {
                         )),
                     }?;
                     map.insert(obj_key, get_object(var.eval(context))?);
+                }
+                Ok(Object::KV(map))
+            }
+            Self::Map(vars) => {
+                let mut map = BTreeMap::new();
+                for (obj_key, var) in vars {
+                    map.insert(obj_key.clone(), get_object(var.eval(context))?);
                 }
                 Ok(Object::KV(map))
             }
@@ -1063,23 +1100,27 @@ mod tests {
         // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
-            "@0.hobbies isNull",                 // false
-            "!(@0.hobbies isNull)",              // true
-            "@1.hobbies isNull",                 // true
-            "!(@1.hobbies isNull)",              // false
-            "true isNull",                       // false
-            "false isNull",                      // false
-            "!true isNull",                      // i.e., !(true isNull), false
-            "@1.hobbies isNull && @1.age == 26", // true
+            "isNull @0.hobbies",                 // false
+            "isNull (@0.hobbies)",               // false
+            "!(isNull @0.hobbies)",              // true
+            "isNull @1.hobbies",                 // true
+            "isNull (@1.hobbies)",               // true
+            "!(isNull @1.hobbies)",              // false
+            "isNull true",                       // false
+            "isNull false",                      // false
+            "!(isNull true)",                    // true
+            "isNull @1.hobbies && @1.age == 26", // true
         ];
         let expected: Vec<Object> = vec![
             object!(false),
+            object!(false),
             object!(true),
             object!(true),
+            object!(true),
             object!(false),
             object!(false),
             object!(false),
-            object!(false),
+            object!(true),
             object!(true),
         ];
 

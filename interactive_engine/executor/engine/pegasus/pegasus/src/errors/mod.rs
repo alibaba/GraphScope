@@ -33,6 +33,7 @@ pub enum ErrorKind {
     Interrupted,
     IOError,
     IllegalScopeInput,
+    Canceled,
     Others,
 }
 
@@ -43,6 +44,7 @@ impl Debug for ErrorKind {
             ErrorKind::Interrupted => write!(f, "Interrupted, retry later"),
             ErrorKind::IOError => write!(f, "IOError"),
             ErrorKind::IllegalScopeInput => write!(f, "IllegalScopeInput"),
+            ErrorKind::Canceled => write!(f, "Job is canceled"),
             ErrorKind::Others => write!(f, "Unknown"),
         }
     }
@@ -339,6 +341,27 @@ impl From<std::io::Error> for StartupError {
         StartupError::ReadConfigError(e)
     }
 }
+
+#[derive(Debug)]
+pub enum CancelError {
+    JobNotFoundError(u64),
+    CancelMapPoisonedError,
+}
+
+impl Display for CancelError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            CancelError::JobNotFoundError(e) => {
+                write!(f, "fail to find job, job id: {};", e)
+            }
+            CancelError::CancelMapPoisonedError => {
+                write!(f, "JOB_CANCEL_MAP is poisoned!;")
+            }
+        }
+    }
+}
+
+impl Error for CancelError {}
 
 #[macro_export]
 macro_rules! throw_io_error {

@@ -23,9 +23,24 @@ namespace gs {
 SharedLibraryAppFactory::SharedLibraryAppFactory(const std::string& path)
     : app_path_(path) {
   app_handle_ = dlopen(app_path_.c_str(), RTLD_LAZY);
+  auto* p_error_msg = dlerror();
+  if (p_error_msg) {
+    LOG(ERROR) << "Fail to open library: " << path
+               << ", error: " << p_error_msg;
+  }
 
   *(void**) (&func_creator_) = dlsym(app_handle_, "CreateApp");
+  p_error_msg = dlerror();
+  if (p_error_msg) {
+    LOG(ERROR) << "Failed to get symbol CreateApp from " << path
+               << ". Reason: " << std::string(p_error_msg);
+  }
   *(void**) (&func_deletor_) = dlsym(app_handle_, "DeleteApp");
+  p_error_msg = dlerror();
+  if (p_error_msg) {
+    LOG(ERROR) << "Failed to get symbol DeleteApp from " << path
+               << ". Reason: " << std::string(p_error_msg);
+  }
 }
 
 SharedLibraryAppFactory::~SharedLibraryAppFactory() {
@@ -35,6 +50,11 @@ SharedLibraryAppFactory::~SharedLibraryAppFactory() {
 }
 
 AppWrapper SharedLibraryAppFactory::CreateApp(GraphDBSession& db) {
+  if (func_creator_ == NULL) {
+    LOG(ERROR) << "Failed to create app from " << app_path_
+               << ". Reason: func_creator_ is NULL";
+    return AppWrapper();
+  }
   AppBase* app = static_cast<AppBase*>(func_creator_(db));
   return AppWrapper(app, func_deletor_);
 }

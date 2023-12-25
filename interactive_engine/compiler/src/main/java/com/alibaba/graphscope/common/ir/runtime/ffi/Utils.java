@@ -130,6 +130,7 @@ public abstract class Utils {
             case COLLECT:
                 return aggCall.isDistinct() ? FfiAggOpt.ToSet : FfiAggOpt.ToList;
             case SUM:
+            case SUM0:
                 return FfiAggOpt.Sum;
             case AVG:
                 return FfiAggOpt.Avg;

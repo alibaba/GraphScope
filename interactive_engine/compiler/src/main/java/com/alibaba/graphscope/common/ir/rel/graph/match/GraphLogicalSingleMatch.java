@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph.match;
 
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleX;
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.Lists;
 
@@ -75,10 +75,10 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
 
     @Override
     public RelNode accept(RelShuttle shuttle) {
-        if (shuttle instanceof GraphRelShuttleX) {
-            return ((GraphRelShuttleX) shuttle).visit(this);
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
         }
-        return super.accept(shuttle);
+        return shuttle.visit(this);
     }
 
     public RelNode getSentence() {

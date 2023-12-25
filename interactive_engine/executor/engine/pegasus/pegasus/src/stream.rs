@@ -108,6 +108,10 @@ impl<D: Data> Stream<D> {
     pub fn get_partitions(&self) -> usize {
         self.partitions
     }
+
+    pub fn set_partitions(&mut self, partitions: usize) {
+        self.partitions = partitions;
+    }
 }
 
 impl<D: Data> Stream<D> {

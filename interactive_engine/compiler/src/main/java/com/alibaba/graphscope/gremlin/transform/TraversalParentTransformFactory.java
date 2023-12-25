@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.transform;
 import com.alibaba.graphscope.common.exception.OpArgIllegalException;
 import com.alibaba.graphscope.common.intermediate.ArgAggFn;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
+import com.alibaba.graphscope.common.intermediate.ArgVariable;
 import com.alibaba.graphscope.common.intermediate.operator.*;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
@@ -495,7 +496,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
                                 stepId,
                                 subId,
                                 applys);
-                FfiVariable.ByValue var = getExpressionAsVar(expr);
+                ArgVariable var = getExpressionAsArgVar(expr);
                 predicate.setValue(var);
             }
         }

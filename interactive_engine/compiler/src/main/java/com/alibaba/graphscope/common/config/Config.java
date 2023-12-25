@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.config;
 
+import java.math.BigDecimal;
 import java.util.function.Function;
 
 public class Config<T> {
@@ -46,7 +47,7 @@ public class Config<T> {
     }
 
     public static Config<Integer> intConfig(String key, int defaultVal) {
-        return new Config<>(key, String.valueOf(defaultVal), (s) -> Integer.parseInt(s));
+        return new Config<>(key, String.valueOf(defaultVal), (s) -> new BigDecimal(s).intValue());
     }
 
     public static Config<Long> longConfig(String key, long defaultVal) {

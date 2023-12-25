@@ -17,6 +17,7 @@ import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.util.JSON;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
@@ -72,6 +73,7 @@ public class OfflineBuildOdps {
         GraphDefPb graphDefPb = client.prepareDataLoad(targets);
         System.out.println("GraphDef: " + graphDefPb);
         GraphSchema schema = GraphDef.parseProto(graphDefPb);
+        System.out.println("GraphSchema: " + JSON.toJson(schema));
 
         // number of reduce task
         int partitionNum = client.getPartitionNum();
@@ -124,6 +126,7 @@ public class OfflineBuildOdps {
         }
 
         String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
+        System.out.println("schemaJson is :" + schemaJson);
         Map<String, ColumnMappingInfo> info = Utils.getMappingInfo(odps, schema, mappingConfig);
         ObjectMapper mapper = new ObjectMapper();
 

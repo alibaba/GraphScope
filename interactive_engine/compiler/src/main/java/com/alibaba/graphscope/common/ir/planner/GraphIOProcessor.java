@@ -22,10 +22,7 @@ import com.alibaba.graphscope.common.ir.planner.type.DataKey;
 import com.alibaba.graphscope.common.ir.planner.type.DataValue;
 import com.alibaba.graphscope.common.ir.planner.type.EdgeDataKey;
 import com.alibaba.graphscope.common.ir.planner.type.VertexDataKey;
-import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
-import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
-import com.alibaba.graphscope.common.ir.rel.GraphPattern;
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleX;
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.AbstractBindableTableScan;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
@@ -103,7 +100,11 @@ public class GraphIOProcessor {
         return Collections.unmodifiableMap(this.graphDetails);
     }
 
-    private class InputConvertor extends GraphRelShuttleX {
+    public GraphBuilder getBuilder() {
+        return builder;
+    }
+
+    private class InputConvertor extends GraphRelVisitor {
         @Override
         public RelNode visit(GraphLogicalMultiMatch match) {
             return new GraphPattern(
@@ -316,7 +317,7 @@ public class GraphIOProcessor {
         }
     }
 
-    private class OutputConvertor extends GraphRelShuttleX {
+    private class OutputConvertor extends GraphRelVisitor {
         private Map<DataKey, DataValue> details = Maps.newHashMap(graphDetails);
 
         @Override

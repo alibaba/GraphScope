@@ -20,10 +20,11 @@ import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.planner.rules.ExtendIntersectRule;
+import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleX;
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
@@ -79,6 +80,10 @@ public class GraphRelOptimizer {
 
     public RelNode optimize(RelNode before, GraphIOProcessor ioProcessor) {
         if (config.isOn()) {
+            // apply rules of 'FieldTrim' before the match optimization
+            if (config.getRules().contains(FieldTrimRule.class.getSimpleName())) {
+                before = FieldTrimRule.trim(ioProcessor.getBuilder(), before);
+            }
             // apply rules of 'FilterPushDown' before the match optimization
             relPlanner.setRoot(before);
             RelNode relOptimized = relPlanner.findBestExp();
@@ -87,7 +92,7 @@ public class GraphRelOptimizer {
         return before;
     }
 
-    private class MatchOptimizer extends GraphRelShuttleX {
+    private class MatchOptimizer extends GraphRelVisitor {
         private final GraphIOProcessor ioProcessor;
 
         public MatchOptimizer(GraphIOProcessor ioProcessor) {

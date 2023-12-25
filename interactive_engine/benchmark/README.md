@@ -14,7 +14,7 @@ The program uses a round-robin strategy to iterate all the **enabled** queries w
 - data
     - substitution_parameters           // query parameter files using to fill the query templates
 - queries                               // qurery templates including LDBC queries, K-hop queries and user-defined queries
-- utils
+- scripts
     - benchmark.sh                      // script for running benchmark
     - cal.py                            // script for calculating benchmark results
 - src                                   // source code of benchmark program
@@ -38,8 +38,8 @@ cd target
 tar -xvf gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
 cd gaia-benchmark-0.0.1-SNAPSHOT
 vim config/interactive-benchmark.properties # specify the gremlin endpoint of your server and modify running configurations
-chmod +x ./utils/benchmark.sh 
-./utils/benchmark.sh                      # run the benchmark program
+chmod +x ./scripts/benchmark.sh 
+./scripts/benchmark.sh                      # run the benchmark program
 ```
 
 Benchmark reports numbers as following:

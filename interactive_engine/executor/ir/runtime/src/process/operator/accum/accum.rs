@@ -87,7 +87,9 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 EntryAccumulator::ToSum(sum) => {
                     let primitive = next
                         .as_object()
-                        .ok_or(FnExecError::unexpected_data_error("DynEntry is not a object type `Sum`"))?
+                        .ok_or_else(|| {
+                            FnExecError::unexpected_data_error("DynEntry is not a object type `Sum`")
+                        })?
                         .as_primitive()
                         .map_err(|e| {
                             FnExecError::unexpected_data_error(&format!(
@@ -100,7 +102,9 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 EntryAccumulator::ToAvg(sum, count) => {
                     let primitive = next
                         .as_object()
-                        .ok_or(FnExecError::unexpected_data_error("DynEntry is not a object type `ToAvg`"))?
+                        .ok_or_else(|| {
+                            FnExecError::unexpected_data_error("DynEntry is not a object type `ToAvg`")
+                        })?
                         .as_primitive()
                         .map_err(|e| {
                             FnExecError::unexpected_data_error(&format!(

@@ -16,6 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
+import static com.alibaba.graphscope.gaia.proto.GraphAlgebra.GroupBy.AggFunc.Aggregate;
+
+import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
@@ -307,6 +310,7 @@ public abstract class Utils {
                                 + " to IrDataType is unsupported yet");
             case MULTISET:
             case ARRAY:
+            case MAP:
                 logger.warn("multiset or array type can not be converted to any ir core data type");
                 return DataType.IrDataType.newBuilder().build();
             default:
@@ -402,6 +406,31 @@ public abstract class Utils {
                 return OuterExpression.Extract.Interval.SECOND;
             default:
                 throw new UnsupportedOperationException("unsupported interval type " + timeUnit);
+        }
+    }
+
+    public static final Aggregate protoAggFn(GraphAggCall aggCall) {
+        switch (aggCall.getAggFunction().getKind()) {
+            case COUNT:
+                return aggCall.isDistinct() ? Aggregate.COUNT_DISTINCT : Aggregate.COUNT;
+            case COLLECT:
+                return aggCall.isDistinct() ? Aggregate.TO_SET : Aggregate.TO_LIST;
+            case SUM:
+            case SUM0:
+                return Aggregate.SUM;
+            case AVG:
+                return Aggregate.AVG;
+            case MIN:
+                return Aggregate.MIN;
+            case MAX:
+                return Aggregate.MAX;
+            case FIRST_VALUE:
+                return Aggregate.FIRST;
+            default:
+                throw new UnsupportedOperationException(
+                        "aggregate opt "
+                                + aggCall.getAggFunction().getKind()
+                                + " is unsupported yet");
         }
     }
 }

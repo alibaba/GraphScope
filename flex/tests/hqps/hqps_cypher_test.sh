@@ -15,26 +15,26 @@
 set -e
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 FLEX_HOME=${SCRIPT_DIR}/../../
-SERVER_BIN=${FLEX_HOME}/build/bin/sync_server
+BULK_LOADER=${FLEX_HOME}/build/bin/bulk_loader
+SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
 # 
-if [ ! $# -eq 4 ]; then
+if [ ! $# -eq 3 ]; then
   echo "only receives: $# args, need 4"
-  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <BULK_LOAD_FILE> <ENGINE_CONFIG>"
+  echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG>"
   exit 1
 fi
 
 INTERACTIVE_WORKSPACE=$1
 GRAPH_NAME=$2
-GRAPH_BULK_LOAD_YAML=$3
-ENGINE_CONFIG_PATH=$4
+ENGINE_CONFIG_PATH=$3
 if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   echo "INTERACTIVE_WORKSPACE: ${INTERACTIVE_WORKSPACE} not exists"
   exit 1
 fi
 # check graph is ldbc or movies
-if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ]; then
+if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ] && [ ${GRAPH_NAME} != "graph_algo" ]; then
   echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies or ldbc"
   exit 1
 fi
@@ -46,22 +46,13 @@ if [ ! -f ${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME}/graph.yaml ]; then
   echo "GRAPH_SCHEMA_FILE: ${BULK_LOAD_FILE} not exists"
   exit 1
 fi
-if [ ! -f ${GRAPH_BULK_LOAD_YAML} ]; then
-  echo "GRAPH_BULK_LOAD_YAML: ${GRAPH_BULK_LOAD_YAML} not exists"
-  exit 1
-fi
 if [ ! -f ${ENGINE_CONFIG_PATH} ]; then
   echo "ENGINE_CONFIG: ${ENGINE_CONFIG_PATH} not exists"
   exit 1
 fi
 
 GRAPH_SCHEMA_YAML=${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME}/graph.yaml
-GRAPH_CSR_DATA_DIR=${HOME}/csr-data-dir/
-# rm data dir if exists
-if [ -d ${GRAPH_CSR_DATA_DIR} ]; then
-  rm -rf ${GRAPH_CSR_DATA_DIR}
-fi
-
+GRAPH_CSR_DATA_DIR=${INTERACTIVE_WORKSPACE}/data/${GRAPH_NAME}/indices
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -78,7 +69,7 @@ info() {
 kill_service(){
     info "Kill Service first"
     ps -ef | grep "com.alibaba.graphscope.GraphServer" | awk '{print $2}' | xargs kill -9 || true
-    ps -ef | grep "sync_server" |  awk '{print $2}' | xargs kill -9  || true
+    ps -ef | grep "interactive_server" |  awk '{print $2}' | xargs kill -9  || true
     sleep 3
     # check if service is killed
     info "Kill Service success"
@@ -90,20 +81,25 @@ trap kill_service EXIT
 
 # start engine service and load ldbc graph
 start_engine_service(){
+    # suppose graph has been loaded, check ${GRAPH_CSR_DATA_DIR} exists
+    if [ ! -d ${GRAPH_CSR_DATA_DIR} ]; then
+        err "GRAPH_CSR_DATA_DIR not found"
+        exit 1
+    fi
+
     #check SERVER_BIN exists
     if [ ! -f ${SERVER_BIN} ]; then
         err "SERVER_BIN not found"
         exit 1
     fi
-
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
-    cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} -l ${GRAPH_BULK_LOAD_YAML} "
-
-    echo "Start engine service with command: ${cmd}"
+    cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
+    
+    info "Start engine service with command: ${cmd}"
     ${cmd} &
     sleep 5
-    #check sync_server is running, if not, exit
-    ps -ef | grep "sync_server" | grep -v grep
+    #check interactive_server is running, if not, exit
+    ps -ef | grep "interactive_server" | grep -v grep
 
     info "Start engine service success"
 }
@@ -152,6 +148,16 @@ run_movie_test(){
   popd
 }
 
+run_graph_algo_test(){
+  echo "run graph_algo test"
+  pushd ${GIE_HOME}/compiler
+  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.graphAlgo.GraphAlgoTest"
+  echo "Start graph_algo test: ${cmd}"
+  ${cmd}
+  info "Finish graph_algo test"
+  popd
+}
+
 kill_service
 start_engine_service
 start_compiler_service
@@ -159,12 +165,12 @@ start_compiler_service
 if [ "${GRAPH_NAME}" == "ldbc" ]; then
   run_ldbc_test
   run_simple_test
-else
+elif [ "${GRAPH_NAME}" == "movies" ]; then
   run_movie_test
+elif [ "${GRAPH_NAME}" == "graph_algo" ]; then
+  run_graph_algo_test
+else
+  echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies, ldbc or graph_algo"
 fi
 
 kill_service
-
-
-
-

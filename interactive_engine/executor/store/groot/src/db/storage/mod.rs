@@ -59,15 +59,29 @@ pub struct RawBytes {
 
 impl RawBytes {
     pub fn new(slice: &[u8]) -> Self {
-        RawBytes { ptr: slice.as_ptr(), len: slice.len() }
+        let tmp = slice.to_vec();
+        let ptr = tmp.as_ptr();
+        let len = tmp.len();
+        ::std::mem::forget(tmp);
+        RawBytes { ptr, len }
     }
 
     pub fn empty() -> Self {
         RawBytes { ptr: null(), len: 0 }
     }
 
-    pub unsafe fn to_slice(&self) -> &[u8] {
-        std::slice::from_raw_parts(self.ptr, self.len)
+    pub fn to_slice(&self) -> &[u8] {
+        unsafe { std::slice::from_raw_parts(self.ptr, self.len) }
+    }
+}
+
+impl Drop for RawBytes {
+    fn drop(&mut self) {
+        if self.len > 0 {
+            unsafe {
+                Vec::from_raw_parts(self.ptr as *mut u8, self.len, self.len);
+            }
+        }
     }
 }
 

@@ -9,12 +9,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
+import java.util.Random;
 
 public abstract class ExternalStorage {
     private static final Logger logger = LoggerFactory.getLogger(ExternalStorage.class);
+    private static final String CHARACTERS =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
     public static ExternalStorage getStorage(String path, Map<String, String> config)
             throws IOException {
@@ -34,6 +40,25 @@ public abstract class ExternalStorage {
     }
 
     public abstract void downloadDataSimple(String srcPath, String dstPath) throws IOException;
+
+    public static String generateRandomString(int length) {
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(length);
+
+        for (int i = 0; i < length; i++) {
+            int randomIndex = random.nextInt(CHARACTERS.length());
+            char randomChar = CHARACTERS.charAt(randomIndex);
+            sb.append(randomChar);
+        }
+
+        return sb.toString();
+    }
+
+    public void downloadDataWithMove(String srcPath, String dstPath) throws IOException {
+        String tmpPath = dstPath + "." + generateRandomString(6);
+        downloadDataSimple(srcPath, tmpPath);
+        Files.move(Path.of(tmpPath), Path.of(dstPath), StandardCopyOption.REPLACE_EXISTING);
+    }
 
     public void downloadDataWithRetry(String srcPath, String dstPath) throws IOException {
         int maxRetry = 5;
@@ -56,7 +81,7 @@ public abstract class ExternalStorage {
         String chkPath = srcPath.substring(0, srcPath.length() - ".sst".length()) + ".chk";
         String chkLocalPath = dstPath.substring(0, dstPath.length() - ".sst".length()) + ".chk";
 
-        downloadDataSimple(chkPath, chkLocalPath);
+        downloadDataWithMove(chkPath, chkLocalPath);
         File chkFile = new File(chkLocalPath);
         byte[] chkData = new byte[(int) chkFile.length()];
         try {
@@ -76,7 +101,7 @@ public abstract class ExternalStorage {
                     "Checksum format error: content: [" + chkArray + "]; path: " + chkPath);
         }
         String chkMD5Value = chkArray[1];
-        downloadDataSimple(srcPath, dstPath);
+        downloadDataWithMove(srcPath, dstPath);
         String sstMD5Value = getFileMD5(dstPath);
         if (!chkMD5Value.equals(sstMD5Value)) {
             logger.error("Checksum failed for " + chkLocalPath + " versus " + dstPath);

@@ -47,8 +47,8 @@ public class GraphPattern extends AbstractRelNode {
 
     @Override
     public RelNode accept(RelShuttle shuttle) {
-        if (shuttle instanceof GraphRelShuttleX) {
-            return ((GraphRelShuttleX) shuttle).visit(this);
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
         }
         return super.accept(shuttle);
     }

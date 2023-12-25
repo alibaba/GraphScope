@@ -26,7 +26,6 @@
 #include <string>
 #include <thread>
 
-#include "flex/utils/mmap_array.h"
 #include "glog/logging.h"
 
 namespace gs {
@@ -80,8 +79,8 @@ class WalsParser {
   std::vector<int> fds_;
   std::vector<void*> mmapped_ptrs_;
   std::vector<size_t> mmapped_size_;
-
-  mmap_array<WalContentUnit> insert_wal_list_;
+  WalContentUnit* insert_wal_list_;
+  size_t insert_wal_list_size_;
   uint32_t last_ts_{0};
 
   std::vector<UpdateWalUnit> update_wal_list_;

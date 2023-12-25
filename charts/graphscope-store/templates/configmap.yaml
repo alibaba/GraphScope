@@ -15,7 +15,6 @@ metadata:
 data:
   groot.config: |-
     ## Common Config
-    graph.name={{ .Values.graphName }}
     role.name=ROLE
     node.idx=INDEX
     rpc.port=55555
@@ -26,41 +25,40 @@ data:
     coordinator.node.count={{ .Values.coordinator.replicaCount }}
     ingestor.queue.count={{ .Values.ingestor.replicaCount }}
     partition.count={{ .Values.store.replicaCount | mul 16 }}
-    engine.type={{ .Values.engineType }}
     discovery.mode={{ .Values.discoveryMode }}
 
     ## Frontend Config
     frontend.service.port=55556
     frontend.server.id=INDEX
     frontend.server.num={{ .Values.frontend.replicaCount }}
+    enable.hash.generate.eid={{ .Values.enableHashGenerateEid }}
 
     ## Ingestor Config
-    ingestor.queue.buffer.size={{ .Values.ingestorQueueBufferSize }}
-    ingestor.sender.buffer.size={{ .Values.ingestorSenderBufferSize }}
+    ingestor.queue.buffer.max.count={{ .Values.ingestorQueueBufferMaxCount }}
+    ingestor.sender.buffer.max.count={{ .Values.ingestorSenderBufferMaxCount }}
+    ingestor.sender.operation.max.count={{ .Values.ingestorSenderOperationMaxCount }}
 
     ## Coordinator Config
     snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
     offsets.persist.interval.ms={{ .Values.offsetsPersistIntervalMs }}
     file.meta.store.path={{ .Values.fileMetaStorePath }}
+    log.recycle.enable={{ .Values.logRecycleEnable }}
 
     ## Store Config
     store.data.path={{ .Values.storeDataPath }}
     store.write.thread.count={{ .Values.storeWriteThreadCount }}
+    store.queue.buffer.size={{ .Values.storeQueueBufferSize }}
 
     ## Kafka Config
     kafka.servers=KAFKA_SERVERS
     kafka.topic={{ .Values.kafkaTopic }}
     kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
+    kafka.test.cluster.enable=false
 
     ## Frontend Config
     gremlin.server.port=12312
     ## disable neo4j when launching groot server by default
     neo4j.bolt.server.disabled=true
-
-    executor.worker.per.process={{ .Values.executorWorkerPerProcess }}
-    executor.query.thread.count={{ .Values.executorQueryThreadCount }}
-    executor.query.manager.thread.count={{ .Values.executorQueryManagerThreadCount }}
-    executor.query.store.thread.count={{ .Values.executorQueryStoreThreadCount }}
 
     dns.name.prefix.frontend=FRONTEND
     dns.name.prefix.ingestor=INGESTOR
@@ -128,5 +126,13 @@ data:
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
-    ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}
+
+    # For core and heap profiling
+    # ulimit -c unlimited
+    # sudo mkdir -p /apsara/cloud/data/corefile/ && sudo chown -R graphscope:graphscope /apsara/cloud/data/corefile/
+    # export _RJEM_MALLOC_CONF=prof:true,lg_prof_interval:32,lg_prof_sample:19
+    # export MALLOC_CONF=prof:true,lg_prof_interval:32
+
+    export RUST_BACKTRACE=1
+    ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start ${ROLE}  # || sleep infinity
 {{- end -}}

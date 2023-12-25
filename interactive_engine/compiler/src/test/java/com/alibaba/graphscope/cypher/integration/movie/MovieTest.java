@@ -148,6 +148,58 @@ public class MovieTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_movie_query19_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query19_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query20_test() {
+        assumeTrue("pegasus".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query20_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query21_test() {
+        QueryContext testQuery = MovieQueries.get_movie_query21_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query22_test() {
+        assumeTrue("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        QueryContext testQuery = MovieQueries.get_movie_query22_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query23_test() {
+        QueryContext testQuery = MovieQueries.get_movie_query23_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query24_test() {
+        QueryContext testQuery = MovieQueries.get_movie_query24_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_movie_query25_test() {
+        QueryContext testQuery = MovieQueries.get_movie_query25_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     @AfterClass
     public static void afterClass() {
         if (session != null) {

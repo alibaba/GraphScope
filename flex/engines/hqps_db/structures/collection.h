@@ -16,6 +16,7 @@
 #define ENGINES_HQPS_DS_COLLECTION_H_
 
 #include <tuple>
+#include <unordered_set>
 #include <vector>
 
 #include "flex/engines/hqps_db/core/null_record.h"
@@ -51,6 +52,10 @@ class TwoLabelVertexSetImpl;
 
 template <typename VID_T, typename LabelT, typename... T>
 class TwoLabelVertexSetImplBuilder;
+
+// untypedEdgeSet
+template <typename VID_T, typename LabelT, typename SUB_GRAPH_T>
+class UnTypedEdgeSet;
 
 template <typename T>
 class Collection;
@@ -423,14 +428,91 @@ class CountBuilder {
   std::vector<size_t> vec_;
 };
 
-template <size_t num_labels, int tag_id, typename T>
+template <int... tag>
+class MultiColCountBuilder {
+ public:
+  MultiColCountBuilder() {}
+
+  // insert tuple at index ind.
+  // if the ele_value equal to invalid_value, then do not insert.
+  template <typename ELE_TUPLE, typename DATA_TUPLE>
+  void insert(size_t ind, const ELE_TUPLE& tuple, const DATA_TUPLE& data) {
+    auto cur_ele_tuple =
+        std::tuple_cat(tuple_slice<1>(gs::get_from_tuple<tag>(tuple))...);
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(0);
+    }
+    using cur_ele_tuple_t =
+        std::remove_const_t<std::remove_reference_t<decltype(cur_ele_tuple)>>;
+    // remove the const and reference for each type in cur_ele_tuple_t
+    using cur_ele_tuple_rm_const_ref_t =
+        typename ConstRefRemoveHelper<cur_ele_tuple_t>::type;
+    if (cur_ele_tuple !=
+        NullRecordCreator<cur_ele_tuple_rm_const_ref_t>::GetNull()) {
+      ++vec_[ind];
+    } else {
+      VLOG(10) << "ele is null";
+    }
+  }
+
+  Collection<size_t> Build() { return Collection<size_t>(std::move(vec_)); }
+
+ private:
+  std::vector<size_t> vec_;
+};
+
+template <int tag_id, typename T, typename Enable = void>
 class DistinctCountBuilder;
 
-// count the distinct number of recieved elements.
-template <int tag_id, typename T>
-class DistinctCountBuilder<1, tag_id, T> {
+// Count the distinct edges of UntypedEdgeSet.
+// We assume each edge  in UnTypeEdgeSet  is unique, so just count the index of
+// index_ele_tuple_t.
+template <int tag_id, typename EDGE_SET_T>
+class DistinctCountBuilder<
+    tag_id, EDGE_SET_T,
+    typename std::enable_if<(EDGE_SET_T::is_edge_set)>::type> {
  public:
-  DistinctCountBuilder(const std::vector<T>& vertices) {
+  using edge_set_t = EDGE_SET_T;
+  using index_ele_t = typename edge_set_t::index_ele_tuple_t;
+  DistinctCountBuilder(const edge_set_t& edge_set) {
+    edges_num_ = edge_set.Size();
+  }
+
+  template <typename ELE_TUPLE_T, typename DATA_TUPLE>
+  void insert(size_t ind, const ELE_TUPLE_T& tuple, const DATA_TUPLE& data) {
+    auto& cur_ind_ele = gs::get_from_tuple<tag_id>(tuple);
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(grape::Bitset(edges_num_));
+    }
+    auto& cur_bitset = vec_[ind];
+    auto cur_ind = std::get<0>(cur_ind_ele);
+    if (cur_ind < edges_num_) {
+      cur_bitset.set_bit(cur_ind);
+    } else {
+      LOG(FATAL) << "Invalid edge index: " << cur_ind
+                 << ", edges num: " << edges_num_;
+    }
+  }
+
+  Collection<size_t> Build() {
+    std::vector<size_t> res;
+    res.reserve(vec_.size());
+    for (auto& bitset : vec_) {
+      res.emplace_back(bitset.count());
+    }
+    return Collection<size_t>(std::move(res));
+  }
+
+ private:
+  std::vector<grape::Bitset> vec_;
+  size_t edges_num_;
+};
+
+// count the distinct number of recieved elements.
+template <int tag_id, typename LabelT, typename VID_T, typename... T>
+class DistinctCountBuilder<tag_id, RowVertexSetImpl<LabelT, VID_T, T...>> {
+ public:
+  DistinctCountBuilder(const std::vector<VID_T>& vertices) {
     // find out the range of vertices inside vector, and use a bitset to count
     for (auto v : vertices) {
       min_v = std::min(min_v, v);
@@ -446,7 +528,7 @@ class DistinctCountBuilder<1, tag_id, T> {
         std::is_same_v<
             std::tuple_element_t<1, std::remove_const_t<std::remove_reference_t<
                                         decltype(cur_ind_ele)>>>,
-            T>,
+            VID_T>,
         "Type not match");
     while (vec_.size() <= ind) {
       vec_.emplace_back(grape::Bitset(range_size));
@@ -469,15 +551,15 @@ class DistinctCountBuilder<1, tag_id, T> {
 
  private:
   std::vector<grape::Bitset> vec_;
-  T min_v, max_v, range_size;
+  VID_T min_v, max_v, range_size;
 };
 
 // specialization for DistinctCountBuilder for num_labels=2
-template <int tag_id, typename T>
-class DistinctCountBuilder<2, tag_id, T> {
+template <int tag_id, typename VID_T, typename LabelT, typename... T>
+class DistinctCountBuilder<tag_id, TwoLabelVertexSetImpl<VID_T, LabelT, T...>> {
  public:
   DistinctCountBuilder(const grape::Bitset& bitset,
-                       const std::vector<T>& vids) {
+                       const std::vector<VID_T>& vids) {
     // find out the range of vertices inside vector, and use a bitset to count
     for (auto i = 0; i < vids.size(); ++i) {
       auto v = vids[i];
@@ -502,7 +584,7 @@ class DistinctCountBuilder<2, tag_id, T> {
         std::is_same_v<
             std::tuple_element_t<2, std::remove_const_t<std::remove_reference_t<
                                         decltype(cur_ind_ele)>>>,
-            T>,
+            VID_T>,
         "Type not match");
     auto label_ind = std::get<1>(cur_ind_ele);
     while (vec_[label_ind].size() <= ind) {
@@ -530,7 +612,49 @@ class DistinctCountBuilder<2, tag_id, T> {
 
  private:
   std::array<std::vector<grape::Bitset>, 2> vec_;
-  std::array<T, 2> min_v, max_v, range_size;
+  std::array<VID_T, 2> min_v, max_v, range_size;
+};
+
+// DistinctCountBuilder for multiple sets together
+template <typename SET_TUPLE_T, int... TAG_IDs>
+class MultiColDistinctCountBuilder;
+
+template <typename... SET_Ts, int... TAG_IDs>
+class MultiColDistinctCountBuilder<std::tuple<SET_Ts...>, TAG_IDs...> {
+ public:
+  using set_ele_t = std::tuple<typename SET_Ts::element_t...>;
+  MultiColDistinctCountBuilder() {}
+
+  template <typename ELE_TUPLE_T, typename DATA_TUPLE>
+  void insert(size_t ind, const ELE_TUPLE_T& tuple, const DATA_TUPLE& data) {
+    // construct the ref tuple from tuple,with TAG_IDS,
+    // get element tuple from index_ele_tuple_t
+    auto cur_ele_tuple =
+        std::tuple_cat(tuple_slice<1>(gs::get_from_tuple<TAG_IDs>(tuple))...);
+
+    while (vec_of_set_.size() <= ind) {
+      vec_of_set_.emplace_back(
+          std::unordered_set<set_ele_t, boost::hash<set_ele_t>>());
+    }
+    auto& cur_set = vec_of_set_[ind];
+    cur_set.insert(cur_ele_tuple);
+    VLOG(10) << "tuple: " << gs::to_string(cur_ele_tuple)
+             << ",all ele: " << gs::to_string(tuple) << "insert at ind: " << ind
+             << ", res: " << cur_set.size();
+  }
+
+  Collection<size_t> Build() {
+    std::vector<size_t> res;
+    res.reserve(vec_of_set_.size());
+    for (auto& set : vec_of_set_) {
+      res.emplace_back(set.size());
+    }
+    return Collection<size_t>(std::move(res));
+  }
+
+ private:
+  std::vector<std::unordered_set<set_ele_t, boost::hash<set_ele_t>>>
+      vec_of_set_;
 };
 
 template <typename T, int tag_id>

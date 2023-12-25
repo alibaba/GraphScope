@@ -41,6 +41,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.commons.io.FileUtils;
@@ -88,7 +89,10 @@ public class GraphPlanner {
     public PlannerInstance instance(String query, IrMeta irMeta) {
         GraphOptCluster optCluster =
                 GraphOptCluster.create(this.optimizer.getMatchPlanner(), this.rexBuilder);
-        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
+        RelMetadataQuery mq = optimizer.createMetaDataQuery();
+        if (mq != null) {
+            optCluster.setMetadataQuerySupplier(() -> mq);
+        }
         return new PlannerInstance(query, optCluster, irMeta);
     }
 

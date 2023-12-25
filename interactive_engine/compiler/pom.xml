@@ -263,6 +263,7 @@
                         <exclude>**/SimpleMatchTest.java</exclude>
                         <exclude>**/IrPatternTest.java</exclude>
                         <exclude>**/MovieTest.java</exclude>
+                        <exclude>**/GraphAlgoTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

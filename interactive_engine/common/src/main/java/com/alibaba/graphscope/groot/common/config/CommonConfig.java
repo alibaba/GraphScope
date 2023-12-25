@@ -55,8 +55,6 @@ public class CommonConfig {
 
     public static final Config<Integer> PARTITION_COUNT = Config.intConfig("partition.count", 1);
 
-    public static final Config<String> GRAPH_NAME = Config.stringConfig("graph.name", "graphscope");
-
     public static final Config<Long> METRIC_UPDATE_INTERVAL_MS =
             Config.longConfig("metric.update.interval.ms", 5000L);
 

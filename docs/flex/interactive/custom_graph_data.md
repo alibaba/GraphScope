@@ -20,7 +20,7 @@ To create a new graph, you will need the original data of the graph. We currentl
 To begin, ensure you've adjusted the settings in the `{INTERACTIVE_HOME}/conf/interactive.yaml` file. By utilizing Docker's volume mount feature, you can map an external folder containing the the CSV files of `movies` to the internal directory at `/home/graphscope/movies`. It's crucial that the internal data path starts with `/home/graphscope` and concludes with `movies`, reflecting the name of your graph. If you're looking to import custom data, you can do volume mapping in a similar way.
 
 ```yaml
-version: v0.0.2
+version: v0.0.3
 volume:
   # replace INTERACTIVE_HOME with actual path.
   - {INTERACTIVE_HOME}/examples/movies:/home/graphscope/movies 
@@ -118,7 +118,10 @@ Supported primitive data types for properties include:
 - DT_SIGNED_INT64
 - DT_UNSIGNED_INT64
 - DT_BOOL
+- DT_FLOAT
+- DT_DOUBLE
 - DT_STRING
+- DT_DATE32
 
 For a comprehensive list of supported types, please refer to the [data model](./data_model) page.
 
@@ -204,3 +207,8 @@ Note: Stopping a prior service is necessary to start a new service with an alter
 
 
 Now you can move to [Stored Procedure](./stored_procedures) to explore querying via stored procedures.
+
+
+## Try other graphs
+
+In addition to `movies` graph, we have also prepared the `graph_algo` graph. You can find the raw CSV files, graph.yaml, and import.yaml in the `./examples/graph_algo/` directory. You can import the `graph_algo` graph just like importing the `movies` graph.

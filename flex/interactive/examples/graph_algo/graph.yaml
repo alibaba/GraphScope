@@ -1,0 +1,120 @@
+name: graph_algo
+schema:
+  vertex_types:
+    - type_name: Paper
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: conference
+          property_type:
+            primitive_type: DT_STRING
+        - property_name: CCFRank
+          property_type:
+            primitive_type: DT_STRING
+        - property_name: CCFField
+          property_type:
+            primitive_type: DT_STRING
+        - property_name: year
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+        - property_name: paper
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_name: Challenge
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: challenge
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_name: Topic
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: category
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_name: Algorithm
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: algorithm
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_name: Strategy
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: strategy
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_name: CCFField
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: field
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+  edge_types:
+    - type_name: WorkOn
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: Algorithm
+          relation: MANY_TO_ONE
+    - type_name: Resolve
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: Challenge
+          relation: MANY_TO_MANY
+    - type_name: Target
+      vertex_type_pair_relations:
+        - source_vertex: Algorithm
+          destination_vertex: Challenge
+          relation: MANY_TO_MANY
+      properties:
+        - property_name: number
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+    - type_name: Belong
+      vertex_type_pair_relations:
+        - source_vertex: Algorithm
+          destination_vertex: Topic
+          relation: MANY_TO_ONE
+    - type_name: Use
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: Strategy
+          relation: MANY_TO_MANY
+    - type_name: ApplyOn
+      vertex_type_pair_relations:
+        - source_vertex: Strategy
+          destination_vertex: Challenge
+          relation: MANY_TO_ONE
+    - type_name: HasField
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: CCFField
+          relation: MANY_TO_MANY
+    - type_name: Citation
+      vertex_type_pair_relations:
+        - source_vertex: Paper
+          destination_vertex: Paper
+          relation: MANY_TO_MANY

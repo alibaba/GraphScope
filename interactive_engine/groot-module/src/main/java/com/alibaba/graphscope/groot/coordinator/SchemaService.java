@@ -24,7 +24,7 @@ import io.grpc.stub.StreamObserver;
 
 public class SchemaService extends SchemaGrpc.SchemaImplBase {
 
-    private SchemaManager schemaManager;
+    private final SchemaManager schemaManager;
 
     public SchemaService(SchemaManager schemaManager) {
         this.schemaManager = schemaManager;

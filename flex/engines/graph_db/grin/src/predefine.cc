@@ -1,16 +1,24 @@
 #include "grin/src/predefine.h"
 
 GRIN_DATATYPE _get_data_type(const gs::PropertyType& type) {
-  if (type == gs::PropertyType::kInt32) {
+  if (type == gs::PropertyType::kBool) {
+    return GRIN_DATATYPE::Bool;
+  } else if (type == gs::PropertyType::kInt32) {
     return GRIN_DATATYPE::Int32;
+  } else if (type == gs::PropertyType::kUInt32) {
+    return GRIN_DATATYPE::UInt32;
   } else if (type == gs::PropertyType::kInt64) {
     return GRIN_DATATYPE::Int64;
+  } else if (type == gs::PropertyType::kUInt64) {
+    return GRIN_DATATYPE::UInt64;
   } else if (type == gs::PropertyType::kString) {
     return GRIN_DATATYPE::String;
   } else if (type == gs::PropertyType::kDate) {
     return GRIN_DATATYPE::Timestamp64;
   } else if (type == gs::PropertyType::kDouble) {
     return GRIN_DATATYPE::Double;
+  } else if (type == gs::PropertyType::kFloat) {
+    return GRIN_DATATYPE::Float;
   } else {
     return GRIN_DATATYPE::Undefined;
   }
@@ -32,6 +40,18 @@ void init_cache(GRIN_GRAPH_T* g) {
         tmp.emplace_back(std::dynamic_pointer_cast<gs::LongColumn>(
                              table.get_column_by_id(idx))
                              .get());
+      } else if (type == gs::PropertyType::kUInt32) {
+        tmp.emplace_back(std::dynamic_pointer_cast<gs::UIntColumn>(
+                             table.get_column_by_id(idx))
+                             .get());
+      } else if (type == gs::PropertyType::kUInt64) {
+        tmp.emplace_back(std::dynamic_pointer_cast<gs::ULongColumn>(
+                             table.get_column_by_id(idx))
+                             .get());
+      } else if (type == gs::PropertyType::kBool) {
+        tmp.emplace_back(std::dynamic_pointer_cast<gs::BoolColumn>(
+                             table.get_column_by_id(idx))
+                             .get());
       } else if (type == gs::PropertyType::kString) {
         tmp.emplace_back(std::dynamic_pointer_cast<gs::StringColumn>(
                              table.get_column_by_id(idx))
@@ -42,6 +62,10 @@ void init_cache(GRIN_GRAPH_T* g) {
                              .get());
       } else if (type == gs::PropertyType::kDouble) {
         tmp.emplace_back(std::dynamic_pointer_cast<gs::DoubleColumn>(
+                             table.get_column_by_id(idx))
+                             .get());
+      } else if (type == gs::PropertyType::kFloat) {
+        tmp.emplace_back(std::dynamic_pointer_cast<gs::FloatColumn>(
                              table.get_column_by_id(idx))
                              .get());
       } else {

@@ -18,12 +18,14 @@
 #include "flex/engines/graph_db/database/version_manager.h"
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
+#include "flex/utils/allocators.h"
 
 namespace gs {
 
 InsertTransaction::InsertTransaction(MutablePropertyFragment& graph,
-                                     ArenaAllocator& alloc, WalWriter& logger,
+                                     Allocator& alloc, WalWriter& logger,
                                      VersionManager& vm, timestamp_t timestamp)
+
     : graph_(graph),
       alloc_(alloc),
       logger_(logger),
@@ -53,12 +55,16 @@ bool InsertTransaction::AddVertex(label_t label, const Any& id,
   for (int col_i = 0; col_i != col_num; ++col_i) {
     auto& prop = props[col_i];
     if (prop.type != types[col_i]) {
-      arc_.Resize(arc_size);
-      std::string label_name = graph_.schema().get_vertex_label_name(label);
-      LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
-                 << "] property type not match, expected " << types[col_i]
-                 << ", but got " << prop.type;
-      return false;
+      if (prop.type == PropertyType::kString &&
+          types[col_i] == PropertyType::kStringMap) {
+      } else {
+        arc_.Resize(arc_size);
+        std::string label_name = graph_.schema().get_vertex_label_name(label);
+        LOG(ERROR) << "Vertex [" << label_name << "][" << col_i
+                   << "] property type not match, expected " << types[col_i]
+                   << ", but got " << prop.type;
+        return false;
+      }
     }
     serialize_field(arc_, prop);
   }
@@ -139,7 +145,7 @@ timestamp_t InsertTransaction::timestamp() const { return timestamp_; }
 
 void InsertTransaction::IngestWal(MutablePropertyFragment& graph,
                                   uint32_t timestamp, char* data, size_t length,
-                                  ArenaAllocator& alloc) {
+                                  Allocator& alloc) {
   grape::OutArchive arc;
   arc.SetSlice(data, length);
   while (!arc.Empty()) {

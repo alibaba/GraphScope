@@ -81,18 +81,20 @@ class FlatEdgeSetBuilder {
   Direction direction_;
 };
 
-template <typename VID_T, typename EDATA_T>
+template <typename VID_T, typename LabelT, typename EDATA_T>
 class FlatEdgeSetIter {
  public:
   using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T>;
-  using self_type_t = FlatEdgeSetIter<VID_T, EDATA_T>;
+  using self_type_t = FlatEdgeSetIter<VID_T, LabelT, EDATA_T>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using data_tuple_t = ele_tuple_t;
   FlatEdgeSetIter(const std::vector<ele_tuple_t>& vec, size_t ind,
                   const std::vector<uint8_t>& label_triplet_ind,
+                  const std::vector<std::array<LabelT, 3>>& label_triplet,
                   const std::vector<std::vector<std::string>>& prop_names)
       : vec_(vec),
         ind_(ind),
+        label_triplet_(label_triplet),
         label_triplet_ind_(label_triplet_ind),
         prop_names_(prop_names) {}
 
@@ -101,10 +103,21 @@ class FlatEdgeSetIter {
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(ind_, GetElement());
   }
+  LabelT GetEdgeLabel() const {
+    return label_triplet_[label_triplet_ind_[ind_]][2];
+  }
 
   VID_T GetSrc() const { return std::get<0>(vec_[ind_]); }
 
+  LabelT GetSrcLabel() const {
+    return label_triplet_[label_triplet_ind_[ind_]][0];
+  }
+
   VID_T GetDst() const { return std::get<1>(vec_[ind_]); }
+
+  LabelT GetDstLabel() const {
+    return label_triplet_[label_triplet_ind_[ind_]][1];
+  }
 
   const EDATA_T& GetData() const { return std::get<2>(vec_[ind_]); }
 
@@ -138,6 +151,7 @@ class FlatEdgeSetIter {
  private:
   const std::vector<ele_tuple_t>& vec_;
   const std::vector<uint8_t>& label_triplet_ind_;
+  const std::vector<std::array<LabelT, 3>>& label_triplet_;
   const std::vector<std::vector<std::string>>& prop_names_;
   size_t ind_;
 };
@@ -148,7 +162,7 @@ class FlatEdgeSet {
  public:
   using ele_tuple_t = std::tuple<VID_T, VID_T, EDATA_T>;
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
-  using iterator = FlatEdgeSetIter<VID_T, EDATA_T>;
+  using iterator = FlatEdgeSetIter<VID_T, LabelT, EDATA_T>;
   using self_type_t = FlatEdgeSet<VID_T, LabelT, EDATA_T>;
   using flat_t = self_type_t;
   using data_tuple_t = ele_tuple_t;
@@ -181,11 +195,12 @@ class FlatEdgeSet {
   }
 
   iterator begin() const {
-    return iterator(vec_, 0, label_triplet_ind_, prop_names_);
+    return iterator(vec_, 0, label_triplet_ind_, label_triplet_, prop_names_);
   }
 
   iterator end() const {
-    return iterator(vec_, vec_.size(), label_triplet_ind_, prop_names_);
+    return iterator(vec_, vec_.size(), label_triplet_ind_, label_triplet_,
+                    prop_names_);
   }
 
   std::vector<LabelKey> GetLabelVec() const {
@@ -201,7 +216,7 @@ class FlatEdgeSet {
   template <size_t col_ind, typename... index_ele_tuple_t_>
   flat_t Flat(
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
-    std::vector<std::tuple<VID_T, VID_T, std::tuple<EDATA_T>>> res;
+    std::vector<ele_tuple_t> res;
     std::vector<uint8_t> label_triplet_ind;
     res.reserve(index_ele_tuple.size());
     label_triplet_ind.reserve(index_ele_tuple.size());
@@ -211,8 +226,9 @@ class FlatEdgeSet {
       label_triplet_ind.emplace_back(
           label_triplet_ind_[std::get<0>(cur_ind_ele)]);
     }
-    return FlatEdgeSet(std::move(res), label_triplet_, prop_names_,
-                       std::move(label_triplet_ind), direction_);
+    auto copied_label_triplet = label_triplet_;
+    return FlatEdgeSet(std::move(res), std::move(copied_label_triplet),
+                       prop_names_, std::move(label_triplet_ind), direction_);
   }
 
   void fillBuiltinPropsImpl(std::vector<EDATA_T>& tuples,
@@ -265,9 +281,10 @@ class FlatEdgeSet {
   size_t Size() const { return vec_.size(); }
 
   template <size_t num_labels, typename FILTER_T>
-  std::pair<GeneralVertexSet<VID_T, LabelT>, std::vector<size_t>> GetVertices(
-      VOpt v_opt, const std::array<LabelT, num_labels>& labels,
-      FILTER_T& expr) const {
+  std::pair<GeneralVertexSet<VID_T, LabelT, grape::EmptyType>,
+            std::vector<size_t>>
+  GetVertices(VOpt v_opt, const std::array<LabelT, num_labels>& labels,
+              FILTER_T& expr) const {
     std::vector<offset_t> offsets;
     std::vector<VID_T> vids;
     offsets.reserve(Size());
@@ -375,6 +392,19 @@ class FlatEdgeSet {
                        direction_);
   }
 
+  void SubSetWithIndices(std::vector<size_t>& indices) {
+    std::vector<ele_tuple_t> res_vec;
+    std::vector<uint8_t> res_label_triplet_ind;
+    res_vec.reserve(indices.size());
+    res_label_triplet_ind.reserve(indices.size());
+    for (auto i = 0; i < indices.size(); ++i) {
+      res_vec.emplace_back(vec_[indices[i]]);
+      res_label_triplet_ind.emplace_back(label_triplet_ind_[indices[i]]);
+    }
+    vec_.swap(res_vec);
+    label_triplet_ind_.swap(res_label_triplet_ind);
+  }
+
   void Repeat(std::vector<offset_t>& cur_offset,
               std::vector<offset_t>& repeat_vec) {
     CHECK(cur_offset.size() == repeat_vec.size());
@@ -453,18 +483,27 @@ class SingleLabelEdgeSetIter {
   using index_ele_tuple_t = std::tuple<size_t, ele_tuple_t>;
   using data_tuple_t = ele_tuple_t;
   SingleLabelEdgeSetIter(const std::vector<ele_tuple_t>& vec, size_t ind,
+                         const std::array<LabelT, 3>& label_triplet,
                          const std::vector<std::string>& prop_names)
-      : vec_(vec), ind_(ind), prop_names_(prop_names) {}
+      : vec_(vec),
+        ind_(ind),
+        label_triplet_(label_triplet),
+        prop_names_(prop_names) {}
 
   ele_tuple_t GetElement() const { return vec_[ind_]; }
 
   index_ele_tuple_t GetIndexElement() const {
     return std::make_tuple(ind_, GetElement());
   }
+  LabelT GetEdgeLabel() const { return label_triplet_[2]; }
 
   VID_T GetSrc() const { return std::get<0>(vec_[ind_]); }
 
+  LabelT GetSrcLabel() const { return label_triplet_[0]; }
+
   VID_T GetDst() const { return std::get<1>(vec_[ind_]); }
+
+  LabelT GetDstLabel() const { return label_triplet_[1]; }
 
   const EDATA_T& GetData() const { return std::get<2>(vec_[ind_]); }
 
@@ -495,6 +534,7 @@ class SingleLabelEdgeSetIter {
 
  private:
   const std::vector<ele_tuple_t>& vec_;
+  const std::array<LabelT, 3>& label_triplet_;
   const std::vector<std::string>& prop_names_;
   size_t ind_;
 };
@@ -525,9 +565,13 @@ class SingleLabelEdgeSet {
         prop_names_(prop_names),
         direction_(direction) {}
 
-  iterator begin() const { return iterator(vec_, 0, prop_names_); }
+  iterator begin() const {
+    return iterator(vec_, 0, label_triplet_, prop_names_);
+  }
 
-  iterator end() const { return iterator(vec_, vec_.size(), prop_names_); }
+  iterator end() const {
+    return iterator(vec_, vec_.size(), label_triplet_, prop_names_);
+  }
 
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
@@ -677,6 +721,15 @@ class SingleLabelEdgeSet {
           res_vec.emplace_back(vec_[k]);
         }
       }
+    }
+    vec_.swap(res_vec);
+  }
+
+  void SubSetWithIndices(std::vector<size_t>& indices) {
+    std::vector<ele_tuple_t> res_vec;
+    res_vec.reserve(indices.size());
+    for (auto i = 0; i < indices.size(); ++i) {
+      res_vec.emplace_back(vec_[indices[i]]);
     }
     vec_.swap(res_vec);
   }

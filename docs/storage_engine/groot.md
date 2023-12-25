@@ -61,6 +61,7 @@ You can also check the deployment status and get the connection address by using
 helm status demo
 ```
 
+
 ### Common Configurations
 | Name | Description | Default value |
 | --- | --- | --- |
@@ -70,10 +71,11 @@ helm status demo
 | auth.username | Username. If empty, then there's no authentication | "" |
 | auth.password | Password | "" |
 | store.replicaCount | Number of Store Pod | 2 |
-| frontend.replicaCount | Number of Frontend | 1 |
 | ingestor.replicaCount | Number of Ingestor Pod | 2 |
-| frontend.service.type | Kubernetes Service type of frontend | NodePort |
 | dataset.modern | Load [modern graph](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/) dataset at the start | false |
+| frontend.replicaCount | Number of Frontend | 1 |
+| frontend.service.type | Kubernetes Service type of frontend | NodePort |
+| frontend.query.per.second.limit | the maximum qps can be handled by frontend service | 2147483647 (without limitation) |
 
 
 If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, one Ingestor Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.
@@ -565,6 +567,32 @@ APIs including:
   - Clear properties of vertices or edges by property name
 
 Refer to [RealtimeWrite.java](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java) for examples.
+
+
+### Other features
+
+Groot could enable user to replay realtime write records from a specific offset, or a timestamp, this is useful when you want to restore some records before
+a offline load finished, since offload will overwrite all records.
+
+You can only specify one of `offset` and `timestamp`. The other unused one must be set to -1. If not, `offset` will take precedence.
+
+Example API:
+- Python:
+    ```python
+    import time
+    import graphscope
+    conn = graphscope.conn()
+    current_timestamp = int(time.time() * 1000) - 100 * 60 * 1000
+
+    r = conn.replay_records(-1, current_timestamp)
+    ```
+- Java
+
+    ```java
+    GrootClient client = GrootClientBuilder.build();
+    long timestamp = System.currentTimeMillis();
+    client.replayRecords(-1, timestamp);
+    ```
 
 ## Uninstalling and Restarting
 

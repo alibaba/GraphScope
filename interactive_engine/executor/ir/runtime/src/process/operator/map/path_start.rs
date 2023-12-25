@@ -35,12 +35,12 @@ struct PathStartOperator {
 impl FilterMapFunction<Record, Record> for PathStartOperator {
     fn exec(&self, mut input: Record) -> FnResult<Option<Record>> {
         if let Some(entry) = input.get(self.start_tag) {
-            let v = entry
-                .as_vertex()
-                .ok_or(FnExecError::unexpected_data_error(&format!(
+            let v = entry.as_vertex().ok_or_else(|| {
+                FnExecError::unexpected_data_error(&format!(
                     "tag {:?} does not refer to a graph vertex element in record {:?}",
                     self.start_tag, input
-                )))?;
+                ))
+            })?;
             let graph_path = GraphPath::new(v.clone(), self.path_opt, self.result_opt);
             input.append(graph_path, None);
             Ok(Some(input))

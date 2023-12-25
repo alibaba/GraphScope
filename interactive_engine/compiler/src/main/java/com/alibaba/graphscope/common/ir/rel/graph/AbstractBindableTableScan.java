@@ -29,10 +29,7 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
-import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableIntList;
 import org.apache.commons.lang3.ObjectUtils;
@@ -51,7 +48,7 @@ public abstract class AbstractBindableTableScan extends TableScan {
     // for field trimmer
     protected @Nullable ImmutableIntList project;
 
-    protected final @Nullable RelNode input;
+    protected @Nullable RelNode input;
 
     protected final TableConfig tableConfig;
 
@@ -114,12 +111,23 @@ public abstract class AbstractBindableTableScan extends TableScan {
         return rowType;
     }
 
+    public void setRowType(GraphSchemaType graphType) {
+        rowType =
+                new RelRecordType(
+                        ImmutableList.of(
+                                new RelDataTypeFieldImpl(getAliasName(), getAliasId(), graphType)));
+    }
+
     public String getAliasName() {
         return this.aliasName;
     }
 
     public int getAliasId() {
         return this.aliasId;
+    }
+
+    public TableConfig getTableConfig() {
+        return this.tableConfig;
     }
 
     // toString
@@ -140,6 +148,14 @@ public abstract class AbstractBindableTableScan extends TableScan {
     @Override
     public List<RelNode> getInputs() {
         return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
+    }
+
+    @Override
+    public void replaceInput(int ordinalInParent, RelNode p) {
+        if (this.input == null) return;
+        assert ordinalInParent == 0;
+        this.input = p;
+        this.recomputeDigest();
     }
 
     public void setFilters(ImmutableList<RexNode> filters) {

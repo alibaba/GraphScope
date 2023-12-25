@@ -43,7 +43,7 @@ public class Utils {
         List<RelNode> inputs = Lists.newArrayList(topNode);
         while (!inputs.isEmpty()) {
             RelNode cur = inputs.remove(0);
-            outputFields.addAll(cur.getRowType().getFieldList());
+            outputFields.addAll(0, cur.getRowType().getFieldList());
             if (AliasInference.removeAlias(cur)) {
                 break;
             }
