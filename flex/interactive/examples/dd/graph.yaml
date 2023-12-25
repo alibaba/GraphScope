@@ -1,0 +1,116 @@
+name: dd_graph
+schema:
+  vertex_types:
+    - type_name: User
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: name
+          property_type:
+            primitive_type: DT_STRING
+        - property_name: city
+          property_type:
+            primitive_type: DT_STRING
+        - property_name: role_name
+          property_type:
+            primitive_type: DT_STRING
+        - property_name: active_days
+          property_type:
+            primitive_type: DT_SIGNED_INT32
+        - property_name: sub_industry
+          property_type:
+            primitive_type: DT_STRINGMAP
+      primary_keys:
+        - id
+    - type_name: DingOrg
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: name
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_name: DingEduOrg
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: name
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+    - type_name: DingGroup
+      properties:
+        - property_name: id
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: name
+          property_type:
+            primitive_type: DT_STRING
+      primary_keys:
+        - id
+  edge_types:
+    - type_name: Friend
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: User
+          relation: MANY_TO_MANY
+      properties:
+        - property_name: creationDate
+          property_type:
+            primitive_type: DT_STRING
+    - type_name: ChatInGroup
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: DingGroup
+          relation: MANY_TO_MANY
+      properties:
+        - property_name: creationDate
+          property_type:
+            primitive_type: DT_STRING
+    - type_name: Intimacy
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: User
+          relation: MANY_TO_MANY
+      properties:
+        - property_name: intimacy_score
+          property_type:
+            primitive_type: DT_DOUBLE
+        - property_name: communication_score
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+    - type_name: WorkAt
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: DingOrg
+          relation: MANY_TO_MANY
+      properties:
+        - property_name: joinDate
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: leaveDate
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: roleName
+          property_type:
+            primitive_type: DT_STRING
+    - type_name: StudyAt
+      vertex_type_pair_relations:
+        - source_vertex: User
+          destination_vertex: DingEduOrg
+          relation: MANY_TO_MANY
+      properties:
+        - property_name: joinDate
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: leaveDate
+          property_type:
+            primitive_type: DT_SIGNED_INT64
+        - property_name: profession
+          property_type:
+            primitive_type: DT_STRING
