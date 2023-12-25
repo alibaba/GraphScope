@@ -733,7 +733,7 @@
           },
           "dst": {
             "id": 0,
-            "PLACE"
+            "name": "PLACE"
           }
         },
         {
