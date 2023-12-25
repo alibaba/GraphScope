@@ -80,7 +80,7 @@ impl Inbox {
                 self.buffer.push(msg);
             } else {
                 if let Err(_) = unsafe { (*tx).send(msg) } {
-                    error!("Channel {}, Inbox#push: send data failure;", self.channel_id);
+                    trace!("[Error] Channel {}, Inbox#push: send data failure;", self.channel_id);
                 }
             }
         }

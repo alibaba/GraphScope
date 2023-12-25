@@ -179,45 +179,41 @@ void template_set_tuple_value(results::Collection* collection,
 /////Sink Any
 
 void set_any_to_common_value(const Any& any, common::Value* value) {
-  switch (any.type) {
-  case gs::PropertyType::kBool:
+  if (any.type == PropertyType::Bool()) {
     value->set_boolean(any.value.b);
-    break;
-  case gs::PropertyType::kInt32:
+  } else if (any.type == PropertyType::Int32()) {
     value->set_i32(any.value.i);
-    break;
-  case gs::PropertyType::kInt64:
-    value->set_i64(any.value.l);
-    break;
-  case gs::PropertyType::kUInt32:
-    // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
+  } else if (any.type == PropertyType::UInt32()) {
+    // FIXME(zhanglei): temporarily use i32, fix this after common.proto is
     // changed
     value->set_i32(any.value.ui);
-    break;
-  case gs::PropertyType::kUInt64:
+  } else if (any.type == PropertyType::Int64()) {
+    value->set_i64(any.value.l);
+  } else if (any.type == PropertyType::UInt64()) {
     // FIXME(zhanglei): temporarily use i64, fix this after common.proto is
     // changed
     value->set_i64(any.value.ul);
-    break;
-  case gs::PropertyType::kDate:
-    value->set_i64(any.value.d.milli_second);
-    break;
-  case gs::PropertyType::kString:
-    value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
-    break;
-  case gs::PropertyType::kDouble:
+  } else if (any.type == PropertyType::Double()) {
     value->set_f64(any.value.db);
-    break;
-  case gs::PropertyType::kFloat:
+  } else if (any.type == PropertyType::Float()) {
     value->set_f64(any.value.f);
-    break;
-  default:
-    LOG(WARNING) << "Unsupported type: " << any.type;
-    break;
+  } else if (any.type == PropertyType::Date()) {
+    value->set_i64(any.value.d.milli_second);
+  } else if (any.type == PropertyType::String()) {
+    value->mutable_str()->assign(any.value.s.data(), any.value.s.size());
+  } else {
+    LOG(WARNING) << "Unexpected property type: "
+                 << static_cast<int>(any.type.type_enum);
   }
 }
 
 // set edge value
+void set_edge_property(results::Edge* edge, const std::string& prop_name,
+                       const std::tuple<int32_t>& value) {
+  auto prop = edge->add_properties();
+  prop->mutable_value()->set_i64(std::get<0>(value));
+  prop->mutable_key()->set_name(prop_name);
+}
 
 void set_edge_property(results::Edge* edge, const std::string& prop_name,
                        const std::tuple<int64_t>& value) {
@@ -250,8 +246,17 @@ void set_edge_property(results::Edge* edge, const std::string& prop_name,
   prop->mutable_key()->set_name(prop_name);
 }
 
+// set grape::EmptyType
+void set_edge_property(results::Edge* edge, const std::string& prop_name,
+                       const std::tuple<grape::EmptyType>& value) {
+  // just skip
+}
+
 void set_edge_property(results::Edge* edge, const std::string& prop_name,
                        const Any& value) {
+  if (value.type == PropertyType::kEmpty) {
+    return;
+  }
   auto prop = edge->add_properties();
   set_any_to_common_value(value, prop->mutable_value());
   prop->mutable_key()->set_name(prop_name);
@@ -260,6 +265,8 @@ void set_edge_property(results::Edge* edge, const std::string& prop_name,
 template <typename GRAPH_INTERFACE>
 class SinkOp {
  public:
+  using vid_t = typename GRAPH_INTERFACE::vertex_id_t;
+  using label_id_t = typename GRAPH_INTERFACE::label_id_t;
   // sink current context to results_pb defined in results.proto
   // return results::CollectiveResults
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
@@ -385,7 +392,7 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        vertex->set_id(vids[i]);
+        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         if (bitset.get_bit(i)) {
           label = labels[0];
         } else {
@@ -400,7 +407,7 @@ class SinkOp {
           if (column_ptr) {
             auto new_prop = vertex->add_properties();
             new_prop->mutable_key()->set_name(prop_names[label][j]);
-            set_any_to_common_value(column_ptr->get(i),
+            set_any_to_common_value(column_ptr->get(vids[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -430,8 +437,7 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          vertex->set_id(vids[i]);
-          vertex->mutable_label()->set_id(label);
+          vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
           // set properties.
           auto columns = column_ptrs[label];
@@ -441,7 +447,7 @@ class SinkOp {
             if (column_ptr) {
               auto new_prop = vertex->add_properties();
               new_prop->mutable_key()->set_name(prop_names[label][j]);
-              set_any_to_common_value(column_ptr->get(i),
+              set_any_to_common_value(column_ptr->get(vids[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -476,16 +482,15 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        vertex->set_id(vids[i]);
+        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         vertex->mutable_label()->set_id(label);
         for (auto j = 0; j < column_ptrs.size(); ++j) {
           auto& column_ptr = column_ptrs[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = vertex->add_properties();
-            VLOG(10) << "col:" << j << "PropName: " << prop_names[j];
             new_prop->mutable_key()->set_name(prop_names[j]);
-            set_any_to_common_value(column_ptr->get(i),
+            set_any_to_common_value(column_ptr->get(vids[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -509,7 +514,7 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          vertex->set_id(vids[i]);
+          vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
           for (auto j = 0; j < column_ptrs.size(); ++j) {
             auto& column_ptr = column_ptrs[j];
@@ -517,7 +522,7 @@ class SinkOp {
             if (column_ptr) {
               auto new_prop = vertex->add_properties();
               new_prop->mutable_key()->set_name(prop_names[j]);
-              set_any_to_common_value(column_ptr->get(i),
+              set_any_to_common_value(column_ptr->get(vids[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -746,7 +751,7 @@ class SinkOp {
     auto vertices_vec = vertex_set.GetVertices();
     auto labels_vec = vertex_set.GetLabels();
     auto& bitsets = vertex_set.GetBitsets();
-    CHECK(vertices_vec.size() == labels_vec.size());
+    CHECK(bitsets.size() == labels_vec.size());
     std::vector<std::vector<std::string>> prop_names;
     for (auto i = 0; i < labels_vec.size(); ++i) {
       prop_names.emplace_back(schema.get_vertex_property_names(labels_vec[i]));
@@ -764,6 +769,7 @@ class SinkOp {
     }
 
     label_t label;
+    size_t label_vec_ind;
     if (repeat_offsets.empty()) {
       CHECK(vertex_set.Size() == results_vec.results_size())
           << "size neq " << vertex_set.Size() << " "
@@ -780,25 +786,25 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto mutable_vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        mutable_vertex->set_id(vertices_vec[i]);
-
         // todo: set properties.
         for (auto j = 0; j < bitsets.size(); ++j) {
           if (bitsets[j].get_bit(i)) {
             label = labels_vec[j];
+            label_vec_ind = j;
             break;
           }
         }
         mutable_vertex->mutable_label()->set_id(label);
+        mutable_vertex->set_id(encode_unique_vertex_id(label, vertices_vec[i]));
         // label must be set
-        auto columns = column_ptrs[label];
-        for (auto j = 0; j < columns.size(); ++j) {
-          auto& column_ptr = columns[j];
+        auto cur_column_ptrs = column_ptrs[label_vec_ind];
+        for (auto j = 0; j < cur_column_ptrs.size(); ++j) {
+          auto& column_ptr = cur_column_ptrs[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = mutable_vertex->add_properties();
-            new_prop->mutable_key()->set_name(prop_names[label][j]);
-            set_any_to_common_value(column_ptr->get(i),
+            new_prop->mutable_key()->set_name(prop_names[label_vec_ind][j]);
+            set_any_to_common_value(column_ptr->get(vertices_vec[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -814,23 +820,25 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          mutable_vertex->set_id(vertices_vec[i]);
           for (auto j = 0; j < bitsets.size(); ++j) {
             if (bitsets[j].get_bit(i)) {
               label = labels_vec[j];
+              label_vec_ind = j;
               break;
             }
           }
           mutable_vertex->mutable_label()->set_id(label);
+          mutable_vertex->set_id(
+              encode_unique_vertex_id(label, vertices_vec[i]));
           // label must be set
-          auto columns = column_ptrs[label];
-          for (auto j = 0; j < columns.size(); ++j) {
-            auto& column_ptr = columns[j];
+          auto cur_column_ptrs = column_ptrs[label_vec_ind];
+          for (auto j = 0; j < cur_column_ptrs.size(); ++j) {
+            auto& column_ptr = cur_column_ptrs[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = mutable_vertex->add_properties();
-              new_prop->mutable_key()->set_name(prop_names[label][j]);
-              set_any_to_common_value(column_ptr->get(i),
+              new_prop->mutable_key()->set_name(prop_names[label_vec_ind][j]);
+              set_any_to_common_value(column_ptr->get(vertices_vec[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -853,7 +861,6 @@ class SinkOp {
       auto iter = edge_set.begin();
       auto end_iter = edge_set.end();
       for (auto i = 0; i < results_vec.results_size(); ++i) {
-        // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -864,8 +871,17 @@ class SinkOp {
         auto mutable_edge =
             new_col->mutable_entry()->mutable_element()->mutable_edge();
         CHECK(iter != end_iter);
-        mutable_edge->set_src_id(iter.GetSrc());
-        mutable_edge->set_dst_id(iter.GetDst());
+        auto unique_edge_label = generate_edge_label_id(
+            iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
+        mutable_edge->mutable_label()->set_id(unique_edge_label);
+        mutable_edge->set_id(encode_unique_edge_id(unique_edge_label, i));
+        mutable_edge->set_src_id(
+            encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
+        mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
+        mutable_edge->set_dst_id(
+            encode_unique_vertex_id(iter.GetDstLabel(), iter.GetDst()));
+        mutable_edge->mutable_dst_label()->set_id(iter.GetDstLabel());
+
         auto prop_names = iter.GetPropNames();
         if (prop_names.size() > 0) {
           set_edge_property(mutable_edge, prop_names[0], iter.GetData());
@@ -881,7 +897,6 @@ class SinkOp {
       for (auto i = 0; i < repeat_offsets.size(); ++i) {
         CHECK(iter != end_iter);
         for (auto j = 0; j < repeat_offsets[i]; ++j) {
-          // auto& row = results_vec[i];
           auto row = results_vec.mutable_results(cur_ind++);
           CHECK(row->record().columns_size() == Ind)
               << "record column size: " << row->record().columns_size()
@@ -891,8 +906,17 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_edge =
               new_col->mutable_entry()->mutable_element()->mutable_edge();
-          mutable_edge->set_src_id(iter.GetSrc());
-          mutable_edge->set_dst_id(iter.GetDst());
+          auto unique_edge_label = generate_edge_label_id(
+              iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
+          mutable_edge->mutable_label()->set_id(unique_edge_label);
+          mutable_edge->set_id(
+              encode_unique_edge_id(unique_edge_label, cur_ind - 1));
+          mutable_edge->set_src_id(
+              encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
+          mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
+          mutable_edge->set_dst_id(
+              encode_unique_vertex_id(iter.GetDstLabel(), iter.GetDst()));
+          mutable_edge->mutable_dst_label()->set_id(iter.GetDstLabel());
           auto prop_names = iter.GetPropNames();
           if (prop_names.size() > 0) {
             set_edge_property(mutable_edge, prop_names[0], iter.GetData());
@@ -967,7 +991,38 @@ class SinkOp {
       mutable_path.add_path()->mutable_vertex()->set_id(vertices[i]);
     }
   }
-};  // namespace gs
+
+  static vid_t encode_unique_vertex_id(label_id_t label_id, vid_t vid) {
+    // encode label_id and vid to a unique vid
+    vid_t unique_vid = label_id;
+    static constexpr int num_bits = sizeof(vid_t) * 8 - sizeof(label_id_t) * 8;
+    unique_vid = unique_vid << num_bits;
+    unique_vid = unique_vid | vid;
+    return unique_vid;
+  }
+
+  static int64_t encode_unique_edge_id(label_id_t label_id, size_t index) {
+    // encode label_id and vid to a unique vid
+    int64_t unique_edge_id = label_id;
+    static constexpr int num_bits =
+        sizeof(int64_t) * 8 - sizeof(label_id_t) * 8;
+    unique_edge_id = unique_edge_id << num_bits;
+    unique_edge_id = unique_edge_id | index;
+    return unique_edge_id;
+  }
+
+  static label_id_t generate_edge_label_id(label_id_t src_label_id,
+                                           label_id_t dst_label_id,
+                                           label_id_t edge_label_id) {
+    label_id_t unique_edge_label_id = src_label_id;
+    static constexpr int num_bits = sizeof(label_id_t) * 8;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | dst_label_id;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | edge_label_id;
+    return unique_edge_label_id;
+  }
+};
 }  // namespace gs
 
 #endif  // ENGINES_HQPS_ENGINE_OPERATOR_SINK_H_

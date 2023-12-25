@@ -32,6 +32,8 @@ class ColumnBase {
   virtual void open(const std::string& name, const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
 
+  virtual void open_in_memory(const std::string& name) = 0;
+
   virtual void close() = 0;
 
   virtual void touch(const std::string& filename) = 0;
@@ -77,6 +79,19 @@ class TypedColumn : public ColumnBase {
       extra_size_ = extra_buffer_.size();
     }
   }
+
+  void open_in_memory(const std::string& name) override {
+    if (!name.empty() && std::filesystem::exists(name)) {
+      basic_buffer_.open_in_memory(name);
+      basic_size_ = basic_buffer_.size();
+    } else {
+      basic_buffer_.reset();
+      basic_size_ = 0;
+    }
+    extra_buffer_.reset();
+    extra_size_ = 0;
+  }
+
   void touch(const std::string& filename) override {
     mmap_array<T> tmp;
     tmp.open(filename, false);
@@ -144,7 +159,7 @@ class TypedColumn : public ColumnBase {
     }
   }
 
-  PropertyType type() const override { return AnyConverter<T>::type; }
+  PropertyType type() const override { return AnyConverter<T>::type(); }
 
   void set_value(size_t index, const T& val) {
     assert(index >= basic_size_ && index < basic_size_ + extra_size_);
@@ -197,7 +212,9 @@ using FloatColumn = TypedColumn<float>;
 template <>
 class TypedColumn<std::string_view> : public ColumnBase {
  public:
-  TypedColumn(StorageStrategy strategy, size_t width = 64) : width_(width) {}
+  TypedColumn(StorageStrategy strategy,
+              uint16_t width = PropertyType::STRING_DEFAULT_MAX_LENGTH)
+      : width_(width) {}
   ~TypedColumn() { close(); }
 
   void open(const std::string& name, const std::string& snapshot_dir,
@@ -206,6 +223,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     if (std::filesystem::exists(basic_path + ".items")) {
       basic_buffer_.open(basic_path, true);
       basic_size_ = basic_buffer_.size();
+
     } else {
       basic_size_ = 0;
     }
@@ -215,9 +233,17 @@ class TypedColumn<std::string_view> : public ColumnBase {
     } else {
       extra_buffer_.open(work_dir + "/" + name, false);
       extra_size_ = extra_buffer_.size();
-
       pos_.store(extra_buffer_.data_size());
     }
+  }
+
+  void open_in_memory(const std::string& prefix) override {
+    basic_buffer_.open_in_memory(prefix);
+    basic_size_ = basic_buffer_.size();
+
+    extra_buffer_.reset();
+    extra_size_ = 0;
+    pos_.store(0);
   }
 
   void touch(const std::string& filename) override {
@@ -308,9 +334,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     }
   }
 
-  PropertyType type() const override {
-    return AnyConverter<std::string_view>::type;
-  }
+  PropertyType type() const override { return PropertyType::Varchar(width_); }
 
   void set_value(size_t idx, const std::string_view& val) {
     assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
@@ -357,7 +381,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
   size_t extra_size_;
   std::atomic<size_t> pos_;
   StorageStrategy strategy_;
-  size_t width_;
+  uint16_t width_;
 };
 
 using StringColumn = TypedColumn<std::string_view>;
@@ -370,7 +394,8 @@ class StringMapColumn : public ColumnBase {
   StringMapColumn(StorageStrategy strategy)
       : index_col_(strategy), meta_map_(nullptr) {
     meta_map_ = new LFIndexer<INDEX_T>();
-    meta_map_->init(PropertyType::kString);
+    meta_map_->init(
+        PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH));
   }
 
   ~StringMapColumn() {
@@ -388,6 +413,7 @@ class StringMapColumn : public ColumnBase {
   }
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override;
+  void open_in_memory(const std::string& name) override;
   void dump(const std::string& filename) override;
 
   void touch(const std::string& filename) override {
@@ -442,6 +468,13 @@ void StringMapColumn<INDEX_T>::open(const std::string& name,
                                     const std::string& work_dir) {
   index_col_.open(name, snapshot_dir, work_dir);
   meta_map_->open(name + ".map_meta", snapshot_dir, work_dir);
+  meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
+}
+
+template <typename INDEX_T>
+void StringMapColumn<INDEX_T>::open_in_memory(const std::string& name) {
+  index_col_.open_in_memory(name);
+  meta_map_->open_in_memory(name + ".map_meta");
   meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
 }
 
@@ -513,6 +546,24 @@ class TypedRefColumn : public RefColumnBase {
   size_t extra_size;
 
   StorageStrategy strategy_;
+};
+
+template <>
+class TypedRefColumn<LabelKey> : public RefColumnBase {
+ public:
+  TypedRefColumn(LabelKey label_key) : label_key_(label_key) {}
+
+  ~TypedRefColumn() {}
+
+  inline LabelKey get_view(size_t index) const { return label_key_; }
+
+  Any get(size_t index) const override {
+    LOG(ERROR) << "LabelKeyColumn does not support get() to Any";
+    return Any();
+  }
+
+ private:
+  LabelKey label_key_;
 };
 
 }  // namespace gs

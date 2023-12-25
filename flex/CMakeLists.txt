@@ -13,8 +13,13 @@ project (
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
-option(USE_MMAPALLOC "Whether to use mmap allocator" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
+option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
+
+if (MONITOR_SESSIONS)
+    message("Monitor sessions is enabled")
+    add_definitions(-DMONITOR_SESSIONS)
+endif ()
 
 execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
 string(STRIP ${LINUX_KERNEL_VERSION} LINUX_KERNEL_VERSION)
@@ -28,7 +33,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 set(DEFAULT_BUILD_TYPE "Release")
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -mno-avx512f -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
 set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0")
 
 
@@ -124,11 +129,6 @@ add_subdirectory(engines)
 add_subdirectory(bin)
 if (BUILD_TEST)
    add_subdirectory(tests)
-endif()
-
-if (USE_MMAPALLOC)
-    add_definitions(-DUSE_MMAPALLOC)
-    message("mmap allocator")
 endif()
 
 file(GLOB_RECURSE FILES_NEED_LINT

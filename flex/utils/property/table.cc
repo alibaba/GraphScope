@@ -63,6 +63,20 @@ void Table::open(const std::string& name, const std::string& snapshot_dir,
   buildColumnPtrs();
 }
 
+void Table::open_in_memory(const std::string& name,
+                           const std::string& snapshot_dir,
+                           const std::vector<std::string>& col_name,
+                           const std::vector<PropertyType>& property_types,
+                           const std::vector<StorageStrategy>& strategies_) {
+  initColumns(col_name, property_types, strategies_);
+  for (size_t i = 0; i < columns_.size(); ++i) {
+    columns_[i]->open_in_memory(snapshot_dir + "/" + name + ".col_" +
+                                std::to_string(i));
+  }
+  touched_ = true;
+  buildColumnPtrs();
+}
+
 void Table::touch(const std::string& name, const std::string& work_dir) {
   if (touched_) {
     LOG(ERROR) << "Table " << name << " has been touched before";
@@ -80,7 +94,7 @@ void Table::copy_to_tmp(const std::string& name,
                         const std::string& work_dir) {
   int i = 0;
   for (auto& col : columns_) {
-       col->copy_to_tmp(snapshot_dir + "/" + name + ".col_" + std::to_string(i),
+    col->copy_to_tmp(snapshot_dir + "/" + name + ".col_" + std::to_string(i),
                      work_dir + "/" + name + ".col_" + std::to_string(i));
     ++i;
   }

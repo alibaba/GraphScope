@@ -36,6 +36,7 @@ import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
@@ -362,32 +363,41 @@ public class RelToFfiConverter implements GraphRelShuttle {
             if (operands.isEmpty()) {
                 throw new IllegalArgumentException(
                         "operands in aggregate call should not be empty");
-            } else if (operands.size() > 1) {
-                throw new UnsupportedOperationException(
-                        "aggregate on multiple variables is unsupported yet");
             }
-            FfiAggOpt ffiAggOpt = Utils.ffiAggOpt(groupCalls.get(i));
             int aliasId = fields.get(i + groupKeys.size()).getIndex();
-            FfiAlias.ByValue ffiAlias =
+            Common.NameOrId alias =
                     (aliasId == AliasInference.DEFAULT_ID)
-                            ? ArgUtils.asNoneAlias()
-                            : ArgUtils.asAlias(aliasId);
-            Preconditions.checkArgument(
-                    operands.get(0) instanceof RexGraphVariable,
-                    "each expression in aggregate call should be type %s, but is %s",
-                    RexGraphVariable.class,
-                    operands.get(0).getClass());
-            OuterExpression.Variable var =
-                    operands.get(0)
-                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
-                            .getOperators(0)
-                            .getVar();
+                            ? Common.NameOrId.newBuilder().build()
+                            : Common.NameOrId.newBuilder().setId(aliasId).build();
+            List<OuterExpression.Variable> vars =
+                    operands.stream()
+                            .map(
+                                    k -> {
+                                        Preconditions.checkArgument(
+                                                k instanceof RexGraphVariable,
+                                                "each operand in aggregate call should be type %s,"
+                                                        + " but is %s",
+                                                RexGraphVariable.class,
+                                                k.getClass());
+                                        return k.accept(
+                                                        new RexToProtoConverter(
+                                                                true, isColumnId, this.rexBuilder))
+                                                .getOperators(0)
+                                                .getVar();
+                                    })
+                            .collect(Collectors.toList());
             checkFfiResult(
                     LIB.addGroupbyAggFnPb(
                             ptrGroup,
-                            new FfiPbPointer.ByValue(var.toByteArray()),
-                            ffiAggOpt,
-                            ffiAlias));
+                            new FfiPbPointer.ByValue(
+                                    GraphAlgebra.GroupBy.AggFunc.newBuilder()
+                                            .addAllVars(vars)
+                                            .setAggregate(
+                                                    com.alibaba.graphscope.common.ir.runtime.proto
+                                                            .Utils.protoAggFn(groupCalls.get(i)))
+                                            .setAlias(alias)
+                                            .build()
+                                            .toByteArray())));
         }
         com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
                         aggregate.getRowType(), isColumnId)

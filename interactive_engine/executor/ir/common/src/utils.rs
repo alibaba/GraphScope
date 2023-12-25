@@ -965,6 +965,34 @@ impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::
     }
 }
 
+impl common_pb::Logical {
+    pub fn is_unary(&self) -> bool {
+        match self {
+            common_pb::Logical::Not | common_pb::Logical::Isnull => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_binary(&self) -> bool {
+        match self {
+            common_pb::Logical::Eq
+            | common_pb::Logical::Ne
+            | common_pb::Logical::Lt
+            | common_pb::Logical::Le
+            | common_pb::Logical::Gt
+            | common_pb::Logical::Ge
+            | common_pb::Logical::Within
+            | common_pb::Logical::Without
+            | common_pb::Logical::Startswith
+            | common_pb::Logical::Endswith
+            | common_pb::Logical::And
+            | common_pb::Logical::Or
+            | common_pb::Logical::Regex => true,
+            _ => false,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
