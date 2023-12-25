@@ -21,6 +21,7 @@
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
+#include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
@@ -31,16 +32,25 @@ namespace gs {
 
 class GraphDB;
 class WalWriter;
-class ArenaAllocator;
 
 void put_argment(gs::Encoder& encoder, const query::Argument& argment);
 
 class GraphDBSession {
  public:
-  static constexpr int32_t MAX_RETRY = 4;
-  GraphDBSession(GraphDB& db, ArenaAllocator& alloc, WalWriter& logger,
-                 int thread_id)
-      : db_(db), alloc_(alloc), logger_(logger), thread_id_(thread_id) {
+  static constexpr int32_t MAX_RETRY = 3;
+  GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
+                 const std::string& work_dir, int thread_id)
+      : db_(db),
+        alloc_(alloc),
+        logger_(logger),
+        work_dir_(work_dir),
+        thread_id_(thread_id)
+#ifdef MONITOR_SESSIONS
+        ,
+        eval_duration_(0),
+        query_num_(0)
+#endif
+  {
     for (auto& app : apps_) {
       app = nullptr;
     }
@@ -56,6 +66,8 @@ class GraphDBSession {
   SingleEdgeInsertTransaction GetSingleEdgeInsertTransaction();
 
   UpdateTransaction GetUpdateTransaction();
+
+  bool BatchUpdate(UpdateBatch& batch);
 
   const MutablePropertyFragment& graph() const;
   MutablePropertyFragment& graph();
@@ -81,14 +93,25 @@ class GraphDBSession {
 
   int SessionId() const;
 
+#ifdef MONITOR_SESSIONS
+  double eval_duration() const;
+  int64_t query_num() const;
+#endif
+
  private:
   GraphDB& db_;
-  ArenaAllocator& alloc_;
+  Allocator& alloc_;
   WalWriter& logger_;
+  std::string work_dir_;
   int thread_id_;
 
   std::array<AppWrapper, 256> app_wrappers_;
   std::array<AppBase*, 256> apps_;
+
+#ifdef MONITOR_SESSIONS
+  std::atomic<int64_t> eval_duration_;
+  std::atomic<int64_t> query_num_;
+#endif
 };
 
 }  // namespace gs

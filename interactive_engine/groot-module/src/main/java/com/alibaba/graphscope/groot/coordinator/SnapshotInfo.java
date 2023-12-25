@@ -18,9 +18,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SnapshotInfo implements Comparable<SnapshotInfo> {
 
-    private long snapshotId;
+    private final long snapshotId;
 
-    private long ddlSnapshotId;
+    private final long ddlSnapshotId;
 
     @JsonCreator
     public SnapshotInfo(

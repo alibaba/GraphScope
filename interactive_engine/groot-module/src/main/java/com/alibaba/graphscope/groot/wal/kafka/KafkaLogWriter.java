@@ -36,9 +36,9 @@ public class KafkaLogWriter implements LogWriter {
     private static final Logger logger = LoggerFactory.getLogger(KafkaLogWriter.class);
 
     private static final LogEntrySerializer ser = new LogEntrySerializer();
-    private Producer<LogEntry, LogEntry> producer;
-    private String topicName;
-    private int partitionId;
+    private final Producer<LogEntry, LogEntry> producer;
+    private final String topicName;
+    private final int partitionId;
 
     public KafkaLogWriter(
             String servers, String topicName, int partitionId, Map<String, String> customConfigs) {

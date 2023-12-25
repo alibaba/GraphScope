@@ -45,7 +45,8 @@ class UnTypedEdgeSetIter {
       : src_vertices_(src_v),
         adj_lists_(std::move(adj_lists)),
         vid_ind_(ind),
-        iter_ind_(0) {
+        iter_ind_(0),
+        cur_ind_(0) {
     LOG(INFO) << "UnTypedEdgeSetIter init,size: " << adj_lists_.size()
               << ", vertices size: " << src_vertices_.size();
     if (vid_ind_ != src_vertices_.size()) {
@@ -71,6 +72,8 @@ class UnTypedEdgeSetIter {
     }
   }
 
+  inline LabelT GetEdgeLabel() const { return cur_iter_.GetEdgeLabel(); }
+
   inline VID_T GetSrc() const { return src_vertices_[vid_ind_]; }
   inline VID_T GetDst() const { return cur_iter_.GetDstId(); }
 
@@ -88,10 +91,11 @@ class UnTypedEdgeSetIter {
 
   // Make sure this okay.
   inline index_ele_tuple_t GetIndexElement() const {
-    return std::make_tuple(vid_ind_, GetSrc(), GetDst(), GetData());
+    return std::make_tuple(cur_ind_, GetSrc(), GetDst(), GetData());
   }
 
   inline const self_type_t& operator++() {
+    ++cur_ind_;
     cur_iter_.Next();
     if (cur_iter_.IsValid()) {
       return *this;
@@ -144,6 +148,7 @@ class UnTypedEdgeSetIter {
   }
 
   size_t vid_ind_, iter_ind_;
+  size_t cur_ind_;
   edge_iter_t cur_iter_;
   const std::vector<vid_t>& src_vertices_;
   std::vector<std::vector<edge_iter_t>> adj_lists_;
@@ -199,6 +204,7 @@ class UnTypedEdgeSet {
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     res.reserve(Size());
+    VLOG(1) << "GetLabelVec for UntypedEdgeSet, size: " << Size();
     for (auto i = 0; i < src_vertices_.size(); ++i) {
       auto label_ind = label_indices_[i];
       auto label = src_labels_[label_ind];
@@ -232,7 +238,6 @@ class UnTypedEdgeSet {
   template <typename PropT>
   std::vector<PropT> getProperties(const PropNameArray<PropT>& prop_names,
                                    const std::vector<offset_t>& repeat_array) {
-    //
     std::vector<PropT> tmp_prop_vec;
     size_t sum = 0;
     {
@@ -248,7 +253,7 @@ class UnTypedEdgeSet {
     while (iter != end_iter) {
       auto edata = iter.GetData();
       PropT prop;
-      if (edata.type == TypeConverter<PropT>::property_type) {
+      if (edata.type == TypeConverter<PropT>::property_type()) {
         ConvertAny<PropT>::to(edata, prop);
       }
       CHECK(cur_ind < sum) << "cur: " << cur_ind << ", sum: " << sum;
@@ -273,12 +278,15 @@ class UnTypedEdgeSet {
     auto v_labels = get_v_opt.v_labels_;
     auto v_labels_vec = array_to_vec(v_labels);
     // if v_labels_vec is null or empty, return all vertices
-    if (v_opt == VOpt::Start) {
+    if ((v_opt == VOpt::Start && direction_ == Direction::Out) ||
+        (v_opt == VOpt::End && direction_ == Direction::In)) {
       if (v_labels_vec.empty()) {
         v_labels_vec = src_labels_;
       }
       return getSrcVertices(v_labels_vec);
-    } else if (v_opt == VOpt::End || v_opt == VOpt::Other) {
+    } else if ((v_opt == VOpt::Start && direction_ == Direction::In) ||
+               (v_opt == VOpt::End && direction_ == Direction::Out) ||
+               (v_opt == VOpt::Other)) {
       auto dst_label_set = get_dst_label_set();
       if (v_labels_vec.empty()) {
         v_labels_vec =
@@ -398,6 +406,7 @@ class UnTypedEdgeSet {
             typename std::enable_if<Fs == -1>::type* = nullptr>
   auto ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                               KeyAlias<tag_id, Fs>& key_alias) const {
+    LOG(INFO) << "Project UntypedEdgeSet to FlatEdgeSet";
     using dst_ele_tuple_t = std::tuple<VID_T, VID_T, Any>;
     CHECK(repeat_array.size() == Size());
     size_t real_size = 0;
@@ -423,8 +432,6 @@ class UnTypedEdgeSet {
       auto& cur_edge_iters = edge_iters[i];
       auto src_label_ind = label_indices_[i];
       auto src_label = src_labels_[src_label_ind];
-      auto cur_triplets_vec = edge_label_triplets[src_label_ind];
-      CHECK(cur_triplets_vec.size() == cur_edge_iters.size());
 
       for (auto j = 0; j < cur_edge_iters.size(); ++j) {
         auto& cur_iter = cur_edge_iters[j];
@@ -510,14 +517,17 @@ class UnTypedEdgeSet {
 
   std::vector<std::vector<std::array<LabelT, 3>>> get_edge_triplets() const {
     std::vector<std::vector<std::array<LabelT, 3>>> ret;
-    for (auto iter : adj_lists_) {
-      auto& sub_graphs = iter.second;
+    for (auto src_label_ind = 0; src_label_ind < src_labels_.size();
+         ++src_label_ind) {
+      auto src_label = src_labels_[src_label_ind];
       std::vector<std::array<LabelT, 3>> tmp;
-      for (auto i = 0; i < sub_graphs.size(); ++i) {
-        auto& sub_graph = sub_graphs[i];
-        tmp.emplace_back(std::array<LabelT, 3>({sub_graph.GetSrcLabel(),
-                                                sub_graph.GetDstLabel(),
-                                                sub_graph.GetEdgeLabel()}));
+      if (adj_lists_.find(src_label) != adj_lists_.end()) {
+        auto& sub_graphs = adj_lists_.at(src_label);
+        for (auto& sub_graph : sub_graphs) {
+          tmp.emplace_back(std::array<LabelT, 3>({sub_graph.GetSrcLabel(),
+                                                  sub_graph.GetDstLabel(),
+                                                  sub_graph.GetEdgeLabel()}));
+        }
       }
       ret.emplace_back(std::move(tmp));
     }

@@ -202,6 +202,7 @@ def add_labels_to_graph(graph, loader_op):
     config = {
         types_pb2.GRAPH_TYPE: utils.graph_type_to_attr(graph._graph_type),
         types_pb2.DIRECTED: utils.b_to_attr(graph._directed),
+        types_pb2.EXTEND_LABEL_DATA: utils.i_to_attr(graph._extend_label_data),
         types_pb2.OID_TYPE: utils.s_to_attr(graph._oid_type),
         types_pb2.VID_TYPE: utils.s_to_attr(graph._vid_type),
         types_pb2.GENERATE_EID: utils.b_to_attr(graph._generate_eid),

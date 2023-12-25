@@ -47,18 +47,17 @@ class GraphDB {
 
   static GraphDB& get();
 
-  void Init(const Schema& schema, const LoadingConfig& config,
-            const std::string& data_dir, int thread_num = 1);
-
   /**
    * @brief Load the graph from data directory.
    * @param schema The schema of graph. It should be the same as the schema,
    * except that the procedure enable_lists changes.
    * @param data_dir The directory of graph data.
    * @param thread_num The number of threads for graph db concurrency
+   * @param warmup Whether to warmup the graph db.
    */
   Result<bool> Open(const Schema& schema, const std::string& data_dir,
-                    int32_t thread_num);
+                    int32_t thread_num = 1, bool warmup = false,
+                    bool memory_only = true);
 
   /**
    * @brief Close the current opened graph.
@@ -119,16 +118,19 @@ class GraphDB {
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
-  void ingestWals(const std::vector<std::string>& wals, int thread_num);
+  void ingestWals(const std::vector<std::string>& wals,
+                  const std::string& work_dir, int thread_num);
 
   void initApps(
       const std::unordered_map<std::string, std::pair<std::string, uint8_t>>&
           plugins);
 
-  void openWalAndCreateContexts(const std::filesystem::path& data_dir_path);
+  void openWalAndCreateContexts(const std::string& data_dir_path,
+                                bool memory_only);
 
   friend class GraphDBSession;
 
+  std::string work_dir_;
   SessionLocalContext* contexts_;
 
   int thread_num_;
@@ -138,6 +140,11 @@ class GraphDB {
 
   std::array<std::string, 256> app_paths_;
   std::array<std::shared_ptr<AppFactoryBase>, 256> app_factories_;
+
+#ifdef MONITOR_SESSIONS
+  std::thread monitor_thread_;
+  bool monitor_thread_running_;
+#endif
 };
 
 }  // namespace gs

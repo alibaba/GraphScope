@@ -196,27 +196,52 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
     switch (type) {
     case GRIN_DATATYPE::Bool: {
       auto _col = static_cast<const gs::BoolColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     case GRIN_DATATYPE::Int32: {
       auto _col = static_cast<const gs::IntColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     case GRIN_DATATYPE::Int64: {
       auto _col = static_cast<const gs::LongColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     case GRIN_DATATYPE::UInt32: {
       auto _col = static_cast<const gs::UIntColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     case GRIN_DATATYPE::UInt64: {
       auto _col = static_cast<const gs::ULongColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     case GRIN_DATATYPE::String: {
@@ -230,17 +255,32 @@ GRIN_ROW grin_get_vertex_row(GRIN_GRAPH g, GRIN_VERTEX v) {
     }
     case GRIN_DATATYPE::Timestamp64: {
       auto _col = static_cast<const gs::DateColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     case GRIN_DATATYPE::Double: {
       auto _col = static_cast<const gs::DoubleColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     case GRIN_DATATYPE::Float: {
       auto _col = static_cast<const gs::FloatColumn*>(col);
-      r->emplace_back(_col->buffer().data() + vid);
+      auto basic_size = _col->basic_buffer_size();
+      if (vid < basic_size) {
+        r->emplace_back(_col->basic_buffer().data() + vid);
+      } else {
+        r->emplace_back(_col->extra_buffer().data() + vid - basic_size);
+      }
       break;
     }
     default:

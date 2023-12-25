@@ -152,7 +152,7 @@ public class WriterAgent implements MetricsAgent {
             }
             this.commitExecutor = null;
         }
-        logger.info("WriterAgent stopped");
+        logger.debug("WriterAgent stopped");
     }
 
     /**
@@ -226,6 +226,8 @@ public class WriterAgent implements MetricsAgent {
                 int queueId = storeDataBatch.getQueueId();
                 long offset = storeDataBatch.getOffset();
                 this.consumedQueueOffsets.set(queueId, offset);
+            } catch (InterruptedException e) {
+                logger.error("processBatches interrupted");
             } catch (Exception e) {
                 logger.error("error in processBatches, ignore", e);
             }

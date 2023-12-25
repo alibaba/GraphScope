@@ -49,16 +49,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue appendScanOperator(
             Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
 
-    // set primary index
-    Pointer initIndexPredicate();
-
-    FfiResult.ByValue andEquivPredicate(
-            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
-
-    FfiResult.ByValue orEquivPredicate(
-            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
-
-    FfiResult.ByValue addScanIndexPredicate(Pointer scan, Pointer predicate);
+    FfiResult.ByValue addIndexPredicatePb(Pointer scan, FfiPbPointer.ByValue pbPointer);
 
     FfiResult.ByValue setScanParams(Pointer scan, Pointer params);
 
@@ -136,11 +127,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addGroupbyKeyPbAlias(
             Pointer groupBy, FfiPbPointer.ByValue pbPointer, FfiAlias.ByValue alias);
 
-    FfiResult.ByValue addGroupbyAggFnPb(
-            Pointer group,
-            FfiPbPointer.ByValue pbPointer,
-            FfiAggOpt aggOpt,
-            FfiAlias.ByValue alias);
+    FfiResult.ByValue addGroupbyAggFnPb(Pointer group, FfiPbPointer.ByValue pbPointer);
 
     FfiResult.ByValue appendGroupbyOperator(
             Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);

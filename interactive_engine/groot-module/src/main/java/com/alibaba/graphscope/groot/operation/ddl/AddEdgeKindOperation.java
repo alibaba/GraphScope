@@ -22,10 +22,10 @@ import com.google.protobuf.ByteString;
 
 public class AddEdgeKindOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private EdgeKind edgeKind;
-    private long tableIdx;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final EdgeKind edgeKind;
+    private final long tableIdx;
 
     public AddEdgeKindOperation(
             int partitionId, long schemaVersion, EdgeKind edgeKind, long tableIdx) {

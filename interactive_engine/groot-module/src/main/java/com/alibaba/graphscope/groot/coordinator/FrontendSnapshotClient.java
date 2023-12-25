@@ -50,7 +50,7 @@ public class FrontendSnapshotClient extends RpcClient {
         }
         stub.advanceQuerySnapshot(
                 builder.build(),
-                new StreamObserver<AdvanceQuerySnapshotResponse>() {
+                new StreamObserver<>() {
                     @Override
                     public void onNext(AdvanceQuerySnapshotResponse response) {
                         long previousSnapshotId = response.getPreviousSnapshotId();

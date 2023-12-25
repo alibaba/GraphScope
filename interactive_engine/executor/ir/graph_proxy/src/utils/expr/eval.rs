@@ -1100,23 +1100,27 @@ mod tests {
         // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
         let ctxt = prepare_context();
         let cases: Vec<&str> = vec![
-            "@0.hobbies isNull",                 // false
-            "!(@0.hobbies isNull)",              // true
-            "@1.hobbies isNull",                 // true
-            "!(@1.hobbies isNull)",              // false
-            "true isNull",                       // false
-            "false isNull",                      // false
-            "!true isNull",                      // i.e., !(true isNull), false
-            "@1.hobbies isNull && @1.age == 26", // true
+            "isNull @0.hobbies",                 // false
+            "isNull (@0.hobbies)",               // false
+            "!(isNull @0.hobbies)",              // true
+            "isNull @1.hobbies",                 // true
+            "isNull (@1.hobbies)",               // true
+            "!(isNull @1.hobbies)",              // false
+            "isNull true",                       // false
+            "isNull false",                      // false
+            "!(isNull true)",                    // true
+            "isNull @1.hobbies && @1.age == 26", // true
         ];
         let expected: Vec<Object> = vec![
             object!(false),
+            object!(false),
             object!(true),
             object!(true),
+            object!(true),
             object!(false),
             object!(false),
             object!(false),
-            object!(false),
+            object!(true),
             object!(true),
         ];
 

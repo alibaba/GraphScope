@@ -298,6 +298,7 @@ class ProjectOp {
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
       const std::vector<size_t>& repeat_array) {
+    LOG(INFO) << "[Single project on labelKey]" << demangle(node);
     auto size = node.Size();
     auto label_vec = node.GetLabelVec();
     std::vector<T> res_prop_vec;

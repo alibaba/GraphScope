@@ -15,17 +15,26 @@
  */
 
 #include "flex/storages/rt_mutable_graph/loader/basic_fragment_loader.h"
+#include "flex/storages/rt_mutable_graph/file_names.h"
 
 namespace gs {
 
-BasicFragmentLoader::BasicFragmentLoader(const Schema& schema)
+BasicFragmentLoader::BasicFragmentLoader(const Schema& schema,
+                                         const std::string& prefix)
     : schema_(schema),
+      work_dir_(prefix),
       vertex_label_num_(schema_.vertex_label_num()),
       edge_label_num_(schema_.edge_label_num()) {
   vertex_data_.resize(vertex_label_num_);
   ie_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
   oe_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_, NULL);
+  dual_csr_list_.resize(vertex_label_num_ * vertex_label_num_ * edge_label_num_,
+                        NULL);
   lf_indexers_.resize(vertex_label_num_);
+  std::filesystem::create_directories(runtime_dir(prefix));
+  std::filesystem::create_directories(snapshot_dir(prefix, 0));
+  std::filesystem::create_directories(wal_dir(prefix));
+  std::filesystem::create_directories(tmp_dir(prefix));
 
   init_vertex_data();
 }
@@ -36,28 +45,52 @@ void BasicFragmentLoader::init_vertex_data() {
     auto label_name = schema_.get_vertex_label_name(v_label);
     auto& property_types = schema_.get_vertex_properties(v_label);
     auto& property_names = schema_.get_vertex_property_names(v_label);
-    v_data.init(property_names, property_types,
-                schema_.get_vertex_storage_strategies(label_name),
-                schema_.get_max_vnum(label_name));
+    v_data.init(vertex_table_prefix(label_name), tmp_dir(work_dir_),
+                property_names, property_types,
+                schema_.get_vertex_storage_strategies(label_name));
+    v_data.resize(schema_.get_max_vnum(label_name));
   }
   VLOG(10) << "Finish init vertex data";
 }
 
-void BasicFragmentLoader::LoadFragment(MutablePropertyFragment& res_fragment) {
-  CHECK(res_fragment.ie_.empty()) << "Fragment is not empty";
-  CHECK(res_fragment.oe_.empty()) << "Fragment is not empty";
-  CHECK(res_fragment.vertex_data_.empty()) << "Fragment is not empty";
+void BasicFragmentLoader::LoadFragment() {
+  std::string schema_filename = schema_path(work_dir_);
+  auto io_adaptor = std::unique_ptr<grape::LocalIOAdaptor>(
+      new grape::LocalIOAdaptor(schema_filename));
+  io_adaptor->Open("wb");
+  schema_.Serialize(io_adaptor);
+  io_adaptor->Close();
 
-  res_fragment.schema_ = schema_;
-  res_fragment.vertex_label_num_ = vertex_label_num_;
-  res_fragment.edge_label_num_ = edge_label_num_;
-  res_fragment.ie_.swap(ie_);
-  res_fragment.oe_.swap(oe_);
-  res_fragment.vertex_data_.swap(vertex_data_);
-  res_fragment.lf_indexers_.swap(lf_indexers_);
-  VLOG(10) << "Finish Building Fragment, " << res_fragment.vertex_label_num_
-           << " vertices labels, " << res_fragment.edge_label_num_
-           << " edges labels";
+  for (label_t v_label = 0; v_label < vertex_label_num_; v_label++) {
+    auto& v_data = vertex_data_[v_label];
+
+    auto label_name = schema_.get_vertex_label_name(v_label);
+    v_data.resize(lf_indexers_[v_label].size());
+    v_data.dump(vertex_table_prefix(label_name), snapshot_dir(work_dir_, 0));
+  }
+
+  for (size_t src_label = 0; src_label < vertex_label_num_; src_label++) {
+    std::string src_label_name = schema_.get_vertex_label_name(src_label);
+    for (size_t dst_label = 0; dst_label < vertex_label_num_; dst_label++) {
+      std::string dst_label_name = schema_.get_vertex_label_name(dst_label);
+      for (size_t edge_label = 0; edge_label < edge_label_num_; edge_label++) {
+        std::string edge_label_name = schema_.get_edge_label_name(edge_label);
+        size_t index = src_label * vertex_label_num_ * edge_label_num_ +
+                       dst_label * edge_label_num_ + edge_label;
+        if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
+          if (dual_csr_list_[index] != NULL) {
+            dual_csr_list_[index]->Dump(
+                oe_prefix(src_label_name, dst_label_name, edge_label_name),
+                ie_prefix(src_label_name, dst_label_name, edge_label_name),
+                edata_prefix(src_label_name, dst_label_name, edge_label_name),
+                snapshot_dir(work_dir_, 0));
+          }
+        }
+      }
+    }
+  }
+
+  set_snapshot_version(work_dir_, 0);
 }
 
 void BasicFragmentLoader::AddVertexBatch(

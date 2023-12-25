@@ -13,9 +13,13 @@
  * limitations under the License.
  */
 
-#include "flex/engines/graph_db/database/graph_db_session.h"
+#ifdef MONITOR_SESSIONS
+#include <chrono>
+#endif
+
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/utils/app_utils.h"
 
 namespace gs {
@@ -67,8 +71,13 @@ SingleEdgeInsertTransaction GraphDBSession::GetSingleEdgeInsertTransaction() {
 
 UpdateTransaction GraphDBSession::GetUpdateTransaction() {
   uint32_t ts = db_.version_manager_.acquire_update_timestamp();
-  return UpdateTransaction(db_.graph_, alloc_, logger_, db_.version_manager_,
-                           ts);
+  return UpdateTransaction(db_.graph_, alloc_, work_dir_, logger_,
+                           db_.version_manager_, ts);
+}
+
+bool GraphDBSession::BatchUpdate(UpdateBatch& batch) {
+  GetUpdateTransaction().batch_commit(batch);
+  return true;
 }
 
 const MutablePropertyFragment& GraphDBSession::graph() const {
@@ -118,6 +127,9 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
 #define likely(x) __builtin_expect(!!(x), 1)
 
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
+#ifdef MONITOR_SESSIONS
+  const auto start = std::chrono::high_resolution_clock::now();
+#endif
   uint8_t type = input.back();
   const char* str_data = input.data();
   size_t str_len = input.size() - 1;
@@ -147,17 +159,33 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
 
   for (auto i = 0; i < MAX_RETRY; ++i) {
     if (app->Query(decoder, encoder)) {
+#ifdef MONITOR_SESSIONS
+      const auto end = std::chrono::high_resolution_clock::now();
+      eval_duration_.fetch_add(
+          std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+              .count());
+      ++query_num_;
+#endif
       return result_buffer;
     }
 
     LOG(INFO) << "[Query-" << (int) type << "][Thread-" << thread_id_
               << "] retry - " << i << " / " << MAX_RETRY;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    if (i + 1 < MAX_RETRY) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
 
     decoder.reset(str_data, str_len);
     result_buffer.clear();
   }
 
+#ifdef MONITOR_SESSIONS
+  const auto end = std::chrono::high_resolution_clock::now();
+  eval_duration_.fetch_add(
+      std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+          .count());
+  ++query_num_;
+#endif
   return Result<std::vector<char>>(
       StatusCode::QueryFailed,
       "Query failed for procedure id:" + std::to_string((int) type),
@@ -288,5 +316,13 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
 void GraphDBSession::GetAppInfo(Encoder& result) { db_.GetAppInfo(result); }
 
 int GraphDBSession::SessionId() const { return thread_id_; }
+
+#ifdef MONITOR_SESSIONS
+double GraphDBSession::eval_duration() const {
+  return static_cast<double>(eval_duration_.load()) / 1000000.0;
+}
+
+int64_t GraphDBSession::query_num() const { return query_num_.load(); }
+#endif
 
 }  // namespace gs

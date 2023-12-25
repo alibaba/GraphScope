@@ -36,7 +36,6 @@
 namespace gs {
 
 // demangle a c++ variable's class name
-
 template <typename T>
 std::string demangle(const T& t) {
   int status;
@@ -197,6 +196,18 @@ template <typename T, size_t N,
           typename std::enable_if<std::is_pod_v<T> && (N > 1)>::type* = nullptr>
 bool operator>(const WithProxy<T>& lhs, const std::array<T, N>& rhs) {
   return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_);
+}
+
+template <size_t N, typename std::enable_if<(N > 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_.label_id);
+}
+
+template <size_t N, typename std::enable_if<(N == 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return false;
 }
 
 template <
@@ -367,6 +378,27 @@ inline auto make_offset_vector(size_t m, size_t n) {
   return offsets;
 }
 
+template <int I, int... Is>
+struct FirstElement {
+  static constexpr int value = I;
+};
+
+// Create a tuple of const references to the elements of a tuple.
+template <typename... Args>
+auto make_tuple_of_const_refs(const std::tuple<Args...>& t) {
+  return std::apply(
+      [](const Args&... args) { return std::make_tuple(std::cref(args)...); },
+      t);
+}
+
+template <typename T>
+struct ConstRefRemoveHelper;
+
+template <typename... T>
+struct ConstRefRemoveHelper<std::tuple<T...>> {
+  using type = std::tuple<std::remove_const_t<std::remove_reference_t<T>>...>;
+};
+
 // first n ele in tuple type
 
 template <int n, typename In, typename... Out>
@@ -416,6 +448,16 @@ constexpr auto tuple_slice(T&& t) {
                 "slice index out of bounds");
   return tuple_slice_impl<l>(std::forward<T>(t),
                              std::make_index_sequence<r - l>{});
+}
+
+// [l, tuple_size - 1]
+template <size_t l, typename T>
+constexpr auto tuple_slice(T&& t) {
+  static_assert(std::tuple_size<std::decay_t<T>>::value > l,
+                "slice index out of bounds");
+  return tuple_slice_impl<l>(
+      std::forward<T>(t),
+      std::make_index_sequence<std::tuple_size<std::decay_t<T>>::value - l>{});
 }
 
 template <int Is, typename... T,

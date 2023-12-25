@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
+import com.alibaba.graphscope.common.ir.rel.PushFilterVisitor;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
@@ -232,6 +233,8 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public TableConfig getTableConfig(LabelConfig labelConfig, GraphOpt.Source opt) {
+        Preconditions.checkArgument(
+                relOptSchema != null, "cannot create table config from the 'null' schema");
         List<RelOptTable> relOptTables = new ArrayList<>();
         if (!labelConfig.isAll()) {
             ObjectUtils.requireNonEmpty(labelConfig.getLabels());
@@ -744,36 +747,54 @@ public class GraphBuilder extends RelBuilder {
             // check property existence for specific label
             condition.accept(propertyChecker);
         }
-        GraphBuilder builder = (GraphBuilder) super.filter(ImmutableSet.of(), conditions);
+        super.filter(ImmutableSet.of(), conditions);
         // fuse filter with the previous table scan if meets the conditions
-        Filter filter;
-        AbstractBindableTableScan tableScan;
-        if ((filter = topFilter()) != null && (tableScan = inputTableScan(filter)) != null) {
+        Filter filter = topFilter();
+        if (filter != null) {
+            GraphBuilder builder =
+                    (GraphBuilder)
+                            GraphPlanner.relBuilderFactory.create(getCluster(), getRelOptSchema());
             RexNode condition = filter.getCondition();
-            List<Integer> aliasIds =
-                    condition.accept(
-                            new RexVariableAliasCollector<>(true, RexGraphVariable::getAliasId));
-            // fuze all conditions into table scan
-            if (!aliasIds.isEmpty()
-                    && ImmutableList.of(AliasInference.DEFAULT_ID, tableScan.getAliasId())
-                            .containsAll(aliasIds)) {
-                condition =
+            RelNode input = !filter.getInputs().isEmpty() ? filter.getInput(0) : null;
+            if (input instanceof AbstractBindableTableScan) {
+                AbstractBindableTableScan tableScan = (AbstractBindableTableScan) input;
+                List<Integer> aliasIds =
                         condition.accept(
-                                new RexVariableAliasConverter(
-                                        true,
-                                        this,
-                                        AliasInference.SIMPLE_NAME(AliasInference.DEFAULT_NAME),
-                                        AliasInference.DEFAULT_ID));
-                // add condition into table scan
-                // pop the filter from the inner stack
-                replaceTop(fuseFilters(tableScan, condition));
+                                new RexVariableAliasCollector<>(
+                                        true, RexGraphVariable::getAliasId));
+                // fuze all conditions into table scan
+                if (!aliasIds.isEmpty()
+                        && ImmutableList.of(AliasInference.DEFAULT_ID, tableScan.getAliasId())
+                                .containsAll(aliasIds)) {
+                    condition =
+                            condition.accept(
+                                    new RexVariableAliasConverter(
+                                            true,
+                                            this,
+                                            AliasInference.SIMPLE_NAME(AliasInference.DEFAULT_NAME),
+                                            AliasInference.DEFAULT_ID));
+                    // add condition into table scan
+                    // pop the filter from the inner stack
+                    replaceTop(fuseFilters(tableScan, condition, builder));
+                }
+            } else if (input instanceof AbstractLogicalMatch) {
+                List<RexNode> extraFilters = Lists.newArrayList();
+                AbstractLogicalMatch match =
+                        fuseFilters((AbstractLogicalMatch) input, condition, extraFilters, builder);
+                if (!match.equals(input)) {
+                    if (extraFilters.isEmpty()) {
+                        replaceTop(match);
+                    } else {
+                        replaceTop(builder.push(match).filter(extraFilters).build());
+                    }
+                }
             }
         }
-        return builder;
+        return this;
     }
 
     private AbstractBindableTableScan fuseFilters(
-            AbstractBindableTableScan tableScan, RexNode condition) {
+            AbstractBindableTableScan tableScan, RexNode condition, GraphBuilder builder) {
         List<Comparable> labelValues = Lists.newArrayList();
         List<RexNode> uniqueKeyFilters = Lists.newArrayList();
         List<RexNode> extraFilters = Lists.newArrayList();
@@ -792,10 +813,6 @@ public class GraphBuilder extends RelBuilder {
                     "cannot find common labels between values= " + labelValues + " and label=",
                     labelType);
             if (labelsToKeep.size() < labelType.getLabelsEntry().size()) {
-                GraphBuilder builder =
-                        (GraphBuilder)
-                                GraphPlanner.relBuilderFactory.create(
-                                        getCluster(), getRelOptSchema());
                 LabelConfig newLabelConfig = new LabelConfig(false);
                 labelsToKeep.forEach(k -> newLabelConfig.addLabel(k));
                 if (tableScan instanceof GraphLogicalSource) {
@@ -862,6 +879,37 @@ public class GraphBuilder extends RelBuilder {
                             RexUtil.composeConjunction(this.getRexBuilder(), extraFilters)));
         }
         return tableScan;
+    }
+
+    /**
+     * fuse label filters into the {@code match} if possible
+     * @param match
+     * @param condition
+     * @param extraFilters
+     * @param builder
+     * @return
+     */
+    private AbstractLogicalMatch fuseFilters(
+            AbstractLogicalMatch match,
+            RexNode condition,
+            List<RexNode> extraFilters,
+            GraphBuilder builder) {
+        List<RexNode> labelFilters = Lists.newArrayList();
+        for (RexNode conjunction : RelOptUtil.conjunctions(condition)) {
+            if (isLabelEqualFilter(conjunction) != null) {
+                labelFilters.add(conjunction);
+            } else {
+                extraFilters.add(conjunction);
+            }
+        }
+        for (RexNode labelFilter : labelFilters) {
+            PushFilterVisitor visitor = new PushFilterVisitor(builder, labelFilter);
+            match = (AbstractLogicalMatch) match.accept(visitor);
+            if (!visitor.isPushed()) {
+                extraFilters.add(labelFilter);
+            }
+        }
+        return match;
     }
 
     private void classifyFilters(

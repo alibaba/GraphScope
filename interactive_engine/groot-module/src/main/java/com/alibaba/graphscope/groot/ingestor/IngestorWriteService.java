@@ -14,15 +14,16 @@
 package com.alibaba.graphscope.groot.ingestor;
 
 import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.graphscope.proto.groot.IngestorWriteGrpc;
-import com.alibaba.graphscope.proto.groot.WriteIngestorRequest;
-import com.alibaba.graphscope.proto.groot.WriteIngestorResponse;
+import com.alibaba.graphscope.proto.groot.*;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+
+import java.util.List;
 
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {
 
-    private IngestService ingestService;
+    private final IngestService ingestService;
 
     public IngestorWriteService(IngestService ingestService) {
         this.ingestService = ingestService;
@@ -58,5 +59,19 @@ public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBas
         } catch (Exception e) {
             responseObserver.onError(e);
         }
+    }
+
+    @Override
+    public void replayWAL(
+            ReplayWALRequest request, StreamObserver<ReplayWALResponse> responseObserver) {
+        try {
+            List<Long> ids =
+                    ingestService.replayDMLRecordsFrom(request.getOffset(), request.getTimestamp());
+            responseObserver.onNext(ReplayWALResponse.newBuilder().addAllSnapshotId(ids).build());
+        } catch (Exception e) {
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+        }
+        responseObserver.onCompleted();
     }
 }

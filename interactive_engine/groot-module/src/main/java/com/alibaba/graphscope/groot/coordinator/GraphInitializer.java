@@ -31,11 +31,11 @@ import java.util.List;
 
 public class GraphInitializer {
 
-    private Configs configs;
-    private CuratorFramework curator;
-    private MetaStore metaStore;
-    private LogService logService;
-    private ObjectMapper objectMapper;
+    private final Configs configs;
+    private final CuratorFramework curator;
+    private final MetaStore metaStore;
+    private final LogService logService;
+    private final ObjectMapper objectMapper;
 
     public GraphInitializer(
             Configs configs, CuratorFramework curator, MetaStore metaStore, LogService logService) {
@@ -67,10 +67,9 @@ public class GraphInitializer {
         if (CommonConfig.DISCOVERY_MODE.get(this.configs).equalsIgnoreCase("zookeeper")) {
             String zkRoot = ZkConfig.ZK_BASE_PATH.get(configs);
             Stat stat = this.curator.checkExists().forPath(zkRoot);
-            if (stat != null) {
-                return;
+            if (stat == null) {
+                this.curator.create().creatingParentsIfNeeded().forPath(zkRoot);
             }
-            this.curator.create().creatingParentsIfNeeded().forPath(zkRoot);
         }
     }
 

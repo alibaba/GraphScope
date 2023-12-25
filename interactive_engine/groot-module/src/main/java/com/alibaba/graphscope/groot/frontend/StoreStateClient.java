@@ -20,7 +20,7 @@ import io.grpc.ManagedChannel;
 
 public class StoreStateClient extends RpcClient {
 
-    private StateServiceGrpc.StateServiceBlockingStub stub;
+    private final StateServiceGrpc.StateServiceBlockingStub stub;
 
     public StoreStateClient(ManagedChannel channel) {
         super(channel);

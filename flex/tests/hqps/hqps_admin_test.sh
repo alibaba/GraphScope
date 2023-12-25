@@ -100,7 +100,7 @@ start_engine_service(){
     info "Start engine service success"
 }
 
-run_movie_test(){
+run_admin_test(){
   echo "run movie test"
   pushd ${FLEX_HOME}/build/
   cmd="GLOG_v=10 ./tests/hqps/admin_http_test ${ADMIN_PORT} ${QUERY_PORT} ${GRAPH_SCHEMA_YAML} ${GRAPH_BULK_LOAD_YAML} ${RAW_CSV_FILES} ${TEST_CYPHER_QUERIES}"
@@ -112,7 +112,7 @@ run_movie_test(){
 
 kill_service
 start_engine_service
-run_movie_test
+run_admin_test
 kill_service
 
 

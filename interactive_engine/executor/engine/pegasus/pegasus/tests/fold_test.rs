@@ -15,7 +15,7 @@
 //
 
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Count, Filter, Fold, FoldByKey, KeyBy, Limit, Map, Sink, SortBy,
+    Collect, CorrelatedSubTask, Count, Filter, Fold, FoldByKey, HasAny, KeyBy, Limit, Map, Sink, SortBy,
     SortLimitBy,
 };
 use pegasus::JobConf;
@@ -99,6 +99,37 @@ fn count_test_03() {
     }
 
     assert_eq!(1, count);
+}
+
+#[test]
+fn count_test_04() {
+    let mut conf = JobConf::new("count_test_03");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        move |input, output| {
+            input
+                .input_from(0..10u64)?
+                .apply(|sub| {
+                    sub.repartition(move |id| Ok(*id % 2))
+                        .flat_map(|i| Ok(0..i))?
+                        .repartition(move |id| Ok(*id % 2))
+                        .count()?
+                        .into_stream()?
+                        .map(|i| Ok(i))?
+                        .any()
+                })?
+                .filter_map(|i| if i.1 { Ok(Some(i.0)) } else { Ok(None) })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure:");
+
+    let mut count = 0;
+    while let Some(Ok(d)) = result.next() {
+        count += d;
+    }
+
+    assert_eq!(90, count);
 }
 
 #[test]

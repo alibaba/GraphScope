@@ -15,6 +15,7 @@
 set -e
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 FLEX_HOME=${SCRIPT_DIR}/../../
+BULK_LOADER=${FLEX_HOME}/build/bin/bulk_loader
 SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
@@ -33,7 +34,7 @@ if [ ! -d ${INTERACTIVE_WORKSPACE} ]; then
   exit 1
 fi
 # check graph is ldbc or movies
-if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ]; then
+if [ ${GRAPH_NAME} != "ldbc" ] && [ ${GRAPH_NAME} != "movies" ] && [ ${GRAPH_NAME} != "graph_algo" ]; then
   echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies or ldbc"
   exit 1
 fi
@@ -80,16 +81,21 @@ trap kill_service EXIT
 
 # start engine service and load ldbc graph
 start_engine_service(){
+    # suppose graph has been loaded, check ${GRAPH_CSR_DATA_DIR} exists
+    if [ ! -d ${GRAPH_CSR_DATA_DIR} ]; then
+        err "GRAPH_CSR_DATA_DIR not found"
+        exit 1
+    fi
+
     #check SERVER_BIN exists
     if [ ! -f ${SERVER_BIN} ]; then
         err "SERVER_BIN not found"
         exit 1
     fi
-
     cmd="${SERVER_BIN} -c ${ENGINE_CONFIG_PATH} -g ${GRAPH_SCHEMA_YAML} "
     cmd="${cmd} --data-path ${GRAPH_CSR_DATA_DIR} "
-
-    echo "Start engine service with command: ${cmd}"
+    
+    info "Start engine service with command: ${cmd}"
     ${cmd} &
     sleep 5
     #check interactive_server is running, if not, exit
@@ -142,6 +148,16 @@ run_movie_test(){
   popd
 }
 
+run_graph_algo_test(){
+  echo "run graph_algo test"
+  pushd ${GIE_HOME}/compiler
+  cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.graphAlgo.GraphAlgoTest"
+  echo "Start graph_algo test: ${cmd}"
+  ${cmd}
+  info "Finish graph_algo test"
+  popd
+}
+
 kill_service
 start_engine_service
 start_compiler_service
@@ -149,12 +165,12 @@ start_compiler_service
 if [ "${GRAPH_NAME}" == "ldbc" ]; then
   run_ldbc_test
   run_simple_test
-else
+elif [ "${GRAPH_NAME}" == "movies" ]; then
   run_movie_test
+elif [ "${GRAPH_NAME}" == "graph_algo" ]; then
+  run_graph_algo_test
+else
+  echo "GRAPH_NAME: ${GRAPH_NAME} not supported, use movies, ldbc or graph_algo"
 fi
 
 kill_service
-
-
-
-

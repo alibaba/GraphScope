@@ -53,6 +53,14 @@ class HQPSService {
 
   void set_exit_state();
 
+  // Actually stop the actors, the service is still on, but returns error code
+  // for each request.
+  seastar::future<> stop_query_actors();
+
+  // Actually create new actors with a different scope_id,
+  // Because we don't know whether the previous scope_id can be reused.
+  void start_query_actors();
+
  private:
   HQPSService() = default;
 

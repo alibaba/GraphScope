@@ -14,7 +14,7 @@ public class IdAllocateService extends IdAllocateGrpc.IdAllocateImplBase {
 
     private static final Logger logger = LoggerFactory.getLogger(IdAllocateService.class);
 
-    private IdAllocator idAllocator;
+    private final IdAllocator idAllocator;
 
     public IdAllocateService(IdAllocator idAllocator) {
         this.idAllocator = idAllocator;

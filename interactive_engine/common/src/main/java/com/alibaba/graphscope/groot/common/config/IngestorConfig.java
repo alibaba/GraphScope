@@ -15,13 +15,13 @@ package com.alibaba.graphscope.groot.common.config;
 
 public class IngestorConfig {
     public static final Config<Integer> INGESTOR_QUEUE_BUFFER_MAX_COUNT =
-            Config.intConfig("ingestor.queue.buffer.max.count", 1024);
+            Config.intConfig("ingestor.queue.buffer.max.count", 102400);
 
     public static final Config<Integer> INGESTOR_SENDER_BUFFER_MAX_COUNT =
-            Config.intConfig("ingestor.sender.buffer.max.count", 1024);
+            Config.intConfig("ingestor.sender.buffer.max.count", 102400);
 
     public static final Config<Integer> INGESTOR_SENDER_OPERATION_MAX_COUNT =
-            Config.intConfig("ingestor.sender.operation.max.count", 8192);
+            Config.intConfig("ingestor.sender.operation.max.count", 102400);
 
     public static final Config<Long> INGESTOR_CHECK_PROCESSOR_INTERVAL_MS =
             Config.longConfig("ingestor.check.processor.interval.ms", 3000L);

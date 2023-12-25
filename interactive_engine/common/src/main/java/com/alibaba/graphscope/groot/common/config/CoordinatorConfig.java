@@ -26,7 +26,7 @@ public class CoordinatorConfig {
             Config.boolConfig("log.recycle.enable", true);
 
     public static final Config<Long> LOG_RECYCLE_INTERVAL_SECOND =
-            Config.longConfig("log.recycle.interval.second", 60L);
+            Config.longConfig("log.recycle.interval.second", 600L);
 
     public static final Config<String> FILE_META_STORE_PATH =
             Config.stringConfig("file.meta.store.path", "./meta");

@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.integration.result;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.google.common.collect.ImmutableMap;
@@ -48,8 +49,9 @@ public class GremlinTestResultProcessor extends GremlinResultProcessor {
             Traversal traversal,
             QueryStatusCallback statusCallback,
             GraphProperties testGraph,
-            Configs configs) {
-        super(writeResult, traversal, statusCallback);
+            Configs configs,
+            QueryTimeoutConfig timeoutConfig) {
+        super(writeResult, traversal, statusCallback, timeoutConfig);
         this.cachedProperties = testGraph.getProperties(configs);
     }
 
