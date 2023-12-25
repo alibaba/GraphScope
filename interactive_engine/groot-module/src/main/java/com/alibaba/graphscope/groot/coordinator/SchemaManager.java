@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
@@ -30,12 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class SchemaManager {
@@ -52,6 +48,7 @@ public class SchemaManager {
     private volatile boolean ready = false;
 
     private ExecutorService singleThreadExecutor;
+    private ScheduledExecutorService scheduler;
 
     public SchemaManager(
             SnapshotManager snapshotManager,
@@ -80,6 +77,14 @@ public class SchemaManager {
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "ddl-executor", logger));
         recover();
+        logger.info(graphDefRef.get().toProto().toString());
+
+        this.scheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "ingest-try-start", logger));
+        this.scheduler.scheduleWithFixedDelay(
+                this::recover, 5, 2, TimeUnit.SECONDS);
     }
 
     private void recover() {
@@ -97,7 +102,6 @@ public class SchemaManager {
     }
 
     private void recoverInternal() throws IOException, ExecutionException, InterruptedException {
-        logger.info("start recover");
         long snapshotId = this.snapshotManager.increaseWriteSnapshotId();
         CompletableFuture<Void> future = new CompletableFuture<>();
         this.snapshotManager.addSnapshotListener(snapshotId, () -> future.complete(null));
@@ -105,8 +109,7 @@ public class SchemaManager {
         GraphDef graphDef = this.graphDefFetcher.fetchGraphDef();
         this.graphDefRef.set(graphDef);
         this.ready = true;
-        logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
-        logger.info(graphDef.toProto().toString());
+        // logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
     }
 
     public void stop() {

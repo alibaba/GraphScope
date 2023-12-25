@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
@@ -80,6 +81,7 @@ public class IngestProcessor implements MetricsAgent {
     private volatile long walBlockPerSecondMs;
     private volatile long lastUpdateStoreBlockTimeNano;
     private volatile long storeBlockPerSecondMs;
+    private boolean isSecondary;
 
     public IngestProcessor(
             Configs configs,
@@ -94,6 +96,8 @@ public class IngestProcessor implements MetricsAgent {
         this.ingestSnapshotId = ingestSnapshotId;
 
         this.bufferSize = IngestorConfig.INGESTOR_QUEUE_BUFFER_MAX_COUNT.get(configs);
+        this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
+
         initMetrics();
         metricsCollector.register(this, this::updateMetrics);
     }
@@ -136,18 +140,20 @@ public class IngestProcessor implements MetricsAgent {
                         });
         this.ingestThread.setDaemon(true);
         this.ingestThread.start();
+        if (isSecondary) {
+            this.tailWALThread =
+                    new Thread(
+                            () -> {
+                                try {
+                                    tailWAL();
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+            this.tailWALThread.setDaemon(true);
+            this.tailWALThread.start();
+        }
 
-        this.tailWALThread =
-                new Thread(
-                        () -> {
-                            try {
-                                tailWAL();
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
-        this.tailWALThread.setDaemon(true);
-        this.ingestThread.start();
         started = true;
         logger.info("ingestProcessor queue#[" + queueId + "] started");
     }
@@ -164,6 +170,15 @@ public class IngestProcessor implements MetricsAgent {
                 logger.warn("stop ingestProcessor queue#[" + queueId + "] interrupted");
             }
             this.ingestThread = null;
+        }
+        if (tailWALThread != null && tailWALThread.isAlive()) {
+            try {
+                this.tailWALThread.interrupt();
+                this.tailWALThread.join();
+            } catch (InterruptedException e) {
+                logger.warn("stop ingestProcessor queue#[" + queueId + "] interrupted");
+            }
+            this.tailWALThread = null;
         }
         this.batchSender.stop();
         logger.debug("ingestProcessor queue#[" + queueId + "] stopped");
@@ -290,9 +305,11 @@ public class IngestProcessor implements MetricsAgent {
                     long offset = record.offset();
                     LogEntry logEntry = record.value();
                     long snapshotId = logEntry.getSnapshotId();
-                    OperationBatch batch = logEntry.getOperationBatch();
-                    this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
-                    logger.info("Applied batch {}", batch.toProto());
+                    OperationBatch batch = extractOperations(logEntry.getOperationBatch(), types);
+                    if (batch.getOperationCount() > 0) {
+                        long batchSnapshotId = this.ingestSnapshotId.get();
+                        this.batchSender.asyncSendWithRetry("", queueId, batchSnapshotId, offset, batch);
+                    }
                 }
             }
         }

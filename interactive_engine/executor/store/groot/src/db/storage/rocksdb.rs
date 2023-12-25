@@ -57,6 +57,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn put(&self, key: &[u8], val: &[u8]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot put in secondary instance");
+            return Ok(());
+        }
         self.db.put(key, val).map_err(|e| {
             let msg = format!("rocksdb.put failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
@@ -64,6 +68,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn delete(&self, key: &[u8]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot delete in secondary instance");
+            return Ok(());
+        }
         self.db.delete(key).map_err(|e| {
             let msg = format!("rocksdb.delete failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
@@ -98,6 +106,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot delete_range in secondary instance");
+            return Ok(());
+        }
         let mut batch = WriteBatch::default();
         self.db
             .delete_file_in_range(start, end)
@@ -116,6 +128,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn load(&self, files: &[&str]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot ingest in secondary instance");
+            return Ok(());
+        }
         let mut options = IngestExternalFileOptions::default();
         options.set_move_files(true);
         self.db
