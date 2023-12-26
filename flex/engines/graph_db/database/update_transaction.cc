@@ -186,10 +186,12 @@ bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
       return false;
     }
   }
-  PropertyType type =
-      graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (type != value.type) {
-    return false;
+  const auto& types =
+      graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
+  if (types.size() == 1) {
+    if (types[0] != value.type) {
+      return false;
+    }
   }
 
   size_t in_csr_index = get_in_csr_index(src_label, dst_label, edge_label);
@@ -615,9 +617,18 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
                                                  edge_label);
       }
       Any value;
-      value.type = graph.schema().get_edge_property(
+      const auto& types = graph.schema().get_edge_properties(
           dir == 0 ? neighbor_label : label, dir == 0 ? label : neighbor_label,
           label);
+      if (types.size() == 1) {
+        value.type = types[0];
+      } else {
+        size_t len = 0;
+        for (const auto& type : types) {
+          len += type.NumBytes();
+        }
+        value.type = PropertyType::FixedChar(len);
+      }
       while (edge_iter->is_valid()) {
         if (edge_iter->get_neighbor() == nbr_lid) {
           deserialize_field(arc, value);

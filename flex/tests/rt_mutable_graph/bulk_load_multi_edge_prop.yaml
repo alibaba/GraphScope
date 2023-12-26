@@ -75,7 +75,7 @@ edge_mappings:
       source_vertex: person
       destination_vertex: software
     inputs:
-      -  person_created_software_extend.csv
+      -  person_created_software.csv
     source_vertex_mappings:
       - column:
           index: 0

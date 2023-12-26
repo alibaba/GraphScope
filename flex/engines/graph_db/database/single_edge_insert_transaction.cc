@@ -52,14 +52,19 @@ bool SingleEdgeInsertTransaction::AddEdge(label_t src_label, const Any& src,
                << "] not found...";
     return false;
   }
-  const PropertyType& type =
-      graph_.schema().get_edge_property(src_label, dst_label, edge_label);
-  if (prop.type != type) {
-    std::string label_name = graph_.schema().get_edge_label_name(edge_label);
-    LOG(ERROR) << "Edge property " << label_name << " type not match, expected "
-               << type << ", got " << prop.type;
-    return false;
+
+  const auto& types =
+      graph_.schema().get_edge_properties(src_label, dst_label, edge_label);
+  if (types.size() == 1) {
+    if (prop.type != types[0]) {
+      std::string label_name = graph_.schema().get_edge_label_name(edge_label);
+      LOG(ERROR) << "Edge property " << label_name
+                 << " type not match, expected " << types[0] << ", got "
+                 << prop.type;
+      return false;
+    }
   }
+
   src_label_ = src_label;
   dst_label_ = dst_label;
   edge_label_ = edge_label;

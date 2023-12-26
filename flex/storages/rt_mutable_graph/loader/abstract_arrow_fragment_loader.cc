@@ -154,11 +154,13 @@ void check_edge_invariant(
   // check type
   // FIXME(zhanglei): Remove this check when we support multiple properties
   // including string for edge.
-  for (auto i = 0; i < properties.size(); ++i) {
-    if (properties[i] == PropertyType::kStringMap ||
-        properties[i].IsVarchar() || properties[i] == PropertyType::kString) {
-      LOG(FATAL) << "When there are multiple properties for edge, we can not "
-                    "have string properties. Will be fixed in near future";
+  if (properties.size() > 1) {
+    for (auto i = 0; i < properties.size(); ++i) {
+      if (properties[i] == PropertyType::kStringMap ||
+          properties[i].IsVarchar() || properties[i] == PropertyType::kString) {
+        LOG(FATAL) << "When there are multiple properties for edge, we can not "
+                      "have string properties. Will be fixed in near future";
+      }
     }
   }
 }

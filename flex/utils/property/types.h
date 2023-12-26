@@ -123,11 +123,6 @@ struct Date {
 
 struct FixedChar {
   FixedChar() = default;
-  FixedChar(uint16_t size) : ptr(nullptr), len(size) {
-    auto tmp_ptr = new char[size];
-    memset(tmp_ptr, 0, size);
-    ptr = tmp_ptr;
-  }
   FixedChar(const void* p, uint16_t l) : ptr(p), len(l) {}
   FixedChar(const std::string_view& sv) : ptr(sv.data()), len(sv.size()) {}
   FixedChar(const std::string& s) : ptr(s.data()), len(s.size()) {}
@@ -948,7 +943,7 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
   } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kVarChar) {
     os << "varchar(" << pt.additional_type_info.max_length << ")";
   } else if (pt.type_enum == gs::impl::PropertyTypeImpl::kFixedChar) {
-    os << "fixed_length_Array(" << pt.additional_type_info.max_length << ")";
+    os << "fixedchar(" << pt.additional_type_info.max_length << ")";
   } else {
     os << "unknown";
   }
