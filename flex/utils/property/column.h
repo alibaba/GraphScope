@@ -387,7 +387,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
 using StringColumn = TypedColumn<std::string_view>;
 
 template <>
-class TypedColumn<fixedChar> : public ColumnBase {
+class TypedColumn<FixedChar> : public ColumnBase {
  public:
   TypedColumn(StorageStrategy strategy, uint16_t width) : width_(width) {}
   ~TypedColumn() { close(); }
@@ -492,7 +492,7 @@ class TypedColumn<fixedChar> : public ColumnBase {
     memcpy(cur + (idx - basic_size_) * width_, ptr, width_);
   }
 
-  void set_value(size_t idx, const fixedChar& val) {
+  void set_value(size_t idx, const FixedChar& val) {
     assert(idx >= basic_size_ && idx < basic_size_ + extra_size_);
 
     char* cur = extra_buffer_.data();
@@ -504,18 +504,18 @@ class TypedColumn<fixedChar> : public ColumnBase {
     if (value.type == PropertyType::kString) {
       set_value(idx, value.value.s);
     } else if (value.type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
-      set_value(idx, fixedChar(value.value.ptr,
+      set_value(idx, FixedChar(value.value.ptr,
                                value.type.additional_type_info.max_length));
     } else {
       LOG(ERROR) << "type inconsistent " << value.type << "..";
     }
   }
 
-  const fixedChar get_view(size_t idx) const {
+  const FixedChar get_view(size_t idx) const {
     const void* ptr = idx < basic_size_
                           ? basic_buffer_.data() + idx * width_
                           : extra_buffer_.data() + (idx - basic_size_) * width_;
-    return fixedChar(ptr, width_);
+    return FixedChar(ptr, width_);
   }
 
   Any get(size_t idx) const override {
@@ -529,7 +529,7 @@ class TypedColumn<fixedChar> : public ColumnBase {
   }
 
   void ingest(uint32_t index, grape::OutArchive& arc) override {
-    fixedChar e;
+    FixedChar e;
     arc >> e;
     set_value(index, e);
   }

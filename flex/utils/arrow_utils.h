@@ -272,7 +272,7 @@ struct TypeConverter<std::string_view> {
 };
 
 template <>
-struct TypeConverter<fixedChar> {
+struct TypeConverter<FixedChar> {
   // static PropertyType property_type() { return PropertyType::kString; }
   using ArrowType = arrow::LargeStringType;
   using ArrowArrayType = arrow::LargeStringArray;

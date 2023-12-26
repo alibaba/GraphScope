@@ -102,7 +102,7 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
 };
 
 template <>
-class TypedEmptyColumn<fixedChar> : public ColumnBase {
+class TypedEmptyColumn<FixedChar> : public ColumnBase {
  public:
   TypedEmptyColumn(int32_t length) : length_(length) {}
   ~TypedEmptyColumn() {}
@@ -122,16 +122,16 @@ class TypedEmptyColumn<fixedChar> : public ColumnBase {
     return PropertyType::FixedChar(length_);
   }
 
-  void set_value(size_t index, const fixedChar& val) {}
+  void set_value(size_t index, const FixedChar& val) {}
 
   void set_any(size_t index, const Any& value) override {}
 
-  fixedChar get_view(size_t index) const { return fixedChar{}; }
+  FixedChar get_view(size_t index) const { return FixedChar{}; }
 
   Any get(size_t index) const override { return Any(); }
 
   void ingest(uint32_t index, grape::OutArchive& arc) override {
-    fixedChar val;
+    FixedChar val;
     arc >> val;
   }
 
@@ -178,7 +178,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<StringEmptyColumn>(
           type.additional_type_info.max_length);
     } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
-      return std::make_shared<TypedEmptyColumn<fixedChar>>(
+      return std::make_shared<TypedEmptyColumn<FixedChar>>(
           type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "unexpected type to create column, "
@@ -210,7 +210,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<StringColumn>(
           strategy, type.additional_type_info.max_length);
     } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
-      return std::make_shared<TypedColumn<fixedChar>>(
+      return std::make_shared<TypedColumn<FixedChar>>(
           strategy, type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "unexpected type to create column, "

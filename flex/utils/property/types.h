@@ -75,6 +75,8 @@ struct PropertyType {
 
   bool IsVarchar() const;
 
+  uint16_t NumBytes() const;
+
   static PropertyType Empty();
   static PropertyType Bool();
   static PropertyType UInt8();
@@ -119,14 +121,26 @@ struct Date {
   int64_t milli_second;
 };
 
-struct fixedChar {
-  fixedChar() = default;
-  fixedChar(const void* p, uint16_t l) : ptr(p), len(l) {}
-  fixedChar(const std::string_view& sv) : ptr(sv.data()), len(sv.size()) {}
-  fixedChar(const std::string& s) : ptr(s.data()), len(s.size()) {}
+struct FixedChar {
+  FixedChar() = default;
+  FixedChar(uint16_t size) : ptr(nullptr), len(size) {
+    auto tmp_ptr = new char[size];
+    memset(tmp_ptr, 0, size);
+    ptr = tmp_ptr;
+  }
+  FixedChar(const void* p, uint16_t l) : ptr(p), len(l) {}
+  FixedChar(const std::string_view& sv) : ptr(sv.data()), len(sv.size()) {}
+  FixedChar(const std::string& s) : ptr(s.data()), len(s.size()) {}
   operator std::string_view() const {
     return std::string_view(static_cast<const char* const>(ptr), len);
   }
+
+  template <typename T>
+  T get_data(size_t index) {
+    assert(index < len && index + sizeof(T) <= len);
+    return *reinterpret_cast<const T*>(static_cast<const char*>(ptr) + index);
+  }
+
   const void* ptr;
   uint16_t len;
 };
@@ -138,7 +152,7 @@ template <>
 struct is_col_property_type<std::string_view> : std::true_type {};
 
 template <>
-struct is_col_property_type<fixedChar> : std::true_type {};
+struct is_col_property_type<FixedChar> : std::true_type {};
 
 struct LabelKey {
   using label_data_type = uint8_t;
@@ -337,9 +351,9 @@ struct Any {
     return value.d;
   }
 
-  fixedChar AsfixedChar() const {
+  FixedChar AsfixedChar() const {
     assert(type.type_enum == impl::PropertyTypeImpl::kFixedChar);
-    return fixedChar(value.ptr, type.additional_type_info.max_length);
+    return FixedChar(value.ptr, type.additional_type_info.max_length);
   }
 
   template <typename T>
@@ -526,11 +540,11 @@ struct ConvertAny<double> {
 };
 
 template <>
-struct ConvertAny<fixedChar> {
-  static void to(const Any& value, fixedChar& out) {
+struct ConvertAny<FixedChar> {
+  static void to(const Any& value, FixedChar& out) {
     CHECK(value.type.type_enum == impl::PropertyTypeImpl::kFixedChar);
     out =
-        fixedChar(value.value.ptr, value.type.additional_type_info.max_length);
+        FixedChar(value.value.ptr, value.type.additional_type_info.max_length);
   }
 };
 
@@ -851,19 +865,19 @@ struct AnyConverter<float> {
 };
 
 template <>
-struct AnyConverter<fixedChar> {
+struct AnyConverter<FixedChar> {
   // static PropertyType type() { return PropertyType::kDouble; }
 
-  static Any to_any(const fixedChar& value) {
+  static Any to_any(const FixedChar& value) {
     Any ret;
     ret.type = PropertyType::FixedChar(value.len);
     ret.value.ptr = value.ptr;
     return ret;
   }
 
-  static fixedChar from_any(const Any& value) {
+  static FixedChar from_any(const Any& value) {
     CHECK(value.type.type_enum == impl::PropertyTypeImpl::kFixedChar);
-    return fixedChar(value.value.ptr,
+    return FixedChar(value.value.ptr,
                      value.type.additional_type_info.max_length);
   }
 };
@@ -881,8 +895,8 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                               std::string_view& value);
 
-grape::InArchive& operator<<(grape::InArchive& in_archive, const fixedChar& e);
-grape::OutArchive& operator>>(grape::OutArchive& out_archive, fixedChar& e);
+grape::InArchive& operator<<(grape::InArchive& in_archive, const FixedChar& e);
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, FixedChar& e);
 }  // namespace gs
 
 namespace boost {

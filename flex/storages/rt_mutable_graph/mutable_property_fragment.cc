@@ -103,12 +103,17 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
     } else if (properties[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
       return new DualCsr<std::string_view>(
           oes, ies, properties[0].additional_type_info.max_length);
-    } else if (properties[0].type_enum == impl::PropertyTypeImpl::kFixedChar) {
-      return new DualCsr<fixedChar>(
-          oes, ies, properties[0].additional_type_info.max_length);
     } else if (properties[0] == PropertyType::kString) {
       return new DualCsr<std::string_view>(oes, ies, 256);
     }
+  } else {
+    size_t bytes_count = 0;
+    {
+      for (auto& property : properties) {
+        bytes_count += property.NumBytes();
+      }
+    }
+    return new DualCsr<FixedChar>(oes, ies, bytes_count);
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;

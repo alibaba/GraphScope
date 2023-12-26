@@ -50,7 +50,7 @@ template class MutableCsr<float>;
 template class SingleMutableCsr<std::string_view>;
 template class MutableCsr<std::string_view>;
 
-template class SingleMutableCsr<fixedChar>;
-template class MutableCsr<fixedChar>;
+template class SingleMutableCsr<FixedChar>;
+template class MutableCsr<FixedChar>;
 
 }  // namespace gs
