@@ -23,7 +23,7 @@ use crate::col_table::ColTable;
 use crate::edge_trim::EdgeTrimJson;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
-use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter, NbrOffsetIter};
+use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter, NbrOffsetIter, Nbr};
 use crate::ldbc_parser::LDBCVertexParser;
 use crate::mcsr::MutableCsr;
 use crate::schema::{CsrGraphSchema, Schema};
@@ -175,6 +175,10 @@ where
         e_label: LabelId, vertex_data: &'a ColTable, edge_data: Option<&'a ColTable>,
     ) -> Self {
         Self { csr, vm, src_label, dst_label, e_label, vertex_data, edge_data }
+    }
+
+    pub fn get_edge(&self, src_id: I) -> Option<Nbr<I>> {
+        self.csr.get_edge(src_id)
     }
 
     pub fn desc(&self) {

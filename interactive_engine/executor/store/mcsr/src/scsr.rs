@@ -107,6 +107,19 @@ impl<I: IndexType> SingleCsr<I> {
         }
     }
 
+    pub fn get_edge(&self, src: I) -> Option<Nbr<I>> {
+        let index = src.index();
+        if index < self.nbr_list.len() {
+            if self.nbr_exist[index] {
+                Some(self.nbr_list[index].clone())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn desc(&self) {
         let num = self.nbr_list.len();
         let mut empty_num = 0;
