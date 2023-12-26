@@ -28,7 +28,6 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -39,7 +38,6 @@ import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.RelOptUtil;
@@ -90,7 +88,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setScan(scanBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(source.getRowType(), isColumnId));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(source, oprBuilder.build());
+        return source;
     }
 
     @Override
@@ -103,7 +101,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(expand.getRowType(), isColumnId));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(expand, oprBuilder.build());
+        return expand;
     }
 
     @Override
@@ -116,7 +114,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(getVertex));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(getV, oprBuilder.build());
+        return getV;
     }
 
     @Override
@@ -145,7 +143,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setPath(pathExpandBuilder));
 
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(pxd, oprBuilder.build());
+        return pxd;
     }
 
     @Override
@@ -160,7 +158,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(expandDegree.getRowType(), isColumnId));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(expandDegree, oprBuilder.build());
+        return expandDegree;
     }
 
     @Override
@@ -174,7 +172,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(physicalExpand.getRowType(), isColumnId));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(physicalExpand, oprBuilder.build());
+        return physicalExpand;
     }
 
     @Override
@@ -188,7 +186,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(physicalGetV.getRowType(), isColumnId));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(physicalGetV, oprBuilder.build());
+        return physicalGetV;
     }
 
     @Override
@@ -204,7 +202,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setSelect(selectBuilder));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(filter, oprBuilder.build());
+        return filter;
     }
 
     @Override
@@ -232,7 +230,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setProject(projectBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(project.getRowType(), isColumnId));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(project, oprBuilder.build());
+        return project;
     }
 
     @Override
@@ -294,9 +292,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
             physicalBuilder.addPlan(projectOprBuilder.build());
             physicalBuilder.addPlan(dedupOprBuilder.build());
-            return new PhysicalNode(
-                    aggregate,
-                    ImmutableList.of(projectOprBuilder.build(), dedupOprBuilder.build()));
         } else {
             GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                     GraphAlgebraPhysical.PhysicalOpr.newBuilder();
@@ -355,8 +350,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             oprBuilder.addAllMetaData(
                     Utils.physicalProtoRowType(aggregate.getRowType(), isColumnId));
             physicalBuilder.addPlan(oprBuilder.build());
-            return new PhysicalNode(aggregate, oprBuilder.build());
         }
+        return aggregate;
     }
 
     @Override
@@ -393,7 +388,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setLimit(limitBuilder));
         }
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(sort, oprBuilder.build());
+        return sort;
     }
 
     @Override
@@ -440,7 +435,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setJoin(joinBuilder));
         physicalBuilder.addPlan(oprBuilder.build());
-        return new PhysicalNode(join, oprBuilder.build());
+        return join;
     }
 
     private List<RexGraphVariable> getLeftRightVariables(RexNode condition) {
