@@ -127,10 +127,15 @@ void check_edge_invariant(
   // properties.
   auto& properties =
       schema.get_edge_properties(src_label_i, dst_label_i, edge_label_i);
-  CHECK(properties.size() == column_mappings.size())
-      << "Edge property "
-      << "size not match:" << properties.size() << " vs "
-      << column_mappings.size();
+  if (column_mappings.size() > 1) {
+    // once column_mappings are specified, we need to make sure they are the
+    // same size as properties.
+    CHECK(properties.size() == column_mappings.size())
+        << "Edge property "
+        << "size not match:" << properties.size() << " vs "
+        << column_mappings.size();
+  }
+
   for (auto i = 0; i < column_mappings.size(); ++i) {
     auto& mapping = column_mappings[i];
     if (std::get<0>(mapping) == src_col_ind ||
