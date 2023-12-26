@@ -98,6 +98,8 @@ inline void copy_file(const std::string& src, const std::string& dst) {
       LOG(ERROR) << "Failed to set read/write permission for file: " << dst
                  << " " << errorCode.message() << std::endl;
     }
+    close(dst_fd);
+    dst_fd = open(dst.c_str(), O_WRONLY);
   }
   ssize_t ret;
   do {
