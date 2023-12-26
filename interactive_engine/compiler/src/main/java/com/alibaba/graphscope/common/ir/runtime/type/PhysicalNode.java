@@ -22,6 +22,7 @@ import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.AbstractRelNode;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.Collections;
@@ -61,5 +62,10 @@ public class PhysicalNode<T> extends AbstractRelNode {
 
     public List<T> getNodes() {
         return Collections.unmodifiableList(nodes);
+    }
+
+    @Override
+    protected RelDataType deriveRowType() {
+        return original.getRowType();
     }
 }

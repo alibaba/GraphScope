@@ -109,4 +109,16 @@ public class GraphLogicalExpandDegree extends SingleRel {
         }
         return shuttle.visit(this);
     }
+
+    @Override
+    public GraphLogicalExpandDegree copy(RelTraitSet traitSet, List<RelNode> inputs) {
+        GraphLogicalExpandDegree copy =
+                new GraphLogicalExpandDegree(
+                        (GraphOptCluster) getCluster(),
+                        ImmutableList.of(),
+                        inputs.get(0),
+                        this.getFusedExpand(),
+                        this.getAliasName());
+        return copy;
+    }
 }

@@ -45,14 +45,12 @@ import com.google.common.collect.Lists;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,11 +63,16 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     private final boolean isColumnId;
     private final RexBuilder rexBuilder;
     private final Configs graphConfig;
+    private GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder;
 
-    public GraphRelToProtoConverter(boolean isColumnId, Configs configs) {
+    public GraphRelToProtoConverter(
+            boolean isColumnId,
+            Configs configs,
+            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder) {
         this.isColumnId = isColumnId;
         this.rexBuilder = GraphPlanner.rexBuilderFactory.apply(configs);
         this.graphConfig = configs;
+        this.physicalBuilder = physicalBuilder;
     }
 
     @Override
@@ -86,33 +89,39 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setScan(scanBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(source.getRowType(), isColumnId));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(source, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphLogicalExpand expand) {
+        visitChildren(expand);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpand(expand);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(expand.getRowType(), isColumnId));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(expand, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphLogicalGetV getV) {
+        visitChildren(getV);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.GetV.Builder getVertex = buildGetV(getV);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(getVertex));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(getV, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphLogicalPathExpand pxd) {
+        visitChildren(pxd);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.PathExpand.Builder pathExpandBuilder =
@@ -134,11 +143,14 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         pathExpandBuilder.setStartTag(Utils.asAliasId(pxd.getStartAlias().getAliasId()));
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setPath(pathExpandBuilder));
+
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(pxd, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphLogicalExpandDegree expandDegree) {
+        visitChildren(expandDegree);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand =
@@ -147,11 +159,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(expandDegree.getRowType(), isColumnId));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(expandDegree, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphPhysicalExpand physicalExpand) {
+        visitChildren(physicalExpand);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpandVertex(physicalExpand);
@@ -159,11 +173,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(physicalExpand.getRowType(), isColumnId));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(physicalExpand, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphPhysicalGetV physicalGetV) {
+        visitChildren(physicalGetV);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(physicalGetV);
@@ -171,11 +187,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(physicalGetV.getRowType(), isColumnId));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(physicalGetV, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(LogicalFilter filter) {
+        visitChildren(filter);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebra.Select.Builder selectBuilder = GraphAlgebra.Select.newBuilder();
@@ -185,11 +203,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         selectBuilder.setPredicate(exprProto);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setSelect(selectBuilder));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(filter, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphLogicalProject project) {
+        visitChildren(project);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.Project.Builder projectBuilder =
@@ -211,11 +231,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setProject(projectBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(project.getRowType(), isColumnId));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(project, oprBuilder.build());
     }
 
     @Override
     public RelNode visit(GraphLogicalAggregate aggregate) {
+        visitChildren(aggregate);
         List<RelDataTypeField> fields = aggregate.getRowType().getFieldList();
         List<GraphAggCall> groupCalls = aggregate.getAggCalls();
         GraphGroupKeys keys = aggregate.getGroupKey();
@@ -270,6 +292,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphAlgebraPhysical.PhysicalOpr.newBuilder();
             dedupOprBuilder.setOpr(
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
+            physicalBuilder.addPlan(projectOprBuilder.build());
+            physicalBuilder.addPlan(dedupOprBuilder.build());
             return new PhysicalNode(
                     aggregate,
                     ImmutableList.of(projectOprBuilder.build(), dedupOprBuilder.build()));
@@ -330,12 +354,14 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             .setGroupBy(groupByBuilder));
             oprBuilder.addAllMetaData(
                     Utils.physicalProtoRowType(aggregate.getRowType(), isColumnId));
+            physicalBuilder.addPlan(oprBuilder.build());
             return new PhysicalNode(aggregate, oprBuilder.build());
         }
     }
 
     @Override
     public RelNode visit(GraphLogicalSort sort) {
+        visitChildren(sort);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         List<RelFieldCollation> collations = sort.getCollation().getFieldCollations();
@@ -366,6 +392,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             oprBuilder.setOpr(
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setLimit(limitBuilder));
         }
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(sort, oprBuilder.build());
     }
 
@@ -405,59 +432,14 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalPlan.newBuilder();
 
         RelNode left = join.getLeft();
-        RelVisitor leftVisitor =
-                new RelVisitor() {
-                    @Override
-                    public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                        if (ordinal == 0) {
-                            super.visit(node, ordinal, parent);
-                            leftPlanBuilder.addPlan(
-                                    (GraphAlgebraPhysical.PhysicalOpr)
-                                            (((PhysicalNode)
-                                                            node.accept(
-                                                                    new GraphRelToProtoConverter(
-                                                                            isColumnId,
-                                                                            graphConfig)))
-                                                    .getNode()));
-                        } else {
-                            throw new UnsupportedOperationException(
-                                    "join node should have two children of type "
-                                            + GraphLogicalSource.class
-                                            + ", but is "
-                                            + node.getClass());
-                        }
-                    }
-                };
-        leftVisitor.go(left);
+        left.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, leftPlanBuilder));
         RelNode right = join.getRight();
-        RelVisitor rightVisitor =
-                new RelVisitor() {
-                    @Override
-                    public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                        if (ordinal == 0) {
-                            super.visit(node, ordinal, parent);
-                            rightPlanBuilder.addPlan(
-                                    (GraphAlgebraPhysical.PhysicalOpr)
-                                            (((PhysicalNode)
-                                                            node.accept(
-                                                                    new GraphRelToProtoConverter(
-                                                                            isColumnId,
-                                                                            graphConfig)))
-                                                    .getNode()));
-                        } else {
-                            throw new UnsupportedOperationException(
-                                    "join node should have two children of type "
-                                            + GraphLogicalSource.class
-                                            + ", but is "
-                                            + node.getClass());
-                        }
-                    }
-                };
-        rightVisitor.go(right);
+        right.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, rightPlanBuilder));
         joinBuilder.setLeftPlan(leftPlanBuilder);
         joinBuilder.setRightPlan(rightPlanBuilder);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setJoin(joinBuilder));
+        physicalBuilder.addPlan(oprBuilder.build());
         return new PhysicalNode(join, oprBuilder.build());
     }
 
