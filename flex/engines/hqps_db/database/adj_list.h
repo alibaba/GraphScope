@@ -491,6 +491,11 @@ class AdjListArray<T> {
         slices_.emplace_back(
             std::make_pair(casted_csr->get_edges(v), slice_t()));
       }
+    } else {
+      LOG(WARNING) << "csr is null";
+      for (auto v : vids) {
+        slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
+      }
     }
   }
   AdjListArray(const csr_base_t* csr0, const csr_base_t* csr1,
@@ -566,6 +571,11 @@ class AdjListArray<grape::EmptyType> {
         auto edges = casted_csr->get_edges(v);
         slices_.emplace_back(
             std::make_pair(casted_csr->get_edges(v), slice_t()));
+      }
+    } else {
+      LOG(ERROR) << "csr is null";
+      for (auto v : vids) {
+        slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
       }
     }
   }
