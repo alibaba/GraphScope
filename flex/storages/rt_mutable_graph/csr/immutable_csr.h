@@ -32,7 +32,12 @@ class ImmutableCsr : public TypedMutableCsrBase<EDATA_T> {
   ~ImmutableCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree) override {
+                    const std::vector<int>& degree,
+                    double reserve_ratio) override {
+    if (reserve_ratio != 1) {
+      LOG(INFO) << "reserve ratio: " << reserve_ratio
+                << " ignored for immutable csr";
+    }
     size_t vnum = degree.size();
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
     adj_lists_.resize(vnum);
@@ -67,6 +72,20 @@ class ImmutableCsr : public TypedMutableCsrBase<EDATA_T> {
     }
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
     adj_lists_.resize(degree_list_.size());
+
+    nbr_t* ptr = nbr_list_.data();
+    for (size_t i = 0; i < degree_list_.size(); ++i) {
+      int deg = degree_list_[i];
+      adj_lists_[i] = ptr;
+      ptr += deg;
+    }
+  }
+
+  void open_in_memory(const std::string& name, size_t v_cap) override {
+    degree_list_.open_in_memory(name + ".deg");
+    adj_lists_.reset();
+    adj_lists_.resize(degree_list_.size());
+    nbr_list_.open_in_memory(name + ".nbr");
 
     nbr_t* ptr = nbr_list_.data();
     for (size_t i = 0; i < degree_list_.size(); ++i) {
@@ -195,7 +214,7 @@ class SingleImmutableCsr : public TypedMutableCsrBase<EDATA_T> {
   ~SingleImmutableCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree) override {
+                    const std::vector<int>& degree, double) override {
     size_t vnum = degree.size();
     nbr_list_.open(work_dir + "/" + name + ".snbr", false);
     nbr_list_.resize(vnum);
@@ -214,6 +233,10 @@ class SingleImmutableCsr : public TypedMutableCsrBase<EDATA_T> {
                 work_dir + "/" + name + ".snbr");
     }
     nbr_list_.open(work_dir + "/" + name + ".snbr", false);
+  }
+
+  void open_in_memory(const std::string& name, size_t v_cap) override {
+    nbr_list_.open_in_memory(name + ".snbr");
   }
 
   void warmup(int thread_num) const override {}

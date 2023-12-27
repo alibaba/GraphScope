@@ -34,11 +34,19 @@ MutablePropertyFragment::~MutablePropertyFragment() {
       for (size_t e_label = 0; e_label != edge_label_num_; ++e_label) {
         size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                        dst_label * edge_label_num_ + e_label;
-        if (ie_[index] != NULL) {
-          ie_[index]->resize(degree_list[dst_label]);
-        }
-        if (oe_[index] != NULL) {
-          oe_[index]->resize(degree_list[src_label]);
+        std::string src_label_name = schema_.get_vertex_label_name(src_label);
+        std::string dst_label_name = schema_.get_vertex_label_name(dst_label);
+        std::string edge_label_name = schema_.get_edge_label_name(e_label);
+        bool mutability = schema_.get_edge_mutability(
+            src_label_name, dst_label_name, edge_label_name);
+
+        if (mutability) {
+          if (ie_[index] != NULL) {
+            ie_[index]->resize(degree_list[dst_label]);
+          }
+          if (oe_[index] != NULL) {
+            oe_[index]->resize(degree_list[src_label]);
+          }
         }
         if (dual_csr_list_[index] != NULL) {
           delete dual_csr_list_[index];
@@ -229,8 +237,6 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
               tmp_dir_path);
         }
-        ie_[index]->resize(vertex_capacities[dst_label_i]);
-        oe_[index]->resize(vertex_capacities[src_label_i]);
         if (mutability) {
           ie_[index]->resize(vertex_capacities[dst_label_i]);
           oe_[index]->resize(vertex_capacities[src_label_i]);
@@ -268,11 +274,15 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
         if (!schema_.exist(src_label, dst_label, edge_label)) {
           continue;
         }
+        bool mutability =
+            schema_.get_edge_mutability(src_label, dst_label, edge_label);
         size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
                        dst_label_i * edge_label_num_ + e_label_i;
         if (dual_csr_list_[index] != NULL) {
-          ie_[index]->resize(vertex_num[dst_label_i]);
-          oe_[index]->resize(vertex_num[src_label_i]);
+          if (mutability) {
+            ie_[index]->resize(vertex_num[dst_label_i]);
+            oe_[index]->resize(vertex_num[src_label_i]);
+          }
           dual_csr_list_[index]->Dump(
               oe_prefix(src_label, dst_label, edge_label),
               ie_prefix(src_label, dst_label, edge_label),

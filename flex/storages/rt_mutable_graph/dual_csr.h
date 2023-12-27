@@ -108,8 +108,8 @@ class DualCsr : public DualCsrBase {
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
                  const std::vector<int>& ie_degree) override {
-    in_csr_->batch_init(ie_name, work_dir, ie_degree);
-    out_csr_->batch_init(oe_name, work_dir, oe_degree);
+    in_csr_->batch_init(ie_name, work_dir, ie_degree, 1.2);
+    out_csr_->batch_init(oe_name, work_dir, oe_degree, 1.2);
   }
 
   void Open(const std::string& oe_name, const std::string& ie_name,
@@ -225,8 +225,8 @@ class DualCsr<std::string_view> : public DualCsrBase {
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
                  const std::vector<int>& ie_degree) override {
-    size_t ie_num = in_csr_->batch_init(ie_name, work_dir, ie_degree);
-    size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree);
+    size_t ie_num = in_csr_->batch_init(ie_name, work_dir, ie_degree, 1.2);
+    size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree, 1.2);
     column_.open(edata_name, "", work_dir);
     column_.resize(std::max(ie_num, oe_num));
     column_idx_.store(0);
