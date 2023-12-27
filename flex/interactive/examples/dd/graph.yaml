@@ -1,7 +1,8 @@
 name: dd_graph
 schema:
   vertex_types:
-    - type_name: User
+    - type_id: 0
+      type_name: User
       properties:
         - property_name: id
           property_type:
@@ -23,7 +24,8 @@ schema:
             primitive_type: DT_STRINGMAP
       primary_keys:
         - id
-    - type_name: DingOrg
+    - type_id: 1
+      type_name: DingOrg
       properties:
         - property_name: id
           property_type:
@@ -33,7 +35,8 @@ schema:
             primitive_type: DT_STRING
       primary_keys:
         - id
-    - type_name: DingEduOrg
+    - type_id: 2
+      type_name: DingEduOrg
       properties:
         - property_name: id
           property_type:
@@ -43,7 +46,8 @@ schema:
             primitive_type: DT_STRING
       primary_keys:
         - id
-    - type_name: DingGroup
+    - type_id: 3
+      type_name: DingGroup
       properties:
         - property_name: id
           property_type:
@@ -54,7 +58,8 @@ schema:
       primary_keys:
         - id
   edge_types:
-    - type_name: Friend
+    - type_id: 0
+      type_name: Friend
       vertex_type_pair_relations:
         - source_vertex: User
           destination_vertex: User
@@ -63,7 +68,8 @@ schema:
         - property_name: creationDate
           property_type:
             primitive_type: DT_STRING
-    - type_name: ChatInGroup
+    - type_id: 1
+      type_name: ChatInGroup
       vertex_type_pair_relations:
         - source_vertex: User
           destination_vertex: DingGroup
@@ -72,7 +78,8 @@ schema:
         - property_name: creationDate
           property_type:
             primitive_type: DT_STRING
-    - type_name: Intimacy
+    - type_id: 2
+      type_name: Intimacy
       vertex_type_pair_relations:
         - source_vertex: User
           destination_vertex: User
@@ -84,7 +91,8 @@ schema:
         - property_name: communication_score
           property_type:
             primitive_type: DT_SIGNED_INT64
-    - type_name: WorkAt
+    - type_id: 3
+      type_name: WorkAt
       vertex_type_pair_relations:
         - source_vertex: User
           destination_vertex: DingOrg
@@ -99,7 +107,8 @@ schema:
         - property_name: roleName
           property_type:
             primitive_type: DT_SIGNED_INT32 #DT_STRINGMAP # limited number of values.(11)
-    - type_name: StudyAt
+    - type_id: 4
+      type_name: StudyAt
       vertex_type_pair_relations:
         - source_vertex: User
           destination_vertex: DingEduOrg
