@@ -189,7 +189,7 @@ edge_mappings:
     column_mappings:
       - column:
           index: 2
-          name: gmt_create
+          name: gmt_create_mill
         property: joinDate
       - column:
           index: 3
