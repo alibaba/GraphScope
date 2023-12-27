@@ -168,12 +168,12 @@ class BasicFragmentLoader {
     VLOG(10) << "Finish adding edge batch of size: " << edges.size();
   }
 
-  void PutMultiPropEdges(
+  template <typename CHAR_ARRAY_T>
+  void putMultiPropEdges(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
       const std::vector<std::tuple<vid_t, vid_t, std::vector<char>>>& edges,
       const std::vector<int32_t>& ie_degree,
-      const std::vector<int32_t>& oe_degree,
-      const std::vector<size_t>& offset_vec) {
+      const std::vector<int32_t>& oe_degree) {
     size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
                    dst_label_id * edge_label_num_ + edge_label_id;
     auto& src_indexer = lf_indexers_[src_label_id];
@@ -190,8 +190,8 @@ class BasicFragmentLoader {
 
     auto edge_properties =
         schema_.get_edge_properties(src_label_id, dst_label_id, edge_label_id);
-    auto dual_csr =
-        new DualCsr<FixedChar>(oe_strategy, ie_strategy, offset_vec.back());
+
+    auto dual_csr = new DualCsr<CHAR_ARRAY_T>(oe_strategy, ie_strategy);
     dual_csr_list_[index] = dual_csr;
     ie_[index] = dual_csr_list_[index]->GetInCsr();
     oe_[index] = dual_csr_list_[index]->GetOutCsr();
@@ -204,11 +204,45 @@ class BasicFragmentLoader {
         tmp_dir(work_dir_), oe_degree, ie_degree);
     for (auto& edge : edges) {
       auto& vec = std::get<2>(edge);
-      FixedChar fc(vec.data(), vec.size());
-      dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge), fc);
+
+      dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge), vec.data());
     }
 
     VLOG(10) << "Finish adding edge batch of size: " << edges.size();
+  }
+  void PutMultiPropEdges(
+      label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
+      const std::vector<std::tuple<vid_t, vid_t, std::vector<char>>>& edges,
+      const std::vector<int32_t>& ie_degree,
+      const std::vector<int32_t>& oe_degree,
+      const std::vector<size_t>& offset_vec) {
+    size_t len = offset_vec.back();
+
+    if (len <= 4) {
+      putMultiPropEdges<char_array<4>>(src_label_id, dst_label_id,
+                                       edge_label_id, edges, ie_degree,
+                                       oe_degree);
+    } else if (len <= 8) {
+      putMultiPropEdges<char_array<8>>(src_label_id, dst_label_id,
+                                       edge_label_id, edges, ie_degree,
+                                       oe_degree);
+    } else if (len <= 12) {
+      putMultiPropEdges<char_array<12>>(src_label_id, dst_label_id,
+                                        edge_label_id, edges, ie_degree,
+                                        oe_degree);
+    } else if (len <= 16) {
+      putMultiPropEdges<char_array<16>>(src_label_id, dst_label_id,
+                                        edge_label_id, edges, ie_degree,
+                                        oe_degree);
+    } else if (len <= 20) {
+      putMultiPropEdges<char_array<20>>(src_label_id, dst_label_id,
+                                        edge_label_id, edges, ie_degree,
+                                        oe_degree);
+    } else if (len <= 24) {
+      putMultiPropEdges<char_array<24>>(src_label_id, dst_label_id,
+                                        edge_label_id, edges, ie_degree,
+                                        oe_degree);
+    }
   }
 
   Table& GetVertexTable(size_t ind) {

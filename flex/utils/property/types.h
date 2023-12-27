@@ -50,6 +50,12 @@ enum class PropertyTypeImpl {
   kStringMap,
   kVarChar,
   kFixedChar,
+  kCharArray4,
+  kCharArray8,
+  kCharArray12,
+  kCharArray16,
+  kCharArray20,
+  kCharArray24
 };
 
 // Stores additional type information for PropertyTypeImpl
@@ -92,6 +98,12 @@ struct PropertyType {
   static PropertyType StringMap();
   static PropertyType Varchar(uint16_t max_length);
   static PropertyType FixedChar(uint16_t max_length);
+  static PropertyType CharArray4();
+  static PropertyType CharArray8();
+  static PropertyType CharArray12();
+  static PropertyType CharArray16();
+  static PropertyType CharArray20();
+  static PropertyType CharArray24();
 
   static const PropertyType kEmpty;
   static const PropertyType kBool;
@@ -106,9 +118,67 @@ struct PropertyType {
   static const PropertyType kDate;
   static const PropertyType kString;
   static const PropertyType kStringMap;
+  static const PropertyType kCharArray4;
+  static const PropertyType kCharArray8;
+  static const PropertyType kCharArray12;
+  static const PropertyType kCharArray16;
+  static const PropertyType kCharArray20;
+  static const PropertyType kCharArray24;
 
   bool operator==(const PropertyType& other) const;
   bool operator!=(const PropertyType& other) const;
+};
+template <int N>
+struct char_array_type_mapping;
+
+// Specializations for each size with the corresponding type
+template <>
+struct char_array_type_mapping<4> {
+  static constexpr PropertyType type =
+      PropertyType(impl::PropertyTypeImpl::kCharArray4);
+};
+
+template <>
+struct char_array_type_mapping<8> {
+  static constexpr PropertyType type =
+      PropertyType(impl::PropertyTypeImpl::kCharArray8);
+};
+
+template <>
+struct char_array_type_mapping<12> {
+  static constexpr PropertyType type =
+      PropertyType(impl::PropertyTypeImpl::kCharArray12);
+};
+
+template <>
+struct char_array_type_mapping<16> {
+  static constexpr PropertyType type =
+      PropertyType(impl::PropertyTypeImpl::kCharArray16);
+};
+
+template <>
+struct char_array_type_mapping<20> {
+  static constexpr PropertyType type =
+      PropertyType(impl::PropertyTypeImpl::kCharArray20);
+};
+
+template <>
+struct char_array_type_mapping<24> {
+  static constexpr PropertyType type =
+      PropertyType(impl::PropertyTypeImpl::kCharArray24);
+};
+
+template <int N>
+struct char_array {
+  char_array() {}
+  char_array(const char* const other) { memcpy(data, other, N); }
+  char_array(const char_array& other) { memcpy(data, other.data, N); }
+  char_array& operator=(const char_array<N>& other) {
+    memcpy(data, other.data, N);
+    return *this;
+  };
+
+  char data[N];
 };
 
 struct Date {
@@ -180,6 +250,7 @@ union AnyValue {
   double db;
   uint8_t u8;
   uint16_t u16;
+  char array[24];
   const void* ptr;
 };
 
@@ -286,6 +357,18 @@ struct Any {
       return value.b ? "true" : "false";
     } else if (type == PropertyType::kFloat) {
       return std::to_string(value.f);
+    } else if (type == PropertyType::kCharArray4) {
+      return std::string(value.array, 4);
+    } else if (type == PropertyType::kCharArray8) {
+      return std::string(value.array, 8);
+    } else if (type == PropertyType::kCharArray12) {
+      return std::string(value.array, 12);
+    } else if (type == PropertyType::kCharArray16) {
+      return std::string(value.array, 16);
+    } else if (type == PropertyType::kCharArray20) {
+      return std::string(value.array, 20);
+    } else if (type == PropertyType::kCharArray24) {
+      return std::string(value.array, 24);
     } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
       return std::string(static_cast<const char*>(value.ptr),
                          type.additional_type_info.max_length);
@@ -351,6 +434,11 @@ struct Any {
     return FixedChar(value.ptr, type.additional_type_info.max_length);
   }
 
+  template <int N>
+  char_array<N> AsCharArray() const {
+    assert(type == char_array_type_mapping<N>::type);
+    return value.array;
+  }
   template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
@@ -808,6 +896,41 @@ struct AnyConverter<grape::EmptyType> {
   }
 };
 
+template <int N>
+struct ConvertAny<char_array<N>> {
+  static void to(const Any& value, char_array<N>& out) {
+    CHECK(value.type == char_array_type_mapping<N>::type);
+    memcpy(out.data, value.value.array, N);
+  }
+};
+
+template <int N>
+struct AnyConverter<char_array<N>> {
+  static PropertyType type() { return char_array_type_mapping<N>::type; }
+
+  static Any to_any(const char_array<N>& value) {
+    Any ret;
+    ret.type = type();
+    memcpy(ret.value.array, value.data, N);
+    return ret;
+  }
+
+  static AnyValue to_any_value(const char_array<N>& value) {
+    AnyValue ret;
+    memcpy(ret.array, value.data, N);
+    return ret;
+  }
+
+  static const char_array<N>& from_any(const Any& value) {
+    CHECK(value.type == type());
+    return value.value.array;
+  }
+
+  static const char_array<N>& from_any_value(const AnyValue& value) {
+    return value.array;
+  }
+};
+
 template <>
 struct AnyConverter<double> {
   static PropertyType type() { return PropertyType::kDouble; }
@@ -881,7 +1004,21 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                               PropertyType& value);
+template <int N>
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const char_array<N>& e) {
+  in_archive << e.len;
+  in_archive.AddBytes(e.data, N);
+  return in_archive;
+}
 
+template <int N>
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              char_array<N>& e) {
+  void* ptr = out_archive.GetBytes(N);
+  memcpy(e.data, ptr, N);
+  return out_archive;
+}
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value);
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value);
 

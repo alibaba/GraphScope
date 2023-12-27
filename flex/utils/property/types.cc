@@ -46,6 +46,18 @@ const PropertyType PropertyType::kString =
     PropertyType(impl::PropertyTypeImpl::kString);
 const PropertyType PropertyType::kStringMap =
     PropertyType(impl::PropertyTypeImpl::kStringMap);
+const PropertyType PropertyType::kCharArray4 =
+    PropertyType(impl::PropertyTypeImpl::kCharArray4);
+const PropertyType PropertyType::kCharArray8 =
+    PropertyType(impl::PropertyTypeImpl::kCharArray8);
+const PropertyType PropertyType::kCharArray12 =
+    PropertyType(impl::PropertyTypeImpl::kCharArray12);
+const PropertyType PropertyType::kCharArray16 =
+    PropertyType(impl::PropertyTypeImpl::kCharArray16);
+const PropertyType PropertyType::kCharArray20 =
+    PropertyType(impl::PropertyTypeImpl::kCharArray20);
+const PropertyType PropertyType::kCharArray24 =
+    PropertyType(impl::PropertyTypeImpl::kCharArray24);
 
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
@@ -145,6 +157,31 @@ PropertyType PropertyType::Varchar(uint16_t max_length) {
 PropertyType PropertyType::FixedChar(uint16_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kFixedChar, max_length);
 }
+
+PropertyType PropertyType::CharArray4() {
+  return PropertyType(impl::PropertyTypeImpl::kCharArray4);
+}
+
+PropertyType PropertyType::CharArray8() {
+  return PropertyType(impl::PropertyTypeImpl::kCharArray8);
+}
+
+PropertyType PropertyType::CharArray12() {
+  return PropertyType(impl::PropertyTypeImpl::kCharArray12);
+}
+
+PropertyType PropertyType::CharArray16() {
+  return PropertyType(impl::PropertyTypeImpl::kCharArray16);
+}
+
+PropertyType PropertyType::CharArray20() {
+  return PropertyType(impl::PropertyTypeImpl::kCharArray20);
+}
+
+PropertyType PropertyType::CharArray24() {
+  return PropertyType(impl::PropertyTypeImpl::kCharArray24);
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value) {
   in_archive << value.type_enum;
@@ -193,6 +230,18 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
                         value.type.additional_type_info.max_length);
   } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
+  } else if (value.type == PropertyType::kCharArray4) {
+    in_archive << value.type << std::string(value.value.array, 4);
+  } else if (value.type == PropertyType::kCharArray8) {
+    in_archive << value.type << std::string(value.value.array, 8);
+  } else if (value.type == PropertyType::kCharArray12) {
+    in_archive << value.type << std::string(value.value.array, 12);
+  } else if (value.type == PropertyType::kCharArray16) {
+    in_archive << value.type << std::string(value.value.array, 16);
+  } else if (value.type == PropertyType::kCharArray20) {
+    in_archive << value.type << std::string(value.value.array, 20);
+  } else if (value.type == PropertyType::kCharArray24) {
+    in_archive << value.type << std::string(value.value.array, 24);
   } else {
     in_archive << PropertyType::kEmpty;
   }
@@ -225,6 +274,24 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     out_archive >> value.value.d.milli_second;
   } else if (value.type == PropertyType::String()) {
     out_archive >> value.value.s;
+  } else if (value.type == PropertyType::kCharArray4) {
+    auto ptr = out_archive.GetBytes(4);
+    memcpy(value.value.array, ptr, 4);
+  } else if (value.type == PropertyType::kCharArray8) {
+    auto ptr = out_archive.GetBytes(8);
+    memcpy(value.value.array, ptr, 8);
+  } else if (value.type == PropertyType::kCharArray12) {
+    auto ptr = out_archive.GetBytes(12);
+    memcpy(value.value.array, ptr, 12);
+  } else if (value.type == PropertyType::kCharArray16) {
+    auto ptr = out_archive.GetBytes(16);
+    memcpy(value.value.array, ptr, 16);
+  } else if (value.type == PropertyType::kCharArray20) {
+    auto ptr = out_archive.GetBytes(20);
+    memcpy(value.value.array, ptr, 20);
+  } else if (value.type == PropertyType::kCharArray24) {
+    auto ptr = out_archive.GetBytes(24);
+    memcpy(value.value.array, ptr, 24);
   } else if (value.type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
     value.value.ptr =
         out_archive.GetBytes(value.type.additional_type_info.max_length);
