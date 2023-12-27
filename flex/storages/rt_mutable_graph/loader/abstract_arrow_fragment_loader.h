@@ -53,8 +53,12 @@ void set_single_vertex_column(gs::ColumnBase* col,
   for (auto j = 0; j < array->num_chunks(); ++j) {
     auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
     for (auto k = 0; k < casted->length(); ++k) {
-      col->set_any(vids[cur_ind++],
-                   std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+      if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+        ++cur_ind;
+      } else {
+        col->set_any(vids[cur_ind++],
+                     std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+      }
     }
   }
 }
@@ -97,10 +101,12 @@ struct _add_vertex {
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
       for (auto i = 0; i < row_num; ++i) {
         if (!indexer.add(casted_array->Value(i), vid)) {
-          LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i)
+          LOG(ERROR) << "Duplicate vertex id: " << casted_array->Value(i)
                      << "..";
+          vids.emplace_back(std::numeric_limits<vid_t>::max());
+        } else {
+          vids.emplace_back(vid);
         }
-        vids.emplace_back(vid);
       }
     } else {
       if (col->type()->Equals(arrow::utf8())) {
@@ -109,9 +115,11 @@ struct _add_vertex {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+            LOG(ERROR) << "Duplicate vertex id: " << str_view << "..";
+            vids.emplace_back(std::numeric_limits<vid_t>::max());
+          } else {
+            vids.emplace_back(vid);
           }
-          vids.emplace_back(vid);
         }
       } else if (col->type()->Equals(arrow::large_utf8())) {
         auto casted_array =
@@ -120,9 +128,11 @@ struct _add_vertex {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
-            LOG(FATAL) << "Duplicate vertex id: " << str_view << "..";
+            LOG(ERROR) << "Duplicate vertex id: " << str_view << "..";
+            vids.emplace_back(std::numeric_limits<vid_t>::max());
+          } else {
+            vids.emplace_back(vid);
           }
-          vids.emplace_back(vid);
         }
       } else {
         LOG(FATAL) << "Not support type: " << col->type()->ToString();
@@ -154,6 +164,7 @@ static void append_src_or_dst(
     std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
     std::vector<int32_t>& ie_degree, std::vector<int32_t>& oe_degree) {
   size_t cur_ind = old_size;
+  auto invalid_vid = std::numeric_limits<vid_t>::max();
   if constexpr (std::is_same_v<PK_T, std::string_view>) {
     if (col->type()->Equals(arrow::utf8())) {
       auto casted = std::static_pointer_cast<arrow::StringArray>(col);
@@ -166,7 +177,9 @@ static void append_src_or_dst(
         } else {
           std::get<0>(parsed_edges[cur_ind++]) = vid;
         }
-        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        if (vid != invalid_vid) {
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
       }
     } else {
       // must be large utf8
@@ -180,7 +193,9 @@ static void append_src_or_dst(
         } else {
           std::get<0>(parsed_edges[cur_ind++]) = vid;
         }
-        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        if (vid != invalid_vid) {
+          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        }
       }
     }
   } else {
@@ -193,7 +208,9 @@ static void append_src_or_dst(
       } else {
         std::get<0>(parsed_edges[cur_ind++]) = vid;
       }
-      is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      if (vid != invalid_vid) {
+        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+      }
     }
   }
 }

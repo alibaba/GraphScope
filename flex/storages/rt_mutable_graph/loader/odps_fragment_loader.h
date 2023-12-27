@@ -22,8 +22,6 @@
 #include <arrow/io/api.h>
 #include <arrow/util/uri.h>
 
-#include <boost/convert.hpp>
-#include <boost/convert/strtol.hpp>
 #include <charconv>
 
 #include "arrow/util/value_parsing.h"
@@ -32,88 +30,13 @@
 #include "flex/storages/rt_mutable_graph/loader/basic_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loader/i_fragment_loader.h"
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
+#include "flex/storages/rt_mutable_graph/loader/odps_client.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/third_party/httplib.h"
 #include "grape/util.h"
-#include "nlohmann/json.hpp"
-#include "storage_api.hpp"
-#include "storage_api_arrow.hpp"
-
-using apsara::odps::sdk::AliyunAccount;
-using apsara::odps::sdk::Configuration;
-using apsara::odps::sdk::storage_api::ReadRowsReq;
-using apsara::odps::sdk::storage_api::SessionReq;
-using apsara::odps::sdk::storage_api::SessionStatus;
-using apsara::odps::sdk::storage_api::SplitOptions;
-using apsara::odps::sdk::storage_api::TableBatchScanReq;
-using apsara::odps::sdk::storage_api::TableBatchScanResp;
-using apsara::odps::sdk::storage_api::TableBatchWriteReq;
-using apsara::odps::sdk::storage_api::TableBatchWriteResp;
-using apsara::odps::sdk::storage_api::TableIdentifier;
-using apsara::odps::sdk::storage_api::WriteRowsReq;
-using apsara::odps::sdk::storage_api::arrow_adapter::ArrowClient;
-using apsara::odps::sdk::storage_api::arrow_adapter::Reader;
 
 namespace gs {
-
-class ODPSReadClient {
- public:
-  static constexpr const int CONNECTION_TIMEOUT = 5;
-  static constexpr const int READ_WRITE_TIMEOUT = 10;
-  ODPSReadClient();
-
-  ~ODPSReadClient();
-
-  void init();
-
-  void CreateReadSession(std::string* session_id, int* split_count,
-                         const TableIdentifier& table_identifier,
-                         const std::vector<std::string>& selected_cols,
-                         const std::vector<std::string>& partition_cols,
-                         const std::vector<std::string>& selected_partitions);
-
-  std::shared_ptr<arrow::Table> ReadTable(const std::string& session_id,
-                                          int split_count,
-                                          const TableIdentifier& table_id,
-                                          int thread_num) const;
-
-  std::shared_ptr<ArrowClient> GetArrowClient() const;
-
- private:
-  TableBatchScanResp createReadSession(
-      const TableIdentifier& table_identifier,
-      const std::vector<std::string>& selected_cols,
-      const std::vector<std::string>& partition_cols,
-      const std::vector<std::string>& selected_partitions);
-
-  TableBatchScanResp getReadSession(std::string session_id,
-                                    const TableIdentifier& table_identifier);
-
-  void getReadSessionStatus(const std::string& session_id, int* split_count,
-                            const TableIdentifier& table_identifier);
-
-  void producerRoutine(
-      const std::string& session_id, const TableIdentifier& table_identifier,
-      std::vector<std::vector<std::shared_ptr<arrow::RecordBatch>>>&
-          all_batches_,
-      const std::vector<int>& indices) const;
-
-  bool readRows(std::string session_id, const TableIdentifier& table_identifier,
-                std::vector<std::shared_ptr<arrow::RecordBatch>>& res_batches,
-                int split_index) const;
-
- private:
-  // odps table related
-  std::string access_id_;
-  std::string access_key_;
-  std::string odps_endpoint_;
-  std::string tunnel_endpoint_;
-  std::string output_directory_;
-  std::shared_ptr<ArrowClient> arrow_client_ptr_;
-  size_t MAX_PRODUCER_NUM = 8;
-  size_t MAX_RETRY = 5;
-};
 
 class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
  public:
