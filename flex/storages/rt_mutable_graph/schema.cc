@@ -390,6 +390,10 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kInt32;
   } else if (str == "uint32" || str == DT_UNSIGNED_INT32) {
     return PropertyType::kUInt32;
+  } else if (str == "uint16" || str == DT_UNSIGNED_INT16) {
+    return PropertyType::kUInt16;
+  } else if (str == "uint8" || str == DT_UNSIGNED_INT8) {
+    return PropertyType::kUInt8;
   } else if (str == "bool" || str == DT_BOOL) {
     return PropertyType::kBool;
   } else if (str == "Date" || str == DT_DATE) {

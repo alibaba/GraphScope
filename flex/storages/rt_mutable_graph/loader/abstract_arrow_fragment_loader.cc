@@ -43,7 +43,11 @@ void set_vertex_column_from_string_array(
       for (auto k = 0; k < casted->length(); ++k) {
         auto str = casted->GetView(k);
         std::string_view sw(str.data(), str.size());
-        col->set_any(vids[cur_ind++], std::move(sw));
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          cur_ind++;
+        } else {
+          col->set_any(vids[cur_ind++], std::move(sw));
+        }
       }
     }
   } else {
@@ -53,7 +57,11 @@ void set_vertex_column_from_string_array(
       for (auto k = 0; k < casted->length(); ++k) {
         auto str = casted->GetView(k);
         std::string_view sw(str.data(), str.size());
-        col->set_any(vids[cur_ind++], std::move(sw));
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          cur_ind++;
+        } else {
+          col->set_any(vids[cur_ind++], std::move(sw));
+        }
       }
     }
   }
@@ -104,8 +112,12 @@ void set_vertex_column_from_timestamp_array(
       auto casted =
           std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
       for (auto k = 0; k < casted->length(); ++k) {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          cur_ind++;
+        } else {
+          col->set_any(vids[cur_ind++],
+                       std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+        }
       }
     }
   } else {

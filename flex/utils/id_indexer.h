@@ -307,7 +307,8 @@ class LFIndexer {
     while (true) {
       INDEX_T ind = indices_.get(index);
       if (ind == sentinel) {
-        LOG(FATAL) << "cannot find " << oid.to_string() << " in lf_indexer";
+        LOG(ERROR) << "cannot find " << oid.to_string() << " in lf_indexer";
+        return ind;
       } else if (keys_->get(ind) == oid) {
         return ind;
       } else {

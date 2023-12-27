@@ -145,6 +145,8 @@ class TypedEmptyColumn<FixedChar> : public ColumnBase {
 
 using IntEmptyColumn = TypedEmptyColumn<int32_t>;
 using UIntEmptyColumn = TypedEmptyColumn<uint32_t>;
+using UInt16EmptyColumn = TypedEmptyColumn<uint16_t>;
+using UInt8EmptyColumn = TypedEmptyColumn<uint8_t>;
 using LongEmptyColumn = TypedEmptyColumn<int64_t>;
 using ULongEmptyColumn = TypedEmptyColumn<uint64_t>;
 using DateEmptyColumn = TypedEmptyColumn<Date>;
@@ -164,6 +166,10 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<LongEmptyColumn>();
     } else if (type == PropertyType::kUInt32) {
       return std::make_shared<UIntEmptyColumn>();
+    } else if (type == PropertyType::kUInt16) {
+      return std::make_shared<UInt16EmptyColumn>();
+    } else if (type == PropertyType::kUInt8) {
+      return std::make_shared<UInt8EmptyColumn>();
     } else if (type == PropertyType::kUInt64) {
       return std::make_shared<ULongEmptyColumn>();
     } else if (type == PropertyType::kDouble) {
@@ -194,6 +200,10 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<LongColumn>(strategy);
     } else if (type == PropertyType::kUInt32) {
       return std::make_shared<UIntColumn>(strategy);
+    } else if (type == PropertyType::kUInt16) {
+      return std::make_shared<UInt16Column>(strategy);
+    } else if (type == PropertyType::kUInt8) {
+      return std::make_shared<UInt8Column>(strategy);
     } else if (type == PropertyType::kUInt64) {
       return std::make_shared<ULongColumn>(strategy);
     } else if (type == PropertyType::kDouble) {
@@ -203,7 +213,7 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
     } else if (type == PropertyType::kDate) {
       return std::make_shared<DateColumn>(strategy);
     } else if (type == PropertyType::kStringMap) {
-      return std::make_shared<StringMapColumn<uint8_t>>(strategy);
+      return std::make_shared<StringMapColumn<uint16_t>>(strategy);
     } else if (type == PropertyType::kString) {
       return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {

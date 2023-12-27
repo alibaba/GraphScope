@@ -15,10 +15,10 @@ schema:
             primitive_type: DT_STRINGMAP
         - property_name: roleName # limited number of values.(distinct count 11)
           property_type:
-            primitive_type: DT_SIGNED_INT32 
+            primitive_type: DT_UNSIGNED_INT8 
         - property_name: activeDays
           property_type:
-            primitive_type: DT_SIGNED_INT32
+            primitive_type: DT_UNSIGNED_INT8
         - property_name: subIndustry # limited number of values.(distinct count 9368)
           property_type:
             primitive_type: DT_STRINGMAP
@@ -67,7 +67,7 @@ schema:
       properties:
         - property_name: creationDate
           property_type:
-            primitive_type: DT_STRING
+            primitive_type: DT_SIGNED_INT64
     - type_id: 1
       type_name: ChatInGroup
       vertex_type_pair_relations:
@@ -77,7 +77,7 @@ schema:
       properties:
         - property_name: creationDate
           property_type:
-            primitive_type: DT_STRING
+            primitive_type: DT_SIGNED_INT64
     - type_id: 2
       type_name: Intimacy
       vertex_type_pair_relations:
@@ -87,10 +87,10 @@ schema:
       properties:
         - property_name: intimacy_score
           property_type:
-            primitive_type: DT_DOUBLE
+            primitive_type: DT_UNSIGNED_INT8
         - property_name: communication_score
           property_type:
-            primitive_type: DT_SIGNED_INT64
+            primitive_type: DT_UNSIGNED_INT16
     - type_id: 3
       type_name: WorkAt
       vertex_type_pair_relations:
@@ -106,7 +106,7 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: roleName
           property_type:
-            primitive_type: DT_SIGNED_INT32 #DT_STRINGMAP # limited number of values.(11)
+            primitive_type: DT_UNSIGNED_INT8 #DT_STRINGMAP # limited number of values.(11)
     - type_id: 4
       type_name: StudyAt
       vertex_type_pair_relations:
