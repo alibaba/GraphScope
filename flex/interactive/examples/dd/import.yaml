@@ -171,9 +171,9 @@ edge_mappings:
           name: role_name
         property: roleName
   - type_triplet:
-    edge: StudyAt
-    source_vertex: User
-    destination_vertex: DingEduOrg
+      edge: StudyAt
+      source_vertex: User
+      destination_vertex: DingEduOrg
     inputs:
       - dd_undata/dim_ding_edu_org_user_edge/ds=20231226
     source_vertex_mappings:
