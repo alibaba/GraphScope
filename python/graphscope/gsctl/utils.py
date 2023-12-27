@@ -19,13 +19,21 @@
 import os
 from typing import List
 
+import click
 import yaml
+
+from google.protobuf.internal.containers import ScalarMap
+
+from graphscope.proto import flex_pb2
 
 
 def read_yaml_file(path):
     """Reads YAML file and returns as a python object."""
-    with open(path, "r") as file:
-        return yaml.safe_load(file)
+    try:
+        with open(path, "r") as file:
+            return yaml.safe_load(file)
+    except Exception as e:
+        click.secho(str(e), fg="red")
 
 
 def write_yaml_file(data, path):
@@ -62,11 +70,19 @@ def dict_to_proto_message(values, message):
             elif isinstance(v, list):
                 _parse_list(v, getattr(message, k))
             else:  # value can be set
-                try:
+                if hasattr(message, k):
                     setattr(message, k, v)
-                except AttributeError:
-                    # treat as map<str, str>
-                    message[k] = v
+                else:
+                    try:
+                        # treat as a map
+                        if isinstance(v, bool):
+                            message[k].CopyFrom(flex_pb2.MapValue(b=v))
+                        elif isinstance(v, int):
+                            message[k].CopyFrom(flex_pb2.MapValue(i=v))
+                        elif isinstance(v, str):
+                            message[k].CopyFrom(flex_pb2.MapValue(s=v))
+                    except AttributeError as e:
+                        click.secho(str(e), fg="red")
 
     _parse_dict(values, message)
     return message

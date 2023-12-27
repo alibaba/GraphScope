@@ -25,7 +25,7 @@ from abc import abstractmethod
 import schedule
 from schedule import CancelJob
 
-from gscoordinator.stoppable_thread import StoppableThread
+from gscoordinator.servicer.flex.stoppable_thread import StoppableThread
 from gscoordinator.utils import decode_datetimestr
 
 
@@ -177,7 +177,7 @@ class Scheduler(metaclass=ABCMeta):
         """Start a thread for the job."""
         # overwrite for each scheduled job
         self._jobid = "job-{0}".format(
-            datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         )
         self._last_run = datetime.datetime.now()
         # schedule in a thread

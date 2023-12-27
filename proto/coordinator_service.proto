@@ -55,15 +55,15 @@ service CoordinatorService {
 
   rpc ListGraph(ListGraphRequest) returns (ListGraphResponse);
 
+  rpc CreateGraph(CreateGraphRequest) returns (ApiResponse);
+
+  rpc DeleteGraph(DeleteGraphRequest) returns (ApiResponse);
+
+  rpc CreateJob(CreateJobRequest) returns (ApiResponse);
+
+  rpc ListJob(ListJobRequest) returns (ListJobResponse);
+
   // end
-
-  rpc CreateInteractiveGraph(CreateInteractiveGraphRequest) returns (ApiResponse);
-
-  rpc RemoveInteractiveGraph(RemoveInteractiveGraphRequest) returns (ApiResponse);
-
-  rpc ImportInteractiveGraph(ImportInteractiveGraphRequest) returns (ApiResponse);
-
-  rpc ListInteractiveJob(ListInteractiveJobRequest) returns (ListInteractiveJobResponse);
 
   rpc CreateInteractiveProcedure(CreateInteractiveProcedureRequest) returns (ApiResponse);
 

@@ -89,14 +89,14 @@ class GRPCClient(object):
             pass
 
     @handle_grpc_error
-    def create_interactive_graph(self, graph_def: flex_pb2.GraphProto):
-        request = flex_pb2.CreateInteractiveGraphRequest(graph_def=graph_def)
-        return self._stub.CreateInteractiveGraph(request)
+    def create_graph(self, graph_def: flex_pb2.GraphProto):
+        request = flex_pb2.CreateGraphRequest(graph_def=graph_def)
+        return self._stub.CreateGraph(request)
 
     @handle_grpc_error
-    def remove_interactive_graph(self, graph: str):
-        request = flex_pb2.RemoveInteractiveGraphRequest(graph_name=graph)
-        return self._stub.RemoveInteractiveGraph(request)
+    def delete_graph(self, graph_name: str):
+        request = flex_pb2.DeleteGraphRequest(graph_name=graph_name)
+        return self._stub.DeleteGraph(request)
 
     @handle_grpc_error
     def list_graph(self):
@@ -104,14 +104,21 @@ class GRPCClient(object):
         return self._stub.ListGraph(request)
 
     @handle_grpc_error
-    def import_interactive_graph(self, schema_mapping: flex_pb2.SchemaMapping):
-        request = flex_pb2.ImportInteractiveGraphRequest(schema_mapping=schema_mapping)
-        return self._stub.ImportInteractiveGraph(request)
+    def create_job(
+        self,
+        type: str,
+        schedule: flex_pb2.Schedule,
+        description: flex_pb2.JobDescription,
+    ):
+        request = flex_pb2.CreateJobRequest(
+            type=type, schedule=schedule, description=description
+        )
+        return self._stub.CreateJob(request)
 
     @handle_grpc_error
-    def list_interactive_job(self):
-        request = flex_pb2.ListInteractiveJobRequest()
-        return self._stub.ListInteractiveJob(request)
+    def list_job(self):
+        request = flex_pb2.ListJobRequest()
+        return self._stub.ListJob(request)
 
     @handle_grpc_error
     def create_interactive_procedure(self, procedure: flex_pb2.Procedure):
