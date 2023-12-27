@@ -9,16 +9,16 @@ schema:
         - property_name: name
           property_type:
             primitive_type: DT_STRING
-        - property_name: city
+        - property_name: city # limited number of values.(distinct count 8425)
           property_type:
-            primitive_type: DT_STRING
-        - property_name: role_name
+            primitive_type: DT_STRINGMAP
+        - property_name: role_name # limited number of values.(distinct count 11)
           property_type:
-            primitive_type: DT_STRING
+            primitive_type: DT_STRINGMAP 
         - property_name: active_days
           property_type:
             primitive_type: DT_SIGNED_INT32
-        - property_name: sub_industry
+        - property_name: sub_industry # limited number of values.(distinct count 9368)
           property_type:
             primitive_type: DT_STRINGMAP
       primary_keys:
@@ -98,7 +98,7 @@ schema:
             primitive_type: DT_SIGNED_INT64
         - property_name: roleName
           property_type:
-            primitive_type: DT_STRING
+            primitive_type: DT_STRINGMAP # limited number of values.(11)
     - type_name: StudyAt
       vertex_type_pair_relations:
         - source_vertex: User
@@ -111,6 +111,6 @@ schema:
         - property_name: leaveDate
           property_type:
             primitive_type: DT_SIGNED_INT64
-        - property_name: profession
+        - property_name: profession # limited number of values.(0) kefei反馈当前置为空置，后续确定会有值
           property_type:
-            primitive_type: DT_STRING
+            primitive_type: DT_STRINGMAP
