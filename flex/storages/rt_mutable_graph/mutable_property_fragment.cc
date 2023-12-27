@@ -37,6 +37,9 @@ MutablePropertyFragment::~MutablePropertyFragment() {
         std::string src_label_name = schema_.get_vertex_label_name(src_label);
         std::string dst_label_name = schema_.get_vertex_label_name(dst_label);
         std::string edge_label_name = schema_.get_edge_label_name(e_label);
+        if (!schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
+          continue;
+        }
         bool mutability = schema_.get_edge_mutability(
             src_label_name, dst_label_name, edge_label_name);
 
