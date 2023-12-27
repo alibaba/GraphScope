@@ -19,7 +19,8 @@
 #include <stdio.h>
 
 #include <grape/serialization/in_archive.h>
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/immutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/utils/allocators.h"
 
 namespace gs {
@@ -62,21 +63,37 @@ class DualCsrBase {
 template <typename EDATA_T, typename Enable = void>
 class DualCsr : public DualCsrBase {
  public:
-  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy)
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, bool mut = true)
       : in_csr_(nullptr), out_csr_(nullptr) {
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<EDATA_T>();
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MutableCsr<EDATA_T>();
+      if (mut) {
+        in_csr_ = new MutableCsr<EDATA_T>();
+      } else {
+        in_csr_ = new ImmutableCsr<EDATA_T>();
+      }
     } else if (ie_strategy == EdgeStrategy::kSingle) {
-      in_csr_ = new SingleMutableCsr<EDATA_T>();
+      if (mut) {
+        in_csr_ = new SingleMutableCsr<EDATA_T>();
+      } else {
+        in_csr_ = new SingleImmutableCsr<EDATA_T>();
+      }
     }
     if (oe_strategy == EdgeStrategy::kNone) {
       out_csr_ = new EmptyCsr<EDATA_T>();
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MutableCsr<EDATA_T>();
+      if (mut) {
+        out_csr_ = new MutableCsr<EDATA_T>();
+      } else {
+        out_csr_ = new ImmutableCsr<EDATA_T>();
+      }
     } else if (oe_strategy == EdgeStrategy::kSingle) {
-      out_csr_ = new SingleMutableCsr<EDATA_T>();
+      if (mut) {
+        out_csr_ = new SingleMutableCsr<EDATA_T>();
+      } else {
+        out_csr_ = new SingleImmutableCsr<EDATA_T>();
+      }
     }
   }
   ~DualCsr() {
@@ -91,8 +108,8 @@ class DualCsr : public DualCsrBase {
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
                  const std::vector<int>& ie_degree) override {
-    in_csr_->batch_init(ie_name, work_dir, ie_degree);
-    out_csr_->batch_init(oe_name, work_dir, oe_degree);
+    in_csr_->batch_init(ie_name, work_dir, ie_degree, 1.2);
+    out_csr_->batch_init(oe_name, work_dir, oe_degree, 1.2);
   }
 
   void Open(const std::string& oe_name, const std::string& ie_name,
@@ -209,8 +226,8 @@ class DualCsr<EDATA_T, std::enable_if_t<is_col_property_type<EDATA_T>::value>>
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
                  const std::vector<int>& ie_degree) override {
-    size_t ie_num = in_csr_->batch_init(ie_name, work_dir, ie_degree);
-    size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree);
+    size_t ie_num = in_csr_->batch_init(ie_name, work_dir, ie_degree, 1.2);
+    size_t oe_num = out_csr_->batch_init(oe_name, work_dir, oe_degree, 1.2);
     column_.open(edata_name, "", work_dir);
     column_.resize(std::max(ie_num, oe_num));
     column_idx_.store(0);

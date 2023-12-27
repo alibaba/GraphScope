@@ -55,7 +55,8 @@ class Schema {
                       const std::vector<PropertyType>& properties,
                       const std::vector<std::string>& prop_names,
                       EdgeStrategy oe = EdgeStrategy::kMultiple,
-                      EdgeStrategy ie = EdgeStrategy::kMultiple);
+                      EdgeStrategy ie = EdgeStrategy::kMultiple,
+                      bool mutability = true);
 
   label_t vertex_label_num() const;
 
@@ -116,6 +117,10 @@ class Schema {
                          const std::string& dst_label,
                          const std::string& edge_label,
                          const std::string& prop) const;
+
+  bool get_edge_mutability(const std::string& src_label,
+                           const std::string& dst_label,
+                           const std::string& edge_label) const;
 
   bool has_vertex_label(const std::string& label) const;
 
@@ -185,6 +190,7 @@ class Schema {
   std::vector<std::vector<StorageStrategy>> vprop_storage_;
   std::map<uint32_t, std::vector<PropertyType>> eproperties_;
   std::map<uint32_t, std::vector<std::string>> eprop_names_;
+  std::map<uint32_t, bool> e_mutability_;
   std::map<uint32_t, EdgeStrategy> oe_strategy_;
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
   std::vector<size_t> max_vnum_;

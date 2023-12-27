@@ -19,7 +19,7 @@
 #include <limits>
 #include <utility>
 
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 
@@ -27,6 +27,25 @@ namespace gs {
 
 class MutablePropertyFragment;
 class VersionManager;
+
+template <typename EDATA_T>
+class ImmutableAdjListView {
+  using nbr_t = ImmutableNbr<EDATA_T>;
+
+ public:
+  ImmutableAdjListView(const nbr_t* begin, const nbr_t* end)
+      : begin_(begin), end_(end) {}
+
+  const nbr_t* begin() const { return begin_; }
+  const nbr_t* end() const { return end_; }
+
+  int estimated_degree() const { return end_ - begin_; }
+
+ private:
+  const nbr_t* begin_;
+  const nbr_t* end_;
+};
+
 template <typename EDATA_T>
 class AdjListView {
   class nbr_iterator {
@@ -120,6 +139,38 @@ class SingleGraphView {
  private:
   const SingleMutableCsr<EDATA_T>& csr_;
   timestamp_t timestamp_;
+};
+
+template <typename EDATA_T>
+class ImmutableGraphView {
+ public:
+  ImmutableGraphView(const ImmutableCsr<EDATA_T>& csr) : csr_(csr) {}
+
+  ImmutableAdjListView<EDATA_T> get_edges(vid_t v) const {
+    return ImmutableAdjListView<EDATA_T>(csr_.get_edges_begin(v),
+                                         csr_.get_edges_end(v));
+  }
+
+ private:
+  const ImmutableCsr<EDATA_T>& csr_;
+};
+
+template <typename EDATA_T>
+class ImmutableSingleGraphView {
+ public:
+  ImmutableSingleGraphView(const SingleImmutableCsr<EDATA_T>& csr)
+      : csr_(csr) {}
+
+  bool exist(vid_t v) const {
+    return csr_.get_edge(v).neighbor != std::numeric_limits<vid_t>::max();
+  }
+
+  const ImmutableNbr<EDATA_T>& get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleImmutableCsr<EDATA_T>& csr_;
 };
 
 class ReadTransaction {
@@ -218,6 +269,26 @@ class ReadTransaction {
     return AdjListView<EDATA_T>(csr->get_edges(v), timestamp_);
   }
 
+  template <typename EDATA_T>
+  ImmutableAdjListView<EDATA_T> GetOutgoingImmutableEdges(
+      label_t v_label, vid_t v, label_t neighbor_label,
+      label_t edge_label) const {
+    auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
+        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+    return ImmutableAdjListView<EDATA_T>(csr->get_edges_begin(v),
+                                         csr->get_edges_end(v));
+  }
+
+  template <typename EDATA_T>
+  ImmutableAdjListView<EDATA_T> GetIncomingImmutableEdges(
+      label_t v_label, vid_t v, label_t neighbor_label,
+      label_t edge_label) const {
+    auto csr = dynamic_cast<const TypedMutableCsrBase<EDATA_T>*>(
+        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+    return ImmutableAdjListView<EDATA_T>(csr->get_edges_begin(v),
+                                         csr->get_edges_end(v));
+  }
+
   const Schema& schema() const;
 
   template <typename EDATA_T>
@@ -239,6 +310,22 @@ class ReadTransaction {
   }
 
   template <typename EDATA_T>
+  ImmutableGraphView<EDATA_T> GetOutgoingImmutableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const ImmutableCsr<EDATA_T>*>(
+        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+    return ImmutableGraphView<EDATA_T>(*csr);
+  }
+
+  template <typename EDATA_T>
+  ImmutableGraphView<EDATA_T> GetIncomingImmutableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const ImmutableCsr<EDATA_T>*>(
+        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+    return ImmutableGraphView<EDATA_T>(*csr);
+  }
+
+  template <typename EDATA_T>
   SingleGraphView<EDATA_T> GetOutgoingSingleGraphView(
       label_t v_label, label_t neighbor_label, label_t edge_label) const {
     auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
@@ -252,6 +339,22 @@ class ReadTransaction {
     auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
         graph_.get_ie_csr(v_label, neighbor_label, edge_label));
     return SingleGraphView<EDATA_T>(*csr, timestamp_);
+  }
+
+  template <typename EDATA_T>
+  ImmutableSingleGraphView<EDATA_T> GetOutgoingImmutableSingleGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const SingleImmutableCsr<EDATA_T>*>(
+        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+    return ImmutableSingleGraphView<EDATA_T>(*csr);
+  }
+
+  template <typename EDATA_T>
+  ImmutableSingleGraphView<EDATA_T> GetIncomingImmutableSingleGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const SingleImmutableCsr<EDATA_T>*>(
+        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+    return ImmutableSingleGraphView<EDATA_T>(*csr);
   }
 
  private:

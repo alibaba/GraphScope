@@ -23,7 +23,6 @@
 #include "flex/storages/rt_mutable_graph/schema.h"
 
 #include "flex/storages/rt_mutable_graph/dual_csr.h"
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/arrow_utils.h"
 #include "flex/utils/id_indexer.h"
