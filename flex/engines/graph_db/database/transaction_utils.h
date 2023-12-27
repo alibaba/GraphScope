@@ -49,18 +49,17 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
         FixedChar(prop.value.ptr, prop.type.additional_type_info.max_length);
     arc << val;
   } else if (prop.type == PropertyType::kCharArray4) {
-    arc.AddBytes(prop.value.data, 4);
-    memcpy(prop.value.array, ptr, 4);
+    arc.AddBytes(prop.value.array, 4);
   } else if (prop.type == PropertyType::kCharArray8) {
-    arc.AddBytes(prop.value.data, 8);
+    arc.AddBytes(prop.value.array, 8);
   } else if (prop.type == PropertyType::kCharArray12) {
-    arc.AddBytes(prop.value.data, 12);
+    arc.AddBytes(prop.value.array, 12);
   } else if (prop.type == PropertyType::kCharArray16) {
-    arc.AddBytes(prop.value.data, 16);
+    arc.AddBytes(prop.value.array, 16);
   } else if (prop.type == PropertyType::kCharArray20) {
-    arc.AddBytes(prop.value.data, 20);
+    arc.AddBytes(prop.value.array, 20);
   } else if (prop.type == PropertyType::kCharArray24) {
-    arc.AddBytes(prop.value.data, 24);
+    arc.AddBytes(prop.value.array, 24);
   } else if (prop.type == PropertyType::Empty()) {
   } else {
     LOG(FATAL) << "Unexpected property type" << int(prop.type.type_enum);

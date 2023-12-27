@@ -125,7 +125,19 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
         bytes_count += property.NumBytes();
       }
     }
-    return new DualCsr<FixedChar>(oes, ies, bytes_count);
+    if (bytes_count <= 4) {
+      return new DualCsr<char_array<4>>(oes, ies, bytes_count);
+    } else if (bytes_count <= 8) {
+      return new DualCsr<char_array<8>>(oes, ies, bytes_count);
+    } else if (bytes_count <= 12) {
+      return new DualCsr<char_array<12>>(oes, ies, bytes_count);
+    } else if (bytes_count <= 16) {
+      return new DualCsr<char_array<16>>(oes, ies, bytes_count);
+    } else if (bytes_count <= 20) {
+      return new DualCsr<char_array<20>>(oes, ies, bytes_count);
+    } else if (bytes_count <= 24) {
+      return new DualCsr<char_array<24>>(oes, ies, bytes_count);
+    }
   }
   LOG(FATAL) << "not support edge strategy or edge data type";
   return nullptr;

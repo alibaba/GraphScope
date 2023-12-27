@@ -40,21 +40,16 @@ class TestStringEdgeProperty {
       }
     }
     auto txn = db_.GetReadTransaction();
-    auto gw = txn.GetIncomingGraphView<FixedChar>(dst_label_, src_label_,
-                                                  edge_label_);
+    auto gw = txn.GetIncomingGraphView<char_array<12>>(dst_label_, src_label_,
+                                                       edge_label_);
     const auto& types = db_.graph().schema().get_edge_properties(
         src_label_, dst_label_, edge_label_);
-    size_t prop_len = 0;
-    for (auto& type : types) {
-      prop_len += type.NumBytes();
-    }
     for (auto i = 0; i < person_v_num; ++i) {
       auto ie = gw.get_edges(i);
       for (auto e : ie) {
         auto fc = e.get_data();
-        auto cur = static_cast<const char*>(fc.ptr);
-        assert(fc.len == prop_len);
-        LOG(INFO) << "weight: " << *static_cast<const double*>(fc.ptr)
+        auto cur = static_cast<const char*>(fc.data);
+        LOG(INFO) << "weight: " << *reinterpret_cast<const double*>(fc.data)
                   << " year: "
                   << *reinterpret_cast<const int*>(cur + sizeof(double));
       }

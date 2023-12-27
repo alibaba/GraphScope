@@ -120,7 +120,7 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
   const_nbr_ptr_t end_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
   using nbr_t = MutableNbr<EDATA_T>;
 
@@ -157,24 +157,26 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
   nbr_t* end_;
 };
 
-template <>
-class TypedMutableCsrEdgeIter<std::string_view>
+template <typename EDATA_T>
+class TypedMutableCsrEdgeIter<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>>
     : public MutableCsrEdgeIterBase {
-  using nbr_ptr_t = typename MutableNbrSliceMut<std::string_view>::nbr_ptr_t;
+  using nbr_ptr_t = typename MutableNbrSliceMut<EDATA_T>::nbr_ptr_t;
 
  public:
-  explicit TypedMutableCsrEdgeIter(MutableNbrSliceMut<std::string_view> slice)
+  explicit TypedMutableCsrEdgeIter(MutableNbrSliceMut<EDATA_T> slice)
       : cur_(slice.begin()), end_(slice.end()) {}
   ~TypedMutableCsrEdgeIter() = default;
 
   vid_t get_neighbor() const override { return cur_.get_neighbor(); }
   Any get_data() const override {
-    return AnyConverter<std::string_view>::to_any(cur_.get_data());
+    return AnyConverter<EDATA_T>::to_any(cur_.get_data());
   }
   timestamp_t get_timestamp() const override { return cur_.get_timestamp(); }
 
   void set_data(const Any& value, timestamp_t ts) override {
-    cur_.set_data(value.AsStringView(), ts);
+    EDATA_T val = AnyConverter<EDATA_T>::from_any(value);
+    cur_.set_data(val, ts);
   }
   size_t get_index() const { return cur_.get_index(); }
   void set_timestamp(timestamp_t ts) { cur_.set_timestamp(ts); }
@@ -195,7 +197,7 @@ class TypedMutableCsrEdgeIter<std::string_view>
   nbr_ptr_t end_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class TypedMutableCsrBase : public MutableCsrBase {
  public:
   using slice_t = MutableNbrSlice<EDATA_T>;
@@ -205,15 +207,16 @@ class TypedMutableCsrBase : public MutableCsrBase {
   virtual void put_edge(vid_t src, vid_t dst, const EDATA_T& data,
                         timestamp_t ts, Allocator& alloc) = 0;
   virtual slice_t get_edges(vid_t i) const = 0;
-
   virtual const immutable_nbr_t* get_edges_begin(vid_t v) const { return NULL; }
   virtual const immutable_nbr_t* get_edges_end(vid_t v) const { return NULL; }
 };
 
-template <>
-class TypedMutableCsrBase<std::string_view> : public MutableCsrBase {
+template <typename EDATA_T>
+class TypedMutableCsrBase<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>>
+    : public MutableCsrBase {
  public:
-  using slice_t = MutableNbrSlice<std::string_view>;
+  using slice_t = MutableNbrSlice<EDATA_T>;
   virtual slice_t get_edges(vid_t i) const = 0;
   virtual void batch_put_edge_with_index(vid_t src, vid_t dst,
                                          const size_t& data,

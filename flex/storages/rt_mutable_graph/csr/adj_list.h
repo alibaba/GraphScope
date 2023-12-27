@@ -30,7 +30,7 @@ struct UninitializedUtils {
   }
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableAdjlist {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
@@ -96,14 +96,14 @@ class MutableAdjlist {
   int capacity_;
 };
 
-template <>
-class MutableAdjlist<std::string_view> {
+template <typename EDATA_T>
+class MutableAdjlist<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>> {
  public:
   using nbr_t = MutableNbr<size_t>;
-  using slice_t = MutableNbrSlice<std::string_view>;
-  using mut_slice_t = MutableNbrSliceMut<std::string_view>;
-  MutableAdjlist(StringColumn& column)
-      : buffer_(NULL), size_(0), capacity_(0) {}
+  using slice_t = MutableNbrSlice<EDATA_T>;
+  using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
+  MutableAdjlist() : buffer_(NULL), size_(0), capacity_(0) {}
   ~MutableAdjlist() {}
 
   void init(nbr_t* ptr, int cap, int size) {
@@ -138,14 +138,14 @@ class MutableAdjlist<std::string_view> {
     nbr.timestamp.store(ts);
   }
 
-  slice_t get_edges(const StringColumn& column) const {
+  slice_t get_edges(const TypedColumn<EDATA_T>& column) const {
     slice_t ret(column);
     ret.set_size(size_.load(std::memory_order_acquire));
     ret.set_begin(buffer_);
     return ret;
   }
 
-  mut_slice_t get_edges_mut(StringColumn& column) {
+  mut_slice_t get_edges_mut(TypedColumn<EDATA_T>& column) {
     mut_slice_t ret(column);
     ret.set_size(size_.load());
     ret.set_begin(buffer_);

@@ -44,6 +44,13 @@ template class MutableCsr<uint64_t>;
 template class SingleMutableCsr<double>;
 template class MutableCsr<double>;
 
+template class MutableCsr<char_array<4>>;
+template class MutableCsr<char_array<8>>;
+template class MutableCsr<char_array<12>>;
+template class MutableCsr<char_array<16>>;
+template class MutableCsr<char_array<20>>;
+template class MutableCsr<char_array<24>>;
+
 template class SingleMutableCsr<float>;
 template class MutableCsr<float>;
 

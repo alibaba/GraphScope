@@ -31,7 +31,7 @@
 
 namespace gs {
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
