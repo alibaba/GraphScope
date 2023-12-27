@@ -208,8 +208,11 @@ class BasicFragmentLoader {
 
     auto edge_properties =
         schema_.get_edge_properties(src_label_id, dst_label_id, edge_label_id);
+    bool mutability = schema_.get_edge_mutability(
+        src_label_name, dst_label_name, edge_label_name);
 
-    auto dual_csr = new DualCsr<CHAR_ARRAY_T>(oe_strategy, ie_strategy);
+    auto dual_csr =
+        new DualCsr<CHAR_ARRAY_T>(oe_strategy, ie_strategy, mutability);
     dual_csr_list_[index] = dual_csr;
     ie_[index] = dual_csr_list_[index]->GetInCsr();
     oe_[index] = dual_csr_list_[index]->GetOutCsr();
