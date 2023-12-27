@@ -627,7 +627,19 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
         for (const auto& type : types) {
           len += type.NumBytes();
         }
-        value.type = PropertyType::FixedChar(len);
+        if (len <= 4) {
+          value.type = PropertyType::kCharArray4;
+        } else if (len <= 8) {
+          value.type = PropertyType::kCharArray8;
+        } else if (len <= 12) {
+          value.type = PropertyType::kCharArray12;
+        } else if (len <= 16) {
+          value.type = PropertyType::kCharArray16;
+        } else if (len <= 20) {
+          value.type = PropertyType::kCharArray20;
+        } else {
+          value.type = PropertyType::kCharArray24;
+        }
       }
       while (edge_iter->is_valid()) {
         if (edge_iter->get_neighbor() == nbr_lid) {

@@ -48,6 +48,19 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
     auto val =
         FixedChar(prop.value.ptr, prop.type.additional_type_info.max_length);
     arc << val;
+  } else if (prop.type == PropertyType::kCharArray4) {
+    arc.AddBytes(prop.value.data, 4);
+    memcpy(prop.value.array, ptr, 4);
+  } else if (prop.type == PropertyType::kCharArray8) {
+    arc.AddBytes(prop.value.data, 8);
+  } else if (prop.type == PropertyType::kCharArray12) {
+    arc.AddBytes(prop.value.data, 12);
+  } else if (prop.type == PropertyType::kCharArray16) {
+    arc.AddBytes(prop.value.data, 16);
+  } else if (prop.type == PropertyType::kCharArray20) {
+    arc.AddBytes(prop.value.data, 20);
+  } else if (prop.type == PropertyType::kCharArray24) {
+    arc.AddBytes(prop.value.data, 24);
   } else if (prop.type == PropertyType::Empty()) {
   } else {
     LOG(FATAL) << "Unexpected property type" << int(prop.type.type_enum);
@@ -77,7 +90,27 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
     auto val =
         FixedChar(prop.value.ptr, prop.type.additional_type_info.max_length);
     arc >> val;
-  } else if (prop.type == PropertyType::Empty()) {
+  } else if (prop.type == PropertyType::kCharArray4) {
+    void* ptr = arc.GetBytes(4);
+    memcpy(prop.value.array, ptr, 4);
+  } else if (prop.type == PropertyType::kCharArray8) {
+    void* ptr = arc.GetBytes(8);
+    memcpy(prop.value.array, ptr, 8);
+  } else if (prop.type == PropertyType::kCharArray12) {
+    void* ptr = arc.GetBytes(12);
+    memcpy(prop.value.array, ptr, 12);
+  } else if (prop.type == PropertyType::kCharArray16) {
+    void* ptr = arc.GetBytes(16);
+    memcpy(prop.value.array, ptr, 16);
+  } else if (prop.type == PropertyType::kCharArray20) {
+    void* ptr = arc.GetBytes(20);
+    memcpy(prop.value.array, ptr, 20);
+  } else if (prop.type == PropertyType::kCharArray24) {
+    void* ptr = arc.GetBytes(24);
+    memcpy(prop.value.array, ptr, 24);
+  }
+
+  else if (prop.type == PropertyType::Empty()) {
   } else {
     LOG(FATAL) << "Unexpected property type: "
                << static_cast<int>(prop.type.type_enum);
