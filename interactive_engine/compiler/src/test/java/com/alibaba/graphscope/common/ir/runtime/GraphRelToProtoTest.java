@@ -149,6 +149,17 @@ public class GraphRelToProtoTest {
                     FileUtils.readJsonFromResource("proto/edge_expand_test.json"),
                     plan.explain().trim());
         }
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(expand))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/partitioned_edge_expand_test.json"),
+                    plan.explain().trim());
+        }
     }
 
     @Test
@@ -183,6 +194,15 @@ public class GraphRelToProtoTest {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/getv_test.json"), plan.explain().trim());
+        }
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedGraphConfig(), Utils.schemaMeta, new LogicalPlan(getV))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/partitioned_getv_test.json"),
+                    plan.explain().trim());
         }
     }
 
@@ -608,6 +628,18 @@ public class GraphRelToProtoTest {
                     FileUtils.readJsonFromResource("proto/edge_expand_degree_test.json"),
                     plan.explain().trim());
         }
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource(
+                            "proto/partitioned_edge_expand_degree_test.json"),
+                    plan.explain().trim());
+        }
     }
 
     // g.V().hasLabel("person").outE("knows").inV()
@@ -652,6 +684,78 @@ public class GraphRelToProtoTest {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/edge_expand_vertex_test.json"),
+                    plan.explain().trim());
+        }
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource(
+                            "proto/partitioned_edge_expand_vertex_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    // g.V().hasLabel("person").outE("knows").inV().has("age",10), can be fused into
+    // GraphPhysicalExpand + GraphPhysicalGetV
+    @Test
+    public void expand_vertex_filter_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "age"),
+                                        builder.literal(10)))
+                        .build();
+
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/edge_expand_vertex_filter_test.json"),
+                    plan.explain().trim());
+        }
+
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource(
+                            "proto/partitioned_edge_expand_vertex_filter_test.json"),
                     plan.explain().trim());
         }
     }
@@ -760,6 +864,15 @@ public class GraphRelToProtoTest {
     }
 
     private Configs getMockGraphConfig() {
-        return new Configs(ImmutableMap.of("servers", "1", "workers", "1"));
+        return new Configs(ImmutableMap.of("pegasus.hosts", "1", "pegasus.worker.num", "1"));
+    }
+
+    private Configs getMockPartitionedGraphConfig() {
+        return new Configs(
+                ImmutableMap.of(
+                        "pegasus.hosts",
+                        "localhost:8080,localhost:8081",
+                        "pegasus.worker.num",
+                        "2"));
     }
 }
