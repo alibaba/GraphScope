@@ -86,6 +86,8 @@ void set_vertex_properties(gs::ColumnBase* col,
     set_vertex_column_from_timestamp_array(col, array, vids);
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_vertex_column_from_string_array(col, array, vids);
+  } else if (col_type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    set_vertex_column_from_string_array(col, array, vids);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }
@@ -118,27 +120,47 @@ void check_edge_invariant(
         column_mappings,
     size_t src_col_ind, size_t dst_col_ind, label_t src_label_i,
     label_t dst_label_i, label_t edge_label_i) {
-  // TODO(zhanglei): Check column mappings after multiple property on edge is
-  // supported
+  auto src_label_name = schema.get_vertex_label_name(src_label_i);
+  auto dst_label_name = schema.get_vertex_label_name(dst_label_i);
+  auto edge_label_name = schema.get_edge_label_name(edge_label_i);
+  // check whether edge have multiple properties, if so, we can not have string
+  // properties.
+  auto& properties =
+      schema.get_edge_properties(src_label_i, dst_label_i, edge_label_i);
   if (column_mappings.size() > 1) {
-    LOG(FATAL) << "Edge column mapping must be less than 1";
+    // once column_mappings are specified, we need to make sure they are the
+    // same size as properties.
+    CHECK(properties.size() == column_mappings.size())
+        << "Edge property "
+        << "size not match:" << properties.size() << " vs "
+        << column_mappings.size();
   }
-  if (column_mappings.size() > 0) {
-    auto& mapping = column_mappings[0];
+
+  for (auto i = 0; i < column_mappings.size(); ++i) {
+    auto& mapping = column_mappings[i];
     if (std::get<0>(mapping) == src_col_ind ||
         std::get<0>(mapping) == dst_col_ind) {
       LOG(FATAL) << "Edge column mappings must not contain src_col_ind or "
                     "dst_col_ind";
     }
-    auto src_label_name = schema.get_vertex_label_name(src_label_i);
-    auto dst_label_name = schema.get_vertex_label_name(dst_label_i);
-    auto edge_label_name = schema.get_edge_label_name(edge_label_i);
     // check property exists in schema
     if (!schema.edge_has_property(src_label_name, dst_label_name,
                                   edge_label_name, std::get<2>(mapping))) {
       LOG(FATAL) << "property " << std::get<2>(mapping)
                  << " not exists in schema for edge triplet " << src_label_name
                  << " -> " << edge_label_name << " -> " << dst_label_name;
+    }
+  }
+  // check type
+  // FIXME(zhanglei): Remove this check when we support multiple properties
+  // including string for edge.
+  if (properties.size() > 1) {
+    for (auto i = 0; i < properties.size(); ++i) {
+      if (properties[i] == PropertyType::kStringMap ||
+          properties[i].IsVarchar() || properties[i] == PropertyType::kString) {
+        LOG(FATAL) << "When there are multiple properties for edge, we can not "
+                      "have string properties. Will be fixed in near future";
+      }
     }
   }
 }
@@ -206,7 +228,6 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
   auto& property_types = schema_.get_edge_properties(
       src_label_name, dst_label_name, edge_label_name);
   size_t col_num = property_types.size();
-  CHECK_LE(col_num, 1) << "Only single or no property is supported for edge.";
 
   if (col_num == 0) {
     if (filenames.empty()) {
@@ -216,80 +237,95 @@ void AbstractArrowFragmentLoader::AddEdgesRecordBatch(
       addEdgesRecordBatchImpl<grape::EmptyType>(
           src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
     }
-  } else if (property_types[0] == PropertyType::kBool) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<bool>(src_label_i, dst_label_i,
-                                                      edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<bool>(src_label_i, dst_label_i, edge_label_i,
-                                    filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kDate) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<Date>(src_label_i, dst_label_i,
-                                                      edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<Date>(src_label_i, dst_label_i, edge_label_i,
-                                    filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kInt32) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<int32_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<int32_t>(src_label_i, dst_label_i, edge_label_i,
-                                       filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kUInt32) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<uint32_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<uint32_t>(src_label_i, dst_label_i, edge_label_i,
-                                        filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kInt64) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<int64_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<int64_t>(src_label_i, dst_label_i, edge_label_i,
-                                       filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kUInt64) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<uint64_t>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<uint64_t>(src_label_i, dst_label_i, edge_label_i,
-                                        filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kDouble) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<double>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<double>(src_label_i, dst_label_i, edge_label_i,
+  } else if (col_num == 1) {
+    if (property_types[0] == PropertyType::kBool) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<bool>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<bool>(src_label_i, dst_label_i, edge_label_i,
                                       filenames, supplier_creator);
-    }
-  } else if (property_types[0] == PropertyType::kFloat) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<float>(src_label_i, dst_label_i,
-                                                       edge_label_i);
+      }
+    } else if (property_types[0] == PropertyType::kDate) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<Date>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<Date>(src_label_i, dst_label_i, edge_label_i,
+                                      filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kInt32) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<int32_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<int32_t>(src_label_i, dst_label_i, edge_label_i,
+                                         filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kUInt32) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<uint32_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<uint32_t>(src_label_i, dst_label_i,
+                                          edge_label_i, filenames,
+                                          supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kInt64) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<int64_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<int64_t>(src_label_i, dst_label_i, edge_label_i,
+                                         filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kUInt64) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<uint64_t>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<uint64_t>(src_label_i, dst_label_i,
+                                          edge_label_i, filenames,
+                                          supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kDouble) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<double>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<double>(src_label_i, dst_label_i, edge_label_i,
+                                        filenames, supplier_creator);
+      }
+    } else if (property_types[0] == PropertyType::kFloat) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<float>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
+                                       filenames, supplier_creator);
+      }
+    } else if (property_types[0].type_enum ==
+               impl::PropertyTypeImpl::kVarChar) {
+      if (filenames.empty()) {
+        basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
+            src_label_i, dst_label_i, edge_label_i);
+      } else {
+        addEdgesRecordBatchImpl<std::string_view>(src_label_i, dst_label_i,
+                                                  edge_label_i, filenames,
+                                                  supplier_creator);
+      }
     } else {
-      addEdgesRecordBatchImpl<float>(src_label_i, dst_label_i, edge_label_i,
-                                     filenames, supplier_creator);
-    }
-  } else if (property_types[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
-    if (filenames.empty()) {
-      basic_fragment_loader_.AddNoPropEdgeBatch<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i);
-    } else {
-      addEdgesRecordBatchImpl<std::string_view>(
-          src_label_i, dst_label_i, edge_label_i, filenames, supplier_creator);
+      LOG(FATAL) << "Unsupported edge property type." << property_types[0];
     }
   } else {
-    LOG(FATAL) << "Unsupported edge property type." << property_types[0];
+    VLOG(10) << "Add edges with multiple properties: " << col_num;
+    if (filenames.empty()) {
+      basic_fragment_loader_.AddNoPropEdgeBatch<FixedChar>(
+          src_label_i, dst_label_i, edge_label_i);
+    } else {
+      addEdgesRecordBatchImpl<FixedChar>(src_label_i, dst_label_i, edge_label_i,
+                                         filenames, supplier_creator);
+    }
   }
 }
 

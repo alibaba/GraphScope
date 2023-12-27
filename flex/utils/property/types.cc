@@ -70,6 +70,33 @@ bool PropertyType::IsVarchar() const {
   return type_enum == impl::PropertyTypeImpl::kVarChar;
 }
 
+uint16_t PropertyType::NumBytes() const {
+  switch (type_enum) {
+  case impl::PropertyTypeImpl::kEmpty:
+    return 0;
+  case impl::PropertyTypeImpl::kBool:
+    return sizeof(bool);
+  case impl::PropertyTypeImpl::kUInt8:
+    return sizeof(uint8_t);
+  case impl::PropertyTypeImpl::kUInt16:
+    return sizeof(uint16_t);
+  case impl::PropertyTypeImpl::kInt32:
+    return sizeof(int32_t);
+  case impl::PropertyTypeImpl::kUInt32:
+    return sizeof(uint32_t);
+  case impl::PropertyTypeImpl::kFloat:
+    return sizeof(float);
+  case impl::PropertyTypeImpl::kInt64:
+    return sizeof(int64_t);
+  case impl::PropertyTypeImpl::kUInt64:
+    return sizeof(uint64_t);
+  case impl::PropertyTypeImpl::kDouble:
+    return sizeof(double);
+  default:
+    LOG(FATAL) << "Can not get num bytes for type: " << (*this);
+  }
+}
+
 /////////////////////////////// Get Type Instance
 //////////////////////////////////
 PropertyType PropertyType::Empty() {
@@ -115,10 +142,14 @@ PropertyType PropertyType::Varchar(uint16_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
+PropertyType PropertyType::FixedChar(uint16_t max_length) {
+  return PropertyType(impl::PropertyTypeImpl::kFixedChar, max_length);
+}
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value) {
   in_archive << value.type_enum;
-  if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
+  if (value.type_enum == impl::PropertyTypeImpl::kVarChar ||
+      value.type_enum == impl::PropertyTypeImpl::kFixedChar) {
     in_archive << value.additional_type_info.max_length;
   }
   return in_archive;
@@ -126,7 +157,8 @@ grape::InArchive& operator<<(grape::InArchive& in_archive,
 grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                               PropertyType& value) {
   out_archive >> value.type_enum;
-  if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
+  if (value.type_enum == impl::PropertyTypeImpl::kVarChar ||
+      value.type_enum == impl::PropertyTypeImpl::kFixedChar) {
     out_archive >> value.additional_type_info.max_length;
   }
   return out_archive;
@@ -155,6 +187,10 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.db;
   } else if (value.type == PropertyType::Date()) {
     in_archive << value.type << value.value.d.milli_second;
+  } else if (value.type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    in_archive << value.type;
+    in_archive.AddBytes(value.value.ptr,
+                        value.type.additional_type_info.max_length);
   } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
   } else {
@@ -189,6 +225,9 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     out_archive >> value.value.d.milli_second;
   } else if (value.type == PropertyType::String()) {
     out_archive >> value.value.s;
+  } else if (value.type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+    value.value.ptr =
+        out_archive.GetBytes(value.type.additional_type_info.max_length);
   } else {
     value.type = PropertyType::kEmpty;
   }
@@ -209,6 +248,19 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
   out_archive >> size;
   str = std::string_view(reinterpret_cast<char*>(out_archive.GetBytes(size)),
                          size);
+  return out_archive;
+}
+
+grape::InArchive& operator<<(grape::InArchive& in_archive, const FixedChar& e) {
+  in_archive << e.len;
+  in_archive.AddBytes(e.ptr, e.len);
+  return in_archive;
+}
+
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, FixedChar& e) {
+  size_t size;
+  out_archive >> e.len;
+  e.ptr = out_archive.GetBytes(e.len);
   return out_archive;
 }
 

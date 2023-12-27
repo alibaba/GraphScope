@@ -89,6 +89,11 @@ class BasicFragmentLoader {
                                                      edge_label_id);
       dual_csr_list_[index] = new DualCsr<std::string_view>(
           oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
+    } else if constexpr (std::is_same_v<EDATA_T, FixedChar>) {
+      const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
+                                                     edge_label_id);
+      dual_csr_list_[index] = new DualCsr<FixedChar>(
+          oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
     } else {
       dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
     }
@@ -121,10 +126,11 @@ class BasicFragmentLoader {
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
 
-    if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
+    if constexpr (std::is_same_v<EDATA_T, std::string_view> ||
+                  std::is_same_v<EDATA_T, FixedChar>) {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
-      auto dual_csr = new DualCsr<std::string_view>(
+      auto dual_csr = new DualCsr<EDATA_T>(
           oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
       dual_csr_list_[index] = dual_csr;
       ie_[index] = dual_csr_list_[index]->GetInCsr();
@@ -159,6 +165,49 @@ class BasicFragmentLoader {
                                std::get<2>(edge));
       }
     }
+    VLOG(10) << "Finish adding edge batch of size: " << edges.size();
+  }
+
+  void PutMultiPropEdges(
+      label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
+      const std::vector<std::tuple<vid_t, vid_t, std::vector<char>>>& edges,
+      const std::vector<int32_t>& ie_degree,
+      const std::vector<int32_t>& oe_degree,
+      const std::vector<size_t>& offset_vec) {
+    size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
+                   dst_label_id * edge_label_num_ + edge_label_id;
+    auto& src_indexer = lf_indexers_[src_label_id];
+    auto& dst_indexer = lf_indexers_[dst_label_id];
+    CHECK(ie_[index] == NULL);
+    CHECK(oe_[index] == NULL);
+    auto src_label_name = schema_.get_vertex_label_name(src_label_id);
+    auto dst_label_name = schema_.get_vertex_label_name(dst_label_id);
+    auto edge_label_name = schema_.get_edge_label_name(edge_label_id);
+    EdgeStrategy oe_strategy = schema_.get_outgoing_edge_strategy(
+        src_label_name, dst_label_name, edge_label_name);
+    EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
+        src_label_name, dst_label_name, edge_label_name);
+
+    auto edge_properties =
+        schema_.get_edge_properties(src_label_id, dst_label_id, edge_label_id);
+    auto dual_csr =
+        new DualCsr<FixedChar>(oe_strategy, ie_strategy, offset_vec.back());
+    dual_csr_list_[index] = dual_csr;
+    ie_[index] = dual_csr_list_[index]->GetInCsr();
+    oe_[index] = dual_csr_list_[index]->GetOutCsr();
+    CHECK(ie_degree.size() == dst_indexer.size());
+    CHECK(oe_degree.size() == src_indexer.size());
+    dual_csr->BatchInit(
+        oe_prefix(src_label_name, dst_label_name, edge_label_name),
+        ie_prefix(src_label_name, dst_label_name, edge_label_name),
+        edata_prefix(src_label_name, dst_label_name, edge_label_name),
+        tmp_dir(work_dir_), oe_degree, ie_degree);
+    for (auto& edge : edges) {
+      auto& vec = std::get<2>(edge);
+      FixedChar fc(vec.data(), vec.size());
+      dual_csr->BatchPutEdge(std::get<0>(edge), std::get<1>(edge), fc);
+    }
+
     VLOG(10) << "Finish adding edge batch of size: " << edges.size();
   }
 

@@ -84,6 +84,7 @@ jobs:
         rm -rf /tmp/csr-data-dir/
         cd ${GITHUB_WORKSPACE}/flex/build/
         GLOG_v=10 ./tests/rt_mutable_graph/test_empty_graph /tmp/csr-data-dir/
+
     - name: Test ACID
       run: |
         rm -rf /tmp/csr-data-dir/
@@ -98,6 +99,16 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=../interactive/examples/modern_graph/modern_graph.yaml
         BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
+        GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
+
+    - name: Test Graph Loading on modern graph with multiple property on edge
+      env:
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph/
+      run: |
+        rm -rf /tmp/csr-data-dir/
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=../tests/rt_mutable_graph/modern_graph_multi_edge_prop.yaml
+        BULK_LOAD_FILE=../tests/rt_mutable_graph/bulk_load_multi_edge_prop.yaml
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
 
     - name: Test Graph Loading on type_test graph

@@ -76,7 +76,9 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
   size_t size() const override { return 0; }
   void resize(size_t size) override {}
 
-  PropertyType type() const override { return PropertyType::kString; }
+  PropertyType type() const override {
+    return PropertyType::Varchar(max_length_);
+  }
 
   void set_value(size_t index, const std::string_view& val) {}
 
@@ -97,6 +99,48 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
 
  private:
   int32_t max_length_;
+};
+
+template <>
+class TypedEmptyColumn<FixedChar> : public ColumnBase {
+ public:
+  TypedEmptyColumn(int32_t length) : length_(length) {}
+  ~TypedEmptyColumn() {}
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) override {}
+  void open_in_memory(const std::string& name) override {}
+  void touch(const std::string& filename) override {}
+  void dump(const std::string& filename) override {}
+  void copy_to_tmp(const std::string& cur_path,
+                   const std::string& tmp_path) override {}
+  void close() override {}
+  size_t size() const override { return 0; }
+  void resize(size_t size) override {}
+
+  PropertyType type() const override {
+    return PropertyType::FixedChar(length_);
+  }
+
+  void set_value(size_t index, const FixedChar& val) {}
+
+  void set_any(size_t index, const Any& value) override {}
+
+  FixedChar get_view(size_t index) const { return FixedChar{}; }
+
+  Any get(size_t index) const override { return Any(); }
+
+  void ingest(uint32_t index, grape::OutArchive& arc) override {
+    FixedChar val;
+    arc >> val;
+  }
+
+  StorageStrategy storage_strategy() const override {
+    return StorageStrategy::kNone;
+  }
+
+ private:
+  int32_t length_;
 };
 
 using IntEmptyColumn = TypedEmptyColumn<int32_t>;
@@ -133,6 +177,9 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringEmptyColumn>(
           type.additional_type_info.max_length);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+      return std::make_shared<TypedEmptyColumn<FixedChar>>(
+          type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "unexpected type to create column, "
                  << static_cast<int>(type.type_enum);
@@ -161,6 +208,9 @@ std::shared_ptr<ColumnBase> CreateColumn(PropertyType type,
       return std::make_shared<StringColumn>(strategy);
     } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
       return std::make_shared<StringColumn>(
+          strategy, type.additional_type_info.max_length);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kFixedChar) {
+      return std::make_shared<TypedColumn<FixedChar>>(
           strategy, type.additional_type_info.max_length);
     } else {
       LOG(FATAL) << "unexpected type to create column, "

@@ -80,7 +80,7 @@ struct MutableNbr<grape::EmptyType> {
   };
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableNbrSlice {
  public:
   using const_nbr_t = const MutableNbr<EDATA_T>;
@@ -108,17 +108,18 @@ class MutableNbrSlice {
   int size_;
 };
 
-template <>
-class MutableNbrSlice<std::string_view> {
+template <typename EDATA_T>
+class MutableNbrSlice<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>> {
  public:
   struct MutableColumnNbr {
     using const_nbr_t = const MutableNbr<size_t>;
     using const_nbr_ptr_t = const MutableNbr<size_t>*;
 
-    MutableColumnNbr(const_nbr_ptr_t ptr, const StringColumn& column)
+    MutableColumnNbr(const_nbr_ptr_t ptr, const TypedColumn<EDATA_T>& column)
         : ptr_(ptr), column_(column) {}
     vid_t get_neighbor() const { return ptr_->neighbor; }
-    std::string_view get_data() const { return column_.get_view(ptr_->data); }
+    EDATA_T get_data() const { return column_.get_view(ptr_->data); }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
 
     const MutableColumnNbr& operator*() const { return *this; }
@@ -152,25 +153,26 @@ class MutableNbrSlice<std::string_view> {
     }
 
     mutable const_nbr_ptr_t ptr_;
-    const StringColumn& column_;
+    const TypedColumn<EDATA_T>& column_;
   };
+
   using const_nbr_t = const MutableColumnNbr;
   using const_nbr_ptr_t = const MutableColumnNbr;
-  MutableNbrSlice(const StringColumn& column) : column_(column) {}
+  MutableNbrSlice(const TypedColumn<EDATA_T>& column) : column_(column) {}
   ~MutableNbrSlice() = default;
   void set_size(int size) { slice_.set_size(size); }
   int size() const { return slice_.size(); }
 
   void set_begin(const MutableNbr<size_t>* ptr) { slice_.set_begin(ptr); }
 
-  const MutableColumnNbr begin() const {
+  const_nbr_ptr_t begin() const {
     return MutableColumnNbr(slice_.begin(), column_);
   }
-  const MutableColumnNbr end() const {
+  const_nbr_ptr_t end() const {
     return MutableColumnNbr(slice_.end(), column_);
   }
 
-  static MutableNbrSlice empty(const StringColumn& column) {
+  static MutableNbrSlice empty(const TypedColumn<EDATA_T>& column) {
     MutableNbrSlice ret(column);
     ret.set_begin(nullptr);
     ret.set_size(0);
@@ -179,10 +181,10 @@ class MutableNbrSlice<std::string_view> {
 
  private:
   MutableNbrSlice<size_t> slice_;
-  const StringColumn& column_;
+  const TypedColumn<EDATA_T>& column_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableNbrSliceMut {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
@@ -210,23 +212,22 @@ class MutableNbrSliceMut {
   int size_;
 };
 
-template <>
-class MutableNbrSliceMut<std::string_view> {
+template <typename EDATA_T>
+class MutableNbrSliceMut<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>> {
  public:
   struct MutableColumnNbr {
     using nbr_t = MutableNbr<size_t>;
 
-    MutableColumnNbr(nbr_t* ptr, StringColumn& column)
+    MutableColumnNbr(nbr_t* ptr, TypedColumn<EDATA_T>& column)
         : ptr_(ptr), column_(column) {}
     vid_t neighbor() const { return ptr_->neighbor; }
-    std::string_view data() { return column_.get_view(ptr_->data); }
+    EDATA_T data() { return column_.get_view(ptr_->data); }
     vid_t get_neighbor() const { return ptr_->neighbor; }
-    const std::string_view get_data() const {
-      return column_.get_view(ptr_->data);
-    }
+    const EDATA_T get_data() const { return column_.get_view(ptr_->data); }
     timestamp_t get_timestamp() const { return ptr_->timestamp.load(); }
     size_t get_index() const { return ptr_->data; }
-    void set_data(const std::string_view& sw, timestamp_t ts) {
+    void set_data(const EDATA_T& sw, timestamp_t ts) {
       column_.set_value(ptr_->data, sw);
       ptr_->timestamp.store(ts);
     }
@@ -258,11 +259,11 @@ class MutableNbrSliceMut<std::string_view> {
 
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
     nbr_t* ptr_;
-    StringColumn & column_;
+    TypedColumn<EDATA_T>& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 
-  MutableNbrSliceMut(StringColumn& column) : column_(column) {}
+  MutableNbrSliceMut(TypedColumn<EDATA_T>& column) : column_(column) {}
   ~MutableNbrSliceMut() = default;
   void set_size(int size) { slice_.set_size(size); }
   int size() const { return slice_.size(); }
@@ -272,7 +273,7 @@ class MutableNbrSliceMut<std::string_view> {
   MutableColumnNbr begin() { return MutableColumnNbr(slice_.begin(), column_); }
   MutableColumnNbr end() { return MutableColumnNbr(slice_.end(), column_); }
 
-  static MutableNbrSliceMut empty(StringColumn& column) {
+  static MutableNbrSliceMut empty(TypedColumn<EDATA_T>& column) {
     MutableNbrSliceMut ret(column);
     ret.set_begin(nullptr);
     ret.set_size(0);
@@ -281,7 +282,7 @@ class MutableNbrSliceMut<std::string_view> {
 
  private:
   MutableNbrSliceMut<size_t> slice_;
-  StringColumn& column_;
+  TypedColumn<EDATA_T>& column_;
 };
 
 template <typename T>
@@ -291,7 +292,7 @@ struct UninitializedUtils {
   }
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableAdjlist {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
@@ -357,14 +358,14 @@ class MutableAdjlist {
   int capacity_;
 };
 
-template <>
-class MutableAdjlist<std::string_view> {
+template <typename EDATA_T>
+class MutableAdjlist<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>> {
  public:
   using nbr_t = MutableNbr<size_t>;
-  using slice_t = MutableNbrSlice<std::string_view>;
-  using mut_slice_t = MutableNbrSliceMut<std::string_view>;
-  MutableAdjlist(StringColumn& column)
-      : buffer_(NULL), size_(0), capacity_(0) {}
+  using slice_t = MutableNbrSlice<EDATA_T>;
+  using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
+  MutableAdjlist() : buffer_(NULL), size_(0), capacity_(0) {}
   ~MutableAdjlist() {}
 
   void init(nbr_t* ptr, int cap, int size) {
@@ -399,14 +400,14 @@ class MutableAdjlist<std::string_view> {
     nbr.timestamp.store(ts);
   }
 
-  slice_t get_edges(const StringColumn& column) const {
+  slice_t get_edges(const TypedColumn<EDATA_T>& column) const {
     slice_t ret(column);
     ret.set_size(size_.load(std::memory_order_acquire));
     ret.set_begin(buffer_);
     return ret;
   }
 
-  mut_slice_t get_edges_mut(StringColumn& column) {
+  mut_slice_t get_edges_mut(TypedColumn<EDATA_T>& column) {
     mut_slice_t ret(column);
     ret.set_size(size_.load());
     ret.set_begin(buffer_);
@@ -524,7 +525,7 @@ class TypedMutableCsrConstEdgeIter : public MutableCsrConstEdgeIterBase {
   const_nbr_ptr_t end_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
   using nbr_t = MutableNbr<EDATA_T>;
 
@@ -561,24 +562,26 @@ class TypedMutableCsrEdgeIter : public MutableCsrEdgeIterBase {
   nbr_t* end_;
 };
 
-template <>
-class TypedMutableCsrEdgeIter<std::string_view>
+template <typename EDATA_T>
+class TypedMutableCsrEdgeIter<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>>
     : public MutableCsrEdgeIterBase {
-  using nbr_ptr_t = typename MutableNbrSliceMut<std::string_view>::nbr_ptr_t;
+  using nbr_ptr_t = typename MutableNbrSliceMut<EDATA_T>::nbr_ptr_t;
 
  public:
-  explicit TypedMutableCsrEdgeIter(MutableNbrSliceMut<std::string_view> slice)
+  explicit TypedMutableCsrEdgeIter(MutableNbrSliceMut<EDATA_T> slice)
       : cur_(slice.begin()), end_(slice.end()) {}
   ~TypedMutableCsrEdgeIter() = default;
 
   vid_t get_neighbor() const override { return cur_.get_neighbor(); }
   Any get_data() const override {
-    return AnyConverter<std::string_view>::to_any(cur_.get_data());
+    return AnyConverter<EDATA_T>::to_any(cur_.get_data());
   }
   timestamp_t get_timestamp() const override { return cur_.get_timestamp(); }
 
   void set_data(const Any& value, timestamp_t ts) override {
-    cur_.set_data(value.AsStringView(), ts);
+    EDATA_T val = AnyConverter<EDATA_T>::from_any(value);
+    cur_.set_data(val, ts);
   }
   size_t get_index() const { return cur_.get_index(); }
   void set_timestamp(timestamp_t ts) { cur_.set_timestamp(ts); }
@@ -599,7 +602,7 @@ class TypedMutableCsrEdgeIter<std::string_view>
   nbr_ptr_t end_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class TypedMutableCsrBase : public MutableCsrBase {
  public:
   using slice_t = MutableNbrSlice<EDATA_T>;
@@ -610,10 +613,12 @@ class TypedMutableCsrBase : public MutableCsrBase {
   virtual slice_t get_edges(vid_t i) const = 0;
 };
 
-template <>
-class TypedMutableCsrBase<std::string_view> : public MutableCsrBase {
+template <typename EDATA_T>
+class TypedMutableCsrBase<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>>
+    : public MutableCsrBase {
  public:
-  using slice_t = MutableNbrSlice<std::string_view>;
+  using slice_t = MutableNbrSlice<EDATA_T>;
   virtual slice_t get_edges(vid_t i) const = 0;
   virtual void batch_put_edge_with_index(vid_t src, vid_t dst,
                                          const size_t& data,
@@ -621,7 +626,7 @@ class TypedMutableCsrBase<std::string_view> : public MutableCsrBase {
   virtual void put_edge_with_index(vid_t src, vid_t dst, size_t index,
                                    timestamp_t ts, Allocator& alloc) = 0;
 };
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
@@ -886,16 +891,17 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   mmap_array<nbr_t> nbr_list_;
 };
 
-template <>
-class MutableCsr<std::string_view>
-    : public TypedMutableCsrBase<std::string_view> {
+template <typename EDATA_T>
+class MutableCsr<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>>
+    : public TypedMutableCsrBase<EDATA_T> {
  public:
   using nbr_t = MutableNbr<size_t>;
-  using adjlist_t = MutableAdjlist<std::string_view>;
-  using slice_t = MutableNbrSlice<std::string_view>;
-  using mut_slice_t = MutableNbrSliceMut<std::string_view>;
+  using adjlist_t = MutableAdjlist<EDATA_T>;
+  using slice_t = MutableNbrSlice<EDATA_T>;
+  using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
 
-  MutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
+  MutableCsr(TypedColumn<EDATA_T>& column, std::atomic<size_t>& column_idx)
       : column_(column), column_idx_(column_idx), locks_(nullptr) {}
   ~MutableCsr() {
     if (locks_ != nullptr) {
@@ -1088,7 +1094,7 @@ class MutableCsr<std::string_view>
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
                         timestamp_t ts, Allocator& alloc) override {
-    std::string_view sw;
+    EDATA_T sw;
     arc >> sw;
     auto row_id = column_idx_.fetch_add(1);
     column_.set_value(row_id, sw);
@@ -1097,27 +1103,26 @@ class MutableCsr<std::string_view>
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<std::string_view>>(
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
         get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return new TypedMutableCsrConstEdgeIter<std::string_view>(get_edges(v));
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
   }
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return std::make_shared<TypedMutableCsrEdgeIter<std::string_view>>(
-        get_edges_mut(v));
+    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v));
   }
 
  private:
   grape::SpinLock* locks_;
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
-  StringColumn& column_;
+  TypedColumn<EDATA_T>& column_;
   std::atomic<size_t>& column_idx_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
  public:
   using nbr_t = MutableNbr<EDATA_T>;
@@ -1299,15 +1304,17 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
   mmap_array<nbr_t> nbr_list_;
 };
 
-template <>
-class SingleMutableCsr<std::string_view>
-    : public TypedMutableCsrBase<std::string_view> {
+template <typename EDATA_T>
+class SingleMutableCsr<
+    EDATA_T, typename std::enable_if_t<is_col_property_type<EDATA_T>::value>>
+    : public TypedMutableCsrBase<EDATA_T> {
  public:
   using nbr_t = MutableNbr<size_t>;
-  using slice_t = MutableNbrSlice<std::string_view>;
-  using mut_slice_t = MutableNbrSliceMut<std::string_view>;
+  using slice_t = MutableNbrSlice<EDATA_T>;
+  using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
 
-  SingleMutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
+  SingleMutableCsr(TypedColumn<EDATA_T>& column,
+                   std::atomic<size_t>& column_idx)
       : column_(column), column_idx_(column_idx) {}
   ~SingleMutableCsr() {}
 
@@ -1396,7 +1403,7 @@ class SingleMutableCsr<std::string_view>
     return ret;
   }
 
-  const MutableNbr<std::string_view>& get_edge(vid_t i) const {
+  const MutableNbr<EDATA_T>& get_edge(vid_t i) const {
     nbr_.neighbor = nbr_list_[i].neighbor;
     nbr_.timestamp.store(nbr_list_[i].timestamp.load());
     nbr_.data = column_.get_view(nbr_list_[i].data);
@@ -1411,7 +1418,7 @@ class SingleMutableCsr<std::string_view>
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
                         timestamp_t ts, Allocator& alloc) override {
-    std::string_view sw;
+    EDATA_T sw;
     arc >> sw;
 
     auto row_id = column_idx_.fetch_add(1);
@@ -1434,17 +1441,16 @@ class SingleMutableCsr<std::string_view>
 
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<std::string_view>>(
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
         get_edges(v));
   }
 
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return new TypedMutableCsrConstEdgeIter<std::string_view>(get_edges(v));
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(get_edges(v));
   }
 
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return std::make_shared<TypedMutableCsrEdgeIter<std::string_view>>(
-        get_edges_mut(v));
+    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v));
   }
 
   void warmup(int thread_num) const override {
@@ -1479,12 +1485,12 @@ class SingleMutableCsr<std::string_view>
 
  private:
   mmap_array<nbr_t> nbr_list_;
-  mutable MutableNbr<std::string_view> nbr_;
+  mutable MutableNbr<EDATA_T> nbr_;
   std::atomic<size_t>& column_idx_;
-  StringColumn& column_;
+  TypedColumn<EDATA_T>& column_;
 };
 
-template <typename EDATA_T>
+template <typename EDATA_T, typename Enable = void>
 class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   using slice_t = MutableNbrSlice<EDATA_T>;
 
@@ -1545,13 +1551,14 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   }
 };
 
-template <>
-class EmptyCsr<std::string_view>
-    : public TypedMutableCsrBase<std::string_view> {
-  using slice_t = MutableNbrSlice<std::string_view>;
+template <typename EDATA_T>
+class EmptyCsr<EDATA_T,
+               typename std::enable_if_t<is_col_property_type<EDATA_T>::value>>
+    : public TypedMutableCsrBase<EDATA_T> {
+  using slice_t = MutableNbrSlice<EDATA_T>;
 
  public:
-  EmptyCsr(StringColumn& column, std::atomic<size_t>& column_idx)
+  EmptyCsr(TypedColumn<EDATA_T>& column, std::atomic<size_t>& column_idx)
       : column_(column), column_idx_(column_idx) {}
   ~EmptyCsr() = default;
 
@@ -1587,7 +1594,7 @@ class EmptyCsr<std::string_view>
 
   void peek_ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
                         const timestamp_t ts, Allocator&) override {
-    std::string_view sw;
+    EDATA_T sw;
     arc >> sw;
     auto row_id = column_idx_.fetch_add(1);
     column_.set_value(row_id, sw);
@@ -1598,19 +1605,19 @@ class EmptyCsr<std::string_view>
                                  timestamp_t ts = 0) override {}
   std::shared_ptr<MutableCsrConstEdgeIterBase> edge_iter(
       vid_t v) const override {
-    return std::make_shared<TypedMutableCsrConstEdgeIter<std::string_view>>(
-        MutableNbrSlice<std::string_view>::empty(column_));
+    return std::make_shared<TypedMutableCsrConstEdgeIter<EDATA_T>>(
+        MutableNbrSlice<EDATA_T>::empty(column_));
   }
   MutableCsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
-    return new TypedMutableCsrConstEdgeIter<std::string_view>(
-        MutableNbrSlice<std::string_view>::empty(column_));
+    return new TypedMutableCsrConstEdgeIter<EDATA_T>(
+        MutableNbrSlice<EDATA_T>::empty(column_));
   }
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
-    return std::make_shared<TypedMutableCsrEdgeIter<std::string_view>>(
-        MutableNbrSliceMut<std::string_view>::empty(column_));
+    return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(
+        MutableNbrSliceMut<EDATA_T>::empty(column_));
   }
   std::atomic<size_t>& column_idx_;
-  StringColumn& column_;
+  TypedColumn<EDATA_T>& column_;
 };
 }  // namespace gs
 
