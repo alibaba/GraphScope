@@ -18,6 +18,10 @@ namespace gs {
 std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
   if (type == PropertyType::Bool()) {
     return arrow::boolean();
+  } else if (type == PropertyType::UInt8()) {
+    return arrow::uint8();
+  } else if (type == PropertyType::UInt16()) {
+    return arrow::uint16();
   } else if (type == PropertyType::Int32()) {
     return arrow::int32();
   } else if (type == PropertyType::Int64()) {
