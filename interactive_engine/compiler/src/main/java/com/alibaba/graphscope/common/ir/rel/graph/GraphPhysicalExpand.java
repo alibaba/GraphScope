@@ -17,37 +17,38 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
-import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
-import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
+import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
-public class GraphPhysicalExpand extends GraphLogicalExpand {
+public class GraphPhysicalExpand extends SingleRel {
     private final GraphOpt.PhysicalExpandOpt physicalOpt;
-    private final RelDataType rowType;
+    private final GraphLogicalExpand fusedExpand;
+    private final GraphLogicalGetV fusedGetV;
 
     protected GraphPhysicalExpand(
             GraphOptCluster cluster,
             List<RelHint> hints,
             RelNode input,
-            GraphOpt.Expand opt,
-            TableConfig tableConfig,
-            @Nullable String alias,
-            AliasNameWithId startAlias,
-            RelDataType rowType,
+            GraphLogicalExpand fusedExpand,
+            GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalExpandOpt physicalOpt) {
-        super(cluster, hints, input, opt, tableConfig, alias, startAlias);
+        super(cluster, RelTraitSet.createEmpty(), input);
         this.physicalOpt = physicalOpt;
-        this.rowType = rowType;
+        this.fusedExpand = fusedExpand;
+        this.fusedGetV = fusedGetV;
     }
 
     public static GraphPhysicalExpand create(
@@ -56,11 +57,13 @@ public class GraphPhysicalExpand extends GraphLogicalExpand {
             GraphLogicalGetV innerGetV,
             @Nullable String aliasName,
             GraphOpt.PhysicalExpandOpt physicalOpt) {
-        RelDataType rowType;
+        GraphLogicalGetV newGetV;
+        // build a new getV if a new aliasName is given, to make sure the derived row type is
+        // correct (which is derived by getV)
         if (innerGetV.getAliasName().equals(aliasName)) {
-            rowType = innerGetV.deriveRowType();
+            newGetV = innerGetV;
         } else {
-            GraphLogicalGetV newGetV =
+            newGetV =
                     GraphLogicalGetV.create(
                             (GraphOptCluster) innerGetV.getCluster(),
                             innerGetV.getHints(),
@@ -69,17 +72,13 @@ public class GraphPhysicalExpand extends GraphLogicalExpand {
                             innerGetV.getTableConfig(),
                             aliasName,
                             innerGetV.getStartAlias());
-            rowType = newGetV.deriveRowType();
         }
         return new GraphPhysicalExpand(
                 (GraphOptCluster) innerExpand.getCluster(),
                 innerExpand.getHints(),
                 input,
-                innerExpand.getOpt(),
-                innerExpand.getTableConfig(),
-                aliasName,
-                innerExpand.getStartAlias(),
-                rowType,
+                innerExpand,
+                newGetV,
                 physicalOpt);
     }
 
@@ -87,14 +86,38 @@ public class GraphPhysicalExpand extends GraphLogicalExpand {
         return this.physicalOpt;
     }
 
+    public GraphLogicalExpand getFusedExpand() {
+        return fusedExpand;
+    }
+
+    public String getAliasName() {
+        return fusedGetV.getAliasName();
+    }
+
+    public int getAliasId() {
+        return fusedGetV.getAliasId();
+    }
+
     @Override
     public RelDataType deriveRowType() {
-        return rowType;
+        return fusedGetV.deriveRowType();
     }
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("physicalOpt", getPhysicalOpt());
+        return super.explainTerms(pw)
+                .item("tableConfig", fusedExpand.tableConfig)
+                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                .itemIf(
+                        "startAlias",
+                        fusedExpand.getStartAlias(),
+                        fusedExpand.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "fusedFilter",
+                        fusedExpand.getFilters(),
+                        !ObjectUtils.isEmpty(fusedExpand.getFilters()))
+                .item("opt", fusedExpand.getOpt())
+                .item("physicalOpt", getPhysicalOpt());
     }
 
     @Override

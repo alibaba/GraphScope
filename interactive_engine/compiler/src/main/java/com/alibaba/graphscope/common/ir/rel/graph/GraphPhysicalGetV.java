@@ -17,40 +17,33 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
-import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
-import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
+import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
-import org.apache.calcite.rex.RexNode;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
 
-public class GraphPhysicalGetV extends GraphLogicalGetV {
+public class GraphPhysicalGetV extends SingleRel {
     private final GraphOpt.PhysicalGetVOpt physicalOpt;
+    private final GraphLogicalGetV fusedGetV;
 
     protected GraphPhysicalGetV(
             GraphOptCluster cluster,
             List<RelHint> hints,
             RelNode input,
-            GraphOpt.GetV opt,
-            TableConfig tableConfig,
-            @Nullable String alias,
-            AliasNameWithId startAlias,
-            @Nullable ImmutableList<RexNode> filters,
+            GraphLogicalGetV fusedGetV,
             GraphOpt.PhysicalGetVOpt physicalOpt) {
-        super(cluster, hints, input, opt, tableConfig, alias, startAlias);
-        if (filters != null) {
-            setFilters(filters);
-        }
+        super(cluster, RelTraitSet.createEmpty(), input);
         this.physicalOpt = physicalOpt;
+        this.fusedGetV = fusedGetV;
     }
 
     public static GraphPhysicalGetV create(
@@ -59,11 +52,7 @@ public class GraphPhysicalGetV extends GraphLogicalGetV {
                 (GraphOptCluster) innerGetV.getCluster(),
                 innerGetV.getHints(),
                 input,
-                innerGetV.getOpt(),
-                innerGetV.getTableConfig(),
-                innerGetV.getAliasName(),
-                innerGetV.getStartAlias(),
-                innerGetV.getFilters(),
+                innerGetV,
                 physicalOpt);
     }
 
@@ -71,9 +60,25 @@ public class GraphPhysicalGetV extends GraphLogicalGetV {
         return this.physicalOpt;
     }
 
+    public GraphLogicalGetV getFusedGetV() {
+        return fusedGetV;
+    }
+
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("physicalOpt", getPhysicalOpt());
+        return super.explainTerms(pw)
+                .item("tableConfig", fusedGetV.tableConfig)
+                .item("alias", AliasInference.SIMPLE_NAME(fusedGetV.getAliasName()))
+                .itemIf(
+                        "startAlias",
+                        fusedGetV.getStartAlias(),
+                        fusedGetV.getStartAlias().getAliasName() != AliasInference.DEFAULT_NAME)
+                .itemIf(
+                        "fusedFilter",
+                        fusedGetV.getFilters(),
+                        !ObjectUtils.isEmpty(fusedGetV.getFilters()))
+                .item("opt", fusedGetV.getOpt())
+                .item("physicalOpt", getPhysicalOpt());
     }
 
     @Override
@@ -81,13 +86,9 @@ public class GraphPhysicalGetV extends GraphLogicalGetV {
         GraphPhysicalGetV copy =
                 new GraphPhysicalGetV(
                         (GraphOptCluster) getCluster(),
-                        getHints(),
+                        fusedGetV.getHints(),
                         inputs.get(0),
-                        this.getOpt(),
-                        this.getTableConfig(),
-                        this.getAliasName(),
-                        this.getStartAlias(),
-                        getFilters(),
+                        fusedGetV,
                         getPhysicalOpt());
         return copy;
     }

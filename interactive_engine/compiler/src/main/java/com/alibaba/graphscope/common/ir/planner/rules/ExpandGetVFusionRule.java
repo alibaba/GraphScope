@@ -50,16 +50,18 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
 
     protected RelNode transform(GraphLogicalGetV getV, GraphLogicalExpand expand, RelNode input) {
         if (ObjectUtils.isEmpty(getV.getFilters())) {
+            // convert to GraphPhysicalExpand(ExpandV)
+            // here, ExpandV with alias of getV's alias
             return GraphPhysicalExpand.create(
                     input, expand, getV, getV.getAliasName(), GraphOpt.PhysicalExpandOpt.VERTEX);
         } else {
+            // convert to GraphPhysicalExpand(ExpandV) + GraphPhysicalGetV(VertexFilter)
+            // here, GraphPhysicalExpand with alias of null, followed by GraphPhysicalGetV with
+            // alias of getV's alias,
+            // in order to avoid alias conflict
             GraphPhysicalExpand physicalExpand =
                     GraphPhysicalExpand.create(
-                            input,
-                            expand,
-                            getV,
-                            expand.getAliasName(),
-                            GraphOpt.PhysicalExpandOpt.VERTEX);
+                            input, expand, getV, null, GraphOpt.PhysicalExpandOpt.VERTEX);
             GraphPhysicalGetV physicalGetV =
                     GraphPhysicalGetV.create(physicalExpand, getV, GraphOpt.PhysicalGetVOpt.ITSELF);
             return physicalGetV;

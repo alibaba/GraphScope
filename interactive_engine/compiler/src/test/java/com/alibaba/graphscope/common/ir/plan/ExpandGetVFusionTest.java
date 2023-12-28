@@ -146,7 +146,6 @@ public class ExpandGetVFusionTest {
                 after.explain().trim());
     }
 
-    // TODO(FIXME).
     // g.V().hasLabel("person").outE("knows").inV().has("age",10), can be fused into
     // GraphPhysicalExpand + GraphPhysicalGetV
     @Test
