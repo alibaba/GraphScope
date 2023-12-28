@@ -11,7 +11,7 @@ loading_config:
 vertex_mappings:
   - type_name: User  # must align with the schema
     inputs:
-      - dd_undata/dim_ding_user_node/ds=20231226
+      - grape_dev/user_node
     column_mappings:
       - column:
           index: 0    # can be omitted if the index is the same as the property index
@@ -39,7 +39,7 @@ vertex_mappings:
         property: subIndustry
   - type_name: DingOrg
     inputs:
-      - dd_undata/dim_ding_org_node/ds=20231226
+      - grape_dev/org_node
     column_mappings:
       - column:
           index: 0
@@ -51,7 +51,7 @@ vertex_mappings:
         property: name
   - type_name: DingEduOrg
     inputs:
-      - dd_undata/dim_ding_edu_org_node/ds=20231226
+      - grape_dev/edu_org_node
     column_mappings:
       - column:
           index: 0
@@ -63,7 +63,7 @@ vertex_mappings:
         property: name
   - type_name: DingGroup
     inputs:
-      - dd_undata/dim_ding_group_node/ds=20231226
+      - grape_dev/group_node
     column_mappings:
       - column:
           index: 0
@@ -79,7 +79,7 @@ edge_mappings:
       source_vertex: User
       destination_vertex: User
     inputs:
-      - dd_undata/dim_ding_user_friend_edge/ds=20231226
+      - grape_dev/user_friend_edge
     source_vertex_mappings:
       - column:
           index: 0
@@ -93,14 +93,14 @@ edge_mappings:
     column_mappings:
       - column:
           index: 2
-          name: gmt_create_mill
+          name: gmt_create
         property: creationDate
   - type_triplet:
       edge: ChatInGroup
       source_vertex: User
       destination_vertex: DingGroup
     inputs:
-      - dd_undata/dim_ding_user_group_edge/ds=20231226
+      - grape_dev/user_group_edge
     source_vertex_mappings:
       - column:
           index: 0
@@ -109,19 +109,19 @@ edge_mappings:
     destination_vertex_mappings:
       - column:
           index: 1
-          name: group_id
+          name: ding_group_id
         property: id
     column_mappings:
       - column:
           index: 2
-          name: gmt_create_mill
+          name: gmt_create
         property: creationDate
   - type_triplet:
       edge: Intimacy
       source_vertex: User
       destination_vertex: User
     inputs:
-      - dd_undata/dim_ding_user_intimacy_edge/ds=20231226
+      - grape_dev/user_intimacy_edge
     source_vertex_mappings:
       - column:
           index: 0
@@ -146,7 +146,7 @@ edge_mappings:
       source_vertex: User
       destination_vertex: DingOrg
     inputs:
-      - dd_undata/dim_ding_user_org_edge/ds=20231226
+      - grape_dev/user_org_edge
     source_vertex_mappings:
       - column:
           index: 0
@@ -175,7 +175,7 @@ edge_mappings:
       source_vertex: User
       destination_vertex: DingEduOrg
     inputs:
-      - dd_undata/dim_ding_edu_org_user_edge/ds=20231226
+      - grape_dev/edu_org_user_edge
     source_vertex_mappings:
       - column:
           index: 0
@@ -199,6 +199,3 @@ edge_mappings:
       #     index: 4
       #     name: profession
       #   property: profession
-
-
-
