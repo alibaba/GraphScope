@@ -55,11 +55,11 @@ vertex_mappings:
     column_mappings:
       - column:
           index: 0
-          name: edu_org_id
+          name: org_id
         property: id
       - column:
           index: 1
-          name: edu_org_name
+          name: org_name
         property: name
   - type_name: DingGroup
     inputs:
@@ -93,7 +93,7 @@ edge_mappings:
     column_mappings:
       - column:
           index: 2
-          name: gmt_create
+          name: gmt_create_mill
         property: creationDate
   - type_triplet:
       edge: ChatInGroup
@@ -109,12 +109,12 @@ edge_mappings:
     destination_vertex_mappings:
       - column:
           index: 1
-          name: ding_group_id
+          name: group_id
         property: id
     column_mappings:
       - column:
           index: 2
-          name: gmt_create
+          name: gmt_create_mill
         property: creationDate
   - type_triplet:
       edge: Intimacy
