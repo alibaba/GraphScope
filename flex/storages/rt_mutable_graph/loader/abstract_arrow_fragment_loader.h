@@ -401,31 +401,29 @@ static void cast_array_and_append(
     std::shared_ptr<arrow::Array> array,
     std::vector<std::tuple<vid_t, vid_t, std::vector<char>>>& parsed_edges) {
   auto type = array->type();
-  if (type->Equals(arrow::int32())) {
+  if (property_type == PropertyType::kInt32) {
     cast_array_and_append_impl<int32_t>(old_size, offset, property_type, array,
                                         parsed_edges);
-  } else if (type->Equals(arrow::int64())) {
+  } else if (property_type == PropertyType::kInt64) {
     cast_array_and_append_impl<int64_t>(old_size, offset, property_type, array,
                                         parsed_edges);
-  } else if (type->Equals(arrow::uint32())) {
+  } else if (property_type == PropertyType::kUInt32) {
     cast_array_and_append_impl<uint32_t>(old_size, offset, property_type, array,
                                          parsed_edges);
-  } else if (type->Equals(arrow::uint64())) {
+  } else if (property_type == PropertyType::kUInt64) {
     cast_array_and_append_impl<uint64_t>(old_size, offset, property_type, array,
                                          parsed_edges);
-  } else if (type->Equals(arrow::float32())) {
+  } else if (property_type == PropertyType::kFloat) {
     cast_array_and_append_impl<float>(old_size, offset, property_type, array,
                                       parsed_edges);
-  } else if (type->Equals(arrow::float64())) {
+  } else if (property_type == PropertyType::kDouble) {
     cast_array_and_append_impl<double>(old_size, offset, property_type, array,
                                        parsed_edges);
-  } else if (type->Equals(arrow::utf8())) {
+  } else if (property_type == PropertyType::kString ||
+             property_type == PropertyType::kStringMap) {
     cast_array_and_append_impl<std::string_view>(
         old_size, offset, property_type, array, parsed_edges);
-  } else if (type->Equals(arrow::large_utf8())) {
-    cast_array_and_append_impl<std::string_view>(
-        old_size, offset, property_type, array, parsed_edges);
-  } else if (type->Equals(arrow::timestamp(arrow::TimeUnit::MILLI))) {
+  } else if (property_type == PropertyType::kDate) {
     cast_array_and_append_impl<Date>(old_size, offset, property_type, array,
                                      parsed_edges);
   } else {
