@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
-import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
@@ -559,12 +558,7 @@ public abstract class Utils {
     }
 
     public static com.google.protobuf.Int32Value asAliasId(int id) {
-        if (id == AliasInference.DEFAULT_ID) {
-            // TODO: check if it is None
-            return com.google.protobuf.Int32Value.newBuilder().build();
-        } else {
-            return com.google.protobuf.Int32Value.of(id);
-        }
+        return com.google.protobuf.Int32Value.of(id);
     }
 
     public static final List<GraphAlgebraPhysical.PhysicalOpr.MetaData> physicalProtoRowType(
