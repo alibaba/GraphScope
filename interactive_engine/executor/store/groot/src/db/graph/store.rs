@@ -78,7 +78,7 @@ impl MultiVersionGraph for GraphStore {
         if let Some(label_id) = label_id {
             self.get_vertex_from_label(si, vertex_id, label_id, property_ids)
         } else {
-            let mut iter = self.vertex_manager.get_all(si as i64);
+            let mut iter = self.vertex_manager.get_all(si as i64)?;
             while let Some(info) = iter.next() {
                 if let Some(vertex) =
                     self.get_vertex_from_label(si, vertex_id, info.get_label() as LabelId, property_ids)?
@@ -144,7 +144,7 @@ impl MultiVersionGraph for GraphStore {
                 }
             }
             None => {
-                let mut vertex_type_info_iter = self.vertex_manager.get_all(si as i64);
+                let mut vertex_type_info_iter = self.vertex_manager.get_all(si as i64)?;
                 let mut res: Records<Self::V> = Box::new(::std::iter::empty());
                 while let Some(info) = vertex_type_info_iter.next_info() {
                     let label_iter =
@@ -373,7 +373,7 @@ impl MultiVersionGraph for GraphStore {
         debug!("insert_update_vertex");
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
-        match res_unwrap!(self.get_vertex_data(si, id, &info), insert_update_vertex, si, id, label)? {
+        match res_unwrap!(self.get_vertex_data(si, id, info), insert_update_vertex, si, id, label)? {
             Some(data) => {
                 let data = data.as_slice();
                 let version = get_codec_version(data);
@@ -400,7 +400,7 @@ impl MultiVersionGraph for GraphStore {
         debug!("clear_vertex_properties");
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
-        if let Some(data) = self.get_vertex_data(si, id, &info)? {
+        if let Some(data) = self.get_vertex_data(si, id, info)? {
             let data = data.as_slice();
             let version = get_codec_version(data);
             let decoder = info.get_decoder(si, version)?;
@@ -657,7 +657,7 @@ impl GraphStore {
     }
 
     fn get_vertex_data(
-        &self, si: SnapshotId, id: VertexId, info: &VertexTypeInfoRef,
+        &self, si: SnapshotId, id: VertexId, info: Arc<VertexTypeInfo>,
     ) -> GraphResult<Option<Vec<u8>>> {
         debug!("get_vertex_data");
         if let Some(table) = info.get_table(si) {
@@ -692,7 +692,7 @@ impl GraphStore {
     }
 
     fn do_insert_vertex_data(
-        &self, si: SnapshotId, info: VertexTypeInfoRef, id: VertexId, properties: &dyn PropertyMap,
+        &self, si: SnapshotId, info: Arc<VertexTypeInfo>, id: VertexId, properties: &dyn PropertyMap,
     ) -> GraphResult<()> {
         debug!("do_insert_vertex_data");
         if let Some(table) = info.get_table(si) {

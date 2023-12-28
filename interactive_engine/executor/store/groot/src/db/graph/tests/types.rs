@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::super::table_manager::Table;
 use super::super::types::*;
 use crate::db::api::*;
@@ -38,11 +40,11 @@ pub trait TableInfoTest {
 }
 
 pub struct VertexInfoTest {
-    info: VertexTypeInfoRef,
+    info: Arc<VertexTypeInfo>,
 }
 
 impl VertexInfoTest {
-    pub fn new(info: VertexTypeInfoRef) -> Self {
+    pub fn new(info: Arc<VertexTypeInfo>) -> Self {
         VertexInfoTest { info }
     }
 }
