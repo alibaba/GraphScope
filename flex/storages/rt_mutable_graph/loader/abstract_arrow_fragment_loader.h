@@ -46,9 +46,9 @@ void set_single_vertex_column(gs::ColumnBase* col,
   using arrow_array_type = typename gs::TypeConverter<COL_T>::ArrowArrayType;
   auto array_type = array->type();
   auto arrow_type = gs::TypeConverter<COL_T>::ArrowTypeValue();
-  CHECK(array_type->Equals(arrow_type))
-      << "Inconsistent data type, expect " << arrow_type->ToString()
-      << ", but got " << array_type->ToString();
+  // CHECK(array_type->Equals(arrow_type))
+  //     << "Inconsistent data type, expect " << arrow_type->ToString()
+  //     << ", but got " << array_type->ToString();
   size_t cur_ind = 0;
   // We temporally support load
   // 1. int64_t to uint8_t,
