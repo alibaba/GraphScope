@@ -474,13 +474,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.EdgeExpand.newBuilder();
         expandBuilder.setDirection(Utils.protoExpandOpt(expand.getOpt()));
         expandBuilder.setParams(buildQueryParams(expand));
-        System.out.println(
-                "expand: "
-                        + expand
-                        + ", alias:"
-                        + expand.getAliasId()
-                        + ", startTag: "
-                        + expand.getStartAlias().getAliasId());
         if (expand.getAliasId() != AliasInference.DEFAULT_ID) {
             expandBuilder.setAlias(Utils.asAliasId(expand.getAliasId()));
         }
@@ -510,13 +503,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.GetV.Builder vertexBuilder = GraphAlgebraPhysical.GetV.newBuilder();
         vertexBuilder.setOpt(Utils.protoPhysicalGetVOpt(opt));
         vertexBuilder.setParams(buildQueryParams(getV));
-        System.out.println(
-                "getv: "
-                        + getV
-                        + ", alias:"
-                        + getV.getAliasId()
-                        + ", startTag: "
-                        + getV.getStartAlias().getAliasId());
         if (getV.getAliasId() != AliasInference.DEFAULT_ID) {
             vertexBuilder.setAlias(Utils.asAliasId(getV.getAliasId()));
         }

@@ -2,7 +2,6 @@
   "plan": [{
     "opr": {
       "scan": {
-        "alias": 0,
         "params": {
           "tables": [{
             "id": 0
