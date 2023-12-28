@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
@@ -88,6 +89,10 @@ public class GraphPhysicalExpand extends SingleRel {
 
     public GraphLogicalExpand getFusedExpand() {
         return fusedExpand;
+    }
+
+    public AliasNameWithId getStartAlias() {
+        return fusedExpand.getStartAlias();
     }
 
     public String getAliasName() {

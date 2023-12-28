@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.rel.graph;
 
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
@@ -58,6 +59,18 @@ public class GraphPhysicalGetV extends SingleRel {
 
     public GraphOpt.PhysicalGetVOpt getPhysicalOpt() {
         return this.physicalOpt;
+    }
+
+    public AliasNameWithId getStartAlias() {
+        return fusedGetV.getStartAlias();
+    }
+
+    public String getAliasName() {
+        return fusedGetV.getAliasName();
+    }
+
+    public int getAliasId() {
+        return fusedGetV.getAliasId();
     }
 
     public GraphLogicalGetV getFusedGetV() {
