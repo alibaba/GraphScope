@@ -404,6 +404,12 @@ static void cast_array_and_append(
   if (property_type == PropertyType::kInt32) {
     cast_array_and_append_impl<int32_t>(old_size, offset, property_type, array,
                                         parsed_edges);
+  } else if (property_type == PropertyType::kUInt8) {
+    cast_array_and_append_impl<uint8_t>(old_size, offset, property_type, array,
+                                        parsed_edges);
+  } else if (property_type == PropertyType::kUInt16) {
+    cast_array_and_append_impl<uint16_t>(old_size, offset, property_type, array,
+                                         parsed_edges);
   } else if (property_type == PropertyType::kInt64) {
     cast_array_and_append_impl<int64_t>(old_size, offset, property_type, array,
                                         parsed_edges);
