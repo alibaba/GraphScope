@@ -99,7 +99,7 @@ public class Glogue {
         this.glogueCardinalityEstimation =
                 new GlogueBasicCardinalityEstimationImpl().create(this, schema);
 
-        logger.info("GlogueGraph\n" + this.toString());
+        logger.debug("GlogueGraph\n" + this.toString());
 
         return this;
     }
