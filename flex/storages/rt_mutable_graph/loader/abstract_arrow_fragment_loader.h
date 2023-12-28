@@ -46,19 +46,76 @@ void set_single_vertex_column(gs::ColumnBase* col,
   using arrow_array_type = typename gs::TypeConverter<COL_T>::ArrowArrayType;
   auto array_type = array->type();
   auto arrow_type = gs::TypeConverter<COL_T>::ArrowTypeValue();
-  CHECK(array_type->Equals(arrow_type))
-      << "Inconsistent data type, expect " << arrow_type->ToString()
-      << ", but got " << array_type->ToString();
+  // CHECK(array_type->Equals(arrow_type))
+  //     << "Inconsistent data type, expect " << arrow_type->ToString()
+  //     << ", but got " << array_type->ToString();
   size_t cur_ind = 0;
-  for (auto j = 0; j < array->num_chunks(); ++j) {
-    auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
-    for (auto k = 0; k < casted->length(); ++k) {
-      if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
-        ++cur_ind;
-      } else {
-        col->set_any(vids[cur_ind++],
-                     std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+  // We temporally support load
+  // 1. int64_t to uint8_t,
+  // 2. load double to uint8_t,
+  // 3. load int64_t to uint16_t
+  if (array_type->Equals(arrow_type)) {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+          ++cur_ind;
+        } else {
+          col->set_any(
+              vids[cur_ind++],
+              std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
+        }
       }
+    }
+  } else {
+    if (arrow_type->Equals(arrow::uint8()) &&
+        array_type->Equals(arrow::int64())) {
+      for (auto j = 0; j < array->num_chunks(); ++j) {
+        auto casted =
+            std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
+        for (auto k = 0; k < casted->length(); ++k) {
+          if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+            ++cur_ind;
+          } else {
+            uint8_t val = casted->Value(k);
+            col->set_any(vids[cur_ind++],
+                         std::move(AnyConverter<COL_T>::to_any(val)));
+          }
+        }
+      }
+    } else if (arrow_type->Equals(arrow::uint16()) &&
+               array_type->Equals(arrow::int64())) {
+      for (auto j = 0; j < array->num_chunks(); ++j) {
+        auto casted =
+            std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
+        for (auto k = 0; k < casted->length(); ++k) {
+          if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+            ++cur_ind;
+          } else {
+            uint16_t val = casted->Value(k);
+            col->set_any(vids[cur_ind++],
+                         std::move(AnyConverter<COL_T>::to_any(val)));
+          }
+        }
+      }
+    } else if (arrow_type->Equals(arrow::uint8()) &&
+               array_type->Equals(arrow::float64())) {
+      for (auto j = 0; j < array->num_chunks(); ++j) {
+        auto casted =
+            std::static_pointer_cast<arrow::DoubleArray>(array->chunk(j));
+        for (auto k = 0; k < casted->length(); ++k) {
+          if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
+            ++cur_ind;
+          } else {
+            uint8_t val = casted->Value(k);
+            col->set_any(vids[cur_ind++],
+                         std::move(AnyConverter<COL_T>::to_any(val)));
+          }
+        }
+      }
+    } else {
+      LOG(FATAL) << "Not support type: " << array_type->ToString() << ", "
+                 << arrow_type->ToString();
     }
   }
 }
@@ -282,47 +339,93 @@ static void append_edges(
 
 template <typename T>
 static void cast_array_and_append_impl(
-    size_t old_size, size_t offset, std::shared_ptr<arrow::Array> array,
+    size_t old_size, size_t offset, PropertyType property_type,
+    std::shared_ptr<arrow::Array> array,
     std::vector<std::tuple<vid_t, vid_t, std::vector<char>>>& parsed_edges) {
   using arrow_array_type = typename gs::TypeConverter<T>::ArrowArrayType;
-  auto casted = std::static_pointer_cast<arrow_array_type>(array);
-  auto cur_ind = old_size;
-  for (auto j = 0; j < casted->length(); ++j) {
-    // must be primitive type, no string
-    // std::get<2>(parsed_edges[cur_ind++]) = casted->Value(j);
-    // set casted->Value(j); to std::get<2>(parsed_edges[cur_ind++]) from
-    // offset to offset + sizeof(T)
-    auto& vec = std::get<2>(parsed_edges[cur_ind++]);
-    auto value = casted->Value(j);
-    CHECK(vec.size() >= offset + sizeof(T));
-    memcpy(vec.data() + offset, &value, sizeof(T));
+  auto array_type = array->type();
+  auto arrow_type = gs::TypeConverter<T>::ArrowTypeValue();
+  if (arrow_type->Equals(array_type)) {
+    auto casted = std::static_pointer_cast<arrow_array_type>(array);
+    auto cur_ind = old_size;
+    for (auto j = 0; j < casted->length(); ++j) {
+      // must be primitive type, no string
+      // std::get<2>(parsed_edges[cur_ind++]) = casted->Value(j);
+      // set casted->Value(j); to std::get<2>(parsed_edges[cur_ind++]) from
+      // offset to offset + sizeof(T)
+      auto& vec = std::get<2>(parsed_edges[cur_ind++]);
+      auto value = casted->Value(j);
+      CHECK(vec.size() >= offset + sizeof(T));
+      memcpy(vec.data() + offset, &value, sizeof(T));
+    }
+  } else {
+    if (array_type->Equals(arrow::int64()) &&
+        arrow_type->Equals(arrow::uint8())) {
+      auto casted = std::static_pointer_cast<arrow::Int64Array>(array);
+      auto cur_ind = old_size;
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto value = casted->Value(j);
+        auto& vec = std::get<2>(parsed_edges[cur_ind++]);
+        CHECK(vec.size() >= offset + sizeof(uint8_t));
+        memcpy(vec.data() + offset, &value, sizeof(uint8_t));
+      }
+    } else if (array_type->Equals(arrow::int64()) &&
+               arrow_type->Equals(arrow::uint16())) {
+      auto casted = std::static_pointer_cast<arrow::Int64Array>(array);
+      auto cur_ind = old_size;
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto value = casted->Value(j);
+        auto& vec = std::get<2>(parsed_edges[cur_ind++]);
+        CHECK(vec.size() >= offset + sizeof(uint16_t));
+        memcpy(vec.data() + offset, &value, sizeof(uint16_t));
+      }
+    } else if (array_type->Equals(arrow::float64()) &&
+               arrow_type->Equals(arrow::uint8())) {
+      auto casted = std::static_pointer_cast<arrow::DoubleArray>(array);
+      auto cur_ind = old_size;
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto value = casted->Value(j);
+        auto& vec = std::get<2>(parsed_edges[cur_ind++]);
+        CHECK(vec.size() >= offset + sizeof(uint8_t));
+        memcpy(vec.data() + offset, &value, sizeof(uint8_t));
+      }
+    } else {
+      LOG(FATAL) << "Not support type: " << array_type->ToString() << ", "
+                 << arrow_type->ToString();
+    }
   }
 }
 
 static void cast_array_and_append(
-    size_t old_size, size_t offset, std::shared_ptr<arrow::Array> array,
+    size_t old_size, size_t offset, PropertyType property_type,
+    std::shared_ptr<arrow::Array> array,
     std::vector<std::tuple<vid_t, vid_t, std::vector<char>>>& parsed_edges) {
   auto type = array->type();
-  if (type->Equals(arrow::int32())) {
-    cast_array_and_append_impl<int32_t>(old_size, offset, array, parsed_edges);
-  } else if (type->Equals(arrow::int64())) {
-    cast_array_and_append_impl<int64_t>(old_size, offset, array, parsed_edges);
-  } else if (type->Equals(arrow::uint32())) {
-    cast_array_and_append_impl<uint32_t>(old_size, offset, array, parsed_edges);
-  } else if (type->Equals(arrow::uint64())) {
-    cast_array_and_append_impl<uint64_t>(old_size, offset, array, parsed_edges);
-  } else if (type->Equals(arrow::float32())) {
-    cast_array_and_append_impl<float>(old_size, offset, array, parsed_edges);
-  } else if (type->Equals(arrow::float64())) {
-    cast_array_and_append_impl<double>(old_size, offset, array, parsed_edges);
-  } else if (type->Equals(arrow::utf8())) {
-    cast_array_and_append_impl<std::string_view>(old_size, offset, array,
-                                                 parsed_edges);
-  } else if (type->Equals(arrow::large_utf8())) {
-    cast_array_and_append_impl<std::string_view>(old_size, offset, array,
-                                                 parsed_edges);
-  } else if (type->Equals(arrow::timestamp(arrow::TimeUnit::MILLI))) {
-    cast_array_and_append_impl<Date>(old_size, offset, array, parsed_edges);
+  if (property_type == PropertyType::kInt32) {
+    cast_array_and_append_impl<int32_t>(old_size, offset, property_type, array,
+                                        parsed_edges);
+  } else if (property_type == PropertyType::kInt64) {
+    cast_array_and_append_impl<int64_t>(old_size, offset, property_type, array,
+                                        parsed_edges);
+  } else if (property_type == PropertyType::kUInt32) {
+    cast_array_and_append_impl<uint32_t>(old_size, offset, property_type, array,
+                                         parsed_edges);
+  } else if (property_type == PropertyType::kUInt64) {
+    cast_array_and_append_impl<uint64_t>(old_size, offset, property_type, array,
+                                         parsed_edges);
+  } else if (property_type == PropertyType::kFloat) {
+    cast_array_and_append_impl<float>(old_size, offset, property_type, array,
+                                      parsed_edges);
+  } else if (property_type == PropertyType::kDouble) {
+    cast_array_and_append_impl<double>(old_size, offset, property_type, array,
+                                       parsed_edges);
+  } else if (property_type == PropertyType::kString ||
+             property_type == PropertyType::kStringMap) {
+    cast_array_and_append_impl<std::string_view>(
+        old_size, offset, property_type, array, parsed_edges);
+  } else if (property_type == PropertyType::kDate) {
+    cast_array_and_append_impl<Date>(old_size, offset, property_type, array,
+                                     parsed_edges);
   } else {
     LOG(FATAL) << "Not support type: " << type->ToString();
   }
@@ -360,15 +463,15 @@ static void append_edges_for_multiple_props(
   auto edata_col_thread = std::thread([&]() {
     CHECK(edata_cols.size() == edge_props.size());
     // first check type consistency
-    for (auto i = 0; i < edata_cols.size(); ++i) {
-      CHECK(src_col->length() == edata_cols[i]->length());
-      auto expected_arrow_type = PropertyTypeToArrowType(edge_props[i]);
-      if (!edata_cols[i]->type()->Equals(expected_arrow_type)) {
-        LOG(FATAL) << "Inconsistent data type, expect "
-                   << expected_arrow_type->ToString() << ", but got "
-                   << edata_cols[i]->type()->ToString();
-      }
-    }
+    // for (auto i = 0; i < edata_cols.size(); ++i) {
+    //   CHECK(src_col->length() == edata_cols[i]->length());
+    //   auto expected_arrow_type = PropertyTypeToArrowType(edge_props[i]);
+    //   if (!edata_cols[i]->type()->Equals(expected_arrow_type)) {
+    //     LOG(FATAL) << "Inconsistent data type, expect "
+    //                << expected_arrow_type->ToString() << ", but got "
+    //                << edata_cols[i]->type()->ToString();
+    //   }
+    // }
 
     for (auto i = old_size; i < parsed_edges.size(); ++i) {
       std::get<2>(parsed_edges[i]).resize(offset_vec.back());
@@ -377,7 +480,8 @@ static void append_edges_for_multiple_props(
     for (auto i = 0; i < edata_cols.size(); ++i) {
       auto edata_col = edata_cols[i];
       auto type = edata_col->type();
-      cast_array_and_append(old_size, offset_vec[i], edata_col, parsed_edges);
+      cast_array_and_append(old_size, offset_vec[i], edge_props[i], edata_col,
+                            parsed_edges);
     }
     VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
   });
