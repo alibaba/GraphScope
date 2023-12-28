@@ -1,0 +1,201 @@
+graph: dd_graph
+loading_config:
+  data_source:
+    scheme: odps  # file, oss, s3, hdfs; only file is supported now
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: arrow
+    metadata:
+      batch_reader: false
+      batch_size: 16MB
+vertex_mappings:
+  - type_name: User  # must align with the schema
+    inputs:
+      - grape_dev/user_node
+    column_mappings:
+      - column:
+          index: 0    # can be omitted if the index is the same as the property index
+          name: ding_user_id  # can be omitted if the name is not known
+        property: id
+      - column:
+          index: 1
+          name: ding_user_nick
+        property: name
+      - column:
+          index: 2
+          name: city_last_visit
+        property: city
+      - column:
+          index: 3
+          name: role_name
+        property: roleName
+      - column:
+          index: 4
+          name: act_usr_days_1m
+        property: activeDays
+      - column:
+          index: 5
+          name: org_industry_sub_id
+        property: subIndustry
+  - type_name: DingOrg
+    inputs:
+      - grape_dev/org_node
+    column_mappings:
+      - column:
+          index: 0
+          name: org_id
+        property: id
+      - column:
+          index: 1
+          name: org_name
+        property: name
+  - type_name: DingEduOrg
+    inputs:
+      - grape_dev/edu_org_node
+    column_mappings:
+      - column:
+          index: 0
+          name: edu_org_id
+        property: id
+      - column:
+          index: 1
+          name: edu_org_name
+        property: name
+  - type_name: DingGroup
+    inputs:
+      - grape_dev/group_node
+    column_mappings:
+      - column:
+          index: 0
+          name: group_id
+        property: id
+      - column:
+          index: 1
+          name: group_name
+        property: name
+edge_mappings:
+  - type_triplet:
+      edge: Friend
+      source_vertex: User
+      destination_vertex: User
+    inputs:
+      - grape_dev/user_friend_edge
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: ding_user_id
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: friend_user_id
+        property: id
+    column_mappings:
+      - column:
+          index: 2
+          name: gmt_create
+        property: creationDate
+  - type_triplet:
+      edge: ChatInGroup
+      source_vertex: User
+      destination_vertex: DingGroup
+    inputs:
+      - grape_dev/user_group_edge
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: ding_user_id
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: ding_group_id
+        property: id
+    column_mappings:
+      - column:
+          index: 2
+          name: gmt_create
+        property: creationDate
+  - type_triplet:
+      edge: Intimacy
+      source_vertex: User
+      destination_vertex: User
+    inputs:
+      - grape_dev/user_intimacy_edge
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: ding_user_id
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: friend_user_id
+        property: id
+    column_mappings:
+      - column:
+          index: 2
+          name: user_intimacy_score
+        property: intimacy_score
+      - column:
+          index: 3
+          name: communication_score_30d
+        property: communication_score
+  - type_triplet:
+      edge: WorkAt
+      source_vertex: User
+      destination_vertex: DingOrg
+    inputs:
+      - grape_dev/user_org_edge
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: ding_user_id
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: org_id
+        property: id
+    column_mappings:
+      - column:
+          index: 2
+          name: gmt_create_mill
+        property: joinDate
+      - column:
+          index: 3
+          name: staff_lst_leave_time_mill
+        property: leaveDate
+      - column:
+          index: 4
+          name: role_name
+        property: roleName
+  - type_triplet:
+      edge: StudyAt
+      source_vertex: User
+      destination_vertex: DingEduOrg
+    inputs:
+      - grape_dev/edu_org_user_edge
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: ding_user_id
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: org_id
+        property: id
+    column_mappings:
+      - column:
+          index: 2
+          name: gmt_create_mill
+        property: joinDate
+      - column:
+          index: 3
+          name: staff_lst_leave_time_mill
+        property: leaveDate
+      # - column:
+      #     index: 4
+      #     name: profession
+      #   property: profession
