@@ -137,6 +137,8 @@ public class SnapshotManager {
 
     private final ObjectMapper objectMapper;
 
+    private boolean isSecondary;
+
     public SnapshotManager(
             Configs configs,
             MetaStore metaStore,
@@ -153,6 +155,8 @@ public class SnapshotManager {
         this.snapshotIncreaseIntervalMs =
                 CoordinatorConfig.SNAPSHOT_INCREASE_INTERVAL_MS.get(configs);
         this.offsetsPersistIntervalMs = CoordinatorConfig.OFFSETS_PERSIST_INTERVAL_MS.get(configs);
+
+        this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
 
         this.storeToSnapshotInfo = new ConcurrentHashMap<>();
         this.storeToOffsets = new ConcurrentHashMap<>();
@@ -230,38 +234,39 @@ public class SnapshotManager {
         checkMetaPath(WRITE_SNAPSHOT_ID_PATH);
         checkMetaPath(QUEUE_OFFSETS_PATH);
 
-        byte[] querySnapshotInfoBytes = this.metaStore.read(QUERY_SNAPSHOT_INFO_PATH);
-        SnapshotInfo recoveredQuerySnapshotInfo =
-                this.objectMapper.readValue(querySnapshotInfoBytes, SnapshotInfo.class);
+        byte[] queryBytes = this.metaStore.read(QUERY_SNAPSHOT_INFO_PATH);
+        SnapshotInfo querySI = objectMapper.readValue(queryBytes, SnapshotInfo.class);
+        logger.info("recovered query snapshot info {}", querySI);
 
-        byte[] writeSnapshotIdBytes = this.metaStore.read(WRITE_SNAPSHOT_ID_PATH);
-        long recoveredWriteSnapshotId =
-                this.objectMapper.readValue(writeSnapshotIdBytes, Long.class);
-
-        if (recoveredQuerySnapshotInfo.getSnapshotId() > recoveredWriteSnapshotId) {
+        byte[] writeBytes = this.metaStore.read(WRITE_SNAPSHOT_ID_PATH);
+        long writeSI = objectMapper.readValue(writeBytes, Long.class);
+        logger.info("recovered write snapshot id {}", writeBytes);
+        if (querySI.getSnapshotId() > writeSI) {
             throw new IllegalStateException(
                     "recovered querySnapshotInfo ["
-                            + recoveredQuerySnapshotInfo
+                            + querySI
                             + "] > writeSnapshotId ["
-                            + recoveredWriteSnapshotId
+                            + writeSI
                             + "]");
         }
 
-        byte[] queueOffsetsBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
-        List<Long> recoveredQueueOffsets =
-                this.objectMapper.readValue(queueOffsetsBytes, new TypeReference<List<Long>>() {});
-        logger.info("recovered queue offsets " + recoveredQueueOffsets + "");
-        if (recoveredQueueOffsets.size() != this.queueCount) {
+        byte[] offsetBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
+        List<Long> offsets = objectMapper.readValue(offsetBytes, new TypeReference<>() {});
+        logger.info("recovered queue offsets {}", offsets);
+        if (isSecondary) {
+            offsets = offsets.subList(0, 1);
+        }
+        if (offsets.size() != this.queueCount) {
             throw new IllegalStateException(
                     "recovered queueCount ["
-                            + recoveredQueueOffsets.size()
+                            + offsets.size()
                             + "], but expect queueCount ["
                             + this.queueCount
                             + "]");
         }
 
         for (int i = 0; i < this.queueCount; i++) {
-            long recoveredOffset = recoveredQueueOffsets.get(i);
+            long recoveredOffset = offsets.get(i);
             try (LogReader reader = logService.createReader(i, recoveredOffset + 1)) {
             } catch (Exception e) {
                 throw new IOException(
@@ -274,9 +279,9 @@ public class SnapshotManager {
             }
         }
 
-        this.querySnapshotInfo = recoveredQuerySnapshotInfo;
-        this.writeSnapshotId = recoveredWriteSnapshotId;
-        this.queueOffsetsRef = new AtomicReference<>(recoveredQueueOffsets);
+        this.querySnapshotInfo = querySI;
+        this.writeSnapshotId = writeSI;
+        this.queueOffsetsRef = new AtomicReference<>(offsets);
     }
 
     /**
@@ -369,7 +374,7 @@ public class SnapshotManager {
                             //                                    "], currentSnapshotInfo [" +
                             // this.querySnapshotInfo + "]");
                         }
-                        persistQuerySnapshotId(minSnapshotInfo);
+                        persistObject(minSnapshotInfo, QUERY_SNAPSHOT_INFO_PATH);
                         this.querySnapshotInfo = minSnapshotInfo;
                         logger.debug("querySnapshotInfo updated to [{}]", querySnapshotInfo);
                     } catch (IOException e) {
@@ -407,16 +412,11 @@ public class SnapshotManager {
         }
     }
 
-    private void persistQuerySnapshotId(SnapshotInfo snapshotInfo) throws IOException {
-        byte[] b = this.objectMapper.writeValueAsBytes(snapshotInfo);
-        this.metaStore.write(QUERY_SNAPSHOT_INFO_PATH, b);
-    }
-
     public long increaseWriteSnapshotId() throws IOException {
         this.writeSnapshotLock.lock();
         try {
             long snapshotId = this.writeSnapshotId + 1;
-            persistWriteSnapshotId(snapshotId);
+            persistObject(snapshotId, WRITE_SNAPSHOT_ID_PATH);
             this.writeSnapshotId = snapshotId;
             this.writeSnapshotIdNotifier.notifyWriteSnapshotIdChanged(this.writeSnapshotId);
             return this.writeSnapshotId;
@@ -435,11 +435,6 @@ public class SnapshotManager {
 
     public long getCurrentWriteSnapshotId() {
         return this.writeSnapshotId;
-    }
-
-    private void persistWriteSnapshotId(long snapshotId) throws IOException {
-        byte[] b = this.objectMapper.writeValueAsBytes(snapshotId);
-        this.metaStore.write(WRITE_SNAPSHOT_ID_PATH, b);
     }
 
     private void updateQueueOffsets() throws IOException {
@@ -462,20 +457,17 @@ public class SnapshotManager {
             }
         }
         if (changed) {
-            persistQueueOffsets(newQueueOffsets);
+            persistObject(newQueueOffsets, QUEUE_OFFSETS_PATH);
             this.queueOffsetsRef.set(newQueueOffsets);
         }
     }
 
-    private void persistQueueOffsets(List<Long> queueOffsets) throws IOException {
-        byte[] bytes = this.objectMapper.writeValueAsBytes(queueOffsets);
-        this.metaStore.write(QUEUE_OFFSETS_PATH, bytes);
-    }
-
-    public SnapshotInfo getQuerySnapshotInfo() {
-        synchronized (this.querySnapshotLock) {
-            return querySnapshotInfo;
+    private void persistObject(Object value, String path) throws IOException {
+        if (isSecondary) {
+            return;
         }
+        byte[] b = objectMapper.writeValueAsBytes(value);
+        metaStore.write(path, b);
     }
 
     /**

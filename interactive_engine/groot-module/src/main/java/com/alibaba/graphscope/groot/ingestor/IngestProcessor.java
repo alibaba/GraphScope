@@ -304,7 +304,6 @@ public class IngestProcessor implements MetricsAgent {
                 for (ConsumerRecord<LogEntry, LogEntry> record : records) {
                     long offset = record.offset();
                     LogEntry logEntry = record.value();
-                    long snapshotId = logEntry.getSnapshotId();
                     OperationBatch batch = extractOperations(logEntry.getOperationBatch(), types);
                     if (batch.getOperationCount() > 0) {
                         long batchSnapshotId = this.ingestSnapshotId.get();
