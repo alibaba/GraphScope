@@ -59,7 +59,9 @@ impl VertexTypeInfo {
     }
 }
 
-pub fn next_vertex_type_info<'a>(si: SnapshotId, iter: &mut Values<'a, LabelId, Arc<VertexTypeInfo>>) -> Option<Arc<VertexTypeInfo>> {
+pub fn next_vertex_type_info<'a>(
+    si: SnapshotId, iter: &mut Values<'a, LabelId, Arc<VertexTypeInfo>>,
+) -> Option<Arc<VertexTypeInfo>> {
     loop {
         let info = iter.next()?;
         if info.lifetime.is_alive_at(si) {
@@ -67,7 +69,6 @@ pub fn next_vertex_type_info<'a>(si: SnapshotId, iter: &mut Values<'a, LabelId, 
         }
     }
 }
-
 
 type VertexMap = HashMap<LabelId, Arc<VertexTypeInfo>>;
 

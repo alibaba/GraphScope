@@ -1,10 +1,7 @@
 use std::collections::HashMap;
-use std::fmt;
-use std::sync::atomic::Ordering;
-use std::sync::Arc;
-
-use ::crossbeam_epoch as epoch;
-use ::crossbeam_epoch::{Atomic, Guard, Owned};
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::time::Duration;
+use std::{fmt, thread};
 
 use super::version::*;
 use crate::db::api::*;
@@ -102,10 +99,10 @@ impl Codec {
 /// and prop#3 because current schema user can see has these properties. When user gets prop#1 or prop#3
 /// and it's in binary data, so just return it. When user get prop#2 but it's not in binary data,
 /// so return None. And prop#4 in data will never be get because user don't know it.
+#[derive(Clone)]
 pub struct Decoder {
-    target: &'static Codec,
-    src: &'static Codec,
-    _guard: Guard,
+    target: Arc<Codec>,
+    src: Arc<Codec>,
 }
 
 impl fmt::Debug for Decoder {
@@ -118,8 +115,8 @@ impl fmt::Debug for Decoder {
 }
 
 impl Decoder {
-    fn new(target: &'static Codec, src: &'static Codec, guard: Guard) -> Self {
-        Decoder { target, src, _guard: guard }
+    fn new(target: Arc<Codec>, src: Arc<Codec>) -> Self {
+        Decoder { target, src }
     }
 
     pub fn decode_properties<'a>(&self, data: &'a [u8]) -> IterDecoder<'a> {
@@ -215,12 +212,6 @@ impl Decoder {
     }
 }
 
-impl Clone for Decoder {
-    fn clone(&self) -> Self {
-        Decoder { target: self.target, src: self.src, _guard: epoch::pin() }
-    }
-}
-
 /// this structure can decode properties as an iterator, each time get one property until all
 /// properties are decoded
 pub struct IterDecoder<'a> {
@@ -296,8 +287,7 @@ impl<'a> SpecIterDecoder<'a> {
 }
 
 pub struct Encoder {
-    codec: &'static Codec,
-    _guard: Guard,
+    codec: Arc<Codec>,
 }
 
 impl fmt::Debug for Encoder {
@@ -309,8 +299,8 @@ impl fmt::Debug for Encoder {
 }
 
 impl Encoder {
-    pub fn new(codec: &'static Codec, guard: Guard) -> Self {
-        Encoder { codec, _guard: guard }
+    pub fn new(codec: Arc<Codec>) -> Self {
+        Encoder { codec }
     }
 
     pub fn encode(&self, props: &dyn PropertyMap, buf: &mut Vec<u8>) -> GraphResult<()> {
@@ -536,7 +526,7 @@ type CodecMap = HashMap<CodecVersion, Arc<Codec>>;
 
 pub struct CodecManager {
     versions: VersionManager,
-    codec_map: Atomic<CodecMap>,
+    codec_map: RwLock<CodecMap>,
     lock: GraphMutexLock<CodecVersion>,
 }
 
@@ -544,7 +534,7 @@ impl CodecManager {
     pub fn new() -> Self {
         CodecManager {
             versions: VersionManager::new(),
-            codec_map: Atomic::new(CodecMap::new()),
+            codec_map: RwLock::new(CodecMap::new()),
             lock: GraphMutexLock::new(-1),
         }
     }
@@ -563,12 +553,8 @@ impl CodecManager {
             return Err(err);
         }
         let codec = Arc::new(codec);
-        let guard = epoch::pin();
-        let map = self.get_map(&guard);
-        let mut map_clone = map.clone();
-        map_clone.insert(version, codec);
-        self.codec_map
-            .store(Owned::new(map_clone), Ordering::Relaxed);
+        let mut map = self.get_map_write()?;
+        map.insert(version, codec);
         self.versions.add(si, version as i64).unwrap();
         *max_version = version;
         Ok(())
@@ -577,9 +563,8 @@ impl CodecManager {
     pub fn get_encoder(&self, si: SnapshotId) -> GraphResult<Encoder> {
         if let Some(v) = self.versions.get(si) {
             let version = v.data as CodecVersion;
-            let guard = epoch::pin();
-            let map = self.get_map(&guard);
-            return get_codec(map, version).map(|codec| Encoder::new(codec, guard));
+            let map = self.get_map()?;
+            return get_codec(map, version).map(|codec| Encoder::new(codec));
         }
         let msg = format!("codec not found at si#{}", si);
         let err = gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, si);
@@ -589,11 +574,10 @@ impl CodecManager {
     pub fn get_decoder(&self, si: SnapshotId, version: CodecVersion) -> GraphResult<Decoder> {
         if let Some(v) = self.versions.get(si) {
             let target_version = v.data as CodecVersion;
-            let guard = epoch::pin();
-            let map = self.get_map(&guard);
-            let src = res_unwrap!(get_codec(map, version), get_decoder, si, version)?;
-            let target = res_unwrap!(get_codec(map, target_version), get_decoder, si, version)?;
-            return Ok(Decoder::new(target, src, guard));
+            let map = self.get_map_write()?;
+            let src = get_codec_write(&map, version)?;
+            let target = get_codec_write(&map, target_version)?;
+            return Ok(Decoder::new(target, src));
         }
         let msg = format!("codec not found at si#{}", si);
         let err = gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_decoder, si, version);
@@ -602,14 +586,9 @@ impl CodecManager {
 
     #[allow(dead_code)]
     pub fn drop_codec(&self, version: CodecVersion) -> GraphResult<()> {
-        let _lock = res_unwrap!(self.lock.lock(), drop_codec, version)?;
-        let guard = epoch::pin();
-        let map = self.get_map(&guard);
-        let mut map_clone = map.clone();
-        if map_clone.remove(&version).is_some() {
-            self.codec_map
-                .store(Owned::new(map_clone), Ordering::Relaxed);
-        }
+        let mut map = self.get_map_write()?;
+        map.remove(&version);
+
         Ok(())
     }
 
@@ -618,19 +597,59 @@ impl CodecManager {
         res_unwrap!(self.versions.gc(si).map(|_| ()), gc, si)
     }
 
-    fn get_map(&self, guard: &Guard) -> &'static CodecMap {
-        unsafe {
-            &*self
-                .codec_map
-                .load(Ordering::Relaxed, &guard)
-                .as_raw()
+    fn get_map(&self) -> GraphResult<RwLockReadGuard<CodecMap>> {
+        let mut counter = 0;
+        loop {
+            if let Ok(inner) = self.codec_map.read() {
+                return Ok(inner);
+            } else {
+                thread::sleep(Duration::from_millis(10));
+                counter += 1;
+                if counter > 10 {
+                    break;
+                }
+            }
         }
+
+        let msg = format!("fail to get the read lock");
+        let err = gen_graph_err!(GraphErrorCode::LockFailed, msg, get_inner);
+
+        Err(err)
+    }
+
+    fn get_map_write(&self) -> GraphResult<RwLockWriteGuard<CodecMap>> {
+        let mut counter = 0;
+        loop {
+            if let Ok(inner) = self.codec_map.write() {
+                return Ok(inner);
+            } else {
+                thread::sleep(Duration::from_millis(10));
+                counter += 1;
+                if counter > 10 {
+                    break;
+                }
+            }
+        }
+
+        let msg = format!("fail to get the write lock");
+        let err = gen_graph_err!(GraphErrorCode::LockFailed, msg, get_inner);
+
+        Err(err)
     }
 }
 
-fn get_codec(map: &CodecMap, version: CodecVersion) -> GraphResult<&Codec> {
+fn get_codec(map: RwLockReadGuard<CodecMap>, version: CodecVersion) -> GraphResult<Arc<Codec>> {
     map.get(&version)
-        .map(|codec| codec.as_ref())
+        .map(|codec| codec.clone())
+        .ok_or_else(|| {
+            let msg = format!("codec of version#{} not found", version);
+            gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, version)
+        })
+}
+
+fn get_codec_write(map: &RwLockWriteGuard<CodecMap>, version: CodecVersion) -> GraphResult<Arc<Codec>> {
+    map.get(&version)
+        .map(|codec| codec.clone())
         .ok_or_else(|| {
             let msg = format!("codec of version#{} not found", version);
             gen_graph_err!(GraphErrorCode::MetaNotFound, msg, get_encoder, version)
@@ -700,17 +719,15 @@ mod tests {
         builder.version(0);
         builder.add_property(18, 18, "18".to_string(), ValueType::Long, None, false, "cmt".to_string());
         let type_def = builder.build();
-        let codec = Codec::from(&type_def);
-        let guard = epoch::pin();
-        let codec_ref = unsafe { std::mem::transmute(&codec) };
-        let encoder = Encoder::new(codec_ref, guard);
+        let codec = Arc::new(Codec::from(&type_def));
+        let encoder = Encoder::new(codec.clone());
         let mut buf = Vec::new();
 
         let mut properties = HashMap::new();
         properties.insert(18, Value::long(20120904101614543));
         encoder.encode(&properties, &mut buf).unwrap();
 
-        let decoder = Decoder::new(codec_ref, codec_ref, epoch::pin());
+        let decoder = Decoder::new(codec.clone(), codec);
         let mut decode_iter = decoder.decode_properties(buf.as_slice());
         let decode_item = decode_iter.next();
         assert_ne!(decode_item, None);
@@ -724,24 +741,22 @@ mod tests {
 
     #[test]
     fn test_encode_decode() {
-        let codec = create_test_codec();
-        let guard = epoch::pin();
-        let codec_ref = unsafe { std::mem::transmute(&codec) };
-        let encoder = Encoder::new(codec_ref, guard);
+        let codec = Arc::new(create_test_codec());
+        let encoder = Encoder::new(codec.clone());
         let data = test_data();
         // pollute the buf to make sure the encoder can work in any event
         let mut buf = vec![255; 1000];
         encoder.encode(&data, &mut buf).unwrap();
         assert_eq!(get_codec_version(&buf), codec.get_version());
-        let decoder = Decoder::new(codec_ref, codec_ref, epoch::pin());
+        let decoder = Decoder::new(codec.clone(), codec);
         check_properties(decoder, &buf, test_data());
     }
 
     #[test]
     fn test_default_value() {
-        let codec = create_default_value_codec();
-        let _encoder = create_decoder(&codec);
-        let _decoder = create_decoder(&codec);
+        let codec = Arc::new(create_default_value_codec());
+        let _encoder = create_decoder(codec.clone());
+        let _decoder = create_decoder(codec);
         let _data: Vec<(PropertyId, Value)> = test_data().into_iter().collect();
 
         #[allow(dead_code)]
@@ -769,9 +784,9 @@ mod tests {
 
     #[test]
     fn test_null_support() {
-        let codec = create_test_codec();
-        let encoder = create_encoder(&codec);
-        let decoder = create_decoder(&codec);
+        let codec = Arc::new(create_test_codec());
+        let encoder = create_encoder(codec.clone());
+        let decoder = create_decoder(codec);
         let data = test_data();
         let mut buf = Vec::new();
 
@@ -783,14 +798,13 @@ mod tests {
         }
     }
 
-    fn create_encoder(codec: &Codec) -> Encoder {
-        let codec_ref = unsafe { std::mem::transmute(codec) };
-        Encoder::new(codec_ref, epoch::pin())
+    fn create_encoder(codec: Arc<Codec>) -> Encoder {
+        Encoder::new(codec)
     }
 
-    fn create_decoder(codec: &Codec) -> Decoder {
-        let codec_ref = unsafe { std::mem::transmute(codec) };
-        Decoder::new(codec_ref, codec_ref, epoch::pin())
+    fn create_decoder(codec: Arc<Codec>) -> Decoder {
+        let codec_clone = codec.clone();
+        Decoder::new(codec, codec_clone)
     }
 
     fn check_properties(decoder: Decoder, data: &[u8], mut ans: HashMap<PropertyId, Value>) {

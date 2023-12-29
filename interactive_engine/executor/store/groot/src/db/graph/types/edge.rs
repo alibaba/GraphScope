@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 use std::collections::hash_map::Values;
 use std::collections::HashMap;
-use std::sync::RwLock;
-use std::sync::RwLockReadGuard;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::sync::MutexGuard;
+use std::sync::RwLock;
+use std::sync::RwLockReadGuard;
 use std::thread;
 use std::time::Duration;
 
@@ -183,7 +183,9 @@ impl EdgeInfoIter {
 }
 */
 
-pub fn next_edge_info(si: SnapshotId, iter: &mut Values<'_, LabelId, Arc<EdgeInfo>>) -> Option<Arc<EdgeInfo>> {
+pub fn next_edge_info(
+    si: SnapshotId, iter: &mut Values<'_, LabelId, Arc<EdgeInfo>>,
+) -> Option<Arc<EdgeInfo>> {
     loop {
         let info = iter.next()?;
         if info.is_alive_at(si) {
@@ -343,7 +345,7 @@ impl EdgeTypeManager {
         }
 
         let msg = format!("fail to get the read lock");
-        let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, get_inner);
+        let err = gen_graph_err!(GraphErrorCode::LockFailed, msg, get_inner);
 
         Err(err)
     }

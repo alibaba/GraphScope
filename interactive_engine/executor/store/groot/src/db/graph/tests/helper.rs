@@ -34,7 +34,9 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
         let type_def = self
             .vertex_type_manager
             .get_type_def(si, label)
-            .ok_or_else(|| gen_graph_err!(GraphErrorCode::TypeNotFound, format!("vertex type {:?} not found", label)))?; // TODO: error code
+            .ok_or_else(|| {
+                gen_graph_err!(GraphErrorCode::TypeNotFound, format!("vertex type {:?} not found", label))
+            })?; // TODO: error code
         for id in list {
             let properties = data::gen_vertex_properties(si, label, id, type_def);
             self.graph
@@ -764,7 +766,6 @@ impl<'a> VertexDataRef<'a> {
 fn check_vertex<V: RocksVertex>(v: &V, ans: &VertexDataRef) {
     assert_eq!(v.get_label_id(), ans.label);
     for (prop_id, ans_val) in ans.properties {
-
         if let Some(val) = v.get_property(*prop_id) {
             assert_eq!(*val.get_property_value(), PropertyValue::from(ans_val.as_ref()));
         } else {
