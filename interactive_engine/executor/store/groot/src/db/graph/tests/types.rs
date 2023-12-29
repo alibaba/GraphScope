@@ -56,11 +56,11 @@ impl TableInfoTest for VertexInfoTest {
 }
 
 pub struct EdgeTypeInfoTest {
-    info: EdgeKindInfoRef,
+    info: Arc<EdgeKindInfo>,
 }
 
 impl EdgeTypeInfoTest {
-    pub fn new(info: EdgeKindInfoRef) -> Self {
+    pub fn new(info: Arc<EdgeKindInfo>) -> Self {
         EdgeTypeInfoTest { info }
     }
 }

@@ -78,8 +78,9 @@ impl MultiVersionGraph for GraphStore {
         if let Some(label_id) = label_id {
             self.get_vertex_from_label(si, vertex_id, label_id, property_ids)
         } else {
-            let mut iter = self.vertex_manager.get_all(si as i64)?;
-            while let Some(info) = iter.next() {
+            let map = self.vertex_manager.get_map()?;
+            let mut iter = map.values();
+            while let Some(info) = next_vertex_type_info(si, &mut iter) {
                 if let Some(vertex) =
                     self.get_vertex_from_label(si, vertex_id, info.get_label() as LabelId, property_ids)?
                 {
@@ -98,8 +99,10 @@ impl MultiVersionGraph for GraphStore {
         if let Some(relation) = edge_relation {
             self.get_edge_from_relation(si, edge_id, relation, property_ids)
         } else {
-            let mut iter = self.edge_manager.get_all_edges(si as i64);
-            while let Some(info) = iter.next() {
+            let inner = self.edge_manager.get_inner()?;
+            let edge_info = &inner.info_map;
+            let mut iter = edge_info.values();
+            while let Some(info) = next_edge_info(si, &mut iter) {
                 let edge_kinds = info.lock();
                 let mut edge_kind_iter = edge_kinds.iter_kinds();
                 while let Some(edge_kind_info) = edge_kind_iter.next() {
@@ -144,9 +147,10 @@ impl MultiVersionGraph for GraphStore {
                 }
             }
             None => {
-                let mut vertex_type_info_iter = self.vertex_manager.get_all(si as i64)?;
+                let map = self.vertex_manager.get_map()?;
+                let mut iter = map.values();
                 let mut res: Records<Self::V> = Box::new(::std::iter::empty());
-                while let Some(info) = vertex_type_info_iter.next_info() {
+                while let Some(info) = next_vertex_type_info(si, &mut iter) {
                     let label_iter =
                         VertexTypeScan::new(self.storage.clone(), si, info, with_prop).into_iter();
                     res = Box::new(res.chain(label_iter));
@@ -372,8 +376,8 @@ impl MultiVersionGraph for GraphStore {
     ) -> GraphResult<()> {
         debug!("insert_update_vertex");
         self.check_si_guard(si)?;
-        let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
-        match res_unwrap!(self.get_vertex_data(si, id, info), insert_update_vertex, si, id, label)? {
+        let info = self.vertex_manager.get_type(si, label)?;
+        match self.get_vertex_data(si, id, info.clone())? {
             Some(data) => {
                 let data = data.as_slice();
                 let version = get_codec_version(data);
@@ -399,8 +403,8 @@ impl MultiVersionGraph for GraphStore {
     ) -> GraphResult<()> {
         debug!("clear_vertex_properties");
         self.check_si_guard(si)?;
-        let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
-        if let Some(data) = self.get_vertex_data(si, id, info)? {
+        let info = self.vertex_manager.get_type(si, label)?;
+        if let Some(data) = self.get_vertex_data(si, id, info.clone())? {
             let data = data.as_slice();
             let version = get_codec_version(data);
             let decoder = info.get_decoder(si, version)?;
@@ -459,7 +463,7 @@ impl MultiVersionGraph for GraphStore {
         )?;
         let direction = if forward { EdgeDirection::Out } else { EdgeDirection::In };
 
-        let data_res = self.get_edge_data(si, id, &info, direction)?;
+        let data_res = self.get_edge_data(si, id, info.clone(), direction)?;
 
         match data_res {
             Some(data) => {
@@ -510,7 +514,7 @@ impl MultiVersionGraph for GraphStore {
             edge_kind
         )?;
         let direction = if forward { EdgeDirection::Out } else { EdgeDirection::In };
-        if let Some(data) = self.get_edge_data(si, complete_id, &info, direction)? {
+        if let Some(data) = self.get_edge_data(si, complete_id, info.clone(), direction)? {
             let data = data.as_slice();
             let version = get_codec_version(data);
             let decoder = info.get_decoder(si, version)?;
@@ -674,7 +678,7 @@ impl GraphStore {
     }
 
     fn get_edge_data(
-        &self, si: SnapshotId, id: EdgeId, info: &EdgeKindInfoRef, direction: EdgeDirection,
+        &self, si: SnapshotId, id: EdgeId, info: Arc<EdgeKindInfo>, direction: EdgeDirection,
     ) -> GraphResult<Option<Vec<u8>>> {
         debug!("get_edge_data");
         if let Some(table) = info.get_table(si) {
@@ -694,7 +698,6 @@ impl GraphStore {
     fn do_insert_vertex_data(
         &self, si: SnapshotId, info: Arc<VertexTypeInfo>, id: VertexId, properties: &dyn PropertyMap,
     ) -> GraphResult<()> {
-        debug!("do_insert_vertex_data");
         if let Some(table) = info.get_table(si) {
             let encoder = res_unwrap!(info.get_encoder(si), do_insert_vertex_data)?;
             let mut buf = Vec::new();
@@ -712,7 +715,7 @@ impl GraphStore {
     }
 
     fn do_insert_edge_data(
-        &self, si: SnapshotId, edge_id: EdgeId, info: EdgeKindInfoRef, direction: EdgeDirection,
+        &self, si: SnapshotId, edge_id: EdgeId, info: Arc<EdgeKindInfo>, direction: EdgeDirection,
         properties: &dyn PropertyMap,
     ) -> GraphResult<()> {
         debug!("do_insert_edge_data {:?} {:?}", edge_id, direction);
@@ -852,9 +855,11 @@ impl GraphStore {
                 }
             }
             None => {
-                let mut edge_info_iter = self.edge_manager.get_all_edges(si as i64);
+                let inner = self.edge_manager.get_inner()?;
+                let edge_info = &inner.info_map;
+                let mut iter = edge_info.values();
                 let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
-                while let Some(info) = edge_info_iter.next_info() {
+                while let Some(info) = next_edge_info(si, &mut iter) {
                     let label_iter =
                         EdgeTypeScan::new(self.storage.clone(), si, info, vertex_id, direction, with_prop)
                             .into_iter();

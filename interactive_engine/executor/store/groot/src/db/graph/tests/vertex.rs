@@ -155,6 +155,7 @@ mod tester {
 
             let check_helper = VertexCheckHelper::new(&helper, &data_gen);
             for si in (1..10).step_by(3) {
+                println!("before check si#{}", si);
                 check_helper.check_query_vertices_err(si, label1);
                 check_helper.check_query_vertices_err(si, label2);
                 println!("check si#{} success", si);

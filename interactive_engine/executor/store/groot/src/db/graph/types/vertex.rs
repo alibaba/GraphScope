@@ -59,34 +59,15 @@ impl VertexTypeInfo {
     }
 }
 
-pub struct VertexTypeInfoIter {
-    si: SnapshotId,
-    inner: Values<'static, LabelId, Arc<VertexTypeInfo>>,
-}
-
-impl VertexTypeInfoIter {
-    pub fn next(&mut self) -> Option<Arc<VertexTypeInfo>> {
-        loop {
-            let info = self.inner.next()?;
-            if info.lifetime.is_alive_at(self.si) {
-                return Some(info.clone());
-            }
+pub fn next_vertex_type_info<'a>(si: SnapshotId, iter: &mut Values<'a, LabelId, Arc<VertexTypeInfo>>) -> Option<Arc<VertexTypeInfo>> {
+    loop {
+        let info = iter.next()?;
+        if info.lifetime.is_alive_at(si) {
+            return Some(info.clone());
         }
     }
-
-    pub fn next_info(&mut self) -> Option<Arc<VertexTypeInfo>> {
-        loop {
-            let info = self.inner.next()?;
-            if info.lifetime.is_alive_at(self.si) {
-                return Some(info.clone());
-            }
-        }
-    }
-
-    fn new(si: SnapshotId, values: Values<'static, LabelId, Arc<VertexTypeInfo>>) -> Self {
-        VertexTypeInfoIter { si, inner: values }
-    }
 }
+
 
 type VertexMap = HashMap<LabelId, Arc<VertexTypeInfo>>;
 
@@ -125,12 +106,12 @@ impl VertexTypeManager {
         if map.contains_key(&label) {
             let msg = format!("vertex#{} already exists", label);
             let err =
-                gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create, si, label, codec, table0);
+                gen_graph_err!(GraphErrorCode::TypeAlreadyExists, msg, create, si, label, codec, table0);
             Err(err)
         } else {
             let info = VertexTypeInfo::new(si, label);
-            res_unwrap!(info.update_codec(si, codec), create, si, label, codec, table0)?;
-            res_unwrap!(info.online_table(table0), create, si, label, codec, table0)?;
+            info.update_codec(si, codec)?;
+            info.online_table(table0)?;
             map.insert(label, Arc::new(info));
 
             Ok(())
@@ -214,7 +195,7 @@ impl VertexTypeManager {
         Ok(table_ids)
     }
 
-    fn get_map(&self) -> GraphResult<RwLockReadGuard<VertexMap>> {
+    pub fn get_map(&self) -> GraphResult<RwLockReadGuard<VertexMap>> {
         let mut counter = 0;
         loop {
             if let Ok(map) = self.map.read() {
@@ -229,7 +210,7 @@ impl VertexTypeManager {
         }
 
         let msg = format!("fail to get the read lock");
-        let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, get_map);
+        let err = gen_graph_err!(GraphErrorCode::LockFailed, msg, get_map);
 
         Err(err)
     }
@@ -248,8 +229,8 @@ impl VertexTypeManager {
             }
         }
 
-        let msg = format!("fail to get the read lock");
-        let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, get_map);
+        let msg = format!("fail to get the write lock");
+        let err = gen_graph_err!(GraphErrorCode::LockFailed, msg, get_map_write);
 
         Err(err)
     }
@@ -273,7 +254,7 @@ impl VertexTypeManagerBuilder {
     pub fn create(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
         if self.map.contains_key(&label) {
             let msg = format!("vertex#{} already exists", label);
-            let err = gen_graph_err!(GraphErrorCode::InvalidOperation, msg, create, si, label, type_def);
+            let err = gen_graph_err!(GraphErrorCode::TypeAlreadyExists, msg, create, si, label, type_def);
             return Err(err);
         }
         let info = VertexTypeInfo::new(si, label);
