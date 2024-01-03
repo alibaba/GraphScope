@@ -62,7 +62,6 @@ public class IngestService implements NodeDiscovery.Listener {
     private Map<Integer, IngestProcessor> queueToProcessor;
     private AtomicLong ingestSnapshotId;
 
-    private volatile boolean processorStarted;
     private volatile boolean storeNodeReady;
     private ScheduledExecutorService scheduler;
     private ExecutorService singleThreadExecutor;
@@ -113,7 +112,6 @@ public class IngestService implements NodeDiscovery.Listener {
                             this.ingestSnapshotId,
                             this.metricsCollector));
         }
-        this.processorStarted = false;
         this.storeNodeReady = false;
         this.discovery.addListener(this);
         this.singleThreadExecutor =
@@ -270,7 +268,7 @@ public class IngestService implements NodeDiscovery.Listener {
     private void startProcessors() {
         this.singleThreadExecutor.execute(
                 () -> {
-                    if (processorStarted) {
+                    if (isProcessorStarted()) {
                         return;
                     }
                     for (IngestProcessor processor : this.queueToProcessor.values()) {
@@ -286,9 +284,17 @@ public class IngestService implements NodeDiscovery.Listener {
                     for (IngestProcessor processor : this.queueToProcessor.values()) {
                         processor.start();
                     }
-                    processorStarted = true;
                     logger.info("processors started");
                 });
+    }
+
+    private boolean isProcessorStarted() {
+        for (IngestProcessor processor : this.queueToProcessor.values()) {
+            if (!processor.isStarted()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void stopProcessors() {
@@ -298,11 +304,10 @@ public class IngestService implements NodeDiscovery.Listener {
         }
         this.singleThreadExecutor.execute(
                 () -> {
-                    if (processorStarted) {
+                    if (isProcessorStarted()) {
                         for (IngestProcessor processor : this.queueToProcessor.values()) {
                             processor.stop();
                         }
-                        processorStarted = false;
                         logger.info("processors stopped");
                     }
                 });
@@ -323,6 +328,8 @@ public class IngestService implements NodeDiscovery.Listener {
         try {
             if (this.storeNodeReady) {
                 startProcessors();
+            } else {
+                logger.warn("Store node is not ready when trying to start processors");
             }
         } catch (Exception e) {
             logger.error("tryStartProcessors failed, ignore", e);

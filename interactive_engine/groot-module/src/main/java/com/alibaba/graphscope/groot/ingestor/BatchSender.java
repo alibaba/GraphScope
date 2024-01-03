@@ -196,7 +196,15 @@ public class BatchSender implements MetricsAgent {
         int retryCount = sendTask.retryCount;
         List<StoreDataBatch> dataToSend = sendTask.dataToRetry;
 
-        if (retryCount > 5) {
+        if (retryCount > 0) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {
+
+            }
+        }
+
+        if (retryCount > 1000) {
             logger.error("Failed to send batch of {}", dataToSend);
             return;
         }

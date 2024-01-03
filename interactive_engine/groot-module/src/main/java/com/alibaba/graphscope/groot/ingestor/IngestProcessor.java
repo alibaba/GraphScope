@@ -159,7 +159,7 @@ public class IngestProcessor implements MetricsAgent {
     }
 
     public void stop() {
-        logger.debug("stopping ingestProcessor queue#[" + queueId + "]");
+        logger.info("stopping ingestProcessor queue#[" + queueId + "]");
         this.shouldStop = true;
         this.started = false;
         if (this.ingestThread != null && this.ingestThread.isAlive()) {
@@ -188,6 +188,10 @@ public class IngestProcessor implements MetricsAgent {
         if (!started) {
             throw new IllegalStateException("IngestProcessor queue#[" + queueId + "] not started");
         }
+    }
+
+    public boolean isStarted() {
+        return started;
     }
 
     public void ingestBatch(
@@ -305,9 +309,11 @@ public class IngestProcessor implements MetricsAgent {
                     long offset = record.offset();
                     LogEntry logEntry = record.value();
                     OperationBatch batch = extractOperations(logEntry.getOperationBatch(), types);
+                    long snapshotId = logEntry.getSnapshotId();
                     if (batch.getOperationCount() > 0) {
                         long batchSnapshotId = this.ingestSnapshotId.get();
                         this.batchSender.asyncSendWithRetry("", queueId, batchSnapshotId, offset, batch);
+                        logger.info("Sent logEntry snapshot Id {}, SnapshotId {}, batch {}", snapshotId, batchSnapshotId, batch.toProto());
                     }
                 }
             }
