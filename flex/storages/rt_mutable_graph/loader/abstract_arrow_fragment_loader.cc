@@ -160,7 +160,7 @@ void RecordBatchQueue::push(std::shared_ptr<arrow::RecordBatch> record_batch) {
 std::shared_ptr<arrow::RecordBatch> RecordBatchQueue::pop() {
   std::unique_lock<std::mutex> lock(mutex_);
   empty_cv_.wait(lock, [this] { return !queue_.empty() || finished_; });
-  if (finished_) {
+  if (queue_.empty()) {
     return nullptr;
   }
   auto record_batch = queue_.front();
