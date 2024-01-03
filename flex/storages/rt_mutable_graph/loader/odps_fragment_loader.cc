@@ -411,6 +411,8 @@ void ODPSFragmentLoader::addVertices(label_t v_label_id,
           return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
         }
       };
+  return AbstractArrowFragmentLoader::AddVerticesRecordBatch(
+      v_label_id, v_files, record_batch_supplier_creator);
 }
 
 void ODPSFragmentLoader::loadVertices() {
