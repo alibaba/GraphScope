@@ -148,21 +148,29 @@ RecordBatchQueue::RecordBatchQueue(int32_t max_length)
 
 void RecordBatchQueue::push(std::shared_ptr<arrow::RecordBatch> record_batch) {
   std::unique_lock<std::mutex> lock(mutex_);
+  VLOG(10) << "Try Pushing record batch to queue, size: " << queue_.size()
+           << ", max_length_: " << max_length_;
   full_cv_.wait(lock,
                 [this] { return queue_.size() < max_length_ || finished_; });
   if (finished_) {
     return;
   }
+  VLOG(10) << "Pushing record batch to queue, size: " << queue_.size()
+           << ", max_length_: " << max_length_;
   queue_.push(record_batch);
   empty_cv_.notify_one();
 }
 
 std::shared_ptr<arrow::RecordBatch> RecordBatchQueue::pop() {
   std::unique_lock<std::mutex> lock(mutex_);
+  VLOG(10) << "Try Popping record batch from queue, size: " << queue_.size()
+           << ", max_length_: " << max_length_;
   empty_cv_.wait(lock, [this] { return !queue_.empty() || finished_; });
   if (queue_.empty()) {
     return nullptr;
   }
+  VLOG(10) << "Popping record batch from queue, size: " << queue_.size()
+           << ", max_length_: " << max_length_;
   auto record_batch = queue_.front();
   queue_.pop();
   full_cv_.notify_one();
