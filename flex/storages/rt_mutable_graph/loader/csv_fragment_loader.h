@@ -44,6 +44,8 @@ class CSVStreamRecordBatchSupplier : public IRecordBatchSupplier {
 
   size_t GetEstimatedNumRows() const override;
 
+  std::string GetSourcePath() const override;
+
  private:
   label_t label_id_;
   std::string file_path_;
@@ -60,6 +62,8 @@ class CSVTableRecordBatchSupplier : public IRecordBatchSupplier {
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
   size_t GetEstimatedNumRows() const override;
+
+  std::string GetSourcePath() const override;
 
  private:
   label_t label_id_;

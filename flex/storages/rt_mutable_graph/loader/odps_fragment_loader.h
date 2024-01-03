@@ -122,12 +122,15 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   ODPSStreamRecordBatchSupplier(label_t label_id, const std::string& file_path,
                                 const ODPSReadClient& odps_table_reader,
                                 const std::string& session_id, int split_count,
-                                size_t num_rows,
+                                size_t num_rows, int32_t supplier_id,
+                                int32_t num_suppliers,
                                 TableIdentifier table_identifier);
 
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
   size_t GetEstimatedNumRows() const override;
+
+  std::string GetSourcePath() const override;
 
  private:
   label_t label_id_;
@@ -136,6 +139,9 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   std::string session_id_;
   int split_count_;
   size_t num_rows_in_table_;
+  int32_t supplier_id_;
+  int32_t num_suppliers_;
+
   TableIdentifier table_identifier_;
 
   int32_t cur_split_index_;
@@ -154,6 +160,8 @@ class ODPSTableRecordBatchSupplier : public IRecordBatchSupplier {
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
   size_t GetEstimatedNumRows() const override;
+
+  std::string GetSourcePath() const override;
 
  private:
   label_t label_id_;

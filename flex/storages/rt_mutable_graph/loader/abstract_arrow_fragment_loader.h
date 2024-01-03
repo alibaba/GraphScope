@@ -31,6 +31,7 @@
 #include "arrow/util/value_parsing.h"
 
 #include "grape/util.h"
+#include "grape/utils/atomic_ops.h"
 
 namespace gs {
 
@@ -40,6 +41,8 @@ class IRecordBatchSupplier {
   virtual std::shared_ptr<arrow::RecordBatch> GetNextBatch() = 0;
   // Return the estimated number of rows in the who table.
   virtual size_t GetEstimatedNumRows() const = 0;
+  // Return the source path of the record batch supplier.
+  virtual std::string GetSourcePath() const = 0;
 };
 
 bool check_primary_key_type(std::shared_ptr<arrow::DataType> data_type);
@@ -213,13 +216,15 @@ static void append_edges(
         } else {
           std::get<0>(parsed_edges[cur_ind++]) = vid;
         }
-        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        // is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
+        is_dst ? grape::atomic_add(ie_degree[vid], 1)
+               : grape::atomic_add(oe_degree[vid], 1);
       }
     }
   };
 
   // if EDATA_T is grape::EmptyType, no need to read columns
-  auto edata_col_thread = std::thread([&]() {
+  auto edata_col_lambda = [&]() {
     if constexpr (!std::is_same<EDATA_T, grape::EmptyType>::value) {
       CHECK(edata_cols.size() == 1);
       auto edata_col = edata_cols[0];
@@ -250,12 +255,10 @@ static void append_edges(
       }
       VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
     }
-  });
-  auto src_col_thread = std::thread([&]() { _append(false); });
-  auto dst_col_thread = std::thread([&]() { _append(true); });
-  src_col_thread.join();
-  dst_col_thread.join();
-  edata_col_thread.join();
+  };
+  _append(false);
+  _append(true);
+  edata_col_lambda();
 }
 
 // A simple queue which stores the record batches, for consuming.
@@ -303,8 +306,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
   void AddVerticesRecordBatch(
       label_t v_label_id, const std::vector<std::string>& input_paths,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, const std::string&, const LoadingConfig&)>
+      std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+          label_t, const std::string&, const LoadingConfig&, int32_t)>
           supplier_creator);
 
   // Add edges in record batch to output_parsed_edges, output_ie_degrees and
@@ -312,8 +315,9 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   void AddEdgesRecordBatch(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
       const std::vector<std::string>& input_paths,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, label_t, label_t, const std::string&, const LoadingConfig&)>
+      std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+          label_t, label_t, label_t, const std::string&, const LoadingConfig&,
+          int32_t)>
           supplier_creator);
 
  protected:
@@ -346,20 +350,15 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   }
 
   void vertexRecordBatchProducerRoutine(
-      label_t v_label_id, const std::vector<std::string>& v_files,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, const std::string&, const LoadingConfig&)>
-          supplier_creator,
-      RecordBatchQueue& queue) {
+      label_t v_label_id, RecordBatchQueue& queue, int32_t producer_id,
+      int32_t producer_num,
+      std::vector<std::shared_ptr<IRecordBatchSupplier>>& suppliers) {
     std::string v_label_name = schema_.get_vertex_label_name(v_label_id);
-    VLOG(10) << "Parsing vertex file:" << v_files.size() << " for label "
-             << v_label_name;
 
-    for (auto& v_file : v_files) {
-      VLOG(10) << "Parsing vertex file:" << v_file << " for label "
+    for (auto& record_batch_supplier : suppliers) {
+      VLOG(10) << "Producer " << producer_id << "Parsing vertex file:"
+               << record_batch_supplier->GetSourcePath() << " for label "
                << v_label_name;
-      auto record_batch_supplier =
-          supplier_creator(v_label_id, v_file, loading_config_);
 
       bool first_batch = true;
       while (true) {
@@ -379,17 +378,22 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         }
         queue.push(batch);  // block if queue is full
       }
-      VLOG(10) << "Finish parsing vertex file:" << v_file << " for label "
+      VLOG(10) << "Producer " << producer_id << " finish parsing vertex file:"
+               << record_batch_supplier->GetSourcePath() << " for label "
                << v_label_name;
     }
-    queue.finish();
   }
 
   // Currently consumer can be only one thread.
   template <typename KEY_T>
   void vertexRecordBatchConsumerRoutine(label_t v_label_id,
                                         IdIndexer<KEY_T, vid_t>& indexer,
-                                        RecordBatchQueue& queue) {
+                                        RecordBatchQueue& queue,
+                                        int32_t consumer_id,
+                                        int32_t consumer_num) {
+    if (consumer_num != 1) {
+      LOG(FATAL) << "Currently consumer can be only one thread";
+    }
     auto primary_key = schema_.get_vertex_primary_key(v_label_id)[0];
     auto primary_key_name = std::get<1>(primary_key);
     size_t primary_key_ind = std::get<2>(primary_key);
@@ -412,24 +416,53 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   template <typename KEY_T>
   void addVertexRecordBatchImpl(
       label_t v_label_id, const std::vector<std::string>& v_files,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, const std::string&, const LoadingConfig&)>
+      std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+          label_t, const std::string&, const LoadingConfig&,
+          int32_t parallelism)>
           supplier_creator) {
     std::string v_label_name = schema_.get_vertex_label_name(v_label_id);
     IdIndexer<KEY_T, vid_t> indexer;
     RecordBatchQueue queue;
-    // create thread running vertexRecordBatchProducerRoutine<KEY_T>
-    std::thread producer_thread = std::thread(
-        &AbstractArrowFragmentLoader::vertexRecordBatchProducerRoutine, this,
-        v_label_id, v_files, supplier_creator, std::ref(queue));
-    // Vertex can not be added in parallel, so only one consumer thread.
-    std::thread consumer_thread = std::thread([&]() {
-      this->vertexRecordBatchConsumerRoutine<KEY_T>(v_label_id, indexer,
-                                                    std::ref(queue));
-    });
 
-    producer_thread.join();
-    consumer_thread.join();
+    int32_t producer_thread_num = thread_num_;
+    int32_t consumer_thread_num = 1;
+    std::vector<std::thread> producer_threads(producer_thread_num);
+    std::vector<std::thread> consumer_threads(consumer_thread_num);
+
+    std::vector<std::vector<std::shared_ptr<IRecordBatchSupplier>>>
+        suppliers_by_thread;  // Each thread hold each supplier for each file.
+    suppliers_by_thread.resize(producer_thread_num);
+    for (auto v_file : v_files) {
+      // Create <= producer_thread_num suppliers for each file.
+      auto suppliers = supplier_creator(v_label_id, v_file, loading_config_,
+                                        producer_thread_num);
+      for (int32_t i = 0; i < producer_thread_num; ++i) {
+        if (suppliers.size() > i) {
+          suppliers_by_thread[i].emplace_back(suppliers[i]);
+        }
+      }
+    }
+
+    for (int32_t i = 0; i < producer_thread_num; ++i) {
+      producer_threads[i] = std::thread(
+          &AbstractArrowFragmentLoader::vertexRecordBatchProducerRoutine, this,
+          v_label_id, std::ref(queue), i, producer_thread_num,
+          std::ref(suppliers_by_thread[i]));
+    }
+    for (int32_t i = 0; i < consumer_thread_num; ++i) {
+      consumer_threads[i] = std::thread([&]() {
+        this->vertexRecordBatchConsumerRoutine<KEY_T>(
+            v_label_id, indexer, std::ref(queue), i, consumer_thread_num);
+      });
+    }
+
+    for (int32_t i = 0; i < producer_thread_num; ++i) {
+      producer_threads[i].join();
+    }
+    queue.finish();
+    for (int32_t i = 0; i < consumer_thread_num; ++i) {
+      consumer_threads[i].join();
+    }
 
     VLOG(10) << "Finish parsing vertex file:" << v_files.size() << " for label "
              << v_label_name;
@@ -441,17 +474,12 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
   void edgeRecordBatchProducerRoutine(
       label_t src_label_id, label_t dst_label_id, label_t e_label_id,
-      const std::vector<std::string>& e_files,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, label_t, label_t, const std::string&, const LoadingConfig&)>
-          supplier_creator,
-      RecordBatchQueue& queue) {
+      RecordBatchQueue& queue, int32_t producer_id, int32_t producer_num,
+      std::vector<std::shared_ptr<IRecordBatchSupplier>>& suppliers) {
     auto src_label_name = schema_.get_vertex_label_name(src_label_id);
     auto dst_label_name = schema_.get_vertex_label_name(dst_label_id);
     auto edge_label_name = schema_.get_edge_label_name(e_label_id);
-    for (auto filename : e_files) {
-      auto record_batch_supplier = supplier_creator(
-          src_label_id, dst_label_id, e_label_id, filename, loading_config_);
+    for (auto record_batch_supplier : suppliers) {
       bool first_batch = true;
       while (true) {
         auto record_batch = record_batch_supplier->GetNextBatch();
@@ -471,11 +499,11 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         queue.push(record_batch);
         first_batch = false;
       }
-      VLOG(10) << "Finish parsing edge file:" << filename << " for label "
+      VLOG(10) << "Producer:" << producer_id << "Finish parsing edge file:"
+               << record_batch_supplier->GetSourcePath() << " for label "
                << src_label_name << " -> " << dst_label_name << " -> "
                << edge_label_name;
     }
-    queue.finish();
   }
 
   template <typename EDATA_T>
@@ -518,6 +546,11 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
       // add edges to vector
       CHECK(src_col->length() == dst_col->length());
+
+      // fetch_and_add for parsed_edges_num
+      // auto old_num = parsed_edges_num.fetch_add(src_col->length(),
+      //                                           std::memory_order_relaxed);
+
       if (src_col_type->Equals(arrow::int64())) {
         append_edges<int64_t, EDATA_T>(
             src_col, dst_col, src_indexer, dst_indexer, property_cols,
@@ -547,8 +580,9 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   void addEdgesRecordBatchImpl(
       label_t src_label_id, label_t dst_label_id, label_t e_label_id,
       const std::vector<std::string>& e_files,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, label_t, label_t, const std::string&, const LoadingConfig&)>
+      std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+          label_t, label_t, label_t, const std::string&, const LoadingConfig&,
+          int32_t)>
           supplier_creator) {
     auto src_label_name = schema_.get_vertex_label_name(src_label_id);
     auto dst_label_name = schema_.get_vertex_label_name(dst_label_id);
@@ -578,29 +612,68 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     VLOG(10) << "src indexer size: " << src_indexer.size()
              << " dst indexer size: " << dst_indexer.size();
     size_t num_edges = 0;
+
+    int32_t producer_thread_num = thread_num_;
+    int32_t consumer_thread_num =
+        1;  // Currently consumer can be only one thread.
+
+    std::vector<std::thread> producer_threads(producer_thread_num);
+    std::vector<std::thread> consumer_threads(consumer_thread_num);
     {
       for (auto filename : e_files) {
-        auto record_batch_supplier = supplier_creator(
-            src_label_id, dst_label_id, e_label_id, filename, loading_config_);
-        num_edges += record_batch_supplier->GetEstimatedNumRows();
+        auto record_batch_suppliers =
+            supplier_creator(src_label_id, dst_label_id, e_label_id, filename,
+                             loading_config_, thread_num_);
+        for (auto& record_batch : record_batch_suppliers) {
+          num_edges += record_batch->GetEstimatedNumRows();
+        }
       }
     }
     LOG(INFO) << "Estimated number of edges: " << num_edges;
-    parsed_edges.resize(num_edges);
+    if (num_edges > 0) {
+      parsed_edges.reserve(num_edges);  // Since the estimated number of edges
+                                        // is not accurate, we reserve a large
+                                        // space for parsed_edges.
+    }
 
-    auto producer_thread = std::thread(
-        &AbstractArrowFragmentLoader::edgeRecordBatchProducerRoutine, this,
-        src_label_id, dst_label_id, e_label_id, e_files, supplier_creator,
-        std::ref(parsed_edges_queue));
-    auto consumer_thread = std::thread([&]() {
-      this->edgeRecordBatchConsumerRoutine<EDATA_T>(
-          src_label_id, dst_label_id, e_label_id, std::cref(src_indexer),
-          std::cref(dst_indexer), parsed_edges, ie_degree, oe_degree,
-          std::ref(parsed_edges_queue));
-    });
+    std::vector<std::vector<std::shared_ptr<IRecordBatchSupplier>>>
+        suppliers_by_thread;  // Each thread hold each supplier for each file.
+    suppliers_by_thread.resize(producer_thread_num);
+    for (auto e_file : e_files) {
+      // Create exactly producer_thread_num suppliers for each file.
+      auto suppliers =
+          supplier_creator(src_label_id, dst_label_id, e_label_id, e_file,
+                           loading_config_, producer_thread_num);
+      for (int32_t i = 0; i < producer_thread_num; ++i) {
+        if (suppliers.size() > i) {
+          suppliers_by_thread[i].emplace_back(suppliers[i]);
+        }
+      }
+    }
 
-    producer_thread.join();
-    consumer_thread.join();
+    for (int32_t i = 0; i < producer_thread_num; ++i) {
+      producer_threads[i] = std::thread(
+          &AbstractArrowFragmentLoader::edgeRecordBatchProducerRoutine, this,
+          src_label_id, dst_label_id, e_label_id, std::ref(parsed_edges_queue),
+          i, producer_thread_num, std::ref(suppliers_by_thread[i]));
+    }
+
+    for (int32_t i = 0; i < consumer_thread_num; ++i) {
+      consumer_threads[i] = std::thread([&]() {
+        this->edgeRecordBatchConsumerRoutine<EDATA_T>(
+            src_label_id, dst_label_id, e_label_id, std::cref(src_indexer),
+            std::cref(dst_indexer), std::ref(parsed_edges), std::ref(ie_degree),
+            std::ref(oe_degree), std::ref(parsed_edges_queue));
+      });
+    }
+
+    for (int32_t i = 0; i < producer_thread_num; ++i) {
+      producer_threads[i].join();
+    }
+    parsed_edges_queue.finish();
+    for (int32_t i = 0; i < consumer_thread_num; ++i) {
+      consumer_threads[i].join();
+    }
 
     basic_fragment_loader_.PutEdges(src_label_id, dst_label_id, e_label_id,
                                     parsed_edges, ie_degree, oe_degree);
@@ -614,7 +687,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   int32_t thread_num_;  // the thread_num is basically the consumer thread num.
 
   mutable BasicFragmentLoader basic_fragment_loader_;
-};  // namespace gs
+};
 
 }  // namespace gs
 
