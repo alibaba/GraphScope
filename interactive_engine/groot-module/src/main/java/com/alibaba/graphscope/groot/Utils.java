@@ -72,13 +72,17 @@ public class Utils {
             default:
                 throw new IllegalArgumentException("invalid role [" + role + "]");
         }
-        String[] array = s.split(",");
-        if (idx >= array.length) {
-            throw new IllegalArgumentException("Invalid index " + idx + " of " + s);
+        if (s.isEmpty()) {  // For backward compatibility
+            return CommonConfig.RPC_PORT.get(configs);
+        } else {
+            String[] array = s.split(",");
+            if (idx >= array.length) {
+                throw new IllegalArgumentException("Invalid index " + idx + " of " + s);
+            }
+            if (array[idx].isEmpty()) {
+                throw new IllegalArgumentException("Invalid port " + array[idx] + " of " + role);
+            }
+            return Integer.parseInt(array[idx]);
         }
-        if (array[idx].isEmpty()) {
-            throw new IllegalArgumentException("Invalid port " + array[idx] + " of " + role);
-        }
-        return Integer.parseInt(array[idx]);
     }
 }
