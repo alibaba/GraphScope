@@ -143,6 +143,44 @@ void check_edge_invariant(
   }
 }
 
+RecordBatchQueue::RecordBatchQueue(int32_t max_length)
+    : max_length_(max_length), finished_(false) {}
+
+void RecordBatchQueue::push(std::shared_ptr<arrow::RecordBatch> record_batch) {
+  std::unique_lock<std::mutex> lock(mutex_);
+  full_cv_.wait(lock,
+                [this] { return queue_.size() < max_length_ || finished_; });
+  if (finished_) {
+    return;
+  }
+  queue_.push(record_batch);
+  empty_cv_.notify_one();
+}
+
+std::shared_ptr<arrow::RecordBatch> RecordBatchQueue::pop() {
+  std::unique_lock<std::mutex> lock(mutex_);
+  empty_cv_.wait(lock, [this] { return !queue_.empty() || finished_; });
+  if (finished_) {
+    return nullptr;
+  }
+  auto record_batch = queue_.front();
+  queue_.pop();
+  full_cv_.notify_one();
+  return record_batch;
+}
+
+size_t RecordBatchQueue::size() const {
+  std::unique_lock<std::mutex> lock(mutex_);
+  return queue_.size();
+}
+
+void RecordBatchQueue::finish() {
+  std::unique_lock<std::mutex> lock(mutex_);
+  finished_ = true;
+  empty_cv_.notify_all();
+  full_cv_.notify_all();
+}
+
 void AbstractArrowFragmentLoader::AddVerticesRecordBatch(
     label_t v_label_id, const std::vector<std::string>& v_files,
     std::function<std::shared_ptr<IRecordBatchSupplier>(

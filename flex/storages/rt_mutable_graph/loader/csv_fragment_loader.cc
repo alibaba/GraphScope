@@ -53,6 +53,9 @@ CSVStreamRecordBatchSupplier::GetNextBatch() {
   }
 }
 
+// Can not get.
+size_t CSVStreamRecordBatchSupplier::GetEstimatedNumRows() const { return 0; }
+
 CSVTableRecordBatchSupplier::CSVTableRecordBatchSupplier(
     label_t label_id, const std::string& path,
     arrow::csv::ConvertOptions convert_options,
@@ -94,6 +97,10 @@ CSVTableRecordBatchSupplier::GetNextBatch() {
                << " error: " << status.message();
   }
   return batch;
+}
+
+size_t CSVTableRecordBatchSupplier::GetEstimatedNumRows() const {
+  return table_->num_rows();
 }
 
 static std::vector<std::string> read_header(const std::string& file_name,
@@ -291,44 +298,14 @@ void CSVFragmentLoader::loadVertices() {
     return;
   }
 
-  if (thread_num_ == 1) {
-    LOG(INFO) << "Loading vertices with single thread...";
-    for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
-         ++iter) {
-      auto v_label_id = iter->first;
-      auto v_files = iter->second;
-      addVertices(v_label_id, v_files);
-    }
-  } else {
-    // copy vertex_sources and edge sources to vector, since we need to
-    // use multi-thread loading.
-    std::vector<std::pair<label_t, std::vector<std::string>>> vertex_files;
-    for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
-         ++iter) {
-      vertex_files.emplace_back(iter->first, iter->second);
-    }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
-              << " " << vertex_files.size() << " vertex files, ";
-    std::atomic<size_t> v_ind(0);
-    std::vector<std::thread> threads(thread_num_);
-    for (int i = 0; i < thread_num_; ++i) {
-      threads[i] = std::thread([&]() {
-        while (true) {
-          size_t cur = v_ind.fetch_add(1);
-          if (cur >= vertex_files.size()) {
-            break;
-          }
-          auto v_label_id = vertex_files[cur].first;
-          addVertices(v_label_id, vertex_files[cur].second);
-        }
-      });
-    }
-    for (auto& thread : threads) {
-      thread.join();
-    }
-
-    LOG(INFO) << "Finished loading vertices";
+  LOG(INFO) << "Loading vertices with single thread...";
+  for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
+       ++iter) {
+    auto v_label_id = iter->first;
+    auto v_files = iter->second;
+    addVertices(v_label_id, v_files);
   }
+  LOG(INFO) << "Finished loading vertices";
 }
 
 void CSVFragmentLoader::fillVertexReaderMeta(
@@ -609,48 +586,15 @@ void CSVFragmentLoader::loadEdges() {
     return;
   }
 
-  if (thread_num_ == 1) {
-    LOG(INFO) << "Loading edges with single thread...";
-    for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
-      auto& src_label_id = std::get<0>(iter->first);
-      auto& dst_label_id = std::get<1>(iter->first);
-      auto& e_label_id = std::get<2>(iter->first);
-      auto& e_files = iter->second;
+  for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
+    auto& src_label_id = std::get<0>(iter->first);
+    auto& dst_label_id = std::get<1>(iter->first);
+    auto& e_label_id = std::get<2>(iter->first);
+    auto& e_files = iter->second;
 
-      addEdges(src_label_id, dst_label_id, e_label_id, e_files);
-    }
-  } else {
-    std::vector<std::pair<typename LoadingConfig::edge_triplet_type,
-                          std::vector<std::string>>>
-        edge_files;
-    for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
-      edge_files.emplace_back(iter->first, iter->second);
-    }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
-              << edge_files.size() << " edge files.";
-    std::atomic<size_t> e_ind(0);
-    std::vector<std::thread> threads(thread_num_);
-    for (int i = 0; i < thread_num_; ++i) {
-      threads[i] = std::thread([&]() {
-        while (true) {
-          size_t cur = e_ind.fetch_add(1);
-          if (cur >= edge_files.size()) {
-            break;
-          }
-          auto& edge_file = edge_files[cur];
-          auto src_label_id = std::get<0>(edge_file.first);
-          auto dst_label_id = std::get<1>(edge_file.first);
-          auto e_label_id = std::get<2>(edge_file.first);
-          auto& file_names = edge_file.second;
-          addEdges(src_label_id, dst_label_id, e_label_id, file_names);
-        }
-      });
-    }
-    for (auto& thread : threads) {
-      thread.join();
-    }
-    LOG(INFO) << "Finished loading edges";
+    addEdges(src_label_id, dst_label_id, e_label_id, e_files);
   }
+  LOG(INFO) << "Finished loading edges";
 }
 
 void CSVFragmentLoader::LoadFragment() {
