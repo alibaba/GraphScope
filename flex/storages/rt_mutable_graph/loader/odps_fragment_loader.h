@@ -68,7 +68,6 @@ class ODPSReadClient {
   void init();
 
   void CreateReadSession(std::string* session_id, int* split_count,
-                         size_t* num_rows,
                          const TableIdentifier& table_identifier,
                          const std::vector<std::string>& selected_cols,
                          const std::vector<std::string>& partition_cols,
@@ -92,7 +91,6 @@ class ODPSReadClient {
                                     const TableIdentifier& table_identifier);
 
   void getReadSessionStatus(const std::string& session_id, int* split_count,
-                            size_t* num_rows,
                             const TableIdentifier& table_identifier);
 
   void producerRoutine(
@@ -122,8 +120,7 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   ODPSStreamRecordBatchSupplier(label_t label_id, const std::string& file_path,
                                 const ODPSReadClient& odps_table_reader,
                                 const std::string& session_id, int split_count,
-                                size_t num_rows, int32_t supplier_id,
-                                int32_t num_suppliers,
+                                int32_t supplier_id, int32_t num_suppliers,
                                 TableIdentifier table_identifier);
 
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;

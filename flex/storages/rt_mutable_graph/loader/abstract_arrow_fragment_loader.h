@@ -264,7 +264,7 @@ static void append_edges(
 // A simple queue which stores the record batches, for consuming.
 struct RecordBatchQueue {
  public:
-  RecordBatchQueue(int32_t max_length = 1024);
+  RecordBatchQueue(int32_t max_length = 2048);
 
   void push(std::shared_ptr<arrow::RecordBatch> record_batch);
 
@@ -462,8 +462,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       consumer_threads[i].join();
     }
 
-    VLOG(10) << "Finish parsing vertex file:" << v_files.size() << " for label "
-             << v_label_name;
+    VLOG(10) << "Finish parsing vertex files of size " << v_files.size()
+             << " for label " << v_label_name;
     if (indexer.bucket_count() == 0) {
       indexer._rehash(schema_.get_max_vnum(v_label_name));
     }
