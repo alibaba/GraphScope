@@ -240,7 +240,7 @@ public class SnapshotManager {
 
         byte[] writeBytes = this.metaStore.read(WRITE_SNAPSHOT_ID_PATH);
         long writeSI = objectMapper.readValue(writeBytes, Long.class);
-        logger.info("recovered write snapshot id {}", writeBytes);
+        logger.info("recovered write snapshot id {}", writeSI);
         if (querySI.getSnapshotId() > writeSI) {
             throw new IllegalStateException(
                     "recovered querySnapshotInfo ["

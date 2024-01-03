@@ -162,7 +162,7 @@ public class VolumeFS extends AbstractFileSystem {
                                 volumeName,
                                 "created by groot data-load-tools",
                                 Volume.Type.OLD,
-                                7L);
+                                1L);
             }
         } catch (OdpsException e) {
             System.out.println(

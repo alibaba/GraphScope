@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::path::Path;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::Arc;
+use std::fs;
 
 use ::crossbeam_epoch as epoch;
 use protobuf::Message;
@@ -609,6 +610,10 @@ impl MultiVersionGraph for GraphStore {
         let data_file_path =
             format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
         if Path::new(data_file_path.as_str()).exists() {
+            if let Ok(metadata) = fs::metadata(file) {
+                let size = metadata.len();
+                println!("Ingesting file: {} with size: {} bytes", file, size);
+            }
             self.ingest(data_file_path.as_str())?
         }
         if target.src_label_id > 0 {
