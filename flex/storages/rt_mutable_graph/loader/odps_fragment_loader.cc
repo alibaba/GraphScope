@@ -135,7 +135,7 @@ void ODPSReadClient::getReadSessionStatus(
   while (resp.session_status_ != SessionStatus::NORMAL) {
     resp = getReadSession(session_id, table_identifier);
     *split_count = resp.split_count_;
-    *num_rows_in_table = resp.record_count_;
+    *num_rows_in_table = (size_t) resp.record_count_;
     LOG(WARNING) << "GetReadSession failed: " << resp.error_message_
                  << ", retrying...";
     if (resp.session_status_ == SessionStatus::CRITICAL) {
@@ -293,16 +293,16 @@ ODPSStreamRecordBatchSupplier::GetNextBatch() {
                    << cur_batch_reader_->GetStatus()
                    << ", split id: " << cur_split_index_;
       } else {
-        VLOG(1) << "Read split " << cur_split_index_ << " finished";
+        VLOG(2) << "Read split " << cur_split_index_ << " finished";
         // move to next split
         cur_split_index_ += num_suppliers_;
         if (cur_split_index_ >= split_count_) {
-          VLOG(1) << "Suppiler with " << supplier_id_
-                  << "Finish Read my splits";
+          VLOG(2) << "Supplier: " << supplier_id_
+                  << " has finished reading splits";
           cur_batch_reader_.reset();
           break;
         } else {
-          VLOG(1) << "Start reading split " << cur_split_index_;
+          VLOG(2) << "Start reading split " << cur_split_index_;
           read_rows_req_.split_index_ = cur_split_index_;
           cur_batch_reader_ =
               odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
@@ -458,44 +458,14 @@ void ODPSFragmentLoader::loadVertices() {
     return;
   }
 
-  if (thread_num_ == 1) {
-    LOG(INFO) << "Loading vertices with single thread...";
-    for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
-         ++iter) {
-      auto v_label_id = iter->first;
-      auto v_files = iter->second;
-      addVertices(v_label_id, v_files);
-    }
-  } else {
-    // copy vertex_sources and edge sources to vector, since we need to
-    // use multi-thread loading.
-    std::vector<std::pair<label_t, std::vector<std::string>>> vertex_files;
-    for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
-         ++iter) {
-      vertex_files.emplace_back(iter->first, iter->second);
-    }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
-              << " " << vertex_files.size() << " vertex files, ";
-    std::atomic<size_t> v_ind(0);
-    std::vector<std::thread> threads(thread_num_);
-    for (int i = 0; i < thread_num_; ++i) {
-      threads[i] = std::thread([&]() {
-        while (true) {
-          size_t cur = v_ind.fetch_add(1);
-          if (cur >= vertex_files.size()) {
-            break;
-          }
-          auto v_label_id = vertex_files[cur].first;
-          addVertices(v_label_id, vertex_files[cur].second);
-        }
-      });
-    }
-    for (auto& thread : threads) {
-      thread.join();
-    }
-
-    LOG(INFO) << "Finished loading vertices";
+  LOG(INFO) << "Loading vertices...";
+  for (auto iter = vertex_sources.begin(); iter != vertex_sources.end();
+       ++iter) {
+    auto v_label_id = iter->first;
+    auto v_files = iter->second;
+    addVertices(v_label_id, v_files);
   }
+  LOG(INFO) << "Finished loading vertices";
 }
 
 ////////////////Loading edges/////////////////
@@ -570,47 +540,15 @@ void ODPSFragmentLoader::loadEdges() {
     return;
   }
 
-  if (thread_num_ == 1) {
-    LOG(INFO) << "Loading edges with single thread...";
-    for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
-      auto& src_label_id = std::get<0>(iter->first);
-      auto& dst_label_id = std::get<1>(iter->first);
-      auto& e_label_id = std::get<2>(iter->first);
-      auto& e_files = iter->second;
-      addEdges(src_label_id, dst_label_id, e_label_id, e_files);
-    }
-  } else {
-    std::vector<std::pair<typename LoadingConfig::edge_triplet_type,
-                          std::vector<std::string>>>
-        edge_files;
-    for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
-      edge_files.emplace_back(iter->first, iter->second);
-    }
-    LOG(INFO) << "Parallel loading with " << thread_num_ << " threads, "
-              << edge_files.size() << " edge files.";
-    std::atomic<size_t> e_ind(0);
-    std::vector<std::thread> threads(thread_num_);
-    for (int i = 0; i < thread_num_; ++i) {
-      threads[i] = std::thread([&]() {
-        while (true) {
-          size_t cur = e_ind.fetch_add(1);
-          if (cur >= edge_files.size()) {
-            break;
-          }
-          auto& edge_file = edge_files[cur];
-          auto src_label_id = std::get<0>(edge_file.first);
-          auto dst_label_id = std::get<1>(edge_file.first);
-          auto e_label_id = std::get<2>(edge_file.first);
-          auto& file_names = edge_file.second;
-          addEdges(src_label_id, dst_label_id, e_label_id, file_names);
-        }
-      });
-    }
-    for (auto& thread : threads) {
-      thread.join();
-    }
-    LOG(INFO) << "Finished loading edges";
+  LOG(INFO) << "Loading edges...";
+  for (auto iter = edge_sources.begin(); iter != edge_sources.end(); ++iter) {
+    auto& src_label_id = std::get<0>(iter->first);
+    auto& dst_label_id = std::get<1>(iter->first);
+    auto& e_label_id = std::get<2>(iter->first);
+    auto& e_files = iter->second;
+    addEdges(src_label_id, dst_label_id, e_label_id, e_files);
   }
+  LOG(INFO) << "Finished loading edges";
 }
 
 std::vector<std::string> ODPSFragmentLoader::columnMappingsToSelectedCols(

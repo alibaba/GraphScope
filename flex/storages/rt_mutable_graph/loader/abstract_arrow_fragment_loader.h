@@ -345,8 +345,6 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
           basic_fragment_loader_.GetVertexTable(v_label_id).column_ptrs()[j],
           chunked_array, vids);
     }
-
-    VLOG(10) << "Insert rows: " << row_num;
   }
 
   void vertexRecordBatchProducerRoutine(
