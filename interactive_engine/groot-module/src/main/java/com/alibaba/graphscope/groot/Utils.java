@@ -72,12 +72,13 @@ public class Utils {
             default:
                 throw new IllegalArgumentException("invalid role [" + role + "]");
         }
-        if (s.isEmpty()) {  // For backward compatibility
+        if (s.isEmpty()) { // For backward compatibility
             return CommonConfig.RPC_PORT.get(configs);
         } else {
             String[] array = s.split(",");
             if (idx >= array.length) {
-                throw new IllegalArgumentException("Invalid index " + idx + " of " + s);
+                // throw new IllegalArgumentException("Invalid index " + idx + " of " + s);
+                idx = 0; // Just use the first one. In this case, assume they are in different pods.
             }
             if (array[idx].isEmpty()) {
                 throw new IllegalArgumentException("Invalid port " + array[idx] + " of " + role);

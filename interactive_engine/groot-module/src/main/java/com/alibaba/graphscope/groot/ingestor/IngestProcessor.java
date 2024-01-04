@@ -312,8 +312,12 @@ public class IngestProcessor implements MetricsAgent {
                     long snapshotId = logEntry.getSnapshotId();
                     if (batch.getOperationCount() > 0) {
                         long batchSnapshotId = this.ingestSnapshotId.get();
-                        this.batchSender.asyncSendWithRetry("", queueId, snapshotId, offset, batch);
-                        logger.info("Sent logEntry snapshot Id {}, SnapshotId {}, batch {}", snapshotId, batchSnapshotId, batch.toProto());
+                        this.batchSender.asyncSendWithRetry("", queueId, batchSnapshotId, offset, batch);
+                        logger.info(
+                                "Sent logEntry snapshot Id {}, SnapshotId {}, batch {}",
+                                snapshotId,
+                                batchSnapshotId,
+                                batch.toProto());
                     }
                 }
             }

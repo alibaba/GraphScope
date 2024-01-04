@@ -66,7 +66,7 @@ public class Coordinator extends NodeBase {
         } else {
             this.curator = CuratorUtils.makeCurator(configs);
             this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
-//            metaStore = new ZkMetaStore(configs, this.curator);
+            //            metaStore = new ZkMetaStore(configs, this.curator);
         }
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);

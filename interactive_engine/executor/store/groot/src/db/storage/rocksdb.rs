@@ -283,6 +283,8 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     ret.set_max_open_files(-1);
     ret.set_max_log_file_size(1024 << 10);
     ret.set_keep_log_file_num(10);
+    // https://github.com/facebook/rocksdb/wiki/Basic-Operations#non-sync-writes
+    ret.set_use_fsync(true);
 
 
     if let Some(conf_str) = options.get("store.rocksdb.compression.type") {

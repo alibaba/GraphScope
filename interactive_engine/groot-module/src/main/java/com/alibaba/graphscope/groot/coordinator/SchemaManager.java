@@ -14,7 +14,6 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
@@ -83,8 +82,7 @@ public class SchemaManager {
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "ingest-try-start", logger));
-        this.scheduler.scheduleWithFixedDelay(
-                this::recover, 5, 2, TimeUnit.SECONDS);
+        this.scheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
     }
 
     private void recover() {
@@ -109,6 +107,7 @@ public class SchemaManager {
         GraphDef graphDef = this.graphDefFetcher.fetchGraphDef();
         this.graphDefRef.set(graphDef);
         this.ready = true;
+
         // logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
     }
 
