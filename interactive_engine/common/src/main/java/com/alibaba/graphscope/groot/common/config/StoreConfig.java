@@ -32,6 +32,8 @@ public class StoreConfig {
     public static final Config<Boolean> STORE_GC_ENABLE =
             Config.boolConfig("store.gc.enable", true);
 
+    public static final Config<Long> STORE_GC_INTERVAL_MS = Config.longConfig("store.gc.interval.ms", 2000L);
+
     // set by IS_SECONDARY_INSTANCE, used in graph.rs
     public static final Config<String> STORE_STORAGE_ENGINE =
             Config.stringConfig("store.storage.engine", "rocksdb");

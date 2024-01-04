@@ -610,9 +610,9 @@ impl MultiVersionGraph for GraphStore {
         let data_file_path =
             format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
         if Path::new(data_file_path.as_str()).exists() {
-            if let Ok(metadata) = fs::metadata(file) {
+            if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
                 let size = metadata.len();
-                println!("Ingesting file: {} with size: {} bytes", file, size);
+                println!("Icngesting file: {} with size: {} bytes", data_file_path, size);
             }
             self.ingest(data_file_path.as_str())?
         }

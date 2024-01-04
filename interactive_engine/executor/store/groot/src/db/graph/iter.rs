@@ -57,6 +57,7 @@ impl IntoIterator for VertexTypeScan {
                 let val = raw_val.to_slice();
                 match parse_vertex_key(key) {
                     Ok((vertex_id, ts)) => {
+                        info!("vid, ts, prev_vid, data_ts: {:?} {:?} {:?} {:?}", vertex_id, ts, previous_vertex, data_ts);
                         if !check_v(vertex_id, ts, previous_vertex, data_ts) {
                             return None;
                         }
