@@ -9,7 +9,7 @@ use super::error::*;
 use super::GraphResult;
 use crate::db::api::PropertyId;
 use crate::db::common::bytes::transform;
-use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter};
+use crate::db::common::bytes::util::{UnsafeBytesReader, UnsafeBytesWriter, LEN32_SIZE, LEN_SIZE};
 use crate::db::common::numeric::*;
 use crate::db::proto::schema_common::{DataTypePb, PropertyValuePb};
 
@@ -293,12 +293,12 @@ impl<'a> ValueRef<'a> {
 
     fn check_numeric_array(&self, value_type: ValueType) -> GraphResult<UnsafeBytesReader> {
         let reader = UnsafeBytesReader::new(self.data);
-        let len = match value_type {
-            ValueType::IntList | ValueType::FloatList => 4,
-            ValueType::LongList | ValueType::DoubleList => 8,
+        let unit_size = match value_type {
+            ValueType::IntList | ValueType::FloatList => ::std::mem::size_of::<u32>(),
+            ValueType::LongList | ValueType::DoubleList => ::std::mem::size_of::<u64>(),
             _ => unreachable!(),
         };
-        if reader.read_i32(0).to_be() * len + 4 == self.data.len() as i32 {
+        if reader.read_u64(0).to_be() as usize * unit_size + LEN_SIZE == self.data.len() {
             return Ok(reader);
         }
         let msg = format!("invalid {:?} bytes, data len is {}", value_type, self.data.len());
@@ -310,9 +310,11 @@ impl<'a> ValueRef<'a> {
     /// in valid utf8 and when user extract the str, the process will be panic
     fn weak_check_str_list(&self) -> GraphResult<UnsafeBytesReader> {
         let reader = UnsafeBytesReader::new(self.data);
-        let len = reader.read_i32(0).to_be() as usize;
-        let total_len = reader.read_i32(4 * len).to_be() as usize;
-        if total_len == self.data.len() - (4 + 4 * len) {
+        let len = reader.read_u64(0).to_be() as usize;
+        let total_len = reader
+            .read_u32(LEN_SIZE + LEN32_SIZE * (len - 1))
+            .to_be() as usize;
+        if total_len == self.data.len() - (LEN_SIZE + LEN32_SIZE * len) {
             return Ok(reader);
         }
         let msg = format!("invalid str array bytes");
@@ -522,31 +524,31 @@ fn get_double(data: &[u8]) -> f64 {
 ///     +-----+----+----+-----+----+
 ///     | len | x1 | x2 | ... | xn |
 ///     +-----+----+----+-----+----+
-///     | 4B  | 4B | 4B | ... | 4B |
+///     | 8B  | 4B | 4B | ... | 4B |
 ///     +-----+----+----+-----+----+ len and every xi is in int format above
 /// long array:
 ///     +-----+----+----+-----+----+
 ///     | len | x1 | x2 | ... | xn |
 ///     +-----+----+----+-----+----+
-///     | 4B  | 8B | 8B | ... | 8B |
+///     | 8B  | 8B | 8B | ... | 8B |
 ///     +-----+----+----+-----+----+ len is in int format above and every xi is in long format above
 /// float array:
 ///     +-----+----+----+-----+----+
 ///     | len | x1 | x2 | ... | xn |
 ///     +-----+----+----+-----+----+
-///     | 4B  | 4B | 4B | ... | 4B |
+///     | 8B  | 4B | 4B | ... | 4B |
 ///     +-----+----+----+-----+----+ len is in int format above and every xi is in float format above
 /// double array:
 ///     +-----+----+----+-----+----+
 ///     | len | x1 | x2 | ... | xn |
 ///     +-----+----+----+-----+----+
-///     | 4B  | 8B | 8B | ... | 8B |
+///     | 8B  | 8B | 8B | ... | 8B |
 ///     +-----+----+----+-----+----+ len is in int format above and every xi is in double format above
 /// string array:
 ///     +-----+------+------+-----+------+------+------+-----+------+
 ///     | len | off1 | off2 | ... | offn | str1 | str2 | ... | strn |
 ///     +-----+------+------+-----+------+------+------+-----+------+
-///     | 4B  |  4B  |  4B  | ... |  4B  | x1 B | x2 B | ... | xn B |
+///     | 8B  |  4B  |  4B  | ... |  4B  | x1 B | x2 B | ... | xn B |
 ///     +-----+------+------+-----+------+------+------+-----+------+
 ///     len and offi is in int format above, stri is in string format above
 ///     off1 == x1 means it's str1's end offset
@@ -562,15 +564,15 @@ pub struct Value {
 macro_rules! gen_array {
     ($arr:ident, $ty:ty, $func:tt) => {{
         let size = ::std::mem::size_of::<$ty>();
-        let total_len = $arr.len() * size + 4;
+        let total_len = $arr.len() * size + LEN_SIZE;
         let mut data = Vec::with_capacity(total_len);
         unsafe {
             data.set_len(total_len);
         }
         let mut writer = UnsafeBytesWriter::new(&mut data);
-        writer.write_i32(0, ($arr.len() as i32).to_be());
+        writer.write_u64(0, ($arr.len() as u64).to_be());
         for i in 0..$arr.len() {
-            writer.$func(4 + size * i, $arr[i].to_big_endian());
+            writer.$func(LEN_SIZE + size * i, $arr[i].to_big_endian());
         }
         data
     }};
@@ -661,7 +663,7 @@ impl Value {
     }
 
     pub fn string_list(v: &[String]) -> Self {
-        let mut size = 4 + 4 * v.len();
+        let mut size = LEN_SIZE + LEN32_SIZE * v.len();
         for s in v {
             size += s.len();
         }
@@ -670,13 +672,13 @@ impl Value {
             data.set_len(size);
         }
         let mut writer = UnsafeBytesWriter::new(&mut data);
-        writer.write_i32(0, (v.len() as i32).to_be());
+        writer.write_u64(0, (v.len() as u64).to_be());
         let mut off = 0;
-        let mut pos = 4;
+        let mut pos = LEN_SIZE;
         for s in v {
-            off += s.len() as i32;
-            writer.write_i32(pos, off.to_be());
-            pos += 4;
+            off += s.len() as u32;
+            writer.write_u32(pos, off.to_be());
+            pos += LEN32_SIZE;
         }
         for s in v {
             writer.write_bytes(pos, s.as_bytes());
@@ -874,13 +876,13 @@ impl<'a, T> NumericArray<'a, T> {
 
 impl<'a, T: ToBigEndian> NumericArray<'a, T> {
     fn new(reader: UnsafeBytesReader<'a>) -> Self {
-        let len = reader.read_i32(0).to_be() as usize;
+        let len = reader.read_u64(0).to_be() as usize;
         NumericArray { reader, len, _phantom: Default::default() }
     }
 
     pub fn get(&self, idx: usize) -> Option<T> {
         if idx < self.len {
-            let offset = 4 + ::std::mem::size_of::<T>() * idx;
+            let offset = LEN_SIZE + ::std::mem::size_of::<T>() * idx;
             let tmp = *self.reader.read_ref::<T>(offset);
             return Some(tmp.to_big_endian());
         }
@@ -978,23 +980,36 @@ pub struct StrArray<'a> {
 
 impl<'a> StrArray<'a> {
     fn new(reader: UnsafeBytesReader<'a>) -> Self {
-        let len = reader.read_i32(0).to_be() as usize;
+        let len = reader.read_u64(0).to_be() as usize;
         StrArray { reader, len }
     }
 
     pub fn get(&self, idx: usize) -> Option<&str> {
         if idx < self.len {
-            let str_start_off = 4 + 4 * self.len;
-            let start_off =
-                if idx == 0 { 0 } else { self.reader.read_i32(4 + (idx - 1) * 4).to_be() as usize };
-            let end_off = self.reader.read_i32(4 + idx * 4).to_be() as usize;
+            let str_start_off = LEN_SIZE + LEN32_SIZE * self.len;
+            let start_off = if idx == 0 {
+                0
+            } else {
+                self.reader
+                    .read_u32(LEN_SIZE + LEN32_SIZE * (idx - 1))
+                    .to_be() as usize
+            };
+            let end_off = self
+                .reader
+                .read_u32(LEN_SIZE + LEN32_SIZE * idx)
+                .to_be() as usize;
             let len = end_off - start_off;
             let offset = str_start_off + start_off;
             let data = self.reader.read_bytes(offset, len);
-            let ret = ::std::str::from_utf8(data).expect("data in str array is in valid utf8");
-            return Some(ret);
+            if let Ok(ret) = ::std::str::from_utf8(data) {
+                Some(ret)
+            } else {
+                error!("data in a str array is invalid utf8");
+                None
+            }
+        } else {
+            None
         }
-        None
     }
 
     pub fn len(&self) -> usize {

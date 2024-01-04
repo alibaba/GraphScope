@@ -1,4 +1,3 @@
-use std::fs;
 use std::sync::Arc;
 
 use crate::db::api::{EdgeDirection, EdgeId, GraphResult, Records, SnapshotId, VertexId};
