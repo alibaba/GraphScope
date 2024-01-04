@@ -32,5 +32,11 @@ protoc-grpcio = "3.0"
 [dev-dependencies]
 rand = "0.8.5"
 
+[profile.dev]
+# TODO(siyuan): re-enable debug assertions by addressing the reports for misaligned pointer
+# dereferences https://github.com/rust-lang/rust/pull/98112/
+# TODO(longbin): Recommend re-implementing encoder/decoder of groot using bincode
+debug-assertions = false
+
 [[bin]]
 name = "write_bench"
