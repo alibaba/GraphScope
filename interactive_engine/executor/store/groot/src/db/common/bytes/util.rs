@@ -7,9 +7,7 @@ use crate::db::api::GraphErrorCode::InvalidData;
 use crate::db::api::{GraphError, GraphResult};
 
 /// define the size that a length field takes in encoding an array
-pub const LEN_SIZE: usize = ::std::mem::size_of::<u64>();
-/// half of LEN_SIZE
-pub const LEN32_SIZE: usize = ::std::mem::size_of::<u32>();
+pub const LEN_SIZE: usize = ::std::mem::size_of::<u32>();
 
 /// This reader won't check whether the offset is overflow when read bytes.
 /// It's for performance purpose. Be careful to use it.
