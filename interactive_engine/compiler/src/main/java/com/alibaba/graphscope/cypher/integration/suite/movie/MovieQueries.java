@@ -373,4 +373,30 @@ public class MovieQueries {
         List<String> expected = Arrays.asList("Record<{type: \"ACTED_IN\"}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_movie_query26_test() {
+        // property 'name' not exist in 'Movie', the count should be 0
+        String query =
+                "Match (a:Movie|Person) Return labels(a) as type, count(a.name) Order by type;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{type: \"Movie\", $f1: 0}>, Record<{type: \"Person\", $f1: 130}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query27_test() {
+        String query =
+                "Match (a:Person)-[b]->(c:Movie) Return distinct type(b) as type Order by type"
+                    + " Limit 1;";
+        List<String> expected = Arrays.asList("Record<{type: \"ACTED_IN\"}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_movie_query28_test() {
+        String query =
+                "Match (a)-[:ACTED_IN]->(c) Return distinct labels(a) as typeA, labels(c) as"
+                    + " typeC;";
+        List<String> expected = Arrays.asList("Record<{typeA: \"Person\", typeC: \"Movie\"}>");
+        return new QueryContext(query, expected);
+    }
 }
