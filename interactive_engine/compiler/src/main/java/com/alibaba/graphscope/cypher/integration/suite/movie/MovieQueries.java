@@ -387,7 +387,7 @@ public class MovieQueries {
     public static QueryContext get_movie_query27_test() {
         String query =
                 "Match (a:Person)-[b]->(c:Movie) Return distinct type(b) as type Order by type"
-                    + " Limit 1;";
+                        + " Limit 1;";
         List<String> expected = Arrays.asList("Record<{type: \"ACTED_IN\"}>");
         return new QueryContext(query, expected);
     }
@@ -395,7 +395,7 @@ public class MovieQueries {
     public static QueryContext get_movie_query28_test() {
         String query =
                 "Match (a)-[:ACTED_IN]->(c) Return distinct labels(a) as typeA, labels(c) as"
-                    + " typeC;";
+                        + " typeC;";
         List<String> expected = Arrays.asList("Record<{typeA: \"Person\", typeC: \"Movie\"}>");
         return new QueryContext(query, expected);
     }
