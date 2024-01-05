@@ -48,4 +48,7 @@ public class FrontendConfig {
 
     public static final Config<Integer> QUERY_PER_SECOND_LIMIT =
             Config.intConfig("frontend.query.per.second.limit", 2147483647);
+
+    public static final Config<Boolean> GRAPH_TYPE_INFERENCE_ENABLED =
+            Config.boolConfig("graph.type.inference.enabled", true);
 }

@@ -18,6 +18,8 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import static java.util.Objects.requireNonNull;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
@@ -76,21 +78,22 @@ import java.util.stream.Collectors;
  * including {@link RexNode} for expressions and {@link RelNode} for operators
  */
 public class GraphBuilder extends RelBuilder {
+    private final Configs configs;
     /**
      * @param context      not used currently
      * @param cluster      get {@link org.apache.calcite.rex.RexBuilder} (to build {@code RexNode})
      *                     and other global resources (not used currently) from it
      * @param relOptSchema get graph schema from it
      */
-    protected GraphBuilder(
-            @Nullable Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
-        super(context, cluster, relOptSchema);
+    protected GraphBuilder(Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
+        super(Objects.requireNonNull(context), cluster, relOptSchema);
         Utils.setFieldValue(
                 RelBuilder.class,
                 this,
                 "simplifier",
                 new GraphRexSimplify(
                         cluster.getRexBuilder(), RelOptPredicateList.EMPTY, RexUtil.EXECUTOR));
+        this.configs = context.unwrapOrThrow(Configs.class);
     }
 
     /**
@@ -100,8 +103,12 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public static GraphBuilder create(
-            @Nullable Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
+            Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
         return new GraphBuilder(context, cluster, relOptSchema);
+    }
+
+    public Context getContext() {
+        return this.configs;
     }
 
     /**
@@ -308,12 +315,15 @@ public class GraphBuilder extends RelBuilder {
      * @param opt anti or optional
      */
     public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
-        single =
-                new GraphTypeInference(
-                                (GraphBuilder)
-                                        GraphPlanner.relBuilderFactory.create(
-                                                this.cluster, this.relOptSchema))
-                        .inferTypes(single);
+        if (FrontendConfig.GRAPH_TYPE_INFERENCE_ENABLED.get(configs)) {
+            single =
+                    new GraphTypeInference(
+                                    GraphBuilder.create(
+                                            this.configs,
+                                            (GraphOptCluster) this.cluster,
+                                            this.relOptSchema))
+                            .inferTypes(single);
+        }
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
@@ -351,12 +361,15 @@ public class GraphBuilder extends RelBuilder {
         }
         Preconditions.checkArgument(
                 sentences.size() > 1, "at least two sentences are required in multiple match");
-        sentences =
-                new GraphTypeInference(
-                                (GraphBuilder)
-                                        GraphPlanner.relBuilderFactory.create(
-                                                this.cluster, this.relOptSchema))
-                        .inferTypes(sentences);
+        if (FrontendConfig.GRAPH_TYPE_INFERENCE_ENABLED.get(configs)) {
+            sentences =
+                    new GraphTypeInference(
+                                    GraphBuilder.create(
+                                            this.configs,
+                                            (GraphOptCluster) this.cluster,
+                                            this.relOptSchema))
+                            .inferTypes(sentences);
+        }
         RelNode input = size() > 0 ? peek() : null;
         RelNode match =
                 GraphLogicalMultiMatch.create(
@@ -752,8 +765,8 @@ public class GraphBuilder extends RelBuilder {
         Filter filter = topFilter();
         if (filter != null) {
             GraphBuilder builder =
-                    (GraphBuilder)
-                            GraphPlanner.relBuilderFactory.create(getCluster(), getRelOptSchema());
+                    GraphBuilder.create(
+                            this.configs, (GraphOptCluster) getCluster(), getRelOptSchema());
             RexNode condition = filter.getCondition();
             RelNode input = !filter.getInputs().isEmpty() ? filter.getInput(0) : null;
             if (input instanceof AbstractBindableTableScan) {

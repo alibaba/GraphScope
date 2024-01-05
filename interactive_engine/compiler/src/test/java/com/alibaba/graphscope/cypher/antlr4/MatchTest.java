@@ -161,11 +161,12 @@ public class MatchTest {
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"  // `knows` is inferred
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}]," // `knows` is inferred
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])\n"
+                        + "], matchOpt=[INNER])",
                 multiMatch.explain().trim());
     }
 
@@ -307,11 +308,12 @@ public class MatchTest {
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"  // `knows` is inferred
-                    + " opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}], alias=[b]," // `knows` is inferred
+                        + " opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], fusedFilter=[[=(DEFAULT.name, ?0)]], opt=[VERTEX])\n"
+                        + "], matchOpt=[INNER])",
                 node.explain().trim());
     }
 
@@ -364,25 +366,28 @@ public class MatchTest {
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"  // `knows` is inferred
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])\n"
-                    + "    GraphLogicalMultiMatch(input=[null],"
-                    + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[person]}], alias=[c], opt=[OTHER])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"  // `knows` is inferred
-                    + " alias=[DEFAULT], opt=[BOTH])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"  // `knows` is inferred
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[c], opt=[VERTEX])\n"
-                    + "]}])",
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
+                    + " tables=[knows]}]," // `knows` is inferred
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])\n"
+                        + "], matchOpt=[INNER])\n"
+                        + "    GraphLogicalMultiMatch(input=[null],"
+                        + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=false,"
+                        + " tables=[person]}], alias=[c], opt=[OTHER])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
+                        + " tables=[knows]}]," // `knows` is inferred
+                        + " alias=[DEFAULT], opt=[BOTH])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])\n"
+                        + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[b], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false,"
+                        + " tables=[knows]}]," // `knows` is inferred
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[c], opt=[VERTEX])\n"
+                        + "]}])",
                 node.explain().trim());
     }
 }
