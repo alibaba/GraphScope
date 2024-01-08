@@ -150,7 +150,7 @@ public class PathExpandConfig {
         protected Builder(GraphBuilder innerBuilder) {
             this.innerBuilder =
                     GraphBuilder.create(
-                            null,
+                            innerBuilder.getContext(),
                             (GraphOptCluster) innerBuilder.getCluster(),
                             innerBuilder.getRelOptSchema());
             this.pathOpt = GraphOpt.PathExpandPath.ARBITRARY;

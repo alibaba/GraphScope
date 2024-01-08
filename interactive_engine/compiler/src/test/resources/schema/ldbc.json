@@ -725,26 +725,6 @@
             "id": 0,
             "name": "PLACE"
           }
-        },
-        {
-          "src": {
-            "id": 3,
-            "name": "POST"
-          },
-          "dst": {
-            "id": 0,
-            "name": "PLACE"
-          }
-        },
-        {
-          "src": {
-            "id": 2,
-            "name": "COMMENT"
-          },
-          "dst": {
-            "id": 0,
-            "name": "PLACE"
-          }
         }
       ],
       "columns": []

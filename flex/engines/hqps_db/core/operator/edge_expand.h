@@ -1325,6 +1325,10 @@ class EdgeExpand {
       dst_label = state.other_label_;
     }
 
+    VLOG(10) << "src label: " << (int) src_label
+             << ", dst label: " << (int) dst_label
+             << ", edge label: " << (int) state.edge_label_;
+
     auto adj_list_array = state.graph_.template GetEdges<T>(
         src_label, dst_label, state.edge_label_, cur_set.GetVertices(),
         gs::to_string(state.direction_), state.limit_, prop_names);
@@ -1333,7 +1337,9 @@ class EdgeExpand {
     offset.reserve(cur_set.Size() + 1);
     size_t size = 0;
     offset.emplace_back(size);
-    CHECK(cur_set.Size() == adj_list_array.size());
+    CHECK(cur_set.Size() == adj_list_array.size())
+        << "cur_set.Size(): " << cur_set.Size()
+        << ", adj_list_array.size():" << adj_list_array.size();
     std::vector<std::tuple<vertex_id_t, vertex_id_t, std::tuple<T>>>
         prop_tuples;
     prop_tuples.reserve(cur_set.Size() + 1);
