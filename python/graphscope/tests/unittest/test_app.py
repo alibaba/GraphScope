@@ -234,7 +234,7 @@ def test_other_app_on_undirected_graph(
     assert np.allclose(r, triangles_result["undirected"])
 
     # louvain
-    ctx = louvain(p2p_project_undirected_graph, min_progress=50, progress_tries=2)
+    ctx = louvain(p2p_project_undirected_graph, min_progress=0, progress_tries=2)
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     community_num = len(df["r"].unique())
     assert community_num == 103
