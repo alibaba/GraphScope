@@ -273,13 +273,6 @@ class LouvainAppBase
       } else if (ctx.compute_context().superstep() == compress_community_step) {
         ctx.GetVertexState(v).is_alived_community = false;
       }
-
-      if (!ctx.compute_context().active(v)) {
-        std::vector<std::pair<vid_t, edata_t>> tmp_edges;
-        ctx.GetVertexState(v).fake_edges.swap(tmp_edges);
-        std::vector<vid_t> tmp_nodes;
-        ctx.GetVertexState(v).nodes_in_community.swap(tmp_nodes);
-      }
     });
 
     {
