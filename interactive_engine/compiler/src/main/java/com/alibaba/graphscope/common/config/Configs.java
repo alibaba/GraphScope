@@ -18,8 +18,10 @@ package com.alibaba.graphscope.common.config;
 
 import com.alibaba.graphscope.common.utils.FileUtils;
 
+import org.apache.calcite.plan.Context;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,7 +29,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-public class Configs {
+public class Configs implements Context {
     protected Properties properties;
 
     public Configs(String file) throws IOException {
@@ -84,6 +86,11 @@ public class Configs {
     @Override
     public String toString() {
         return this.properties.toString();
+    }
+
+    @Override
+    public <C> @Nullable C unwrap(Class<C> aClass) {
+        return aClass.isInstance(this) ? aClass.cast(this) : null;
     }
 
     public static class Factory {

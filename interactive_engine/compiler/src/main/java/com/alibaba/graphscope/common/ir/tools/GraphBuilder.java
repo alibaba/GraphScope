@@ -18,6 +18,8 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import static java.util.Objects.requireNonNull;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
@@ -69,7 +71,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -77,21 +78,22 @@ import java.util.stream.Collectors;
  * including {@link RexNode} for expressions and {@link RelNode} for operators
  */
 public class GraphBuilder extends RelBuilder {
+    private final Configs configs;
     /**
      * @param context      not used currently
      * @param cluster      get {@link org.apache.calcite.rex.RexBuilder} (to build {@code RexNode})
      *                     and other global resources (not used currently) from it
      * @param relOptSchema get graph schema from it
      */
-    protected GraphBuilder(
-            @Nullable Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
-        super(context, cluster, relOptSchema);
+    protected GraphBuilder(Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
+        super(Objects.requireNonNull(context), cluster, relOptSchema);
         Utils.setFieldValue(
                 RelBuilder.class,
                 this,
                 "simplifier",
                 new GraphRexSimplify(
                         cluster.getRexBuilder(), RelOptPredicateList.EMPTY, RexUtil.EXECUTOR));
+        this.configs = context.unwrapOrThrow(Configs.class);
     }
 
     /**
@@ -101,8 +103,12 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public static GraphBuilder create(
-            @Nullable Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
+            Context context, GraphOptCluster cluster, RelOptSchema relOptSchema) {
         return new GraphBuilder(context, cluster, relOptSchema);
+    }
+
+    public Context getContext() {
+        return this.configs;
     }
 
     /**
@@ -309,6 +315,15 @@ public class GraphBuilder extends RelBuilder {
      * @param opt anti or optional
      */
     public GraphBuilder match(RelNode single, GraphOpt.Match opt) {
+        if (FrontendConfig.GRAPH_TYPE_INFERENCE_ENABLED.get(configs)) {
+            single =
+                    new GraphTypeInference(
+                                    GraphBuilder.create(
+                                            this.configs,
+                                            (GraphOptCluster) this.cluster,
+                                            this.relOptSchema))
+                            .inferTypes(single);
+        }
         RelNode input = size() > 0 ? peek() : null;
         // unwrap match if there is only one source operator in the sentence
         RelNode match =
@@ -339,10 +354,30 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     public GraphBuilder match(RelNode first, Iterable<? extends RelNode> others) {
+        List<RelNode> sentences = Lists.newArrayList();
+        sentences.add(first);
+        for (RelNode other : others) {
+            sentences.add(other);
+        }
+        Preconditions.checkArgument(
+                sentences.size() > 1, "at least two sentences are required in multiple match");
+        if (FrontendConfig.GRAPH_TYPE_INFERENCE_ENABLED.get(configs)) {
+            sentences =
+                    new GraphTypeInference(
+                                    GraphBuilder.create(
+                                            this.configs,
+                                            (GraphOptCluster) this.cluster,
+                                            this.relOptSchema))
+                            .inferTypes(sentences);
+        }
         RelNode input = size() > 0 ? peek() : null;
         RelNode match =
                 GraphLogicalMultiMatch.create(
-                        (GraphOptCluster) cluster, null, null, first, ImmutableList.copyOf(others));
+                        (GraphOptCluster) cluster,
+                        null,
+                        null,
+                        sentences.get(0),
+                        sentences.subList(1, sentences.size()));
         if (input == null) {
             push(match);
         } else {
@@ -711,6 +746,7 @@ public class GraphBuilder extends RelBuilder {
 
     @Override
     public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
+        RexVisitor propertyChecker = new RexPropertyChecker(true, this);
         // make sure all conditions have the Boolean return type
         for (RexNode condition : conditions) {
             RelDataType type = condition.getType();
@@ -721,14 +757,16 @@ public class GraphBuilder extends RelBuilder {
                                 + " should return Boolean value, but is "
                                 + type);
             }
+            // check property existence for specific label
+            condition.accept(propertyChecker);
         }
         super.filter(ImmutableSet.of(), conditions);
         // fuse filter with the previous table scan if meets the conditions
         Filter filter = topFilter();
         if (filter != null) {
             GraphBuilder builder =
-                    (GraphBuilder)
-                            GraphPlanner.relBuilderFactory.create(getCluster(), getRelOptSchema());
+                    GraphBuilder.create(
+                            this.configs, (GraphOptCluster) getCluster(), getRelOptSchema());
             RexNode condition = filter.getCondition();
             RelNode input = !filter.getInputs().isEmpty() ? filter.getInput(0) : null;
             if (input instanceof AbstractBindableTableScan) {
@@ -797,14 +835,14 @@ public class GraphBuilder extends RelBuilder {
                                     newLabelConfig,
                                     tableScan.getAliasName()));
                 } else if (tableScan instanceof GraphLogicalExpand) {
-                    ((GraphBuilder) builder.push(tableScan.getInput(0)))
+                    builder.push(tableScan.getInput(0))
                             .expand(
                                     new ExpandConfig(
                                             ((GraphLogicalExpand) tableScan).getOpt(),
                                             newLabelConfig,
                                             tableScan.getAliasName()));
                 } else if (tableScan instanceof GraphLogicalGetV) {
-                    ((GraphBuilder) builder.push(tableScan.getInput(0)))
+                    builder.push(tableScan.getInput(0))
                             .getV(
                                     new GetVConfig(
                                             ((GraphLogicalGetV) tableScan).getOpt(),
@@ -813,24 +851,7 @@ public class GraphBuilder extends RelBuilder {
                 }
                 if (builder.size() > 0) {
                     // check if the property still exist after updating the label type
-                    RexVisitor propertyChecker =
-                            new RexVisitorImpl<Void>(true) {
-                                @Override
-                                public Void visitInputRef(RexInputRef inputRef) {
-                                    if (inputRef instanceof RexGraphVariable) {
-                                        RexGraphVariable variable = (RexGraphVariable) inputRef;
-                                        String[] splits =
-                                                variable.getName()
-                                                        .split(
-                                                                Pattern.quote(
-                                                                        AliasInference.DELIMITER));
-                                        if (splits.length > 1) {
-                                            builder.variable(null, splits[1]);
-                                        }
-                                    }
-                                    return null;
-                                }
-                            };
+                    RexVisitor propertyChecker = new RexPropertyChecker(true, builder);
                     if (tableScan instanceof GraphLogicalSource) {
                         RexNode originalUniqueKeyFilters =
                                 ((GraphLogicalSource) tableScan).getUniqueKeyFilters();

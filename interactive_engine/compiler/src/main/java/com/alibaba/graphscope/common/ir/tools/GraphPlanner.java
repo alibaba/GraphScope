@@ -76,9 +76,6 @@ public class GraphPlanner {
     private final AtomicLong idGenerator;
     private final LogicalPlanFactory logicalPlanFactory;
 
-    public static final RelBuilderFactory relBuilderFactory =
-            (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
-                    GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
 
@@ -86,7 +83,8 @@ public class GraphPlanner {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         logger.debug("planner config: " + this.plannerConfig);
-        this.optPlanner = createRelOptPlanner(this.plannerConfig);
+        this.optPlanner =
+                createRelOptPlanner(this.plannerConfig, new GraphBuilderFactory(this.graphConfig));
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);
         this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
         this.logicalPlanFactory = logicalPlanFactory;
@@ -129,7 +127,9 @@ public class GraphPlanner {
             IrGraphSchema schema = irMeta.getSchema();
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
-                            null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
+                            graphConfig,
+                            this.optCluster,
+                            new GraphOptSchema(this.optCluster, schema));
 
             LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
 
@@ -196,7 +196,8 @@ public class GraphPlanner {
         }
     }
 
-    private RelOptPlanner createRelOptPlanner(PlannerConfig plannerConfig) {
+    private RelOptPlanner createRelOptPlanner(
+            PlannerConfig plannerConfig, RelBuilderFactory graphBuilderFactory) {
         if (plannerConfig.isOn()) {
             PlannerConfig.Opt opt = plannerConfig.getOpt();
             switch (opt) {
@@ -230,7 +231,7 @@ public class GraphPlanner {
                     ruleConfigs.forEach(
                             k -> {
                                 hepBuilder.addRuleInstance(
-                                        k.withRelBuilderFactory(relBuilderFactory).toRule());
+                                        k.withRelBuilderFactory(graphBuilderFactory).toRule());
                             });
                     return new HepPlanner(hepBuilder.build());
                 case CBO:

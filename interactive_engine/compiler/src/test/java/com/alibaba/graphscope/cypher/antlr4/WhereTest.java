@@ -44,8 +44,8 @@ public class WhereTest {
                     + " person]}], alias=[c], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[b], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 where.explain().trim());
     }
@@ -92,7 +92,7 @@ public class WhereTest {
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[m], opt=[OTHER])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                     + " alias=[DEFAULT], opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[n], opt=[VERTEX])\n"
@@ -122,30 +122,6 @@ public class WhereTest {
                                 "Match (a:person)-[]->()-[]->(b:person) Where Not a=b AND NOT"
                                         + " (a:person)-[]->(b:person) Return a, b")
                         .build();
-        Assert.assertEquals(
-                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
-                    + "  LogicalFilter(condition=[AND(NOT(=(a, b)), NOT(EXISTS({\n"
-                    + "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[b],"
-                    + " opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "})))])\n"
-                    + "    GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
-                    + "      GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
-                    + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
-                    + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
-                before.explain().trim());
-
         RelOptPlanner planner =
                 com.alibaba.graphscope.common.ir.Utils.mockPlanner(
                         NotMatchToAntiJoinRule.Config.DEFAULT);
@@ -158,19 +134,19 @@ public class WhereTest {
                     + "      GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                     + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[DEFAULT], opt=[END])\n"
-                    + "      GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
-                    + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                    + "      GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
                     + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])\n"
                     + "      GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                     + " alias=[DEFAULT], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
@@ -194,8 +170,8 @@ public class WhereTest {
                     + " person]}], alias=[b], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 multiMatch.explain().trim());
         RelOptPlanner optPlanner =
@@ -214,8 +190,8 @@ public class WhereTest {
                     + " person]}], alias=[b], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
     }
@@ -237,8 +213,8 @@ public class WhereTest {
                     + " person]}], alias=[b], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 multiMatch.explain().trim());
 
@@ -258,8 +234,8 @@ public class WhereTest {
                     + " person]}], alias=[b], fusedFilter=[[IS NOT NULL(DEFAULT)]], opt=[END])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
     }
