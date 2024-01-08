@@ -428,6 +428,44 @@ class CountBuilder {
   std::vector<size_t> vec_;
 };
 
+// Prop Count Builder.
+template <int tag, typename PropGetterT>
+class PropCountBuilder {
+ public:
+  PropCountBuilder(PropGetterT&& prop_getter)
+      : prop_getter_(std::move(prop_getter)) {}
+
+  // insert tuple at index ind.
+  // if the ele_value equal to invalid_value, then do not insert.
+  template <typename ELE_TUPLE, typename DATA_TUPLE>
+  void insert(size_t ind, const ELE_TUPLE& tuple, const DATA_TUPLE& data) {
+    // just count times.
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(0);
+    }
+    using cur_ele_tuple = typename gs::tuple_element<tag, ELE_TUPLE>::type;
+
+    auto& cur_ele = gs::get_from_tuple<tag>(tuple);
+    // get prop from prop getter
+    auto props = prop_getter_.get_view(cur_ele);
+    // get the type of props
+    using props_t = decltype(props);
+
+    if (props != NullRecordCreator<props_t>::GetNull()) {
+      ++vec_[ind];
+    } else {
+      VLOG(10) << "ele is null, ind: " << ind
+               << "ele:" << gs::to_string(cur_ele);
+    }
+  }
+
+  Collection<size_t> Build() { return Collection<size_t>(std::move(vec_)); }
+
+ private:
+  std::vector<size_t> vec_;
+  PropGetterT prop_getter_;
+};
+
 template <int... tag>
 class MultiColCountBuilder {
  public:

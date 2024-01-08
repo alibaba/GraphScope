@@ -167,9 +167,12 @@ class GroupByOpBuilder {
         prop_name = prop_key.name();
         prop_type = single_common_data_type_pb_2_str(
             key_alias_key.node_type().data_type());
+      } else if (prop.item_case() == common::Property::kLabel) {
+        prop_type = "LabelKey";
       } else {
-        LOG(FATAL)
-            << "Current only support key_alias on internal id or property";
+        LOG(FATAL) << "Current only support key_alias on internal id or "
+                      "property, but got: "
+                   << prop.DebugString();
       }
     } else {
       VLOG(10) << "Apply internal id since no property provided";
