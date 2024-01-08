@@ -36,7 +36,7 @@ class DataloadingJobScheduler(Scheduler):
         self._description = description
         self._servicer = servicer
 
-        self._tags = [JobType.GRAPH_IMPORT]
+        self._tags = [JobType.DATALOADING.name]
 
     def run(self):
         """This function needs to handle exception by itself"""
@@ -47,7 +47,7 @@ class DataloadingJobScheduler(Scheduler):
         detail = {"graph name": graph_name}
         status = JobStatus(
             jobid=self.jobid,
-            type=JobType.GRAPH_IMPORT,
+            type=JobType.DATALOADING,
             start_time=self.last_run,
             detail=detail,
         )
@@ -74,4 +74,4 @@ class DataloadingJobScheduler(Scheduler):
                 )
                 status.set_failed(message=str(e))
             else:
-                status.set_success(message=api_response.message)
+                status.set_success(message=api_response)

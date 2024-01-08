@@ -23,7 +23,8 @@ from gscoordinator.utils import encode_datetime
 
 
 class JobType(Enum):
-    GRAPH_IMPORT = 0
+    SCHEDULER = 0
+    DATALOADING = 1
 
 
 class Status(Enum):
@@ -42,6 +43,7 @@ class JobStatus(object):
         start_time,
         status=Status.RUNNING,
         end_time=None,
+        log="",
         detail=dict(),
         message="",
     ):
@@ -50,9 +52,23 @@ class JobStatus(object):
         self.status = status
         self.start_time = start_time
         self.end_time = end_time
+        self.log = log
         # detail for specific job
         self.detail = detail
         self.message = message
+
+    @staticmethod
+    def from_dict(data):
+        return JobStatus(
+            jobid=data["jobid"],
+            type=data["type"],
+            status=data["status"],
+            start_time=data["start_time"],
+            end_time=data["end_time"],
+            log=data["log"],
+            detail=data["detail"],
+            message=data["message"],
+        )
 
     def to_dict(self):
         return {
@@ -61,6 +77,7 @@ class JobStatus(object):
             "status": self.status.name,
             "start_time": encode_datetime(self.start_time),
             "end_time": encode_datetime(self.end_time),
+            "log": self.log,
             "detail": self.detail,
             "message": self.message,
         }

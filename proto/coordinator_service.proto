@@ -63,11 +63,13 @@ service CoordinatorService {
 
   rpc ListJob(ListJobRequest) returns (ListJobResponse);
 
+  rpc CancelJob(CancelJobRequest) returns (ApiResponse);
+
+  rpc CreateProcedure(CreateProcedureRequest) returns (ApiResponse);
+
+  rpc ListProcedure(ListProcedureRequest) returns (ListProcedureResponse);
+
   // end
-
-  rpc CreateInteractiveProcedure(CreateInteractiveProcedureRequest) returns (ApiResponse);
-
-  rpc ListInteractiveProcedure(ListInteractiveProcedureRequest) returns (ListInteractiveProcedureResponse);
 
   rpc UpdateInteractiveProcedure(UpdateInteractiveProcedureRequest) returns (ApiResponse);
 

@@ -141,6 +141,37 @@ def graph(name, filename):
     "-f",
     "--filename",
     required=True,
+    help="Path of yaml file to use to create a procedure",
+)
+def procedure(filename):
+    """Create a stored procedure in database"""
+
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+
+    procedure_dict = read_yaml_file(filename)
+    # transform procedure dict to proto message
+    procedure_def = flex_pb2.Procedure()
+    dict_to_proto_message(procedure_dict, procedure_def)
+
+    grpc_client = get_grpc_client()
+    if not grpc_client.connect():
+        return
+
+    response = grpc_client.create_procedure(procedure_def)
+
+    if is_success(response):
+        click.secho(
+            "Create stored procedure successfully", fg="green",
+        )
+
+
+@create.command()
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
     help="Path of yaml file to use to create the job",
 )
 def job(filename):
@@ -184,7 +215,7 @@ def job(filename):
             return
 
         response = grpc_client.create_job(
-            type="dataloading",
+            type=job["type"],
             schedule=schedule,
             description=description,
         )
@@ -198,50 +229,6 @@ def job(filename):
         click.secho(str(e), fg="red")
 
 
-@create.command()
-@click.option(
-    "-g",
-    "--graph",
-    required=True,
-    help="The name of the graph",
-)
-@click.option(
-    "-n",
-    "--name",
-    required=True,
-    help="The name of the procedure",
-)
-@click.option(
-    "-i",
-    "--sourcefile",
-    required=True,
-    help="Path of [ .cc, .cypher ] file",
-)
-@click.option(
-    "-d",
-    "--description",
-    required=False,
-    help="Description for the specific procedure",
-)
-def procedure(graph, name, sourcefile, description):
-    """Create and compile procedure over a specific graph"""
-
-    # read source
-    with open(sourcefile, "r") as f:
-        query = f.read()
-
-    # construct procedure proto
-    procedure = flex_pb2.Procedure(
-        name=name, bound_graph=graph, description=description, query=query, enable=True
-    )
-
-    grpc_client = get_grpc_client()
-    response = grpc_client.create_interactive_procedure(procedure)
-
-    if is_success(response):
-        click.secho("Create procedure {0} successfully.".format(name), fg="green")
-
-
 @delete.command()
 @click.argument("graph", required=True)
 def graph(graph):
@@ -253,6 +240,25 @@ def graph(graph):
     if is_success(response):
         click.secho(
             "Delete graph {0} successfully.".format(graph),
+            fg="green",
+        )
+
+@delete.command()
+@click.argument("job", required=True)
+@click.option(
+    '--delete-scheduler/--no-delete-scheduler',
+    default=False,
+    help="True will delete the job scheduler, otherwise just cancel the next schedule",
+)
+def job(job, delete_scheduler):
+    """Cancel a job by jobid"""
+
+    grpc_client = get_grpc_client()
+    response = grpc_client.cancel_job(job, delete_scheduler)
+
+    if is_success(response):
+        click.secho(
+            "Cancel job {0} successfully.".format(job),
             fg="green",
         )
 
@@ -496,12 +502,6 @@ def job():
 
 
 @get.command()
-@click.option(
-    "-g",
-    "--graph",
-    required=True,
-    help="The name of the graph",
-)
 def procedure(graph):
     """Display procedures in database"""
 
@@ -526,11 +526,10 @@ def procedure(graph):
         terminal_display(data)
 
     grpc_client = get_grpc_client()
-    response = grpc_client.list_interactive_procedure(graph)
+    response = grpc_client.list_procedure()
 
     if is_success(response):
         _construct_and_display_data(response.procedures)
-        return response.procedures
 
 
 @get.command()

@@ -136,7 +136,7 @@ message DataSource {
 // format
 message DataSourceFormat {
   string type = 1;  // csv
-  map<string, MapValue> metadata = 2;
+  map<string, string> metadata = 2;
 }
 
 // loading config
@@ -161,8 +161,9 @@ message JobStatus {
   string status = 3;
   string start_time = 4;
   string end_time = 5;
-  map<string, MapValue> detail = 6;
-  string message = 7;
+  string log = 6;
+  map<string, string> detail = 7;
+  string message = 8;
 }
 
 // procedure runtime params, used both in property and return type
@@ -176,7 +177,7 @@ message Procedure {
   string name = 1;
   string bound_graph = 2;
   string description = 3;
-  optional string type = 4;  // [ cpp, cypher ]
+  string type = 4;  // [ cpp, cypher ]
   string query = 5;  // content
   bool enable = 6;
 
@@ -209,8 +210,8 @@ message NodeStatus {
 // job schedule
 message Schedule {
   bool run_now = 1;
-  string time = 2;  // formate with "2023-02-21 11:56:30"
-  string repeate = 3;  // day, week, or null
+  string at_time = 2;  // formate with "2023-02-21 11:56:30"
+  string repeat = 3;  // day, week, or null
 }
 
 // AnalyticalJobPlaceHolder
@@ -265,15 +266,18 @@ message ListJobResponse {
   repeated JobStatus job_status = 3;
 }
 
-message CreateInteractiveProcedureRequest {
+message CancelJobRequest {
+  string jobid = 1;
+  bool delete_scheduler = 2;
+}
+
+message CreateProcedureRequest {
   Procedure procedure_def = 1;
 }
 
-message ListInteractiveProcedureRequest {
-  string graph_name = 1;
-}
+message ListProcedureRequest {}
 
-message ListInteractiveProcedureResponse {
+message ListProcedureResponse {
   Code code = 1;
   optional string error_msg = 2;
 

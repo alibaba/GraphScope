@@ -144,7 +144,7 @@ class Hiactor(object):
         schedule_proto: flex_pb2.Schedule,
         description_proto: flex_pb2.JobDescription,
     ):
-        if job_type != "dataloading":
+        if job_type != "DATALOADING":
             raise RuntimeError(
                 "Job type {0} is not supported in interacive.".format(job_type)
             )
@@ -193,6 +193,15 @@ class Hiactor(object):
             servicer=self,
         )
         scheduler.start()
+
+    def create_procedure(self, procedure_def_dict):
+        with hiactor_client.ApiClient(
+            hiactor_client.Configuration(self._hiactor_host)
+        ) as api_client:
+            api_instance = hiactor_client.ProcedureApi(api_client)
+            graph_name = procedure_def_dict["bound_graph"]
+            procedure = hiactor_client.Procedure.from_dict(procedure_def_dict)
+            return api_instance.create_procedure(graph_name, procedure)
 
 
 def init_interactive_service(config: Config):

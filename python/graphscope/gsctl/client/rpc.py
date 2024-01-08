@@ -121,14 +121,19 @@ class GRPCClient(object):
         return self._stub.ListJob(request)
 
     @handle_grpc_error
-    def create_interactive_procedure(self, procedure: flex_pb2.Procedure):
-        request = flex_pb2.CreateInteractiveProcedureRequest(procedure_def=procedure)
-        return self._stub.CreateInteractiveProcedure(request)
+    def cancel_job(self, jobid: str, delete_scheduler: bool):
+        request = flex_pb2.CancelJobRequest(jobid=jobid, delete_scheduler=delete_scheduler)
+        return self._stub.CancelJob(request)
 
     @handle_grpc_error
-    def list_interactive_procedure(self, graph: str):
-        request = flex_pb2.ListInteractiveProcedureRequest(graph_name=graph)
-        return self._stub.ListInteractiveProcedure(request)
+    def create_procedure(self, procedure_def: flex_pb2.Procedure):
+        request = flex_pb2.CreateProcedureRequest(procedure_def=procedure_def)
+        return self._stub.CreateProcedure(request)
+
+    @handle_grpc_error
+    def list_procedure(self):
+        request = flex_pb2.ListProcedureRequest()
+        return self._stub.ListProcedure(request)
 
     @handle_grpc_error
     def update_interactive_procedure(self, procedures: List[flex_pb2.Procedure]):

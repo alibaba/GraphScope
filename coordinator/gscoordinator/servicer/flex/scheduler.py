@@ -18,9 +18,11 @@
 
 import datetime
 import json
+import random
 import time
 from abc import ABCMeta
 from abc import abstractmethod
+from string import ascii_uppercase
 
 import schedule
 from schedule import CancelJob
@@ -67,8 +69,8 @@ class Scheduler(metaclass=ABCMeta):
 
     def __init__(self, at_time, repeat):
         # scheduler id
-        self._scheduler_id = "Job-scheduler-{0}".format(
-            datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self._scheduler_id = "SCHEDULER-{0}".format(
+            "".join(random.choices(ascii_uppercase, k=16))
         )
         # periodic job as used
         self._job = None
@@ -176,8 +178,8 @@ class Scheduler(metaclass=ABCMeta):
     def do_run(self):
         """Start a thread for the job."""
         # overwrite for each scheduled job
-        self._jobid = "job-{0}".format(
-            datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        self._jobid = "JOB-{0}".format(
+            "".join(random.choices(ascii_uppercase, k=16))
         )
         self._last_run = datetime.datetime.now()
         # schedule in a thread

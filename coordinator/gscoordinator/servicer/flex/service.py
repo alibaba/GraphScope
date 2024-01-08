@@ -19,6 +19,7 @@
 """Service under FLEX Architecture"""
 
 import atexit
+import datetime
 import traceback
 import functools
 
@@ -35,7 +36,12 @@ from graphscope.proto import error_codes_pb2
 from graphscope.proto import flex_pb2
 from graphscope.proto import message_pb2
 
-# from gscoordinator.scheduler import schedule
+from gscoordinator.servicer.flex.job import JobStatus
+from gscoordinator.servicer.flex.job import JobType
+from gscoordinator.servicer.flex.job import Status
+from gscoordinator.servicer.flex.scheduler import cancel_job
+from gscoordinator.servicer.flex.scheduler import schedule
+
 # from gscoordinator.utils import WORKSPACE
 # from gscoordinator.utils import delegate_command_to_pod
 # from gscoordinator.utils import run_kube_cp_command
@@ -136,15 +142,67 @@ class FlexServiceServicer(coordinator_service_pb2_grpc.CoordinatorServiceService
         )
         return flex_pb2.ApiResponse(code=error_codes_pb2.OK)
 
+    @handle_api_exception(flex_pb2.ListProcedureResponse)
+    def ListProcedure(self, request, context):
+        pass
+
     @handle_api_exception(flex_pb2.ListJobResponse)
     def ListJob(self, request, context):
+        # job to be scheduled in the future
+        jobs = {}
+        for job in schedule.get_jobs():
+            if datetime.datetime.now() >= job.next_run:
+                continue
+            for tag in job.tags:
+                if tag.startswith("SCHEDULER"):
+                    jobid = tag
+            jobs[jobid] = JobStatus.from_dict(
+                {
+                    "jobid": jobid,
+                    "type": JobType.SCHEDULER,
+                    "status": Status.WAITING,
+                    "start_time": str(job.next_run),
+                    "end_time": None,
+                    "log": "",
+                    "detail": {"tag": str(job.tags)},
+                    "message": "",
+                }
+            )
+        jobs.update(self._service_client.job_status)
         return flex_pb2.ListJobResponse(
             code=error_codes_pb2.OK,
             job_status=[
                 dict_to_proto_message(s.to_dict(), flex_pb2.JobStatus())
-                for _, s in self._service_client.job_status.items()
+                for _, s in jobs.items()
             ],
         )
+
+    @handle_api_exception(flex_pb2.ApiResponse)
+    def CancelJob(self, request, context):
+        jobid = request.jobid
+        delete_scheduler = request.delete_scheduler
+        if jobid in self._service_client.job_status:
+            raise RuntimeError("Job cancellation is not supported yet!")
+        # cancel job scheduler
+        scheduler = None
+        for job in schedule.get_jobs():
+            if jobid in job.tags:
+                scheduler = job
+                break
+        if scheduler is None:
+            raise RuntimeError("Job {0} not found".format(jobid))
+        cancel_job(scheduler, delete_scheduler)
+        return flex_pb2.ApiResponse(code=error_codes_pb2.OK)
+
+    @handle_api_exception(flex_pb2.ApiResponse)
+    def CreateProcedure(self, request, context):
+        procedure_def_dict = MessageToDict(
+            request.procedure_def,
+            preserving_proto_field_name=True,
+            including_default_value_fields=True,
+        )
+        api_response = self._service_client.create_procedure(procedure_def_dict)
+        return flex_pb2.ApiResponse(code=error_codes_pb2.OK, error_msg=api_response)
 
 
 def init_flex_service_servicer(config: Config):
