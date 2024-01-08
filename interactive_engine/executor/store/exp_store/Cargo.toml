@@ -36,6 +36,3 @@ timely = "0.10"
 vec_map = { version = "0.8.2", features = ["serde"] }
 walkdir = "2"
 
-[profile.release]
-lto = true
-panic = "abort"

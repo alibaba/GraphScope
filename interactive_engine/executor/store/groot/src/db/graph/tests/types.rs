@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use super::super::table_manager::Table;
 use super::super::types::*;
 use crate::db::api::*;
@@ -38,11 +40,12 @@ pub trait TableInfoTest {
 }
 
 pub struct VertexInfoTest {
-    info: VertexTypeInfoRef,
+    info: Arc<VertexTypeInfo>,
 }
 
 impl VertexInfoTest {
-    pub fn new(info: VertexTypeInfoRef) -> Self {
+    #[allow(dead_code)]
+    pub fn new(info: Arc<VertexTypeInfo>) -> Self {
         VertexInfoTest { info }
     }
 }
@@ -54,11 +57,12 @@ impl TableInfoTest for VertexInfoTest {
 }
 
 pub struct EdgeTypeInfoTest {
-    info: EdgeKindInfoRef,
+    info: EdgeKindInfo,
 }
 
 impl EdgeTypeInfoTest {
-    pub fn new(info: EdgeKindInfoRef) -> Self {
+    #[allow(dead_code)]
+    pub fn new(info: EdgeKindInfo) -> Self {
         EdgeTypeInfoTest { info }
     }
 }
