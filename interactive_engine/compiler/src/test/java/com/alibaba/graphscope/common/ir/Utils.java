@@ -63,6 +63,12 @@ public class Utils {
                 new GraphOptSchema(cluster, mockSchemaMeta(schemaJson).getSchema()));
     }
 
+    public static final GraphBuilder mockGraphBuilder(Configs configs) {
+        GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
+        return GraphBuilder.create(
+                configs, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
+    }
+
     public static final RelOptPlanner mockPlanner(RelRule.Config... rules) {
         HepProgramBuilder hepBuilder = HepProgram.builder();
         if (rules.length > 0) {
