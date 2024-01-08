@@ -16,9 +16,12 @@
 
 package com.alibaba.graphscope.cypher.antlr4;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
+import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.rel.RelNode;
@@ -57,7 +60,7 @@ public class MatchTest {
     }
 
     @Test
-    public void match_3_test() {
+    public void match_3_1_test() {
         // In the modern graph, there are only two kinds of edges,
         // one is `(person)-[knows]->(person)`, the other is `(person)-[created]->(software)`.
         // Thus, the type of a, b and c can be automatically inferred as follows:
@@ -80,6 +83,40 @@ public class MatchTest {
                     + " alias=[DEFAULT], opt=[OUT])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[b], opt=[VERTEX])\n"
+                    + "]}])",
+                match.explain().trim());
+    }
+
+    // if the type inference is disabled, the type will be the intersection of the query given types
+    // and the overall possible types from schema
+    @Test
+    public void match_3_2_test() {
+        // disable the type inference
+        RelNode match =
+                Utils.eval(
+                                "Match (a)-[]->(b), (b)-[]->(c) Return a, b, c",
+                                com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder(
+                                        new Configs(
+                                                ImmutableMap.of(
+                                                        FrontendConfig.GRAPH_TYPE_INFERENCE_ENABLED
+                                                                .getKey(),
+                                                        "false"))))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], b=[b], c=[c], isAppend=[false])\n"
+                    + "  GraphLogicalMultiMatch(input=[null],"
+                    + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=true,"
+                    + " tables=[software, person]}], alias=[b], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])\n"
+                    + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[c], opt=[END])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[b], opt=[VERTEX])\n"
                     + "]}])",
                 match.explain().trim());
     }
