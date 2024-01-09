@@ -16,15 +16,15 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 
+import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
+import com.alibaba.graphscope.common.ir.rel.GraphJoinDecomposition;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersectEdge;
 
 import org.apache.calcite.plan.RelOptCost;
 import org.apache.calcite.plan.RelOptCostFactory;
 import org.apache.calcite.plan.RelOptPlanner;
-import org.apache.calcite.plan.volcano.RelSubset;
-import org.apache.calcite.plan.volcano.VolcanoPlanner;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
@@ -32,10 +32,12 @@ import org.apache.calcite.rel.metadata.RelMetadataQuery;
 public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulativeCost.Handler {
     private final RelOptPlanner optPlanner;
     private final RelOptCostFactory costFactory;
+    private final PlannerConfig plannerConfig;
 
-    public GraphNonCumulativeCostHandler(RelOptPlanner optPlanner) {
+    public GraphNonCumulativeCostHandler(RelOptPlanner optPlanner, PlannerConfig plannerConfig) {
         this.optPlanner = optPlanner;
         this.costFactory = optPlanner.getCostFactory();
+        this.plannerConfig = plannerConfig;
     }
     /**
      * estimate the non-cumulative cost of {@code GraphExtendIntersect} or {@code GraphBinaryJoin} operator
@@ -48,21 +50,10 @@ public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulat
         if (node instanceof GraphExtendIntersect) {
             GlogueExtendIntersectEdge glogueEdge = ((GraphExtendIntersect) node).getGlogueEdge();
             double weight = glogueEdge.getExtendStep().getWeight();
-            RelNode input = node.getInput(0);
-            double srcPatternCount =
-                    mq.getRowCount(
-                            input instanceof RelSubset ? ((RelSubset) input).getOriginal() : input);
+            double srcPatternCount = mq.getRowCount(node.getInput(0));
             double dRows = weight * srcPatternCount;
             double dCpu = dRows + 1;
-            double dIo = 0;
-            if (optPlanner instanceof VolcanoPlanner) {
-                RelSubset subset = ((VolcanoPlanner) optPlanner).getSubset(node);
-                if (subset != null) {
-                    RelNode currentPattern = subset.getOriginal();
-                    // use the row count of the current pattern to estimate the communication cost
-                    dIo = mq.getRowCount(currentPattern);
-                }
-            }
+            double dIo = mq.getRowCount(node);
             return costFactory.makeCost(dRows, dCpu, dIo);
         } else if (node instanceof GraphPattern) {
             int patternSize = ((GraphPattern) node).getPattern().getVertexNumber();
@@ -71,9 +62,22 @@ public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulat
                 return costFactory.makeCost(dRows, dRows + 1, dRows);
             }
             return costFactory.makeInfiniteCost();
+        } else if (node instanceof GraphJoinDecomposition) {
+            // estimate the cost of join operators,
+            // here we assume the underline join operator is hash join, thus the cost is
+            // w1*count(left)+w2*count(right), where w1 and w2 are constant
+            GraphJoinDecomposition decomposition = (GraphJoinDecomposition) node;
+            double probeCount = mq.getRowCount(decomposition.getLeft());
+            double buildCount = mq.getRowCount(decomposition.getRight());
+            // todo: refine the cost estimation
+            double dRows =
+                    plannerConfig.getJoinCostFactor1() * probeCount
+                            + plannerConfig.getJoinCostFactor2() * buildCount;
+            double dCpu = dRows + 1;
+            double dIo = mq.getRowCount(node);
+            return costFactory.makeCost(dRows, dCpu, dIo);
         } else {
-            // todo: estimate the row count of GraphBinaryJoin
-            return node.computeSelfCost(node.getCluster().getPlanner(), mq);
+            return node.computeSelfCost(optPlanner, mq);
         }
     }
 }

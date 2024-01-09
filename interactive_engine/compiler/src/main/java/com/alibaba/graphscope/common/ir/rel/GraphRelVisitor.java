@@ -74,4 +74,8 @@ public abstract class GraphRelVisitor extends RelShuttleImpl {
     public RelNode visit(GraphPattern graph) {
         return graph;
     }
+
+    public RelNode visit(GraphJoinDecomposition decomposition) {
+        return decomposition;
+    }
 }

@@ -78,7 +78,7 @@ public class GraphPlanner {
 
     public GraphPlanner(Configs graphConfig, LogicalPlanFactory logicalPlanFactory) {
         this.graphConfig = graphConfig;
-        this.plannerConfig = PlannerConfig.create(this.graphConfig);
+        this.plannerConfig = new PlannerConfig(this.graphConfig);
         logger.debug("planner config: " + this.plannerConfig);
         this.optimizer = new GraphRelOptimizer(this.plannerConfig);
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);

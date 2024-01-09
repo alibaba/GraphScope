@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 
+import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.google.common.base.Preconditions;
 
@@ -32,10 +33,13 @@ import java.util.Objects;
 public class GraphMetadataHandlerProvider implements MetadataHandlerProvider {
     private final RelOptPlanner optPlanner;
     private final GlogueQuery glogueQuery;
+    private final PlannerConfig plannerConfig;
 
-    public GraphMetadataHandlerProvider(RelOptPlanner optPlanner, GlogueQuery glogueQuery) {
+    public GraphMetadataHandlerProvider(
+            RelOptPlanner optPlanner, GlogueQuery glogueQuery, PlannerConfig plannerConfig) {
         this.optPlanner = optPlanner;
         this.glogueQuery = glogueQuery;
+        this.plannerConfig = plannerConfig;
     }
 
     @Override
@@ -45,7 +49,7 @@ public class GraphMetadataHandlerProvider implements MetadataHandlerProvider {
         } else if (handlerClass.equals(ExternalMetaData.GlogueEdges.Handler.class)) {
             return new GraphGlogueEdgesHandler(this.glogueQuery);
         } else if (handlerClass.equals(BuiltInMetadata.NonCumulativeCost.Handler.class)) {
-            return new GraphNonCumulativeCostHandler(this.optPlanner);
+            return new GraphNonCumulativeCostHandler(this.optPlanner, this.plannerConfig);
         } else if (handlerClass.equals(BuiltInMetadata.Selectivity.Handler.class)) {
             return new GraphSelectivityHandler();
         } else {

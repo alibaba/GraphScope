@@ -61,7 +61,9 @@ public class RelMetadataQueryTest {
         GlogueQuery gq = new GlogueQuery(gl, g);
 
         GraphRelMetadataQuery mq =
-                new GraphRelMetadataQuery(new GraphMetadataHandlerProvider(planner, gq));
+                new GraphRelMetadataQuery(
+                        new GraphMetadataHandlerProvider(
+                                planner, gq, new PlannerConfig(new Configs(ImmutableMap.of()))));
 
         optCluster.setMetadataQuerySupplier(() -> mq);
 
@@ -138,7 +140,7 @@ public class RelMetadataQueryTest {
     @Test
     public void test_3() throws Exception {
         PlannerConfig plannerConfig =
-                PlannerConfig.create(
+                new PlannerConfig(
                         new Configs(
                                 ImmutableMap.of(
                                         "graph.planner.is.on", "true",
@@ -158,6 +160,42 @@ public class RelMetadataQueryTest {
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
                                 "Match (p1:person)-[:knows]-(p2:person)-[:knows]-(p3:person) Where"
                                         + " p1.id = 1 Return p1, p2",
+                                builder)
+                        .build();
+        System.out.println(node.explain());
+        RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, Utils.schemaMeta));
+        System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(after));
+    }
+
+    @Test
+    public void test_4() throws Exception {
+        PlannerConfig plannerConfig =
+                new PlannerConfig(
+                        new Configs(
+                                ImmutableMap.of(
+                                        "graph.planner.is.on",
+                                        "true",
+                                        "graph.planner.opt",
+                                        "CBO",
+                                        "graph.planner.rules",
+                                        "FilterMatchRule, ExtendIntersectRule,"
+                                                + " JoinDecompositionRule",
+                                        "graph.planner.cbo.glogue.schema",
+                                        "conf/ldbc1_statistics.txt")));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(plannerConfig);
+        RelOptCluster optCluster =
+                GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
+        optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
+        GraphBuilder builder =
+                (GraphBuilder)
+                        GraphPlanner.relBuilderFactory.create(
+                                optCluster,
+                                new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
+        RelNode node =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match"
+                                    + " (p1:PERSON)-[:KNOWS]-(p2:PERSON)-[:KNOWS]-(p3:PERSON)-[:KNOWS]-(p4:PERSON)"
+                                    + " Where p1.id = 1 AND p4.id = 2 Return count(p1)",
                                 builder)
                         .build();
         System.out.println(node.explain());

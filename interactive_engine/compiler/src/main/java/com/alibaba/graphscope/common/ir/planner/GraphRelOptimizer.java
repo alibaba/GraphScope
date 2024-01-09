@@ -19,10 +19,7 @@ package com.alibaba.graphscope.common.ir.planner;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
-import com.alibaba.graphscope.common.ir.planner.rules.ExtendIntersectRule;
-import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
-import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
-import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
+import com.alibaba.graphscope.common.ir.planner.rules.*;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
 import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
@@ -73,7 +70,7 @@ public class GraphRelOptimizer {
             Glogue gl = new Glogue().create(g, config.getGlogueSize());
             GlogueQuery gq = new GlogueQuery(gl, g);
             return new GraphRelMetadataQuery(
-                    new GraphMetadataHandlerProvider(this.matchPlanner, gq));
+                    new GraphMetadataHandlerProvider(this.matchPlanner, gq, this.config));
         }
         return null;
     }
@@ -152,8 +149,10 @@ public class GraphRelOptimizer {
                                             ExtendIntersectRule.Config.DEFAULT
                                                     .withMaxPatternSizeInGlogue(
                                                             config.getGlogueSize());
-                                } else {
-                                    // todo: add JoinRule
+                                } else if (k.equals(JoinDecompositionRule.class.getSimpleName())) {
+                                    ruleConfig =
+                                            JoinDecompositionRule.Config.DEFAULT.withMinPatternSize(
+                                                    config.getJoinMinPatternSize());
                                 }
                                 if (ruleConfig != null) {
                                     planner.addRule(

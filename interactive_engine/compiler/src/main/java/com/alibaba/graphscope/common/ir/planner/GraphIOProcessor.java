@@ -47,6 +47,7 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataType;
@@ -350,6 +351,9 @@ public class GraphIOProcessor {
         public RelNode visit(GraphExtendIntersect intersect) {
             GlogueExtendIntersectEdge glogueEdge = intersect.getGlogueEdge();
             Map<DataKey, DataValue> edgeDetails = getGlogueEdgeDetails(glogueEdge);
+            this.details =
+                    createSubDetails(
+                            glogueEdge.getSrcPattern(), glogueEdge.getSrcToTargetOrderMapping());
             ExtendStep extendStep = glogueEdge.getExtendStep();
             List<ExtendEdge> extendEdges = extendStep.getExtendEdges();
             RelNode child = visitChildren(intersect).getInput(0);
@@ -391,6 +395,79 @@ public class GraphIOProcessor {
                             .collect(Collectors.toList()),
                     ImmutableMap.of(),
                     null);
+        }
+
+        @Override
+        public RelNode visit(GraphJoinDecomposition decomposition) {
+            Map<Integer, Integer> probeOrderMap =
+                    decomposition.getOrderMappings().getLeftToTargetOrderMap();
+            Map<Integer, Integer> buildOrderMap =
+                    decomposition.getOrderMappings().getRightToTargetOrderMap();
+            List<GraphJoinDecomposition.JoinVertexPair> jointVertices =
+                    decomposition.getJoinVertexPairs();
+            List<Integer> parentJointOrderIds =
+                    jointVertices.stream()
+                            .map(k -> buildOrderMap.get(k.getRightOrderId()))
+                            .collect(Collectors.toList());
+            Map<DataKey, DataValue> parentVertexDetails =
+                    getJointVertexDetails(parentJointOrderIds);
+            Map<DataKey, DataValue> probeDetails =
+                    createSubDetails(decomposition.getProbePattern(), probeOrderMap);
+            Map<DataKey, DataValue> buildDetails =
+                    createSubDetails(decomposition.getBuildPattern(), buildOrderMap);
+            this.details = probeDetails;
+            RelNode newLeft = visitChild(decomposition, 0, decomposition.getLeft()).getInput(0);
+            this.details = buildDetails;
+            RelNode newRight = visitChild(decomposition, 1, decomposition.getRight()).getInput(1);
+            RexNode joinCondition =
+                    createJoinFilter(parentJointOrderIds, parentVertexDetails, newLeft, newRight);
+            // here we assume all inputs of the join come from different sources
+            return LogicalJoin.create(
+                    newLeft,
+                    newRight,
+                    ImmutableList.of(),
+                    joinCondition,
+                    ImmutableSet.of(),
+                    JoinRelType.INNER);
+        }
+
+        private RexNode createJoinFilter(
+                List<Integer> jointOrderIds,
+                Map<DataKey, DataValue> vertexDetails,
+                RelNode left,
+                RelNode right) {
+            List<RexNode> joinCondition = Lists.newArrayList();
+            for (Integer orderId : jointOrderIds) {
+                DataValue value = vertexDetails.get(new VertexDataKey(orderId));
+                Preconditions.checkArgument(
+                        value != null,
+                        "can not find vertex key %s in details map %s",
+                        orderId,
+                        vertexDetails);
+                builder.push(left);
+                RexVariable leftVar = builder.variable(value.getAlias());
+                builder.build();
+                builder.push(right);
+                RexVariable rightVar = builder.variable(value.getAlias());
+                builder.build();
+                joinCondition.add(builder.equals(leftVar, rightVar));
+            }
+            return RexUtil.composeConjunction(builder.getRexBuilder(), joinCondition);
+        }
+
+        private Map<DataKey, DataValue> getJointVertexDetails(List<Integer> vertexOrderIds) {
+            Map<DataKey, DataValue> vertexDetails = Maps.newHashMap();
+            for (Integer orderId : vertexOrderIds) {
+                DataKey vertexKey = new VertexDataKey(orderId);
+                DataValue vertexValue = details.get(vertexKey);
+                Preconditions.checkArgument(
+                        vertexValue != null,
+                        "can not find vertex key %s in details map %s",
+                        vertexKey,
+                        details);
+                vertexDetails.put(vertexKey, vertexValue);
+            }
+            return vertexDetails;
         }
 
         private @Nullable RelDataType deriveIntersectType(List<RelNode> inputs) {
@@ -544,15 +621,19 @@ public class GraphIOProcessor {
                                         details);
                                 edgeDetails.put(key2, value2);
                             });
-            // update details for the recursive invocation
-            Pattern src = edge.getSrcPattern();
+            return edgeDetails;
+        }
+
+        private Map<DataKey, DataValue> createSubDetails(
+                Pattern subPattern, Map<Integer, Integer> orderMappings) {
             Map<DataKey, DataValue> newDetails = Maps.newHashMap();
-            src.getVertexSet()
+            subPattern
+                    .getVertexSet()
                     .forEach(
                             k -> {
-                                int newOrderId = src.getVertexOrder(k);
+                                int newOrderId = subPattern.getVertexOrder(k);
                                 VertexDataKey oldKey =
-                                        new VertexDataKey(srcToTargetMap.get(newOrderId));
+                                        new VertexDataKey(orderMappings.get(newOrderId));
                                 VertexDataKey newKey = new VertexDataKey(newOrderId);
                                 DataValue value = details.get(oldKey);
                                 Preconditions.checkArgument(
@@ -562,17 +643,18 @@ public class GraphIOProcessor {
                                         details);
                                 newDetails.put(newKey, value);
                             });
-            src.getEdgeSet()
+            subPattern
+                    .getEdgeSet()
                     .forEach(
                             k -> {
-                                int newSrcOrderId = src.getVertexOrder(k.getSrcVertex());
-                                int newDstOrderId = src.getVertexOrder(k.getDstVertex());
+                                int newSrcOrderId = subPattern.getVertexOrder(k.getSrcVertex());
+                                int newDstOrderId = subPattern.getVertexOrder(k.getDstVertex());
                                 PatternDirection direction =
                                         k.isBoth() ? PatternDirection.BOTH : PatternDirection.OUT;
                                 EdgeDataKey oldKey =
                                         new EdgeDataKey(
-                                                srcToTargetMap.get(newSrcOrderId),
-                                                srcToTargetMap.get(newDstOrderId),
+                                                orderMappings.get(newSrcOrderId),
+                                                orderMappings.get(newDstOrderId),
                                                 direction);
                                 EdgeDataKey newKey =
                                         new EdgeDataKey(newSrcOrderId, newDstOrderId, direction);
@@ -584,8 +666,7 @@ public class GraphIOProcessor {
                                         details);
                                 newDetails.put(newKey, value);
                             });
-            details = newDetails;
-            return edgeDetails;
+            return newDetails;
         }
 
         private EdgeDataKey createEdgeKey(ExtendEdge edge, GlogueExtendIntersectEdge glogueEdge) {

@@ -52,7 +52,7 @@ public class YamlConfigTest {
                 new YamlConfigs("config/gs_interactive_pegasus.yaml", FileLoadType.RESOURCES);
         Assert.assertEquals(
                 "PlannerConfig{isOn=true, opt=RBO, rules=[FilterMatchRule], glogueSize=3}",
-                PlannerConfig.create(configs).toString());
+                (new PlannerConfig(configs)).toString());
         Assert.assertEquals(
                 "localhost:8001, localhost:8005", PegasusConfig.PEGASUS_HOSTS.get(configs));
         Assert.assertEquals(3, (int) PegasusConfig.PEGASUS_WORKER_NUM.get(configs));

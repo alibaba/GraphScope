@@ -315,6 +315,10 @@ public class Pattern {
         return this.id;
     }
 
+    public boolean containsVertex(PatternVertex vertex) {
+        return this.patternGraph.containsVertex(vertex);
+    }
+
     @Override
     public String toString() {
         return "Pattern "

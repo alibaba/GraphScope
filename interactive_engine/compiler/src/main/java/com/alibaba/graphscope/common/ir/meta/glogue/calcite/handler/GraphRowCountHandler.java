@@ -19,6 +19,7 @@ package com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler;
 import com.alibaba.graphscope.common.ir.meta.glogue.PrimitiveCountEstimator;
 import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
 import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
+import com.alibaba.graphscope.common.ir.rel.GraphJoinDecomposition;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
@@ -69,30 +70,44 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                 if (subset != null) {
                     GraphExtendIntersect extendIntersect =
                             (GraphExtendIntersect) feasibleIntersects(subset);
-                    ExtendStep extendStep = extendIntersect.getGlogueEdge().getExtendStep();
-                    int targetOrder = extendStep.getTargetVertexOrder();
-                    PatternVertex target = pattern.getVertexByOrder(targetOrder);
-                    Set<PatternEdge> adjacentEdges = pattern.getEdgesOf(target);
-                    Pattern extendPattern = new Pattern();
-                    List<PatternVertex> extendFromVertices = Lists.newArrayList();
-                    for (PatternEdge edge : adjacentEdges) {
-                        extendPattern.addVertex(edge.getSrcVertex());
-                        extendPattern.addVertex(edge.getDstVertex());
-                        extendPattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
-                        extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
+                    if (extendIntersect != null) {
+                        ExtendStep extendStep = extendIntersect.getGlogueEdge().getExtendStep();
+                        int targetOrder = extendStep.getTargetVertexOrder();
+                        PatternVertex target = pattern.getVertexByOrder(targetOrder);
+                        Set<PatternEdge> adjacentEdges = pattern.getEdgesOf(target);
+                        Pattern extendPattern = new Pattern();
+                        List<PatternVertex> extendFromVertices = Lists.newArrayList();
+                        for (PatternEdge edge : adjacentEdges) {
+                            extendPattern.addVertex(edge.getSrcVertex());
+                            extendPattern.addVertex(edge.getDstVertex());
+                            extendPattern.addEdge(edge.getSrcVertex(), edge.getDstVertex(), edge);
+                            extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
+                        }
+                        return getRowCount(
+                                (GraphPattern) subGraphPattern(extendIntersect),
+                                new GraphPattern(
+                                        node.getCluster(), node.getTraitSet(), extendPattern),
+                                extendFromVertices,
+                                mq);
                     }
-                    double count =
-                            getRowCount(subGraphPattern(extendIntersect), mq)
-                                    * getRowCount(
-                                            new GraphPattern(
-                                                    node.getCluster(),
-                                                    node.getTraitSet(),
-                                                    extendPattern),
-                                            mq);
-                    for (PatternVertex vertex : extendFromVertices) {
-                        count /= countEstimator.estimate(vertex);
+                    GraphJoinDecomposition joinDecomposition =
+                            (GraphJoinDecomposition) feasibleJoinDecomposition(subset);
+                    if (joinDecomposition != null) {
+                        Pattern buildPattern =
+                                ((GraphPattern) joinDecomposition.getRight()).getPattern();
+                        List<PatternVertex> jointVertices =
+                                joinDecomposition.getJoinVertexPairs().stream()
+                                        .map(
+                                                k ->
+                                                        buildPattern.getVertexByOrder(
+                                                                k.getRightOrderId()))
+                                        .collect(Collectors.toList());
+                        return getRowCount(
+                                (GraphPattern) joinDecomposition.getLeft(),
+                                (GraphPattern) joinDecomposition.getRight(),
+                                jointVertices,
+                                mq);
                     }
-                    return count;
                 }
             }
             throw new UnsupportedOperationException(
@@ -108,8 +123,8 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
         } else if (node instanceof Project) {
             return mdRowCount.getRowCount((Project) node, mq);
         } else if (node instanceof RelSubset) {
-            return mdRowCount.getRowCount(((RelSubset) node).getOriginal(), mq);
-        } else if (node instanceof GraphExtendIntersect) {
+            return mq.getRowCount(((RelSubset) node).getOriginal());
+        } else if (node instanceof GraphExtendIntersect || node instanceof GraphJoinDecomposition) {
             if (optPlanner instanceof VolcanoPlanner) {
                 RelSubset subset = ((VolcanoPlanner) optPlanner).getSubset(node);
                 if (subset != null) {
@@ -174,6 +189,18 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
         throw new IllegalArgumentException("can not estimate row count for the rel=" + rel);
     }
 
+    private double getRowCount(
+            GraphPattern p1,
+            GraphPattern p2,
+            List<PatternVertex> jointVertices,
+            RelMetadataQuery mq) {
+        double count = getRowCount(p1, mq) * getRowCount(p2, mq);
+        for (PatternVertex vertex : jointVertices) {
+            count /= countEstimator.estimate(vertex);
+        }
+        return count;
+    }
+
     private @Nullable RelNode feasibleIntersects(RelSubset subSet) {
         List<RelNode> rels = subSet.getRelList();
         for (RelNode rel : rels) {
@@ -193,5 +220,23 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
     private @Nullable RelNode subGraphPattern(GraphExtendIntersect intersect) {
         RelNode input = intersect.getInput(0);
         return (input instanceof RelSubset) ? ((RelSubset) input).getOriginal() : input;
+    }
+
+    private @Nullable RelNode feasibleJoinDecomposition(RelSubset subSet) {
+        List<RelNode> rels = subSet.getRelList();
+        for (RelNode rel : rels) {
+            if (rel instanceof GraphJoinDecomposition) {
+                GraphJoinDecomposition decomposition = (GraphJoinDecomposition) rel;
+                if (decomposition.getLeft() instanceof RelSubset
+                        && decomposition.getRight() instanceof RelSubset) {
+                    RelSubset left = (RelSubset) decomposition.getLeft();
+                    RelSubset right = (RelSubset) decomposition.getRight();
+                    if (left.getBest() != null && right.getBest() != null) {
+                        return rel;
+                    }
+                }
+            }
+        }
+        return null;
     }
 }
