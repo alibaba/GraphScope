@@ -15,3 +15,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+import os
+import sys
+
+
+try:
+    sys.path.insert(0, os.path.dirname(__file__))
+    import coordinator_client
+except ImportError:
+    raise
