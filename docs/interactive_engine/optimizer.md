@@ -68,3 +68,73 @@ This rule optimizes to retain only necessary data, significantly reducing the vo
 
 ## Cost-based Optimizer (CBO)
 TODO
+
+## Graph Type Inference
+Traditional SQL only provides checks and inference for basic data types, such as int, double, string, boolean, etc. However, graph databases encompass more complex types. Beyond basic data types, they introduce special vertex and edge types. Vertex types constrain the range of entity types within the graph, while edge types constrain relationships between entities. While the introduction of vertex and edge types in graph databases provides a more flexible data model, it simultaneously adds complexity to the data, necessitating type checks and inference for graph data.
+
+We address this complexity through Graph Type Inference, offering functionality for type checks and inference for graph data. This feature examines whether vertex and edge types in graph data adhere to user-defined schemas and can infer vertex and edge types, laying the groundwork for subsequent optimizations in graph queries.
+
+Taking the example of a modern graph schema, which includes the following vertex and edge types:
+```
+# Vertex types
+person (name, age)
+software (name, lang)
+
+# Edge types
+knows (weight)
+created (weight)
+```
+Graph Type Inference provides the following capabilities:
+- Checking if vertex and edge types in the graph conform to user-defined schemas:
+  - Reporting errors for nonexistent vertex or edge types:
+    ```bash
+    # 'per' is a nonexistent vertex type
+    Match (a:per) Return a;
+    ```
+    ```bash
+    # 'kno' is a nonexistent edge type
+    Match (a:person)-[b:kno]->(c) Return a, b, c;
+    ```
+  - Reporting errors for nonexistent properties or mismatched property types in vertices or edges:
+    ```bash
+    # The 'lang' property does not exist in vertices of type 'person'
+    Match (a:person {lang: 'java'}) Return a;
+    ```
+    ```bash
+    # The 'name' property in vertices of type 'person' is of type string, cannot perform addition
+    Match (a:person) Return a.name + 1;
+    ```
+  - Reporting errors for invalid paths composed of vertices and edges:
+    ```bash
+    # There is no edge of type 'created' between vertices of type 'person'
+    Match (a:person)-[:created]->(b:person)
+    ```
+    ```bash
+    # Vertices of type 'software' have no outgoing edges
+    Match (a:software)-[b]->(c);
+    ```
+- Inferring vertex and edge types in the graph:
+  - Inferring vertex types given edge types:
+    ```bash
+    # (?)-[knows]->(?) => (person)-[knows]->(person)
+    Match (a)-[:knows]->(b) Return labels(a), labels(b);
+    ```
+    ```bash
+    # (?)-[knows*1..4]->(?) => (person)-[knows*1..2]->(person)
+    Match (a)-[:knows*1..4]->(b) Return labels(a), labels(b);
+    ```
+  - Inferring edge types given vertex types:
+    ```bash
+    # (person)-[?]->(person) => (person)-[knows]->(person)
+    Match (a:person)-[b]->(c:person) Return type(b);
+    ```
+  - Inferring all vertex and edge types given a path:
+    ```bash
+    # (?)-[?]->(?)->[?]->(software) => (person)-[knows]->(person)->[created]->(software)
+    Match (a)-[b]->(c)-[d]->(:software) Return labels(a), type(b), labels(c), type(d);
+    ```
+  - Inferring across multiple sentences:
+    ```bash
+    # (?)-[]->(?), (?)-[knows]-(?) => (person)-[knows]-(person), (person)-[knows]-(person)
+    Match (a)-[b]-(c), (a)-[:KNOWS]-(c) Return labels(a), type(b), labels(c);
+    ```

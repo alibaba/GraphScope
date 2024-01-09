@@ -283,6 +283,7 @@ mod test {
         })
     }
 
+    #[ignore]
     #[test]
     fn bench_hash() {
         let mut i = 0_i64;

@@ -42,7 +42,7 @@ public class GraphPathType extends ArraySqlType {
             super(SqlTypeName.OTHER, false, null);
             this.expandType = expandType;
             this.getVType = getVType;
-            computeDigest();
+            this.computeDigest();
         }
 
         public RelDataType getExpandType() {

@@ -28,6 +28,10 @@ public abstract class Utils {
         return new GraphBuilderVisitor(graphBuilder).visit(new CypherAntlr4Parser().parse(query));
     }
 
+    public static final GraphBuilder eval(String query, GraphBuilder builder) {
+        return new GraphBuilderVisitor(builder).visit(new CypherAntlr4Parser().parse(query));
+    }
+
     public static LogicalPlan evalLogicalPlan(String query) {
         GraphBuilder graphBuilder = com.alibaba.graphscope.common.ir.Utils.mockGraphBuilder();
         LogicalPlanVisitor logicalPlanVisitor =

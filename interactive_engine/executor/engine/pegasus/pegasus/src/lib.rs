@@ -264,8 +264,11 @@ where
 {
     init_env();
     let cancel_hook = sink.get_cancel_hook().clone();
-    let mut lock = JOB_CANCEL_MAP.write().expect("lock poisoned");
-    lock.insert(conf.job_id, cancel_hook);
+    if let Ok(mut lock) = JOB_CANCEL_MAP.write() {
+        lock.insert(conf.job_id, cancel_hook);
+    } else {
+        return Err(BuildJobError::from("JOB_CANCEL_MAP is poisoned;"))?;
+    }
     let peer_guard = Arc::new(AtomicUsize::new(0));
     let conf = Arc::new(conf);
     let workers = allocate_local_worker(&conf)?;
