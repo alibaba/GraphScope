@@ -16,7 +16,6 @@ gs.set_option(show_log=True)
 
 @torch.no_grad()
 def test(model, test_loader, dataset_name):
-    # evaluator = Evaluator(name=dataset_name)
     model.eval()
     xs = []
     y_true = []
@@ -32,18 +31,8 @@ def test(model, test_loader, dataset_name):
     xs = [t.to(device) for t in xs]
     y_true = [t.to(device) for t in y_true]
     y_pred = torch.cat(xs, dim=0).argmax(dim=-1, keepdim=True)
-    y_true = torch.cat(y_true, dim=0)#.unsqueeze(-1)
-    # print(y_true.T == y_pred.T)
+    y_true = torch.cat(y_true, dim=0)
     test_acc = sum((y_pred.T == y_true.T)[0]) / len(y_true.T[0])
-    # print(test_acc)
-    # print(y_true.shape, y_pred.shape)
-    # print(y_true, y_pred)
-    # test_acc = evaluator.eval(
-    #     {
-    #         "y_true": y_true,
-    #         "y_pred": y_pred,
-    #     }
-    # )["acc"]
 
     return test_acc.item()
 
@@ -144,11 +133,9 @@ for epoch in range(0, epochs):
     model.train()
     start = time.time()
     for batch in train_loader:
-        # print(f"batch: {batch}")
         optimizer.zero_grad()
         batch.x = batch.x.to(torch.float32)  # TODO
         out = model(batch.x, batch.edge_index)[: batch.batch_size].log_softmax(dim=-1)
-        # print(f"out: {out.shape}")
         loss = F.nll_loss(out, torch.flatten(batch.y[: batch.batch_size]))
         loss.backward()
         optimizer.step()
