@@ -17,13 +17,13 @@
 package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.RexNode;
@@ -37,10 +37,10 @@ public class NestedTraversalVisitor extends GremlinGSBaseVisitor<RexNode> {
     public NestedTraversalVisitor(GraphBuilder parentBuilder, @Nullable String tag) {
         this.parentBuilder = parentBuilder;
         this.nestedBuilder =
-                (GraphBuilder)
-                        GraphPlanner.relBuilderFactory.create(
-                                this.parentBuilder.getCluster(),
-                                this.parentBuilder.getRelOptSchema());
+                GraphBuilder.create(
+                        this.parentBuilder.getContext(),
+                        (GraphOptCluster) this.parentBuilder.getCluster(),
+                        this.parentBuilder.getRelOptSchema());
         this.tag = tag;
     }
 

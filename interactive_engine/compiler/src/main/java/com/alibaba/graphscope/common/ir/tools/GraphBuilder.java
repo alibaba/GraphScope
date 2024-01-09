@@ -22,11 +22,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalDedupBy;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
-import com.alibaba.graphscope.common.ir.rel.PushFilterVisitor;
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
@@ -72,6 +68,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
