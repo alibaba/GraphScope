@@ -789,7 +789,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     if (need_cap_list) {
       FILE* fcap_out =
           fopen((new_spanshot_dir + "/" + name + ".cap").c_str(), "wb");
-      fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out);
+      CHECK_EQ(fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out),
+               cap_list.size());
       fflush(fcap_out);
       fclose(fcap_out);
     }
@@ -802,8 +803,9 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       FILE* fout =
           fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
-        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].capacity(),
-               fout);
+        CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
+                        adj_lists_[i].capacity(), fout),
+                 adj_lists_[i].capacity());
       }
       fflush(fout);
       fclose(fout);
@@ -1026,7 +1028,9 @@ class MutableCsr<std::string_view>
       FILE* fout =
           fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
-        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].size(), fout);
+        CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
+                        adj_lists_[i].size(), fout),
+                 adj_lists_[i].size());
       }
       fflush(fout);
       fclose(fout);
@@ -1155,7 +1159,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       nbr_list_.reset();
       nbr_list_.resize(v_cap);
       FILE* fin = fopen((prefix + ".snbr").c_str(), "r");
-      fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin);
+      CHECK_EQ(fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin), old_size);
       fclose(fin);
       for (size_t k = old_size; k != v_cap; ++k) {
         nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());

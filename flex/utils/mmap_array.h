@@ -68,7 +68,7 @@ class mmap_array {
         size_ = 0;
         data_ = NULL;
       } else {
-        fd_ = ::open(filename.c_str(), O_RDONLY);
+        fd_ = ::open(filename.c_str(), O_RDONLY, 0777);
         size_t file_size = std::filesystem::file_size(filename);
         size_ = file_size / sizeof(T);
         if (size_ == 0) {
@@ -83,7 +83,7 @@ class mmap_array {
       if (!std::filesystem::exists(filename)) {
         creat = true;
       }
-      fd_ = ::open(filename.c_str(), O_RDWR | O_CREAT);
+      fd_ = ::open(filename.c_str(), O_RDWR | O_CREAT, 0777);
       if (fd_ == -1) {
         LOG(FATAL) << "open file failed " << filename << strerror(errno)
                    << "\n";
@@ -124,7 +124,7 @@ class mmap_array {
     filename_ = filename;
     if (!filename_.empty() && std::filesystem::exists(filename_)) {
       size_t file_size = std::filesystem::file_size(filename_);
-      fd_ = ::open(filename_.c_str(), O_RDWR);
+      fd_ = ::open(filename_.c_str(), O_RDWR, 0777);
       size_ = file_size / sizeof(T);
       if (size_ != 0) {
         size_t size_in_bytes = size_ * sizeof(T);
