@@ -82,6 +82,11 @@ data:
     pegasus.output.capacity=16
     pegasus.hosts=PEGASUS_HOSTS
 
+    ## Secondary config
+    secondary.instance.enabled={{ .Values.secondary.enabled }}
+    store.data.secondary.path={{ .Values.secondary.storeDataPath }}
+    store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
+
     ## Extra Config
     {{- if .Values.extraConfig }}
     {{- $config_list := regexSplit ";" .Values.extraConfig -1 }}
