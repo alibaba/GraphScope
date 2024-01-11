@@ -47,6 +47,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   std::vector<int32_t> in_tags;
   std::vector<std::string> in_prop_names;
   std::vector<std::string> in_prop_types;
+  tag_ind_mapping.CreateOrGetTagInd(agg_func.alias().value());
   auto& vars = agg_func.vars();
   for (int32_t i = 0; i < vars.size(); ++i) {
     auto& var = vars[i];
