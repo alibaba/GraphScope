@@ -178,66 +178,66 @@ def run_client_proc(
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-    description="Arguments for distributed training of supervised SAGE with servers."
+        description="Arguments for distributed training of supervised SAGE with servers."
     )
     parser.add_argument(
-    "--dataset",
-    type=str,
-    default='ogbn-arxiv',
-    help="The name of ogbn arxiv.",
+        "--dataset",
+        type=str,
+        default='ogbn-arxiv',
+        help="The name of ogbn arxiv.",
     )
     parser.add_argument(
-    "--num_server_nodes",
-    type=int,
-    default=2,
-    help="Number of server nodes for remote sampling.",
+        "--num_server_nodes",
+        type=int,
+        default=2,
+        help="Number of server nodes for remote sampling.",
     )
     parser.add_argument(
-    "--num_client_nodes",
-    type=int,
-    default=2,
-    help="Number of client nodes for training.",
+        "--num_client_nodes",
+        type=int,
+        default=2,
+        help="Number of client nodes for training.",
     )
     parser.add_argument(
-    "--node_rank",
-    type=int,
-    default=0,
-    help="The node rank of the current role.",
+        "--node_rank",
+        type=int,
+        default=0,
+        help="The node rank of the current role.",
     )
     parser.add_argument(
-    "--epochs",
-    type=int,
-    default=10,
-    help="The number of training epochs. (client option)",
+        "--epochs",
+        type=int,
+        default=10,
+        help="The number of training epochs. (client option)",
     )
     parser.add_argument(
-    "--batch_size",
-    type=int,
-    default=256,
-    help="Batch size for the training and testing dataloader.",
+        "--batch_size",
+        type=int,
+        default=256,
+        help="Batch size for the training and testing dataloader.",
     )
     parser.add_argument(
-    "--training_pg_master_port",
-    type=int,
-    default=11111,
-    help="The port used for PyTorch's process group initialization across all training processes.",
+        "--training_pg_master_port",
+        type=int,
+        default=11111,
+        help="The port used for PyTorch's process group initialization across all training processes.",
     )
     parser.add_argument(
-    "--train_loader_master_port",
-    type=int,
-    default=11112,
-    help="The port used for RPC initialization across all sampling workers of training loader.",
+        "--train_loader_master_port",
+        type=int,
+        default=11112,
+        help="The port used for RPC initialization across all sampling workers of training loader.",
     )
     parser.add_argument(
-    "--test_loader_master_port",
-    type=int,
-    default=11113,
-    help="The port used for RPC initialization across all sampling workers of testing loader.",
+        "--test_loader_master_port",
+        type=int,
+        default=11113,
+        help="The port used for RPC initialization across all sampling workers of testing loader.",
     )
     args = parser.parse_args()
 
     print(
-    f'--- Distributed training example of supervised SAGE with server-client mode. Client {args.node_rank} ---'
+        f'--- Distributed training example of supervised SAGE with server-client mode. Client {args.node_rank} ---'
     )
     print(f'* dataset: {args.dataset}')
     print(f'* total server nodes: {args.num_server_nodes}')
