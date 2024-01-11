@@ -60,7 +60,6 @@ def run_server_proc(proc_rank, handle, config, server_rank, dataset):
 
 def launch_graphlearn_torch_server(handle, config, server_rank):
     logger.info(f"-- [Server {server_rank}] Initializing server ...")
-    logger.info(f"handle:::::::: {handle}")
     edge_dir = config.pop("edge_dir")
 
     random_node_split = config.pop("random_node_split")
@@ -108,7 +107,4 @@ if __name__ == "__main__":
     server_index = int(sys.argv[3])
     config = GLTorchGraph.reverse_transform_config(config)
 
-    # logger.info(
-    #     f"launch_graphlearn_torch_server handle: {handle} config: {config} server_index: {server_index}",
-    # )
     launch_graphlearn_torch_server(handle, config, server_index)
