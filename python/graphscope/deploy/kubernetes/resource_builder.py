@@ -128,7 +128,10 @@ class ResourceBuilder:
     def get_node_selector(node_selector):
         import base64
         import json
-        decoded_node_selector = base64.b64decode(node_selector).decode("utf-8", errors="ignore")
+
+        decoded_node_selector = base64.b64decode(node_selector).decode(
+            "utf-8", errors="ignore"
+        )
         return json.loads(decoded_node_selector)
 
     @staticmethod
