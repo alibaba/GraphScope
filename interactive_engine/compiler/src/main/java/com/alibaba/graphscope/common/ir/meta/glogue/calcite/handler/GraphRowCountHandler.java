@@ -84,7 +84,7 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                             extendFromVertices.add(Utils.getExtendFromVertex(edge, target));
                         }
                         return getRowCount(
-                                (GraphPattern) subGraphPattern(extendIntersect),
+                                (GraphPattern) subGraphPattern(extendIntersect, 0),
                                 new GraphPattern(
                                         node.getCluster(), node.getTraitSet(), extendPattern),
                                 extendFromVertices,
@@ -93,8 +93,7 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                     GraphJoinDecomposition joinDecomposition =
                             (GraphJoinDecomposition) feasibleJoinDecomposition(subset);
                     if (joinDecomposition != null) {
-                        Pattern buildPattern =
-                                ((GraphPattern) joinDecomposition.getRight()).getPattern();
+                        Pattern buildPattern = joinDecomposition.getBuildPattern();
                         List<PatternVertex> jointVertices =
                                 joinDecomposition.getJoinVertexPairs().stream()
                                         .map(
@@ -103,8 +102,8 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
                                                                 k.getRightOrderId()))
                                         .collect(Collectors.toList());
                         return getRowCount(
-                                (GraphPattern) joinDecomposition.getLeft(),
-                                (GraphPattern) joinDecomposition.getRight(),
+                                (GraphPattern) subGraphPattern(joinDecomposition, 0),
+                                (GraphPattern) subGraphPattern(joinDecomposition, 1),
                                 jointVertices,
                                 mq);
                     }
@@ -217,8 +216,8 @@ class GraphRowCountHandler implements BuiltInMetadata.RowCount.Handler {
         return null;
     }
 
-    private @Nullable RelNode subGraphPattern(GraphExtendIntersect intersect) {
-        RelNode input = intersect.getInput(0);
+    private @Nullable RelNode subGraphPattern(RelNode rel, int subId) {
+        RelNode input = rel.getInput(subId);
         return (input instanceof RelSubset) ? ((RelSubset) input).getOriginal() : input;
     }
 

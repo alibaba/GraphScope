@@ -73,7 +73,7 @@ public class Utils {
             URL schemaResource =
                     Thread.currentThread()
                             .getContextClassLoader()
-                            .getResource("schema/modern.json");
+                            .getResource("schema/ldbc_schema_exp_hierarchy.json");
             URL proceduresResource =
                     Thread.currentThread()
                             .getContextClassLoader()

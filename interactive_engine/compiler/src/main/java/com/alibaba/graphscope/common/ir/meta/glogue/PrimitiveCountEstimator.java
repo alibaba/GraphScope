@@ -64,14 +64,7 @@ public class PrimitiveCountEstimator {
     public double estimate(PatternEdge edge) {
         double sum = 0.0d;
         for (EdgeTypeId typeId : edge.getEdgeTypeIds()) {
-            Pattern edgePattern = new Pattern();
-            PatternVertex srcVertex = new SinglePatternVertex(typeId.getSrcLabelId(), 0);
-            PatternVertex dstVertex = new SinglePatternVertex(typeId.getDstLabelId(), 1);
-            edgePattern.addVertex(srcVertex);
-            edgePattern.addVertex(dstVertex);
-            edgePattern.addEdge(
-                    srcVertex, dstVertex, new SinglePatternEdge(srcVertex, dstVertex, typeId, 0));
-            sum += gq.getRowCount(edgePattern);
+            sum += estimate(edge, typeId);
         }
         if (edge.isBoth()) {
             sum *= 2;
@@ -82,6 +75,36 @@ public class PrimitiveCountEstimator {
                 * edge.getDetails().getSelectivity()
                 * src.getDetails().getSelectivity()
                 * dst.getDetails().getSelectivity();
+    }
+
+    // estimate the row count for each type id in the edge
+    public double estimate(PatternEdge edge, EdgeTypeId typeId) {
+        int minHop = 1, maxHop = 1;
+        PathExpandRange range = edge.getDetails().getRange();
+        if (range != null) {
+            minHop = range.getOffset();
+            maxHop = range.getOffset() + range.getFetch() - 1;
+        }
+        double sum = 0.0d;
+        for (int hop = minHop; hop <= maxHop; ++hop) {
+            sum += estimate(edge, typeId, hop);
+        }
+        return sum;
+    }
+
+    public double estimate(PatternEdge edge, EdgeTypeId typeId, int hops) {
+        PatternVertex srcVertex = new SinglePatternVertex(typeId.getSrcLabelId(), 0);
+        PatternVertex dstVertex = new SinglePatternVertex(typeId.getDstLabelId(), 1);
+        if (hops == 0) {
+            return estimate(srcVertex);
+        }
+        Pattern edgePattern = new Pattern();
+        edgePattern.addVertex(srcVertex);
+        edgePattern.addVertex(dstVertex);
+        edgePattern.addEdge(
+                srcVertex, dstVertex, new SinglePatternEdge(srcVertex, dstVertex, typeId, 0));
+        return Math.pow(gq.getRowCount(edgePattern), hops)
+                / Math.pow(estimate(dstVertex), hops - 1);
     }
 
     private @Nullable PatternVertex getIntersectVertex(Pattern pattern) {

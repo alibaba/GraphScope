@@ -3,9 +3,8 @@ package com.alibaba.graphscope.common.ir.planner.rules;
 import com.alibaba.graphscope.common.ir.meta.glogue.Utils;
 import com.alibaba.graphscope.common.ir.rel.GraphJoinDecomposition;
 import com.alibaba.graphscope.common.ir.rel.GraphPattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternEdge;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
+import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -16,9 +15,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> extends RelRule<C> {
+
     protected JoinDecompositionRule(C config) {
         super(config);
     }
@@ -40,8 +41,10 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         List<GraphJoinDecomposition> queues = initDecompositions(pattern);
         int initialSize = queues.size();
         int offset = 0;
+        List<PatternVertex> newAddVertices = Lists.newArrayList();
         while (offset < queues.size()) {
-            List<GraphJoinDecomposition> newCompositions = getDecompositions(queues.get(offset++));
+            List<GraphJoinDecomposition> newCompositions =
+                    getDecompositions(queues.get(offset++), newAddVertices);
             addDedupCompositions(queues, newCompositions);
         }
         return queues.subList(initialSize, queues.size());
@@ -81,30 +84,28 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         return results;
     }
 
-    private List<GraphJoinDecomposition> getDecompositions(GraphJoinDecomposition parent) {
+    private List<GraphJoinDecomposition> getDecompositions(
+            GraphJoinDecomposition parent, List<PatternVertex> newAddVertices) {
         List<GraphJoinDecomposition.JoinVertexPair> jointVertices = parent.getJoinVertexPairs();
         List<GraphJoinDecomposition> results = Lists.newArrayList();
         // try to add one joint vertex into disjoint vertices of the probe pattern
         for (GraphJoinDecomposition.JoinVertexPair jointVertex : jointVertices) {
-            GraphJoinDecomposition decomposition =
-                    getDecomposition(parent, jointVertex, jointVertices);
-            if (decomposition != null) {
-                results.add(decomposition);
-            }
+            results.addAll(getDecompositions(parent, jointVertex, jointVertices, newAddVertices));
         }
         return results;
     }
 
-    private @Nullable GraphJoinDecomposition getDecomposition(
+    private List<GraphJoinDecomposition> getDecompositions(
             GraphJoinDecomposition parent,
             GraphJoinDecomposition.JoinVertexPair jointVertex,
-            List<GraphJoinDecomposition.JoinVertexPair> jointVertices) {
-        Pattern probePattern = ((GraphPattern) parent.getLeft()).getPattern();
+            List<GraphJoinDecomposition.JoinVertexPair> jointVertices,
+            List<PatternVertex> newAddVertices) {
         Pattern buildPattern = ((GraphPattern) parent.getRight()).getPattern();
-        PatternVertex probeJointVertex =
-                probePattern.getVertexByOrder(jointVertex.getLeftOrderId());
         PatternVertex buildJointVertex =
                 buildPattern.getVertexByOrder(jointVertex.getRightOrderId());
+        if (newAddVertices.contains(buildJointVertex)) {
+            return ImmutableList.of();
+        }
         // guarantee the joint vertex is not connected to any joint vertices in the build pattern
         if (buildPattern.getEdgesOf(buildJointVertex).stream()
                 .anyMatch(
@@ -118,34 +119,74 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                                                             == buildPattern.getVertexOrder(
                                                                     disjointVertex));
                         })) {
-            return null;
+            return ImmutableList.of();
         }
+        Pattern buildClone0 = new Pattern(buildPattern);
+        // guarantee the build pattern is still connected after removing the joint vertex
+        if (buildClone0.removeVertex(buildJointVertex).size() != 1) {
+            return ImmutableList.of();
+        }
+        // find all possible edge decompositions, each edge decomposition contains the edges to be
+        // added to the probe pattern and to the build pattern
+        List<EdgeDecomposition> edgeDecompositions = Lists.newArrayList();
+        getEdgeDecompositions(
+                Lists.newArrayList(buildPattern.getEdgesOf(buildJointVertex)),
+                0,
+                new EdgeDecomposition(Lists.newArrayList(), Lists.newArrayList()),
+                edgeDecompositions,
+                buildJointVertex,
+                newAddVertices);
+        return edgeDecompositions.stream()
+                .map(
+                        k ->
+                                createNewJoinDecomposition(
+                                        parent, buildClone0, k, jointVertex, jointVertices))
+                .filter(k -> k != null)
+                .collect(Collectors.toList());
+    }
+
+    private @Nullable GraphJoinDecomposition createNewJoinDecomposition(
+            GraphJoinDecomposition parent,
+            Pattern buildClone0,
+            EdgeDecomposition edgeDecomposition,
+            GraphJoinDecomposition.JoinVertexPair jointVertex,
+            List<GraphJoinDecomposition.JoinVertexPair> jointVertices) {
+        Pattern probePattern = ((GraphPattern) parent.getLeft()).getPattern();
+        Pattern buildPattern = ((GraphPattern) parent.getRight()).getPattern();
+        PatternVertex probeJointVertex =
+                probePattern.getVertexByOrder(jointVertex.getLeftOrderId());
+        PatternVertex buildJointVertex =
+                buildPattern.getVertexByOrder(jointVertex.getRightOrderId());
         Pattern probeClone = new Pattern(probePattern);
-        Pattern buildClone = new Pattern(buildPattern);
-        // check if build pattern still connected after removing one joint vertex
-        if (buildClone.removeVertex(buildJointVertex).size() != 1) {
+        Pattern buildClone = new Pattern(buildClone0);
+        // create the new probe pattern
+        for (PatternEdge probeEdge : edgeDecomposition.probeEdges) {
+            PatternVertex probeNewVertex = Utils.getExtendFromVertex(probeEdge, buildJointVertex);
+            probeClone.addVertex(probeNewVertex);
+            if (probeEdge.getSrcVertex().equals(buildJointVertex)) {
+                probeClone.addEdge(probeJointVertex, probeNewVertex, probeEdge);
+            } else {
+                probeClone.addEdge(probeNewVertex, probeJointVertex, probeEdge);
+            }
+        }
+        // create the new build pattern
+        for (PatternEdge buildEdge : edgeDecomposition.buildEdges) {
+            if (!buildClone.containsVertex(buildEdge.getSrcVertex())) {
+                buildClone.addVertex(buildEdge.getSrcVertex());
+            }
+            if (!buildClone.containsVertex(buildEdge.getDstVertex())) {
+                buildClone.addVertex(buildEdge.getDstVertex());
+            }
+            buildClone.addEdge(buildEdge.getSrcVertex(), buildEdge.getDstVertex(), buildEdge);
+        }
+        if (probeClone.getVertexNumber() > buildClone.getVertexNumber()) {
             return null;
         }
-        List<PatternVertex> jointCandidates = Lists.newArrayList();
-        for (PatternEdge edge : buildPattern.getEdgesOf(buildJointVertex)) {
-            PatternVertex disjointVertex = Utils.getExtendFromVertex(edge, buildJointVertex);
-            // add the vertex and edge to the probe pattern
-            probeClone.addVertex(disjointVertex);
-            if (probeClone.getVertexNumber() > buildClone.getVertexNumber()) {
-                return null;
-            }
-            // todo: add edges between the disjoint vertex and the joint vertices (including
-            // vertices in joint candidates) in the probe pattern
-            if (edge.getSrcVertex().equals(buildJointVertex)) {
-                probeClone.addEdge(probeJointVertex, disjointVertex, edge);
-            } else {
-                probeClone.addEdge(disjointVertex, probeJointVertex, edge);
-            }
-            // the disjoint vertex becomes the new joint vertex if meets the condition
-            if (buildClone.containsVertex(disjointVertex)) {
-                jointCandidates.add(disjointVertex);
-            }
-        }
+        List<PatternVertex> jointCandidates =
+                edgeDecomposition.probeEdges.stream()
+                        .map(k -> Utils.getExtendFromVertex(k, buildJointVertex))
+                        .filter(k -> buildClone.containsVertex(k))
+                        .collect(Collectors.toList());
         probeClone.reordering();
         buildClone.reordering();
         // update the joint vertices for the new probe pattern and build pattern
@@ -182,20 +223,28 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                 .getVertexSet()
                 .forEach(
                         v -> {
-                            Integer targetOrderId =
-                                    (probePattern.containsVertex(v))
-                                            ? probeOrderMap.get(probePattern.getVertexOrder(v))
-                                            : buildOrderMap.get(buildPattern.getVertexOrder(v));
-                            newProbeOrderMap.put(probeClone.getVertexOrder(v), targetOrderId);
+                            // todo: maintain the order mappings for the new added vertex in probe
+                            // pattern
+                            if (probePattern.containsVertex(v) || buildPattern.containsVertex(v)) {
+                                Integer targetOrderId =
+                                        (probePattern.containsVertex(v))
+                                                ? probeOrderMap.get(probePattern.getVertexOrder(v))
+                                                : buildOrderMap.get(buildPattern.getVertexOrder(v));
+                                newProbeOrderMap.put(probeClone.getVertexOrder(v), targetOrderId);
+                            }
                         });
         Map<Integer, Integer> newBuildOrderMap = Maps.newHashMap();
         buildClone
                 .getVertexSet()
                 .forEach(
                         v -> {
-                            newBuildOrderMap.put(
-                                    buildClone.getVertexOrder(v),
-                                    buildOrderMap.get(buildPattern.getVertexOrder(v)));
+                            // todo: maintain the order mappings for the new added vertex in build
+                            // pattern
+                            if (buildPattern.containsVertex(v)) {
+                                newBuildOrderMap.put(
+                                        buildClone.getVertexOrder(v),
+                                        buildOrderMap.get(buildPattern.getVertexOrder(v)));
+                            }
                         });
         return new GraphJoinDecomposition(
                 parent.getCluster(),
@@ -204,6 +253,121 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                 buildClone,
                 newJointVertices,
                 new GraphJoinDecomposition.OrderMappings(newProbeOrderMap, newBuildOrderMap));
+    }
+
+    private void getEdgeDecompositions(
+            List<PatternEdge> probeEdges,
+            int edgeId,
+            EdgeDecomposition curDecomposition,
+            List<EdgeDecomposition> resultDecompositions,
+            PatternVertex jointVertex,
+            List<PatternVertex> newAddVertices) {
+        if (edgeId == probeEdges.size()) {
+            resultDecompositions.add(curDecomposition);
+            return;
+        }
+        PatternEdge probeEdge = probeEdges.get(edgeId);
+        PathExpandRange pxdRange = probeEdge.getDetails().getRange();
+        // try to split the path expand
+        if (pxdRange != null) {
+            int minHop = pxdRange.getOffset();
+            int maxHop = pxdRange.getOffset() + pxdRange.getFetch() - 1;
+            for (int i = 0; i <= minHop; ++i) {
+                for (int j = 1; j <= maxHop - 1; ++j) {
+                    if (i <= j) {
+                        // split the path expand into two path expands
+                        // probe part: [i, j]
+                        // build part: [minHop - i, maxHop - j]
+                        PatternVertex anotherVertex =
+                                Utils.getExtendFromVertex(probeEdge, jointVertex);
+                        PatternVertex splitVertex = createNewVertex(anotherVertex);
+                        newAddVertices.add(splitVertex);
+                        PatternVertex probeSrc, probeDst;
+                        if (probeEdge.getSrcVertex().equals(jointVertex)) {
+                            probeSrc = jointVertex;
+                            probeDst = splitVertex;
+                        } else {
+                            probeSrc = splitVertex;
+                            probeDst = jointVertex;
+                        }
+                        PatternEdge probeSplit =
+                                createNewEdge(
+                                        probeEdge,
+                                        probeSrc,
+                                        probeDst,
+                                        new PathExpandRange(i, j - i + 1));
+                        PatternVertex buildSrc, buildDst;
+                        if (probeEdge.getSrcVertex().equals(jointVertex)) {
+                            buildSrc = splitVertex;
+                            buildDst = anotherVertex;
+                        } else {
+                            buildSrc = anotherVertex;
+                            buildDst = splitVertex;
+                        }
+                        PatternEdge buildSplit =
+                                createNewEdge(
+                                        probeEdge,
+                                        buildSrc,
+                                        buildDst,
+                                        new PathExpandRange(
+                                                minHop - i, maxHop - j - (minHop - i) + 1));
+                        EdgeDecomposition cloneDecomposition = curDecomposition.copy();
+                        cloneDecomposition.probeEdges.add(probeSplit);
+                        cloneDecomposition.buildEdges.add(buildSplit);
+                        getEdgeDecompositions(
+                                probeEdges,
+                                edgeId + 1,
+                                cloneDecomposition,
+                                resultDecompositions,
+                                jointVertex,
+                                newAddVertices);
+                    }
+                }
+            }
+        }
+        EdgeDecomposition cloneDecomposition = curDecomposition.copy();
+        cloneDecomposition.probeEdges.add(probeEdge);
+        getEdgeDecompositions(
+                probeEdges,
+                edgeId + 1,
+                cloneDecomposition,
+                resultDecompositions,
+                jointVertex,
+                newAddVertices);
+    }
+
+    private PatternVertex createNewVertex(PatternVertex oldVertex) {
+        int randomId = UUID.randomUUID().hashCode();
+        return oldVertex.isDistinct()
+                ? new SinglePatternVertex(
+                        oldVertex.getVertexTypeIds().get(0), randomId, new ElementDetails())
+                : new FuzzyPatternVertex(
+                        oldVertex.getVertexTypeIds(), randomId, new ElementDetails());
+    }
+
+    private PatternEdge createNewEdge(
+            PatternEdge oldEdge,
+            PatternVertex newSrc,
+            PatternVertex newDst,
+            PathExpandRange newRange) {
+        int randomId = UUID.randomUUID().hashCode();
+        ElementDetails newDetails =
+                new ElementDetails(oldEdge.getDetails().getSelectivity(), newRange);
+        return oldEdge.isDistinct()
+                ? new SinglePatternEdge(
+                        newSrc,
+                        newDst,
+                        oldEdge.getEdgeTypeIds().get(0),
+                        randomId,
+                        oldEdge.isBoth(),
+                        newDetails)
+                : new FuzzyPatternEdge(
+                        newSrc,
+                        newDst,
+                        oldEdge.getEdgeTypeIds(),
+                        randomId,
+                        oldEdge.isBoth(),
+                        newDetails);
     }
 
     private void addDedupCompositions(
@@ -292,6 +456,21 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
 
         public int getMinPatternSize() {
             return minPatternSize;
+        }
+    }
+
+    private static class EdgeDecomposition {
+        private final List<PatternEdge> probeEdges;
+        private final List<PatternEdge> buildEdges;
+
+        public EdgeDecomposition(List<PatternEdge> probeEdges, List<PatternEdge> buildEdges) {
+            this.probeEdges = probeEdges;
+            this.buildEdges = buildEdges;
+        }
+
+        public EdgeDecomposition copy() {
+            return new EdgeDecomposition(
+                    Lists.newArrayList(probeEdges), Lists.newArrayList(buildEdges));
         }
     }
 }

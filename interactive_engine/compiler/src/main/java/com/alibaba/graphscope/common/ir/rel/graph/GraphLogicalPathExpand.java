@@ -24,7 +24,6 @@ import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -112,12 +111,12 @@ public class GraphLogicalPathExpand extends SingleRel {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw)
-                .item("expand", RelOptUtil.toString(expand))
-                .item("getV", RelOptUtil.toString(getV))
+                .item("direction", ((GraphLogicalExpand) expand).getOpt())
+                .item("tableConfig", ((GraphLogicalExpand) expand).getTableConfig())
                 .itemIf("offset", offset, offset != null)
                 .itemIf("fetch", fetch, fetch != null)
-                .item("path_opt", getPathOpt())
-                .item("result_opt", getResultOpt())
+                //                .item("path_opt", getPathOpt())
+                //                .item("result_opt", getResultOpt())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
                         "start_alias",

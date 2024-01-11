@@ -178,10 +178,10 @@ public class RelMetadataQueryTest {
                                         "graph.planner.opt",
                                         "CBO",
                                         "graph.planner.rules",
-                                        "FilterMatchRule, ExtendIntersectRule,"
-                                                + " JoinDecompositionRule",
+                                        "FilterMatchRule, JoinDecompositionRule,"
+                                                + " ExtendIntersectRule",
                                         "graph.planner.cbo.glogue.schema",
-                                        "conf/ldbc1_statistics.txt")));
+                                        "conf/ldbc30_statistics.txt")));
         GraphRelOptimizer optimizer = new GraphRelOptimizer(plannerConfig);
         RelOptCluster optCluster =
                 GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
@@ -193,13 +193,24 @@ public class RelMetadataQueryTest {
                                 new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
         RelNode node =
                 com.alibaba.graphscope.cypher.antlr4.Utils.eval(
-                                "Match"
-                                    + " (p1:PERSON)-[:KNOWS]-(p2:PERSON)-[:KNOWS]-(p3:PERSON)-[:KNOWS]-(p4:PERSON)"
-                                    + " Where p1.id = 1 AND p4.id = 2 Return count(p1)",
+                                "MATCH (countryX:COUNTRY {name:"
+                                    + " 'Laos'})<-[:ISLOCATEDIN]-(messageX)-[:HASCREATOR]->(otherP:PERSON),\n"
+                                    + "    \t(countryY:COUNTRY {name:"
+                                    + " 'United_States'})<-[:ISLOCATEDIN]-(messageY)-[:HASCREATOR]->(otherP:PERSON),\n"
+                                    + "    \t(otherP)-[:ISLOCATEDIN]->(city)-[:ISPARTOF]->(countryCity),\n"
+                                    + "    \t(person:PERSON {id:1})-[:KNOWS*1..3]-(otherP)\n"
+                                    + "WHERE messageX.creationDate >= 20110601000000000 and"
+                                    + " messageX.creationDate < 20110713000000000\n"
+                                    + "  AND messageY.creationDate >= 20110601000000000 and"
+                                    + " messageY.creationDate < 20110713000000000\n"
+                                    + "\tAND countryCity.name <> 'Laos' AND countryCity.name <>"
+                                    + " 'United_States' Return count(countryX);",
                                 builder)
                         .build();
         System.out.println(node.explain());
         RelNode after = optimizer.optimize(node, new GraphIOProcessor(builder, Utils.schemaMeta));
         System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(after));
+        VolcanoPlanner planner = (VolcanoPlanner) optimizer.getMatchPlanner();
+        planner.dump(new PrintWriter(new FileOutputStream("set.out"), true));
     }
 }

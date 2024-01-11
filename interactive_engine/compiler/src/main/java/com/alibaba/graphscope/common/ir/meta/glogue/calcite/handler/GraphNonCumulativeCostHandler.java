@@ -69,7 +69,6 @@ public class GraphNonCumulativeCostHandler implements BuiltInMetadata.NonCumulat
             GraphJoinDecomposition decomposition = (GraphJoinDecomposition) node;
             double probeCount = mq.getRowCount(decomposition.getLeft());
             double buildCount = mq.getRowCount(decomposition.getRight());
-            // todo: refine the cost estimation
             double dRows =
                     plannerConfig.getJoinCostFactor1() * probeCount
                             + plannerConfig.getJoinCostFactor2() * buildCount;

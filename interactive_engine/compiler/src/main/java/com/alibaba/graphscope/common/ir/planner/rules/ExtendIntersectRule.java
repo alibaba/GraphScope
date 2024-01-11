@@ -118,7 +118,8 @@ public class ExtendIntersectRule<C extends ExtendIntersectRule.Config> extends R
                                             src.getVertexOrder(extendFrom),
                                             k.getEdgeTypeIds(),
                                             Utils.getExtendDirection(k, target),
-                                            estimator.estimate(k, target));
+                                            estimator.estimate(k, target),
+                                            k.getDetails().getRange());
                                 })
                         .collect(Collectors.toList());
         ExtendStep extendStep =

@@ -37,7 +37,7 @@ public class Utils {
             return edge.getSrcVertex();
         } else {
             throw new IllegalArgumentException(
-                    "target vertex must be one of the edge's src or dst, target: %s, edge: %s"
+                    "target vertex must be one of the edge's src or dst, target: "
                             + target
                             + ", edge: "
                             + edge);
@@ -117,7 +117,9 @@ public class Utils {
             }
             if (edge.isBoth()) return false;
             ElementDetails details = edge.getDetails();
-            if (details != null && Double.compare(details.getSelectivity(), 1.0d) != 0) {
+            if (details != null
+                    && (Double.compare(details.getSelectivity(), 1.0d) != 0
+                            || details.getRange() != null)) {
                 return false;
             }
         }
