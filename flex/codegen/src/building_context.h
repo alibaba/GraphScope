@@ -100,8 +100,8 @@ struct TagIndMapping {
         *std::max_element(tag_id_2_tag_inds_.begin(), tag_id_2_tag_inds_.end());
     auto max_tag_id =
         *std::max_element(tag_ind_2_tag_ids_.begin(), tag_ind_2_tag_ids_.end());
-    CHECK((size_t) max_ind + 1 == tag_ind_2_tag_ids_.size());
-    CHECK((size_t) max_tag_id + 1 == tag_id_2_tag_inds_.size());
+    CHECK(max_ind + 1 == (int32_t) tag_ind_2_tag_ids_.size());
+    CHECK(max_tag_id + 1 == (int32_t) tag_id_2_tag_inds_.size());
   }
 
   void print_debug_info() const {

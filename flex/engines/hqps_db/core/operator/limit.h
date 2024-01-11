@@ -34,7 +34,7 @@ class LimitOp {
     size_t cur_offset = 0;
     std::vector<size_t> new_offsets;
     new_offsets.emplace_back(0);
-    upper_bound = std::min((size_t) upper_bound, cur_.Size());
+    upper_bound = std::min(upper_bound, cur_.Size());
     for (size_t cur_ind = 0; cur_ind < cur_.Size(); ++cur_ind) {
       if (cur_ind >= lower_bound && cur_ind < upper_bound) {
         cur_offset += 1;
