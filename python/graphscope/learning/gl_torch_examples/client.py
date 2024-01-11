@@ -254,29 +254,7 @@ if __name__ == '__main__':
     print(f'* testing loader master port: {args.test_loader_master_port}')
 
     client_rank = args.node_rank
-    # print('--- Launching loader ...')
-    # if client_rank == 0:
-    #     sess = gs.session(cluster_type="hosts", num_workers=num_servers)
-    #     g = load_ogbn_arxiv(sess=sess)
-    #     print(f"here {g.fragments}, {g.vineyard_id}")
-    #     glt_graph = gs.graphlearn_torch(
-    #         g,
-    #         edges=[
-    #             ("paper", "citation", "paper"),
-    #         ],
-    #         node_features={
-    #             "paper": [f"feat_{i}" for i in range(128)],
-    #         },
-    #         node_labels={
-    #             "paper": "label",
-    #         },
-    #         edge_dir="out",
-    #         random_node_split={
-    #             "num_val": 0.1,
-    #             "num_test": 0.1,
-    #         },
-    #     )
-    
+    print('--- Loading graph info ...')
     glt_graph = pickle.load(open('glt_graph.pkl', 'rb'))
     print('--- Launching client processes ...')
     run_client_proc(
