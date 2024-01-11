@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -224,7 +225,9 @@ class LouvainAppBase
               actual_quality_aggregator);
       // after one pass if already decided halt, that means the pass yield no
       // changes, so we halt computation.
-      if (current_super_step <= 14 || actual_quality <= ctx.prev_quality()) {
+      if (current_super_step <= 14 ||
+          std::fabs(actual_quality - ctx.prev_quality())
+              < min_quality_improvement) {
         // turn to sync community result
         ctx.compute_context().set_superstep(sync_result_step);
         syncCommunity(frag, ctx, messages);
@@ -314,7 +317,7 @@ class LouvainAppBase
                                 int tid, vertex_t v) {
       const auto& member_list = ctx.vertex_state()[v].nodes_in_community;
       if (!member_list.empty()) {
-        auto community_id = frag.Gid2Oid(member_list.front());
+        auto community_id = frag.Gid2Oid(ctx.vertex_state()[v].community);
         // send community id to members
         for (const auto& member_gid : member_list) {
           auto fid = vid_parser.GetFid(member_gid);

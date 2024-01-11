@@ -237,7 +237,7 @@ def test_other_app_on_undirected_graph(
     ctx = louvain(p2p_project_undirected_graph, min_progress=50, progress_tries=2)
     df = ctx.to_dataframe({"node": "v.id", "r": "r"})
     community_num = len(df["r"].unique())
-    assert community_num == 103
+    assert community_num == 102
     # simple_path
     ctx = is_simple_path(p2p_project_undirected_graph, [1, 10])
     assert ctx is not None
