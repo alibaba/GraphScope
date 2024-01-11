@@ -47,10 +47,8 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   std::vector<int32_t> in_tags;
   std::vector<std::string> in_prop_names;
   std::vector<std::string> in_prop_types;
-  int32_t res_alias = agg_func.alias().value();
-  auto real_res_alias = tag_ind_mapping.CreateOrGetTagInd(res_alias);
   auto& vars = agg_func.vars();
-  for (auto i = 0; i < vars.size(); ++i) {
+  for (int32_t i = 0; i < vars.size(); ++i) {
     auto& var = vars[i];
     auto raw_tag_id = var.tag().id();
     in_tags.push_back(ctx.GetTagInd(raw_tag_id));
@@ -80,7 +78,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   std::string selectors_str, in_tags_str;
   {
     std::stringstream ss;
-    for (auto i = 0; i < in_prop_types.size(); ++i) {
+    for (size_t i = 0; i < in_prop_types.size(); ++i) {
       boost::format selector_formater(PROPERTY_SELECTOR);
       selector_formater % in_prop_types[i] % in_prop_names[i];
       ss << selector_formater.str();
@@ -92,7 +90,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   }
   {
     std::stringstream ss;
-    for (auto i = 0; i < in_tags.size(); ++i) {
+    for (size_t i = 0; i < in_tags.size(); ++i) {
       ss << in_tags[i];
       if (i != in_tags.size() - 1) {
         ss << ", ";
@@ -125,7 +123,7 @@ class FoldOpBuilder {
     std::string fold_ops_code;
     {
       std::stringstream ss;
-      for (auto i = 0; i < agg_func_name_and_code.size(); ++i) {
+      for (size_t i = 0; i < agg_func_name_and_code.size(); ++i) {
         ss << make_move(agg_func_name_and_code[i].first);
         if (i != agg_func_name_and_code.size() - 1) {
           ss << ", ";
@@ -140,7 +138,7 @@ class FoldOpBuilder {
     std::string agg_func_code_con;
     {
       std::stringstream ss;
-      for (auto i = 0; i < agg_func_name_and_code.size(); ++i) {
+      for (size_t i = 0; i < agg_func_name_and_code.size(); ++i) {
         ss << agg_func_name_and_code[i].second << std::endl;
       }
       agg_func_code_con = ss.str();
@@ -164,7 +162,7 @@ static std::string BuildGroupWithoutKeyOp(
     const physical::PhysicalOpr::MetaData& meta_data) {
   CHECK(group_by_pb.mappings_size() == 0);
   FoldOpBuilder fold_op_builder(ctx);
-  for (auto i = 0; i < group_by_pb.functions_size(); ++i) {
+  for (int32_t i = 0; i < group_by_pb.functions_size(); ++i) {
     fold_op_builder.AddAggFunc(group_by_pb.functions(i));
   }
   return fold_op_builder.Build();

@@ -294,16 +294,11 @@ class GroupByOp {
     VLOG(10) << "new result_t, base tag: " << RES_T::base_tag_id;
     // Currently we only support to to_count;
     using agg_tuple_t = std::tuple<FOLD_OPT...>;
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
+
     static constexpr size_t agg_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     // the result context must be one-to-one mapping.
 
-    // if (ctx.get_sub_task_start_tag() == INVALID_TAG) {
-    //   LOG(FATAL) << "Not implemented now";
-    // }
-
-    // int start_tag = ctx.get_sub_task_start_tag();
     int start_tag = 0;
     VLOG(10) << "start tag: " << start_tag;
     auto& agg_tuple = group_opt;
@@ -327,7 +322,6 @@ class GroupByOp {
         builder.insert(0, empty_tuple, empty_tuple);
       }
     } else {
-      size_t cnt = 0;
       for (auto iter : ctx) {
         auto ele_tuple = iter.GetAllIndexElement();
         auto data_tuple = iter.GetAllData();
@@ -341,7 +335,7 @@ class GroupByOp {
           // start_tag.
           start_tag_ind = 0;
         } else {
-          auto start_tag_ind = iter.GetTagOffset(start_tag);
+          start_tag_ind = iter.GetTagOffset(start_tag);
         }
         // indicate at which index the start_tag element is in.
         insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
@@ -385,7 +379,6 @@ class GroupByOp {
     // Currently we only support to to_count;
     using agg_tuple_t = std::tuple<AGG_T...>;
     using key_alias_t = typename GROUP_KEY::selector_t;
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr int keyed_tag_id = GROUP_KEY::col_id;
     // the result context must be one-to-one mapping.
@@ -395,7 +388,6 @@ class GroupByOp {
         std::remove_reference_t<decltype(old_key_set)>>;
     using keyed_set_builder_t =
         typename KeyedT<old_key_set_t, key_alias_t>::keyed_builder_t;
-    auto keyed_set_size = old_key_set.Size();
 
     // create a keyed set from the old key set.
     keyed_set_builder_t keyed_set_builder =
@@ -418,7 +410,6 @@ class GroupByOp {
         auto data_tuple = iter.GetAllData();
 
         auto key_ele = gs::get_from_tuple<GROUP_KEY::col_id>(ele_tuple);
-        auto data_ele = gs::get_from_tuple<GROUP_KEY::col_id>(data_tuple);
         size_t ind = insert_to_keyed_set_with_prop_getter(keyed_set_builder,
                                                           prop_getter, key_ele);
 
@@ -473,7 +464,6 @@ class GroupByOp {
     using agg_tuple_t = std::tuple<AGG...>;
     using alias_tuple_t = std::tuple<KEY_ALIAS...>;
 
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr size_t group_key_num = std::tuple_size_v<alias_tuple_t>;
 

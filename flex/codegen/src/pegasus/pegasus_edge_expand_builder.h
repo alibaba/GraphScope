@@ -134,18 +134,18 @@ class EdgeExpandOpBuilder {
     std::unordered_set<LabelT> start_labels_set;
     std::vector<LabelT> start_labels, end_labels;
     if (direction_ == physical::EdgeExpand_Direction::EdgeExpand_Direction_IN) {
-      for (auto i = 0; i < src_vertex_labels_.size(); i++) {
+      for (size_t i = 0; i < src_vertex_labels_.size(); i++) {
         end_labels.push_back(src_vertex_labels_[i]);
       }
-      for (auto i = 0; i < dst_vertex_labels_.size(); i++) {
+      for (size_t i = 0; i < dst_vertex_labels_.size(); i++) {
         start_labels_set.insert(dst_vertex_labels_[i]);
         start_labels.push_back(dst_vertex_labels_[i]);
       }
     } else {
-      for (auto i = 0; i < dst_vertex_labels_.size(); i++) {
+      for (size_t i = 0; i < dst_vertex_labels_.size(); i++) {
         end_labels.push_back(dst_vertex_labels_[i]);
       }
-      for (auto i = 0; i < src_vertex_labels_.size(); i++) {
+      for (size_t i = 0; i < src_vertex_labels_.size(); i++) {
         start_labels_set.insert(src_vertex_labels_[i]);
         start_labels.push_back(src_vertex_labels_[i]);
       }
@@ -153,7 +153,7 @@ class EdgeExpandOpBuilder {
 
     int32_t edge_labels = query_params_.tables_size();
     std::stringstream expand_code_ss;
-    for (auto i = 0; i < edge_labels; i++) {
+    for (int32_t i = 0; i < edge_labels; i++) {
       auto edge_label = query_params_.tables(i).id();
       if (start_labels_set.size() > 1) {
         boost::format multi_labels_fmter(
@@ -161,7 +161,7 @@ class EdgeExpandOpBuilder {
             "as usize);\n"
             "%2%");
         std::string labels_expand_code;
-        for (auto j = 0; j < src_vertex_labels_.size(); ++j) {
+        for (size_t j = 0; j < src_vertex_labels_.size(); ++j) {
           boost::format with_label_fmter(
               "if vertex_label == %1% {\n"
               "%2%"
@@ -193,7 +193,7 @@ class EdgeExpandOpBuilder {
         multi_labels_fmter % input_index % labels_expand_code;
         expand_code_ss << multi_labels_fmter.str();
       } else {
-        for (auto j = 0; j < src_vertex_labels_.size(); ++j) {
+        for (size_t j = 0; j < src_vertex_labels_.size(); ++j) {
           if (direction_ ==
               physical::EdgeExpand_Direction::EdgeExpand_Direction_IN) {
             expand_code_ss << write_edge_expand(
@@ -288,7 +288,7 @@ class EdgeExpandOpBuilder {
           "result.push(graph.get_global_id(e.neighbor, %3%).unwrap() as u64);\n"
           "}\n");
       std::stringstream vars_stream;
-      for (auto i = 0; i < var_names_.size(); i++) {
+      for (size_t i = 0; i < var_names_.size(); i++) {
         boost::format var_fmter("let %1% = %2%[e.neighbor];\n");
         var_fmter % var_names_[i] %
             get_edge_prop_column_name(properties_[i].var_name, src_label,

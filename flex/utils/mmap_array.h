@@ -179,7 +179,7 @@ class mmap_array {
         if (data_ != NULL) {
           size_t copy_size = std::min(size, size_);
           if (copy_size > 0) {
-            memcpy(new_data, data_, copy_size * sizeof(T));
+            memcpy((void*) new_data, (void*) data_, copy_size * sizeof(T));
           }
           munmap(data_, size_ * sizeof(T));
         }

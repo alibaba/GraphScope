@@ -186,7 +186,7 @@ class GetVertex {
     using res_set_t = vertex_set_t<T...>;
     static constexpr size_t num_labels = SET_T::num_labels;
     std::array<std::vector<std::tuple<T...>>, num_labels> res_data_tuples;
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       auto& cur_set = multi_set.GetSet(i);
       VLOG(10) << "set: " << i << ", size: " << cur_set.Size();
       res_data_tuples[i] = graph.template GetVertexPropsFromVid<T...>(
@@ -207,7 +207,6 @@ class GetVertex {
   static RES_T GetNoPropVSetFromVertexSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, Filter<EXPRESSION, SELECTOR...>>& get_v_opt) {
-    auto v_opt = get_v_opt.v_opt_;
     auto filter = get_v_opt.filter_;
     return do_project(graph, get_v_opt.v_labels_, filter, set);
   }
@@ -218,7 +217,6 @@ class GetVertex {
   static auto GetNoPropVSetFromSingleDstEdgeSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
-    auto v_opt = get_v_opt.v_opt_;
     auto expr = get_v_opt.filter_.expr_;
     return set.GetVertices(get_v_opt.v_opt_, get_v_opt.v_labels_, expr);
   }
@@ -252,7 +250,7 @@ class GetVertex {
           make_default_row_vertex_set<vertex_id_t, label_id_t>({}, label);
       // create offsets.
       auto offsets = std::vector<offset_t>(set.Size() + 1);
-      for (auto i = 0; i < offsets.size(); ++i) {
+      for (size_t i = 0; i < offsets.size(); ++i) {
         offsets[i] = 0;
       }
       return std::make_pair(std::move(res_set), std::move(offsets));

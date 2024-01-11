@@ -150,7 +150,7 @@ class PathExpand {
 
     size_t cur_0_cnt = 0, cur_1_cnt = 0;
     CHECK(offsets0.size() + offsets1.size() == input_size + 2);
-    for (auto i = 0; i < input_size; ++i) {
+    for (size_t i = 0; i < input_size; ++i) {
       if (bitset.get_bit(i)) {
         CHECK(cur_0_cnt < offsets0.size() - 1);
         auto start = offsets0[cur_0_cnt];
@@ -399,7 +399,7 @@ class PathExpand {
           tmp_vec, gs::to_string(edge_expand_opt.dir_), INT_MAX);
       // remove duplicate
       size_t limit = 0;
-      for (auto i = 0; i < tmp_vec.size(); ++i) {
+      for (size_t i = 0; i < tmp_vec.size(); ++i) {
         if (visited_vertices.find(tmp_vec[i]) == visited_vertices.end()) {
           tmp_vec[limit++] = tmp_vec[i];
         }
@@ -407,7 +407,7 @@ class PathExpand {
       tmp_vec.resize(limit);
       if (cur_hop >= range.start_) {
         // emplace tmp_vec to gids;
-        for (auto i = 0; i < tmp_vec.size(); ++i) {
+        for (size_t i = 0; i < tmp_vec.size(); ++i) {
           auto nbr_gid = tmp_vec[i];
           auto insert_res = visited_vertices.insert(nbr_gid);
           if (insert_res.second) {
@@ -418,7 +418,7 @@ class PathExpand {
       } else {
         // when cur_hop is not included, we also need to insert vertices into
         // set, to avoid duplicated.
-        for (auto i = 0; i < tmp_vec.size(); ++i) {
+        for (size_t i = 0; i < tmp_vec.size(); ++i) {
           auto nbr_gid = tmp_vec[i];
           visited_vertices.insert(nbr_gid);
         }
@@ -459,7 +459,7 @@ class PathExpand {
 
     gids.resize(range.limit_);
     offsets.resize(range.limit_);
-    for (auto i = 0; i < range.limit_; ++i) {
+    for (size_t i = 0; i < range.limit_; ++i) {
       offsets.reserve(src_vertices_size + 1);
     }
 
@@ -467,7 +467,7 @@ class PathExpand {
     gids[0].insert(gids[0].begin(), src_vertices_vec.begin(),
                    src_vertices_vec.end());
     // offsets[0] set with all 1s
-    for (auto i = 0; i < src_vertices_size; ++i) {
+    for (size_t i = 0; i < src_vertices_size; ++i) {
       offsets[0].emplace_back(i);
     }
     offsets[0].emplace_back(src_vertices_size);
@@ -482,7 +482,7 @@ class PathExpand {
       gids[cur_hop].swap(pair.first);
       CHECK(gids[cur_hop - 1].size() + 1 == pair.second.size());
       // offsets[cur_hop].swap(pair.second);
-      for (auto j = 0; j < offsets[cur_hop - 1].size(); ++j) {
+      for (size_t j = 0; j < offsets[cur_hop - 1].size(); ++j) {
         auto& new_off_vec = pair.second;
         offsets[cur_hop].emplace_back(new_off_vec[offsets[cur_hop - 1][j]]);
       }
@@ -497,7 +497,7 @@ class PathExpand {
 
     {
       size_t flat_size = 0;
-      for (auto i = range.start_; i < range.limit_; ++i) {
+      for (size_t i = range.start_; i < range.limit_; ++i) {
         flat_size += gids[i].size();
       }
       VLOG(10) << "flat size: " << flat_size;
@@ -510,7 +510,7 @@ class PathExpand {
       // we add vertices to vertex set, but we don't add them to flat_gids
       // and dists.
 
-      for (auto i = 0; i < src_vertices_size; ++i) {
+      for (size_t i = 0; i < src_vertices_size; ++i) {
         // size_t prev_size = flat_gids.size();
         for (auto j = range.start_; j < range.limit_; ++j) {
           auto start = offsets[j][i];
@@ -681,14 +681,14 @@ class PathExpand {
       cur_other_vertices.insert(cur_other_vertices.end(), vertices_vec.begin(),
                                 vertices_vec.end());
 
-      for (auto i = 0; i < vertices_vec.size(); ++i) {
+      for (size_t i = 0; i < vertices_vec.size(); ++i) {
         cur_other_offsets.emplace_back(i);
       }
       cur_other_offsets.emplace_back(vertices_vec.size());
     }
     VLOG(10) << " Finish set distance 0 vertices.";
 
-    for (auto i = 1; i < range.limit_; ++i) {
+    for (size_t i = 1; i < range.limit_; ++i) {
       auto& cur_other_vertices = other_vertices[i];
       auto& cur_other_offsets = other_offsets[i];
       auto& prev_other_vertices = other_vertices[i - 1];
@@ -711,8 +711,8 @@ class PathExpand {
     std::vector<std::vector<offset_t>> offset_amplify(
         range.limit_, std::vector<offset_t>(copied_other_offsets[0].size(), 0));
     offset_amplify[0] = copied_other_offsets[0];
-    for (auto i = 1; i < offset_amplify.size(); ++i) {
-      for (auto j = 0; j < offset_amplify[i].size(); ++j) {
+    for (size_t i = 1; i < offset_amplify.size(); ++i) {
+      for (size_t j = 0; j < offset_amplify[i].size(); ++j) {
         offset_amplify[i][j] =
             copied_other_offsets[i][offset_amplify[i - 1][j]];
       }
@@ -720,7 +720,7 @@ class PathExpand {
 
     std::vector<size_t> path_num_cnt;
     path_num_cnt.resize(vertices_vec.size() + 1, 0);
-    for (auto i = 0; i < vertices_vec.size(); ++i) {
+    for (size_t i = 0; i < vertices_vec.size(); ++i) {
       for (auto j = range.start_; j < range.limit_; ++j) {
         auto start = offset_amplify[j][i];
         auto end = offset_amplify[j][i + 1];
@@ -730,7 +730,7 @@ class PathExpand {
     std::vector<offset_t> ctx_offsets;
     ctx_offsets.resize(vertices_vec.size() + 1);
     ctx_offsets[0] = 0;
-    for (auto i = 0; i < vertices_vec.size(); ++i) {
+    for (size_t i = 0; i < vertices_vec.size(); ++i) {
       ctx_offsets[i + 1] = ctx_offsets[i] + path_num_cnt[i];
     }
     VLOG(10) << "Ctx offsets: " << gs::to_string(ctx_offsets);
@@ -762,13 +762,13 @@ class PathExpand {
     other_vertices.resize(range.limit_);
     other_offsets.resize(range.limit_);
     other_labels_vec.resize(range.limit_);
-    for (auto i = 0; i < range.limit_; ++i) {
+    for (size_t i = 0; i < range.limit_; ++i) {
       other_offsets[i].reserve(vertices_vec.size() + 1);
     }
     other_vertices[0].insert(other_vertices[0].end(), vertices_vec.begin(),
                              vertices_vec.end());
     other_labels_vec[0] = src_v_labels_vec;
-    for (auto i = 0; i < vertices_vec.size(); ++i) {
+    for (size_t i = 0; i < vertices_vec.size(); ++i) {
       other_offsets[0].emplace_back(i);
     }
     other_offsets[0].emplace_back(vertices_vec.size());
@@ -792,7 +792,7 @@ class PathExpand {
     }
     VLOG(10) << "src_label_candidates: " << gs::to_string(src_label_candidates);
     // iterate for all hops
-    for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
+    for (size_t cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
       using nbr_list_type =
           std::pair<std::vector<gs::mutable_csr_graph_impl::Nbr>, label_id_t>;
       std::vector<std::vector<nbr_list_type>> nbr_lists;
@@ -857,7 +857,7 @@ class PathExpand {
                 INT_MAX);
             {
               size_t tmp_sum = 0;
-              for (auto i = 0; i < cur_nbr_list.size(); ++i) {
+              for (size_t i = 0; i < cur_nbr_list.size(); ++i) {
                 tmp_sum += cur_nbr_list.get_vector(i).size();
               }
               VLOG(10) << "Get other vertices: " << cur_nbr_list.size()
@@ -870,7 +870,7 @@ class PathExpand {
                        << ", direction: " << gs::to_string(direction);
             }
 
-            for (auto i = 0; i < indices.size(); ++i) {
+            for (size_t i = 0; i < indices.size(); ++i) {
               auto index = indices[i];
               nbr_lists[index].emplace_back(cur_nbr_list.get_vector(i),
                                             dst_other_label);
@@ -891,7 +891,7 @@ class PathExpand {
                                    // src_vertices.
       auto& cur_other_labels_vec = other_labels_vec[cur_hop];
       size_t cur_hop_new_vnum = 0;
-      for (auto i = 0; i < nbr_lists.size(); ++i) {
+      for (size_t i = 0; i < nbr_lists.size(); ++i) {
         for (auto& nbr_list_pair : nbr_lists[i]) {
           cur_hop_new_vnum += nbr_list_pair.first.size();
         }
@@ -906,11 +906,11 @@ class PathExpand {
       tmp_cur_offset.reserve(cur_hop_new_vnum);
       tmp_cur_offset.emplace_back(0);
       size_t cur_cnt = 0;
-      for (auto i = 0; i < nbr_lists.size(); ++i) {
+      for (size_t i = 0; i < nbr_lists.size(); ++i) {
         for (auto& nbr_list_pair : nbr_lists[i]) {
           auto cur_other_vertex_label = nbr_list_pair.second;
           auto& nbr_list = nbr_list_pair.first;
-          for (auto j = 0; j < nbr_list.size(); ++j) {
+          for (size_t j = 0; j < nbr_list.size(); ++j) {
             auto& nbr = nbr_list[j];
             cur_other_vertices.emplace_back(nbr.neighbor());
             cur_other_labels_vec.emplace_back(cur_other_vertex_label);
@@ -919,7 +919,7 @@ class PathExpand {
         }
         tmp_cur_offset.emplace_back(cur_cnt);
       }
-      for (auto i = 0; i < other_offsets[cur_hop - 1].size(); ++i) {
+      for (size_t i = 0; i < other_offsets[cur_hop - 1].size(); ++i) {
         other_offsets[cur_hop].emplace_back(
             tmp_cur_offset[other_offsets[cur_hop - 1][i]]);
       }
@@ -940,7 +940,7 @@ class PathExpand {
              << " valid labels, from " << get_v_labels.size();
 
     size_t flat_size = 0;
-    for (auto i = range.start_; i < range.limit_; ++i) {
+    for (size_t i = range.start_; i < range.limit_; ++i) {
       flat_size += other_vertices[i].size();
     }
     VLOG(10) << "PathExpandV with multiple triplet flat size: " << flat_size;
@@ -949,7 +949,7 @@ class PathExpand {
     res_labels_vec.reserve(flat_size);
     res_offsets.reserve(vertices_vec.size() + 1);
     res_offsets.emplace_back(0);
-    for (auto i = 0; i < vertices_vec.size(); ++i) {
+    for (size_t i = 0; i < vertices_vec.size(); ++i) {
       for (auto j = range.start_; j < range.limit_; ++j) {
         auto start = other_offsets[j][i];
         auto end = other_offsets[j][i + 1];
@@ -978,7 +978,7 @@ class PathExpand {
     std::vector<int32_t>
         label_to_index;  // label to index in res_bitsets vector.
     label_to_index.resize(sizeof(label_id_t) * 8, -1);
-    for (auto i = 0; i < label_vec.size(); ++i) {
+    for (size_t i = 0; i < label_vec.size(); ++i) {
       if (label_to_index[label_vec[i]] == -1) {
         label_to_index[label_vec[i]] = res_bitsets.size();
         res_bitsets.emplace_back();
@@ -989,7 +989,7 @@ class PathExpand {
     auto num_valid_labels = res_bitsets.size();
     VLOG(10) << "num valid labels: " << num_valid_labels;
 
-    for (auto i = 0; i < label_vec.size(); ++i) {
+    for (size_t i = 0; i < label_vec.size(); ++i) {
       auto index = label_to_index[label_vec[i]];
       res_bitsets[index].set_bit(i);
     }
@@ -1002,7 +1002,7 @@ class PathExpand {
     CHECK(first_col.size() == old_cols.size());
     std::vector<std::tuple<T, Ts...>> res_vec;
     res_vec.reserve(old_cols.size());
-    for (auto i = 0; i < old_cols.size(); ++i) {
+    for (size_t i = 0; i < old_cols.size(); ++i) {
       res_vec.emplace_back(std::tuple_cat(std::make_tuple(first_col[i]),
                                           std::move(old_cols[i])));
     }
@@ -1013,7 +1013,7 @@ class PathExpand {
   static auto single_col_vec_to_tuple_vec(std::vector<T>&& vec) {
     std::vector<std::tuple<T>> res_vec;
     res_vec.reserve(vec.size());
-    for (auto i = 0; i < vec.size(); ++i) {
+    for (size_t i = 0; i < vec.size(); ++i) {
       res_vec.emplace_back(std::make_tuple(vec[i]));
     }
     return res_vec;
@@ -1025,7 +1025,7 @@ class PathExpand {
                           const label_id_t query_label) {
     std::vector<vertex_id_t> res_vertices;
     std::vector<size_t> indices;
-    for (auto i = 0; i < label_vec.size(); ++i) {
+    for (size_t i = 0; i < label_vec.size(); ++i) {
       if (label_vec[i] == query_label) {
         res_vertices.emplace_back(vertices[i]);
         indices.emplace_back(i);

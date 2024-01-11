@@ -221,7 +221,7 @@ class QueryGenerator {
       sort(param_vars.begin(), param_vars.end(),
            [](const auto& a, const auto& b) { return a.id < b.id; });
       CHECK(param_vars[0].id == 0);
-      for (auto i = 0; i < param_vars.size(); ++i) {
+      for (size_t i = 0; i < param_vars.size(); ++i) {
         if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
           // found duplicate
           CHECK(param_vars[i] == param_vars[i - 1]);
@@ -246,7 +246,7 @@ class QueryGenerator {
       CHECK(param_vars[0].id == 0);  // encoding start from 0
     }
 
-    for (auto i = 0; i < param_vars.size(); ++i) {
+    for (size_t i = 0; i < param_vars.size(); ++i) {
       if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
         CHECK(param_vars[i] == param_vars[i - 1]);
         continue;
@@ -268,7 +268,7 @@ class QueryGenerator {
       if (param_names.size() > 0) {
         ss << ",";
       }
-      for (auto i = 0; i < param_names.size(); ++i) {
+      for (size_t i = 0; i < param_names.size(); ++i) {
         ss << param_names[i];
         if (i != param_names.size() - 1) {
           ss << ", ";
@@ -278,7 +278,7 @@ class QueryGenerator {
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < param_decoding_codes.size(); ++i) {
+      for (size_t i = 0; i < param_decoding_codes.size(); ++i) {
         ss << param_decoding_codes[i] << std::endl;
       }
       param_vars_decoding = ss.str();
@@ -291,7 +291,7 @@ class QueryGenerator {
     auto size = plan_.plan_size();
 
     LOG(INFO) << "Found " << size << " operators in the plan";
-    for (auto i = 0; i < size; ++i) {
+    for (int32_t i = 0; i < size; ++i) {
       auto op = plan_.plan(i);
       auto& meta_datas = op.meta_data();
       // CHECK(meta_datas.size() == 1) << "meta data size: " <<
@@ -546,7 +546,7 @@ static std::array<std::string, 4> BuildJoinOp(
   auto& left_keys = join_op_pb.left_keys();
   auto& right_keys = join_op_pb.right_keys();
   std::vector<int32_t> join_keys;  // the left_keys and
-  for (auto i = 0; i < left_keys.size(); ++i) {
+  for (int i = 0; i < left_keys.size(); ++i) {
     CHECK(left_keys[i].tag().id() == right_keys[i].tag().id());
     join_keys.push_back(left_keys[i].tag().id());
   }

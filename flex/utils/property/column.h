@@ -458,8 +458,8 @@ class StringMapColumn : public ColumnBase {
   const LFIndexer<INDEX_T>& get_meta_map() const { return *meta_map_; }
 
  private:
-  LFIndexer<INDEX_T>* meta_map_;
   TypedColumn<INDEX_T> index_col_;
+  LFIndexer<INDEX_T>* meta_map_;
 };
 
 template <typename INDEX_T>

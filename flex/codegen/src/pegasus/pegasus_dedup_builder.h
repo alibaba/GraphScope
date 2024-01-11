@@ -58,14 +58,14 @@ class DedupOpBuilder {
     std::stringstream key_ss;
     key_ss << "(";
     std::unordered_set<int32_t> key_sets;
-    for (auto i = 0; i < in_tag_ids_.size(); i++) {
+    for (size_t i = 0; i < in_tag_ids_.size(); i++) {
       int32_t input_index = 0;
       if (in_tag_ids_[i] != -1) {
         input_index = ctx_.GetAliasIndex(in_tag_ids_[i]);
       }
       key_sets.insert(input_index);
       key_ss << "i" << input_index;
-      if (i != in_tag_ids_.size() - 1) {
+      if (i + 1 != in_tag_ids_.size()) {
         key_ss << ", ";
       }
     }
@@ -75,12 +75,12 @@ class DedupOpBuilder {
     std::stringstream value_ss;
     value_ss << "(";
     std::vector<int32_t> value_list;
-    for (auto i = 0; i < input_size; i++) {
+    for (int32_t i = 0; i < input_size; i++) {
       if (key_sets.find(i) == key_sets.end()) {
         value_list.push_back(i);
       }
     }
-    for (auto i = 0; i < value_list.size(); i++) {
+    for (size_t i = 0; i < value_list.size(); i++) {
       value_ss << "i" << value_list[i];
       if (i != value_list.size() - 1) {
         value_ss << ", ";
@@ -114,7 +114,7 @@ static std::string BuildDedupOp(
     const physical::PhysicalOpr::MetaData& meta_data) {
   DedupOpBuilder builder(ctx);
   auto tag_size = dedup.keys_size();
-  for (auto i = 0; i < tag_size; i++) {
+  for (int32_t i = 0; i < tag_size; i++) {
     builder.add_in_tag(dedup.keys(i).tag().id());
   }
   return builder.operator_index(operator_index).Build();

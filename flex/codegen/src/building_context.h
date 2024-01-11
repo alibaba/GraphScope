@@ -64,7 +64,7 @@ struct TagIndMapping {
       return -1;
     }
     print_debug_info();
-    CHECK(tag_id < tag_id_2_tag_inds_.size())
+    CHECK(tag_id < (int) tag_id_2_tag_inds_.size())
         << "tag id: " << tag_id << " not found";
     return tag_id_2_tag_inds_[tag_id];
   }
@@ -78,7 +78,7 @@ struct TagIndMapping {
     if (it == tag_ind_2_tag_ids_.end()) {
       auto new_tag_ind = tag_ind_2_tag_ids_.size();
       tag_ind_2_tag_ids_.emplace_back(tag_id);
-      auto old_size = tag_id_2_tag_inds_.size();
+      auto old_size = (int32_t) tag_id_2_tag_inds_.size();
       if (tag_id + 1 > old_size) {
         tag_id_2_tag_inds_.resize(tag_id + 1);
         for (auto i = old_size; i < tag_id; ++i) {
@@ -100,8 +100,8 @@ struct TagIndMapping {
         *std::max_element(tag_id_2_tag_inds_.begin(), tag_id_2_tag_inds_.end());
     auto max_tag_id =
         *std::max_element(tag_ind_2_tag_ids_.begin(), tag_ind_2_tag_ids_.end());
-    CHECK(max_ind + 1 == tag_ind_2_tag_ids_.size());
-    CHECK(max_tag_id + 1 == tag_id_2_tag_inds_.size());
+    CHECK((size_t) max_ind + 1 == tag_ind_2_tag_ids_.size());
+    CHECK((size_t) max_tag_id + 1 == tag_id_2_tag_inds_.size());
   }
 
   void print_debug_info() const {
@@ -129,14 +129,15 @@ class BuildingContext {
                   std::string query_name = "Query0",
                   std::string ctx_prefix = "")
       : storage_backend_(storage_type),
-        app_base_header_(APP_BASE_HEADER),
+        query_name_(query_name),
         ctx_id_(0),
         var_id_(0),
-        query_name_(query_name),
+        expr_id_(0),
         expr_var_id_(0),
         mapper_var_id_(0),
-        expr_id_(0),
+        lambda_func_id_(0),
         ctx_prefix_(ctx_prefix),
+        app_base_header_(APP_BASE_HEADER),
         alias_size_(0) {
     if (storage_type == StorageBackend::kGrape) {
       graph_header_ = GRAPE_INTERFACE_HEADER;
@@ -151,16 +152,17 @@ class BuildingContext {
                   std::string query_name = "Query0",
                   std::string ctx_prefix = "")
       : storage_backend_(storage_type),
-        graph_interface_(graph_interface),
-        graph_header_(graph_header),
-        app_base_header_(APP_BASE_HEADER),
+        query_name_(query_name),
         ctx_id_(0),
         var_id_(0),
-        query_name_(query_name),
+        expr_id_(0),
         expr_var_id_(0),
         mapper_var_id_(0),
-        expr_id_(0),
+        lambda_func_id_(0),
         ctx_prefix_(ctx_prefix),
+        app_base_header_(APP_BASE_HEADER),
+        graph_interface_(graph_interface),
+        graph_header_(graph_header),
         alias_size_(0) {}
 
   // int32_t GetCurrentCtxId() const { return ctx_id_; }
@@ -351,7 +353,7 @@ class BuildingContext {
   void SetAliasType(int32_t alias, int32_t type,
                     std::vector<int32_t>& label_list) {
     auto index = tag_index_[alias];
-    if (tag_type_.size() <= index) {
+    if ((int32_t) tag_type_.size() <= index) {
       tag_type_.resize(index + 1);
     }
     tag_type_[index].first = type;
@@ -365,7 +367,7 @@ class BuildingContext {
   }
 
   int32_t SetAlias(int32_t cur_alias) {
-    if (cur_alias >= tag_index_.size()) {
+    if (cur_alias >= (int32_t) tag_index_.size()) {
       tag_index_.resize(cur_alias + 1, -1);
     }
     if (tag_index_[cur_alias] != -1) {
@@ -402,7 +404,7 @@ class BuildingContext {
     }
   }
 
-  void SetOutput(int32_t index, std::vector<codegen::DataType>& output) {
+  void SetOutput(size_t index, std::vector<codegen::DataType>& output) {
     if (cur_outputs_.size() <= index) {
       cur_outputs_.resize(index + 1);
     }
@@ -432,10 +434,10 @@ class BuildingContext {
   int32_t expr_var_id_;
   int32_t mapper_var_id_;
   int32_t lambda_func_id_;
+  std::string ctx_prefix_;
+  std::string app_base_header_;
   std::string graph_interface_;
   std::string graph_header_;
-  std::string app_base_header_;
-  std::string ctx_prefix_;
 
   std::vector<codegen::ParamConst> parameter_vars_;
   std::vector<std::string> expr_code_;
