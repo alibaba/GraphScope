@@ -11,17 +11,17 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.wal.mock;
+package com.alibaba.graphscope.groot.wal.readonly;
 
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
 import java.io.IOException;
 
-public class MockLogWriter implements LogWriter {
+public class ReadOnlyLogWriter implements LogWriter {
     private long offset = 0;
 
-    public MockLogWriter() {}
+    public ReadOnlyLogWriter() {}
 
     @Override
     public long append(LogEntry logEntry) throws IOException {

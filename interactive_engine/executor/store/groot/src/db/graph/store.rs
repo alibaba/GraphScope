@@ -1,10 +1,10 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fs;
 use std::path::Path;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::Arc;
-use std::fs;
 
 use ::crossbeam_epoch as epoch;
 use protobuf::Message;
@@ -76,8 +76,8 @@ impl MultiVersionGraph for GraphStore {
         &self, si: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::V>> {
-        if let Some(label_id) = label_id {
         debug!("get_vertex {:?}, {:?}, {:?}", vertex_id, label_id, property_ids);
+        if let Some(label_id) = label_id {
             self.get_vertex_from_label(si, vertex_id, label_id, property_ids)
         } else {
             let guard = epoch::pin();
@@ -612,7 +612,7 @@ impl MultiVersionGraph for GraphStore {
         if Path::new(data_file_path.as_str()).exists() {
             if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
                 let size = metadata.len();
-                println!("Icngesting file: {} with size: {} bytes", data_file_path, size);
+                println!("Ingesting file: {} with size: {} bytes", data_file_path, size);
             }
             self.ingest(data_file_path.as_str())?
         }
@@ -651,13 +651,16 @@ impl GraphStore {
                     Self::init(config, storage, path)
                 });
                 res_unwrap!(res, open, config, path)
-            },
+            }
             "rocksdb_as_secondary" => {
-                let secondary_path = config.get_storage_option("store.data.secondary.path").expect("invalid config, missing store.data.secondary.path");
-                let res = RocksDB::open_as_secondary(config.get_storage_options(), path, secondary_path).and_then(|db| {
-                    let storage = Arc::new(db);
-                    Self::init(config, storage, path)
-                });
+                let secondary_path = config
+                    .get_storage_option("store.data.secondary.path")
+                    .expect("invalid config, missing store.data.secondary.path");
+                let res = RocksDB::open_as_secondary(config.get_storage_options(), path, secondary_path)
+                    .and_then(|db| {
+                        let storage = Arc::new(db);
+                        Self::init(config, storage, path)
+                    });
                 res_unwrap!(res, open, config, path)
             }
             unknown => {

@@ -325,7 +325,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         long jobId = queryLogger.getQueryId();
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
-        queryLogger.debug("ir plan {}", irPlan.getPlanAsJson());
+        queryLogger.info("ir plan {}", irPlan.getPlanAsJson());
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
         irPlan.close();
 
@@ -346,7 +346,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-        queryLogger.info("Job submitted");
 
         this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
     }

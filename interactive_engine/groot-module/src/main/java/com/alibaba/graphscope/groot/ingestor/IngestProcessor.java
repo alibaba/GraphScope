@@ -27,7 +27,7 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
-import com.alibaba.graphscope.groot.wal.mock.MockLogReader;
+import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogReader;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -302,7 +302,7 @@ public class IngestProcessor implements MetricsAgent {
         types.add(OperationType.REMOVE_EDGE_KIND);
         types.add(OperationType.PREPARE_DATA_LOAD);
         types.add(OperationType.COMMIT_DATA_LOAD);
-        try (MockLogReader reader = (MockLogReader) logService.createReader(queueId, 0)) {
+        try (ReadOnlyLogReader reader = (ReadOnlyLogReader) logService.createReader(queueId, 0)) {
             while (!shouldStop) {
                 ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
                 for (ConsumerRecord<LogEntry, LogEntry> record : records) {
@@ -312,7 +312,8 @@ public class IngestProcessor implements MetricsAgent {
                     long snapshotId = logEntry.getSnapshotId();
                     if (batch.getOperationCount() > 0) {
                         long batchSnapshotId = this.ingestSnapshotId.get();
-                        this.batchSender.asyncSendWithRetry("", queueId, batchSnapshotId, offset, batch);
+                        this.batchSender.asyncSendWithRetry(
+                                "", queueId, batchSnapshotId, offset, batch);
                         logger.info(
                                 "Sent logEntry snapshot Id {}, SnapshotId {}, batch {}",
                                 snapshotId,

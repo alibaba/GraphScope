@@ -30,12 +30,25 @@ impl RocksDB {
         Ok(ret)
     }
 
-    pub fn open_as_secondary(options: &HashMap<String, String>, primary_path: &str, secondary_path: &str) -> GraphResult<Self> {
+    pub fn open_as_secondary(
+        options: &HashMap<String, String>, primary_path: &str, secondary_path: &str,
+    ) -> GraphResult<Self> {
         let mut opts = Options::default();
         opts.set_max_open_files(-1);
         let db = DB::open_as_secondary(&opts, primary_path, secondary_path).map_err(|e| {
-            let msg = format!("open rocksdb at {}, {} failed, because {}", primary_path, secondary_path, e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary, options, primary_path)
+            let msg = format!(
+                "open rocksdb at {}, {} failed, because {}",
+                primary_path,
+                secondary_path,
+                e.into_string()
+            );
+            gen_graph_err!(
+                GraphErrorCode::ExternalStorageError,
+                msg,
+                open_as_secondary,
+                options,
+                primary_path
+            )
         })?;
 
         let ret = RocksDB { db: Arc::new(db), is_secondary: true };
@@ -182,10 +195,12 @@ impl ExternalStorage for RocksDB {
 
     fn try_catch_up_with_primary(&self) -> GraphResult<()> {
         if self.is_secondary {
-            self.db.try_catch_up_with_primary().map_err(|e| {
-                let msg = format!("try to catch up with primary failed because {:?}", e);
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-            })
+            self.db
+                .try_catch_up_with_primary()
+                .map_err(|e| {
+                    let msg = format!("try to catch up with primary failed because {:?}", e);
+                    gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                })
         } else {
             return Ok(());
         }
@@ -285,7 +300,6 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     ret.set_keep_log_file_num(10);
     // https://github.com/facebook/rocksdb/wiki/Basic-Operations#non-sync-writes
     ret.set_use_fsync(true);
-
 
     if let Some(conf_str) = options.get("store.rocksdb.compression.type") {
         match conf_str.as_str() {

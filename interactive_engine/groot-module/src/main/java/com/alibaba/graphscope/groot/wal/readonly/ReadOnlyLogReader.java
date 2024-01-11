@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.wal.mock;
+package com.alibaba.graphscope.groot.wal.readonly;
 
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
@@ -29,14 +29,14 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 
-public class MockLogReader implements LogReader {
+public class ReadOnlyLogReader implements LogReader {
 
-    private static final Logger logger = LoggerFactory.getLogger(MockLogReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReadOnlyLogReader.class);
 
     private static final LogEntryDeserializer deSer = new LogEntryDeserializer();
     private final Consumer<LogEntry, LogEntry> consumer;
 
-    public MockLogReader(String servers, String topicName, int partitionId) throws IOException {
+    public ReadOnlyLogReader(String servers, String topicName, int partitionId) throws IOException {
         Map<String, Object> kafkaConfigs = new HashMap<>();
         kafkaConfigs.put("bootstrap.servers", servers);
 

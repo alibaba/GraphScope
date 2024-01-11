@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.wal.mock;
+package com.alibaba.graphscope.groot.wal.readonly;
 
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.KafkaConfig;
@@ -24,12 +24,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class MockLogService implements LogService {
-    private static final Logger logger = LoggerFactory.getLogger(MockLogService.class);
+public class ReadOnlyLogService implements LogService {
+    private static final Logger logger = LoggerFactory.getLogger(ReadOnlyLogService.class);
     private final String servers;
     private final String topic;
 
-    public MockLogService(Configs configs) {
+    public ReadOnlyLogService(Configs configs) {
         this.servers = KafkaConfig.KAFKA_SERVERS.get(configs);
         this.topic = KafkaConfig.KAKFA_TOPIC.get(configs);
         logger.info("Initialized MockLogService");
@@ -48,7 +48,7 @@ public class MockLogService implements LogService {
 
     @Override
     public LogWriter createWriter(int queueId) {
-        return new MockLogWriter();
+        return new ReadOnlyLogWriter();
     }
 
     @Override
@@ -58,7 +58,7 @@ public class MockLogService implements LogService {
 
     @Override
     public LogReader createReader(int queueId, long offset, long timestamp) throws IOException {
-        return new MockLogReader(servers, topic, queueId);
+        return new ReadOnlyLogReader(servers, topic, queueId);
     }
 
     @Override

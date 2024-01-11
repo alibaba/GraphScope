@@ -16,12 +16,12 @@ package com.alibaba.graphscope.groot.wal;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
-import com.alibaba.graphscope.groot.wal.mock.MockLogService;
+import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogService;
 
 public class LogServiceFactory {
     public static LogService makeLogService(Configs configs) {
         if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs)) {
-            return new MockLogService(configs);
+            return new ReadOnlyLogService(configs);
         } else {
             return new KafkaLogService(configs);
         }

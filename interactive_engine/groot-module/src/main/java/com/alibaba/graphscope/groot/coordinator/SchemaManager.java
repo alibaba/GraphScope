@@ -81,7 +81,7 @@ public class SchemaManager {
         this.scheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
-                                "ingest-try-start", logger));
+                                "recover", logger));
         this.scheduler.scheduleWithFixedDelay(this::recover, 5, 2, TimeUnit.SECONDS);
     }
 
@@ -107,7 +107,6 @@ public class SchemaManager {
         GraphDef graphDef = this.graphDefFetcher.fetchGraphDef();
         this.graphDefRef.set(graphDef);
         this.ready = true;
-
         // logger.info("SchemaManager recovered. version [" + graphDef.getVersion() + "]");
     }
 
