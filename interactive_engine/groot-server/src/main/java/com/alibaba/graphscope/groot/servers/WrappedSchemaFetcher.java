@@ -29,18 +29,23 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
 
     private SnapshotCache snapshotCache;
     private MetaService metaService;
+    // If this is a secondary instance, then always use the latest snapshot ID.
+    private boolean isSecondary;
 
-    public WrappedSchemaFetcher(SnapshotCache snapshotCache, MetaService metaService) {
+    private long MAX_SNAPSHOT_ID = Long.MAX_VALUE - 1;
+
+    public WrappedSchemaFetcher(
+            SnapshotCache snapshotCache, MetaService metaService, boolean isSecondary) {
         this.snapshotCache = snapshotCache;
         this.metaService = metaService;
+        this.isSecondary = isSecondary;
     }
 
     @Override
     public Map<Long, GraphSchema> getSchemaSnapshotPair() {
         SnapshotWithSchema snapshotSchema = this.snapshotCache.getSnapshotWithSchema();
-        long snapshotId = snapshotSchema.getSnapshotId();
+        long snapshotId = isSecondary ? MAX_SNAPSHOT_ID : snapshotSchema.getSnapshotId();
         GraphSchema schema = snapshotSchema.getGraphDef();
-        logger.debug("fetch schema of snapshot id [" + snapshotId + "]");
         return Map.of(snapshotId, schema);
     }
 

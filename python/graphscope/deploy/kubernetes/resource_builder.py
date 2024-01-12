@@ -65,7 +65,7 @@ class ResourceBuilder:
         role_ref = kube_client.V1RoleRef(
             kind="Role", name=role_name, api_group="rbac.authorization.k8s.io"
         )
-        subject = kube_client.V1Subject(
+        subject = kube_client.RbacV1Subject(
             kind="ServiceAccount", name=service_account_name, namespace=namespace
         )
         role_binding = kube_client.V1RoleBinding(
@@ -81,7 +81,7 @@ class ResourceBuilder:
         role_ref = kube_client.V1RoleRef(
             kind="ClusterRole", name=role_name, api_group="rbac.authorization.k8s.io"
         )
-        subject = kube_client.V1Subject(
+        subject = kube_client.RbacV1Subject(
             kind="ServiceAccount", name=service_account_name, namespace=namespace
         )
         role_binding = kube_client.V1ClusterRoleBinding(

@@ -14,7 +14,7 @@
 package com.alibaba.graphscope.groot.servers;
 
 import com.alibaba.graphscope.groot.common.RoleType;
-import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.*;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 
 import org.slf4j.Logger;
@@ -28,6 +28,13 @@ public class GrootGraph {
     public static void main(String[] args) throws IOException {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
+        if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(conf)) {
+            conf =
+                    Configs.newBuilder(conf)
+                            .put(StoreConfig.STORE_STORAGE_ENGINE.getKey(), "rocksdb_as_secondary")
+                            .build();
+        }
+        logger.info("Configs {}", conf);
 
         NodeBase node;
         if (args.length == 0) {

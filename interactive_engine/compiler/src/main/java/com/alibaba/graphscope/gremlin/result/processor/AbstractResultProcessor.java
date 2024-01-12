@@ -67,7 +67,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
         RequestMessage msg = writeResult.getRequestMessage();
         Settings settings = writeResult.getSettings();
         // init batch size from resultIterationBatchSize in conf/gremlin-server.yaml,
-        // or args in RequestMessage which is originate from gremlin client
+        // or args in RequestMessage which is originated from gremlin client
         this.resultCollectorsBatchSize =
                 (Integer)
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)

@@ -36,9 +36,6 @@ public abstract class NodeBase implements Closeable {
     public NodeBase(Configs configs) {
         this.roleType = RoleType.fromName(CommonConfig.ROLE_NAME.get(configs));
         this.idx = CommonConfig.NODE_IDX.get(configs);
-        if (idx == 0) {
-            logger.info("Configs {}", configs);
-        }
     }
 
     public NodeBase(Configs configs, RoleType roleType) {
@@ -53,22 +50,6 @@ public abstract class NodeBase implements Closeable {
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         return Configs.newBuilder(configs)
-                .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_ENGINE.getName()),
-                        String.valueOf(storeCount))
-                .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_GRAPH.getName()),
-                        String.valueOf(storeCount))
-                .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_MANAGE.getName()),
-                        String.valueOf(storeCount))
-                .put(
-                        String.format(
-                                CommonConfig.NODE_COUNT_FORMAT, RoleType.EXECUTOR_QUERY.getName()),
-                        String.valueOf(storeCount))
                 .put(
                         String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_RPC.getName()),
                         String.valueOf(storeCount))

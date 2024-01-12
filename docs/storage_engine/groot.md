@@ -678,3 +678,15 @@ The location of the logging configuration file in the container is:
 
 - configuration file of `logback` is in `/usr/local/groot/conf/logback.xml`
 - configuration file of `log4rs` is in `/usr/local/groot/conf/log4rs.yml` 
+
+### Secondary Instance
+
+Groot support open secondary instance along with primary instances. It leverages the [Secondary Instance](https://github.com/facebook/rocksdb/wiki/Read-only-and-Secondary-instances) of RocksDB
+to provide the ability to serve the querying requests as well as catching up the schema and data updates.
+
+To use it, just set the `secondary.enabled=true` in the helm charts.
+Also remember the data path, ZK connect string as well as Kafka endpoint and topic should be as same as the primary instance.
+And use a different `zk.base.path` for each secondary instance to avoid conflict with each other when doing node discovery.
+
+`storeGcIntervalMs` controls how often should the secondary perform a `try_catch_up_with_primary` call, default to `5000` which is 5 seconds.
+
