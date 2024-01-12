@@ -327,16 +327,6 @@ class GroupByOp {
         auto data_tuple = iter.GetAllData();
         size_t start_tag_ind = 0;
 
-        if constexpr (sizeof...(CTX_PREV) == 1 &&
-                      std::is_same_v<
-                          std::tuple_element_t<0, std::tuple<CTX_PREV...>>,
-                          grape::EmptyType>) {
-          // if there is no previous context, we will use the first element as
-          // start_tag.
-          start_tag_ind = 0;
-        } else {
-          start_tag_ind = iter.GetTagOffset(start_tag);
-        }
         // indicate at which index the start_tag element is in.
         insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
                                     data_tuple, start_tag_ind);
