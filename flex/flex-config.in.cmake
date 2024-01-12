@@ -9,7 +9,7 @@
 set(FLEX_HOME "${CMAKE_CURRENT_LIST_DIR}/../../..")
 include("${CMAKE_CURRENT_LIST_DIR}/flex-targets.cmake")
 
-set(FLEX_LIBRARIES flex_bsp flex_graph_db flex_immutable_graph flex_rt_mutable_graph flex_server flex_utils hqps_plan_proto)
+set(FLEX_LIBRARIES flex_bsp flex_graph_db flex_immutable_graph flex_rt_mutable_graph flex_utils hqps_plan_proto)
 set(FLEX_INCLUDE_DIR "${FLEX_HOME}/include")
 set(FLEX_INCLUDE_DIRS "${FLEX_INCLUDE_DIR}")
 
