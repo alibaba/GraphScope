@@ -189,6 +189,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/flex-config.cmake"
 
 install(EXPORT flex-targets
         FILE flex-targets.cmake
+	NAMESPACE flex::
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flex)
 
 file(GLOB_RECURSE FILES_NEED_LINT
