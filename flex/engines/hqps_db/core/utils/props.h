@@ -144,7 +144,7 @@ static auto get_prop_getters_from_selectors_impl_label_vec(
   using prop_getter_t = typename GRAPH_INTERFACE::template multi_prop_getter_t<
       typename SELECTOR::prop_t...>;
   std::vector<prop_getter_t> prop_getter_array;
-  for (auto i = 0; i < labels.size(); ++i) {
+  for (size_t i = 0; i < labels.size(); ++i) {
     prop_getter_array.emplace_back(
         get_prop_getter_from_selectors(graph, labels[i], selectors));
   };
@@ -272,7 +272,7 @@ class GeneralVertexSetPropGetter {
 
   inline auto get_view(const IND_ELE_T& ind_ele) const {
     auto ind = std::get<0>(ind_ele);
-    for (auto i = 0; i < bitset_.size(); ++i) {
+    for (size_t i = 0; i < bitset_.size(); ++i) {
       CHECK(i < bitset_[i].cardinality());
       if (bitset_[i].get_bit(ind)) {
         return getters_[i].get_view(std::get<1>(ind_ele));
@@ -576,7 +576,7 @@ static auto get_dist_prop_getter(
     std::vector<Dist> dists;
     auto& data_vec = set.GetDataVec();
     dists.reserve(set.Size());
-    for (auto i = 0; i < data_vec.size(); ++i) {
+    for (size_t i = 0; i < data_vec.size(); ++i) {
       dists.emplace_back(Dist(std::get<Is>(data_vec[i])));
     }
     return DistGetter<tag_id, typename RowVertexSetImpl<
@@ -588,7 +588,7 @@ static auto get_dist_prop_getter(
     std::vector<Dist> dists;
     auto set_size = set.Size();
     dists.reserve(set_size);
-    for (auto i = 0; i < set_size; ++i) {
+    for (size_t i = 0; i < set_size; ++i) {
       dists.emplace_back(0);
     }
     return DistGetter<tag_id, typename RowVertexSetImpl<
@@ -609,7 +609,7 @@ static auto get_dist_prop_getter(
     std::vector<Dist> dists;
     auto& data_vec = set.GetDataVec();
     dists.reserve(set.Size());
-    for (auto i = 0; i < data_vec.size(); ++i) {
+    for (size_t i = 0; i < data_vec.size(); ++i) {
       dists.emplace_back(Dist(std::get<Is>(data_vec[i])));
     }
     return DistGetter<tag_id,
@@ -622,7 +622,7 @@ static auto get_dist_prop_getter(
     std::vector<Dist> dists;
     auto set_size = set.Size();
     dists.reserve(set_size);
-    for (auto i = 0; i < set_size; ++i) {
+    for (size_t i = 0; i < set_size; ++i) {
       dists.emplace_back(0);
     }
     return DistGetter<tag_id,
@@ -765,7 +765,7 @@ static auto create_prop_getter_impl(
   // const std::array<std::string, 2>& labels = set.GetLabels();
   auto labels = set.GetLabels();
   std::vector<prop_getter_t> prop_getters;
-  for (auto i = 0; i < labels.size(); ++i) {
+  for (size_t i = 0; i < labels.size(); ++i) {
     prop_getters.emplace_back(
         graph.template GetSinglePropGetter<prop_t>(labels[i], prop_name));
   }

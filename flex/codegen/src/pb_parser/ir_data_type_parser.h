@@ -79,8 +79,10 @@ parse_prop_names_and_prop_types_from_ir_data_type(
 
     return std::make_pair(prop_names, prop_types);
   }
+  default: {
+    LOG(WARNING) << "Unsupported data type: " << ir_data_type.DebugString();
   }
-  LOG(WARNING) << "Unsupported data type: " << ir_data_type.DebugString();
+  }
   return std::make_pair(prop_names, prop_types);
 }
 

@@ -201,7 +201,7 @@ static void put_column_names_option(const LoadingConfig& loading_config,
     }
     VLOG(10) << "before Got all column names: " << all_column_names.size()
              << gs::to_string(all_column_names);
-    for (auto i = 0; i < all_column_names.size(); ++i) {
+    for (size_t i = 0; i < all_column_names.size(); ++i) {
       auto& name = all_column_names[i];
       if (name_count[name] > 1) {
         auto cur_cnt = name_count[name];
@@ -219,7 +219,7 @@ static void put_column_names_option(const LoadingConfig& loading_config,
       num_cols = tmp.size();
     }
     all_column_names.resize(num_cols);
-    for (auto i = 0; i < all_column_names.size(); ++i) {
+    for (size_t i = 0; i < all_column_names.size(); ++i) {
       all_column_names[i] = std::string("f") + std::to_string(i);
     }
   }
@@ -381,7 +381,7 @@ void CSVFragmentLoader::fillVertexReaderMeta(
     property_names.insert(property_names.begin() + primary_key_ind,
                           primary_key_name);
 
-    for (auto i = 0; i < read_options.column_names.size(); ++i) {
+    for (size_t i = 0; i < read_options.column_names.size(); ++i) {
       included_col_names.emplace_back(read_options.column_names[i]);
       included_col_indices.emplace_back(i);
       // We assume the order of the columns in the file is the same as the
@@ -389,7 +389,7 @@ void CSVFragmentLoader::fillVertexReaderMeta(
       mapped_property_names.emplace_back(property_names[i]);
     }
   } else {
-    for (auto i = 0; i < cur_label_col_mapping.size(); ++i) {
+    for (size_t i = 0; i < cur_label_col_mapping.size(); ++i) {
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
       if (col_name.empty()) {
         // use default mapping
@@ -413,13 +413,13 @@ void CSVFragmentLoader::fillVertexReaderMeta(
     auto property_names = schema_.get_vertex_property_names(v_label);
     CHECK(property_types.size() == property_names.size());
 
-    for (auto i = 0; i < property_types.size(); ++i) {
+    for (size_t i = 0; i < property_types.size(); ++i) {
       // for each schema' property name, get the index of the column in
       // vertex_column mapping, and bind the type with the column name
       auto property_type = property_types[i];
       auto property_name = property_names[i];
       size_t ind = mapped_property_names.size();
-      for (auto i = 0; i < mapped_property_names.size(); ++i) {
+      for (size_t i = 0; i < mapped_property_names.size(); ++i) {
         if (mapped_property_names[i] == property_name) {
           ind = i;
           break;
@@ -444,7 +444,7 @@ void CSVFragmentLoader::fillVertexReaderMeta(
       auto primary_key_name = std::get<1>(primary_key);
       auto primary_key_type = std::get<0>(primary_key);
       size_t ind = mapped_property_names.size();
-      for (auto i = 0; i < mapped_property_names.size(); ++i) {
+      for (size_t i = 0; i < mapped_property_names.size(); ++i) {
         if (mapped_property_names[i] == primary_key_name) {
           ind = i;
           break;
@@ -512,14 +512,14 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
     // the same as the order of the properties in the schema,
     auto edge_prop_names =
         schema_.get_edge_property_names(src_label_id, dst_label_id, label_id);
-    for (auto i = 0; i < edge_prop_names.size(); ++i) {
+    for (size_t i = 0; i < edge_prop_names.size(); ++i) {
       auto property_name = edge_prop_names[i];
       included_col_names.emplace_back(property_name);
       mapped_property_names.emplace_back(property_name);
     }
   } else {
     // add the property columns into the included columns
-    for (auto i = 0; i < cur_label_col_mapping.size(); ++i) {
+    for (size_t i = 0; i < cur_label_col_mapping.size(); ++i) {
       // TODO: make the property column's names are in same order with schema.
       auto& [col_id, col_name, property_name] = cur_label_col_mapping[i];
       if (col_name.empty()) {
@@ -543,13 +543,13 @@ void CSVFragmentLoader::fillEdgeReaderMeta(
     auto property_names =
         schema_.get_edge_property_names(src_label_id, dst_label_id, label_id);
     CHECK(property_types.size() == property_names.size());
-    for (auto i = 0; i < property_types.size(); ++i) {
+    for (size_t i = 0; i < property_types.size(); ++i) {
       // for each schema' property name, get the index of the column in
       // vertex_column mapping, and bind the type with the column name
       auto property_type = property_types[i];
       auto property_name = property_names[i];
       size_t ind = mapped_property_names.size();
-      for (auto i = 0; i < mapped_property_names.size(); ++i) {
+      for (size_t i = 0; i < mapped_property_names.size(); ++i) {
         if (mapped_property_names[i] == property_name) {
           ind = i;
           break;

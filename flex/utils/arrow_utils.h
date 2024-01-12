@@ -148,14 +148,13 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
 
 class LDBCLongDateParser : public arrow::TimestampParser {
  public:
+  using seconds_type = std::chrono::duration<arrow::TimestampType::c_type>;
   LDBCLongDateParser() = default;
 
   ~LDBCLongDateParser() override {}
 
   bool operator()(const char* s, size_t length, arrow::TimeUnit::type out_unit,
                   int64_t* out) const override {
-    using seconds_type = std::chrono::duration<arrow::TimestampType::c_type>;
-
     uint64_t seconds;
     // convert (s, s + length - 4) to seconds_since_epoch
     if (ARROW_PREDICT_FALSE(

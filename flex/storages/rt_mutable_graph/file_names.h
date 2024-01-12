@@ -81,12 +81,12 @@ inline void copy_file(const std::string& src, const std::string& dst) {
   }
 #if USE_COPY_FILE_RANGE
   size_t len = std::filesystem::file_size(src);
-  int src_fd = open(src.c_str(), O_RDONLY);
+  int src_fd = open(src.c_str(), O_RDONLY, 0777);
   bool creat = false;
   if (!std::filesystem::exists(dst)) {
     creat = true;
   }
-  int dst_fd = open(dst.c_str(), O_WRONLY | O_CREAT);
+  int dst_fd = open(dst.c_str(), O_WRONLY | O_CREAT, 0777);
   if (creat) {
     std::filesystem::perms readWritePermission =
         std::filesystem::perms::owner_read |
@@ -104,7 +104,7 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     // error, one possible cause of the error could be that the
     // file's metadata has not yet been flushed to the file system.
     close(dst_fd);
-    dst_fd = open(dst.c_str(), O_WRONLY);
+    dst_fd = open(dst.c_str(), O_WRONLY, 0777);
   }
   ssize_t ret;
   do {
@@ -162,7 +162,7 @@ inline std::string get_latest_snapshot(const std::string& work_dir) {
   uint32_t version;
   {
     FILE* fin = fopen((snapshots_dir + "/VERSION").c_str(), "r");
-    fread(&version, sizeof(uint32_t), 1, fin);
+    CHECK_EQ(fread(&version, sizeof(uint32_t), 1, fin), 1);
   }
   return snapshots_dir + "/" + std::to_string(version);
 }
@@ -171,7 +171,7 @@ inline uint32_t get_snapshot_version(const std::string& work_dir) {
   std::string version_path = snapshot_version_path(work_dir);
   FILE* version_file = fopen(version_path.c_str(), "rb");
   uint32_t version = 0;
-  fread(&version, sizeof(uint32_t), 1, version_file);
+  CHECK_EQ(fread(&version, sizeof(uint32_t), 1, version_file), 1);
   fclose(version_file);
   return version;
 }
@@ -180,7 +180,7 @@ inline void set_snapshot_version(const std::string& work_dir,
                                  uint32_t version) {
   std::string version_path = snapshot_version_path(work_dir);
   FILE* version_file = fopen(version_path.c_str(), "wb");
-  fwrite(&version, sizeof(uint32_t), 1, version_file);
+  CHECK_EQ(fwrite(&version, sizeof(uint32_t), 1, version_file), 1);
   fflush(version_file);
   fclose(version_file);
 }

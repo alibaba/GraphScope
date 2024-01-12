@@ -46,7 +46,7 @@ class SinkOpBuilder {
     std::string tag_ids_str;
     {
       std::stringstream ss;
-      for (auto i = 0; i < tag_ind_2_tag_ids.size(); ++i) {
+      for (size_t i = 0; i < tag_ind_2_tag_ids.size(); ++i) {
         if (i == tag_ind_2_tag_ids.size() - 1) {
           ss << tag_ind_2_tag_ids[i];
         } else {

@@ -176,7 +176,7 @@ class GetVOpBuilder {
       std::string selectors_str;
       {
         std::stringstream ss;
-        for (int i = 0; i < expr_call_param_.size(); ++i) {
+        for (size_t i = 0; i < expr_call_param_.size(); ++i) {
           ss << expr_call_param_[i].var_name;
           if (i != expr_call_param_.size() - 1) {
             ss << ", ";
@@ -189,7 +189,7 @@ class GetVOpBuilder {
         if (tag_propertys_.size() > 0) {
           ss << ", ";
         }
-        for (int i = 0; i < tag_propertys_.size(); ++i) {
+        for (size_t i = 0; i < tag_propertys_.size(); ++i) {
           ss << tag_propertys_[i].second;
           if (i != tag_propertys_.size() - 1) {
             ss << ", ";

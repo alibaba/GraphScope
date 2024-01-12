@@ -16,6 +16,21 @@ option(BUILD_DOC "Whether to build doc" ON)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
 
+
+# ------------------------------------------------------------------------------
+# cmake configs
+# ------------------------------------------------------------------------------
+
+include(CheckLibraryExists)
+include(GNUInstallDirs)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# reference: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 if (MONITOR_SESSIONS)
     message("Monitor sessions is enabled")
     add_definitions(-DMONITOR_SESSIONS)
@@ -32,10 +47,23 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 set(DEFAULT_BUILD_TYPE "Release")
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE
+      STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+               "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
-set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0")
+if (APPLE)
+  set(CMAKE_MACOSX_RPATH ON)
+else ()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wl,-rpath,$ORIGIN")
+endif ()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 
 add_compile_definitions(FLEX_VERSION="${FLEX_VERSION}")
 
@@ -122,6 +150,23 @@ if (BUILD_ODPS_FRAGMENT_LOADER)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
 endif()
 
+macro(install_flex_target target)
+    install(TARGETS ${target}
+            EXPORT flex-targets
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+    )
+endmacro()
+
+macro(install_without_export_flex_target target)
+    install(TARGETS ${target}
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+    )
+endmacro()
+
 add_subdirectory(utils)
 add_subdirectory(codegen)
 add_subdirectory(storages)
@@ -130,6 +175,22 @@ add_subdirectory(bin)
 if (BUILD_TEST)
    add_subdirectory(tests)
 endif()
+
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flex-config.in.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/flex-config.cmake @ONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flex-config-version.in.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/flex-config-version.cmake @ONLY)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/flex-config.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/flex-config-version.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flex)
+
+install(EXPORT flex-targets
+        FILE flex-targets.cmake
+	NAMESPACE flex::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flex)
 
 file(GLOB_RECURSE FILES_NEED_LINT
         "engines/*.cc"

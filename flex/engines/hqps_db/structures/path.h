@@ -70,9 +70,9 @@ struct Path {
 
   std::string to_string() const {
     std::stringstream ss;
-    for (int32_t i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       ss << vids_[i];
-      if (i < vids_.size() - 1) {
+      if (i + 1 < vids_.size()) {
         ss << "->";
       }
     }
@@ -83,7 +83,7 @@ struct Path {
     if (vids_.size() != rhs.vids_.size()) {
       return false;
     }
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       if (vids_[i] != rhs.vids_[i]) {
         return false;
       }
@@ -242,14 +242,14 @@ class CompressedPathSet {
         << "vids and offsets size not match" << vids_.size() << ", "
         << offsets_.size();
     CHECK(vids_.size() == labels_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       CHECK(vids_[i].size() == offsets_[i].back());
     }
   }
 
   size_t Size() const {
     size_t res = 0;
-    for (int32_t i = min_len_; i < offsets_.size(); ++i) {
+    for (size_t i = min_len_; i < offsets_.size(); ++i) {
       res += offsets_[i].back();
     }
     return res;
@@ -306,17 +306,16 @@ class CompressedPathSet {
     std::vector<std::vector<Path<VID_T, LabelT>>> paths_by_len;
     auto path_len = vids_.size();
     VLOG(10) << "path len: " << path_len;
-    for (auto i = 0; i < path_len; ++i) {
+    for (size_t i = 0; i < path_len; ++i) {
       std::vector<Path<VID_T, LabelT>> cur_paths;
       if (i == 0) {
-        for (auto j = 0; j < vids_[i].size(); ++j) {
+        for (size_t j = 0; j < vids_[i].size(); ++j) {
           cur_paths.emplace_back(Path<VID_T, LabelT>(vids_[i][j], labels_[i]));
         }
       } else {
         // expand path from last level.
-        for (auto j = 0; j < paths_by_len[i - 1].size(); ++j) {
+        for (size_t j = 0; j < paths_by_len[i - 1].size(); ++j) {
           auto path = paths_by_len[i - 1][j];
-          auto last_vid = path.GetVertices().back();
           CHECK(offsets_[i].back() == vids_[i].size());
           for (auto k = offsets_[i][j]; k < offsets_[i][j + 1]; ++k) {
             auto cur_vid = vids_[i][k];
@@ -337,20 +336,20 @@ class CompressedPathSet {
     std::vector<std::vector<offset_t>> offset_amplify(
         vids_.size(), std::vector<offset_t>(offsets_[0].size(), 0));
     offset_amplify[0] = offsets_[0];
-    for (auto i = 1; i < offset_amplify.size(); ++i) {
-      for (auto j = 0; j < offset_amplify[i].size(); ++j) {
+    for (size_t i = 1; i < offset_amplify.size(); ++i) {
+      for (size_t j = 0; j < offset_amplify[i].size(); ++j) {
         offset_amplify[i][j] = offsets_[i][offset_amplify[i - 1][j]];
       }
     }
     VLOG(10) << "amplify: " << gs::to_string(offset_amplify);
 
     CHECK(vids_.size() > 0);
-    for (auto i = 0; i < vids_[0].size(); ++i) {
+    for (size_t i = 0; i < vids_[0].size(); ++i) {
       // len - 1 is the key.
-      for (auto j = min_len_; j < paths_by_len.size(); ++j) {
+      for (size_t j = min_len_; j < paths_by_len.size(); ++j) {
         auto start_ind = offset_amplify[j][i];
         auto end_ind = offset_amplify[j][i + 1];
-        for (auto k = start_ind; k < end_ind; ++k) {
+        for (size_t k = start_ind; k < end_ind; ++k) {
           res.emplace_back(paths_by_len[j][k]);
         }
       }
@@ -362,9 +361,9 @@ class CompressedPathSet {
   }
 
  private:
-  std::vector<LabelT> labels_;
   std::vector<std::vector<VID_T>> vids_;
   std::vector<std::vector<offset_t>> offsets_;
+  std::vector<LabelT> labels_;
   size_t min_len_;
 };
 

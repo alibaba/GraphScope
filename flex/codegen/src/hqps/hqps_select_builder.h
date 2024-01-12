@@ -52,7 +52,7 @@ class SelectOpBuilder {
              unused_expr_ret_type) = expr_builder.Build();
 
     // add func_call_params to ctx's param const;
-    for (auto i = 0; i < func_call_params.size(); ++i) {
+    for (size_t i = 0; i < func_call_params.size(); ++i) {
       ctx_.AddParameterVar(func_call_params[i]);
     }
 
@@ -61,7 +61,7 @@ class SelectOpBuilder {
     expr_var_name_ = ctx_.GetNextExprVarName();
     {
       std::stringstream ss;
-      for (auto i = 0; i < func_call_params.size(); ++i) {
+      for (size_t i = 0; i < func_call_params.size(); ++i) {
         ss << func_call_params[i].var_name;
         if (i != func_call_params.size() - 1) {
           ss << ",";
@@ -71,7 +71,7 @@ class SelectOpBuilder {
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < tag_props.size(); ++i) {
+      for (size_t i = 0; i < tag_props.size(); ++i) {
         ss << tag_props[i].second;
         if (i != tag_props.size() - 1) {
           ss << ",";
@@ -81,7 +81,7 @@ class SelectOpBuilder {
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < tag_props.size(); ++i) {
+      for (size_t i = 0; i < tag_props.size(); ++i) {
         ss << format_input_col(tag_props[i].first);
         if (i != tag_props.size() - 1) {
           ss << ",";

@@ -131,9 +131,12 @@ void ODPSReadClient::getReadSessionStatus(
     const std::string& session_id, int* split_count,
     const TableIdentifier& table_identifier) {
   TableBatchScanResp resp;
-  while (resp.session_status_ != SessionStatus::NORMAL) {
+  while (true) {
     resp = getReadSession(session_id, table_identifier);
-    *split_count = resp.split_count_;
+    if (resp.session_status_ == SessionStatus::NORMAL) {
+      *split_count = resp.split_count_;
+      break;
+    }
     LOG(WARNING) << "GetReadSession failed: " << resp.error_message_
                  << ", retrying...";
     if (resp.session_status_ == SessionStatus::CRITICAL) {
@@ -151,7 +154,7 @@ void ODPSReadClient::producerRoutine(
     std::vector<std::vector<std::shared_ptr<arrow::RecordBatch>>>& all_batches,
     const std::vector<int>& indices) const {
   for (int i : indices) {
-    for (auto j = 0; j < MAX_RETRY; ++j) {
+    for (size_t j = 0; j < MAX_RETRY; ++j) {
       bool st = readRows(session_id, table_identifier, all_batches[i], i);
       if (!st) {
         LOG(ERROR) << "Read split " << i << " error";
@@ -210,7 +213,7 @@ std::shared_ptr<arrow::Table> ODPSReadClient::ReadTable(
 
   std::vector<std::vector<std::shared_ptr<arrow::RecordBatch>>> all_batches;
   all_batches.resize(split_count);
-  for (auto i = 0; i < cur_thread_num; ++i) {
+  for (int32_t i = 0; i < cur_thread_num; ++i) {
     auto indices = split_indices(i, cur_thread_num, split_count);
     LOG(INFO) << "Thread " << i << " will read " << indices.size()
               << " splits of " << split_count << " splits";

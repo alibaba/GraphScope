@@ -158,7 +158,7 @@ std::vector<bool> filter_labels(
     for (auto l : filter_labels) {
       set.insert(l);
     }
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       if (set.find(old_labels[i]) != set.end()) {
         label_flag[i] = true;
       }
@@ -187,7 +187,7 @@ auto two_label_project_vertices_impl(
 
   offset.emplace_back(0);
   double t0 = -grape::GetCurrentTime();
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     if (old_bit_set.get_bit(i) && label_flag[0]) {
       auto vid = old_vec[i];
       if (std::apply(expr, prop_getters[0].get_view(vid))) {
@@ -229,7 +229,7 @@ auto two_label_project_vertices_impl(
 
   offset.emplace_back(0);
   double t0 = -grape::GetCurrentTime();
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     if (old_bit_set.get_bit(i) && label_flag[0]) {
       res_bitset.set_bit(res_vec.size());
       res_vec.emplace_back(old_vec[i]);
@@ -265,7 +265,7 @@ auto two_label_project_vertices_impl(
   std::vector<offset_t> offset;
 
   offset.emplace_back(0);
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     if (old_bit_set.get_bit(i) && label_flag[0]) {
       auto vid = old_vec[i];
       if (std::apply(expr, prop_getters[0](vid))) {
@@ -305,7 +305,7 @@ auto two_label_project_vertices_impl(
   std::vector<offset_t> offset;
 
   offset.emplace_back(0);
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     if (old_bit_set.get_bit(i) && label_flag[0]) {
       auto vid = old_vec[i];
       res_bitset.set_bit(res_vec.size());
@@ -344,7 +344,7 @@ void filter_with_select_prop(
       res_vec.reserve(old_vec.size() / 2);
       res_data.reserve(old_vec.size() / 2);
 
-      for (auto i = 0; i < old_vec.size(); ++i) {
+      for (size_t i = 0; i < old_vec.size(); ++i) {
         auto& data = old_data[i];
         if (expr(std::get<Is>(data))) {
           if (old_bitset.get_bit(i) && label_flag[0]) {
@@ -407,7 +407,7 @@ auto two_label_project_vertices_internal_impl(
     for (auto l : filter_labels) {
       set.insert(l);
     }
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       if (set.find(old_labels[i]) != set.end()) {
         label_flag[i] = true;
       }
@@ -747,7 +747,7 @@ class TwoLabelVertexSetImpl {
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     // fill with each vertex's label
-    for (auto i = 0; i < vec_.size(); ++i) {
+    for (size_t i = 0; i < vec_.size(); ++i) {
       if (bitset_.get_bit(i)) {
         res.emplace_back(label_names_[0]);
       } else {
@@ -787,14 +787,14 @@ class TwoLabelVertexSetImpl {
     res.reserve(cnt);
     active_ind.reserve(cnt);
     if (ind == 0) {
-      for (auto i = 0; i < bitset_.cardinality(); ++i) {
+      for (size_t i = 0; i < bitset_.cardinality(); ++i) {
         if (bitset_.get_bit(i)) {
           res.emplace_back(vec_[i]);
           active_ind.emplace_back(i);
         }
       }
     } else {
-      for (auto i = 0; i < bitset_.cardinality(); ++i) {
+      for (size_t i = 0; i < bitset_.cardinality(); ++i) {
         if (!bitset_.get_bit(i)) {
           res.emplace_back(vec_[i]);
           active_ind.emplace_back(i);
@@ -815,7 +815,7 @@ class TwoLabelVertexSetImpl {
     std::vector<lid_t> next_vids;
     std::vector<std::tuple<T...>> next_datas;
     size_t next_size = 0;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       next_size += repeat_array[i];
     }
     VLOG(10) << "[TwoLabelVertexSetImpl] size: " << Size()
@@ -825,16 +825,16 @@ class TwoLabelVertexSetImpl {
     next_datas.reserve(next_size);
     grape::Bitset next_set;
     next_set.init(next_size);
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       if (bitset_.get_bit(i)) {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           // VLOG(10) << "Project: " << vids_[i];
           next_set.set_bit(next_vids.size());
           next_vids.push_back(vec_[i]);
           next_datas.push_back(data_tuple_[i]);
         }
       } else {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           // VLOG(10) << "Project: " << vids_[i];
           //   next_set.set_bit(next_vids.size());
           next_vids.push_back(vec_[i]);
@@ -1022,7 +1022,7 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
   std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     // fill with each vertex's label
-    for (auto i = 0; i < vec_.size(); ++i) {
+    for (size_t i = 0; i < vec_.size(); ++i) {
       if (bitset_.get_bit(i)) {
         res.emplace_back(label_names_[0]);
       } else {
@@ -1058,14 +1058,14 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
     res.reserve(cnt);
     active_ind.reserve(cnt);
     if (ind == 0) {
-      for (auto i = 0; i < bitset_.cardinality(); ++i) {
+      for (size_t i = 0; i < bitset_.cardinality(); ++i) {
         if (bitset_.get_bit(i)) {
           res.push_back(vec_[i]);
           active_ind.push_back(i);
         }
       }
     } else {
-      for (auto i = 0; i < bitset_.cardinality(); ++i) {
+      for (size_t i = 0; i < bitset_.cardinality(); ++i) {
         if (!bitset_.get_bit(i)) {
           res.push_back(vec_[i]);
           active_ind.push_back(i);
@@ -1085,7 +1085,7 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> next_vids;
     size_t next_size = 0;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       next_size += repeat_array[i];
     }
     VLOG(10) << "[TwoLabelVertexSetImpl] size: " << Size()
@@ -1094,14 +1094,14 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
     next_vids.reserve(next_size);
     grape::Bitset next_set;
     next_set.init(next_size);
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       if (bitset_.get_bit(i)) {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           next_set.set_bit(next_vids.size());
           next_vids.push_back(vec_[i]);
         }
       } else {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           next_vids.push_back(vec_[i]);
         }
       }
@@ -1193,16 +1193,16 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
     // estimate size
     {
       size_t tmp_size = 0;
-      for (auto i = 0; i + 1 < cur_offset.size(); ++i) {
+      for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
         auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
         tmp_size += (cur_offset[i + 1] - cur_offset[i]) * times_to_repeat;
       }
       new_bitset.init(tmp_size);
     }
 
-    for (auto i = 0; i + 1 < cur_offset.size(); ++i) {
+    for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
       auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
-      for (auto j = 0; j < times_to_repeat; ++j) {
+      for (size_t j = 0; j < times_to_repeat; ++j) {
         for (auto k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
           new_vec.emplace_back(vec_[k]);
           if (bitset_.get_bit(k)) {
@@ -1255,24 +1255,6 @@ auto make_two_label_set(std::vector<VID_T>&& vec,
       std::move(prop_names), std::move(bitset));
 }
 
-static std::array<std::vector<int32_t>, 2> two_label_bitset_to_vids_inds(
-    const grape::Bitset& bitset) {
-  std::array<std::vector<int32_t>, 2> res;
-  auto limit_size = bitset.cardinality();
-  VLOG(10) << "old bitset limit size: " << limit_size;
-  auto label0_cnt = bitset.count();
-  res[0].reserve(label0_cnt);
-  res[1].reserve(limit_size - label0_cnt);
-  for (auto i = 0; i < limit_size; ++i) {
-    if (bitset.get_bit(i)) {
-      res[0].emplace_back(i);
-    } else {
-      res[1].emplace_back(i);
-    }
-  }
-  return res;
-}
-
 template <typename vertex_id_t>
 static std::pair<std::array<std::vector<vertex_id_t>, 2>,
                  std::array<std::vector<int32_t>, 2>>
@@ -1287,7 +1269,7 @@ two_label_bitset_to_vids_indsV2(const grape::Bitset& bitset,
   res_vids[0].reserve(label0_cnt);
   res[1].reserve(limit_size - label0_cnt);
   res_vids[1].reserve(limit_size - label0_cnt);
-  for (auto i = 0; i < limit_size; ++i) {
+  for (size_t i = 0; i < limit_size; ++i) {
     if (bitset.get_bit(i)) {
       res[0].emplace_back(i);
       res_vids[0].emplace_back(old_vids[i]);
@@ -1326,7 +1308,6 @@ static auto get_property_tuple_two_label(
     const TwoLabelVertexSetImpl<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                                 VERTEX_SET_PROP_T...>& general_set,
     const std::tuple<NamedProp...>& named_prop) {
-  using data_tuple_t = std::tuple<typename NamedProp::prop_t...>;
   std::array<std::string, sizeof...(NamedProp)> prop_names;
   size_t ind = 0;
   std::apply([&prop_names,

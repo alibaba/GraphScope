@@ -155,10 +155,13 @@ struct AnyConverter;
 struct Any {
   Any() : type(PropertyType::kEmpty) {}
 
+  Any(const Any& other) : type(other.type), value(other.value) {}
+
   template <typename T>
   Any(const T& val) {
     Any a = Any::From(val);
-    memcpy(this, &a, sizeof(a));
+    type = a.type;
+    value = a.value;
   }
 
   ~Any() {}

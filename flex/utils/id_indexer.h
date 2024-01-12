@@ -192,9 +192,16 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
 template <typename INDEX_T>
 class LFIndexer {
  public:
-  LFIndexer() : num_elements_(0), hasher_(), indices_size_(0), keys_(nullptr) {}
+  LFIndexer()
+      : indices_(),
+        indices_size_(0),
+        num_elements_(0),
+        num_slots_minus_one_(0),
+        keys_(nullptr),
+        hasher_() {}
   LFIndexer(LFIndexer&& rhs)
       : indices_(std::move(rhs.indices_)),
+        indices_size_(rhs.indices_size_),
         num_elements_(rhs.num_elements_.load()),
         num_slots_minus_one_(rhs.num_slots_minus_one_),
         hasher_(rhs.hasher_) {
@@ -464,14 +471,14 @@ class LFIndexer {
   }
 
  private:
-  ColumnBase* keys_;
   mmap_array<INDEX_T>
       indices_;  // size() == indices_size_ == num_slots_minus_one_ +
                  // log(num_slots_minus_one_)
+  size_t indices_size_;
   std::atomic<size_t> num_elements_;
   size_t num_slots_minus_one_;
+  ColumnBase* keys_;
 
-  size_t indices_size_;
   ska::ska::prime_number_hash_policy hash_policy_;
   GHash<Any> hasher_;
 
@@ -524,7 +531,9 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
   bool get_key(const INDEX_T& lid, Any& oid) const override {
     KEY_T oid_;
     bool flag = get_key(lid, oid_);
-    oid = Any::From(oid_);
+    if (flag) {
+      oid = Any::From(oid_);
+    }
     return flag;
   }
 

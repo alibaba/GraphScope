@@ -650,7 +650,7 @@ class SyncEngine : public BaseEngine {
     grape::Bitset new_bitset;
     new_bitset.init(vertices.size());
     size_t cur_begin = last_offset[0];
-    for (auto i = 0; i < last_offset.size() - 1; ++i) {
+    for (size_t i = 0; i < last_offset.size() - 1; ++i) {
       auto limit = last_offset[i + 1];
       for (auto j = cur_begin; j < limit; ++j) {
         auto vid = vertices[j];
@@ -696,7 +696,7 @@ class SyncEngine : public BaseEngine {
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
       Filter<EXPR, SELECTOR...>&& filter) {
     VLOG(10) << "[Select]";
-    using ctx_t = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
+
     // Currently only support select with head node.
     auto expr = filter.expr_;
     auto selectors = filter.selectors_;
@@ -723,7 +723,7 @@ class SyncEngine : public BaseEngine {
     auto& vertices = head.GetMutableVertices();
     auto& prop_getter = prop_getters[0];
     if constexpr (CTX_T::prev_alias_num == 0) {
-      for (auto i = 0; i < vertices.size(); ++i) {
+      for (size_t i = 0; i < vertices.size(); ++i) {
         auto vid = vertices[i];
         if (std::apply(expr, prop_getter.get_view(vid))) {
           if (cur < i) {
@@ -737,7 +737,7 @@ class SyncEngine : public BaseEngine {
       auto& last_offset = ctx.GetMutableOffset(-1);
 
       size_t cur_begin = last_offset[0];
-      for (auto i = 0; i < last_offset.size() - 1; ++i) {
+      for (size_t i = 0; i + 1 < last_offset.size(); ++i) {
         auto limit = last_offset[i + 1];
         for (auto j = cur_begin; j < limit; ++j) {
           auto vid = vertices[j];
@@ -875,7 +875,7 @@ class SyncEngine : public BaseEngine {
     std::array<int32_t,
                Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>::col_num>
         tag_ids;
-    for (int i = 0; i < tag_ids.size(); i++) {
+    for (size_t i = 0; i < tag_ids.size(); i++) {
       tag_ids[i] = i;
     }
     return Sink(graph, ctx, tag_ids);

@@ -226,8 +226,7 @@ void Table::insert(size_t index, const std::vector<Any>& values,
                    const std::vector<int32_t>& col_ind_mapping) {
   assert(values.size() == columns_.size() + 1);
   CHECK_EQ(values.size(), columns_.size() + 1);
-  size_t col_num = columns_.size();
-  for (auto i = 0; i < values.size(); ++i) {
+  for (size_t i = 0; i < values.size(); ++i) {
     if (col_ind_mapping[i] != -1) {
       columns_[col_ind_mapping[i]]->set_any(index, values[i]);
     }

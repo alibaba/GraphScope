@@ -86,6 +86,8 @@ class MutableNbrSlice {
   using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
   MutableNbrSlice() = default;
+  MutableNbrSlice(const MutableNbrSlice& rhs)
+      : ptr_(rhs.ptr_), size_(rhs.size_) {}
   ~MutableNbrSlice() = default;
 
   void set_size(int size) { size_ = size; }
@@ -156,7 +158,9 @@ class MutableNbrSlice<std::string_view> {
   };
   using const_nbr_t = const MutableColumnNbr;
   using const_nbr_ptr_t = const MutableColumnNbr;
-  MutableNbrSlice(const StringColumn& column) : column_(column) {}
+  MutableNbrSlice(const StringColumn& column) : slice_(), column_(column) {}
+  MutableNbrSlice(const MutableNbrSlice& rhs)
+      : slice_(rhs.slice_), column_(rhs.column_) {}
   ~MutableNbrSlice() = default;
   void set_size(int size) { slice_.set_size(size); }
   int size() const { return slice_.size(); }
@@ -258,7 +262,7 @@ class MutableNbrSliceMut<std::string_view> {
 
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
     nbr_t* ptr_;
-    StringColumn & column_;
+    StringColumn& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 
@@ -287,7 +291,7 @@ class MutableNbrSliceMut<std::string_view> {
 template <typename T>
 struct UninitializedUtils {
   static void copy(T* new_buffer, T* old_buffer, size_t len) {
-    memcpy(new_buffer, old_buffer, len * sizeof(T));
+    memcpy((void*) new_buffer, (void*) old_buffer, len * sizeof(T));
   }
 };
 
@@ -298,6 +302,10 @@ class MutableAdjlist {
   using slice_t = MutableNbrSlice<EDATA_T>;
   using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
   MutableAdjlist() : buffer_(NULL), size_(0), capacity_(0) {}
+  MutableAdjlist(const MutableAdjlist& rhs)
+      : buffer_(rhs.buffer_),
+        size_(rhs.size_.load(std::memory_order_acquire)),
+        capacity_(rhs.capacity_) {}
   ~MutableAdjlist() {}
 
   void init(nbr_t* ptr, int cap, int size) {
@@ -365,6 +373,11 @@ class MutableAdjlist<std::string_view> {
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
   MutableAdjlist(StringColumn& column)
       : buffer_(NULL), size_(0), capacity_(0) {}
+  MutableAdjlist(const MutableAdjlist& rhs)
+      : buffer_(rhs.buffer_),
+        size_(rhs.size_.load(std::memory_order_acquire)),
+        capacity_(rhs.capacity_) {}
+
   ~MutableAdjlist() {}
 
   void init(nbr_t* ptr, int cap, int size) {
@@ -789,7 +802,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     if (need_cap_list) {
       FILE* fcap_out =
           fopen((new_spanshot_dir + "/" + name + ".cap").c_str(), "wb");
-      fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out);
+      CHECK_EQ(fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out),
+               cap_list.size());
       fflush(fcap_out);
       fclose(fcap_out);
     }
@@ -802,8 +816,9 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       FILE* fout =
           fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
-        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].capacity(),
-               fout);
+        CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
+                        adj_lists_[i].capacity(), fout),
+                 adj_lists_[i].capacity());
       }
       fflush(fout);
       fclose(fout);
@@ -1026,7 +1041,9 @@ class MutableCsr<std::string_view>
       FILE* fout =
           fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
-        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].size(), fout);
+        CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
+                        adj_lists_[i].size(), fout),
+                 adj_lists_[i].size());
       }
       fflush(fout);
       fclose(fout);
@@ -1110,11 +1127,11 @@ class MutableCsr<std::string_view>
   }
 
  private:
+  StringColumn& column_;
+  std::atomic<size_t>& column_idx_;
   grape::SpinLock* locks_;
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
-  StringColumn& column_;
-  std::atomic<size_t>& column_idx_;
 };
 
 template <typename EDATA_T>
@@ -1155,7 +1172,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       nbr_list_.reset();
       nbr_list_.resize(v_cap);
       FILE* fin = fopen((prefix + ".snbr").c_str(), "r");
-      fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin);
+      CHECK_EQ(fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin), old_size);
       fclose(fin);
       for (size_t k = old_size; k != v_cap; ++k) {
         nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -1478,10 +1495,11 @@ class SingleMutableCsr<std::string_view>
   }
 
  private:
+  StringColumn& column_;
+  std::atomic<size_t>& column_idx_;
+
   mmap_array<nbr_t> nbr_list_;
   mutable MutableNbr<std::string_view> nbr_;
-  std::atomic<size_t>& column_idx_;
-  StringColumn& column_;
 };
 
 template <typename EDATA_T>
@@ -1609,8 +1627,8 @@ class EmptyCsr<std::string_view>
     return std::make_shared<TypedMutableCsrEdgeIter<std::string_view>>(
         MutableNbrSliceMut<std::string_view>::empty(column_));
   }
-  std::atomic<size_t>& column_idx_;
   StringColumn& column_;
+  std::atomic<size_t>& column_idx_;
 };
 }  // namespace gs
 

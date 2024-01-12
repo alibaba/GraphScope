@@ -92,7 +92,7 @@ class CaseWhenBuilder : public ExprBuilder {
   }
 
   ret_t Build() const override {
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ctx_.AddParameterVar(construct_params_[i]);
     }
 
@@ -168,7 +168,7 @@ class CaseWhenBuilder : public ExprBuilder {
 
   std::string get_func_call_impl_str() const override {
     std::stringstream ss;
-    for (int i = 0; i < when_then_codes_.size(); ++i) {
+    for (size_t i = 0; i < when_then_codes_.size(); ++i) {
       ss << when_then_codes_[i] << std::endl;
     }
     ss << else_code_ << std::endl;
@@ -194,7 +194,7 @@ class CaseWhenBuilder : public ExprBuilder {
       construct_params_.push_back(param_const);
     }
     if (set_ret_type) {
-      for (auto i = 0; i < oprs.size(); ++i) {
+      for (int32_t i = 0; i < oprs.size(); ++i) {
         auto cur_opr = oprs[i];
         auto node_type = cur_opr.node_type();
         if (node_type.type_case() == common::IrDataType::kDataType) {

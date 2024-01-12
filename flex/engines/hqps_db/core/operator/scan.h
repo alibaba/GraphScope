@@ -84,7 +84,7 @@ class Scan {
 
     grape::Bitset bitset;
     bitset.init(gids.size());
-    for (auto i = 0; i < gids0.size(); ++i) {
+    for (size_t i = 0; i < gids0.size(); ++i) {
       bitset.set_bit(i);
     }
     return make_two_label_set(std::move(gids), std::move(labels),
@@ -121,14 +121,14 @@ class Scan {
     std::vector<label_id_t> labels_vec;
     std::vector<grape::Bitset> bitsets;
     vertex_id_t vid;
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       if (graph.ScanVerticesWithOid(v_label_ids[i], oid, vid)) {
         labels_vec.emplace_back(v_label_ids[i]);
         gids.emplace_back(vid);
       }
     }
     bitsets.resize(labels_vec.size());
-    for (auto i = 0; i < bitsets.size(); ++i) {
+    for (size_t i = 0; i < bitsets.size(); ++i) {
       bitsets[i].init(gids.size());
       bitsets[i].set_bit(i);
     }
@@ -146,7 +146,7 @@ class Scan {
       const std::tuple<SELECTOR...>& selectors) {
     std::vector<vertex_id_t> gids;
     std::vector<size_t> cur_cnt;
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       cur_cnt.emplace_back(gids.size());
       auto gids_i =
           scan_vertex_with_selector(graph, labels[i], expr, selectors);
@@ -155,7 +155,7 @@ class Scan {
     cur_cnt.emplace_back(gids.size());
     std::vector<grape::Bitset> bitsets(num_labels);
     CHECK(cur_cnt.size() == num_labels + 1);
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       bitsets[i].init(cur_cnt.back());
       VLOG(10) << "Scan label " << std::to_string(labels[i])
                << ", vertices cnt: " << cur_cnt[i + 1] - cur_cnt[i];
