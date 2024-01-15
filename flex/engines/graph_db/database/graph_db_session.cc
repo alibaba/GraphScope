@@ -317,6 +317,23 @@ void GraphDBSession::GetAppInfo(Encoder& result) { db_.GetAppInfo(result); }
 
 int GraphDBSession::SessionId() const { return thread_id_; }
 
+CompactTransaction GraphDBSession::GetCompactTransaction() {
+  timestamp_t ts = db_.version_manager_.acquire_update_timestamp();
+  return CompactTransaction(db_.graph_, logger_, db_.version_manager_, ts);
+}
+
+bool GraphDBSession::Compact() {
+  auto txn = GetCompactTransaction();
+  if (txn.timestamp() > db_.GetLastCompactionTimestamp() + 100000) {
+    db_.UpdateCompactionTimestamp(txn.timestamp());
+    txn.Commit();
+    return true;
+  } else {
+    txn.Abort();
+    return false;
+  }
+}
+
 #ifdef MONITOR_SESSIONS
 double GraphDBSession::eval_duration() const {
   return static_cast<double>(eval_duration_.load()) / 1000000.0;

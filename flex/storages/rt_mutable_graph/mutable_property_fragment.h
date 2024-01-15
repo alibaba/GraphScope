@@ -50,6 +50,8 @@ class MutablePropertyFragment {
 
   void Open(const std::string& work_dir, bool memory_only);
 
+  void Compact(uint32_t version);
+
   void Warmup(int thread_num);
 
   void Dump(const std::string& work_dir, uint32_t version);

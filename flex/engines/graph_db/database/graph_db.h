@@ -115,6 +115,9 @@ class GraphDB {
 
   int SessionNum() const;
 
+  void UpdateCompactionTimestamp(timestamp_t ts);
+  timestamp_t GetLastCompactionTimestamp() const;
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
@@ -145,6 +148,8 @@ class GraphDB {
   std::thread monitor_thread_;
   bool monitor_thread_running_;
 #endif
+
+  timestamp_t last_compaction_ts_;
 };
 
 }  // namespace gs

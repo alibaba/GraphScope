@@ -79,6 +79,10 @@ void BasicFragmentLoader::LoadFragment() {
                        dst_label * edge_label_num_ + edge_label;
         if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
           if (dual_csr_list_[index] != NULL) {
+            if (schema_.get_sort_on_compaction(src_label_name, dst_label_name,
+                                               edge_label_name)) {
+              dual_csr_list_[index]->SortByEdgeData(1);
+            }
             dual_csr_list_[index]->Dump(
                 oe_prefix(src_label_name, dst_label_name, edge_label_name),
                 ie_prefix(src_label_name, dst_label_name, edge_label_name),

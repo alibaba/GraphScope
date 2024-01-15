@@ -67,6 +67,8 @@ class GraphDBSession {
 
   UpdateTransaction GetUpdateTransaction();
 
+  CompactTransaction GetCompactTransaction();
+
   bool BatchUpdate(UpdateBatch& batch);
 
   const MutablePropertyFragment& graph() const;
@@ -92,6 +94,8 @@ class GraphDBSession {
   void GetAppInfo(Encoder& result);
 
   int SessionId() const;
+
+  bool Compact();
 
 #ifdef MONITOR_SESSIONS
   double eval_duration() const;

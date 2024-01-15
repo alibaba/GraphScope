@@ -97,6 +97,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
             });
   mutable_schema.EmplacePlugins(plugin_paths);
 
+  last_compaction_ts_ = 0;
   openWalAndCreateContexts(data_dir, memory_only);
 
   if ((!create_empty_graph) && warmup) {
@@ -151,6 +152,13 @@ GraphDBSession& GraphDB::GetSession(int thread_id) {
 }
 
 int GraphDB::SessionNum() const { return thread_num_; }
+
+void GraphDB::UpdateCompactionTimestamp(timestamp_t ts) {
+  last_compaction_ts_ = ts;
+}
+timestamp_t GraphDB::GetLastCompactionTimestamp() const {
+  return last_compaction_ts_;
+}
 
 const MutablePropertyFragment& GraphDB::graph() const { return graph_; }
 MutablePropertyFragment& GraphDB::graph() { return graph_; }
@@ -236,8 +244,13 @@ void GraphDB::ingestWals(const std::vector<std::string>& wals,
     if (from_ts < to_ts) {
       IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
     }
-    UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
-                                 update_wal.size, contexts_[0].allocator);
+    if (update_wal.size == 0) {
+      graph_.Compact(update_wal.timestamp);
+      last_compaction_ts_ = update_wal.timestamp;
+    } else {
+      UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
+                                   update_wal.size, contexts_[0].allocator);
+    }
     from_ts = to_ts + 1;
   }
   if (from_ts <= parser.last_ts()) {
