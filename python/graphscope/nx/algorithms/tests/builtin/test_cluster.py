@@ -340,7 +340,9 @@ class TestClustering:
         assert nx.builtin.clustering(G, 1) == 0
         assert nx.builtin.clustering(G, [1, 2]) == {1: 0, 2: 0}
 
-    @pytest.mark.skip(reason="FIXME(@acezen): first assert failed, got [12, 12, 12, 12,12]")
+    @pytest.mark.skip(
+        reason="FIXME(@acezen): first assert failed, got [12, 12, 12, 12,12]"
+    )
     def test_k5(self):
         G = nx.complete_graph(5)
         assert list(nx.builtin.clustering(G).values()) == [1, 1, 1, 1, 1]
