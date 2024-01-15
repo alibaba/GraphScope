@@ -157,7 +157,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
     }
   }
 
-  for (auto i = 0; i < MAX_RETRY; ++i) {
+  for (size_t i = 0; i < MAX_RETRY; ++i) {
     if (app->Query(decoder, encoder)) {
 #ifdef MONITOR_SESSIONS
       const auto end = std::chrono::high_resolution_clock::now();
@@ -220,7 +220,7 @@ Result<std::vector<char>> GraphDBSession::EvalAdhoc(
         "Fail to open dynamic lib for: " + input_lib_path, result_buffer);
   }
 
-  for (auto i = 0; i < MAX_RETRY; ++i) {
+  for (size_t i = 0; i < MAX_RETRY; ++i) {
     if (app_wrapper.app()->Query(decoder, encoder)) {
       return result_buffer;
     }
@@ -288,7 +288,7 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
   std::vector<char> input_buffer;
   gs::Encoder input_encoder(input_buffer);
   auto& args = query_pb.arguments();
-  for (auto i = 0; i < args.size(); ++i) {
+  for (int32_t i = 0; i < args.size(); ++i) {
     auto& arg = args[i];
     put_argment(input_encoder, arg);
   }
@@ -296,7 +296,7 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
   size_t str_len = input_buffer.size();
   gs::Decoder input_decoder(input_buffer.data(), input_buffer.size());
 
-  for (auto i = 0; i < MAX_RETRY; ++i) {
+  for (size_t i = 0; i < MAX_RETRY; ++i) {
     std::vector<char> result_buffer;
     gs::Encoder result_encoder(result_buffer);
     if (app->Query(input_decoder, result_encoder)) {

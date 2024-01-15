@@ -21,8 +21,8 @@ std::vector<std::string> get_yaml_files(const std::string& plugin_dir) {
   std::vector<std::string> res_yaml_files;
 
   for (auto& entry : std::filesystem::directory_iterator(dir_path)) {
-    if (entry.is_regular_file() && (entry.path().extension() == ".yaml") ||
-        (entry.path().extension() == ".yml")) {
+    if (entry.is_regular_file() && ((entry.path().extension() == ".yaml") ||
+                                    (entry.path().extension() == ".yml"))) {
       res_yaml_files.emplace_back(entry.path());
     }
   }
@@ -55,4 +55,5 @@ Result<std::string> get_string_from_yaml(const YAML::Node& node) {
         Status{StatusCode::IOError, "Failed to convert yaml to json"});
   }
 }
+
 }  // namespace gs

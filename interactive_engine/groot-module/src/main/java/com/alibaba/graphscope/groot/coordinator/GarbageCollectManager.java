@@ -2,6 +2,7 @@ package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 
@@ -20,11 +21,13 @@ public class GarbageCollectManager {
     private final ConcurrentHashMap<Integer, Long> hashMap;
     private final RoleClients<CoordinatorSnapshotClient> clients;
     private ScheduledExecutorService updateScheduler;
+    private long interval;
 
     public GarbageCollectManager(Configs configs, RoleClients<CoordinatorSnapshotClient> clients) {
         this.configs = configs;
         this.hashMap = new ConcurrentHashMap<>();
         this.clients = clients;
+        this.interval = StoreConfig.STORE_GC_INTERVAL_MS.get(configs);
     }
 
     public void put(int frontendId, long snapshotId) {
@@ -56,7 +59,7 @@ public class GarbageCollectManager {
                     }
                 },
                 5000L,
-                2000L,
+                interval,
                 TimeUnit.MILLISECONDS);
     }
 

@@ -71,8 +71,8 @@ class EdgeIter {
   }
 
  private:
-  std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
   std::array<LabelT, 3> label_triplet_;
+  std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
   const std::vector<std::string>* prop_names_;
 };
 
@@ -240,12 +240,12 @@ class AdjList<T> {
     Iterator()
         : cur_(),
           begin0_(nullptr),
-          end0_(nullptr),
           begin1_(nullptr),
+          end0_(nullptr),
           end1_(nullptr) {}
     Iterator(const nbr_t* begin0, const nbr_t* end0, const nbr_t* begin1,
              const nbr_t* end1)
-        : cur_(), begin0_(begin0), end0_(end0), begin1_(begin1), end1_(end1) {
+        : cur_(), begin0_(begin0), begin1_(begin1), end0_(end0), end1_(end1) {
       // probe for next;
       probe_for_next();
     }
@@ -367,12 +367,12 @@ class AdjList<grape::EmptyType> {
     Iterator()
         : cur_(),
           begin0_(nullptr),
-          end0_(nullptr),
           begin1_(nullptr),
+          end0_(nullptr),
           end1_(nullptr) {}
     Iterator(const nbr_t* begin0, const nbr_t* end0, const nbr_t* begin1,
              const nbr_t* end1)
-        : cur_(), begin0_(begin0), end0_(end0), begin1_(begin1), end1_(end1) {
+        : cur_(), begin0_(begin0), begin1_(begin1), end0_(end0), end1_(end1) {
       probe_for_next();
     }
 
@@ -493,7 +493,7 @@ class AdjListArray<T> {
       }
     } else {
       LOG(WARNING) << "csr is null";
-      for (auto v : vids) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
       }
     }
@@ -574,7 +574,7 @@ class AdjListArray<grape::EmptyType> {
       }
     } else {
       LOG(ERROR) << "csr is null";
-      for (auto v : vids) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
       }
     }

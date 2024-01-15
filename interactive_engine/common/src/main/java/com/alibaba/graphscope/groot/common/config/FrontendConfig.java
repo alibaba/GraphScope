@@ -18,8 +18,11 @@ public class FrontendConfig {
 
     public static final Config<String> AUTH_PASSWORD = Config.stringConfig("auth.password", "");
 
+    //
     public static final Config<Integer> FRONTEND_SERVICE_PORT =
-            Config.intConfig("frontend.service.port", 8182);
+            Config.intConfig("frontend.service.port", 55556);
+    public static final Config<Integer> GREMLIN_SERVER_PORT =
+            Config.intConfig("gremlin.server.port", 8182);
 
     public static final Config<Integer> FRONTEND_SERVICE_THREAD_COUNT =
             Config.intConfig(

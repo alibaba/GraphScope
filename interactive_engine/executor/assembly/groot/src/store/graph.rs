@@ -55,7 +55,12 @@ pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHa
     let buf = unsafe { ::std::slice::from_raw_parts(config_bytes, len) };
     let proto = parse_pb::<ConfigPb>(buf).expect("parse config pb failed");
     let mut config_builder = GraphConfigBuilder::new();
-    config_builder.set_storage_engine("rocksdb");
+    let engine = "rocksdb".to_string();
+    let engine = proto
+        .get_configs()
+        .get("store.storage.engine")
+        .unwrap_or(&engine);
+    config_builder.set_storage_engine(engine);
     config_builder.set_storage_options(proto.get_configs().clone());
     let config = config_builder.build();
     let path = config
@@ -438,14 +443,22 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
 
 #[no_mangle]
 pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
-    unsafe {
-        let graph_store_ptr = &*(ptr as *const GraphStore);
-        match graph_store_ptr.gc(snapshot_id) {
-            Ok(_) => JnaResponse::new_success(),
-            Err(e) => {
-                let msg = format!("{:?}", e);
-                JnaResponse::new_error(&msg)
-            }
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+
+    match graph_store_ptr.try_catch_up_with_primary() {
+        Ok(_) => (),
+        Err(e) => {
+            error!("Error during catch up primary {:?}", e);
+        }
+    };
+    if snapshot_id % 3600 != 0 {
+        return JnaResponse::new_success();
+    }
+    match graph_store_ptr.gc(snapshot_id) {
+        Ok(_) => JnaResponse::new_success(),
+        Err(e) => {
+            let msg = format!("{:?}", e);
+            JnaResponse::new_error(&msg)
         }
     }
 }

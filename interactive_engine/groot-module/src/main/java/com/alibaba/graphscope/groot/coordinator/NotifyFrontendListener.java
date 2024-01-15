@@ -43,12 +43,8 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
 
     @Override
     public void snapshotAdvanced(long snapshotId, long ddlSnapshotId) {
-        logger.debug(
-                "snapshot advanced to [{}]-[{}], will notify frontend", snapshotId, ddlSnapshotId);
-        GraphDef graphDef = null;
-        if (ddlSnapshotId > this.lastDdlSnapshotId.get()) {
-            graphDef = this.schemaManager.getGraphDef();
-        }
+        GraphDef graphDef = this.schemaManager.getGraphDef();
+        logger.debug("snapshot advanced to {}-{}, will notify frontend", snapshotId, ddlSnapshotId);
         this.frontendSnapshotClient.advanceQuerySnapshot(
                 snapshotId,
                 graphDef,

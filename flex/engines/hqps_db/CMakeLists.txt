@@ -32,15 +32,11 @@ protobuf_generate(APPEND_PATH
 )
 
 add_library(hqps_plan_proto SHARED ${PROTO_SRCS_GIE})
-target_include_directories(hqps_plan_proto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(hqps_plan_proto PUBLIC 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> 
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 target_link_libraries(hqps_plan_proto PUBLIC ${Protobuf_LIBRARIES})
-
-
-
-install(TARGETS hqps_plan_proto
-        RUNTIME DESTINATION bin
-        ARCHIVE DESTINATION lib
-        LIBRARY DESTINATION lib)
+install_flex_target(hqps_plan_proto)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         DESTINATION include/flex/engines/

@@ -98,15 +98,15 @@ void BasicFragmentLoader::AddVertexBatch(
     const std::vector<std::vector<Any>>& props) {
   auto& table = vertex_data_[v_label];
   CHECK(props.size() == table.col_num());
-  for (auto i = 0; i < props.size(); ++i) {
+  for (size_t i = 0; i < props.size(); ++i) {
     CHECK(props[i].size() == vids.size())
         << "vids size: " << vids.size() << ", props size: " << props.size()
         << ", props[i] size: " << props[i].size();
   }
   auto dst_columns = table.column_ptrs();
-  for (auto j = 0; j < props.size(); ++j) {
+  for (size_t j = 0; j < props.size(); ++j) {
     auto& cur_vec = props[j];
-    for (auto i = 0; i < vids.size(); ++i) {
+    for (size_t i = 0; i < vids.size(); ++i) {
       auto index = vids[i];
       dst_columns[j]->set_any(index, cur_vec[i]);
     }

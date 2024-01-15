@@ -272,13 +272,16 @@ public class StoreService implements MetricsAgent {
                             }
                         } catch (Exception ex) {
                             logger.error(
-                                    "write to partition ["
-                                            + partitionId
-                                            + "] failed, snapshotId ["
-                                            + snapshotId
-                                            + "]. will retry",
+                                    "write to partition [{}] failed, snapshotId [{}].",
+                                    partitionId,
+                                    snapshotId,
                                     ex);
-                            batchNeedRetry.put(partitionId, batch);
+                            String msg = "Not supported operation in secondary mode";
+                            if (ex.getMessage().contains(msg)) {
+                                logger.warn("Ignored write in secondary instance, {}", msg);
+                            } else {
+                                batchNeedRetry.put(partitionId, batch);
+                            }
                         }
                         if (counter.decrementAndGet() == 0) {
                             future.complete(null);
@@ -316,8 +319,9 @@ public class StoreService implements MetricsAgent {
         if (!Files.isDirectory(uniquePath)) {
             try {
                 Files.createDirectories(uniquePath);
+                logger.info("Created uniquePath {}", uniquePath);
             } catch (IOException e) {
-                logger.error("create uniquePath failed. uniquePath [" + uniquePath + "]", e);
+                logger.error("create uniquePath failed. uniquePath {}", uniquePath, e);
                 callback.onError(e);
                 return;
             }
@@ -405,9 +409,6 @@ public class StoreService implements MetricsAgent {
     }
 
     private void garbageCollectInternal(long snapshotId) throws IOException {
-        if (snapshotId % 3600 != 0) { // schedule every 1 hour
-            return;
-        }
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
             GraphPartition partition = entry.getValue();
             partition.garbageCollect(snapshotId);

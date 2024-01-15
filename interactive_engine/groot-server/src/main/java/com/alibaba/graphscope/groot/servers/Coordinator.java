@@ -31,7 +31,7 @@ import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 
 import io.grpc.NameResolver;
 
@@ -60,14 +60,13 @@ public class Coordinator extends NodeBase {
         super(configs);
         configs = reConfig(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        MetaStore metaStore;
+        MetaStore metaStore = new FileMetaStore(configs);
         if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
             this.discovery = new FileDiscovery(configs);
-            metaStore = new FileMetaStore(configs);
         } else {
             this.curator = CuratorUtils.makeCurator(configs);
             this.discovery = new ZkDiscovery(configs, localNodeProvider, this.curator);
-            metaStore = new ZkMetaStore(configs, this.curator);
+            //            metaStore = new ZkMetaStore(configs, this.curator);
         }
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
@@ -80,7 +79,8 @@ public class Coordinator extends NodeBase {
                         this.channelManager, RoleType.INGESTOR, IngestorSnapshotClient::new);
         WriteSnapshotIdNotifier writeSnapshotIdNotifier =
                 new IngestorWriteSnapshotIdNotifier(configs, ingestorSnapshotClients);
-        LogService logService = new KafkaLogService(configs);
+
+        LogService logService = LogServiceFactory.makeLogService(configs);
         this.snapshotManager =
                 new SnapshotManager(configs, metaStore, logService, writeSnapshotIdNotifier);
         DdlExecutors ddlExecutors = new DdlExecutors();

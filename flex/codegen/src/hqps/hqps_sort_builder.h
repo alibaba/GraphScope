@@ -143,7 +143,7 @@ class SortOpBuilder {
     }
     {
       std::stringstream ss;
-      for (int i = 0; i < sort_pairs_.size(); ++i) {
+      for (size_t i = 0; i < sort_pairs_.size(); ++i) {
         ss << sort_pair_pb_to_order_pair(ctx_, sort_pairs_[i]);
         if (i != sort_pairs_.size() - 1) {
           ss << ", ";

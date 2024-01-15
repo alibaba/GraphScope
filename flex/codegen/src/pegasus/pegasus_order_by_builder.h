@@ -61,7 +61,7 @@ class OrderByOpBuilder {
 
     std::string order_body_code;
     VLOG(10) << "Ordering pair size is " << ordering_pair_.size();
-    for (auto i = 0; i < ordering_pair_.size(); ++i) {
+    for (size_t i = 0; i < ordering_pair_.size(); ++i) {
       boost::format cmp_fmter("x.%1%.%2%(&y.%1%)%3%");
 
       int32_t input_tag = ordering_pair_[i].key().tag().id();
@@ -132,7 +132,7 @@ static std::string BuildOrderByOp(
   OrderByOpBuilder builder(ctx);
 
   CHECK(order_by_pb.pairs_size() >= 1);
-  for (auto i = 0; i < order_by_pb.pairs_size(); i++) {
+  for (int32_t i = 0; i < order_by_pb.pairs_size(); i++) {
     builder.AddOrderingPair(order_by_pb.pairs(i));
   }
   if (order_by_pb.has_limit()) {

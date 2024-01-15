@@ -502,7 +502,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     VLOG(1) << "GetLabelVec for general edge set.";
     std::vector<LabelKey> res;
     res.reserve(Size());
-    for (auto i = 0; i < Size(); ++i) {
+    for (size_t i = 0; i < Size(); ++i) {
       res.emplace_back(edge_label_);
     }
     return res;
@@ -510,7 +510,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
 
   size_t Size() const {
     if (size_ == 0) {
-      for (auto i = 0; i < adj_lists_.size(); ++i) {
+      for (size_t i = 0; i < adj_lists_.size(); ++i) {
         auto adj = adj_lists_.get(i);
         size_ += adj.size();
       }
@@ -529,7 +529,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     std::vector<std::tuple<VID_T, VID_T, std::tuple<T...>>> res;
     res.reserve(index_ele_tuple.size());
     std::vector<LabelT> label_vec(index_ele_tuple.size(), (LabelT) 0);
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto ind = std::get<0>(cur_ind_ele);
       auto nbr = std::get<2>(cur_ind_ele);
@@ -580,7 +580,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
                             const std::vector<size_t>& repeat_array) {
     // Make sure this is correct.
     std::vector<bool> is_built_in(prop_names_.size(), false);
-    for (auto i = 0; i < prop_names_.size(); ++i) {
+    for (size_t i = 0; i < prop_names_.size(); ++i) {
       if (prop_names_[i].size() == 1 && prop_names_[i][0] == prop_names[0]) {
         is_built_in[i] = true;
       }
@@ -601,7 +601,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
         for (auto iter : *this) {
           auto edata = iter.GetData();
           auto repeat_times = repeat_array[iter_ind];
-          for (auto j = 0; j < repeat_times; ++j) {
+          for (size_t j = 0; j < repeat_times; ++j) {
             CHECK(cur_ind < tuples.size());
             std::get<0>(tuples[cur_ind]) = std::get<My_Is>(edata);
             cur_ind += 1;
@@ -696,7 +696,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
     std::vector<LabelKey> res;
     VLOG(1) << "GetLabelVec for general edge set.";
     res.reserve(Size());
-    for (auto i = 0; i < Size(); ++i) {
+    for (size_t i = 0; i < Size(); ++i) {
       res.emplace_back(edge_label_);
     }
     return res;
@@ -710,7 +710,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
 
   size_t Size() const {
     if (size_ == 0) {
-      for (auto i = 0; i < adj_lists_.size(); ++i) {
+      for (size_t i = 0; i < adj_lists_.size(); ++i) {
         auto adj = adj_lists_.get(i);
         size_ += adj.size();
       }
@@ -729,7 +729,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
     std::vector<std::tuple<VID_T, VID_T, grape::EmptyType>> res;
     res.reserve(index_ele_tuple.size());
     std::vector<LabelT> label_vec(index_ele_tuple.size(), (LabelT) 0);
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto ind = std::get<0>(cur_ind_ele);
       auto nbr = std::get<2>(cur_ind_ele);

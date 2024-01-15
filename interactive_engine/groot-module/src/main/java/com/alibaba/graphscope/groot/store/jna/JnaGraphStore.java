@@ -44,6 +44,11 @@ public class JnaGraphStore implements GraphPartition {
         Path partitionPath = Paths.get(dataRoot, "" + partitionId);
         this.downloadPath = Paths.get(dataRoot, "download");
         this.backupPath = Paths.get(dataRoot, "backups", "" + partitionId);
+        String secondaryDataRoot = StoreConfig.STORE_SECONDARY_DATA_PATH.get(configs);
+        Path secondPath = Paths.get(secondaryDataRoot, "" + partitionId);
+        if (!Files.isDirectory(secondPath)) {
+            Files.createDirectories(secondPath);
+        }
         if (!Files.isDirectory(partitionPath)) {
             Files.createDirectories(partitionPath);
         }
@@ -55,11 +60,10 @@ public class JnaGraphStore implements GraphPartition {
         if (!Files.isDirectory(backupPath)) {
             Files.createDirectories(backupPath);
         }
-        Configs storeConfigs =
-                Configs.newBuilder(configs)
-                        .put("store.data.path", partitionPath.toString())
-                        .build();
-        byte[] configBytes = storeConfigs.toProto().toByteArray();
+        Configs.Builder builder = Configs.newBuilder(configs);
+        builder.put(StoreConfig.STORE_DATA_PATH.getKey(), partitionPath.toString());
+        builder.put(StoreConfig.STORE_SECONDARY_DATA_PATH.getKey(), secondPath.toString());
+        byte[] configBytes = builder.build().toProto().toByteArray();
         this.pointer = GraphLibrary.INSTANCE.openGraphStore(configBytes, configBytes.length);
         this.partitionId = partitionId;
         logger.info("JNA store opened. partition [" + partitionId + "]");

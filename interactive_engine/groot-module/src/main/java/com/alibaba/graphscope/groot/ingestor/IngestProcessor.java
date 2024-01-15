@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.ingestor;
 
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
@@ -26,7 +27,10 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
+import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogReader;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,6 +62,7 @@ public class IngestProcessor implements MetricsAgent {
     private final int bufferSize;
     private BlockingQueue<IngestTask> ingestBuffer;
     private Thread ingestThread;
+    private Thread tailWALThread;
     private final AtomicLong ingestSnapshotId;
 
     private final LogService logService;
@@ -76,6 +81,7 @@ public class IngestProcessor implements MetricsAgent {
     private volatile long walBlockPerSecondMs;
     private volatile long lastUpdateStoreBlockTimeNano;
     private volatile long storeBlockPerSecondMs;
+    private boolean isSecondary;
 
     public IngestProcessor(
             Configs configs,
@@ -90,6 +96,8 @@ public class IngestProcessor implements MetricsAgent {
         this.ingestSnapshotId = ingestSnapshotId;
 
         this.bufferSize = IngestorConfig.INGESTOR_QUEUE_BUFFER_MAX_COUNT.get(configs);
+        this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
+
         initMetrics();
         metricsCollector.register(this, this::updateMetrics);
     }
@@ -132,6 +140,20 @@ public class IngestProcessor implements MetricsAgent {
                         });
         this.ingestThread.setDaemon(true);
         this.ingestThread.start();
+        if (isSecondary) {
+            this.tailWALThread =
+                    new Thread(
+                            () -> {
+                                try {
+                                    tailWAL();
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+            this.tailWALThread.setDaemon(true);
+            this.tailWALThread.start();
+        }
+
         started = true;
         logger.info("ingestProcessor queue#[" + queueId + "] started");
     }
@@ -149,14 +171,27 @@ public class IngestProcessor implements MetricsAgent {
             }
             this.ingestThread = null;
         }
+        if (tailWALThread != null && tailWALThread.isAlive()) {
+            try {
+                this.tailWALThread.interrupt();
+                this.tailWALThread.join();
+            } catch (InterruptedException e) {
+                logger.warn("stop ingestProcessor queue#[" + queueId + "] interrupted");
+            }
+            this.tailWALThread = null;
+        }
         this.batchSender.stop();
-        logger.info("ingestProcessor queue#[" + queueId + "] stopped");
+        logger.debug("ingestProcessor queue#[" + queueId + "] stopped");
     }
 
     private void checkStarted() {
         if (!started) {
             throw new IllegalStateException("IngestProcessor queue#[" + queueId + "] not started");
         }
+    }
+
+    public boolean isStarted() {
+        return started;
     }
 
     public void ingestBatch(
@@ -255,6 +290,39 @@ public class IngestProcessor implements MetricsAgent {
     public void setTailOffset(long offset) {
         logger.info("IngestProcessor of queue #[{}] set tail offset to [{}]", queueId, offset);
         this.tailOffset = offset;
+    }
+
+    public void tailWAL() throws IOException {
+        List<OperationType> types = new ArrayList<>();
+        types.add(OperationType.CREATE_VERTEX_TYPE);
+        types.add(OperationType.CREATE_EDGE_TYPE);
+        types.add(OperationType.ADD_EDGE_KIND);
+        types.add(OperationType.DROP_VERTEX_TYPE);
+        types.add(OperationType.DROP_EDGE_TYPE);
+        types.add(OperationType.REMOVE_EDGE_KIND);
+        types.add(OperationType.PREPARE_DATA_LOAD);
+        types.add(OperationType.COMMIT_DATA_LOAD);
+        try (ReadOnlyLogReader reader = (ReadOnlyLogReader) logService.createReader(queueId, 0)) {
+            while (!shouldStop) {
+                ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
+                for (ConsumerRecord<LogEntry, LogEntry> record : records) {
+                    long offset = record.offset();
+                    LogEntry logEntry = record.value();
+                    OperationBatch batch = extractOperations(logEntry.getOperationBatch(), types);
+                    long snapshotId = logEntry.getSnapshotId();
+                    if (batch.getOperationCount() > 0) {
+                        long batchSnapshotId = this.ingestSnapshotId.get();
+                        this.batchSender.asyncSendWithRetry(
+                                "", queueId, batchSnapshotId, offset, batch);
+                        logger.info(
+                                "Sent logEntry snapshot Id {}, SnapshotId {}, batch {}",
+                                snapshotId,
+                                batchSnapshotId,
+                                batch.toProto());
+                    }
+                }
+            }
+        }
     }
 
     public void replayWAL(long tailOffset) throws IOException {

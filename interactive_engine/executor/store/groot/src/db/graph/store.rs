@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fs;
 use std::path::Path;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::Arc;
@@ -609,6 +610,10 @@ impl MultiVersionGraph for GraphStore {
         let data_file_path =
             format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
         if Path::new(data_file_path.as_str()).exists() {
+            if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
+                let size = metadata.len();
+                println!("Ingesting file: {} with size: {} bytes", data_file_path, size);
+            }
             self.ingest(data_file_path.as_str())?
         }
         if target.src_label_id > 0 {
@@ -638,7 +643,7 @@ impl MultiVersionGraph for GraphStore {
 
 impl GraphStore {
     pub fn open(config: &GraphConfig, path: &str) -> GraphResult<Self> {
-        info!("open graph store at {}, with config: {:?}", path, config);
+        info!("open graph store at {} with config {:?}", path, config);
         match config.get_storage_engine() {
             "rocksdb" => {
                 let res = RocksDB::open(config.get_storage_options(), path).and_then(|db| {
@@ -647,12 +652,27 @@ impl GraphStore {
                 });
                 res_unwrap!(res, open, config, path)
             }
+            "rocksdb_as_secondary" => {
+                let secondary_path = config
+                    .get_storage_option("store.data.secondary.path")
+                    .expect("invalid config, missing store.data.secondary.path");
+                let res = RocksDB::open_as_secondary(config.get_storage_options(), path, secondary_path)
+                    .and_then(|db| {
+                        let storage = Arc::new(db);
+                        Self::init(config, storage, path)
+                    });
+                res_unwrap!(res, open, config, path)
+            }
             unknown => {
                 let msg = format!("unknown storage {}", unknown);
                 let err = gen_graph_err!(GraphErrorCode::NotSupported, msg, open, config, path);
                 Err(err)
             }
         }
+    }
+
+    pub fn try_catch_up_with_primary(&self) -> GraphResult<()> {
+        self.storage.try_catch_up_with_primary()
     }
 
     fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>, path: &str) -> GraphResult<Self> {

@@ -29,19 +29,17 @@ class LimitOp {
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
             typename... CTX_PREV>
   static auto Limit(Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
-                    int32_t lower_bound, int32_t upper_bound) {
+                    size_t lower_bound, size_t upper_bound) {
     auto& cur_ = ctx.GetMutableHead();
     size_t cur_offset = 0;
-    size_t cur_ind = 0;
     std::vector<size_t> new_offsets;
     new_offsets.emplace_back(0);
-    upper_bound = std::min((size_t) upper_bound, cur_.Size());
-    for (auto iter : ctx) {
+    upper_bound = std::min(upper_bound, cur_.Size());
+    for (size_t cur_ind = 0; cur_ind < cur_.Size(); ++cur_ind) {
       if (cur_ind >= lower_bound && cur_ind < upper_bound) {
         cur_offset += 1;
       }
       new_offsets.push_back(cur_offset);
-      cur_ind += 1;
     }
 
     std::vector<size_t> selected_indices;

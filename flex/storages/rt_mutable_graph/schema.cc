@@ -599,7 +599,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
 
   std::vector<int> primary_key_inds(primary_key_node.size(), -1);
   std::vector<std::tuple<PropertyType, std::string, size_t>> primary_keys;
-  for (auto i = 0; i < primary_key_node.size(); ++i) {
+  for (size_t i = 0; i < primary_key_node.size(); ++i) {
     auto cur_primary_key = primary_key_node[i];
     std::string primary_key_name = primary_key_node[0].as<std::string>();
     for (size_t j = 0; j < property_names.size(); ++j) {
@@ -688,7 +688,7 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
     LOG(ERROR) << "edge [vertex_type_pair_relations] should be a sequence";
     return false;
   }
-  for (auto i = 0; i < vertex_type_pair_node.size(); ++i) {
+  for (size_t i = 0; i < vertex_type_pair_node.size(); ++i) {
     std::string src_label_name, dst_label_name;
     auto cur_node = vertex_type_pair_node[i];
     EdgeStrategy cur_ie = default_ie;
@@ -960,7 +960,7 @@ bool Schema::vertex_has_primary_key(const std::string& label,
   auto v_label_id = get_vertex_label_id(label);
   CHECK(v_label_id < vprop_names_.size());
   auto& keys = v_primary_keys_[v_label_id];
-  for (auto i = 0; i < keys.size(); ++i) {
+  for (size_t i = 0; i < keys.size(); ++i) {
     if (std::get<1>(keys[i]) == prop) {
       return true;
     }

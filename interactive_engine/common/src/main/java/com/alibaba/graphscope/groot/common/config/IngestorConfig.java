@@ -24,5 +24,5 @@ public class IngestorConfig {
             Config.intConfig("ingestor.sender.operation.max.count", 102400);
 
     public static final Config<Long> INGESTOR_CHECK_PROCESSOR_INTERVAL_MS =
-            Config.longConfig("ingestor.check.processor.interval.ms", 3000L);
+            Config.longConfig("ingestor.check.processor.interval.ms", 2000L);
 }

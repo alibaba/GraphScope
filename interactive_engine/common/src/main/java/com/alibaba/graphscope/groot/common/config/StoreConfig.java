@@ -32,12 +32,12 @@ public class StoreConfig {
     public static final Config<Boolean> STORE_GC_ENABLE =
             Config.boolConfig("store.gc.enable", true);
 
-    public static final Config<Integer> EXECUTOR_GRAPH_PORT =
-            Config.intConfig("executor.graph.port", 0);
+    public static final Config<Long> STORE_GC_INTERVAL_MS =
+            Config.longConfig("store.gc.interval.ms", 5000L);
 
-    public static final Config<Integer> EXECUTOR_QUERY_PORT =
-            Config.intConfig("executor.query.port", 0);
-
-    public static final Config<Integer> EXECUTOR_ENGINE_PORT =
-            Config.intConfig("executor.engine.port", 0);
+    // set by IS_SECONDARY_INSTANCE, used in graph.rs
+    public static final Config<String> STORE_STORAGE_ENGINE =
+            Config.stringConfig("store.storage.engine", "rocksdb");
+    public static final Config<String> STORE_SECONDARY_DATA_PATH =
+            Config.stringConfig("store.data.secondary.path", "./data_secondary");
 }

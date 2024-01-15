@@ -181,8 +181,8 @@ class CollectionIter {
   inline const self_type_t* operator->() const { return this; }
 
  private:
-  size_t ind_;
   const std::vector<T>& vec_;
+  size_t ind_;
 };
 
 // specialization for T is tuple, and only contains one element.
@@ -280,7 +280,7 @@ class Collection {
     new_offset.reserve(new_size + 1);
     new_vec.reserve(new_size);
     new_offset.emplace_back(0);
-    for (auto i = 0; i < new_size; ++i) {
+    for (size_t i = 0; i < new_size; ++i) {
       if (offset[i] >= offset[i + 1]) {
         new_vec.emplace_back(T());
       } else {
@@ -301,9 +301,9 @@ class Collection {
     CHECK(repeat_vec.size() == cur_offset.size())
         << "repeat vec:" << gs::to_string(repeat_vec)
         << ", cur offset: " << gs::to_string(cur_offset);
-    for (auto i = 0; i + 1 < cur_offset.size(); ++i) {
+    for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
       auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
-      for (auto j = 0; j < times_to_repeat; ++j) {
+      for (size_t j = 0; j < times_to_repeat; ++j) {
         for (auto k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
           res.push_back(vec_[k]);
         }
@@ -333,8 +333,8 @@ class Collection {
   self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<T> res;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         // VLOG(10) << "Project: " << vids_[i];
         res.push_back(vec_[i]);
       }
@@ -443,7 +443,6 @@ class PropCountBuilder {
     while (vec_.size() <= ind) {
       vec_.emplace_back(0);
     }
-    using cur_ele_tuple = typename gs::tuple_element<tag, ELE_TUPLE>::type;
 
     auto& cur_ele = gs::get_from_tuple<tag>(tuple);
     // get prop from prop getter
@@ -599,7 +598,7 @@ class DistinctCountBuilder<tag_id, TwoLabelVertexSetImpl<VID_T, LabelT, T...>> {
   DistinctCountBuilder(const grape::Bitset& bitset,
                        const std::vector<VID_T>& vids) {
     // find out the range of vertices inside vector, and use a bitset to count
-    for (auto i = 0; i < vids.size(); ++i) {
+    for (size_t i = 0; i < vids.size(); ++i) {
       auto v = vids[i];
       if (bitset.get_bit(i)) {
         min_v[0] = std::min(min_v[0], v);
@@ -641,7 +640,7 @@ class DistinctCountBuilder<tag_id, TwoLabelVertexSetImpl<VID_T, LabelT, T...>> {
     auto max_ind = std::max(vec_[0].size(), vec_[1].size());
     res.resize(max_ind, 0);
     for (auto label_ind = 0; label_ind < 2; ++label_ind) {
-      for (auto i = 0; i < vec_[label_ind].size(); ++i) {
+      for (size_t i = 0; i < vec_[label_ind].size(); ++i) {
         res[i] += vec_[label_ind][i].count();
       }
     }
@@ -994,7 +993,7 @@ class CollectionOfSetBuilder<
 
   CollectionOfVec<T> Build() {
     // Make it unique.
-    for (auto i = 0; i < vec_.size(); ++i) {
+    for (size_t i = 0; i < vec_.size(); ++i) {
       sort(vec_[i].begin(), vec_[i].end());
       vec_[i].erase(unique(vec_[i].begin(), vec_[i].end()), vec_[i].end());
     }

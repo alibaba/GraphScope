@@ -56,7 +56,7 @@ class DedupOpBuilder {
     std::string dedup_tag_ids_str;
     {
       std::stringstream ss;
-      for (auto i = 0; i < dedup_tag_ids_.size(); ++i) {
+      for (size_t i = 0; i < dedup_tag_ids_.size(); ++i) {
         if (i + 1 == dedup_tag_ids_.size()) {
           ss << dedup_tag_ids_[i];
         } else {

@@ -116,9 +116,8 @@ class UpdateTransaction {
     const vid_t* added_edges_end_;
 
     std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter_;
-    size_t offset_;
-
     UpdateTransaction* txn_;
+    size_t offset_;
   };
 
   vertex_iterator GetVertexIterator(label_t label);

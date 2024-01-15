@@ -37,7 +37,7 @@ public class IngestProgressService extends IngestProgressGrpc.IngestProgressImpl
     public void getTailOffsets(
             GetTailOffsetsRequest request,
             StreamObserver<GetTailOffsetsResponse> responseObserver) {
-        logger.info("Get offset of [" + request.getQueueIdList() + "]");
+        logger.info("Get offset of {}", request.getQueueIdList());
         List<Integer> queueIdList = request.getQueueIdList();
         List<Long> tailOffsets = this.snapshotManager.getTailOffsets(queueIdList);
         GetTailOffsetsResponse response =
