@@ -25,6 +25,14 @@ limitations under the License.
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
+namespace grape {
+
+inline bool operator<(const EmptyType& lhs, const EmptyType& rhs) {
+  return false;
+}
+
+}  // namespace grape
+
 namespace gs {
 
 enum class StorageStrategy {
@@ -112,6 +120,10 @@ struct Date {
   Date(int64_t x);
 
   std::string to_string() const;
+
+  bool operator<(const Date& rhs) const {
+    return milli_second < rhs.milli_second;
+  }
 
   int64_t milli_second;
 };
