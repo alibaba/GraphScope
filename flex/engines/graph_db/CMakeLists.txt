@@ -14,6 +14,7 @@ install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/single_edge_insert_transaction.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/single_vertex_insert_transaction.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/update_transaction.h
+              ${CMAKE_CURRENT_SOURCE_DIR}/database/compact_transaction.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/version_manager.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/wal.h
               ${CMAKE_CURRENT_SOURCE_DIR}/database/transaction_utils.h

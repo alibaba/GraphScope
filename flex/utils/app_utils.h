@@ -48,6 +48,10 @@ class Encoder {
 
   void put_string_view(const std::string_view& v);
 
+  void put_small_string(const std::string& v);
+
+  void put_small_string_view(const std::string_view& v);
+
   void put_double(double v);
 
   void clear();
@@ -66,6 +70,8 @@ class Decoder {
   int64_t get_long();
 
   std::string_view get_string();
+
+  std::string_view get_small_string();
 
   uint8_t get_byte();
 
