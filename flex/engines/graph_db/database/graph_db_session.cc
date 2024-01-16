@@ -164,8 +164,8 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       eval_duration_.fetch_add(
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
               .count());
-      ++query_num_;
 #endif
+      ++query_num_;
       return result_buffer;
     }
 
@@ -184,8 +184,8 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   eval_duration_.fetch_add(
       std::chrono::duration_cast<std::chrono::microseconds>(end - start)
           .count());
-  ++query_num_;
 #endif
+  ++query_num_;
   return Result<std::vector<char>>(
       StatusCode::QueryFailed,
       "Query failed for procedure id:" + std::to_string((int) type),
@@ -339,7 +339,8 @@ double GraphDBSession::eval_duration() const {
   return static_cast<double>(eval_duration_.load()) / 1000000.0;
 }
 
-int64_t GraphDBSession::query_num() const { return query_num_.load(); }
 #endif
+
+int64_t GraphDBSession::query_num() const { return query_num_.load(); }
 
 }  // namespace gs

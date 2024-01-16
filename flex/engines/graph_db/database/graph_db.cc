@@ -20,6 +20,8 @@
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/utils/yaml_utils.h"
 
+#include "flex/third_party/httplib.h"
+
 namespace gs {
 
 struct SessionLocalContext {
@@ -41,6 +43,10 @@ struct SessionLocalContext {
 
 GraphDB::GraphDB() = default;
 GraphDB::~GraphDB() {
+  if (compact_thread_running_) {
+    compact_thread_running_ = false;
+    compact_thread_.join();
+  }
   for (int i = 0; i < thread_num_; ++i) {
     contexts_[i].~SessionLocalContext();
   }
@@ -53,7 +59,8 @@ GraphDB& GraphDB::get() {
 }
 
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
-                           int32_t thread_num, bool warmup, bool memory_only) {
+                           int32_t thread_num, bool warmup, bool memory_only,
+                           bool enable_auto_compaction, int port) {
   if (!std::filesystem::exists(data_dir)) {
     std::filesystem::create_directories(data_dir);
   }
@@ -103,6 +110,48 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   if ((!create_empty_graph) && warmup) {
     graph_.Warmup(thread_num_);
   }
+
+  if (enable_auto_compaction && (port != -1)) {
+    if (compact_thread_running_) {
+      compact_thread_running_ = false;
+      compact_thread_.join();
+    }
+    compact_thread_running_ = true;
+    compact_thread_ = std::thread([&]() {
+      size_t last_compaction_at = 0;
+      while (compact_thread_running_) {
+        size_t query_num_before = getExecutedQueryNum();
+        sleep(30);
+        if (!compact_thread_running_) {
+          break;
+        }
+        size_t query_num_after = getExecutedQueryNum();
+        if (query_num_before == query_num_after &&
+            (query_num_after > (last_compaction_at + 100000))) {
+          VLOG(10) << "Trigger auto compaction";
+          last_compaction_at = query_num_after;
+          std::string url = "127.0.0.1";
+          httplib::Client cli(url, port);
+          cli.set_connection_timeout(0, 300000);
+          cli.set_read_timeout(300, 0);
+          cli.set_write_timeout(300, 0);
+
+          std::vector<char> buf;
+          Encoder encoder(buf);
+          encoder.put_string("COMPACTION");
+          encoder.put_byte(0);
+          std::string content(buf.data(), buf.size());
+          auto res = cli.Post("/interactive/query", content, "text/plain");
+          std::string ret = res->body;
+          Decoder decoder(ret.data(), ret.size());
+          std::string_view info = decoder.get_string();
+
+          VLOG(10) << "Finish compaction, info: " << info;
+        }
+      }
+    });
+  }
+
   return Result<bool>(true);
 }
 
@@ -111,6 +160,10 @@ void GraphDB::Close() {
   monitor_thread_running_ = false;
   monitor_thread_.join();
 #endif
+  if (compact_thread_running_) {
+    compact_thread_running_ = false;
+    compact_thread_.join();
+  }
   //-----------Clear graph_db----------------
   graph_.Clear();
   version_manager_.clear();
@@ -364,6 +417,14 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
     }
   });
 #endif
+}
+
+size_t GraphDB::getExecutedQueryNum() const {
+  size_t ret = 0;
+  for (int i = 0; i < thread_num_; ++i) {
+    ret += contexts_[i].session.query_num();
+  }
+  return ret;
 }
 
 }  // namespace gs
