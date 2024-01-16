@@ -12,9 +12,10 @@ project (
 
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
-option(BUILD_DOC "Whether to build doc" ON)
-option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
+option(BUILD_DOC "Whether to build doc" OFF)
+option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
+option(ENABLE_HUGEPAGE "Whether to use hugepages when open mmap array in memory" ON)
 
 # ------------------------------------------------------------------------------
 # cmake configs
@@ -33,6 +34,12 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 if (MONITOR_SESSIONS)
     message("Monitor sessions is enabled")
     add_definitions(-DMONITOR_SESSIONS)
+endif ()
+
+
+if (ENABLE_HUGEPAGE)
+    message("Hugepage is enabled")
+    add_definitions(-DHUGEPAGE)
 endif ()
 
 execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
