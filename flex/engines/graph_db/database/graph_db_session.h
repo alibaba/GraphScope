@@ -17,6 +17,7 @@
 #define GRAPHSCOPE_DATABASE_GRAPH_DB_SESSION_H_
 
 #include "flex/engines/graph_db/app/app_base.h"
+#include "flex/engines/graph_db/database/compact_transaction.h"
 #include "flex/engines/graph_db/database/insert_transaction.h"
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
@@ -45,11 +46,10 @@ class GraphDBSession {
         logger_(logger),
         work_dir_(work_dir),
         thread_id_(thread_id),
-        query_num_(0),
 #ifdef MONITOR_SESSIONS
-        eval_duration_(0)
+        eval_duration_(0),
 #endif
-  {
+        query_num_(0) {
     for (auto& app : apps_) {
       app = nullptr;
     }
@@ -112,10 +112,10 @@ class GraphDBSession {
   std::array<AppWrapper, 256> app_wrappers_;
   std::array<AppBase*, 256> apps_;
 
-  std::atomic<int64_t> query_num_;
 #ifdef MONITOR_SESSIONS
   std::atomic<int64_t> eval_duration_;
 #endif
+  std::atomic<int64_t> query_num_;
 };
 
 }  // namespace gs
