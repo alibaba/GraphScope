@@ -694,7 +694,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       ptr += cap;
     }
 
-    unsorted_since_ = 1;
+    unsorted_since_ = 0;
     return edge_num;
   }
 
@@ -709,15 +709,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
         cap_list->open(snapshot_dir + "/" + name + ".cap", true);
       }
       nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
-
-      {
-        FILE* unsorted_since_fd =
-            fopen((snapshot_dir + "/" + name + ".meta").c_str(), "r");
-        CHECK_EQ(
-            fread(&unsorted_since_, sizeof(timestamp_t), 1, unsorted_since_fd),
-            1);
-        fclose(unsorted_since_fd);
-      }
+      load_meta(snapshot_dir + "/" + name);
     }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
@@ -740,13 +732,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   void open_in_memory(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
     degree_list.open_in_memory(prefix + ".deg");
-    {
-      FILE* unsorted_since_fd = fopen((prefix + ".meta").c_str(), "r");
-      CHECK_EQ(
-          fread(&unsorted_since_, sizeof(timestamp_t), 1, unsorted_since_fd),
-          1);
-      fclose(unsorted_since_fd);
-    }
+    load_meta(prefix);
     mmap_array<int>* cap_list = &degree_list;
     if (std::filesystem::exists(prefix + ".cap")) {
       cap_list = new mmap_array<int>();
@@ -814,15 +800,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
             const std::string& new_spanshot_dir) override {
     size_t vnum = adj_lists_.size();
     bool reuse_nbr_list = true;
-    {
-      FILE* unsorted_since_fd =
-          fopen((new_spanshot_dir + "/" + name + ".meta").c_str(), "wb");
-      CHECK_EQ(
-          fwrite(&unsorted_since_, sizeof(timestamp_t), 1, unsorted_since_fd),
-          1);
-      fflush(unsorted_since_fd);
-      fclose(unsorted_since_fd);
-    }
+    dump_meta(new_spanshot_dir + "/" + name);
     mmap_array<int> degree_list;
     std::vector<int> cap_list;
     degree_list.open(new_spanshot_dir + "/" + name + ".deg", false);
@@ -957,6 +935,30 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   timestamp_t unsorted_since() const override { return unsorted_since_; }
 
  private:
+  void load_meta(const std::string& prefix) {
+    std::string meta_file_path = prefix + ".meta";
+    if (std::filesystem::exists(meta_file_path)) {
+      FILE* meta_file_fd = fopen(meta_file_path.c_str(), "r");
+      CHECK_EQ(
+          fread(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
+          1);
+      fclose(meta_file_fd);
+    } else {
+      unsorted_since_ = 0;
+    }
+  }
+
+  void dump_meta(const std::string& prefix) const {
+    std::string meta_file_path = prefix + ".meta";
+    FILE* meta_file_fd =
+        fopen((prefix + ".meta").c_str(), "wb");
+    CHECK_EQ(
+        fwrite(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
+        1);
+    fflush(meta_file_fd);
+    fclose(meta_file_fd);
+  }
+
   grape::SpinLock* locks_;
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
