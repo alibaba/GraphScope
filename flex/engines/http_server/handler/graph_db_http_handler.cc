@@ -23,12 +23,44 @@
 #include "flex/engines/http_server/generated/actor/executor_ref.act.autogen.h"
 #include "flex/engines/http_server/types.h"
 
+#if 0
+class query_dispatcher {
+ public:
+  query_dispatcher(uint32_t shard_concurrency)
+      : shard_concurrency_(shard_concurrency), executor_idx_(0) {}
+
+  int get_executor_idx() {
+    auto idx = executor_idx_;
+    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    return idx;
+  }
+
+ private:
+  int shard_concurrency_;
+  int executor_idx_;
+};
+#else
+#include <random>
+class query_dispatcher {
+ public:
+  query_dispatcher(uint32_t shard_concurrency)
+      : rd_(), gen_(rd_()), dis_(0, shard_concurrency - 1) {}
+
+  int get_executor_idx() { return dis_(gen_); }
+
+ private:
+  std::random_device rd_;
+  std::mt19937 gen_;
+  std::uniform_int_distribution<> dis_;
+};
+#endif
+
 namespace server {
 
 class graph_db_ic_handler : public seastar::httpd::handler_base {
  public:
   graph_db_ic_handler(uint32_t group_id, uint32_t shard_concurrency)
-      : shard_concurrency_(shard_concurrency), executor_idx_(0) {
+      : shard_concurrency_(shard_concurrency), dispatcher_(shard_concurrency) {
     executor_refs_.reserve(shard_concurrency_);
     hiactor::scope_builder builder;
     builder.set_shard(hiactor::local_shard_id())
@@ -44,8 +76,7 @@ class graph_db_ic_handler : public seastar::httpd::handler_base {
       const seastar::sstring& path,
       std::unique_ptr<seastar::httpd::request> req,
       std::unique_ptr<seastar::httpd::reply> rep) override {
-    auto dst_executor = executor_idx_;
-    executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+    auto dst_executor = dispatcher_.get_executor_idx();
 
     return executor_refs_[dst_executor]
         .run_graph_db_query(query_param{std::move(req->content)})
@@ -65,7 +96,7 @@ class graph_db_ic_handler : public seastar::httpd::handler_base {
 
  private:
   const uint32_t shard_concurrency_;
-  uint32_t executor_idx_;
+  query_dispatcher dispatcher_;
   std::vector<executor_ref> executor_refs_;
 };
 

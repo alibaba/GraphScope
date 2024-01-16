@@ -55,7 +55,8 @@ class Schema {
                       const std::vector<PropertyType>& properties,
                       const std::vector<std::string>& prop_names,
                       EdgeStrategy oe = EdgeStrategy::kMultiple,
-                      EdgeStrategy ie = EdgeStrategy::kMultiple);
+                      EdgeStrategy ie = EdgeStrategy::kMultiple,
+                      bool sort_on_compaction = false);
 
   label_t vertex_label_num() const;
 
@@ -135,6 +136,10 @@ class Schema {
                                           const std::string& dst_label,
                                           const std::string& label) const;
 
+  bool get_sort_on_compaction(const std::string& src_label,
+                              const std::string& dst_label,
+                              const std::string& label) const;
+
   bool contains_edge_label(const std::string& label) const;
 
   label_t get_edge_label_id(const std::string& label) const;
@@ -187,6 +192,7 @@ class Schema {
   std::map<uint32_t, std::vector<std::string>> eprop_names_;
   std::map<uint32_t, EdgeStrategy> oe_strategy_;
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
+  std::map<uint32_t, bool> sort_on_compactions_;
   std::vector<size_t> max_vnum_;
   std::unordered_map<std::string, std::pair<std::string, uint8_t>>
       plugin_name_to_path_and_id_;  // key is plugin name, value is plugin path

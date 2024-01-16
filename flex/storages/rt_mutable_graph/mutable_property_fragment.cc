@@ -233,6 +233,34 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
   }
 }
 
+void MutablePropertyFragment::Compact(uint32_t version) {
+  for (size_t src_label_i = 0; src_label_i != vertex_label_num_;
+       ++src_label_i) {
+    std::string src_label =
+        schema_.get_vertex_label_name(static_cast<label_t>(src_label_i));
+    for (size_t dst_label_i = 0; dst_label_i != vertex_label_num_;
+         ++dst_label_i) {
+      std::string dst_label =
+          schema_.get_vertex_label_name(static_cast<label_t>(dst_label_i));
+      for (size_t e_label_i = 0; e_label_i != edge_label_num_; ++e_label_i) {
+        std::string edge_label =
+            schema_.get_edge_label_name(static_cast<label_t>(e_label_i));
+        if (!schema_.exist(src_label, dst_label, edge_label)) {
+          continue;
+        }
+        size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
+                       dst_label_i * edge_label_num_ + e_label_i;
+        if (dual_csr_list_[index] != NULL) {
+          if (schema_.get_sort_on_compaction(src_label, dst_label,
+                                             edge_label)) {
+            dual_csr_list_[index]->SortByEdgeData(version);
+          }
+        }
+      }
+    }
+  }
+}
+
 void MutablePropertyFragment::Dump(const std::string& work_dir,
                                    uint32_t version) {
   std::string snapshot_dir_path = snapshot_dir(work_dir, version);
@@ -266,6 +294,10 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
         if (dual_csr_list_[index] != NULL) {
           ie_[index]->resize(vertex_num[dst_label_i]);
           oe_[index]->resize(vertex_num[src_label_i]);
+          if (schema_.get_sort_on_compaction(src_label, dst_label,
+                                             edge_label)) {
+            dual_csr_list_[index]->SortByEdgeData(version + 1);
+          }
           dual_csr_list_[index]->Dump(
               oe_prefix(src_label, dst_label, edge_label),
               ie_prefix(src_label, dst_label, edge_label),

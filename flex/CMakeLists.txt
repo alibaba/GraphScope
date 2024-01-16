@@ -16,7 +16,6 @@ option(BUILD_DOC "Whether to build doc" ON)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
 
-
 # ------------------------------------------------------------------------------
 # cmake configs
 # ------------------------------------------------------------------------------
@@ -55,16 +54,6 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
 
-if (APPLE)
-  set(CMAKE_MACOSX_RPATH ON)
-else ()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wl,-rpath,$ORIGIN")
-endif ()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -fPIC")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
-
 add_compile_definitions(FLEX_VERSION="${FLEX_VERSION}")
 
 if (APPLE)
@@ -76,6 +65,10 @@ else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -Wl,-rpath,$ORIGIN")
     endif ()
 endif ()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
