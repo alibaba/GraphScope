@@ -13,6 +13,7 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
+import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.discovery.*;
@@ -24,6 +25,8 @@ import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.store.*;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.NameResolver;
@@ -47,7 +50,6 @@ public class Store extends NodeBase {
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
         DiscoveryFactory discoveryFactory = new DiscoveryFactory(configs);
         this.discovery = discoveryFactory.makeDiscovery(localNodeProvider);
-
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
@@ -55,13 +57,16 @@ public class Store extends NodeBase {
         this.storeService = new StoreService(configs, this.metaService, metricsCollector);
         SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
+        LogService logService = LogServiceFactory.makeLogService(configs);
+
         this.writerAgent =
                 new WriterAgent(
                         configs,
                         this.storeService,
                         this.metaService,
                         snapshotCommitter,
-                        metricsCollector);
+                        metricsCollector,
+                        logService);
         StoreWriteService storeWriteService = new StoreWriteService(this.writerAgent);
         this.backupAgent = new BackupAgent(configs, this.storeService);
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);

@@ -17,11 +17,13 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
+import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.OperationType;
+import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
@@ -252,7 +254,14 @@ public class IngestProcessor implements MetricsAgent {
         long walOffset = -1L;
         if (!shouldStop) {
             try {
-                walOffset = logWriter.append(new LogEntry(batchSnapshotId, task.operationBatch));
+
+                Map<Integer, OperationBatch.Builder> builderMap = batchSender.splitBatch(task.operationBatch);
+                for (Map.Entry<Integer, OperationBatch.Builder> entry : builderMap.entrySet()) {
+                    int partitionId = entry.getKey();
+                    OperationBatch batch = entry.getValue().build();
+                    logWriter.append(partitionId, new LogEntry(batchSnapshotId, batch));
+                }
+//                walOffset = logWriter.append(new LogEntry(batchSnapshotId, task.operationBatch));
             } catch (Exception e) {
                 // write failed, just throw out to fail this task
                 logger.error("write WAL failed. requestId [" + task.requestId + "]", e);
@@ -263,8 +272,8 @@ public class IngestProcessor implements MetricsAgent {
         if (shouldStop) {
             throw new IllegalStateException("ingestProcessor queue#[" + this.queueId + "] stopped");
         }
-        this.batchSender.asyncSendWithRetry(
-                task.requestId, this.queueId, batchSnapshotId, walOffset, task.operationBatch);
+//        this.batchSender.asyncSendWithRetry(
+//                task.requestId, this.queueId, batchSnapshotId, walOffset, task.operationBatch);
         long storeCompleteTimeNano = System.nanoTime();
         if (!task.operationBatch.equals(IngestService.MARKER_BATCH)) {
             this.walBlockTimeNano += (walCompleteTimeNano - startTimeNano);

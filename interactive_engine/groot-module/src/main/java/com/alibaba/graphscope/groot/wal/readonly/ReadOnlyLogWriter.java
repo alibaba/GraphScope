@@ -25,6 +25,10 @@ public class ReadOnlyLogWriter implements LogWriter {
 
     @Override
     public long append(LogEntry logEntry) throws IOException {
+        return append(0, logEntry);
+    }
+
+    public long append(int partition, LogEntry logEntry) throws IOException {
         offset += 1;
         return offset;
     }

@@ -25,6 +25,7 @@ import com.alibaba.graphscope.groot.store.SnapshotCommitter;
 import com.alibaba.graphscope.groot.store.StoreService;
 import com.alibaba.graphscope.groot.store.WriterAgent;
 
+import com.alibaba.graphscope.groot.wal.LogService;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -45,6 +46,7 @@ public class WriterAgentTest {
         when(mockMetaService.getQueueCount()).thenReturn(1);
 
         SnapshotCommitter mockSnapshotCommitter = mock(SnapshotCommitter.class);
+        LogService logService = mock(LogService.class);
 
         WriterAgent writerAgent =
                 new WriterAgent(
@@ -52,7 +54,8 @@ public class WriterAgentTest {
                         mockStoreService,
                         mockMetaService,
                         mockSnapshotCommitter,
-                        new MetricsCollector(configs));
+                        new MetricsCollector(configs),
+                        logService);
         writerAgent.init(0L);
 
         writerAgent.start();

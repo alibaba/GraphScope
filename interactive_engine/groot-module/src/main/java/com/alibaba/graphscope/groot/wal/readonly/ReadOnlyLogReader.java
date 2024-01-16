@@ -45,7 +45,7 @@ public class ReadOnlyLogReader implements LogReader {
         consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
         consumer.assign(List.of(partition));
         consumer.seekToEnd(consumer.assignment());
-        logger.info("Created MockLogReader");
+        logger.info("Created ReadOnlyLogReader");
     }
 
     public ConsumerRecords<LogEntry, LogEntry> getLatestUpdates() {

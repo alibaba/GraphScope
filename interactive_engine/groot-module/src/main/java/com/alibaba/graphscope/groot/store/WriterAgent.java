@@ -15,17 +15,26 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.AvgMetric;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
+import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 
+import com.alibaba.graphscope.groot.wal.LogEntry;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogReader;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,6 +78,7 @@ public class WriterAgent implements MetricsAgent {
     private ExecutorService commitExecutor;
     private List<Long> consumedQueueOffsets;
     private Thread consumeThread;
+    private Thread pollThread;
 
     private volatile long lastUpdateTime;
     private volatile long totalWrite;
@@ -81,12 +91,15 @@ public class WriterAgent implements MetricsAgent {
     private volatile long pollLatencyPerSecondMs;
     private AvgMetric bufferWritePerSecondMetric;
 
+    private LogService logService;
+
     public WriterAgent(
             Configs configs,
             StoreService storeService,
             MetaService metaService,
             SnapshotCommitter snapshotCommitter,
-            MetricsCollector metricsCollector) {
+            MetricsCollector metricsCollector,
+            LogService logService) {
         this.configs = configs;
         this.storeId = CommonConfig.NODE_IDX.get(configs);
         this.queueCount = metaService.getQueueCount();
@@ -94,6 +107,7 @@ public class WriterAgent implements MetricsAgent {
         this.metaService = metaService;
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
+        this.logService = logService;
         initMetrics();
         metricsCollector.register(this, () -> updateMetrics());
     }
@@ -115,10 +129,15 @@ public class WriterAgent implements MetricsAgent {
             this.consumedQueueOffsets.add(-1L);
         }
 
-        this.consumeThread = new Thread(() -> processBatches());
+        this.consumeThread = new Thread(this::processBatches);
         this.consumeThread.setName("store-consume");
         this.consumeThread.setDaemon(true);
         this.consumeThread.start();
+
+        this.pollThread = new Thread(this::pollBatches);
+        this.pollThread.setName("store-kafka-poller");
+        this.pollThread.setDaemon(true);
+        this.pollThread.start();
 
         this.commitExecutor =
                 new ThreadPoolExecutor(
@@ -182,6 +201,44 @@ public class WriterAgent implements MetricsAgent {
         long afterOfferTime = System.nanoTime();
         this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
         return true;
+    }
+
+    public void pollBatches() {
+        int partitionCount = metaService.getPartitionCount();
+        try (ReadOnlyLogReader reader = (ReadOnlyLogReader) logService.createReader(storeId, 0)) {
+            while (!shouldStop) {
+                ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
+                for (ConsumerRecord<LogEntry, LogEntry> record : records) {
+                    long offset = record.offset();
+                    LogEntry logEntry = record.value();
+                    OperationBatch operationBatch = logEntry.getOperationBatch();
+                    long snapshotId = logEntry.getSnapshotId();
+                    StoreDataBatch.Builder builder = StoreDataBatch.newBuilder().requestId("")
+                            .queueId(storeId)
+                            .snapshotId(snapshotId)
+                            .offset(offset);
+
+                    for (OperationBlob operationBlob : operationBatch) {
+                        long partitionKey = operationBlob.getPartitionKey();
+                        if (partitionKey == -1L) {
+                            // replicate to all store node
+                            builder.addOperation(-1, operationBlob);
+                        } else {
+                            int partitionId = PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
+                            int curStoreId = metaService.getStoreIdByPartition(partitionId);
+                            if (curStoreId == storeId) {
+                                builder.addOperation(partitionId, operationBlob);
+                            } else {
+                                logger.error("Should not happen: {} {}", partitionId, operationBlob.toProto());
+                            }
+                        }
+                    }
+                    writeStore(builder.build());
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void processBatches() {

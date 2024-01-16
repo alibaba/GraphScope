@@ -66,6 +66,7 @@ public class KafkaLogReader implements LogReader {
                     "invalid offset " + offset + ", hint: [" + earliest + ", " + latest + ")");
         }
         consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
+
         consumer.assign(List.of(partition));
         consumer.seek(partition, offset);
         nextReadOffset = offset;
@@ -106,6 +107,11 @@ public class KafkaLogReader implements LogReader {
         nextReadOffset = record.offset() + 1;
         LogEntry v = record.value();
         return new ReadLogEntry(record.offset(), v);
+    }
+    public ConsumerRecords<LogEntry, LogEntry> getLatestUpdates() {
+        ConsumerRecords<LogEntry, LogEntry> consumerRecords =
+                consumer.poll(Duration.ofMillis(1000L));
+        return consumerRecords;
     }
 
     @Override

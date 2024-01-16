@@ -110,6 +110,31 @@ public class BatchSender implements MetricsAgent {
         }
     }
 
+    public Map<Integer, OperationBatch.Builder> splitBatch(OperationBatch operationBatch) {
+        int partitionCount = metaService.getPartitionCount();
+        Map<Integer, OperationBatch.Builder> storeToBatchBuilder = new HashMap<>();
+        Function<Integer, OperationBatch.Builder> storeDataBatchBuilderFunc =
+                k -> OperationBatch.newBuilder();
+        for (OperationBlob operationBlob : operationBatch) {
+            long partitionKey = operationBlob.getPartitionKey();
+            if (partitionKey == -1L) {
+                // replicate to all store node
+                for (int i = 0; i < this.storeCount; i++) {
+                    OperationBatch.Builder batchBuilder =
+                            storeToBatchBuilder.computeIfAbsent(i, storeDataBatchBuilderFunc);
+                    batchBuilder.addOperationBlob(operationBlob);
+                }
+            } else {
+                int partitionId = PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
+                int storeId = metaService.getStoreIdByPartition(partitionId);
+                OperationBatch.Builder batchBuilder =
+                        storeToBatchBuilder.computeIfAbsent(storeId, storeDataBatchBuilderFunc);
+                batchBuilder.addOperationBlob(operationBlob);
+            }
+        }
+        return storeToBatchBuilder;
+    }
+
     public void asyncSendWithRetry(
             String requestId,
             int queueId,
