@@ -117,7 +117,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
       compact_thread_.join();
     }
     compact_thread_running_ = true;
-    compact_thread_ = std::thread([&]() {
+    compact_thread_ = std::thread([&](int http_port) {
       size_t last_compaction_at = 0;
       while (compact_thread_running_) {
         size_t query_num_before = getExecutedQueryNum();
@@ -131,7 +131,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
           VLOG(10) << "Trigger auto compaction";
           last_compaction_at = query_num_after;
           std::string url = "127.0.0.1";
-          httplib::Client cli(url, port);
+          httplib::Client cli(url, http_port);
           cli.set_connection_timeout(0, 300000);
           cli.set_read_timeout(300, 0);
           cli.set_write_timeout(300, 0);
@@ -149,7 +149,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
           VLOG(10) << "Finish compaction, info: " << info;
         }
       }
-    });
+    }, port);
   }
 
   return Result<bool>(true);

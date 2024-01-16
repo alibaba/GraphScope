@@ -293,7 +293,7 @@ bool ServerApp::Query(Decoder& input, Encoder& output) {
       }
       return true;
     }
-  } else if (op == "COMPCATION") {
+  } else if (op == "COMPACTION") {
     bool ret = graph_.Compact();
     if (ret) {
       output.put_string("SUCCESS");
