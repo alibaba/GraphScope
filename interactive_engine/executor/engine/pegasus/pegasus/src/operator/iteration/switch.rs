@@ -272,7 +272,7 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
                 }
             } else {
                 // parent of parent scope end;
-                if level >= self.scope_level-1 {
+                if level >= self.scope_level - 1 {
                     return Err(JobExecError::panic(String::from(
                         "SwitchOperator: tag len is not less than scope level",
                     )));
@@ -315,9 +315,7 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
             inputs[1].cancel_scope(n.tag());
         } else {
             if n.port != 1 {
-                return Err(JobExecError::panic(String::from(
-                    "SwitchOperator: port is not equal to 1",
-                )));
+                return Err(JobExecError::panic(String::from("SwitchOperator: port is not equal to 1")));
             }
             if n.tag().len() == self.scope_level as usize {
                 let nth = n.tag().current_uncheck();

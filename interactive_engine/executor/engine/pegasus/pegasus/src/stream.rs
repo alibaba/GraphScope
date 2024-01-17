@@ -127,8 +127,8 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn repartition<F>(mut self, route: F) -> Stream<D>
-        where
-            F: Fn(&D) -> FnResult<u64> + Send + 'static,
+    where
+        F: Fn(&D) -> FnResult<u64> + Send + 'static,
     {
         self.partitions = self.builder.worker_id.total_peers() as usize;
         self.ch
@@ -178,10 +178,10 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn transform<F, O, T>(mut self, name: &str, op_builder: F) -> Result<Stream<O>, BuildJobError>
-        where
-            O: Data,
-            T: OperatorCore,
-            F: FnOnce(&OperatorInfo) -> T,
+    where
+        O: Data,
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
     {
         let dfb = self.builder.clone();
         let partitions = self.partitions;
@@ -195,10 +195,10 @@ impl<D: Data> Stream<D> {
     pub fn transform_notify<F, O, T>(
         mut self, name: &str, op_builder: F,
     ) -> Result<Stream<O>, BuildJobError>
-        where
-            O: Data,
-            T: NotifiableOperator,
-            F: FnOnce(&OperatorInfo) -> T,
+    where
+        O: Data,
+        T: NotifiableOperator,
+        F: FnOnce(&OperatorInfo) -> T,
     {
         let dfb = self.builder.clone();
         let partitions = self.partitions;
@@ -212,11 +212,11 @@ impl<D: Data> Stream<D> {
     pub fn union_transform<R, O, F, T>(
         mut self, name: &str, mut other: Stream<R>, op_builder: F,
     ) -> Result<Stream<O>, BuildJobError>
-        where
-            R: Data,
-            O: Data,
-            T: OperatorCore,
-            F: FnOnce(&OperatorInfo) -> T,
+    where
+        R: Data,
+        O: Data,
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
     {
         if self.get_scope_level() != other.get_scope_level() {
             BuildJobError::unsupported(format!(
@@ -239,11 +239,11 @@ impl<D: Data> Stream<D> {
     pub fn union_transform_notify<R, O, F, T>(
         mut self, name: &str, mut other: Stream<R>, op_builder: F,
     ) -> Result<Stream<O>, BuildJobError>
-        where
-            R: Data,
-            O: Data,
-            T: NotifiableOperator,
-            F: FnOnce(&OperatorInfo) -> T,
+    where
+        R: Data,
+        O: Data,
+        T: NotifiableOperator,
+        F: FnOnce(&OperatorInfo) -> T,
     {
         if self.get_scope_level() != other.get_scope_level() {
             BuildJobError::unsupported(format!(
@@ -265,11 +265,11 @@ impl<D: Data> Stream<D> {
     pub fn binary_branch<F, L, R, T>(
         mut self, name: &str, op_builder: F,
     ) -> Result<(Stream<L>, Stream<R>), BuildJobError>
-        where
-            L: Data,
-            R: Data,
-            T: OperatorCore,
-            F: FnOnce(&OperatorInfo) -> T,
+    where
+        L: Data,
+        R: Data,
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
     {
         let op = self.add_operator(name, op_builder)?;
         let left = op.new_output::<L>();
@@ -286,11 +286,11 @@ impl<D: Data> Stream<D> {
     pub fn binary_branch_notify<F, L, R, T>(
         mut self, name: &str, op_builder: F,
     ) -> Result<(Stream<L>, Stream<R>), BuildJobError>
-        where
-            L: Data,
-            R: Data,
-            T: NotifiableOperator,
-            F: FnOnce(&OperatorInfo) -> T,
+    where
+        L: Data,
+        R: Data,
+        T: NotifiableOperator,
+        F: FnOnce(&OperatorInfo) -> T,
     {
         let op = self.add_notify_operator(name, op_builder)?;
         let left = op.new_output::<L>();
@@ -305,9 +305,9 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn sink_by<F, T>(mut self, name: &str, op_builder: F) -> Result<(), BuildJobError>
-        where
-            T: OperatorCore,
-            F: FnOnce(&OperatorInfo) -> T,
+    where
+        T: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> T,
     {
         let op_ref = self.add_operator(name, op_builder)?;
         self.builder.add_sink(op_ref.get_index());
@@ -349,9 +349,9 @@ impl<D: Data> Stream<D> {
     pub fn leave(mut self) -> Result<Self, BuildJobError> {
         if !self.ch.is_pipeline()
             || self
-            .ch
-            .add_delta(ScopeDelta::ToParent(1))
-            .is_some()
+                .ch
+                .add_delta(ScopeDelta::ToParent(1))
+                .is_some()
         {
             self.forward("leave_adapter")?.leave()
         } else {
@@ -360,9 +360,9 @@ impl<D: Data> Stream<D> {
     }
 
     pub fn add_operator<O, F>(&mut self, name: &str, builder: F) -> Result<OperatorRef, BuildJobError>
-        where
-            O: OperatorCore,
-            F: FnOnce(&OperatorInfo) -> O,
+    where
+        O: OperatorCore,
+        F: FnOnce(&OperatorInfo) -> O,
     {
         let mut op = self
             .builder
@@ -375,9 +375,9 @@ impl<D: Data> Stream<D> {
     pub fn add_notify_operator<O, F>(
         &mut self, name: &str, builder: F,
     ) -> Result<OperatorRef, BuildJobError>
-        where
-            O: NotifiableOperator,
-            F: FnOnce(&OperatorInfo) -> O,
+    where
+        O: NotifiableOperator,
+        F: FnOnce(&OperatorInfo) -> O,
     {
         let mut op = self
             .builder
@@ -437,18 +437,18 @@ impl<D: Debug + Send + Sync + 'static> SingleItem<D> {
     }
 
     pub fn unfold<Iter, F>(self, f: F) -> Result<Stream<Iter::Item>, BuildJobError>
-        where
-            Iter: Iterator + Send + 'static,
-            Iter::Item: Data,
-            F: Fn(D) -> FnResult<Iter> + Send + 'static,
+    where
+        Iter: Iterator + Send + 'static,
+        Iter::Item: Data,
+        F: Fn(D) -> FnResult<Iter> + Send + 'static,
     {
         self.inner.flat_map(move |single| f(single.0))
     }
 
     pub fn map<T, F>(mut self, f: F) -> Result<SingleItem<T>, BuildJobError>
-        where
-            T: Debug + Send + Sync + 'static,
-            F: Fn(D) -> FnResult<T> + Send + 'static,
+    where
+        T: Debug + Send + Sync + 'static,
+        F: Fn(D) -> FnResult<T> + Send + 'static,
     {
         self.inner.set_upstream_batch_size(1);
         self.inner.set_upstream_batch_capacity(1);

@@ -379,7 +379,9 @@ impl NetworkConfig {
     pub fn local_addr(&self) -> Result<SocketAddr, NetError> {
         let index = self.server_id as usize;
         if index >= self.servers_size {
-            return Err(NetError::InvalidConfig(Some("Invalid server config, server_id is out of range".to_owned())));
+            return Err(NetError::InvalidConfig(Some(
+                "Invalid server config, server_id is out of range".to_owned(),
+            )));
         }
         if let Some(ref servers) = self.servers {
             if let Some(Some(addr)) = servers.get(index) {

@@ -257,8 +257,6 @@ fn work_loop(
 
 impl PooledExecutorRuntime {
     fn new(core: usize, task_rx: Receiver<TaskPackage>) -> Self {
-        // Unnecessary assert
-        assert!(core > 0);
         let mut in_flows = Vec::with_capacity(core);
         for _ in 0..core {
             in_flows.push(Arc::new(SegQueue::new()));
@@ -304,7 +302,6 @@ impl PooledExecutorRuntime {
                     Ok(task) => match task {
                         TaskPackage::Single(task) => {
                             if let Some(task) = self.fork_new_thread(task) {
-                                // Unnecessary assert
                                 assert_eq!(self.current_core, self.max_core);
                                 queue.push(RunTask::Users(task));
                             }
@@ -312,7 +309,6 @@ impl PooledExecutorRuntime {
                         TaskPackage::Batch(mut tasks) => {
                             while let Some(task) = tasks.pop() {
                                 if let Some(task) = self.fork_new_thread(task) {
-                                    // Unnecessary assert
                                     assert_eq!(self.current_core, self.max_core);
                                     queue.push(RunTask::Users(task));
                                     break;
@@ -320,7 +316,6 @@ impl PooledExecutorRuntime {
                             }
 
                             if !tasks.is_empty() {
-                                // Unnecessary assert
                                 assert_eq!(self.current_core, self.max_core);
                                 for task in tasks {
                                     queue.push(RunTask::Users(task));
@@ -432,8 +427,10 @@ impl Executor for PooledExecutorProxy {
                 let task = GeneralTask::new(task);
                 general_tasks.push(task);
             }
-            if let Ok(_) = self.task_tx
-                .send(TaskPackage::Batch(general_tasks)) {
+            if let Ok(_) = self
+                .task_tx
+                .send(TaskPackage::Batch(general_tasks))
+            {
                 Ok(())
             } else {
                 Err(RejectError(()))

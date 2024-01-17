@@ -73,9 +73,7 @@ impl Schedule {
             for event in updates.drain(..) {
                 let index = event.target_port.index;
                 if index >= self.sch_ops.len() {
-                    return Err(JobExecError::panic(String::from(
-                        "Schedule: index out of range",
-                    )));
+                    return Err(JobExecError::panic(String::from("Schedule: index out of range")));
                 }
                 self.sch_ops[index].accept(event)?;
             }

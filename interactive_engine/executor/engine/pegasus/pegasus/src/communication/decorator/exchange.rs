@@ -827,10 +827,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByBatchPush<D> {
         } else {
             if !batch.is_empty() {
                 let mut err = IOError::new(IOErrorKind::Internal);
-                err.set_io_cause(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    "Batch is not empty",
-                ));
+                err.set_io_cause(std::io::Error::new(std::io::ErrorKind::Other, "Batch is not empty"));
                 return Err(err);
             }
             if let Some(end) = batch.take_end() {

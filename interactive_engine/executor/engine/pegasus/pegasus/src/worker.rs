@@ -72,8 +72,8 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
     }
 
     pub fn dataflow<F>(&mut self, func: F) -> Result<(), BuildJobError>
-        where
-            F: FnOnce(&mut Source<D>, ResultSink<T>) -> Result<(), BuildJobError>,
+    where
+        F: FnOnce(&mut Source<D>, ResultSink<T>) -> Result<(), BuildJobError>,
     {
         // set current worker's id into tls variable to make it accessible at anywhere;
         let _g = crate::worker_id::guard(self.id);
@@ -85,7 +85,9 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let (mut tx, rx) = resource.take();
         if self.conf.total_workers() > 1 {
             if tx.len() != self.id.total_peers() as usize + 1 {
-                return Err(BuildJobError::InternalError(String::from("Tx size is not equal to peers size")));
+                return Err(BuildJobError::InternalError(String::from(
+                    "Tx size is not equal to peers size",
+                )));
             }
             let mut abort = tx.swap_remove(self.id.index as usize);
             abort.close().ok();

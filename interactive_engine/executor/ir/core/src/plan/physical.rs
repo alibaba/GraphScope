@@ -793,9 +793,9 @@ impl AsPhysical for LogicalPlan {
                         let operator = node.borrow().opr.clone();
                         match operator.opr.as_ref() {
                             // TODO(bingqing): remove this when engine supports.
-                            // Some(pb::logical_plan::operator::Opr::Path(_)) => {
-                            //     Err(IrError::Unsupported("PathExpand in Apply".to_string()))?
-                            // }
+                            Some(pb::logical_plan::operator::Opr::Path(_)) => {
+                                Err(IrError::Unsupported("PathExpand in Apply".to_string()))?
+                            }
                             _ => {}
                         }
                     }

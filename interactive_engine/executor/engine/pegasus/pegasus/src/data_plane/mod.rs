@@ -274,7 +274,9 @@ pub fn build_channels<T: Data>(
             pushes.push(local_push);
         }
         if pushes.len() != total_peers + 1 {
-            return Err(BuildJobError::InternalError(String::from("Pushed size is not equal to peers size")));
+            return Err(BuildJobError::InternalError(String::from(
+                "Pushed size is not equal to peers size",
+            )));
         }
         let local = local_pull.pop_front().expect("local recv lost");
         let remote = remote_recv
