@@ -15,7 +15,7 @@
 
 use std::time::Duration;
 
-use pegasus::api::{IterCondition, Iteration, Map, Sink};
+use pegasus::api::{Collect, IterCondition, Iteration, Map, Sink};
 use pegasus::JobConf;
 
 /// test binary merge pipeline;
@@ -81,18 +81,21 @@ fn timeout_test_02() {
     assert!(results.is_cancel());
 }
 
-// timeout test and rerun task
 #[test]
-fn timeout_test_03() {
-    let mut conf = JobConf::new("timeout_test_01");
+fn timeout_resubmit_test() {
+    let mut conf = JobConf::new("timeout_test");
     conf.time_limit = 5000;
-    let mut result = pegasus::run(conf, || {
+    conf.set_workers(2);
+    let mut results = pegasus::run(conf, || {
         |input, output| {
+            let worker_id = input.get_worker_index();
             input
                 .input_from(vec![0u32])?
-                .iterate_until(IterCondition::max_iters(20), |iter| {
-                    iter.map(|input| {
-                        std::thread::sleep(Duration::from_millis(1000));
+                .iterate_until(IterCondition::max_iters(20), move |iter| {
+                    iter.map(move |input| {
+                        if worker_id == 1 {
+                            std::thread::sleep(Duration::from_millis(1000));
+                        }
                         Ok(input + 1)
                     })
                 })?
@@ -100,11 +103,33 @@ fn timeout_test_03() {
         }
     })
     .expect("submit job failure;");
-
     let mut count = 0;
-    while let Some(Ok(data)) = result.next() {
-        count += data;
+    while let Some(result) = results.next() {
+        if let Ok(data) = result {
+            count += data;
+        } else {
+            let err = result.err().unwrap();
+            assert_eq!(err.to_string(), "Job is canceled;".to_string());
+            break;
+        }
     }
-    assert!(result.is_cancel());
-    assert_eq!(0, count);
+    assert!(results.is_cancel());
+    let mut conf = JobConf::new("resubmit_test");
+    conf.time_limit = 5000;
+    conf.set_workers(2);
+    let mut results = pegasus::run(conf, || {
+        |input, output| {
+            input
+                .input_from(vec![0u32])?
+                .iterate_until(IterCondition::max_iters(20), move |iter| {
+                    iter.map(move |input| Ok(input + 1))
+                })?
+                .collect::<Vec<u32>>()?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure;");
+    let mut result = results.next().unwrap().unwrap();
+    result.sort();
+    assert_eq!(result, [20, 20]);
 }
