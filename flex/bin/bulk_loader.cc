@@ -75,6 +75,8 @@ int main(int argc, char** argv) {
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
 
+  double t = -grape::GetCurrentTime();
+
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   auto loading_config =
       gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_config_path);
@@ -92,6 +94,9 @@ int main(int argc, char** argv) {
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
       data_dir_path.string(), schema, loading_config, parallelism);
   loader->LoadFragment();
+
+  t += grape::GetCurrentTime();
+  LOG(INFO) << "Finished bulk loading in " << t << " seconds.";
 
   return 0;
 }

@@ -493,7 +493,8 @@ class LFIndexer {
 template <typename INDEX_T>
 class IdIndexerBase {
  public:
-  IdIndexerBase() {}
+  IdIndexerBase() = default;
+  virtual ~IdIndexerBase() = default;
   virtual PropertyType get_type() const = 0;
   virtual void _add(const Any& oid) = 0;
   virtual bool add(const Any& oid, INDEX_T& lid) = 0;

@@ -38,7 +38,7 @@ namespace gs {
 
 class GraphDB;
 class GraphDBSession;
-class SessionLocalContext;
+struct SessionLocalContext;
 
 class GraphDB {
  public:

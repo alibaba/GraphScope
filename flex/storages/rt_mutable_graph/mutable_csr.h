@@ -58,7 +58,7 @@ struct MutableNbr {
     data = val;
     timestamp.store(ts);
   }
-  void set_neighbor(vid_t neighbor) { neighbor = neighbor; }
+  void set_neighbor(vid_t neighbor) { this->neighbor = neighbor; }
   void set_timestamp(timestamp_t ts) { timestamp.store(ts); }
 
   vid_t neighbor;
@@ -82,7 +82,7 @@ struct MutableNbr<grape::EmptyType> {
   void set_data(const grape::EmptyType&, timestamp_t ts) {
     timestamp.store(ts);
   }
-  void set_neighbor(vid_t neighbor) { neighbor = neighbor; }
+  void set_neighbor(vid_t neighbor) { this->neighbor = neighbor; }
   void set_timestamp(timestamp_t ts) { timestamp.store(ts); }
   const grape::EmptyType& get_data() const { return data; }
   vid_t get_neighbor() const { return neighbor; }

@@ -33,6 +33,7 @@ namespace gs {
 // The interface providing visitor pattern for RecordBatch.
 class IRecordBatchSupplier {
  public:
+  virtual ~IRecordBatchSupplier() = default;
   virtual std::shared_ptr<arrow::RecordBatch> GetNextBatch() = 0;
 };
 

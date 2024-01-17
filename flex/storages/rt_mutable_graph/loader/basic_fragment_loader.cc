@@ -95,6 +95,8 @@ void BasicFragmentLoader::LoadFragment() {
   }
 
   set_snapshot_version(work_dir_, 0);
+
+  std::filesystem::remove_all(tmp_dir(work_dir_));
 }
 
 void BasicFragmentLoader::AddVertexBatch(
