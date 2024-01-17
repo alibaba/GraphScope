@@ -42,6 +42,7 @@ static constexpr const char* DT_DOUBLE = "DT_DOUBLE";
 static constexpr const char* DT_STRING = "DT_STRING";
 static constexpr const char* DT_STRINGMAP = "DT_STRINGMAP";
 static constexpr const char* DT_DATE = "DT_DATE32";
+static constexpr const char* DT_DAY = "DT_DAY32";
 
 }  // namespace gs
 

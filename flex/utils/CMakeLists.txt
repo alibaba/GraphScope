@@ -6,7 +6,7 @@ if (ARROW_SHARED_LIB)
 else()
         target_link_libraries(flex_utils ${ARROW_STATIC_LIB})
 endif()
-target_link_libraries(flex_utils ${YAML_CPP_LIBRARIES})
+target_link_libraries(flex_utils ${YAML_CPP_LIBRARIES} ${Boost_LIBRARIES})
 install_flex_target(flex_utils)
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}

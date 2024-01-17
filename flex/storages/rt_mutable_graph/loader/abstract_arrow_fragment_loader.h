@@ -33,6 +33,7 @@ namespace gs {
 // The interface providing visitor pattern for RecordBatch.
 class IRecordBatchSupplier {
  public:
+  virtual ~IRecordBatchSupplier() = default;
   virtual std::shared_ptr<arrow::RecordBatch> GetNextBatch() = 0;
 };
 
@@ -65,6 +66,10 @@ void set_vertex_column_from_string_array(
     const std::vector<vid_t>& vids);
 
 void set_vertex_column_from_timestamp_array(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids);
+
+void set_vertex_column_from_timestamp_array_to_day(
     gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
     const std::vector<vid_t>& vids);
 

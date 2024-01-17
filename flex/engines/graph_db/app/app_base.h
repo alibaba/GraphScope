@@ -24,6 +24,8 @@
 #include <string>
 #include <vector>
 
+#include <glog/logging.h>
+
 namespace gs {
 
 class AppBase {
@@ -93,6 +95,47 @@ class SharedLibraryAppFactory : public AppFactoryBase {
 
   void* (*func_creator_)(GraphDBSession&);
   void (*func_deletor_)(void*);
+};
+
+struct AppMetric {
+  AppMetric()
+      : total_(0),
+        min_val_(std::numeric_limits<int64_t>::max()),
+        max_val_(0),
+        count_(0) {}
+  ~AppMetric() {}
+
+  void add_record(int64_t val) {
+    total_ += val;
+    min_val_ = std::min(min_val_, val);
+    max_val_ = std::max(max_val_, val);
+    ++count_;
+  }
+
+  bool empty() const { return (count_ == 0); }
+
+  AppMetric& operator+=(const AppMetric& rhs) {
+    total_ += rhs.total_;
+    min_val_ = std::min(min_val_, rhs.min_val_);
+    max_val_ = std::max(max_val_, rhs.max_val_);
+    count_ += rhs.count_;
+
+    return *this;
+  }
+
+  void output(const std::string& name) const {
+    LOG(INFO) << "Query - " << name << ":";
+    LOG(INFO) << "\tcount: " << count_;
+    LOG(INFO) << "\tmin: " << min_val_;
+    LOG(INFO) << "\tmax: " << max_val_;
+    LOG(INFO) << "\tavg: "
+              << static_cast<double>(total_) / static_cast<double>(count_);
+  }
+
+  int64_t total_;
+  int64_t min_val_;
+  int64_t max_val_;
+  int64_t count_;
 };
 
 }  // namespace gs
