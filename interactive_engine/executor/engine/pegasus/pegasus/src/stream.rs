@@ -319,8 +319,8 @@ impl<D: Data> Stream<D> {
             Err("can't create feedback stream on root scope;")?;
         }
         let r = self.ch.add_delta(ScopeDelta::ToSibling(1));
-        if r.is_none() {
-            return Err(BuildJobError::InternalError(String::from("Operator index is none")));
+        if !r.is_none() {
+            return Err(BuildJobError::InternalError(String::from("Operator index is not none")));
         }
         if let Some(mut op) = self.builder.get_operator(op_index) {
             let edge = self.connect(&mut op)?;
