@@ -25,42 +25,41 @@ public class GraphAlgoQueries {
 
     public static QueryContext get_graph_algo_test1() {
         String query =
-                "MATCH (p:Paper)-[:WorkOn]->(:Algorithm)-[:Belong]->(ca:Topic)\n"
+                "MATCH (p:Paper)-[:WorkOn]->(:Task)-[:Belong]->(ca:Topic)\n"
                         + "WITH distinct ca, count(p) as paperCount\n"
                         + "RETURN ca.category, paperCount\n "
                         + "ORDER BY paperCount desc;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Traversal\", paperCount: 29}>",
-                        "Record<{category: \"Cohesive_Subgraph\", paperCount:" + " 18}>",
-                        "Record<{category: \"Centrality\", paperCount: 18}>",
-                        "Record<{category: \"Clustering\", paperCount: 17}>",
-                        "Record<{category: \"Pattern Matching\", paperCount: 11}>",
-                        "Record<{category: \"Other\", paperCount: 7}>",
-                        "Record<{category: \"Similarity\", paperCount: 2}>");
+                        "Record<{category: \"Traversal\", paperCount: 31}>",
+                        "Record<{category: \"Cohesive Subgraph\", paperCount:" + " 27}>",
+                        "Record<{category: \"Centrality\", paperCount: 22}>",
+                        "Record<{category: \"Community Detection\", paperCount: 16}>",
+                        "Record<{category: \"Pattern Matching\", paperCount: 15}>",
+                        "Record<{category: \"Similarity\", paperCount: 12}>");
         return new QueryContext(query, expected);
     }
 
     public static QueryContext get_graph_algo_test2() {
         String query =
-                "MATCH (ca:Topic)<-[:Belong]-(a:Algorithm),\n"
-                        + "(a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Strategy),\n"
+                "MATCH (ca:Topic)<-[:Belong]-(a:Task),\n"
+                        + "(a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Solution),\n"
                         + "(s)-[:ApplyOn]->(ch:Challenge)\n"
                         + "WITH ca, ch, count(p) AS num \n"
                         + "RETURN ca.category AS category, ch.challenge AS challenge, num\n"
                         + "ORDER BY num DESC LIMIT 5;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
-                                + " num: 21}>",
-                        "Record<{category: \"Clustering\", challenge: \"Communication Overhead\","
-                                + " num: 12}>",
-                        "Record<{category: \"Cohesive_Subgraph\", challenge:"
-                                + " \"Communication Overhead\", num: 10}>",
-                        "Record<{category: \"Centrality\", challenge:"
-                                + " \"Parallelism\", num: 9}>",
-                        "Record<{category: \"Cohesive_Subgraph\", challenge: \"Parallelism\", num:"
-                                + " 9}>");
+                        "Record<{category: \"Cohesive Subgraph\", challenge:"
+                                + " \"Communication Overhead\", num: 6}>",
+                        "Record<{category: \"Similarity\", challenge:"
+                                + " \"Parallelism\", num: 6}>",
+                        "Record<{category: \"Similarity\", challenge:"
+                                + " \"Communication Overhead\", num: 6}>",
+                        "Record<{category: \"Community Detection\", challenge: \"Communication"
+                            + " Overhead\", num: 4}>",
+                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Load Balance\", num:"
+                                + " 4}>");
         return new QueryContext(query, expected);
     }
 
