@@ -1208,10 +1208,12 @@ class EdgeExpand {
       new_bitset.set_bit(i);
     }
 
+    auto prop_name_vec = array_to_vec(prop_names);
+
     GeneralEdgeSet<num_labels, GRAPH_INTERFACE, vertex_id_t, label_id_t,
                    std::tuple<T...>, std::tuple<T...>>
         edge_set(std::move(vids_arrays), std::move(res_adj_list_arrays),
-                 std::move(new_bitset), prop_names, state.edge_label_,
+                 std::move(new_bitset), prop_name_vec, state.edge_label_,
                  copied_labels, state.other_label_, state.direction_);
     CHECK(offset.back() == edge_set.Size())
         << "offset: " << offset.back() << ", " << edge_set.Size();

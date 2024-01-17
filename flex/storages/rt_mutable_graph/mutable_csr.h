@@ -276,7 +276,7 @@ class MutableNbrSliceMut<std::string_view> {
 
     bool operator<(const MutableColumnNbr& nbr) { return ptr_ < nbr.ptr_; }
     nbr_t* ptr_;
-    StringColumn & column_;
+    StringColumn& column_;
   };
   using nbr_ptr_t = MutableColumnNbr;
 
@@ -939,9 +939,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     std::string meta_file_path = prefix + ".meta";
     if (std::filesystem::exists(meta_file_path)) {
       FILE* meta_file_fd = fopen(meta_file_path.c_str(), "r");
-      CHECK_EQ(
-          fread(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
-          1);
+      CHECK_EQ(fread(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
+               1);
       fclose(meta_file_fd);
     } else {
       unsorted_since_ = 0;
@@ -950,11 +949,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void dump_meta(const std::string& prefix) const {
     std::string meta_file_path = prefix + ".meta";
-    FILE* meta_file_fd =
-        fopen((prefix + ".meta").c_str(), "wb");
-    CHECK_EQ(
-        fwrite(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
-        1);
+    FILE* meta_file_fd = fopen((prefix + ".meta").c_str(), "wb");
+    CHECK_EQ(fwrite(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd), 1);
     fflush(meta_file_fd);
     fclose(meta_file_fd);
   }

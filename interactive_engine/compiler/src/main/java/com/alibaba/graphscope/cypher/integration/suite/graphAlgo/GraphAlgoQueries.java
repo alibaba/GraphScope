@@ -145,4 +145,8 @@ public class GraphAlgoQueries {
                         "Record<{paperId: 3, citationId: 4}>");
         return new QueryContext(query, expected);
     }
+
+    //TODO
+    // MATCH (a)-[b:WorkOn]-() return count(b);
+    //MATCH (a: Paper)-[]-() return count(a);
 }
