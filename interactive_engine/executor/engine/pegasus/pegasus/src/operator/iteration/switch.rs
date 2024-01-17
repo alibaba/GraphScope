@@ -272,7 +272,11 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
                 }
             } else {
                 // parent of parent scope end;
-                assert!(level < self.scope_level - 1);
+                if level >= self.scope_level-1 {
+                    return Err(JobExecError::panic(String::from(
+                        "SwitchOperator: tag len is not less than scope level",
+                    )));
+                }
                 if self.has_synchronized && self.iterate_states.is_empty() {
                     let end = n.take();
                     if !end.tag.is_root() {
@@ -285,7 +289,11 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
             }
         } else if n.port == 1 {
             if level == 0 {
-                assert!(self.has_synchronized && self.iterate_states.is_empty());
+                if !(self.has_synchronized && self.iterate_states.is_empty()) {
+                    return Err(JobExecError::panic(String::from(
+                        "SwitchOperator: does not has synchronized or iterate_states not empty",
+                    )));
+                }
                 outputs[0].notify_end(n.take())?;
             }
         } else {
@@ -297,12 +305,20 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
     fn on_cancel(&mut self, n: Cancel, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
         if n.port == 0 {
             // received from outer loop
-            assert!(n.tag().len() < self.scope_level as usize);
+            if n.tag().len() >= self.scope_level as usize {
+                return Err(JobExecError::panic(String::from(
+                    "SwitchOperator: tag len is not less than scope level",
+                )));
+            }
             trace_worker!("EARLY_STOP: cancel all iterations of scope {:?};", n.tag());
             inputs[0].cancel_scope(n.tag());
             inputs[1].cancel_scope(n.tag());
         } else {
-            assert_eq!(n.port, 1);
+            if n.port != 1 {
+                return Err(JobExecError::panic(String::from(
+                    "SwitchOperator: port is not equal to 1",
+                )));
+            }
             if n.tag().len() == self.scope_level as usize {
                 let nth = n.tag().current_uncheck();
                 // in the middle iteration, should propagated into previous iteration

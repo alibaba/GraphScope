@@ -192,7 +192,11 @@ impl<D: Data> OperatorCore for ForkSubtaskOperator<D> {
 impl<D: Data> Notifiable for ForkSubtaskOperator<D> {
     fn on_end(&mut self, n: End, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         let level = n.tag().len() as u32;
-        assert!(level < self.scope_level);
+        if level >= self.scope_level {
+            return Err(JobExecError::panic(String::from(
+                "ForkSubtaskOperator: tag len is not less than scope level",
+            )));
+        }
         let end = n.take();
         if level + 1 == self.scope_level {
             if let Some(fp) = self.tumbling_scope.remove(&end.tag) {
@@ -212,14 +216,22 @@ impl<D: Data> Notifiable for ForkSubtaskOperator<D> {
     fn on_cancel(&mut self, n: Cancel, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
         let level = n.tag().len() as u32;
         if n.port() == 0 {
-            assert!(level < self.scope_level);
+            if level >= self.scope_level {
+                return Err(JobExecError::panic(String::from(
+                    "ForkSubtaskOperator: tag len is not less than scope level",
+                )));
+            }
             if level + 1 == self.scope_level {
                 let tag = Tag::inherit(n.tag(), 0);
                 inputs[0].cancel_scope(&tag);
             }
             inputs[0].cancel_scope(n.tag());
         } else {
-            assert_eq!(n.port(), 1);
+            if n.port != 1 {
+                return Err(JobExecError::panic(String::from(
+                    "ForkSubtaskOperator: port is not equal to 1",
+                )));
+            }
             //ignore;
         }
         Ok(())
@@ -276,16 +288,29 @@ impl<P: Data, S: Data> OperatorCore for ZipSubtaskOperator<P, S> {
 
         input_right.for_each_batch(|batch| {
             if !batch.is_empty() {
-                assert_eq!(batch.len(), 1);
+                if batch.len() != 1 {
+                    return Err(JobExecError::panic(String::from(
+                        "ForkSubtaskOperator: batch len is not equal to 1",
+                    )));
+                }
                 let p_tag = batch.tag.to_parent_uncheck();
                 let peers = self.peers;
                 if let Some(parent) = self.parent.get_mut(&p_tag) {
                     let mut zip_guard = self.zip_guard.borrow_mut();
                     let in_progress = zip_guard.get_mut_or_insert(&p_tag);
-                    assert!(*in_progress > 0);
+                    if *in_progress == 0 {
+                        return Err(JobExecError::panic(String::from(
+                            "ForkSubtaskOperator: in progress is 0",
+                        )));
+                    }
                     let seq = batch.tag.current_uncheck();
                     let res = batch.next().unwrap();
-                    assert!(seq > 0, "unrecognized sequence {}", seq);
+                    if seq == 0 {
+                        return Err(JobExecError::panic(format!(
+                            "ForkSubtaskOperator: unrecognized sequence {}",
+                            seq
+                        )));
+                    }
                     let offset = (seq / peers) as usize - 1;
                     let tag = Tag::inherit(&p_tag, 0);
                     let mut session = output.new_session(&tag)?;
@@ -330,7 +355,11 @@ impl<P: Data, S: Data> OperatorCore for ZipSubtaskOperator<P, S> {
 impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
     fn on_end(&mut self, n: End, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         let level = n.tag().len() as u32;
-        assert!(level < self.scope_level);
+        if level >= self.scope_level {
+            return Err(JobExecError::panic(format!(
+                "ForkSubtaskOperator: tag len is not less than scope level",
+            )));
+        }
         if n.port == 0 {
             if level + 1 == self.scope_level {
                 if let Some(tasks) = self.parent.get_mut(n.tag()) {
@@ -347,7 +376,11 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
                 }
             } else {
                 let offset = level as usize;
-                assert!(offset < self.parent_parent_ends.len());
+                if offset >= self.parent_parent_ends.len() {
+                    return Err(JobExecError::panic(format!(
+                        "ForkSubtaskOperator: offset is not less than parent tag len",
+                    )));
+                }
                 if self.parent.is_empty() {
                     outputs[0].notify_end(n.take())?;
                 } else {
@@ -355,7 +388,11 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
                 }
             }
         } else {
-            assert_eq!(n.port, 1);
+            if n.port != 1 {
+                return Err(JobExecError::panic(String::from(
+                    "ForkSubtaskOperator: port is not equal to 1",
+                )));
+            }
             if level + 1 == self.scope_level {
                 trace_worker!("all subtasks of {:?} is finished;", n.tag());
                 if let Some(mut tasks) = self.parent.remove(n.tag()) {
@@ -392,7 +429,11 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
     fn on_cancel(&mut self, n: Cancel, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
         trace_worker!("accept cancel of {:?}", n.tag());
         let level = n.tag().len() as u32;
-        assert!(level < self.scope_level);
+        if level >= self.scope_level {
+            return Err(JobExecError::panic(format!(
+                "ForkSubtaskOperator: tag len is not less than scope level",
+            )));
+        }
         if level + 1 == self.scope_level {
             if let Some(tasks) = self.parent.get_mut(n.tag()) {
                 let len = tasks.len;

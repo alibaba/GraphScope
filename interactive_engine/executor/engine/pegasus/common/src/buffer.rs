@@ -342,6 +342,7 @@ impl<D, F: BufferFactory<D>> BufferPool<D, F> {
         self.factory.try_reuse()
     }
 
+    // This function is not used
     pub fn in_use_size(&self) -> usize {
         if self.alloc == 0 {
             0
@@ -383,6 +384,7 @@ impl<D, F: BufferFactory<D>> Drop for BufferPool<D, F> {
 
 impl<D, F: BufferFactory<D>> BufferFactory<D> for BufferPool<D, F> {
     fn create(&mut self, batch_size: usize) -> Option<Buffer<D>> {
+        // unnecessary assert
         assert_eq!(batch_size, self.batch_size);
         if let Some(inner) = self.fetch() {
             Some(inner)

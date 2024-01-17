@@ -104,7 +104,6 @@
         }
       ]
     },
-
     {
       "label": {
         "id": 0,
@@ -275,6 +274,14 @@
           "key": {
             "id": 9,
             "name": "id"
+          },
+          "data_type": 4,
+          "is_primary_key": false
+        },
+        {
+          "key": {
+            "id": 10,
+            "name": "popularityScore"
           },
           "data_type": 4,
           "is_primary_key": false
@@ -666,8 +673,18 @@
       "entity_pairs": [
         {
           "src": {
-            "id": 4,
-            "name": "FORUM"
+            "id": 2,
+            "name": "COMMENT"
+          },
+          "dst": {
+            "id": 7,
+            "name": "TAG"
+          }
+        },
+        {
+          "src": {
+            "id": 3,
+            "name": "POST"
           },
           "dst": {
             "id": 7,
