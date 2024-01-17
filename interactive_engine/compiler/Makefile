@@ -14,7 +14,7 @@ UNAME_M := $(shell uname -m)
 graph.schema:=
 graph.store:=
 
-rpc.target:=start_rpc_server_csr
+rpc.target:=start_rpc_server
 
 target.revision:=0.0.1-SNAPSHOT
 
