@@ -26,12 +26,12 @@ vertex_mappings:
   - type_name: Topic
     inputs:
       - Topic.csv
-  - type_name: Algorithm
+  - type_name: Task
     inputs:
-      - Algorithm.csv
-  - type_name: Strategy
+      - Task.csv
+  - type_name: Solution
     inputs:
-      - Strategy.csv
+      - Solution.csv
   - type_name: CCFField
     inputs:
       - CCFField.csv
@@ -39,9 +39,9 @@ edge_mappings:
   - type_triplet:
       edge: WorkOn
       source_vertex:  Paper
-      destination_vertex:  Algorithm
+      destination_vertex:  Task
     inputs:
-      - Paper_WorkOn_Algorithm.csv
+      - Paper_WorkOn_Task.csv
   - type_triplet:
       edge: Resolve
       source_vertex:  Paper
@@ -50,7 +50,7 @@ edge_mappings:
       - Paper_Resolve_Challenge.csv
   - type_triplet: 
       edge: Target
-      source_vertex:  Algorithm
+      source_vertex:  Task
       destination_vertex:  Challenge
     source_vertex_mappings:
       - column:
@@ -61,25 +61,25 @@ edge_mappings:
           index: 1
           name: id
     inputs:
-      - Algorithm_Target_Challenge.csv
+      - Task_Target_Challenge.csv
   - type_triplet: 
       edge: Belong
-      source_vertex:  Algorithm
+      source_vertex:  Task
       destination_vertex:  Topic
     inputs:
-      - Algorithm_Belong_Topic.csv
+      - Task_Belong_Topic.csv
   - type_triplet:
       edge: Use
       source_vertex:  Paper
-      destination_vertex:  Strategy
+      destination_vertex:  Solution
     inputs:
-      - Paper_Use_Strategy.csv
+      - Paper_Use_Solution.csv
   - type_triplet:
       edge: ApplyOn
-      source_vertex:  Strategy
+      source_vertex:  Solution
       destination_vertex:  Challenge
     inputs:
-      - Strategy_ApplyOn_Challenge.csv
+      - Solution_ApplyOn_Challenge.csv
   - type_triplet:
       edge: HasField
       source_vertex:  Paper
