@@ -461,8 +461,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
   using builder_t = GeneralEdgeSetBuilder<2, GI, VID_T, LabelT,
                                           std::tuple<T...>, std::tuple<T...>>;
   GeneralEdgeSet(std::vector<VID_T>&& vids, adj_list_array_t&& adj_lists,
-                 grape::Bitset&& bitsets,
-                 const std::array<std::string, num_props>& prop_names,
+                 grape::Bitset&& bitsets, std::vector<std::string>& prop_names,
                  LabelT edge_label, std::array<LabelT, 2> src_labels,
                  LabelT dst_label, Direction dir)
       : vids_(std::move(vids)),
@@ -584,7 +583,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     // Make sure this is correct.
     std::vector<bool> is_built_in(prop_names_.size(), false);
     for (size_t i = 0; i < prop_names_.size(); ++i) {
-      if (prop_names_[i].size() == 1 && prop_names_[i][0] == prop_names[0]) {
+      if (prop_names_[i].size() == 1 && prop_names_[0] == prop_names[0]) {
         is_built_in[i] = true;
       }
     }
@@ -634,12 +633,51 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     fillBuiltinPropsImpl<0, EDATA_T>(tuples, vec, repeat_array);
   }
 
+  template <int tag_id, int Fs,
+            typename std::enable_if<Fs == -1>::type* = nullptr>
+  flat_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
+                                KeyAlias<tag_id, Fs>& key_alias) const {
+    std::vector<std::tuple<VID_T, VID_T, std::tuple<T...>>> res;
+    size_t total_size = 0;
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      total_size += repeat_array[i];
+    }
+    res.reserve(total_size);
+    std::vector<uint8_t> triplet_ind;
+    triplet_ind.reserve(total_size);
+    std::vector<std::array<LabelT, 3>> label_triplets;
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[0], dst_label_, edge_label_});
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[1], dst_label_, edge_label_});
+    size_t cur_ind = 0;
+    for (auto iter : *this) {
+      auto repeat_times = repeat_array[cur_ind];
+      for (size_t j = 0; j < repeat_times; ++j) {
+        res.emplace_back(
+            std::make_tuple(iter.GetSrc(), iter.GetDst(), iter.GetData()));
+        auto src_label = iter.GetSrcLabel();
+        if (src_label == src_labels_[0]) {
+          triplet_ind.emplace_back(0);
+        } else {
+          triplet_ind.emplace_back(1);
+        }
+        cur_ind += 1;
+      }
+    }
+    std::vector<std::vector<std::string>> prop_names;
+    prop_names.emplace_back(prop_names_);
+    prop_names.emplace_back(prop_names_);
+    return flat_t(std::move(res), std::move(label_triplets), prop_names,
+                  std::move(triplet_ind), dir_);
+  }
+
  private:
   mutable size_t size_;
   LabelT edge_label_, dst_label_;
   std::array<LabelT, 2> src_labels_;
 
-  std::array<std::string, num_props> prop_names_;
+  std::vector<std::string> prop_names_;
 
   std::vector<VID_T> vids_;
   adj_list_array_t adj_lists_;

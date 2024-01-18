@@ -89,6 +89,9 @@ class Schema {
   bool exist(const std::string& src_label, const std::string& dst_label,
              const std::string& edge_label) const;
 
+  bool exist(label_type src_label, label_type dst_label,
+             label_type edge_label) const;
+
   const std::vector<PropertyType>& get_edge_properties(
       const std::string& src_label, const std::string& dst_label,
       const std::string& label) const;

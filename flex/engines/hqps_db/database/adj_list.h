@@ -545,6 +545,9 @@ class AdjListArray<T> {
 
   size_t size() const { return slices_.size(); }
 
+  bool get_flag() const { return flag_; }
+  void set_flag(bool flag) { flag_ = flag; }
+
   AdjList<T> get(size_t i) const {
     if (flag_) {
       return AdjList<T>(slices_[i].first, slices_[i].second);
@@ -638,6 +641,9 @@ class AdjListArray<grape::EmptyType> {
   size_t size() const { return slices_.size(); }
 
   void resize(size_t new_size) { slices_.resize(new_size); }
+
+  bool get_flag() const { return flag_; }
+  void set_flag(bool flag) { flag_ = flag; }
 
   void set(size_t i, const AdjList<grape::EmptyType>& slice) {
     slices_[i] = std::make_pair(slice.slice0(), slice.slice1());
