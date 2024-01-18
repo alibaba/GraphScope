@@ -267,7 +267,11 @@ impl<D: Data> ExchangeByDataPush<D> {
                     let mut err = IOError::new(IOErrorKind::Internal);
                     err.set_io_cause(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        "Push illegal data without allow",
+                        format!(
+                            "Push illegal data without permission, peers: {:?}, src: {};",
+                            end.peers(),
+                            self.src
+                        ),
                     ));
                     return Err(err);
                 }
@@ -382,7 +386,11 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                             let mut err = IOError::new(IOErrorKind::Internal);
                             err.set_io_cause(std::io::Error::new(
                                 std::io::ErrorKind::Other,
-                                "Push illegal data without allow",
+                                format!(
+                                    "Push illegal data without permission, peers: {:?}, src: {};",
+                                    end.peers(),
+                                    self.src
+                                ),
                             ));
                             return Err(err);
                         }
@@ -413,7 +421,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                 let mut err = IOError::new(IOErrorKind::Internal);
                 err.set_io_cause(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    "scope_level does not match tag length",
+                    format!("scope_level in batch is not equal to that in channel, scope_level in batch: {}, scope_level in channel: {}", level, self.scope_level)
                 ));
                 return Err(err);
             }
@@ -422,7 +430,11 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                     let mut err = IOError::new(IOErrorKind::Internal);
                     err.set_io_cause(std::io::Error::new(
                         std::io::ErrorKind::Other,
-                        "Push illegal data without allow",
+                        format!(
+                            "Push illegal data without permission, peers: {:?}, src: {};",
+                            end.peers(),
+                            self.src
+                        ),
                     ));
                     return Err(err);
                 }
@@ -501,7 +513,7 @@ impl<D: Data> Push<MicroBatch<D>> for ExchangeByDataPush<D> {
                 let mut err = IOError::new(IOErrorKind::Internal);
                 err.set_io_cause(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    "scope_level does not match tag length",
+                    format!("scope_level in batch is not equal to that in channel, scope_level in batch: {}, scope_level in channel: {}", level, self.scope_level)
                 ));
                 return Err(err);
             }
@@ -709,7 +721,11 @@ impl<D: Data> ExchangeByBatchPush<D> {
             let mut err = IOError::new(IOErrorKind::Internal);
             err.set_io_cause(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "Push illegal data without allow",
+                format!(
+                    "Push illegal data without permission, peers: {:?}, src: {};",
+                    end.peers(),
+                    self.src
+                ),
             ));
             return Err(err);
         }

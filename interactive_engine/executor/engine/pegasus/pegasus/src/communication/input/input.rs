@@ -273,7 +273,7 @@ impl<D: Data> InputHandle<D> {
                             let mut err = IOError::new(IOErrorKind::Internal);
                             err.set_io_cause(std::io::Error::new(
                                 std::io::ErrorKind::Other,
-                                "Tag length is not equal to scope level",
+                                format!("scope_level in batch is not equal to that in channel, scope_level in batch: {}, scope_level in channel: {}", level, self.ch_info.scope_level),
                             ));
                             return Err(err);
                         }
@@ -361,7 +361,7 @@ impl<D: Data> InputHandle<D> {
                 let mut err = IOError::new(IOErrorKind::Internal);
                 err.set_io_cause(std::io::Error::new(
                     std::io::ErrorKind::Other,
-                    "Tag length should less than scope level",
+                    format!("scope_level in batch should less than that in channel, scope_level in batch: {}, scope_level in channel: {}", level, self.ch_info.scope_level)
                 ));
                 return Err(err);
             }
@@ -481,8 +481,8 @@ impl<D: Data> InputProxy for RefWrapInput<D> {
         self.inbound.borrow().is_exhaust()
     }
 
-    fn cancel_scope(&self, tag: &Tag) {
-        self.inbound.borrow_mut().cancel_scope(tag);
+    fn cancel_scope(&self, tag: &Tag) -> IOResult<()> {
+        self.inbound.borrow_mut().cancel_scope(tag)
     }
 }
 

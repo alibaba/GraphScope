@@ -378,6 +378,9 @@ pub struct Fraction(u64, u64);
 #[allow(dead_code)]
 impl Fraction {
     pub fn new(numerator: u64, denominator: u64) -> Self {
+        // numerator and denominator must be non-zero
+        // assert_ne!(numerator, 0);
+        // assert_ne!(denominator, 0);
         Fraction(numerator, denominator)
     }
 

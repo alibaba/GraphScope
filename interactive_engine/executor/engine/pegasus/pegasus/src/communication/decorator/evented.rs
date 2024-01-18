@@ -96,7 +96,12 @@ impl<T: Data> EventEmitPush<T> {
         if end.tag.len() == self.push_monitor.scope_level as usize {
             if !end.peers().contains_source(self.source_worker) {
                 let mut err = IOError::new(IOErrorKind::Internal);
-                let message = format!("send end of {:?} without allow", end.tag);
+                let message = format!(
+                    "send end of {:?} without permission, peers: {:?}, source_worker: {};",
+                    end.tag,
+                    end.peers(),
+                    self.source_worker
+                );
                 err.set_io_cause(std::io::Error::new(std::io::ErrorKind::Other, message));
                 return Err(err);
             }

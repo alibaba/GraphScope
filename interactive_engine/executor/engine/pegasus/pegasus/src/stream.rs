@@ -320,14 +320,17 @@ impl<D: Data> Stream<D> {
         }
         let r = self.ch.add_delta(ScopeDelta::ToSibling(1));
         if !r.is_none() {
-            return Err(BuildJobError::InternalError(String::from("Operator index is not none")));
+            return Err(BuildJobError::InternalError(format!("Operator index is not none")));
         }
         if let Some(mut op) = self.builder.get_operator(op_index) {
             let edge = self.connect(&mut op)?;
             self.builder.add_edge(edge);
             Ok(())
         } else {
-            Err(BuildJobError::InternalError(String::from("Operator index out of range")))
+            Err(BuildJobError::InternalError(format!(
+                "Operator index out of range, operator index: {}",
+                op_index
+            )))
         }
     }
 

@@ -80,13 +80,15 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         let resource =
             crate::communication::build_channel::<Event>(ChannelId::new(self.id.job_id, 0), &self.conf)?;
         if resource.ch_id.index != 0 {
-            return Err(BuildJobError::InternalError(String::from("Event channel index is not 0")));
+            return Err(BuildJobError::InternalError(String::from("Event channel index must be 0")));
         }
         let (mut tx, rx) = resource.take();
         if self.conf.total_workers() > 1 {
             if tx.len() != self.id.total_peers() as usize + 1 {
-                return Err(BuildJobError::InternalError(String::from(
-                    "Tx size is not equal to peers size",
+                return Err(BuildJobError::InternalError(format!(
+                    "Incorrect number of senders, senders size: {}, total_peers: {};",
+                    tx.len(),
+                    self.id.total_peers(),
                 )));
             }
             let mut abort = tx.swap_remove(self.id.index as usize);

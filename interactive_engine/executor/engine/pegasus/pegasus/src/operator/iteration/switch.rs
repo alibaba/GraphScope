@@ -273,8 +273,8 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
             } else {
                 // parent of parent scope end;
                 if level >= self.scope_level - 1 {
-                    return Err(JobExecError::panic(String::from(
-                        "SwitchOperator: tag len is not less than scope level",
+                    return Err(JobExecError::panic(format!(
+                        "SwitchOperator: scope_level in Endscope should less than scope_level in operator, scope_level in tag: {}, scope_level in operator: {};", level, self.scope_level
                     )));
                 }
                 if self.has_synchronized && self.iterate_states.is_empty() {
@@ -306,13 +306,13 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
         if n.port == 0 {
             // received from outer loop
             if n.tag().len() >= self.scope_level as usize {
-                return Err(JobExecError::panic(String::from(
-                    "SwitchOperator: tag len is not less than scope level",
+                return Err(JobExecError::panic(format!(
+                    "SwitchOperator: scope_level in Endscope should less than scope_level in operator, scope_level in tag: {}, scope_level in operator: {};", n.tag().len(), self.scope_level
                 )));
             }
             trace_worker!("EARLY_STOP: cancel all iterations of scope {:?};", n.tag());
-            inputs[0].cancel_scope(n.tag());
-            inputs[1].cancel_scope(n.tag());
+            inputs[0].cancel_scope(n.tag())?;
+            inputs[1].cancel_scope(n.tag())?;
         } else {
             if n.port != 1 {
                 return Err(JobExecError::panic(String::from("SwitchOperator: port is not equal to 1")));
@@ -322,11 +322,11 @@ impl<D: Data> Notifiable for SwitchOperator<D> {
                 // in the middle iteration, should propagated into previous iteration
                 if nth != 0 {
                     trace_worker!("EARLY_STOP: cancel the {}th iteration of {:?};", nth, n.tag());
-                    inputs[1].cancel_scope(n.tag());
+                    inputs[1].cancel_scope(n.tag())?;
                 } else {
                     let p = n.tag().to_parent_uncheck();
                     trace_worker!("EARLY_STOP: cancel new iteration of {:?};", p);
-                    inputs[0].cancel_scope(&p);
+                    inputs[0].cancel_scope(&p)?;
                 }
             }
         }

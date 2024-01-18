@@ -193,8 +193,8 @@ impl<D: Data> Notifiable for ForkSubtaskOperator<D> {
     fn on_end(&mut self, n: End, outputs: &[Box<dyn OutputProxy>]) -> Result<(), JobExecError> {
         let level = n.tag().len() as u32;
         if level >= self.scope_level {
-            return Err(JobExecError::panic(String::from(
-                "ForkSubtaskOperator: tag len is not less than scope level",
+            return Err(JobExecError::panic(format!(
+                "ForkSubtaskOperator: scope_level in Endscope should less than scope_level in operator, scope_level in tag: {}, scope_level in operator: {};", level, self.scope_level
             )));
         }
         let end = n.take();
@@ -217,15 +217,15 @@ impl<D: Data> Notifiable for ForkSubtaskOperator<D> {
         let level = n.tag().len() as u32;
         if n.port() == 0 {
             if level >= self.scope_level {
-                return Err(JobExecError::panic(String::from(
-                    "ForkSubtaskOperator: tag len is not less than scope level",
+                return Err(JobExecError::panic(format!(
+                    "ForkSubtaskOperator: scope_level in Endscope should less than scope_level in operator, scope_level in tag: {}, scope_level in operator: {};", level, self.scope_level
                 )));
             }
             if level + 1 == self.scope_level {
                 let tag = Tag::inherit(n.tag(), 0);
-                inputs[0].cancel_scope(&tag);
+                inputs[0].cancel_scope(&tag)?;
             }
-            inputs[0].cancel_scope(n.tag());
+            inputs[0].cancel_scope(n.tag())?;
         } else {
             if n.port != 1 {
                 return Err(JobExecError::panic(String::from(
@@ -357,7 +357,7 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
         let level = n.tag().len() as u32;
         if level >= self.scope_level {
             return Err(JobExecError::panic(format!(
-                "ForkSubtaskOperator: tag len is not less than scope level",
+                "ZipSubtaskOperator: scope_level in Endscope should less than scope_level in operator, scope_level in tag: {}, scope_level in operator: {};", level, self.scope_level
             )));
         }
         if n.port == 0 {
@@ -378,7 +378,7 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
                 let offset = level as usize;
                 if offset >= self.parent_parent_ends.len() {
                     return Err(JobExecError::panic(format!(
-                        "ForkSubtaskOperator: offset is not less than parent tag len",
+                        "ZipSubtaskOperator: scope_level in Endscope should less than scope_level in operator, scope_level in tag: {}, scope_level in operator: {};", level, self.scope_level
                     )));
                 }
                 if self.parent.is_empty() {
@@ -390,7 +390,7 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
         } else {
             if n.port != 1 {
                 return Err(JobExecError::panic(String::from(
-                    "ForkSubtaskOperator: port is not equal to 1",
+                    "ZipSubtaskOperator: port is not equal to 1",
                 )));
             }
             if level + 1 == self.scope_level {
@@ -438,9 +438,9 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
             if let Some(tasks) = self.parent.get_mut(n.tag()) {
                 let len = tasks.len;
                 tasks.cancel();
-                inputs[1].cancel_scope(n.tag());
+                inputs[1].cancel_scope(n.tag())?;
                 if tasks.end.is_none() {
-                    inputs[0].cancel_scope(n.tag());
+                    inputs[0].cancel_scope(n.tag())?;
                     trace_worker!("cancel join {} and flowing subtasks of {:?}", len, n.tag());
                 } else {
                     trace_worker!("cancel join {} subtasks of {:?}", len, n.tag());
@@ -453,17 +453,17 @@ impl<P: Data, S: Data> Notifiable for ZipSubtaskOperator<P, S> {
                 if n.tag().is_parent_of(&*tag) {
                     let len = tasks.len;
                     tasks.cancel();
-                    inputs[1].cancel_scope(&*tag);
+                    inputs[1].cancel_scope(&*tag)?;
                     if tasks.end.is_none() {
-                        inputs[0].cancel_scope(&*tag);
+                        inputs[0].cancel_scope(&*tag)?;
                         trace_worker!("cancel join {} and flowing subtasks of {:?}", len, &*tag);
                     } else {
                         trace_worker!("cancel join {} subtasks of {:?}", len, &*tag);
                     }
                 }
             }
-            inputs[0].cancel_scope(n.tag());
-            inputs[1].cancel_scope(n.tag());
+            inputs[0].cancel_scope(n.tag())?;
+            inputs[1].cancel_scope(n.tag())?;
         }
         Ok(())
     }
