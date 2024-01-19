@@ -47,6 +47,7 @@ GraphDB::~GraphDB() {
     compact_thread_running_ = false;
     compact_thread_.join();
   }
+  showAppMetrics();
   for (int i = 0; i < thread_num_; ++i) {
     contexts_[i].~SessionLocalContext();
   }
@@ -117,39 +118,41 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
       compact_thread_.join();
     }
     compact_thread_running_ = true;
-    compact_thread_ = std::thread([&](int http_port) {
-      size_t last_compaction_at = 0;
-      while (compact_thread_running_) {
-        size_t query_num_before = getExecutedQueryNum();
-        sleep(30);
-        if (!compact_thread_running_) {
-          break;
-        }
-        size_t query_num_after = getExecutedQueryNum();
-        if (query_num_before == query_num_after &&
-            (query_num_after > (last_compaction_at + 100000))) {
-          VLOG(10) << "Trigger auto compaction";
-          last_compaction_at = query_num_after;
-          std::string url = "127.0.0.1";
-          httplib::Client cli(url, http_port);
-          cli.set_connection_timeout(0, 300000);
-          cli.set_read_timeout(300, 0);
-          cli.set_write_timeout(300, 0);
+    compact_thread_ = std::thread(
+        [&](int http_port) {
+          size_t last_compaction_at = 0;
+          while (compact_thread_running_) {
+            size_t query_num_before = getExecutedQueryNum();
+            sleep(30);
+            if (!compact_thread_running_) {
+              break;
+            }
+            size_t query_num_after = getExecutedQueryNum();
+            if (query_num_before == query_num_after &&
+                (query_num_after > (last_compaction_at + 100000))) {
+              VLOG(10) << "Trigger auto compaction";
+              last_compaction_at = query_num_after;
+              std::string url = "127.0.0.1";
+              httplib::Client cli(url, http_port);
+              cli.set_connection_timeout(0, 300000);
+              cli.set_read_timeout(300, 0);
+              cli.set_write_timeout(300, 0);
 
-          std::vector<char> buf;
-          Encoder encoder(buf);
-          encoder.put_string("COMPACTION");
-          encoder.put_byte(0);
-          std::string content(buf.data(), buf.size());
-          auto res = cli.Post("/interactive/query", content, "text/plain");
-          std::string ret = res->body;
-          Decoder decoder(ret.data(), ret.size());
-          std::string_view info = decoder.get_string();
+              std::vector<char> buf;
+              Encoder encoder(buf);
+              encoder.put_string("COMPACTION");
+              encoder.put_byte(0);
+              std::string content(buf.data(), buf.size());
+              auto res = cli.Post("/interactive/query", content, "text/plain");
+              std::string ret = res->body;
+              Decoder decoder(ret.data(), ret.size());
+              std::string_view info = decoder.get_string();
 
-          VLOG(10) << "Finish compaction, info: " << info;
-        }
-      }
-    }, port);
+              VLOG(10) << "Finish compaction, info: " << info;
+            }
+          }
+        },
+        port);
   }
 
   return Result<bool>(true);
@@ -201,6 +204,10 @@ UpdateTransaction GraphDB::GetUpdateTransaction(int thread_id) {
 }
 
 GraphDBSession& GraphDB::GetSession(int thread_id) {
+  return contexts_[thread_id].session;
+}
+
+const GraphDBSession& GraphDB::GetSession(int thread_id) const {
   return contexts_[thread_id].session;
 }
 
@@ -417,6 +424,29 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
     }
   });
 #endif
+}
+
+void GraphDB::showAppMetrics() const {
+  int session_num = SessionNum();
+  for (int i = 0; i < 256; ++i) {
+    AppMetric summary;
+    for (int k = 0; k < session_num; ++k) {
+      summary += GetSession(k).GetAppMetric(i);
+    }
+    if (!summary.empty()) {
+      std::string query_name = "UNKNOWN";
+      if (i == 0) {
+        query_name = "ServerApp";
+      } else if (i <= 14) {
+        query_name = "IC" + std::to_string(i);
+      } else if (i <= 21) {
+        query_name = "IS" + std::to_string(i - 14);
+      } else if (i <= 29) {
+        query_name = "INS" + std::to_string(i - 21);
+      }
+      summary.output(query_name);
+    }
+  }
 }
 
 size_t GraphDB::getExecutedQueryNum() const {

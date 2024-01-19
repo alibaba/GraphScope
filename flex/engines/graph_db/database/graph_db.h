@@ -113,6 +113,7 @@ class GraphDB {
   void GetAppInfo(Encoder& result);
 
   GraphDBSession& GetSession(int thread_id);
+  const GraphDBSession& GetSession(int thread_id) const;
 
   int SessionNum() const;
 
@@ -131,6 +132,8 @@ class GraphDB {
 
   void openWalAndCreateContexts(const std::string& data_dir_path,
                                 bool memory_only);
+
+  void showAppMetrics() const;
 
   size_t getExecutedQueryNum() const;
 
