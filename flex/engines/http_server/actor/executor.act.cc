@@ -19,7 +19,9 @@
 #include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
+#ifdef BUILD_HQPS
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
+#endif  // BUILD_HQPS
 #include "nlohmann/json.hpp"
 
 #include <seastar/core/print.hh>

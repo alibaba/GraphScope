@@ -31,6 +31,11 @@ set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
+if (BUILD_HQPS)
+    message("Build HighQPS Engine")
+    add_definitions(-DBUILD_HQPS)
+endif ()
+
 if (MONITOR_SESSIONS)
     message("Monitor sessions is enabled")
     add_definitions(-DMONITOR_SESSIONS)
