@@ -277,7 +277,7 @@ impl<D: Data> InputHandle<D> {
                             ));
                             return Err(err);
                         }
-                        if self.is_discard(&batch.tag) {
+                        if self.is_discard(&batch.tag)? {
                             batch.take_data();
                             trace_worker!(
                                 "channel[{}] discard batch of {:?} from {};",
@@ -383,21 +383,30 @@ impl<D: Data> InputHandle<D> {
     }
 
     #[inline]
-    fn is_discard(&self, tag: &Tag) -> bool {
+    fn is_discard(&self, tag: &Tag) -> IOResult<bool> {
+        let level = tag.len() as u32;
+        if level != self.ch_info.scope_level {
+            let mut err = IOError::new(IOErrorKind::Internal);
+            err.set_io_cause(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("scope_level in tag is not equal to that in channel, scope_level in batch: {}, scope_level in channel: {}", level, self.ch_info.scope_level),
+            ));
+            return Err(err);
+        }
         if !self.cancel.is_empty() {
             if self.cancel.contains_key(tag) {
-                return true;
+                return Ok(true);
             }
         }
 
         if !self.parent_cancel.is_empty() {
             let p = tag.to_parent_uncheck();
             if self.parent_cancel.contains(&p) {
-                return true;
+                return Ok(true);
             }
         }
 
-        false
+        Ok(false)
     }
 
     pub fn propagate_cancel(&mut self, tag: &Tag) {
