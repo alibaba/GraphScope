@@ -410,6 +410,8 @@ static PropertyType StringToPropertyType(const std::string& str) {
     return PropertyType::kBool;
   } else if (str == "Date" || str == DT_DATE) {
     return PropertyType::kDate;
+  } else if (str == "Day" || str == DT_DAY) {
+    return PropertyType::kDay;
   } else if (str == "String" || str == DT_STRING) {
     // DT_STRING is a alias for VARCHAR(STRING_DEFAULT_MAX_LENGTH);
     return PropertyType::Varchar(PropertyType::STRING_DEFAULT_MAX_LENGTH);
@@ -480,6 +482,9 @@ static bool parse_property_type(YAML::Node node, PropertyType& type) {
   } else if (node["date"]) {
     auto format = node["date"].as<std::string>();
     prop_type_str = DT_DATE;
+  } else if (node["day"]) {
+    auto format = node["day"].as<std::string>();
+    prop_type_str = DT_DAY;
   } else {
     return false;
   }

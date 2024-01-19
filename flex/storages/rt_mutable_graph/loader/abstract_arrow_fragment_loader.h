@@ -69,6 +69,10 @@ void set_vertex_column_from_timestamp_array(
     gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
     const std::vector<vid_t>& vids);
 
+void set_vertex_column_from_timestamp_array_to_day(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids);
+
 void set_vertex_properties(gs::ColumnBase* col,
                            std::shared_ptr<arrow::ChunkedArray> array,
                            const std::vector<vid_t>& vids);

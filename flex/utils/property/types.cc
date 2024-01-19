@@ -42,6 +42,8 @@ const PropertyType PropertyType::kDouble =
     PropertyType(impl::PropertyTypeImpl::kDouble);
 const PropertyType PropertyType::kDate =
     PropertyType(impl::PropertyTypeImpl::kDate);
+const PropertyType PropertyType::kDay =
+    PropertyType(impl::PropertyTypeImpl::kDay);
 const PropertyType PropertyType::kString =
     PropertyType(impl::PropertyTypeImpl::kString);
 const PropertyType PropertyType::kStringMap =
@@ -105,6 +107,9 @@ PropertyType PropertyType::Double() {
 PropertyType PropertyType::Date() {
   return PropertyType(impl::PropertyTypeImpl::kDate);
 }
+PropertyType PropertyType::Day() {
+  return PropertyType(impl::PropertyTypeImpl::kDay);
+}
 PropertyType PropertyType::String() {
   return PropertyType(impl::PropertyTypeImpl::kString);
 }
@@ -155,6 +160,8 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.db;
   } else if (value.type == PropertyType::Date()) {
     in_archive << value.type << value.value.d.milli_second;
+  } else if (value.type == PropertyType::Day()) {
+    in_archive << value.type << value.value.day.to_u32();
   } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
   } else {
@@ -187,6 +194,10 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     out_archive >> value.value.db;
   } else if (value.type == PropertyType::Date()) {
     out_archive >> value.value.d.milli_second;
+  } else if (value.type == PropertyType::Day()) {
+    uint32_t val;
+    out_archive >> val;
+    value.value.day.from_u32(val);
   } else if (value.type == PropertyType::String()) {
     out_archive >> value.value.s;
   } else {
@@ -215,5 +226,25 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
 Date::Date(int64_t x) : milli_second(x) {}
 
 std::string Date::to_string() const { return std::to_string(milli_second); }
+
+Day::Day(int64_t ts) { from_timestamp(ts); }
+
+std::string Day::to_string() const {
+  return std::to_string(static_cast<int>(year())) + "-" +
+         std::to_string(static_cast<int>(month())) + "-" +
+         std::to_string(static_cast<int>(day()));
+}
+
+uint32_t Day::to_u32() const { return value.integer; }
+
+void Day::from_u32(uint32_t val) { value.integer = val; }
+
+int Day::year() const { return value.internal.year; }
+
+int Day::month() const { return value.internal.month; }
+
+int Day::day() const { return value.internal.day; }
+
+int Day::hour() const { return value.internal.hour; }
 
 }  // namespace gs
