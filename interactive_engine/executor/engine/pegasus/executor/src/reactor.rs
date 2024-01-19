@@ -27,6 +27,7 @@ use pegasus_common::queue::*;
 use pending::PendingPool;
 
 use super::*;
+use crate::error::InternalError;
 
 struct SelectTask {
     pub last: Instant,
@@ -273,7 +274,13 @@ impl PooledExecutorRuntime {
         }
     }
 
-    fn start(mut self) {
+    fn start(mut self) -> Result<(), InternalError> {
+        if self.current_core > self.max_core {
+            return Err(InternalError::new(format!(
+                "The number of executos has execeeded, current_core: {}, max_core: {}",
+                self.current_core, self.max_core
+            )));
+        }
         let queue = self
             .re_active_queue
             .get_queue()
@@ -341,6 +348,7 @@ impl PooledExecutorRuntime {
         } else {
             work_loop(&queue, &not_readies, &self.task_rx);
         }
+        Ok(())
     }
 
     #[inline]
@@ -507,7 +515,7 @@ impl DirectExecutorRuntime {
         Self(rx)
     }
 
-    fn start(self) {
+    fn start(self) -> Result<(), InternalError> {
         std::thread::Builder::new()
             .name("direct-boss".into())
             .spawn(move || {
@@ -538,6 +546,7 @@ impl DirectExecutorRuntime {
             .expect("start direct fail;")
             .join()
             .ok();
+        Ok(())
     }
 }
 
@@ -570,7 +579,7 @@ pub enum ExecutorRuntime {
 }
 
 impl ExecutorRuntime {
-    fn start(self) {
+    fn start(self) -> Result<(), InternalError> {
         match self {
             ExecutorRuntime::Direct(e) => e.start(),
             ExecutorRuntime::Pooled(e) => e.start(),
@@ -636,7 +645,7 @@ impl Drop for ExecutorGuard {
 
 lazy_static! {
     static ref EXECUTOR: (Mutex<Option<ExecutorRuntime>>, ExecutorProxy) = init_executor();
-    static ref THREAD_JOIN: Mutex<Option<JoinHandle<()>>> = Mutex::new(None);
+    static ref THREAD_JOIN: Mutex<Option<JoinHandle<Result<(), InternalError>>>> = Mutex::new(None);
     static ref EXECUTOR_GUARD: ExecutorGuard = ExecutorGuard::new();
 }
 
@@ -646,16 +655,18 @@ thread_local! {
 
 /// Start the [`Executor`] runtime, this function will **block** current thread;
 /// The global executor runtime can only be started once, other invoking on this function will fail;
-fn start_executor() {
+fn start_executor() -> Result<(), InternalError> {
     if SHUTDOWN_HOOK.swap(false, Ordering::SeqCst) {
         let mut lock = EXECUTOR.0.lock().expect("Executor lock poison");
         if let Some(executor) = lock.take() {
-            executor.start();
+            executor.start()
         } else {
-            error!("Global executor runtime is already started;");
+            Err(InternalError::new(format!("Global executor runtime is already started;")))
         }
     } else {
-        error!("can't start executor as the executor is in shutdown, try start later;")
+        Err(InternalError::new(format!(
+            "can't start executor as the executor is in shutdown, try start later;"
+        )))
     }
 }
 
@@ -709,7 +720,10 @@ pub fn await_termination() {
             .take()
         {
             info!("waiting executor terminate...");
-            join.join().expect("Executor runtime error");
+            let result = join.join().expect("Executor runtime error");
+            if let Err(e) = result {
+                error!("Executor internal error occured: {}", e.reason)
+            }
         }
         if *TRACE_SELECT_ENABLE {
             let cost = TRACE_SELECT_COST.load(Ordering::SeqCst);
