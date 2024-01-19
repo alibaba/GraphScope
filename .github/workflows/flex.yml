@@ -49,21 +49,21 @@ jobs:
         # try different combination of different options. -DBUILD_HQPS=ON/OFF -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
         mkdir build && cd build
         cmake .. -DBUILD_HQPS=ON -DBUILD_TEST=ON -DBUILD_ODPS_FRAGMENT_LOADER=OFF
-        make -j$(nproc)
+        sudo make -j$(nproc)
         cmake .. -DBUILD_HQPS=ON -DBUILD_TEST=OFF -DBUILD_ODPS_FRAGMENT_LOADER=ON
-        make -j$(nproc)
+        sudo make -j$(nproc)
         cmake .. -DBUILD_HQPS=ON -DBUILD_TEST=OFF -DBUILD_ODPS_FRAGMENT_LOADER=OFF
-        make -j$(nproc)
+        sudo make -j$(nproc)
         cmake .. -DBUILD_HQPS=OFF -DBUILD_TEST=ON -DBUILD_ODPS_FRAGMENT_LOADER=ON
-        make -j$(nproc)
+        sudo make -j$(nproc)
         cmake .. -DBUILD_HQPS=OFF -DBUILD_TEST=ON -DBUILD_ODPS_FRAGMENT_LOADER=OFF
-        make -j$(nproc)
+        sudo make -j$(nproc)
         cmake .. -DBUILD_HQPS=OFF -DBUILD_TEST=OFF -DBUILD_ODPS_FRAGMENT_LOADER=ON
-        make -j$(nproc)
+        sudo make -j$(nproc)
         cmake .. -DBUILD_HQPS=OFF -DBUILD_TEST=OFF -DBUILD_ODPS_FRAGMENT_LOADER=OFF
-        make -j$(nproc)
+        sudo make -j$(nproc)
         cmake .. -DBUILD_HQPS=ON -DBUILD_TEST=ON -DBUILD_ODPS_FRAGMENT_LOADER=ON
-        make -j$(nproc)
+        sudo make -j$(nproc)
 
     - name: Build
       env:
