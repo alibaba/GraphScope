@@ -258,7 +258,7 @@ fn work_loop(
 impl PooledExecutorRuntime {
     fn new(core: usize, task_rx: Receiver<TaskPackage>) -> Self {
         // PooledExcutorRuntime is created if and only if core > 0
-        // assert!(core > 0);
+        assert!(core > 0);
         let mut in_flows = Vec::with_capacity(core);
         for _ in 0..core {
             in_flows.push(Arc::new(SegQueue::new()));
