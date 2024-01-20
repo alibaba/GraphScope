@@ -147,6 +147,12 @@ public enum DataType {
             case DATE:
                 return DataType.STRING;
 
+            case TIME:
+                return DataType.STRING;
+
+            case TIMESTAMP:
+                return DataType.STRING;
+
             case BYTES:
                 return DataType.BYTES;
 

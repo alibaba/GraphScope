@@ -478,7 +478,7 @@ def decode_dataframe(value):
     return pd.DataFrame(arrays)
 
 
-def _unify_str_type(t):
+def _unify_str_type(t):  # noqa: C901
     t = t.lower()
     if t in ("b", "bool"):
         return graph_def_pb2.DataTypePb.BOOL
@@ -502,6 +502,34 @@ def _unify_str_type(t):
         return graph_def_pb2.DataTypePb.STRING
     elif t == "bytes":
         return graph_def_pb2.DataTypePb.BYTES
+    elif t == "date32[day]":
+        return graph_def_pb2.DataTypePb.DATE32
+    elif t == "date64[ms]":
+        return graph_def_pb2.DataTypePb.DATE64
+    elif t == "time32[s]":
+        return graph_def_pb2.DataTypePb.TIME32_S
+    elif t == "time32[ms]":
+        return graph_def_pb2.DataTypePb.TIME32_MS
+    elif t == "time32[us]":
+        return graph_def_pb2.DataTypePb.TIME32_US
+    elif t == "time32[ns]":
+        return graph_def_pb2.DataTypePb.TIME32_NS
+    elif t == "time64[s]":
+        return graph_def_pb2.DataTypePb.TIME64_S
+    elif t == "time64[ms]":
+        return graph_def_pb2.DataTypePb.TIME64_MS
+    elif t == "time64[us]":
+        return graph_def_pb2.DataTypePb.TIME64_US
+    elif t == "time64[ns]":
+        return graph_def_pb2.DataTypePb.TIME64_NS
+    elif t.startswith("timestamp[s]"):
+        return graph_def_pb2.DataTypePb.TIMESTAMP_S
+    elif t.startswith("timestamp[ms]"):
+        return graph_def_pb2.DataTypePb.TIMESTAMP_MS
+    elif t.startswith("timestamp[us]"):
+        return graph_def_pb2.DataTypePb.TIMESTAMP_US
+    elif t.startswith("timestamp[ns]"):
+        return graph_def_pb2.DataTypePb.TIMESTAMP_NS
     elif t == "int_list" or t.startswith("fixedlistint"):
         return graph_def_pb2.DataTypePb.INT_LIST
     elif t == "long_list" or t.startswith("fixedlistlong"):
