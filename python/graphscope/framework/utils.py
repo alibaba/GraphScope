@@ -502,25 +502,25 @@ def _unify_str_type(t):  # noqa: C901
         return graph_def_pb2.DataTypePb.STRING
     elif t == "bytes":
         return graph_def_pb2.DataTypePb.BYTES
-    elif t == "date32[day]":
+    elif t == "date32[day]" or t == "date[32][day]" or t == "date32" or t == "date[32]":
         return graph_def_pb2.DataTypePb.DATE32
-    elif t == "date64[ms]":
+    elif t == "date64[ms]" or t == "date[64][ms]" or t == "date64" or t == "date[64]":
         return graph_def_pb2.DataTypePb.DATE64
-    elif t == "time32[s]":
+    elif t == "time32[s]" or t == "time[32][s]":
         return graph_def_pb2.DataTypePb.TIME32_S
-    elif t == "time32[ms]":
+    elif t == "time32[ms]" or t == "time[32][ms]":
         return graph_def_pb2.DataTypePb.TIME32_MS
-    elif t == "time32[us]":
+    elif t == "time32[us]" or t == "time[32][us]":
         return graph_def_pb2.DataTypePb.TIME32_US
-    elif t == "time32[ns]":
+    elif t == "time32[ns]" or t == "time[32][ns]":
         return graph_def_pb2.DataTypePb.TIME32_NS
-    elif t == "time64[s]":
+    elif t == "time64[s]" or t == "time[64][s]":
         return graph_def_pb2.DataTypePb.TIME64_S
-    elif t == "time64[ms]":
+    elif t == "time64[ms]" or t == "time[64][ms]":
         return graph_def_pb2.DataTypePb.TIME64_MS
-    elif t == "time64[us]":
+    elif t == "time64[us]" or t == "time[64][us]":
         return graph_def_pb2.DataTypePb.TIME64_US
-    elif t == "time64[ns]":
+    elif t == "time64[ns]" or t == "time[64][ns]":
         return graph_def_pb2.DataTypePb.TIME64_NS
     elif t.startswith("timestamp[s]"):
         return graph_def_pb2.DataTypePb.TIMESTAMP_S

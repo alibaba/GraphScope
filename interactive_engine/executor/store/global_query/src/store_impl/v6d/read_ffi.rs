@@ -856,17 +856,17 @@ impl WriteNativeProperty {
                 Object::DateFormat(DateTimeFormats::Time(v)) => {
                     let u = PropertyUnion {
                         i: (v.num_seconds_from_midnight() * 1000) as i32
-                            + (v.nanosecond() / 1000000) as i32,
+                            + (v.nanosecond() / 1000_000) as i32,
                     };
                     (PropertyType::Time32MS, vec![], unsafe { u.l })
                 }
                 Object::DateFormat(DateTimeFormats::DateTime(v)) => {
-                    let u = PropertyUnion { l: v.timestamp_millis() };
-                    (PropertyType::TimestampMS, vec![], unsafe { u.l })
+                    let u = PropertyUnion { l: v.timestamp_nanos() };
+                    (PropertyType::TimestampNS, vec![], unsafe { u.l })
                 }
                 Object::DateFormat(DateTimeFormats::DateTimeWithTz(v)) => {
-                    let u = PropertyUnion { l: v.timestamp_millis() };
-                    (PropertyType::TimestampMS, vec![], unsafe { u.l })
+                    let u = PropertyUnion { l: v.timestamp_nanos() };
+                    (PropertyType::TimestampNS, vec![], unsafe { u.l })
                 }
                 _ => {
                     panic!("Unsupported object type: {:?}", property)
@@ -932,8 +932,8 @@ impl PropertyType {
             RawType::String => PropertyType::String,
             RawType::Date => PropertyType::Date32,
             RawType::Time => PropertyType::Time32MS,
-            RawType::DateTime => PropertyType::TimestampMS,
-            RawType::DateTimeWithTz => PropertyType::TimestampMS,
+            RawType::DateTime => PropertyType::TimestampNS,
+            RawType::DateTimeWithTz => PropertyType::TimestampNS,
             RawType::Blob(_) => PropertyType::Bytes,
             _ => {
                 unimplemented!("Unsupported data type {:?}", raw_type)
@@ -984,7 +984,7 @@ impl PropertyType {
             common_pb::DataType::StringArray => PropertyType::StringList,
             common_pb::DataType::Date32 => PropertyType::Date32,
             common_pb::DataType::Time32 => PropertyType::Time32MS,
-            common_pb::DataType::Timestamp => PropertyType::TimestampMS,
+            common_pb::DataType::Timestamp => PropertyType::TimestampNS,
             _ => {
                 unimplemented!("Unsupported data type {:?}", raw_type)
             }
@@ -1038,7 +1038,7 @@ impl PropertyType {
             DataType::ListFloat => PropertyType::FloatList,
             DataType::ListDouble => PropertyType::DoubleList,
             DataType::ListString => PropertyType::StringList,
-            DataType::Date => PropertyType::TimestampMS,
+            DataType::Date => PropertyType::TimestampNS,
             _ => {
                 unimplemented!("Unsupported data type {:?}", data_type)
             }

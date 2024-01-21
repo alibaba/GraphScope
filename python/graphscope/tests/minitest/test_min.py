@@ -447,4 +447,8 @@ def test_graph_with_datetime_property():
     check_node_values(nodes)
     check_edge_values(edges)
 
+    # check subgraph
+    g1 = interactive.subgraph("g.E()")
+    logger.info("subgraph = %s", g1.schema)
+
     session.close()
