@@ -72,6 +72,7 @@ jobs:
         echo "cmake .. -DBUILD_HQPS=OFF -DBUILD_TEST=OFF -DBUILD_ODPS_FRAGMENT_LOADER=OFF"
         cmake .. -DBUILD_HQPS=OFF -DBUILD_TEST=OFF -DBUILD_ODPS_FRAGMENT_LOADER=OFF -DCMAKE_BUILD_TYPE=Debug -DBUILD_DOC=OFF
         sudo make -j$(nproc)
+        cd .. && rm -rf build
 
     - name: Build
       env:
