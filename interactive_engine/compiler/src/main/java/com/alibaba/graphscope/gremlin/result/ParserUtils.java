@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.alibaba.graphscope.gremlin.exception.GremlinResultParserException;
+import com.google.common.base.Preconditions;
 
 import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
@@ -29,10 +30,8 @@ import org.apache.tinkerpop.gremlin.structure.util.detached.DetachedVertex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ParserUtils {
@@ -91,6 +90,51 @@ public class ParserUtils {
                 return value.getF64();
             case STR:
                 return value.getStr();
+            case DATE:
+                Preconditions.checkArgument(
+                        value.getDate().getItem() >= 0,
+                        "Date prior to 1970-00-00 is not supported, got %d",
+                        value.getDate().getItem());
+                return new Date(((long) value.getDate().getItem()) * 24 * 60 * 60 * 1000);
+            case TIME:
+                Preconditions.checkArgument(
+                        value.getTime().getItem() >= 0,
+                        "Time of day must be greater than 00:00:00, got %d",
+                        value.getTime().getItem());
+                // gremlin-python doesn't support local time
+                //
+                // see also:
+                // https://github.com/apache/tinkerpop/blob/master/gremlin-python/src/main/python/gremlin_python/structure/io/graphbinaryV1.py#L105-L107
+                OffsetTime time =
+                        LocalTime.ofNanoOfDay(((long) value.getTime().getItem()) * 1000_000L)
+                                .atOffset(ZoneOffset.UTC);
+                // to ISO-8601 formats: HH:mm:ss.SSSSSS
+                //
+                // see also:
+                // - https://docs.oracle.com/javase/8/docs/api/java/time/LocalTime.html#toString--
+                // - https://docs.oracle.com/javase/8/docs/api/java/time/OffsetTime.html#toString--
+                return time.toString();
+            case TIMESTAMP:
+                Preconditions.checkArgument(
+                        value.getTimestamp().getItem() >= 0,
+                        "Timestamp prior to 1970-00-00 00:00:00 is not supported, got %d",
+                        value.getTimestamp().getItem());
+                // gremlin-python will convert timestamp to float, that isn't what we want
+                //
+                // see also:
+                // https://github.com/apache/tinkerpop/blob/master/gremlin-python/src/main/python/gremlin_python/statics.py#L48
+                //
+                // We use java.util.Instant rather than java.sql.Timestamp for a UTC timestamp value
+                OffsetDateTime ts =
+                        Instant.ofEpochSecond(
+                                        value.getTimestamp().getItem() / 1000L,
+                                        value.getTimestamp().getItem() % 1000L * 1000_000L)
+                                .atOffset(ZoneOffset.UTC);
+                // to  ISO-8601 format: uuuu-MM-dd'T'HH:mm:ss.SSSSSSXXXXX
+                //
+                // see also:
+                // https://docs.oracle.com/javase/8/docs/api/java/time/OffsetDateTime.html#toString--
+                return ts.toString();
             case PAIR_ARRAY:
                 Common.PairArray pairs = value.getPairArray();
                 Map pairInMap = new HashMap();

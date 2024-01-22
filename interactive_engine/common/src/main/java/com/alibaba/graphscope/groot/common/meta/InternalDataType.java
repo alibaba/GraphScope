@@ -56,10 +56,19 @@ public enum InternalDataType {
      * STRING data type in InteractiveEngine, map to String in Java
      */
     STRING,
+
     /**
-     * INT data type in InteractiveEngine, map to Integer(int) in Java
+     * Date data type in InteractiveEngine, map to DateValue in Java
      */
     DATE,
+    /**
+     * Date data type in InteractiveEngine, map to TimeValue in Java
+     */
+    TIME,
+    /**
+     * Date data type in InteractiveEngine, map to DateTimeValue in Java
+     */
+    TIMESTAMP,
 
     /**
      * SET data type, Collection Type, can mixed with list and map, example:Set， value: List<Map<List<String>,List<String>>>
@@ -94,6 +103,8 @@ public enum InternalDataType {
                     && value != UNKNOWN
                     && value != CHAR
                     && value != DATE
+                    && value != TIME
+                    && value != TIMESTAMP
                     && value != SHORT) {
                 primitiveTypes.add(value.name());
             }

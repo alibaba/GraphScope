@@ -119,8 +119,25 @@ class mmap_array {
     madvise(data_, size_ * sizeof(T), MADV_RANDOM | MADV_WILLNEED);
   }
 
+#ifdef HUGEPAGE
+#ifdef __ia64__
+#define ADDR (void*) (0x8000000000000000UL)
+#define FLAGS (MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_FIXED)
+#else
+#define ADDR (void*) (0x0UL)
+#define FLAGS (MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB)
+#endif
+
+#define PROTECTION (PROT_READ | PROT_WRITE)
+
+#define HUGEPAGE_SIZE (2UL * 1024 * 1024)
+#define HUGEPAGE_MASK (2UL * 1024 * 1024 - 1UL)
+#define ROUND_UP(size) (((size) + HUGEPAGE_MASK) & (~HUGEPAGE_MASK))
+#endif
+
   void open_in_memory(const std::string& filename) {
     reset();
+#ifndef HUGEPAGE
     filename_ = filename;
     if (!filename_.empty() && std::filesystem::exists(filename_)) {
       size_t file_size = std::filesystem::file_size(filename_);
@@ -137,6 +154,24 @@ class mmap_array {
         }
       }
     }
+#else
+    if (!filename.empty() && std::filesystem::exists(filename)) {
+      LOG(INFO) << "open in memory with hugepage...";
+      size_t file_size = std::filesystem::file_size(filename);
+      size_ = file_size / sizeof(T);
+      if (size_ != 0) {
+        size_t size_in_bytes = size_ * sizeof(T);
+        data_ = static_cast<T*>(
+            mmap(ADDR, ROUND_UP(size_in_bytes), PROTECTION, FLAGS, -1, 0));
+        if (data_ == MAP_FAILED) {
+          LOG(FATAL) << "mmap failed " << filename << " " << strerror(errno)
+                     << "..\n";
+        }
+        FILE* fin = fopen(filename.c_str(), "rb");
+        CHECK_EQ(fread(data_, size_in_bytes, 1, fin), 1);
+      }
+    }
+#endif
   }
 
   void dump(const std::string& filename) {
@@ -170,6 +205,7 @@ class mmap_array {
       if (size == 0) {
         reset();
       } else {
+#ifndef HUGEPAGE
         T* new_data = static_cast<T*>(
             mmap(NULL, size * sizeof(T), PROT_READ | PROT_WRITE,
                  MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE, -1, 0));
@@ -190,6 +226,24 @@ class mmap_array {
           close(fd_);
           fd_ = -1;
         }
+#else
+        LOG(INFO) << "resize with hugepage...";
+        T* new_data = static_cast<T*>(
+            mmap(ADDR, ROUND_UP(size * sizeof(T)), PROTECTION, FLAGS, -1, 0));
+        if (new_data == MAP_FAILED) {
+          LOG(FATAL) << "mmap failed " << strerror(errno) << "..\n";
+        }
+
+        if (data_ != NULL) {
+          size_t copy_size = std::min(size, size_);
+          if (copy_size > 0) {
+            memcpy((void*)new_data, (void*) data_, copy_size * sizeof(T));
+          }
+          munmap(data_, ROUND_UP(size_ * sizeof(T)));
+        }
+        data_ = new_data;
+        size_ = size;
+#endif
       }
     } else {
       if (read_only_) {
@@ -234,6 +288,12 @@ class mmap_array {
   }
 
   bool read_only() const { return read_only_; }
+
+#undef ADDR
+#undef FLAGS
+#undef HUGEPAGE_SIZE
+#undef HUGEPAGE_MASK
+#undef ROUND_UP
 
   void touch(const std::string& filename) {
     if (read_only_) {
