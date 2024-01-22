@@ -1,6 +1,8 @@
 use std::ffi::{CStr, CString};
 use std::sync::Arc;
 
+use chrono::{Datelike, Days, NaiveDate, NaiveDateTime, NaiveTime, Timelike};
+
 use crate::store_api::*;
 pub type GraphId = i64;
 type GetVertexIterator = *const ::libc::c_void;
@@ -14,9 +16,7 @@ type InEdgeIterator = *const ::libc::c_void;
 type GetAllEdgesIterator = *const ::libc::c_void;
 
 // these are for path directly to GAIA
-use dyn_type::object::Primitives;
-use dyn_type::object::RawType;
-use dyn_type::Object;
+use dyn_type::object::{DateTimeFormats, Object, Primitives, RawType};
 use ir_common::generated::common as common_pb;
 use ir_common::KeyId;
 
@@ -66,6 +66,20 @@ pub enum PropertyType {
     FloatList = 12,
     DoubleList = 13,
     StringList = 14,
+    Date32 = 15,
+    Date64 = 16,
+    Time32S = 17,
+    Time32MS = 18,
+    Time32US = 19,
+    Time32NS = 20,
+    Time64S = 21,
+    Time64MS = 22,
+    Time64US = 23,
+    Time64NS = 24,
+    TimestampS = 25,
+    TimestampMS = 26,
+    TimestampUS = 27,
+    TimestampNS = 28,
 }
 
 #[repr(C)]
@@ -173,6 +187,32 @@ extern "C" {
     fn v6d_get_property_as_string_list(
         property: *const NativeProperty, out: *mut *const *const u8, out_len: *mut *const i32,
         out_num: *mut i32,
+    ) -> FFIState;
+    fn v6d_get_property_as_date32(property: *const NativeProperty, out: *mut i32) -> FFIState;
+    fn v6d_get_property_as_date64(property: *const NativeProperty, out: *mut i64) -> FFIState;
+    fn v6d_get_property_as_time32_s(property: *const NativeProperty, out: *mut i32) -> FFIState;
+    fn v6d_get_property_as_time32_ms(property: *const NativeProperty, out: *mut i32) -> FFIState;
+    fn v6d_get_property_as_time32_us(property: *const NativeProperty, out: *mut i32) -> FFIState;
+    fn v6d_get_property_as_time32_ns(property: *const NativeProperty, out: *mut i32) -> FFIState;
+    fn v6d_get_property_as_time64_s(property: *const NativeProperty, out: *mut i64) -> FFIState;
+    fn v6d_get_property_as_time64_ms(property: *const NativeProperty, out: *mut i64) -> FFIState;
+    fn v6d_get_property_as_time64_us(property: *const NativeProperty, out: *mut i64) -> FFIState;
+    fn v6d_get_property_as_time64_ns(property: *const NativeProperty, out: *mut i64) -> FFIState;
+    fn v6d_get_property_as_timestamp_s(
+        property: *const NativeProperty, out: *mut i64, out_timezone: *mut *const u8,
+        out_timezone_len: *mut i32,
+    ) -> FFIState;
+    fn v6d_get_property_as_timestamp_ms(
+        property: *const NativeProperty, out: *mut i64, out_timezone: *mut *const u8,
+        out_timezone_len: *mut i32,
+    ) -> FFIState;
+    fn v6d_get_property_as_timestamp_us(
+        property: *const NativeProperty, out: *mut i64, out_timezone: *mut *const u8,
+        out_timezone_len: *mut i32,
+    ) -> FFIState;
+    fn v6d_get_property_as_timestamp_ns(
+        property: *const NativeProperty, out: *mut i64, out_timezone: *mut *const u8,
+        out_timezone_len: *mut i32,
     ) -> FFIState;
 
     fn v6d_free_property(p: *const NativeProperty);
@@ -318,7 +358,156 @@ impl NativeProperty {
                     return Some(Object::Blob(ret.into_boxed_slice()));
                 }
             }
-            _ => (),
+            PropertyType::Date32 => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_date32(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveDate::from_num_days_from_ce_opt(v)
+                        .map(|v| Object::DateFormat(DateTimeFormats::Date(v)));
+                }
+            }
+            PropertyType::Date64 => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_date64(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_millis(v)
+                        .map(|v| Object::DateFormat(DateTimeFormats::DateTime(v)));
+                }
+            }
+            PropertyType::Time32S => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_s(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(v as u32, 0)
+                        .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::Time32MS => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_ms(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000) as u32,
+                        (v % 1000 * 1000000) as u32,
+                    )
+                    .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::Time32US => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_us(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000) as u32,
+                        (v % 1000000 * 1000) as u32,
+                    )
+                    .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::Time32NS => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_ns(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000000) as u32,
+                        (v % 1000000000) as u32,
+                    )
+                    .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::Time64S => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_s(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(v as u32, 0)
+                        .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::Time64MS => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_ms(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000) as u32,
+                        (v % 1000 * 1000000) as u32,
+                    )
+                    .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::Time64US => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_us(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000) as u32,
+                        (v % 1000000 * 1000) as u32,
+                    )
+                    .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::Time64NS => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_ns(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000000) as u32,
+                        (v % 1000000000) as u32,
+                    )
+                    .map(|v| Object::DateFormat(DateTimeFormats::Time(v)));
+                }
+            }
+            PropertyType::TimestampS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_s(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_opt(v, 0)
+                        .map(|v| Object::DateFormat(DateTimeFormats::DateTime(v)));
+                }
+            }
+            PropertyType::TimestampMS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_ms(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_millis(v)
+                        .map(|v| Object::DateFormat(DateTimeFormats::DateTime(v)));
+                }
+            }
+            PropertyType::TimestampUS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_us(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_micros(v)
+                        .map(|v| Object::DateFormat(DateTimeFormats::DateTime(v)));
+                }
+            }
+            PropertyType::TimestampNS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_ns(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_opt(v / 1000000000, (v % 1000000000) as u32)
+                        .map(|v| Object::DateFormat(DateTimeFormats::DateTime(v)));
+                }
+            }
+            _ => {
+                error!("NativeProperty::to_object: unsupported property type: {:?}", self.r#type);
+                return None;
+            }
         }
         None
     }
@@ -445,6 +634,153 @@ impl NativeProperty {
                     return ret.map(|x| Property::ListString(x));
                 }
             }
+            PropertyType::Date32 => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_date32(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveDate::from_ymd_opt(1970, 1, 1)
+                        .map_or(None, |d| d.checked_add_days(Days::new(v as u64)))
+                        .map(|v| Property::Date(v.format("%Y-%m-%d").to_string()));
+                }
+            }
+            PropertyType::Date64 => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_date64(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_millis(v)
+                        .map(|v| Property::Date(v.format("%Y-%m-%d %H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time32S => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_s(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(v as u32, 0)
+                        .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time32MS => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_ms(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000) as u32,
+                        (v % 1000 * 1000000) as u32,
+                    )
+                    .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time32US => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_us(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000) as u32,
+                        (v % 1000000 * 1000) as u32,
+                    )
+                    .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time32NS => {
+                let mut v: i32 = 0;
+                let res = unsafe { v6d_get_property_as_time32_ns(property, &mut v as *mut i32) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000000) as u32,
+                        (v % 1000000000) as u32,
+                    )
+                    .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time64S => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_s(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(v as u32, 0)
+                        .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time64MS => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_ms(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000) as u32,
+                        (v % 1000 * 1000000) as u32,
+                    )
+                    .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time64US => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_us(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000) as u32,
+                        (v % 1000000 * 1000) as u32,
+                    )
+                    .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::Time64NS => {
+                let mut v: i64 = 0;
+                let res = unsafe { v6d_get_property_as_time64_ns(property, &mut v as *mut i64) };
+                if res == STATE_SUCCESS {
+                    return NaiveTime::from_num_seconds_from_midnight_opt(
+                        (v / 1000000000) as u32,
+                        (v % 1000000000) as u32,
+                    )
+                    .map(|v| Property::Date(v.format("%H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::TimestampS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_s(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_opt(v, 0)
+                        .map(|v| Property::Date(v.format("%Y-%m-%d %H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::TimestampMS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_ms(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_millis(v)
+                        .map(|v| Property::Date(v.format("%Y-%m-%d %H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::TimestampUS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_us(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_micros(v)
+                        .map(|v| Property::Date(v.format("%Y-%m-%d %H:%M:%S.%6f").to_string()));
+                }
+            }
+            PropertyType::TimestampNS => {
+                let mut v: i64 = 0;
+                let mut tz_v: *const u8 = std::ptr::null();
+                let mut tz_len = 0;
+                let res = unsafe {
+                    v6d_get_property_as_timestamp_ns(property, &mut v as *mut i64, &mut tz_v, &mut tz_len)
+                };
+                if res == STATE_SUCCESS {
+                    return NaiveDateTime::from_timestamp_opt(v / 1000000000, (v % 1000000000) as u32)
+                        .map(|v| Property::Date(v.format("%Y-%m-%d %H:%M:%S.%6f").to_string()));
+                }
+            }
         }
         None
     }
@@ -513,6 +849,25 @@ impl WriteNativeProperty {
                     let len = vecdata.len() as i64;
                     (PropertyType::Bytes, vecdata, len)
                 }
+                Object::DateFormat(DateTimeFormats::Date(v)) => {
+                    let u = PropertyUnion { i: v.num_days_from_ce() as i32 };
+                    (PropertyType::Date32, vec![], unsafe { u.l })
+                }
+                Object::DateFormat(DateTimeFormats::Time(v)) => {
+                    let u = PropertyUnion {
+                        i: (v.num_seconds_from_midnight() * 1000) as i32
+                            + (v.nanosecond() / 1000_000) as i32,
+                    };
+                    (PropertyType::Time32MS, vec![], unsafe { u.l })
+                }
+                Object::DateFormat(DateTimeFormats::DateTime(v)) => {
+                    let u = PropertyUnion { l: v.timestamp_nanos() };
+                    (PropertyType::TimestampNS, vec![], unsafe { u.l })
+                }
+                Object::DateFormat(DateTimeFormats::DateTimeWithTz(v)) => {
+                    let u = PropertyUnion { l: v.timestamp_nanos() };
+                    (PropertyType::TimestampNS, vec![], unsafe { u.l })
+                }
                 _ => {
                     panic!("Unsupported object type: {:?}", property)
                 }
@@ -541,7 +896,21 @@ impl Drop for WriteNativeProperty {
                 | PropertyType::Int
                 | PropertyType::Long
                 | PropertyType::Float
-                | PropertyType::Double => unsafe {
+                | PropertyType::Double
+                | PropertyType::Date32
+                | PropertyType::Date64
+                | PropertyType::Time32S
+                | PropertyType::Time32MS
+                | PropertyType::Time32US
+                | PropertyType::Time32NS
+                | PropertyType::Time64S
+                | PropertyType::Time64MS
+                | PropertyType::Time64US
+                | PropertyType::Time64NS
+                | PropertyType::TimestampS
+                | PropertyType::TimestampMS
+                | PropertyType::TimestampUS
+                | PropertyType::TimestampNS => unsafe {
                     drop(Vec::from_raw_parts(self.data as *mut u8, 0, 0));
                 },
                 _ => unsafe {
@@ -561,6 +930,10 @@ impl PropertyType {
             RawType::ULLong => PropertyType::Long,
             RawType::Float => PropertyType::Double,
             RawType::String => PropertyType::String,
+            RawType::Date => PropertyType::Date32,
+            RawType::Time => PropertyType::Time32MS,
+            RawType::DateTime => PropertyType::TimestampNS,
+            RawType::DateTimeWithTz => PropertyType::TimestampNS,
             RawType::Blob(_) => PropertyType::Bytes,
             _ => {
                 unimplemented!("Unsupported data type {:?}", raw_type)
@@ -577,6 +950,20 @@ impl PropertyType {
             PropertyType::Float => RawType::Float,
             PropertyType::Double => RawType::Float,
             PropertyType::String => RawType::String,
+            PropertyType::Date32 => RawType::Date,
+            PropertyType::Date64 => RawType::DateTime,
+            PropertyType::Time32S => RawType::Time,
+            PropertyType::Time32MS => RawType::Time,
+            PropertyType::Time32US => RawType::Time,
+            PropertyType::Time32NS => RawType::Time,
+            PropertyType::Time64S => RawType::Time,
+            PropertyType::Time64MS => RawType::Time,
+            PropertyType::Time64US => RawType::Time,
+            PropertyType::Time64NS => RawType::Time,
+            PropertyType::TimestampS => RawType::DateTime,
+            PropertyType::TimestampMS => RawType::DateTime,
+            PropertyType::TimestampUS => RawType::DateTime,
+            PropertyType::TimestampNS => RawType::DateTime,
             _ => {
                 unimplemented!("Unsupported data type {:?}", *self)
             }
@@ -595,6 +982,9 @@ impl PropertyType {
             common_pb::DataType::Int64Array => PropertyType::LongList,
             common_pb::DataType::DoubleArray => PropertyType::DoubleList,
             common_pb::DataType::StringArray => PropertyType::StringList,
+            common_pb::DataType::Date32 => PropertyType::Date32,
+            common_pb::DataType::Time32 => PropertyType::Time32MS,
+            common_pb::DataType::Timestamp => PropertyType::TimestampNS,
             _ => {
                 unimplemented!("Unsupported data type {:?}", raw_type)
             }
@@ -612,6 +1002,20 @@ impl PropertyType {
             PropertyType::LongList => common_pb::DataType::Int64Array,
             PropertyType::DoubleList => common_pb::DataType::DoubleArray,
             PropertyType::StringList => common_pb::DataType::StringArray,
+            PropertyType::Date32 => common_pb::DataType::Date32,
+            PropertyType::Date64 => common_pb::DataType::Timestamp,
+            PropertyType::Time32S => common_pb::DataType::Time32,
+            PropertyType::Time32MS => common_pb::DataType::Time32,
+            PropertyType::Time32US => common_pb::DataType::Time32,
+            PropertyType::Time32NS => common_pb::DataType::Time32,
+            PropertyType::Time64S => common_pb::DataType::Time32,
+            PropertyType::Time64MS => common_pb::DataType::Time32,
+            PropertyType::Time64US => common_pb::DataType::Time32,
+            PropertyType::Time64NS => common_pb::DataType::Time32,
+            PropertyType::TimestampS => common_pb::DataType::Timestamp,
+            PropertyType::TimestampMS => common_pb::DataType::Timestamp,
+            PropertyType::TimestampUS => common_pb::DataType::Timestamp,
+            PropertyType::TimestampNS => common_pb::DataType::Timestamp,
             _ => {
                 unimplemented!("Unsupported data type {:?}", *self)
             }
@@ -634,6 +1038,7 @@ impl PropertyType {
             DataType::ListFloat => PropertyType::FloatList,
             DataType::ListDouble => PropertyType::DoubleList,
             DataType::ListString => PropertyType::StringList,
+            DataType::Date => PropertyType::TimestampNS,
             _ => {
                 unimplemented!("Unsupported data type {:?}", data_type)
             }
@@ -656,6 +1061,20 @@ impl PropertyType {
             PropertyType::FloatList => DataType::ListFloat,
             PropertyType::DoubleList => DataType::ListDouble,
             PropertyType::StringList => DataType::ListString,
+            PropertyType::Date32 => DataType::Date,
+            PropertyType::Date64 => DataType::Date,
+            PropertyType::Time32S => DataType::Date,
+            PropertyType::Time32MS => DataType::Date,
+            PropertyType::Time32US => DataType::Date,
+            PropertyType::Time32NS => DataType::Date,
+            PropertyType::Time64S => DataType::Date,
+            PropertyType::Time64MS => DataType::Date,
+            PropertyType::Time64US => DataType::Date,
+            PropertyType::Time64NS => DataType::Date,
+            PropertyType::TimestampS => DataType::Date,
+            PropertyType::TimestampMS => DataType::Date,
+            PropertyType::TimestampUS => DataType::Date,
+            PropertyType::TimestampNS => DataType::Date,
         }
     }
 }

@@ -252,6 +252,24 @@ int get_property_as_double_list(Property* property, const double** out,
                                 int* out_len);
 int get_property_as_string_list(Property* property, const char*** out,
                                 const int** out_len, int* out_num);
+int get_property_as_date32(struct Property* property, int32_t *out);
+int get_property_as_date64(struct Property* property, int64_t *out);
+int get_property_as_time32_s(struct Property* property, int32_t *out);
+int get_property_as_time32_ms(struct Property* property, int32_t *out);
+int get_property_as_time32_us(struct Property* property, int32_t *out);
+int get_property_as_time32_ns(struct Property* property, int32_t *out);
+int get_property_as_time64_s(struct Property* property, int64_t *out);
+int get_property_as_time64_ms(struct Property* property, int64_t *out);
+int get_property_as_time64_us(struct Property* property, int64_t *out);
+int get_property_as_time64_ns(struct Property* property, int64_t *out);
+int get_property_as_timestamp_s(struct Property* property, int64_t *out,
+                                const char **out_timezone, int *out_timezone_len);
+int get_property_as_timestamp_ms(struct Property* property, int64_t *out,
+                                 const char **out_timezone, int *out_timezone_len);
+int get_property_as_timestamp_us(struct Property* property, int64_t *out,
+                                 const char **out_timezone, int *out_timezone_len);
+int get_property_as_timestamp_ns(struct Property* property, int64_t *out,
+                                 const char **out_timezone, int *out_timezone_len);
 
 void free_property(Property* property);
 

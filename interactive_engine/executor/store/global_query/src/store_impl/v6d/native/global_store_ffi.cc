@@ -570,6 +570,52 @@ int v6d_get_property_as_string_list(Property* property, const char*** out,
   return htap_impl::get_property_as_string_list(property, out, out_len,
                                                 out_num);
 }
+int v6d_get_property_as_date32(struct Property* property, int32_t *out) {
+  return htap_impl::get_property_as_date32(property, out);
+}
+int v6d_get_property_as_date64(struct Property* property, int64_t *out) {
+  return htap_impl::get_property_as_date64(property, out);
+}
+int v6d_get_property_as_time32_s(struct Property* property, int32_t *out) {
+  return htap_impl::get_property_as_time32_s(property, out);
+}
+int v6d_get_property_as_time32_ms(struct Property* property, int32_t *out) {
+  return htap_impl::get_property_as_time32_ms(property, out);
+}
+int v6d_get_property_as_time32_us(struct Property* property, int32_t *out) {
+  return htap_impl::get_property_as_time32_us(property, out);
+}
+int v6d_get_property_as_time32_ns(struct Property* property, int32_t *out) {
+  return htap_impl::get_property_as_time32_ns(property, out);
+}
+int v6d_get_property_as_time64_s(struct Property* property, int64_t *out) {
+  return htap_impl::get_property_as_time64_s(property, out);
+}
+int v6d_get_property_as_time64_ms(struct Property* property, int64_t *out) {
+  return htap_impl::get_property_as_time64_ms(property, out);
+}
+int v6d_get_property_as_time64_us(struct Property* property, int64_t *out) {
+  return htap_impl::get_property_as_time64_us(property, out);
+}
+int v6d_get_property_as_time64_ns(struct Property* property, int64_t *out) {
+  return htap_impl::get_property_as_time64_ns(property, out);
+}
+int v6d_get_property_as_timestamp_s(struct Property* property, int64_t *out,
+                                    const char **out_timezone, int *out_timezone_len) {
+  return htap_impl::get_property_as_timestamp_s(property, out, out_timezone, out_timezone_len);
+}
+int v6d_get_property_as_timestamp_ms(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len) {
+  return htap_impl::get_property_as_timestamp_ms(property, out, out_timezone, out_timezone_len);
+}
+int v6d_get_property_as_timestamp_us(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len) {
+  return htap_impl::get_property_as_timestamp_us(property, out, out_timezone, out_timezone_len);
+}
+int v6d_get_property_as_timestamp_ns(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len) {
+  return htap_impl::get_property_as_timestamp_ns(property, out, out_timezone, out_timezone_len);
+}
 
 void v6d_free_property(Property* property) {}
 
