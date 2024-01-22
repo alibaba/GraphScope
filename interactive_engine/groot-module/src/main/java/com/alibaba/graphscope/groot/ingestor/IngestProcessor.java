@@ -29,7 +29,6 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 import com.alibaba.graphscope.groot.wal.ReadLogEntry;
-import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogReader;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -113,20 +112,7 @@ public class IngestProcessor implements MetricsAgent {
         this.ingestThread =
                 new Thread(
                         () -> {
-                            while (!shouldStop) {
-                                try {
-                                    replayWAL(this.tailOffset);
-                                    break;
-                                } catch (Exception e) {
-                                    logger.error("error occurred before ingest, retrying", e);
-                                    try {
-                                        Thread.sleep(1000L);
-                                    } catch (InterruptedException ie) {
-                                        // Ignore
-                                    }
-                                }
-                            }
-                            LogWriter logWriter = this.logService.createWriter(this.queueId);
+                            LogWriter logWriter = this.logService.createWriter();
                             while (!shouldStop) {
                                 try {
                                     process(logWriter);
@@ -311,7 +297,7 @@ public class IngestProcessor implements MetricsAgent {
         types.add(OperationType.REMOVE_EDGE_KIND);
         types.add(OperationType.PREPARE_DATA_LOAD);
         types.add(OperationType.COMMIT_DATA_LOAD);
-        try (ReadOnlyLogReader reader = (ReadOnlyLogReader) logService.createReader(queueId, 0)) {
+        try (LogReader reader = logService.createReader(queueId, -1)) {
             while (!shouldStop) {
                 ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
                 for (ConsumerRecord<LogEntry, LogEntry> record : records) {

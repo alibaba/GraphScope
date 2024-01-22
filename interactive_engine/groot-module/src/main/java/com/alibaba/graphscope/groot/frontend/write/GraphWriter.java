@@ -4,6 +4,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
+import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
@@ -13,11 +14,10 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
-import com.alibaba.graphscope.groot.common.util.EdgeRecordKey;
-import com.alibaba.graphscope.groot.common.util.PkHashUtils;
-import com.alibaba.graphscope.groot.common.util.VertexRecordKey;
-import com.alibaba.graphscope.groot.common.util.WriteSessionUtil;
+import com.alibaba.graphscope.groot.common.util.*;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
+import com.alibaba.graphscope.groot.ingestor.IngestCallback;
+import com.alibaba.graphscope.groot.ingestor.IngestProcessor;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
@@ -28,18 +28,20 @@ import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 
+import com.alibaba.graphscope.groot.store.KafkaProcessor;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
+import com.alibaba.graphscope.proto.groot.WriteIngestorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class GraphWriter implements MetricsAgent {
+    private static final Logger logger = LoggerFactory.getLogger(GraphWriter.class);
 
     public static final String WRITE_REQUESTS_TOTAL = "write.requests.total";
     public static final String WRITE_REQUESTS_PER_SECOND = "write.requests.per.second";
@@ -66,24 +68,64 @@ public class GraphWriter implements MetricsAgent {
     private RoleClients<IngestorWriteClient> ingestWriteClients;
     private AtomicLong lastWrittenSnapshotId = new AtomicLong(0L);
 
-    private static final Logger logger = LoggerFactory.getLogger(GraphWriter.class);
+    private final KafkaAppender kafkaAppender;
+    private ScheduledExecutorService scheduler;
 
     public GraphWriter(
             SnapshotCache snapshotCache,
             EdgeIdGenerator edgeIdGenerator,
             MetaService metaService,
-            RoleClients<IngestorWriteClient> ingestWriteClients,
+//            RoleClients<IngestorWriteClient> ingestWriteClients,
             MetricsCollector metricsCollector,
+            KafkaAppender appender,
             Configs configs) {
         this.snapshotCache = snapshotCache;
         this.edgeIdGenerator = edgeIdGenerator;
         this.metaService = metaService;
-        this.ingestWriteClients = ingestWriteClients;
+//        this.ingestWriteClients = ingestWriteClients;
         initMetrics();
         metricsCollector.register(this, this::updateMetrics);
         // default for increment eid generate
         this.enableHashEid = FrontendConfig.ENABLE_HASH_GENERATE_EID.get(configs);
+
+        this.kafkaAppender = appender;
     }
+
+    public void advanceIngestSnapshotId(
+            long snapshotId, CompletionCallback<Long> callback) {
+        this.kafkaAppender.advanceIngestSnapshotId(snapshotId, callback);
+    }
+
+    public void start() {
+        this.scheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "kafka-appender-try-start", logger));
+
+        this.scheduler.scheduleWithFixedDelay(
+                this::tryStartProcessors, 0, 2000, TimeUnit.MILLISECONDS);
+    }
+
+    public void stop() {
+        if (this.scheduler != null) {
+            this.scheduler.shutdown();
+            try {
+                this.scheduler.awaitTermination(3000L, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+            this.scheduler = null;
+        }
+        kafkaAppender.stop();
+    }
+
+    private void tryStartProcessors() {
+        if (!kafkaAppender.isStarted()) {
+            kafkaAppender.start();
+        }
+    }
+
+
 
     public long writeBatch(
             String requestId, String writeSession, List<WriteRequest> writeRequests) {
@@ -152,47 +194,29 @@ public class GraphWriter implements MetricsAgent {
             }
         }
         OperationBatch operationBatch = batchBuilder.build();
-        int writeQueueId = getWriteQueueId(writeSession);
-        int ingestorId = this.metaService.getIngestorIdForQueue(writeQueueId);
-        long startTimeNano = System.nanoTime();
-        this.ingestWriteClients
-                .getClient(ingestorId)
-                .writeIngestorAsync(
-                        requestId,
-                        writeQueueId,
-                        operationBatch,
-                        new CompletionCallback<Long>() {
-                            @Override
-                            public void onCompleted(Long res) {
-                                long writeSnapshotId = res;
-                                lastWrittenSnapshotId.updateAndGet(
-                                        x -> Math.max(x, writeSnapshotId));
-                                writeRequestsTotal.addAndGet(writeRequests.size());
-                                finish();
-                                callback.onCompleted(res);
-                            }
+        this.kafkaAppender.ingestBatch(requestId, operationBatch,
+                new IngestCallback() {
+                    @Override
+                    public void onSuccess(long snapshotId) {
+                        lastWrittenSnapshotId.updateAndGet(
+                                x -> Math.max(x, snapshotId));
+                        writeRequestsTotal.addAndGet(writeRequests.size());
+                        callback.onCompleted(snapshotId);
+                    }
 
-                            @Override
-                            public void onError(Throwable t) {
-                                finish();
-                                callback.onError(t);
-                            }
-
-                            void finish() {
-                                long ingestorCompleteTimeNano = System.nanoTime();
-                                ingestorBlockTimeNano.addAndGet(
-                                        ingestorCompleteTimeNano - startTimeNano);
-                                pendingWriteCount.decrementAndGet();
-                            }
-                        });
+                    @Override
+                    public void onFailure(Exception e) {
+                        callback.onError(e);
+                    }
+                });
     }
 
     public List<Long> replayWALFrom(long offset, long timestamp) {
         List<Long> allIds = new ArrayList<>();
         for (int queue = 0; queue < metaService.getQueueCount(); ++queue) {
             int id = metaService.getIngestorIdForQueue(queue);
-            List<Long> ids = ingestWriteClients.getClient(id).replayWALFrom(offset, timestamp);
-            allIds.addAll(ids);
+//            List<Long> ids = ingestWriteClients.getClient(id).replayWALFrom(offset, timestamp);
+//            allIds.addAll(ids);
         }
         return allIds;
     }

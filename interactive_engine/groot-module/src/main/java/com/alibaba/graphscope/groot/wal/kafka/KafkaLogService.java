@@ -21,6 +21,7 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
+import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogWriter;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -92,7 +93,7 @@ public class KafkaLogService implements LogService {
     }
 
     @Override
-    public LogWriter createWriter(int queueId) {
+    public LogWriter createWriter() {
         String customConfigsStr = KafkaConfig.KAFKA_PRODUCER_CUSTOM_CONFIGS.get(configs);
         Map<String, String> customConfigs = new HashMap<>();
         if (!customConfigsStr.isEmpty()) {
@@ -106,7 +107,7 @@ public class KafkaLogService implements LogService {
             }
         }
         logger.info("Kafka writer configs {}", customConfigs);
-        return new KafkaLogWriter(servers, topic, queueId, customConfigs);
+        return new KafkaLogWriter(servers, topic, customConfigs);
     }
 
     @Override

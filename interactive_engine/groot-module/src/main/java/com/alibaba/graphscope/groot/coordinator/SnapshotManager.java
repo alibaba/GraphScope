@@ -479,7 +479,7 @@ public class SnapshotManager {
      */
     public List<Long> getTailOffsets(List<Integer> queueIdList) {
         List<Long> tailOffsets = new ArrayList<>(queueIdList.size());
-        List<Long> queueOffsets = this.queueOffsetsRef.get();
+        List<Long> queueOffsets = getQueueOffsets();
         for (int queueId : queueIdList) {
             tailOffsets.add(queueOffsets.get(queueId));
         }

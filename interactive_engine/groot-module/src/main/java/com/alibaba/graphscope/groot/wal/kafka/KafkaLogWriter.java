@@ -39,12 +39,10 @@ public class KafkaLogWriter implements LogWriter {
     private static final LogEntrySerializer ser = new LogEntrySerializer();
     private final Producer<LogEntry, LogEntry> producer;
     private final String topicName;
-    private final int partitionId;
 
     public KafkaLogWriter(
-            String servers, String topicName, int partitionId, Map<String, String> customConfigs) {
+            String servers, String topicName, Map<String, String> customConfigs) {
         this.topicName = topicName;
-        this.partitionId = partitionId;
 
         Map<String, Object> producerConfig = new HashMap<>();
         producerConfig.put("bootstrap.servers", servers);
@@ -59,8 +57,16 @@ public class KafkaLogWriter implements LogWriter {
     }
 
     public long append(int partition, LogEntry logEntry) {
-        logger.info("Appended a entry: {}", logEntry.toProto());
         Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topicName, partition, null, logEntry));
+        return waitFuture(future);
+    }
+    @Override
+    public long append(LogEntry logEntry) {
+        Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topicName, logEntry));
+        return waitFuture(future);
+    }
+
+    public long waitFuture(Future<RecordMetadata> future) {
         RecordMetadata recordMetadata;
         try {
             recordMetadata = future.get();
@@ -69,11 +75,6 @@ public class KafkaLogWriter implements LogWriter {
             throw new GrootException(e);
         }
         return recordMetadata.offset();
-    }
-    @Override
-    public long append(LogEntry logEntry) {
-        return append(partitionId, logEntry);
-
     }
 
     @Override

@@ -31,7 +31,7 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
     public IngestorWriteSnapshotIdNotifier(
             Configs configs, RoleClients<IngestorSnapshotClient> ingestorSnapshotClients) {
         this.ingestorSnapshotClients = ingestorSnapshotClients;
-        this.ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
+        this.ingestorCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
     }
 
     @Override

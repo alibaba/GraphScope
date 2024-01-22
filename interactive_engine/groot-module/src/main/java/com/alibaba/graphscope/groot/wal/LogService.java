@@ -33,7 +33,7 @@ public interface LogService {
      * @param queueId
      * @return
      */
-    LogWriter createWriter(int queueId);
+    LogWriter createWriter();
 
     /**
      * Create a reader can read data of specific queue from certain offset.

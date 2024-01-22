@@ -45,7 +45,7 @@ public class IngestProcessorTest {
         when(mockLogService.createReader(queueId, tailOffset + 1)).thenReturn(mockLogReader);
 
         LogWriter mockLogWriter = mock(LogWriter.class);
-        when(mockLogService.createWriter(queueId)).thenReturn(mockLogWriter);
+        when(mockLogService.createWriter()).thenReturn(mockLogWriter);
         when(mockLogWriter.append(any())).thenReturn(tailOffset + 3);
 
         OperationBatch emptyBatch = OperationBatch.newBuilder().build();

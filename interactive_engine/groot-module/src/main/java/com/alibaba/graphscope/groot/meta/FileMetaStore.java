@@ -11,11 +11,10 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.coordinator;
+package com.alibaba.graphscope.groot.meta;
 
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
-import com.alibaba.graphscope.groot.meta.MetaStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,8 +41,8 @@ public class FileMetaStore implements MetaStore {
     private final String workingDir;
     private final Map<String, Integer> pathToSuffix;
 
-    public FileMetaStore(Configs configs) {
-        this.workingDir = CoordinatorConfig.FILE_META_STORE_PATH.get(configs);
+    public FileMetaStore(String metaPath) {
+        this.workingDir = metaPath;
         boolean ret = new File(this.workingDir).mkdirs();
         this.pathToSuffix = new ConcurrentHashMap<>();
     }

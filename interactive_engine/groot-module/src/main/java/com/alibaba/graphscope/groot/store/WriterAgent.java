@@ -15,10 +15,16 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
+import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
+import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
+import com.alibaba.graphscope.groot.ingestor.IngestService;
+import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
+import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.metrics.AvgMetric;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
@@ -27,22 +33,19 @@ import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 
 import com.alibaba.graphscope.groot.wal.LogEntry;
+import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogReader;
+import com.alibaba.graphscope.groot.wal.ReadLogEntry;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -78,8 +81,6 @@ public class WriterAgent implements MetricsAgent {
     private ExecutorService commitExecutor;
     private List<Long> consumedQueueOffsets;
     private Thread consumeThread;
-    private Thread pollThread;
-
     private volatile long lastUpdateTime;
     private volatile long totalWrite;
     private volatile long writePerSecond;
@@ -90,8 +91,6 @@ public class WriterAgent implements MetricsAgent {
     private volatile long totalPollLatencyNano;
     private volatile long pollLatencyPerSecondMs;
     private AvgMetric bufferWritePerSecondMetric;
-
-    private LogService logService;
 
     public WriterAgent(
             Configs configs,
@@ -107,9 +106,11 @@ public class WriterAgent implements MetricsAgent {
         this.metaService = metaService;
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
-        this.logService = logService;
+
+        String metaPath = StoreConfig.STORE_DATA_PATH.get(configs) + "/meta";
+
         initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
+        metricsCollector.register(this, this::updateMetrics);
     }
 
     /** should be called once, before start */
@@ -129,16 +130,6 @@ public class WriterAgent implements MetricsAgent {
             this.consumedQueueOffsets.add(-1L);
         }
 
-        this.consumeThread = new Thread(this::processBatches);
-        this.consumeThread.setName("store-consume");
-        this.consumeThread.setDaemon(true);
-        this.consumeThread.start();
-
-        this.pollThread = new Thread(this::pollBatches);
-        this.pollThread.setName("store-kafka-poller");
-        this.pollThread.setDaemon(true);
-        this.pollThread.start();
-
         this.commitExecutor =
                 new ThreadPoolExecutor(
                         1,
@@ -148,8 +139,15 @@ public class WriterAgent implements MetricsAgent {
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "writer-agent-commit", logger));
+
+
+        this.consumeThread = new Thread(this::processBatches);
+        this.consumeThread.setName("store-consume");
+        this.consumeThread.setDaemon(true);
+        this.consumeThread.start();
         logger.info("WriterAgent started");
     }
+
 
     public void stop() {
         this.shouldStop = true;
@@ -171,8 +169,10 @@ public class WriterAgent implements MetricsAgent {
             }
             this.commitExecutor = null;
         }
+
         logger.debug("WriterAgent stopped");
     }
+
 
     /**
      * Write data to store engine. This method will return immediately when the data is written to
@@ -203,86 +203,29 @@ public class WriterAgent implements MetricsAgent {
         return true;
     }
 
-    public void pollBatches() {
-        int partitionCount = metaService.getPartitionCount();
-        try (ReadOnlyLogReader reader = (ReadOnlyLogReader) logService.createReader(storeId, 0)) {
-            while (!shouldStop) {
-                ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
-                for (ConsumerRecord<LogEntry, LogEntry> record : records) {
-                    long offset = record.offset();
-                    LogEntry logEntry = record.value();
-                    OperationBatch operationBatch = logEntry.getOperationBatch();
-                    long snapshotId = logEntry.getSnapshotId();
-                    StoreDataBatch.Builder builder = StoreDataBatch.newBuilder().requestId("")
-                            .queueId(storeId)
-                            .snapshotId(snapshotId)
-                            .offset(offset);
-
-                    for (OperationBlob operationBlob : operationBatch) {
-                        long partitionKey = operationBlob.getPartitionKey();
-                        if (partitionKey == -1L) {
-                            // replicate to all store node
-                            builder.addOperation(-1, operationBlob);
-                        } else {
-                            int partitionId = PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
-                            int curStoreId = metaService.getStoreIdByPartition(partitionId);
-                            if (curStoreId == storeId) {
-                                builder.addOperation(partitionId, operationBlob);
-                            } else {
-                                logger.error("Should not happen: {} {}", partitionId, operationBlob.toProto());
-                            }
-                        }
-                    }
-                    writeStore(builder.build());
-                }
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private void processBatches() {
         while (!shouldStop) {
             try {
-                long beforePollNano = System.nanoTime();
-                StoreDataBatch storeDataBatch = this.bufferQueue.poll();
-                long afterPollNano = System.nanoTime();
-                long pollNano = afterPollNano - beforePollNano;
-                this.totalPollLatencyNano += pollNano;
-                this.maxPollLatencyNano.updateAndGet(
-                        curMax -> (pollNano > curMax) ? pollNano : curMax);
-                if (storeDataBatch == null) {
+                StoreDataBatch batch = this.bufferQueue.poll();
+                if (batch == null) {
                     continue;
                 }
-                long batchSnapshotId = storeDataBatch.getSnapshotId();
+                long batchSnapshotId = batch.getSnapshotId();
                 logger.debug("polled one batch [" + batchSnapshotId + "]");
-                boolean hasDdl = writeEngineWithRetry(storeDataBatch);
-                int writeCount = storeDataBatch.getSize();
-                this.totalWrite += writeCount;
+                boolean hasDdl = writeEngineWithRetry(batch);
+                this.totalWrite += batch.getSize();
                 if (this.consumeSnapshotId < batchSnapshotId) {
-                    SnapshotInfo availSnapshotInfo = this.availSnapshotInfoRef.get();
-                    long availDdlSnapshotId = availSnapshotInfo.getDdlSnapshotId();
-                    if (availDdlSnapshotId < this.consumeDdlSnapshotId) {
-                        availDdlSnapshotId = this.consumeDdlSnapshotId;
-                    }
-                    long prevSnapshotId = batchSnapshotId - 1;
-                    long availSnapshotId = availSnapshotInfo.getSnapshotId();
-                    if (availSnapshotId < prevSnapshotId) {
-                        availSnapshotId = prevSnapshotId;
-                    }
+                    SnapshotInfo availSInfo = this.availSnapshotInfoRef.get();
+                    long availSI = Math.max(availSInfo.getSnapshotId(), batchSnapshotId - 1);
+                    long availDdlSI= Math.max(availSInfo.getDdlSnapshotId(), consumeDdlSnapshotId);
                     this.consumeSnapshotId = batchSnapshotId;
-                    this.availSnapshotInfoRef.set(
-                            new SnapshotInfo(availSnapshotId, availDdlSnapshotId));
-                    this.commitExecutor.execute(() -> asyncCommit());
+                    this.availSnapshotInfoRef.set(new SnapshotInfo(availSI, availDdlSI));
+                    this.commitExecutor.execute(this::asyncCommit);
                 }
-
                 if (hasDdl) {
                     this.consumeDdlSnapshotId = batchSnapshotId;
                 }
-
-                int queueId = storeDataBatch.getQueueId();
-                long offset = storeDataBatch.getOffset();
-                this.consumedQueueOffsets.set(queueId, offset);
+                this.consumedQueueOffsets.set(batch.getQueueId(), batch.getOffset());
             } catch (InterruptedException e) {
                 logger.error("processBatches interrupted");
             } catch (Exception e) {
@@ -298,23 +241,11 @@ public class WriterAgent implements MetricsAgent {
             long ddlSnapshotId = snapshotInfo.getDdlSnapshotId();
             List<Long> queueOffsets = new ArrayList<>(this.consumedQueueOffsets);
             try {
-                logger.debug(
-                        "commit snapshotId ["
-                                + availSnapshotId
-                                + "], last DDL snapshotId ["
-                                + ddlSnapshotId
-                                + "]");
-                this.snapshotCommitter.commitSnapshotId(
-                        this.storeId, availSnapshotId, ddlSnapshotId, queueOffsets);
+                logger.debug("commit SI {}, last DDL SI {}", availSnapshotId, ddlSnapshotId);
+                this.snapshotCommitter.commitSnapshotId(storeId, availSnapshotId, ddlSnapshotId, queueOffsets);
                 this.lastCommitSnapshotId = availSnapshotId;
             } catch (Exception e) {
-                logger.warn(
-                        "commit failed. snapshotId ["
-                                + availSnapshotId
-                                + "], queueOffsets ["
-                                + queueOffsets
-                                + "]. will ignore",
-                        e);
+                logger.warn("commit failed. SI {}, offset {}. ignored", availSnapshotId, queueOffsets, e);
             }
         }
     }
@@ -324,20 +255,14 @@ public class WriterAgent implements MetricsAgent {
             try {
                 return this.storeService.batchWrite(storeDataBatch);
             } catch (Exception e) {
-                logger.error(
-                        "writeEngine failed. queueId ["
-                                + storeDataBatch.getQueueId()
-                                + "], "
-                                + "snapshotId ["
-                                + storeDataBatch.getSnapshotId()
-                                + "], "
-                                + "offset ["
-                                + storeDataBatch.getOffset()
-                                + "]. will retry",
-                        e);
+                logger.error("writeEngine failed: batch {}.", storeDataBatch.toProto(), e);
             }
         }
         return false;
+    }
+
+    public List<Long> getConsumedQueueOffsets() {
+        return consumedQueueOffsets;
     }
 
     @Override

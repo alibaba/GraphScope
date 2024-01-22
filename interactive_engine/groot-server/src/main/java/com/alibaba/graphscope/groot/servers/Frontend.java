@@ -29,6 +29,7 @@ import com.alibaba.graphscope.groot.frontend.*;
 import com.alibaba.graphscope.groot.frontend.write.DefaultEdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.EdgeIdGenerator;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
+import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAggregator;
@@ -41,6 +42,8 @@ import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.BindableService;
@@ -68,6 +71,8 @@ public class Frontend extends NodeBase {
 
     private SnapshotCache snapshotCache;
 
+    private GraphWriter graphWriter;
+
     public Frontend(Configs configs) {
         super(configs);
         configs = reConfig(configs);
@@ -86,16 +91,16 @@ public class Frontend extends NodeBase {
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients =
                 new RoleClients<>(
                         this.channelManager, RoleType.FRONTEND, MetricsCollectClient::new);
-        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
-                new RoleClients<>(
-                        this.channelManager, RoleType.INGESTOR, MetricsCollectClient::new);
+//        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
+//                new RoleClients<>(
+//                        this.channelManager, RoleType.INGESTOR, MetricsCollectClient::new);
         RoleClients<MetricsCollectClient> storeMetricsCollectClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, MetricsCollectClient::new);
         MetricsAggregator metricsAggregator =
                 new MetricsAggregator(
                         configs,
                         frontendMetricsCollectClients,
-                        ingestorMetricsCollectClients,
+//                        ingestorMetricsCollectClients,
                         storeMetricsCollectClients);
 
         StoreIngestor storeIngestClients =
@@ -133,15 +138,19 @@ public class Frontend extends NodeBase {
         GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
 
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
-        RoleClients<IngestorWriteClient> ingestorWriteClients =
-                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
-        GraphWriter graphWriter =
+//        RoleClients<IngestorWriteClient> ingestorWriteClients =
+//                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
+
+        LogService logService = LogServiceFactory.makeLogService(configs);
+        KafkaAppender kafkaAppender = new KafkaAppender(configs, metaService, logService);
+        this.graphWriter =
                 new GraphWriter(
                         snapshotCache,
                         edgeIdGenerator,
                         this.metaService,
-                        ingestorWriteClients,
+//                        ingestorWriteClients,
                         metricsCollector,
+                        kafkaAppender,
                         configs);
         WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
         ClientWriteService clientWriteService =
@@ -150,13 +159,17 @@ public class Frontend extends NodeBase {
         RoleClients<BackupClient> backupClients =
                 new RoleClients<>(this.channelManager, RoleType.COORDINATOR, BackupClient::new);
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);
+
+        IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
+
         this.serviceServer =
                 buildServiceServer(
                         configs,
                         clientService,
                         clientDdlService,
                         clientWriteService,
-                        clientBackupService);
+                        clientBackupService,
+                        ingestorWriteService);
 
         boolean isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
         WrappedSchemaFetcher wrappedSchemaFetcher =
@@ -190,6 +203,7 @@ public class Frontend extends NodeBase {
             this.curator.start();
         }
         this.metaService.start();
+        this.graphWriter.start();
         try {
             this.rpcServer.start();
         } catch (IOException e) {
