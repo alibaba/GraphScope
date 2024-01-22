@@ -371,27 +371,34 @@ impl PooledExecutorRuntime {
     }
 
     fn fork_new_thread(&mut self, task: GeneralTask) -> Result<Option<GeneralTask>, InternalError> {
-        if let Some(re_active) = self.re_active_queue.get_queue() {
-            let in_flow = self.in_flows.pop().expect("unreachable");
-            let new_tasks = self.task_rx.clone();
-            if self.current_core >= self.max_core {
-                return Err(InternalError::new(format!(
-                    "The number of executos has has reached the maximum limit, current_core: {}, max_core: {}",
+        if self.current_core < self.max_core {
+            if let Some(re_active) = self.re_active_queue.get_queue() {
+                if let Some(in_flow) = self.in_flows.pop() {
+                    let new_tasks = self.task_rx.clone();
+                    let id = self.current_core;
+                    let g = ::std::thread::Builder::new()
+                        .name(format!("reactor {}", id))
+                        .spawn(move || {
+                            debug!("fork new thread reactor: {}", id);
+                            do_user_task(task, &in_flow, &re_active);
+                            work_loop(&re_active, &in_flow, &new_tasks)
+                        })
+                        .expect("fork new thread failure");
+                    self.threads_guard.push(g);
+                    self.current_core += 1;
+                    Ok(None)
+                } else {
+                    Err(InternalError::new(format!(
+                        "re_active queue is empty before executos reach the maximum limit, current_core: {}, max_core: {}",
+                        self.current_core, self.max_core
+                    )))
+                }
+            } else {
+                Err(InternalError::new(format!(
+                    "in_flows queue is empty before executos reach the maximum limit, current_core: {}, max_core: {}",
                     self.current_core, self.max_core
-                )));
+                )))
             }
-            let id = self.current_core;
-            self.current_core += 1;
-            let g = ::std::thread::Builder::new()
-                .name(format!("reactor {}", id))
-                .spawn(move || {
-                    debug!("fork new thread reactor: {}", id);
-                    do_user_task(task, &in_flow, &re_active);
-                    work_loop(&re_active, &in_flow, &new_tasks)
-                })
-                .expect("fork new thread failure");
-            self.threads_guard.push(g);
-            Ok(None)
         } else {
             warn!("fork new thread failure, already forked {} threads;", self.current_core);
             Ok(Some(task))
