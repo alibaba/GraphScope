@@ -51,6 +51,8 @@ public class KafkaProcessor {
     public static final int QUEUE_COUNT = 1;
 
     public static int storeId = 0;
+    private volatile boolean shouldStop = true;
+
 
     public KafkaProcessor(Configs configs, MetaService metaService, WriterAgent writerAgent, LogService logService) {
         this.metaService = metaService;
@@ -88,7 +90,7 @@ public class KafkaProcessor {
                 3000,
                 3000,
                 TimeUnit.MILLISECONDS);
-
+        this.shouldStop = false;
         this.pollThread = new Thread(this::pollBatches);
         this.pollThread.setName("store-kafka-poller");
         this.pollThread.setDaemon(true);
@@ -96,6 +98,7 @@ public class KafkaProcessor {
     }
 
     public void stop() {
+        this.shouldStop = true;
         if (this.persistOffsetsScheduler != null) {
             this.persistOffsetsScheduler.shutdown();
             try {
@@ -129,7 +132,7 @@ public class KafkaProcessor {
             byte[] offsetBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
             offsets = objectMapper.readValue(offsetBytes, new TypeReference<>() {});
         }
-        this.queueOffsetsRef.set(offsets);
+        queueOffsetsRef = new AtomicReference<>(offsets);
         logger.info("recovered queue offsets {}", offsets);
         if (offsets.size() != QUEUE_COUNT) {
             String msg = String.format("recovered queueCount %d, expect %d", offsets.size(), QUEUE_COUNT);
@@ -173,10 +176,13 @@ public class KafkaProcessor {
         }
 
         try (LogReader reader = logService.createReader(storeId, -1)) {
+            while (!shouldStop) {
                 ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
+                // logger.info("Get records: {}", records.count());
                 for (ConsumerRecord<LogEntry, LogEntry> record : records) {
                     processRecord(record);
                 }
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -192,7 +198,7 @@ public class KafkaProcessor {
                 .queueId(storeId)
                 .snapshotId(snapshotId)
                 .offset(offset);
-
+        // logger.info("Process a record");
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
             if (partitionKey == -1L) {

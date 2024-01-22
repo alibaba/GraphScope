@@ -7,8 +7,10 @@ import com.alibaba.graphscope.proto.groot.IngestorWriteGrpc;
 import com.alibaba.graphscope.proto.groot.WriteIngestorRequest;
 import com.alibaba.graphscope.proto.groot.WriteIngestorResponse;
 import io.grpc.stub.StreamObserver;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(IngestorWriteService.class);
 
     private final KafkaAppender appender;
     public IngestorWriteService(KafkaAppender appender) {

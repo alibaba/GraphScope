@@ -7,8 +7,10 @@ import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdResponse;
 import com.alibaba.graphscope.proto.groot.IngestorSnapshotGrpc;
 import io.grpc.stub.StreamObserver;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 public class IngestorSnapshotService extends IngestorSnapshotGrpc.IngestorSnapshotImplBase {
+    private static final Logger logger = LoggerFactory.getLogger(IngestorSnapshotService.class);
 
     private final GraphWriter graphWriter;
     public IngestorSnapshotService(GraphWriter graphWriter) {
@@ -20,6 +22,7 @@ public class IngestorSnapshotService extends IngestorSnapshotGrpc.IngestorSnapsh
             AdvanceIngestSnapshotIdRequest request,
             StreamObserver<AdvanceIngestSnapshotIdResponse> responseObserver) {
         long snapshotId = request.getSnapshotId();
+        // logger.info("ingestor advance snapshot id: {}", snapshotId);
         this.graphWriter.advanceIngestSnapshotId(
                 snapshotId,
                 new CompletionCallback<Long>() {

@@ -182,6 +182,7 @@ public class WriterAgent implements MetricsAgent {
      * @return True if offer success, otherwise False
      */
     public boolean writeStore(StoreDataBatch storeDataBatch) throws InterruptedException {
+        // logger.info("writeStore {}", storeDataBatch.toProto());
         int queueId = storeDataBatch.getQueueId();
         long beforeOfferTime = System.nanoTime();
         boolean suc = this.bufferQueue.offerQueue(queueId, storeDataBatch);
@@ -241,7 +242,7 @@ public class WriterAgent implements MetricsAgent {
             long ddlSnapshotId = snapshotInfo.getDdlSnapshotId();
             List<Long> queueOffsets = new ArrayList<>(this.consumedQueueOffsets);
             try {
-                logger.debug("commit SI {}, last DDL SI {}", availSnapshotId, ddlSnapshotId);
+                // logger.info("commit SI {}, last DDL SI {}", availSnapshotId, ddlSnapshotId);
                 this.snapshotCommitter.commitSnapshotId(storeId, availSnapshotId, ddlSnapshotId, queueOffsets);
                 this.lastCommitSnapshotId = availSnapshotId;
             } catch (Exception e) {

@@ -131,9 +131,7 @@ public class Frontend extends NodeBase {
 
         MetricsCollector metricsCollector = new MetricsCollector(configs);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
-        this.rpcServer =
-                new RpcServer(
-                        configs, localNodeProvider, frontendSnapshotService, metricsCollectService);
+
 
         GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
 
@@ -161,6 +159,13 @@ public class Frontend extends NodeBase {
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);
 
         IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
+IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(graphWriter);
+
+        this.rpcServer =
+                new RpcServer(
+                        configs, localNodeProvider, frontendSnapshotService, metricsCollectService,
+                        ingestorWriteService,
+                        ingestorSnapshotService);
 
         this.serviceServer =
                 buildServiceServer(
@@ -168,8 +173,7 @@ public class Frontend extends NodeBase {
                         clientService,
                         clientDdlService,
                         clientWriteService,
-                        clientBackupService,
-                        ingestorWriteService);
+                        clientBackupService);
 
         boolean isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
         WrappedSchemaFetcher wrappedSchemaFetcher =

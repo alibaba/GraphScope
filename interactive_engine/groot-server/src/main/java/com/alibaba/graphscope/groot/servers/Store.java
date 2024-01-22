@@ -43,6 +43,8 @@ public class Store extends NodeBase {
     private BackupAgent backupAgent;
     private RpcServer rpcServer;
     private AbstractService executorService;
+    
+    private KafkaProcessor processor;
 
     public Store(Configs configs) {
         super(configs);
@@ -88,6 +90,8 @@ public class Store extends NodeBase {
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
+        
+        this.processor = new KafkaProcessor(configs, metaService, writerAgent, logService);
     }
 
     @Override
@@ -115,10 +119,12 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
+        this.processor.start();
     }
 
     @Override
     public void close() throws IOException {
+        this.processor.stop();
         this.executorService.stop();
         this.rpcServer.stop();
         this.backupAgent.stop();

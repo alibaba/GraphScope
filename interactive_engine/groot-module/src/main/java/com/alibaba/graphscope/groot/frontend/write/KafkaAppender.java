@@ -107,7 +107,7 @@ public class KafkaAppender {
     public void ingestBatch(
             String requestId, OperationBatch operationBatch, IngestCallback callback) {
         checkStarted();
-        logger.debug("ingestBatch requestId [{}]", requestId);
+        // logger.info("ingestBatch requestId [{}]", requestId);
         if (this.ingestSnapshotId.get() == -1L) {
             throw new IllegalStateException("ingestor has no valid ingestSnapshotId");
         }
@@ -161,6 +161,7 @@ public class KafkaAppender {
                 for (Map.Entry<Integer, OperationBatch.Builder> entry : builderMap.entrySet()) {
                     int partitionId = entry.getKey();
                     OperationBatch batch = entry.getValue().build();
+                    // logger.info("Log writer append partitionId [{}]", partitionId);
                     logWriter.append(partitionId, new LogEntry(batchSnapshotId, batch));
                 }
             } catch (Exception e) {
@@ -230,6 +231,7 @@ public class KafkaAppender {
     public synchronized void advanceIngestSnapshotId(
             long snapshotId, CompletionCallback<Long> callback) {
         checkStarted();
+        logger.debug("ingestor advance snapshot id: {}", snapshotId);
         long previousSnapshotId = this.ingestSnapshotId.getAndUpdate(x -> Math.max(x, snapshotId));
         if (previousSnapshotId >= snapshotId) {
             throw new IllegalStateException(
