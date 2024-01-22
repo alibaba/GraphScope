@@ -48,7 +48,7 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
 
   static constexpr size_t num_props = sizeof...(T);
   GeneralEdgeSetBuilder(size_t edge_size, const grape::Bitset& bitset,
-                        std::array<std::string, num_props> prop_names,
+                        std::vector<std::string> prop_names,
                         LabelT edge_label, std::array<LabelT, 2> src_labels,
                         LabelT dst_label, Direction dir)
       : bitset_(bitset),
@@ -82,8 +82,8 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
     label_triplets.emplace_back(
         std::array<LabelT, 3>{src_labels_[1], dst_label_, dst_label_});
     std::vector<std::vector<std::string>> prop_names;
-    prop_names.emplace_back(array_to_vec(prop_names_));
-    prop_names.emplace_back(array_to_vec(prop_names_));
+    prop_names.emplace_back(prop_names_);
+    prop_names.emplace_back(prop_names_);
     return res_t(std::move(vec_), std::move(label_triplets), prop_names,
                  std::move(label_vec_), direction_);
   }
@@ -91,7 +91,7 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
  private:
   std::vector<ele_tuple_t> vec_;
   std::vector<LabelT> label_vec_;
-  std::array<std::string, num_props> prop_names_;
+  std::vector<std::string> prop_names_;
   LabelT edge_label_;
   std::array<LabelT, 2> src_labels_;
   LabelT dst_label_;
