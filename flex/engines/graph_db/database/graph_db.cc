@@ -26,10 +26,11 @@ namespace gs {
 
 struct SessionLocalContext {
   SessionLocalContext(GraphDB& db, const std::string& work_dir, int thread_id,
-                      bool memory_only)
-      : allocator(memory_only
-                      ? ""
-                      : thread_local_allocator_prefix(work_dir, thread_id)),
+                      MemoryStrategy allocator_strategy)
+      : allocator(allocator_strategy,
+                  (allocator_strategy != MemoryStrategy::kSyncToFile
+                       ? ""
+                       : thread_local_allocator_prefix(work_dir, thread_id))),
         session(db, allocator, logger, work_dir, thread_id) {}
   ~SessionLocalContext() { logger.close(); }
   Allocator allocator;
@@ -62,6 +63,27 @@ GraphDB& GraphDB::get() {
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int32_t thread_num, bool warmup, bool memory_only,
                            bool enable_auto_compaction, int port) {
+  GraphDBConfig config(schema, data_dir, thread_num);
+  config.warmup = warmup;
+  if (memory_only) {
+    config.allocator_strategy = MemoryStrategy::kMemoryOnly;
+    config.topology_strategy = MemoryStrategy::kMemoryOnly;
+    config.vertex_map_strategy = MemoryStrategy::kMemoryOnly;
+    config.vertex_table_strategy = MemoryStrategy::kMemoryOnly;
+  } else {
+    config.allocator_strategy = MemoryStrategy::kSyncToFile;
+    config.topology_strategy = MemoryStrategy::kSyncToFile;
+    config.vertex_map_strategy = MemoryStrategy::kSyncToFile;
+    config.vertex_table_strategy = MemoryStrategy::kSyncToFile;
+  }
+  config.enable_auto_compaction = enable_auto_compaction;
+  config.service_port = port;
+  return Open(config);
+}
+
+Result<bool> GraphDB::Open(const GraphDBConfig& config) {
+  const std::string& data_dir = config.data_dir;
+  const Schema& schema = config.schema;
   if (!std::filesystem::exists(data_dir)) {
     std::filesystem::create_directories(data_dir);
   }
@@ -73,9 +95,10 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
     graph_.mutable_schema() = schema;
   }
   work_dir_ = data_dir;
-  thread_num_ = thread_num;
+  thread_num_ = config.thread_num;
   try {
-    graph_.Open(data_dir, memory_only);
+    graph_.Open(data_dir, config.vertex_map_strategy,
+                config.vertex_table_strategy, config.topology_strategy);
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
     return Result<bool>(StatusCode::InternalError,
@@ -106,13 +129,13 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   mutable_schema.EmplacePlugins(plugin_paths);
 
   last_compaction_ts_ = 0;
-  openWalAndCreateContexts(data_dir, memory_only);
+  openWalAndCreateContexts(data_dir, config.allocator_strategy);
 
-  if ((!create_empty_graph) && warmup) {
+  if ((!create_empty_graph) && config.warmup) {
     graph_.Warmup(thread_num_);
   }
 
-  if (enable_auto_compaction && (port != -1)) {
+  if (config.enable_auto_compaction && (config.service_port != -1)) {
     if (compact_thread_running_) {
       compact_thread_running_ = false;
       compact_thread_.join();
@@ -152,7 +175,7 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
             }
           }
         },
-        port);
+        config.service_port);
   }
 
   return Result<bool>(true);
@@ -342,7 +365,7 @@ void GraphDB::initApps(
 }
 
 void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
-                                       bool memory_only) {
+                                       MemoryStrategy allocator_strategy) {
   std::string wal_dir_path = wal_dir(data_dir);
   if (!std::filesystem::exists(wal_dir_path)) {
     std::filesystem::create_directory(wal_dir_path);
@@ -357,7 +380,8 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
       aligned_alloc(4096, sizeof(SessionLocalContext) * thread_num_));
   std::filesystem::create_directories(allocator_dir(data_dir));
   for (int i = 0; i < thread_num_; ++i) {
-    new (&contexts_[i]) SessionLocalContext(*this, data_dir, i, memory_only);
+    new (&contexts_[i])
+        SessionLocalContext(*this, data_dir, i, allocator_strategy);
   }
   ingestWals(wal_files, data_dir, thread_num_);
 

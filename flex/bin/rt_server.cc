@@ -83,7 +83,14 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  db.Open(schema, data_path, shard_num, warmup, memory_only, true, http_port);
+  gs::GraphDBConfig config(schema, data_path, shard_num);
+  config.allocator_strategy = gs::MemoryStrategy::kHugepagePrefered;
+  config.vertex_map_strategy = gs::MemoryStrategy::kHugepagePrefered;
+  config.vertex_table_strategy = gs::MemoryStrategy::kHugepagePrefered;
+  config.topology_strategy = gs::MemoryStrategy::kHugepagePrefered;
+  config.enable_auto_compaction = true;
+  config.service_port = http_port;
+  db.Open(config);
 
   t0 += grape::GetCurrentTime();
 

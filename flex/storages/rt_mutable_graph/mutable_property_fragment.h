@@ -48,7 +48,9 @@ class MutablePropertyFragment {
                   vid_t dst_lid, label_t edge_label, timestamp_t ts,
                   const Any& arc, Allocator& alloc);
 
-  void Open(const std::string& work_dir, bool memory_only);
+  void Open(const std::string& work_dir, MemoryStrategy vertex_map_strategy,
+            MemoryStrategy vertex_table_strategy,
+            MemoryStrategy topology_strategy);
 
   void Compact(uint32_t version);
 

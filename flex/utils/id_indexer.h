@@ -240,7 +240,7 @@ class LFIndexer {
                              const std::string& snapshot_dir,
                              const std::string& work_dir) {
     keys_->open(filename + ".keys", "", work_dir);
-    indices_.open(work_dir + "/" + filename + ".indices", false);
+    indices_.open_beta(work_dir + "/" + filename + ".indices", true);
 
     num_elements_.store(0);
     indices_size_ = 0;
@@ -363,7 +363,7 @@ class LFIndexer {
 
     load_meta(work_dir + "/" + name + ".meta");
     keys_->open(name + ".keys", "", work_dir);
-    indices_.open(work_dir + "/" + name + ".indices", false);
+    indices_.open_beta(work_dir + "/" + name + ".indices", true);
     size_t num_elements = num_elements_.load();
 
     keys_->resize(num_elements + (num_elements >> 2));
@@ -378,7 +378,20 @@ class LFIndexer {
       num_elements_.store(0);
     }
     keys_->open_in_memory(name + ".keys");
-    indices_.open_in_memory(name + ".indices");
+    indices_.open_beta(name + ".indices", false);
+    indices_size_ = indices_.size();
+    size_t num_elements = num_elements_.load();
+    keys_->resize(num_elements + (num_elements >> 2));
+  }
+
+  void open_with_hugepages(const std::string& name) {
+    if (std::filesystem::exists(name + ".meta")) {
+      load_meta(name + ".meta");
+    } else {
+      num_elements_.store(0);
+    }
+    keys_->open_with_hugepages(name + ".keys");
+    indices_.open_with_hugepages(name + ".indices");
     indices_size_ = indices_.size();
     size_t num_elements = num_elements_.load();
     keys_->resize(num_elements + (num_elements >> 2));
@@ -954,7 +967,7 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
   _move_data<KEY_T, INDEX_T>()(input.keys_, *lf.keys_, size);
   lf.num_elements_.store(size);
 
-  lf.indices_.open(snapshot_dir + "/" + filename + ".indices", false);
+  lf.indices_.open_beta(snapshot_dir + "/" + filename + ".indices", true);
   lf.indices_.resize(input.num_slots_minus_one_ + 1);
   for (size_t k = 0; k != input.num_slots_minus_one_ + 1; ++k) {
     lf.indices_[k] = std::numeric_limits<INDEX_T>::max();
