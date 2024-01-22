@@ -17,11 +17,6 @@
 
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
-#include "flex/engines/http_server/codegen_proxy.h"
-#include "flex/engines/http_server/workdir_manipulator.h"
-#ifdef BUILD_HQPS
-#include "flex/proto_generated_gie/stored_procedure.pb.h"
-#endif  // BUILD_HQPS
 #include "nlohmann/json.hpp"
 
 #include <seastar/core/print.hh>
@@ -55,22 +50,14 @@ seastar::future<query_result> executor::run_graph_db_query(
 
 // run_query_for stored_procedure
 seastar::future<query_result> executor::run_hqps_procedure_query(
-    query_param&& param) {
-  auto& str = param.content;
-  const char* str_data = str.data();
-  size_t str_length = str.size();
-  LOG(INFO) << "Receive pay load: " << str_length << " bytes";
-
-  query::Query cur_query;
-  if (!cur_query.ParseFromArray(str_data, str_length)) {
-    LOG(ERROR) << "Fail to parse query from pay load";
-    return seastar::make_ready_future<query_result>(
-        seastar::sstring("Fail to parse query from pay load"));
-  }
+    hqps_proc_param&& param) {
+  auto query_name = param.content.first;
+  auto query_args = param.content.second;
+  gs::Decoder decoder(query_args.data(), query_args.size());
 
   auto ret = gs::GraphDB::get()
                  .GetSession(hiactor::local_shard_id())
-                 .EvalHqpsProcedure(cur_query);
+                 .EvalHqpsProcedure(query_name, decoder);
   if (!ret.ok()) {
     LOG(ERROR) << "Eval failed: " << ret.status().error_message();
     return seastar::make_exception_future<query_result>(

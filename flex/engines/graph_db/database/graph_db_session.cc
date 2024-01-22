@@ -24,27 +24,6 @@
 
 namespace gs {
 
-void put_argment(Encoder& encoder, const query::Argument& argment) {
-  auto& value = argment.value();
-  auto item_case = value.item_case();
-  switch (item_case) {
-  case common::Value::kI32:
-    encoder.put_int(value.i32());
-    break;
-  case common::Value::kI64:
-    encoder.put_long(value.i64());
-    break;
-  case common::Value::kF64:
-    encoder.put_double(value.f64());
-    break;
-  case common::Value::kStr:
-    encoder.put_string(value.str());
-    break;
-  default:
-    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case);
-  }
-}
-
 ReadTransaction GraphDBSession::GetReadTransaction() {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
   return ReadTransaction(db_.graph_, db_.version_manager_, ts);
@@ -236,8 +215,7 @@ Result<std::vector<char>> GraphDBSession::EvalAdhoc(
 }
 
 Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
-    const query::Query& query_pb) {
-  auto query_name = query_pb.query_name().name();
+    const std::string& query_name, Decoder& input_decoder) {
   if (query_name.empty()) {
     LOG(ERROR) << "Query name is empty";
     return Result<std::vector<char>>(StatusCode::InValidArgument,
@@ -284,17 +262,8 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
         StatusCode::NotExists,
         "Query type is not registered: " + std::to_string(type), {});
   }
-
-  std::vector<char> input_buffer;
-  gs::Encoder input_encoder(input_buffer);
-  auto& args = query_pb.arguments();
-  for (int32_t i = 0; i < args.size(); ++i) {
-    auto& arg = args[i];
-    put_argment(input_encoder, arg);
-  }
-  const char* str_data = input_buffer.data();
-  size_t str_len = input_buffer.size();
-  gs::Decoder input_decoder(input_buffer.data(), input_buffer.size());
+  const char* input_char = input_decoder.data();
+  size_t input_size = input_decoder.size();
 
   for (size_t i = 0; i < MAX_RETRY; ++i) {
     std::vector<char> result_buffer;
@@ -305,7 +274,7 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
     LOG(INFO) << "[Query-" << query_name << "][Thread-" << thread_id_
               << "] retry - " << i << " / " << MAX_RETRY;
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    input_decoder.reset(str_data, str_len);
+    input_decoder.reset(input_char, input_size);
   }
   return Result<std::vector<char>>(
       StatusCode::QueryFailed, "Query failed for procedure: " + query_name, {});

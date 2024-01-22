@@ -54,6 +54,7 @@ struct payload {
 };
 
 using query_param = payload<seastar::sstring>;
+using hqps_proc_param = payload<std::pair<seastar::sstring, seastar::sstring>>;
 using query_result = payload<seastar::sstring>;
 using adhoc_result = payload<std::pair<int32_t, std::string>>;
 using admin_query_result = payload<gs::Result<seastar::sstring>>;

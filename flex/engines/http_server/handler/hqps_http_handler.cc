@@ -15,10 +15,30 @@
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/service/hqps_service.h"
-
 #include "flex/engines/http_server/types.h"
 
 namespace server {
+
+void put_argment(gs::Encoder& encoder, const query::Argument& argment) {
+  auto& value = argment.value();
+  auto item_case = value.item_case();
+  switch (item_case) {
+  case common::Value::kI32:
+    encoder.put_int(value.i32());
+    break;
+  case common::Value::kI64:
+    encoder.put_long(value.i64());
+    break;
+  case common::Value::kF64:
+    encoder.put_double(value.f64());
+    break;
+  case common::Value::kStr:
+    encoder.put_string(value.str());
+    break;
+  default:
+    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case);
+  }
+}
 
 hqps_ic_handler::hqps_ic_handler(uint32_t init_group_id, uint32_t max_group_id,
                                  uint32_t group_inc_step,
@@ -86,9 +106,38 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  // first extract the query name and parameters
+  auto& str = req->content;
+  const char* str_data = str.data();
+  size_t str_length = str.size();
+  LOG(INFO) << "Receive pay load: " << str_length << " bytes";
+
+  query::Query cur_query;
+  if (!cur_query.ParseFromArray(str_data, str_length)) {
+    LOG(ERROR) << "Fail to parse query from pay load";
+    rep->set_status(seastar::httpd::reply::status_type::bad_request);
+    rep->write_body("bin",
+                    seastar::sstring("Fail to parse query from pay load"));
+    rep->done();
+    return seastar::make_ready_future<std::unique_ptr<seastar::httpd::reply>>(
+        std::move(rep));
+  }
+  auto query_name = cur_query.query_name().name();
+
+  std::vector<char> input_buffer;
+  gs::Encoder input_encoder(input_buffer);
+  auto& args = cur_query.arguments();
+  for (int32_t i = 0; i < args.size(); ++i) {
+    auto& arg = args[i];
+    put_argment(input_encoder, arg);
+  }
+  VLOG(10) << "Query name: " << query_name << ", args: " << input_buffer.size()
+           << " bytes";
+  seastar::sstring input_str(input_buffer.data(), input_buffer.size());
 
   return executor_refs_[dst_executor]
-      .run_hqps_procedure_query(query_param{std::move(req->content)})
+      .run_hqps_procedure_query(hqps_proc_param{
+          std::make_pair(seastar::sstring{query_name}, input_str)})
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
             if (__builtin_expect(fut.failed(), false)) {

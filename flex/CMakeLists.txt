@@ -17,6 +17,14 @@ option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
 option(ENABLE_HUGEPAGE "Whether to use hugepages when open mmap array in memory" OFF)
 
+#print options
+message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
+message(STATUS "Build test: ${BUILD_TEST}")
+message(STATUS "Build doc: ${BUILD_DOC}")
+message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
+message(STATUS "Monitor sessions: ${MONITOR_SESSIONS}")
+message(STATUS "Enable hugepage: ${ENABLE_HUGEPAGE}")
+
 # ------------------------------------------------------------------------------
 # cmake configs
 # ------------------------------------------------------------------------------

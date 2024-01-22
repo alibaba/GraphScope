@@ -6,14 +6,25 @@ if (Hiactor_FOUND)
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
         INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/nlohmann-json/single_include/)
 
-  file(GLOB_RECURSE SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
-  #if BUILD_HQPS, remove admin_http_handler.cc and hqps_*.cc
+    message(STATUS "server_actor_autogen_files: ${server_actor_autogen_files}")
+
   if (NOT BUILD_HQPS)
-      list(REMOVE_ITEM SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/handler/admin_http_handler.cc")
-      list(REMOVE_ITEM SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/handler/hqps_http_handler.cc")
-      list(REMOVE_ITEM SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/service/hqps_service.cc")
-      list(REMOVE_ITEM SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/service/codegen_proxy.h")
+    list(FILTER server_actor_autogen_files EXCLUDE REGEX ".*admin.*")
+    list(FILTER server_actor_autogen_files EXCLUDE REGEX ".*codegen.*")
+    message(STATUS "server_actor_autogen_files: ${server_actor_autogen_files}")
   endif ()
+
+  # get all .cc files in current directory, except for generated/
+  file(GLOB_RECURSE SERVER_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
+  list(FILTER SERVER_FILES EXCLUDE REGEX ".*generated.*")
+
+  if (NOT BUILD_HQPS)
+    list(FILTER SERVER_FILES EXCLUDE REGEX ".*admin*")
+    list(FILTER SERVER_FILES EXCLUDE REGEX ".*hqps*")
+    list(FILTER SERVER_FILES EXCLUDE REGEX ".*codegen*")
+    list(FILTER SERVER_FILES EXCLUDE REGEX ".*workdir_manipulator*")
+  endif ()
+  message(STATUS "SERVER_FILES: ${SERVER_FILES}")
 
   add_library(flex_server STATIC ${SERVER_FILES} ${server_actor_autogen_files})
   add_dependencies(flex_server server_actor_autogen)

@@ -24,7 +24,6 @@
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
-#include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/column.h"
 #include "flex/utils/result.h"
@@ -33,8 +32,6 @@ namespace gs {
 
 class GraphDB;
 class WalWriter;
-
-void put_argment(gs::Encoder& encoder, const query::Argument& argment);
 
 class GraphDBSession {
  public:
@@ -88,7 +85,8 @@ class GraphDBSession {
   Result<std::vector<char>> EvalAdhoc(const std::string& input_lib_path);
 
   // Evaluate a stored procedure with input parameters given.
-  Result<std::vector<char>> EvalHqpsProcedure(const query::Query& query_pb);
+  Result<std::vector<char>> EvalHqpsProcedure(const std::string& query_name,
+                                              Decoder& decoder);
 
   void GetAppInfo(Encoder& result);
 
