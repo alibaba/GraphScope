@@ -154,6 +154,8 @@ uint8_t Decoder::get_byte() { return static_cast<uint8_t>(*(data_++)); }
 
 const char* Decoder::data() const { return data_; }
 
+size_t Decoder::size() const { return end_ - data_; }
+
 bool Decoder::empty() const { return data_ == end_; }
 
 void Decoder::reset(const char* p, size_t size) {
