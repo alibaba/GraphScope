@@ -264,7 +264,7 @@ impl PooledExecutorRuntime {
         }
         PooledExecutorRuntime {
             max_core: core,
-            current_core: 1,
+            current_core: 0,
             task_rx,
             re_active_queue: WorkStealFactory::new(core),
             threads_guard: Vec::with_capacity(core),
@@ -273,13 +273,14 @@ impl PooledExecutorRuntime {
     }
 
     fn start(mut self) -> Result<(), InternalError> {
-        // re_active_queue and not_readies are empty if current_core > max_core
-        if self.current_core > self.max_core {
+        // start first thread for executor
+        if self.current_core >= self.max_core {
             return Err(InternalError::new(format!(
-                "The number of executos has execeeded, current_core: {}, max_core: {}",
+                "The number of executos has has reached the maximum limit, current_core: {}, max_core: {}",
                 self.current_core, self.max_core
             )));
         }
+        self.current_core += 1;
         let queue = self
             .re_active_queue
             .get_queue()
@@ -296,7 +297,7 @@ impl PooledExecutorRuntime {
         while self.current_core < self.max_core {
             if shutdown {
                 if IN_PROGRESS_TASK_COUNT.load(Ordering::SeqCst) > self.current_core {
-                    self.try_fork_new_thread(&queue, &not_readies);
+                    self.try_fork_new_thread(&queue, &not_readies)?;
                 } else {
                     break;
                 }
@@ -309,14 +310,14 @@ impl PooledExecutorRuntime {
                     // fork new thread to do work;
                     Ok(task) => match task {
                         TaskPackage::Single(task) => {
-                            if let Some(task) = self.fork_new_thread(task) {
+                            if let Some(task) = self.fork_new_thread(task)? {
                                 assert_eq!(self.current_core, self.max_core);
                                 queue.push(RunTask::Users(task));
                             }
                         }
                         TaskPackage::Batch(mut tasks) => {
                             while let Some(task) = tasks.pop() {
-                                if let Some(task) = self.fork_new_thread(task) {
+                                if let Some(task) = self.fork_new_thread(task)? {
                                     assert_eq!(self.current_core, self.max_core);
                                     queue.push(RunTask::Users(task));
                                     break;
@@ -332,7 +333,7 @@ impl PooledExecutorRuntime {
                         }
                     },
                     Err(RecvTimeoutError::Timeout) => {
-                        self.try_fork_new_thread(&queue, &not_readies);
+                        self.try_fork_new_thread(&queue, &not_readies)?;
                         shutdown = SHUTDOWN_HOOK.load(Ordering::SeqCst);
                     }
                     Err(RecvTimeoutError::Disconnected) => {
@@ -353,26 +354,34 @@ impl PooledExecutorRuntime {
     #[inline]
     fn try_fork_new_thread(
         &mut self, queue: &WorkStealQueue<RunTask>, not_readies: &Arc<SegQueue<GeneralTask>>,
-    ) {
+    ) -> Result<(), InternalError> {
         if let Some(task) = queue.pop() {
             match task {
                 RunTask::Select(task) => {
                     do_task(RunTask::Select(task), not_readies, &queue);
                 }
                 RunTask::Users(task) => {
-                    if let Some(task) = self.fork_new_thread(task) {
+                    if let Some(task) = self.fork_new_thread(task)? {
                         do_task(RunTask::Users(task), not_readies, &queue);
                     }
                 }
             }
         }
+        Ok(())
     }
 
-    fn fork_new_thread(&mut self, task: GeneralTask) -> Option<GeneralTask> {
+    fn fork_new_thread(&mut self, task: GeneralTask) -> Result<Option<GeneralTask>, InternalError> {
         if let Some(re_active) = self.re_active_queue.get_queue() {
             let in_flow = self.in_flows.pop().expect("unreachable");
             let new_tasks = self.task_rx.clone();
+            if self.current_core >= self.max_core {
+                return Err(InternalError::new(format!(
+                    "The number of executos has has reached the maximum limit, current_core: {}, max_core: {}",
+                    self.current_core, self.max_core
+                )));
+            }
             let id = self.current_core;
+            self.current_core += 1;
             let g = ::std::thread::Builder::new()
                 .name(format!("reactor {}", id))
                 .spawn(move || {
@@ -382,11 +391,10 @@ impl PooledExecutorRuntime {
                 })
                 .expect("fork new thread failure");
             self.threads_guard.push(g);
-            self.current_core += 1;
-            None
+            Ok(None)
         } else {
             warn!("fork new thread failure, already forked {} threads;", self.current_core);
-            Some(task)
+            Ok(Some(task))
         }
     }
 }
