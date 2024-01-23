@@ -84,12 +84,19 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         switch (dataType.getSqlTypeName()) {
             case MULTISET:
             case ARRAY:
-                if (dataType instanceof ArbitraryArrayType) {
-                    return parseCollection(
-                            entry.getCollection(),
-                            ((ArbitraryArrayType) dataType).getComponentTypes());
-                } else {
-                    return parseCollection(entry.getCollection(), dataType.getComponentType());
+                switch (entry.getInnerCase()) {
+                    case COLLECTION:
+                        if (dataType instanceof ArbitraryArrayType) {
+                            return parseCollection(
+                                    entry.getCollection(),
+                                    ((ArbitraryArrayType) dataType).getComponentTypes());
+                        } else {
+                            return parseCollection(
+                                    entry.getCollection(), dataType.getComponentType());
+                        }
+                    case ELEMENT:
+                    default:
+                        return parseElement(entry.getElement(), dataType.getComponentType());
                 }
             case MAP:
                 if (dataType instanceof ArbitraryMapType) {

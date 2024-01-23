@@ -161,7 +161,7 @@ public class GraphPlanner {
                     throw new RuntimeException(e);
                 }
             } else {
-                return new ProcedurePhysicalBuilder(logicalPlan).build();
+                return new ProcedurePhysicalBuilder(graphConfig, irMeta, logicalPlan).build();
             }
         }
     }
