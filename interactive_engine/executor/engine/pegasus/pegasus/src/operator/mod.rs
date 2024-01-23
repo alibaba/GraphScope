@@ -228,7 +228,7 @@ impl<T: Send + 'static> Notifiable for DefaultNotifyOperator<T> {
         if !inputs.is_empty() {
             if let Some(cancel) = self.notify.merge_cancel(n) {
                 for input in inputs {
-                    input.cancel_scope(&cancel);
+                    input.cancel_scope(&cancel)?;
                 }
             }
         }

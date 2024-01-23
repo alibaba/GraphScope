@@ -319,11 +319,19 @@ impl<D: Data> Stream<D> {
             Err("can't create feedback stream on root scope;")?;
         }
         let r = self.ch.add_delta(ScopeDelta::ToSibling(1));
-        assert!(r.is_none());
-        let mut op = self.builder.get_operator(op_index);
-        let edge = self.connect(&mut op)?;
-        self.builder.add_edge(edge);
-        Ok(())
+        if !r.is_none() {
+            return Err(BuildJobError::InternalError(format!("Operator index is not none")));
+        }
+        if let Some(mut op) = self.builder.get_operator(op_index) {
+            let edge = self.connect(&mut op)?;
+            self.builder.add_edge(edge);
+            Ok(())
+        } else {
+            Err(BuildJobError::InternalError(format!(
+                "Operator index out of range, operator index: {}",
+                op_index
+            )))
+        }
     }
 
     pub fn enter(self) -> Result<Self, BuildJobError> {
