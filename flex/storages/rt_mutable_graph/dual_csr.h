@@ -33,18 +33,26 @@ class DualCsrBase {
                          const std::string& work_dir,
                          const std::vector<int>& oe_degree,
                          const std::vector<int>& ie_degree) = 0;
+
   virtual void Open(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
+
   virtual void OpenInMemory(const std::string& oe_name,
                             const std::string& ie_name,
                             const std::string& edata_name,
                             const std::string& snapshot_dir,
                             size_t src_vertex_cap, size_t dst_vertex_cap) = 0;
+
   virtual void Dump(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& new_snapshot_dir) = 0;
+
+  // Clean up the associated files in the tmp directory after dump.
+  virtual void ClearTmp(const std::string& oe_name, const std::string& ie_name,
+                        const std::string& edata_name,
+                        const std::string& work_dir) = 0;
 
   virtual void PutEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
                        Allocator& alloc) = 0;
@@ -59,6 +67,8 @@ class DualCsrBase {
 
   virtual MutableCsrBase* GetInCsr() = 0;
   virtual MutableCsrBase* GetOutCsr() = 0;
+
+  virtual void Close() = 0;
 };
 
 template <typename EDATA_T>
@@ -89,6 +99,7 @@ class DualCsr : public DualCsrBase {
       delete out_csr_;
     }
   }
+
   void BatchInit(const std::string& oe_name, const std::string& ie_name,
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
@@ -110,6 +121,13 @@ class DualCsr : public DualCsrBase {
                     size_t dst_vertex_cap) override {
     in_csr_->open_in_memory(snapshot_dir + "/" + ie_name, dst_vertex_cap);
     out_csr_->open_in_memory(snapshot_dir + "/" + oe_name, src_vertex_cap);
+  }
+
+  void ClearTmp(const std::string& oe_name, const std::string& ie_name,
+                const std::string& edata_name,
+                const std::string& work_dir) override {
+    in_csr_->clear_tmp(ie_name, work_dir);
+    out_csr_->clear_tmp(oe_name, work_dir);
   }
 
   void Dump(const std::string& oe_name, const std::string& ie_name,
@@ -174,6 +192,11 @@ class DualCsr : public DualCsrBase {
   void BatchPutEdge(vid_t src, vid_t dst, const EDATA_T& data) {
     in_csr_->batch_put_edge(dst, src, data);
     out_csr_->batch_put_edge(src, dst, data);
+  }
+
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
   }
 
  private:
@@ -252,6 +275,14 @@ class DualCsr<std::string_view> : public DualCsrBase {
     column_.dump(new_snapshot_dir + "/" + edata_name);
   }
 
+  void ClearTmp(const std::string& oe_name, const std::string& ie_name,
+                const std::string& edata_name,
+                const std::string& work_dir) override {
+    in_csr_->clear_tmp(ie_name, work_dir);
+    out_csr_->clear_tmp(oe_name, work_dir);
+    column_.clear_tmp(work_dir + "/" + edata_name);
+  }
+
   MutableCsrBase* GetInCsr() override { return in_csr_; }
   MutableCsrBase* GetOutCsr() override { return out_csr_; }
   void PutEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
@@ -326,6 +357,12 @@ class DualCsr<std::string_view> : public DualCsrBase {
 
     in_csr_->batch_put_edge_with_index(dst, src, row_id);
     out_csr_->batch_put_edge_with_index(src, dst, row_id);
+  }
+
+  void Close() override {
+    in_csr_->close();
+    out_csr_->close();
+    column_.close();
   }
 
  private:

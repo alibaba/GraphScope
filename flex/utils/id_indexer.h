@@ -391,6 +391,12 @@ class LFIndexer {
     dump_meta(snapshot_dir + "/" + name + ".meta");
   }
 
+  void clear_tmp(const std::string& filename) {
+    keys_->clear_tmp(filename + ".keys");
+    unlink((filename + ".indices").c_str());
+    unlink((filename + ".meta").c_str());
+  }
+
   void close() {
     keys_->close();
     indices_.reset();

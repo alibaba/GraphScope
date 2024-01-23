@@ -500,10 +500,15 @@ class MutableCsrBase {
   virtual void open(const std::string& name, const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
 
+  virtual void close() = 0;
+
   virtual void open_in_memory(const std::string& prefix, size_t v_cap = 0) = 0;
 
   virtual void dump(const std::string& name,
                     const std::string& new_spanshot_dir) = 0;
+
+  virtual void clear_tmp(const std::string& name,
+                         const std::string& work_dir) = 0;
 
   virtual void warmup(int thread_num) const = 0;
 
@@ -674,7 +679,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
                     double reserve_ratio) override {
     reserve_ratio = std::max(reserve_ratio, 1.0);
     size_t vnum = degree.size();
-    adj_lists_.open(work_dir + "/" + name + ".adj", false);
+    adj_lists_.open_in_memory(work_dir + "/" + name + ".adj");
     adj_lists_.resize(vnum);
 
     locks_ = new grape::SpinLock[vnum];
@@ -683,7 +688,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     for (auto d : degree) {
       edge_num += (std::ceil(d * reserve_ratio));
     }
-    nbr_list_.open(work_dir + "/" + name + ".nbr", false);
+    nbr_list_.open_in_memory(work_dir + "/" + name + ".nbr");
     nbr_list_.resize(edge_num);
 
     nbr_t* ptr = nbr_list_.data();
@@ -850,6 +855,13 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     }
   }
 
+  void clear_tmp(const std::string& name,
+                 const std::string& work_dir) override {
+    unlink((work_dir + "/" + name + ".nbr").c_str());
+    unlink((work_dir + "/" + name + ".adj").c_str());
+    unlink((work_dir + "/" + name + ".deg").c_str());
+  }
+
   void resize(vid_t vnum) override {
     if (vnum > adj_lists_.size()) {
       size_t old_size = adj_lists_.size();
@@ -934,14 +946,21 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   timestamp_t unsorted_since() const override { return unsorted_since_; }
 
+  void close() override {
+    if (locks_ != nullptr) {
+      delete[] locks_;
+    }
+    adj_lists_.reset();
+    nbr_list_.reset();
+  }
+
  private:
   void load_meta(const std::string& prefix) {
     std::string meta_file_path = prefix + ".meta";
     if (std::filesystem::exists(meta_file_path)) {
       FILE* meta_file_fd = fopen(meta_file_path.c_str(), "r");
-      CHECK_EQ(
-          fread(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
-          1);
+      CHECK_EQ(fread(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
+               1);
       fclose(meta_file_fd);
     } else {
       unsorted_since_ = 0;
@@ -950,11 +969,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void dump_meta(const std::string& prefix) const {
     std::string meta_file_path = prefix + ".meta";
-    FILE* meta_file_fd =
-        fopen((prefix + ".meta").c_str(), "wb");
-    CHECK_EQ(
-        fwrite(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
-        1);
+    FILE* meta_file_fd = fopen((prefix + ".meta").c_str(), "wb");
+    CHECK_EQ(fwrite(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd), 1);
     fflush(meta_file_fd);
     fclose(meta_file_fd);
   }
@@ -986,7 +1002,7 @@ class MutableCsr<std::string_view>
                     const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    adj_lists_.open(work_dir + "/" + name + ".adj", false);
+    adj_lists_.open_in_memory(work_dir + "/" + name + ".adj");
     adj_lists_.resize(vnum);
 
     locks_ = new grape::SpinLock[vnum];
@@ -995,7 +1011,7 @@ class MutableCsr<std::string_view>
     for (auto d : degree) {
       edge_num += d;
     }
-    nbr_list_.open(work_dir + "/" + name + ".nbr", false);
+    nbr_list_.open_in_memory(work_dir + "/" + name + ".nbr");
     nbr_list_.resize(edge_num);
 
     nbr_t* ptr = nbr_list_.data();
@@ -1114,6 +1130,13 @@ class MutableCsr<std::string_view>
     }
   }
 
+  void clear_tmp(const std::string& name,
+                 const std::string& work_dir) override {
+    unlink((work_dir + "/" + name + ".nbr").c_str());
+    unlink((work_dir + "/" + name + ".adj").c_str());
+    unlink((work_dir + "/" + name + ".deg").c_str());
+  }
+
   void resize(vid_t vnum) override {
     if (vnum > adj_lists_.size()) {
       size_t old_size = adj_lists_.size();
@@ -1190,6 +1213,14 @@ class MutableCsr<std::string_view>
         get_edges_mut(v));
   }
 
+  void close() override {
+    if (locks_ != nullptr) {
+      delete[] locks_;
+    }
+    adj_lists_.reset();
+    nbr_list_.reset();
+  }
+
  private:
   StringColumn& column_;
   std::atomic<size_t>& column_idx_;
@@ -1212,7 +1243,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
                     const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", false);
+    nbr_list_.open_in_memory(work_dir + "/" + name + ".snbr");
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -1246,11 +1277,22 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    assert(!nbr_list_.read_only());
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if ((!nbr_list_.filename().empty() &&
+         std::filesystem::exists(nbr_list_.filename()))) {
+      assert(!nbr_list_.read_only());
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
+  }
+
+  void clear_tmp(const std::string& name,
+                 const std::string& work_dir) override {
+    unlink((work_dir + "/" + name + ".snbr").c_str());
   }
 
   void resize(vid_t vnum) override {
@@ -1382,6 +1424,8 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     return std::numeric_limits<timestamp_t>::max();
   }
 
+  void close() override { nbr_list_.reset(); }
+
  private:
   mmap_array<nbr_t> nbr_list_;
 };
@@ -1402,7 +1446,7 @@ class SingleMutableCsr<std::string_view>
                     const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", false);
+    nbr_list_.open_in_memory(work_dir + "/" + name + ".snbr");
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -1425,11 +1469,22 @@ class SingleMutableCsr<std::string_view>
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    assert(!nbr_list_.read_only());
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if ((!nbr_list_.filename().empty() &&
+         std::filesystem::exists(nbr_list_.filename()))) {
+      assert(!nbr_list_.read_only());
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
+  }
+
+  void clear_tmp(const std::string& name,
+                 const std::string& work_dir) override {
+    unlink((work_dir + "/" + name + ".snbr").c_str());
   }
 
   void resize(vid_t vnum) override {
@@ -1564,6 +1619,8 @@ class SingleMutableCsr<std::string_view>
     (void) output.load();
   }
 
+  void close() override { nbr_list_.reset(); }
+
  private:
   StringColumn& column_;
   std::atomic<size_t>& column_idx_;
@@ -1593,6 +1650,9 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}
+
+  void clear_tmp(const std::string& name,
+                 const std::string& work_dir) override {}
 
   void warmup(int thread_num) const override {}
 
@@ -1637,6 +1697,8 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   timestamp_t unsorted_since() const override {
     return std::numeric_limits<timestamp_t>::max();
   }
+
+  void close() override {}
 };
 
 template <>
@@ -1663,6 +1725,8 @@ class EmptyCsr<std::string_view>
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}
 
+  void clear_tmp(const std::string& name,
+                 const std::string& work_dir) override {}
   void warmup(int thread_num) const override {}
 
   void resize(vid_t vnum) override {}
@@ -1703,6 +1767,9 @@ class EmptyCsr<std::string_view>
     return std::make_shared<TypedMutableCsrEdgeIter<std::string_view>>(
         MutableNbrSliceMut<std::string_view>::empty(column_));
   }
+  void close() override {}
+
+ private:
   StringColumn& column_;
   std::atomic<size_t>& column_idx_;
 };
