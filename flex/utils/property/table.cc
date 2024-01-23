@@ -124,6 +124,13 @@ void Table::dump(const std::string& name, const std::string& snapshot_dir) {
   column_ptrs_.clear();
 }
 
+void Table::clear_tmp(const std::string& name, const std::string& work_dir) {
+  int i = 0;
+  for (auto col : columns_) {
+    col->clear_tmp(work_dir + "/" + name + ".col_" + std::to_string(i++));
+  }
+}
+
 void Table::reset_header(const std::vector<std::string>& col_name) {
   IdIndexer<std::string, int> new_col_id_indexer;
   size_t col_num = col_name.size();

@@ -35,6 +35,7 @@ class TypedEmptyColumn : public ColumnBase {
 #endif
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
+  void clear_tmp(const std::string&) override {}
   void copy_to_tmp(const std::string& cur_path,
                    const std::string& tmp_path) override {}
   void close() override {}
@@ -76,6 +77,7 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
 #endif
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
+  void clear_tmp(const std::string&) override {}
   void copy_to_tmp(const std::string& cur_path,
                    const std::string& tmp_path) override {}
   void close() override {}
