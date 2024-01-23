@@ -5,6 +5,8 @@ name: Build GraphScope Development and Wheel Images
 # 2) graphscope-dev: including all dependencies for graphscope's development env.
 # 3) vineyard-dev: including all vineyard-related dependencies that could compile graphscope analytical engine.
 # 4) vineyard-runtime: including all vineyard-related running dependencies.
+# Note that:
+#   Due to security considerations, we cannot use self-hosts runner(aarch64) when we configured the secret on github.
 on:
   workflow_dispatch:
     inputs:
@@ -73,10 +75,10 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # dev-wheel image
-        sudo docker tag graphscope/graphscope-dev:wheel-${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/graphscope-dev:wheel-${tag}-${arch} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
 
   build-wheel-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
@@ -179,10 +181,10 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # graphscope-dev image
-        sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/graphscope-dev:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
 
   build-graphscope-dev-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
@@ -285,10 +287,10 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # vineyard-dev image
-        sudo docker tag graphscope/vineyard-dev:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-dev:${{ github.event.inputs.v6d_version }}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/vineyard-dev:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
 
   build-vineyard-dev-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
@@ -393,10 +395,10 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # vineyard-runtime image
-        sudo docker tag graphscope/vineyard-runtime:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${{ github.event.inputs.v6d_version }}
+        sudo docker tag graphscope/vineyard-runtime:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
+        sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
 
   build-vineyard-runtime-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
