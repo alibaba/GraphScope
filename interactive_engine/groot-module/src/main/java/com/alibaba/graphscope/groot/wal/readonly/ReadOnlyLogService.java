@@ -14,17 +14,8 @@
 package com.alibaba.graphscope.groot.wal.readonly;
 
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.KafkaConfig;
-import com.alibaba.graphscope.groot.wal.LogReader;
-import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
-
-import com.alibaba.graphscope.groot.wal.kafka.KafkaLogReader;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class ReadOnlyLogService extends KafkaLogService {
 
@@ -36,5 +27,4 @@ public class ReadOnlyLogService extends KafkaLogService {
     public LogWriter createWriter() {
         return new ReadOnlyLogWriter();
     }
-
 }

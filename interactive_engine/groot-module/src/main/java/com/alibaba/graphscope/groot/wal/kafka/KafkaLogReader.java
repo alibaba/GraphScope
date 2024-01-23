@@ -57,9 +57,9 @@ public class KafkaLogReader implements LogReader {
         long earliest = getOffset(client, partition, OffsetSpec.earliest());
         latest = getOffset(client, partition, OffsetSpec.latest());
 
-        if (offset == -1 && timestamp == -1) {  // Seek to end
+        if (offset == -1 && timestamp == -1) { // Seek to end
             offset = latest;
-        } else if (offset == -1) {  // Get offset from timestamp
+        } else if (offset == -1) { // Get offset from timestamp
             offset = getOffset(client, partition, OffsetSpec.forTimestamp(timestamp));
         }
         if (earliest > offset || offset > latest) {

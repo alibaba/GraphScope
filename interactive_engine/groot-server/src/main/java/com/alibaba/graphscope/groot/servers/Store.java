@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
-import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.discovery.*;
@@ -43,7 +42,7 @@ public class Store extends NodeBase {
     private BackupAgent backupAgent;
     private RpcServer rpcServer;
     private AbstractService executorService;
-    
+
     private KafkaProcessor processor;
 
     public Store(Configs configs) {
@@ -67,8 +66,7 @@ public class Store extends NodeBase {
                         this.storeService,
                         this.metaService,
                         snapshotCommitter,
-                        metricsCollector,
-                        logService);
+                        metricsCollector);
         StoreWriteService storeWriteService = new StoreWriteService(this.writerAgent);
         this.backupAgent = new BackupAgent(configs, this.storeService);
         StoreBackupService storeBackupService = new StoreBackupService(this.backupAgent);
@@ -90,7 +88,7 @@ public class Store extends NodeBase {
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
-        
+
         this.processor = new KafkaProcessor(configs, metaService, writerAgent, logService);
     }
 

@@ -21,7 +21,6 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
-import com.alibaba.graphscope.groot.wal.readonly.ReadOnlyLogWriter;
 import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;

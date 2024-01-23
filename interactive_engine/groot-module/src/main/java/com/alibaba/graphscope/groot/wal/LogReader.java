@@ -33,7 +33,7 @@ public interface LogReader extends AutoCloseable {
 
     public ConsumerRecord<LogEntry, LogEntry> readNextRecord();
 
-        ConsumerRecords<LogEntry, LogEntry> getLatestUpdates();
+    ConsumerRecords<LogEntry, LogEntry> getLatestUpdates();
 
     void close() throws IOException;
 }

@@ -91,16 +91,17 @@ public class Frontend extends NodeBase {
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients =
                 new RoleClients<>(
                         this.channelManager, RoleType.FRONTEND, MetricsCollectClient::new);
-//        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
-//                new RoleClients<>(
-//                        this.channelManager, RoleType.INGESTOR, MetricsCollectClient::new);
+        //        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
+        //                new RoleClients<>(
+        //                        this.channelManager, RoleType.INGESTOR,
+        // MetricsCollectClient::new);
         RoleClients<MetricsCollectClient> storeMetricsCollectClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, MetricsCollectClient::new);
         MetricsAggregator metricsAggregator =
                 new MetricsAggregator(
                         configs,
                         frontendMetricsCollectClients,
-//                        ingestorMetricsCollectClients,
+                        //                        ingestorMetricsCollectClients,
                         storeMetricsCollectClients);
 
         StoreIngestor storeIngestClients =
@@ -132,12 +133,12 @@ public class Frontend extends NodeBase {
         MetricsCollector metricsCollector = new MetricsCollector(configs);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
 
-
         GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
 
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
-//        RoleClients<IngestorWriteClient> ingestorWriteClients =
-//                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
+        //        RoleClients<IngestorWriteClient> ingestorWriteClients =
+        //                new RoleClients<>(this.channelManager, RoleType.INGESTOR,
+        // IngestorWriteClient::new);
 
         LogService logService = LogServiceFactory.makeLogService(configs);
         KafkaAppender kafkaAppender = new KafkaAppender(configs, metaService, logService);
@@ -146,7 +147,7 @@ public class Frontend extends NodeBase {
                         snapshotCache,
                         edgeIdGenerator,
                         this.metaService,
-//                        ingestorWriteClients,
+                        //                        ingestorWriteClients,
                         metricsCollector,
                         kafkaAppender,
                         configs);
@@ -159,11 +160,14 @@ public class Frontend extends NodeBase {
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);
 
         IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
-IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(graphWriter);
+        IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(graphWriter);
 
         this.rpcServer =
                 new RpcServer(
-                        configs, localNodeProvider, frontendSnapshotService, metricsCollectService,
+                        configs,
+                        localNodeProvider,
+                        frontendSnapshotService,
+                        metricsCollectService,
                         ingestorWriteService,
                         ingestorSnapshotService);
 

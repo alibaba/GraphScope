@@ -1,5 +1,6 @@
 package com.alibaba.graphscope.groot.store;
 
+import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.StoreConfig;
@@ -11,12 +12,14 @@ import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
+import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
@@ -33,28 +36,31 @@ import java.util.concurrent.atomic.AtomicReference;
 public class KafkaProcessor {
     private static final Logger logger = LoggerFactory.getLogger(KafkaProcessor.class);
 
-
-    private LogService logService;
+    private final LogService logService;
 
     private AtomicReference<List<Long>> queueOffsetsRef;
     private final MetaStore metaStore;
-    private MetaService metaService;
+    private final MetaService metaService;
 
     private final ObjectMapper objectMapper;
     private ScheduledExecutorService persistOffsetsScheduler;
     private Thread pollThread;
 
-    private boolean isSecondary;
+    private final boolean isSecondary;
 
-    private WriterAgent writerAgent;
+    private final WriterAgent writerAgent;
     public static final String QUEUE_OFFSETS_PATH = "queue_offsets";
     public static final int QUEUE_COUNT = 1;
 
     public static int storeId = 0;
     private volatile boolean shouldStop = true;
+    List<OperationType> typesDDL;
 
-
-    public KafkaProcessor(Configs configs, MetaService metaService, WriterAgent writerAgent, LogService logService) {
+    public KafkaProcessor(
+            Configs configs,
+            MetaService metaService,
+            WriterAgent writerAgent,
+            LogService logService) {
         this.metaService = metaService;
         this.writerAgent = writerAgent;
         this.logService = logService;
@@ -68,7 +74,6 @@ public class KafkaProcessor {
     }
 
     public void start() {
-
         try {
             recover();
         } catch (IOException e) {
@@ -135,7 +140,9 @@ public class KafkaProcessor {
         queueOffsetsRef = new AtomicReference<>(offsets);
         logger.info("recovered queue offsets {}", offsets);
         if (offsets.size() != QUEUE_COUNT) {
-            String msg = String.format("recovered queueCount %d, expect %d", offsets.size(), QUEUE_COUNT);
+            String msg =
+                    String.format(
+                            "recovered queueCount %d, expect %d", offsets.size(), QUEUE_COUNT);
             throw new IllegalStateException(msg);
         }
     }
@@ -167,8 +174,8 @@ public class KafkaProcessor {
         metaStore.write(path, b);
     }
 
-
     public void pollBatches() {
+        typesDDL = prepareDDLTypes();
         try {
             replayWAL();
         } catch (IOException e) {
@@ -178,7 +185,6 @@ public class KafkaProcessor {
         try (LogReader reader = logService.createReader(storeId, -1)) {
             while (!shouldStop) {
                 ConsumerRecords<LogEntry, LogEntry> records = reader.getLatestUpdates();
-                // logger.info("Get records: {}", records.count());
                 for (ConsumerRecord<LogEntry, LogEntry> record : records) {
                     processRecord(record);
                 }
@@ -193,19 +199,27 @@ public class KafkaProcessor {
         long offset = record.offset();
         LogEntry logEntry = record.value();
         OperationBatch operationBatch = logEntry.getOperationBatch();
+        if (isSecondary) { // only catch up the schema updates
+            operationBatch = Utils.extractOperations(operationBatch, typesDDL);
+        }
+        if (operationBatch.getOperationCount() == 0) {
+            return;
+        }
         long snapshotId = logEntry.getSnapshotId();
-        StoreDataBatch.Builder builder = StoreDataBatch.newBuilder().requestId("")
-                .queueId(storeId)
-                .snapshotId(snapshotId)
-                .offset(offset);
-        // logger.info("Process a record");
+        StoreDataBatch.Builder builder =
+                StoreDataBatch.newBuilder()
+                        .requestId("")
+                        .queueId(storeId)
+                        .snapshotId(snapshotId)
+                        .offset(offset);
         for (OperationBlob operationBlob : operationBatch) {
             long partitionKey = operationBlob.getPartitionKey();
             if (partitionKey == -1L) {
                 // replicate to all store node
                 builder.addOperation(-1, operationBlob);
             } else {
-                int partitionId = PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
+                int partitionId =
+                        PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
                 int curStoreId = metaService.getStoreIdByPartition(partitionId);
                 if (curStoreId == storeId) {
                     builder.addOperation(partitionId, operationBlob);
@@ -234,5 +248,18 @@ public class KafkaProcessor {
             }
         }
         logger.info("replayWAL finished. total replayed [{}] records", replayCount);
+    }
+
+    private List<OperationType> prepareDDLTypes() {
+        List<OperationType> types = new ArrayList<>();
+        types.add(OperationType.CREATE_VERTEX_TYPE);
+        types.add(OperationType.CREATE_EDGE_TYPE);
+        types.add(OperationType.ADD_EDGE_KIND);
+        types.add(OperationType.DROP_VERTEX_TYPE);
+        types.add(OperationType.DROP_EDGE_TYPE);
+        types.add(OperationType.REMOVE_EDGE_KIND);
+        types.add(OperationType.PREPARE_DATA_LOAD);
+        types.add(OperationType.COMMIT_DATA_LOAD);
+        return types;
     }
 }

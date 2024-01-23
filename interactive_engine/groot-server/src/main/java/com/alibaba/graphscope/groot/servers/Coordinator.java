@@ -62,7 +62,8 @@ public class Coordinator extends NodeBase {
         super(configs);
         configs = reConfig(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        MetaStore metaStore = new FileMetaStore(CoordinatorConfig.FILE_META_STORE_PATH.get(configs));
+        MetaStore metaStore =
+                new FileMetaStore(CoordinatorConfig.FILE_META_STORE_PATH.get(configs));
         if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
             this.discovery = new FileDiscovery(configs);
         } else {

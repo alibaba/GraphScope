@@ -13,8 +13,6 @@
  */
 package com.alibaba.graphscope.groot.meta;
 
-import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

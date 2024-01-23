@@ -1,35 +1,34 @@
 package com.alibaba.graphscope.groot.frontend.write;
 
+import static com.alibaba.graphscope.groot.Utils.MARKER_BATCH;
+
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.IngestorConfig;
 import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
-import com.alibaba.graphscope.groot.ingestor.IngestProcessor;
-import com.alibaba.graphscope.groot.ingestor.IngestService;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
-import com.alibaba.graphscope.groot.wal.LogEntry;
-import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.LogWriter;
+import com.alibaba.graphscope.groot.operation.OperationType;
+import com.alibaba.graphscope.groot.wal.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-
-import static com.alibaba.graphscope.groot.ingestor.IngestService.MARKER_BATCH;
 
 public class KafkaAppender {
     private static final Logger logger = LoggerFactory.getLogger(KafkaAppender.class);
@@ -48,9 +47,7 @@ public class KafkaAppender {
 
     private final AtomicLong ingestSnapshotId;
 
-    public KafkaAppender(Configs configs,
-                         MetaService metaService,
-                         LogService logService) {
+    public KafkaAppender(Configs configs, MetaService metaService, LogService logService) {
         this.metaService = metaService;
         this.logService = logService;
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
@@ -89,6 +86,7 @@ public class KafkaAppender {
     public boolean isStarted() {
         return this.started;
     }
+
     public void stop() {
         logger.info("stopping KafkaAppender queue#[]");
         this.shouldStop = true;
@@ -159,10 +157,10 @@ public class KafkaAppender {
             try {
                 Map<Integer, OperationBatch.Builder> builderMap = splitBatch(task.operationBatch);
                 for (Map.Entry<Integer, OperationBatch.Builder> entry : builderMap.entrySet()) {
-                    int partitionId = entry.getKey();
+                    int storeId = entry.getKey();
                     OperationBatch batch = entry.getValue().build();
                     // logger.info("Log writer append partitionId [{}]", partitionId);
-                    logWriter.append(partitionId, new LogEntry(batchSnapshotId, batch));
+                    logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
                 }
             } catch (Exception e) {
                 // write failed, just throw out to fail this task
@@ -209,7 +207,8 @@ public class KafkaAppender {
                     batchBuilder.addOperationBlob(operationBlob);
                 }
             } else {
-                int partitionId = PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
+                int partitionId =
+                        PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
                 int storeId = metaService.getStoreIdByPartition(partitionId);
                 OperationBatch.Builder batchBuilder =
                         storeToBatchBuilder.computeIfAbsent(storeId, storeDataBatchBuilderFunc);
@@ -217,6 +216,45 @@ public class KafkaAppender {
             }
         }
         return storeToBatchBuilder;
+    }
+
+    public List<Long> replayDMLRecordsFrom(long offset, long timestamp) throws IOException {
+        List<OperationType> types = new ArrayList<>();
+        types.add(OperationType.OVERWRITE_VERTEX);
+        types.add(OperationType.UPDATE_VERTEX);
+        types.add(OperationType.DELETE_VERTEX);
+        types.add(OperationType.OVERWRITE_EDGE);
+        types.add(OperationType.UPDATE_EDGE);
+        types.add(OperationType.DELETE_EDGE);
+        types.add(OperationType.CLEAR_VERTEX_PROPERTIES);
+        types.add(OperationType.CLEAR_EDGE_PROPERTIES);
+
+        logger.info("replay DML records of from offset [{}], ts [{}]", offset, timestamp);
+
+        long batchSnapshotId = this.ingestSnapshotId.get();
+        int replayCount = 0;
+
+        try (LogWriter logWriter = this.logService.createWriter()) {
+            for (int storeId = 0; storeId < storeCount; ++storeId) {
+                try (LogReader logReader =
+                        this.logService.createReader(storeId, offset, timestamp)) {
+                    ReadLogEntry readLogEntry;
+                    while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
+                        LogEntry logEntry = readLogEntry.getLogEntry();
+                        OperationBatch batch =
+                                Utils.extractOperations(logEntry.getOperationBatch(), types);
+                        if (batch.getOperationCount() == 0) {
+                            continue;
+                        }
+                        logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
+                        replayCount++;
+                    }
+                }
+            }
+        }
+
+        logger.info("replay DML records finished. total replayed [{}] records", replayCount);
+        return List.of(batchSnapshotId);
     }
 
     /**
@@ -241,36 +279,28 @@ public class KafkaAppender {
                             + snapshotId
                             + "]");
         }
-            try {
-                ingestBatch(
-                        "marker",
-                        MARKER_BATCH,
-                        new IngestCallback() {
-                            @Override
-                            public void onSuccess(long snapshotId) {
-                                callback.onCompleted(previousSnapshotId);
-                            }
+        try {
+            ingestBatch(
+                    "marker",
+                    MARKER_BATCH,
+                    new IngestCallback() {
+                        @Override
+                        public void onSuccess(long snapshotId) {
+                            callback.onCompleted(previousSnapshotId);
+                        }
 
-                            @Override
-                            public void onFailure(Exception e) {
-                                logger.warn(
-                                        "ingest marker failed. snapshotId {}",
-                                        snapshotId,
-                                        e);
-                                callback.onError(e);
-                            }
-                        });
-            } catch (IllegalStateException e) {
-                logger.warn(
-                        "ingest marker failed, snapshotId {}, {}",
-                        snapshotId,
-                        e.getMessage());
-                callback.onError(e);
-            } catch (Exception e) {
-                logger.warn("ingest marker failed. snapshotId {}", snapshotId, e);
-                callback.onError(e);
-            }
+                        @Override
+                        public void onFailure(Exception e) {
+                            logger.warn("ingest marker failed. snapshotId {}", snapshotId, e);
+                            callback.onError(e);
+                        }
+                    });
+        } catch (IllegalStateException e) {
+            logger.warn("ingest marker failed, snapshotId {}, {}", snapshotId, e.getMessage());
+            callback.onError(e);
+        } catch (Exception e) {
+            logger.warn("ingest marker failed. snapshotId {}", snapshotId, e);
+            callback.onError(e);
         }
-
-
+    }
 }

@@ -19,7 +19,6 @@ import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
-import org.apache.commons.logging.Log;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -40,8 +39,7 @@ public class KafkaLogWriter implements LogWriter {
     private final Producer<LogEntry, LogEntry> producer;
     private final String topicName;
 
-    public KafkaLogWriter(
-            String servers, String topicName, Map<String, String> customConfigs) {
+    public KafkaLogWriter(String servers, String topicName, Map<String, String> customConfigs) {
         this.topicName = topicName;
 
         Map<String, Object> producerConfig = new HashMap<>();
@@ -57,9 +55,11 @@ public class KafkaLogWriter implements LogWriter {
     }
 
     public long append(int partition, LogEntry logEntry) {
-        Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topicName, partition, null, logEntry));
+        Future<RecordMetadata> future =
+                producer.send(new ProducerRecord<>(topicName, partition, null, logEntry));
         return waitFuture(future);
     }
+
     @Override
     public long append(LogEntry logEntry) {
         Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topicName, logEntry));

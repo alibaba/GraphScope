@@ -37,10 +37,10 @@ public class MetricsAggregator {
     public MetricsAggregator(
             Configs configs,
             RoleClients<MetricsCollectClient> frontendMetricsCollectClients,
-//            RoleClients<MetricsCollectClient> ingestorMetricsCollectClients,
+            //            RoleClients<MetricsCollectClient> ingestorMetricsCollectClients,
             RoleClients<MetricsCollectClient> storeMetricsCollectClients) {
         this.roleToClients.put(RoleType.FRONTEND, frontendMetricsCollectClients);
-//        this.roleToClients.put(RoleType.INGESTOR, ingestorMetricsCollectClients);
+        //        this.roleToClients.put(RoleType.INGESTOR, ingestorMetricsCollectClients);
         this.roleToClients.put(RoleType.STORE, storeMetricsCollectClients);
 
         this.objectMapper = new ObjectMapper();

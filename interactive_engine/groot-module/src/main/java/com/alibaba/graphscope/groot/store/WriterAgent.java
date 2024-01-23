@@ -15,35 +15,17 @@ package com.alibaba.graphscope.groot.store;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.StoreConfig;
-import com.alibaba.graphscope.groot.common.exception.GrootException;
-import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.coordinator.SnapshotInfo;
-import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
-import com.alibaba.graphscope.groot.ingestor.IngestService;
-import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
-import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.metrics.AvgMetric;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
-import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 
-import com.alibaba.graphscope.groot.wal.LogEntry;
-import com.alibaba.graphscope.groot.wal.LogReader;
-import com.alibaba.graphscope.groot.wal.LogService;
-import com.alibaba.graphscope.groot.wal.ReadLogEntry;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -65,19 +47,19 @@ public class WriterAgent implements MetricsAgent {
     public static final String STORE_WRITE_TOTAL = "store.write.total";
     public static final String BUFFER_WRITE_PER_SECOND_MS = "buffer.write.per.second.ms";
 
-    private Configs configs;
-    private int storeId;
-    private int queueCount;
-    private StoreService storeService;
-    private MetaService metaService;
-    private SnapshotCommitter snapshotCommitter;
+    private final Configs configs;
+    private final int storeId;
+    private final int queueCount;
+    private final StoreService storeService;
+    private final MetaService metaService;
+    private final SnapshotCommitter snapshotCommitter;
 
     private volatile boolean shouldStop = true;
     private SnapshotSortQueue bufferQueue;
     private volatile long lastCommitSnapshotId;
     private volatile long consumeSnapshotId;
     private volatile long consumeDdlSnapshotId;
-    private AtomicReference<SnapshotInfo> availSnapshotInfoRef;
+    private final AtomicReference<SnapshotInfo> availSnapshotInfoRef;
     private ExecutorService commitExecutor;
     private List<Long> consumedQueueOffsets;
     private Thread consumeThread;
@@ -97,8 +79,7 @@ public class WriterAgent implements MetricsAgent {
             StoreService storeService,
             MetaService metaService,
             SnapshotCommitter snapshotCommitter,
-            MetricsCollector metricsCollector,
-            LogService logService) {
+            MetricsCollector metricsCollector) {
         this.configs = configs;
         this.storeId = CommonConfig.NODE_IDX.get(configs);
         this.queueCount = metaService.getQueueCount();
@@ -106,9 +87,6 @@ public class WriterAgent implements MetricsAgent {
         this.metaService = metaService;
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
-
-        String metaPath = StoreConfig.STORE_DATA_PATH.get(configs) + "/meta";
-
         initMetrics();
         metricsCollector.register(this, this::updateMetrics);
     }
@@ -140,14 +118,12 @@ public class WriterAgent implements MetricsAgent {
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "writer-agent-commit", logger));
 
-
         this.consumeThread = new Thread(this::processBatches);
         this.consumeThread.setName("store-consume");
         this.consumeThread.setDaemon(true);
         this.consumeThread.start();
         logger.info("WriterAgent started");
     }
-
 
     public void stop() {
         this.shouldStop = true;
@@ -172,7 +148,6 @@ public class WriterAgent implements MetricsAgent {
 
         logger.debug("WriterAgent stopped");
     }
-
 
     /**
      * Write data to store engine. This method will return immediately when the data is written to
@@ -218,7 +193,7 @@ public class WriterAgent implements MetricsAgent {
                 if (this.consumeSnapshotId < batchSnapshotId) {
                     SnapshotInfo availSInfo = this.availSnapshotInfoRef.get();
                     long availSI = Math.max(availSInfo.getSnapshotId(), batchSnapshotId - 1);
-                    long availDdlSI= Math.max(availSInfo.getDdlSnapshotId(), consumeDdlSnapshotId);
+                    long availDdlSI = Math.max(availSInfo.getDdlSnapshotId(), consumeDdlSnapshotId);
                     this.consumeSnapshotId = batchSnapshotId;
                     this.availSnapshotInfoRef.set(new SnapshotInfo(availSI, availDdlSI));
                     this.commitExecutor.execute(this::asyncCommit);
@@ -243,10 +218,15 @@ public class WriterAgent implements MetricsAgent {
             List<Long> queueOffsets = new ArrayList<>(this.consumedQueueOffsets);
             try {
                 // logger.info("commit SI {}, last DDL SI {}", availSnapshotId, ddlSnapshotId);
-                this.snapshotCommitter.commitSnapshotId(storeId, availSnapshotId, ddlSnapshotId, queueOffsets);
+                this.snapshotCommitter.commitSnapshotId(
+                        storeId, availSnapshotId, ddlSnapshotId, queueOffsets);
                 this.lastCommitSnapshotId = availSnapshotId;
             } catch (Exception e) {
-                logger.warn("commit failed. SI {}, offset {}. ignored", availSnapshotId, queueOffsets, e);
+                logger.warn(
+                        "commit failed. SI {}, offset {}. ignored",
+                        availSnapshotId,
+                        queueOffsets,
+                        e);
             }
         }
     }

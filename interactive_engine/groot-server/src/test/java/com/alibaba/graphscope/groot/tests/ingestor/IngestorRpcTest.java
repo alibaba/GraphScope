@@ -13,43 +13,32 @@
  */
 package com.alibaba.graphscope.groot.tests.ingestor;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.frontend.IngestorSnapshotService;
+import com.alibaba.graphscope.groot.frontend.IngestorWriteService;
+import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
+import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
-import com.alibaba.graphscope.groot.ingestor.IngestProgressClient;
-import com.alibaba.graphscope.groot.ingestor.IngestService;
-import com.alibaba.graphscope.groot.ingestor.IngestorSnapshotService;
-import com.alibaba.graphscope.groot.ingestor.IngestorWriteService;
-import com.alibaba.graphscope.groot.ingestor.StoreWriteClient;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
-import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdResponse;
-import com.alibaba.graphscope.proto.groot.GetTailOffsetsResponse;
-import com.alibaba.graphscope.proto.groot.IngestProgressGrpc;
-import com.alibaba.graphscope.proto.groot.StoreWriteGrpc;
 import com.alibaba.graphscope.proto.groot.WriteIngestorRequest;
 import com.alibaba.graphscope.proto.groot.WriteIngestorResponse;
-import com.alibaba.graphscope.proto.groot.WriteStoreResponse;
 
 import io.grpc.stub.StreamObserver;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.List;
-
 public class IngestorRpcTest {
 
     @Test
     void testIngestorSnapshotService() {
-        IngestService ingestService = mock(IngestService.class);
-        IngestorSnapshotService ingestorSnapshotService =
-                new IngestorSnapshotService(ingestService);
+        GraphWriter graphWriter = mock(GraphWriter.class);
+        IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(graphWriter);
         AdvanceIngestSnapshotIdRequest req =
                 AdvanceIngestSnapshotIdRequest.newBuilder().setSnapshotId(10L).build();
         StreamObserver<AdvanceIngestSnapshotIdResponse> streamObserver = mock(StreamObserver.class);
@@ -59,7 +48,7 @@ public class IngestorRpcTest {
                             callback.onCompleted(9L);
                             return null;
                         })
-                .when(ingestService)
+                .when(graphWriter)
                 .advanceIngestSnapshotId(anyLong(), any());
         ingestorSnapshotService.advanceIngestSnapshotId(req, streamObserver);
         verify(streamObserver)
@@ -72,8 +61,8 @@ public class IngestorRpcTest {
 
     @Test
     void testIngestorWriteService() {
-        IngestService ingestService = mock(IngestService.class);
-        IngestorWriteService ingestorWriteService = new IngestorWriteService(ingestService);
+        KafkaAppender kafkaAppender = mock(KafkaAppender.class);
+        IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
         WriteIngestorRequest req =
                 WriteIngestorRequest.newBuilder()
                         .setQueueId(2)
@@ -86,44 +75,11 @@ public class IngestorRpcTest {
                             callback.onSuccess(10L);
                             return null;
                         })
-                .when(ingestService)
-                .ingestBatch(eq("test_req"), eq(2), eq(OperationBatch.newBuilder().build()), any());
+                .when(kafkaAppender)
+                .ingestBatch(eq("test_req"), eq(OperationBatch.newBuilder().build()), any());
         StreamObserver<WriteIngestorResponse> observer = mock(StreamObserver.class);
         ingestorWriteService.writeIngestor(req, observer);
         verify(observer).onNext(WriteIngestorResponse.newBuilder().setSnapshotId(10L).build());
         verify(observer).onCompleted();
-    }
-
-    @Test
-    void testIngestProgressClient() {
-        IngestProgressGrpc.IngestProgressBlockingStub stub =
-                mock(IngestProgressGrpc.IngestProgressBlockingStub.class);
-        IngestProgressClient client = new IngestProgressClient(stub);
-        when(stub.getTailOffsets(any()))
-                .thenReturn(
-                        GetTailOffsetsResponse.newBuilder()
-                                .addAllOffsets(Arrays.asList(10L, 20L, 30L))
-                                .build());
-        List<Long> tailOffsets = client.getTailOffsets(Arrays.asList(1, 2, 3));
-        assertEquals(tailOffsets, Arrays.asList(10L, 20L, 30L));
-    }
-
-    @Test
-    void testStoreWriteClient() {
-        StoreWriteGrpc.StoreWriteStub stub = mock(StoreWriteGrpc.StoreWriteStub.class);
-        StoreWriteClient client = new StoreWriteClient(stub);
-        CompletionCallback callback = mock(CompletionCallback.class);
-        doAnswer(
-                        invocation -> {
-                            StreamObserver<WriteStoreResponse> observer = invocation.getArgument(1);
-                            observer.onNext(
-                                    WriteStoreResponse.newBuilder().setSuccess(true).build());
-                            return null;
-                        })
-                .when(stub)
-                .writeStore(any(), any());
-        client.writeStore(
-                Arrays.asList(StoreDataBatch.newBuilder().requestId("test_req").build()), callback);
-        verify(callback).onCompleted(12);
     }
 }
