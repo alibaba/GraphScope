@@ -64,10 +64,10 @@ jobs:
         # Essential cause glog installed by brew is broken and produce corrupted messages
         brew uninstall --ignore-dependencies glog
         . ~/.graphscope_env
-        git clone https://github.com/google/glog.git
+        git clone https://github.com/google/glog.git -b v0.6.0
         cd glog
 
-        cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF
+        cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF -DWITH_GTEST=OFF -DBUILD_TESTING=OFF
         make -j
         sudo make install
 
