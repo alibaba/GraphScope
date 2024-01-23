@@ -43,11 +43,12 @@ jobs:
         # image tag
         tag=ext-${arch}
         # manylinux2014 image
-        sudo docker tag graphscope/manylinux2014:${tag} ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
-        sudo docker push ${{ env.REGISTRY }}/graphscope/manylinux2014:${tag}
+        sudo docker tag graphscope/manylinux2014:${tag} ${{ env.REGISTRY }}/graphscope/manylinux2014:ext
+        sudo docker push ${{ env.REGISTRY }}/graphscope/manylinux2014:ext
         
   build-manylinux-ext-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
+    if: false
     steps:
     - uses: actions/checkout@v3
       with:
@@ -86,6 +87,7 @@ jobs:
        
   manifest_push_manylinux-ext-image:
     runs-on: ubuntu-20.04
+    if: false
     needs: [build-manylinux-ext-image-x86-64, build-manylinux-ext-image-aarch64]
     steps:
     - name: Create and Push Docker Manifest
