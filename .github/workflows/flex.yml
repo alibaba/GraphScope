@@ -22,11 +22,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-flex:
+  test-build-flex:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+        platform: [x86_64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        bash ./scripts/install_dependencies.sh 4
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build # only test default build
+        cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && sudo make -j 4
+
+  test-flex:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.8
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
     steps:
     - uses: actions/checkout@v3
 

@@ -1,6 +1,7 @@
 #ifndef ENGINES_HQPS_ENGINE_UTILS_TYPE_UTILS_H_
 #define ENGINES_HQPS_ENGINE_UTILS_TYPE_UTILS_H_
 
+#include <limits>
 #include "flex/storages/rt_mutable_graph/types.h"
 
 namespace gs {
