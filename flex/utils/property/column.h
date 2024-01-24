@@ -34,7 +34,9 @@ class ColumnBase {
 
   virtual void open_in_memory(const std::string& name) = 0;
 
+#ifdef HUGEPAGE
   virtual void open_with_hugepages(const std::string& name) = 0;
+#endif
 
   virtual void close() = 0;
 
@@ -94,6 +96,7 @@ class TypedColumn : public ColumnBase {
     extra_size_ = 0;
   }
 
+#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& name) override {
     if (!name.empty() && std::filesystem::exists(name)) {
       basic_buffer_.open_with_hugepages(name);
@@ -107,6 +110,7 @@ class TypedColumn : public ColumnBase {
     extra_buffer_.set_hugepage_prefered(true);
     extra_size_ = 0;
   }
+#endif
 
   void touch(const std::string& filename) override {
     mmap_array<T> tmp;
@@ -262,6 +266,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     pos_.store(0);
   }
 
+#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& prefix) override {
     basic_buffer_.open_with_hugepages(prefix);
     basic_size_ = basic_buffer_.size();
@@ -271,6 +276,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     extra_size_ = 0;
     pos_.store(0);
   }
+#endif
 
   void touch(const std::string& filename) override {
     mmap_array<std::string_view> tmp;
@@ -451,7 +457,9 @@ class StringMapColumn : public ColumnBase {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override;
   void open_in_memory(const std::string& name) override;
+#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& name) override;
+#endif
   void dump(const std::string& filename) override;
 
   void touch(const std::string& filename) override {
@@ -516,12 +524,14 @@ void StringMapColumn<INDEX_T>::open_in_memory(const std::string& name) {
   meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
 }
 
+#ifdef HUGEPAGE
 template <typename INDEX_T>
 void StringMapColumn<INDEX_T>::open_with_hugepages(const std::string& name) {
   index_col_.open_with_hugepages(name);
   meta_map_->open_with_hugepages(name + ".map_meta");
   meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
 }
+#endif
 
 template <typename INDEX_T>
 void StringMapColumn<INDEX_T>::dump(const std::string& filename) {

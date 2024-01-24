@@ -501,10 +501,12 @@ class MutableCsrBase {
                     const std::string& work_dir) = 0;
 
   virtual void open_in_memory(const std::string& prefix, size_t v_cap = 0) = 0;
+#ifdef HUGEPAGE
   virtual void open_with_hugepages(const std::string& prefix,
                                    size_t v_cap = 0) {
     LOG(FATAL) << "not supported...";
   }
+#endif
 
   virtual void dump(const std::string& name,
                     const std::string& new_spanshot_dir) = 0;
@@ -766,6 +768,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     }
   }
 
+#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
     degree_list.open(prefix + ".deg", false);
@@ -799,6 +802,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       delete cap_list;
     }
   }
+#endif
 
   void warmup(int thread_num) const override {
     size_t vnum = adj_lists_.size();
@@ -1278,6 +1282,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
     }
   }
 
+#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& prefix, size_t v_cap) override {
     nbr_list_.open_with_hugepages(prefix + ".snbr", v_cap);
     size_t old_size = nbr_list_.size();
@@ -1288,6 +1293,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       }
     }
   }
+#endif
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
@@ -1635,7 +1641,9 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void open_in_memory(const std::string& prefix, size_t v_cap) override {}
 
+#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& prefix, size_t v_cap) override {}
+#endif
 
   void dump(const std::string& name,
             const std::string& new_spanshot_dir) override {}

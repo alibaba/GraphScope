@@ -87,11 +87,15 @@ class ArenaAllocator {
   void* allocate_batch(size_t size) {
     if (prefix_.empty()) {
       mmap_array<char>* buf = new mmap_array<char>();
+#ifdef HUGEPAGE
       if (strategy_ == MemoryStrategy::kHugepagePrefered) {
         buf->open_with_hugepages("", size);
       } else {
         buf->open("", false);
       }
+#else
+      buf->open("", false);
+#endif
       buf->resize(size);
       mmap_buffers_.push_back(buf);
       return static_cast<void*>(buf->data());

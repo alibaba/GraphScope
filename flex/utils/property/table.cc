@@ -77,6 +77,7 @@ void Table::open_in_memory(const std::string& name,
   buildColumnPtrs();
 }
 
+#ifdef HUGEPAGE
 void Table::open_with_hugepages(
     const std::string& name, const std::string& snapshot_dir,
     const std::vector<std::string>& col_name,
@@ -90,6 +91,7 @@ void Table::open_with_hugepages(
   touched_ = true;
   buildColumnPtrs();
 }
+#endif
 
 void Table::touch(const std::string& name, const std::string& work_dir) {
   if (touched_) {

@@ -11,11 +11,11 @@ project (
 
 
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
-option(BUILD_TEST "Whether to build test" OFF)
-option(BUILD_DOC "Whether to build doc" OFF)
-option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
+option(BUILD_TEST "Whether to build test" ON)
+option(BUILD_DOC "Whether to build doc" ON)
+option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
-option(ENABLE_HUGEPAGE "Whether to use hugepages when open mmap array in memory" ON)
+option(ENABLE_HUGEPAGE "Whether to use hugepages when open mmap array in memory" OFF)
 
 # ------------------------------------------------------------------------------
 # cmake configs

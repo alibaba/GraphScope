@@ -48,11 +48,13 @@ class Table {
                       const std::vector<PropertyType>& property_types,
                       const std::vector<StorageStrategy>& strategies_);
 
+#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& name,
                            const std::string& snapshot_dir,
                            const std::vector<std::string>& col_name,
                            const std::vector<PropertyType>& property_types,
                            const std::vector<StorageStrategy>& strategies_);
+#endif
 
   void touch(const std::string& name, const std::string& work_dir);
 
