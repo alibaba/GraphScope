@@ -15,6 +15,7 @@
 #ifndef GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 #define GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 
+#include <assert.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -22,6 +23,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <filesystem>
+
 #include "glog/logging.h"
 
 namespace gs {
@@ -208,6 +210,20 @@ inline std::string allocator_dir(const std::string& work_dir) {
 
 inline std::string tmp_dir(const std::string& work_dir) {
   return runtime_dir(work_dir) + "tmp/";
+}
+
+inline void clear_tmp(const std::string& work_dir) {
+  std::string tmp_dir_str = tmp_dir(work_dir);
+  if (std::filesystem::exists(tmp_dir_str)) {
+    assert(std::filesystem::is_directory(tmp_dir_str));
+    if (std::filesystem::directory_iterator(tmp_dir_str) !=
+        std::filesystem::directory_iterator()) {
+      for (const auto& entry :
+           std::filesystem::directory_iterator(tmp_dir_str)) {
+        std::filesystem::remove_all(entry.path());
+      }
+    }
+  }
 }
 
 inline std::string vertex_map_prefix(const std::string& label) {

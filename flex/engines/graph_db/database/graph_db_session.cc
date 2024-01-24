@@ -127,9 +127,7 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
 #define likely(x) __builtin_expect(!!(x), 1)
 
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
-#ifdef MONITOR_SESSIONS
   const auto start = std::chrono::high_resolution_clock::now();
-#endif
   uint8_t type = input.back();
   const char* str_data = input.data();
   size_t str_len = input.size() - 1;
@@ -159,8 +157,11 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
 
   for (size_t i = 0; i < MAX_RETRY; ++i) {
     if (app->Query(decoder, encoder)) {
-#ifdef MONITOR_SESSIONS
       const auto end = std::chrono::high_resolution_clock::now();
+      app_metrics_[type].add_record(
+          std::chrono::duration_cast<std::chrono::microseconds>(end - start)
+              .count());
+#ifdef MONITOR_SESSIONS
       eval_duration_.fetch_add(
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
               .count());
@@ -342,5 +343,9 @@ double GraphDBSession::eval_duration() const {
 #endif
 
 int64_t GraphDBSession::query_num() const { return query_num_.load(); }
+
+const AppMetric& GraphDBSession::GetAppMetric(int idx) const {
+  return app_metrics_[idx];
+}
 
 }  // namespace gs

@@ -39,7 +39,7 @@ RUN apt-get install -y protobuf-compiler libprotobuf-dev
 RUN cd /tmp && apt-get install -y -V ca-certificates lsb-release wget && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     apt-get install -y ./apache-arrow-apt-source-latest.deb && \
-    apt-get update && apt-get install -y libarrow-dev=6.0.1-1
+    apt-get update && apt-get install -y libarrow-dev=8.0.0-1
     
 RUN apt-get install -y sudo
 
@@ -50,6 +50,9 @@ RUN useradd -m graphscope -u 1001 && \
 # Change to graphscope user
 USER graphscope
 WORKDIR /home/graphscope
+
+# set HOME
+ENV HOME /home/graphscope
 
 RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   sh -s -- -y --profile minimal --default-toolchain=1.70.0 && \

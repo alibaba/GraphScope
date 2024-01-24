@@ -30,8 +30,9 @@ class ArenaAllocator {
   static constexpr size_t batch_size = 128 * 1024 * 1024;
 
  public:
-  ArenaAllocator(const std::string& prefix)
-      : prefix_(prefix),
+  ArenaAllocator(MemoryStrategy strategy, const std::string& prefix)
+      : strategy_(strategy),
+        prefix_(prefix),
         cur_loc_(0),
         cur_size_(0)
 #ifdef MONITOR_SESSIONS
@@ -39,6 +40,9 @@ class ArenaAllocator {
         allocated_memory_(0)
 #endif
   {
+    if (strategy_ != MemoryStrategy::kSyncToFile) {
+      prefix_.clear();
+    }
   }
   ~ArenaAllocator() {
     for (auto ptr : mmap_buffers_) {
@@ -83,19 +87,28 @@ class ArenaAllocator {
   void* allocate_batch(size_t size) {
     if (prefix_.empty()) {
       mmap_array<char>* buf = new mmap_array<char>();
-      buf->open_in_memory("");
+#ifdef HUGEPAGE
+      if (strategy_ == MemoryStrategy::kHugepagePrefered) {
+        buf->open_with_hugepages("", size);
+      } else {
+        buf->open("", false);
+      }
+#else
+      buf->open("", false);
+#endif
       buf->resize(size);
       mmap_buffers_.push_back(buf);
       return static_cast<void*>(buf->data());
     } else {
       mmap_array<char>* buf = new mmap_array<char>();
-      buf->open(prefix_ + std::to_string(mmap_buffers_.size()), false);
+      buf->open(prefix_ + std::to_string(mmap_buffers_.size()), true);
       buf->resize(size);
       mmap_buffers_.push_back(buf);
       return static_cast<void*>(buf->data());
     }
   }
 
+  MemoryStrategy strategy_;
   std::string prefix_;
   std::vector<mmap_array<char>*> mmap_buffers_;
 
