@@ -164,9 +164,23 @@ class BasicFragmentLoader {
             },
             i);
       }
+
       for (auto& t : work_threads) {
         t.join();
       }
+
+      dual_csr->Dump(
+          oe_prefix(src_label_name, dst_label_name, edge_label_name),
+          ie_prefix(src_label_name, dst_label_name, edge_label_name),
+          edata_prefix(src_label_name, dst_label_name, edge_label_name),
+          snapshot_dir(work_dir_, 0));
+      dual_csr->Close();
+      dual_csr->ClearTmp(
+          oe_prefix(src_label_name, dst_label_name, edge_label_name),
+          ie_prefix(src_label_name, dst_label_name, edge_label_name),
+          edata_prefix(src_label_name, dst_label_name, edge_label_name),
+          tmp_dir(work_dir_));
+
     } else {
       auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
 
@@ -198,6 +212,7 @@ class BasicFragmentLoader {
             },
             i);
       }
+
       for (auto& t : work_threads) {
         t.join();
       }
