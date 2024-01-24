@@ -33,19 +33,20 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
-    - name: Setup tmate session
-      if: false
-      uses: mxschmitt/action-tmate@v2
     
     - name: Install dependencies
       run: |
         cd ${GITHUB_WORKSPACE}/flex
         bash ./scripts/install_dependencies.sh 4
 
+    - name: Setup tmate session
+      if: true
+      uses: mxschmitt/action-tmate@v2
+
     - name: Build
       run: |
         cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
         mkdir build && cd build # only test default build
         cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && make -j 4
 
