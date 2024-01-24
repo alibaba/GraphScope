@@ -227,12 +227,16 @@ class QueryGenerator {
           CHECK(param_vars[i] == param_vars[i - 1]);
           continue;
         } else {
-          ss << ", " << data_type_2_string(param_vars[i].type) << " "
-             << param_vars[i].var_name;
+          ss << data_type_2_string(param_vars[i].type) << " "
+             << param_vars[i].var_name << ",";
         }
       }
     }
-    return ss.str();
+    auto str = ss.str();
+    if (str.size() > 0) {
+      str.pop_back();  // remove the last comma
+    }
+    return str;
   }
 
   // implement the function that overrides the base class.
@@ -265,9 +269,6 @@ class QueryGenerator {
     std::string param_vars_decoding, param_vars_concat_str;
     {
       std::stringstream ss;
-      if (param_names.size() > 0) {
-        ss << ",";
-      }
       for (size_t i = 0; i < param_names.size(); ++i) {
         ss << param_names[i];
         if (i != param_names.size() - 1) {

@@ -78,8 +78,12 @@ class graph_db_ic_handler : public seastar::httpd::handler_base {
       std::unique_ptr<seastar::httpd::reply> rep) override {
     auto dst_executor = dispatcher_.get_executor_idx();
 
+    auto&& content = req->content;
+    // append int32_t value 0 to content
+    content.append("\0", 1);
+
     return executor_refs_[dst_executor]
-        .run_graph_db_query(query_param{std::move(req->content)})
+        .run_graph_db_query(query_param{std::move(content)})
         .then_wrapped([rep = std::move(rep)](
                           seastar::future<query_result>&& fut) mutable {
           if (__builtin_expect(fut.failed(), false)) {
