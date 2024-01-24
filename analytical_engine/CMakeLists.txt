@@ -235,6 +235,15 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
+if (NETWORKX)
+    find_package(RapidJSON REQUIRED)
+    if (DEFINED RapidJSON_INCLUDE_DIRS)  # rapidjson > 1.1.0
+        include_directories(${RapidJSON_INCLUDE_DIRS})
+    else ()  # rapidjson <= 1.1.0
+        include_directories(${RAPIDJSON_INCLUDE_DIRS})
+    endif ()
+endif ()
+
 find_package(Protobuf CONFIG QUIET)
 if (NOT Protobuf_FOUND)
     find_package(Protobuf REQUIRED)

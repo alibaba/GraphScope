@@ -17,6 +17,7 @@ use std::cell::RefMut;
 
 use crate::communication::input::input::InputBlockGuard;
 use crate::communication::input::InputHandle;
+use crate::communication::IOResult;
 use crate::data::MicroBatch;
 use crate::errors::{ErrorKind, JobExecError};
 use crate::PROFILE_COMM_FLAG;
@@ -78,7 +79,7 @@ impl<'a, D: Data> InputSession<'a, D> {
                     }
                     match func(&mut batch) {
                         Ok(_) => {
-                            if self.on_consumed(is_last, &mut batch) {
+                            if self.on_consumed(is_last, &mut batch)? {
                                 self.for_each_batch_of(&batch.tag, &mut func)?;
                             }
                         }
@@ -133,7 +134,7 @@ impl<'a, D: Data> InputSession<'a, D> {
             }
             match (*func)(&mut batch) {
                 Ok(_) => {
-                    if !self.on_consumed(is_last, &mut batch) {
+                    if !self.on_consumed(is_last, &mut batch)? {
                         return Ok(());
                     }
                 }
@@ -172,7 +173,7 @@ impl<'a, D: Data> InputSession<'a, D> {
     }
 
     #[inline]
-    fn on_consumed(&mut self, is_last: bool, batch: &mut MicroBatch<D>) -> bool {
+    fn on_consumed(&mut self, is_last: bool, batch: &mut MicroBatch<D>) -> IOResult<bool> {
         if batch.is_discarded() {
             batch.take_data();
             if is_last {
@@ -180,9 +181,9 @@ impl<'a, D: Data> InputSession<'a, D> {
                     self.input.end_on(end);
                 }
             } else {
-                self.input.cancel_scope(&batch.tag);
+                self.input.cancel_scope(&batch.tag)?;
             }
-            false
+            Ok(false)
         } else {
             if !batch.is_empty() {
                 warn_worker!(
@@ -196,7 +197,7 @@ impl<'a, D: Data> InputSession<'a, D> {
             if let Some(end) = batch.take_end() {
                 self.input.end_on(end);
             }
-            !is_last
+            Ok(!is_last)
         }
     }
 }
