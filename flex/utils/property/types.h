@@ -153,19 +153,6 @@ struct Day {
   void from_u32(uint32_t val);
 
   int64_t to_timestamp() const {
-#if 0
-    std::tm tm_date = {};
-    tm_date.tm_year = year() - 1900;
-    tm_date.tm_mon = month() - 1;
-    tm_date.tm_mday = day();
-    tm_date.tm_hour = hour();
-    tm_date.tm_min = 0;
-    tm_date.tm_sec = 0;
-    tm_date.tm_isdst = -1;
-
-    std::time_t t = std::mktime(&tm_date);
-    return static_cast<int64_t>(t) * 1000;
-#else
     const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
 
     boost::gregorian::date new_date(year(), month(), day());
@@ -175,19 +162,9 @@ struct Day {
     int64_t new_timestamp_sec = diff.total_seconds();
 
     return new_timestamp_sec * 1000;
-#endif
   }
 
   void from_timestamp(int64_t ts) {
-#if 0
-    std::time_t timestamp = ts / 1000;
-    std::tm tm = *std::gmtime(&timestamp);
-
-    this->value.internal.year = 1900 + tm.tm_year;
-    this->value.internal.month = 1 + tm.tm_mon;
-    this->value.internal.day = tm.tm_mday;
-    this->value.internal.hour = tm.tm_hour;
-#else
     const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
     int64_t ts_sec = ts / 1000;
     boost::posix_time::ptime time_point =
@@ -198,7 +175,6 @@ struct Day {
     this->value.internal.month = date.month().as_number();
     this->value.internal.day = date.day();
     this->value.internal.hour = td.hours();
-#endif
 
     int64_t ts_back = to_timestamp();
     CHECK_EQ(ts, ts_back);
@@ -304,6 +280,7 @@ struct Any {
     type = PropertyType::kDate;
     value.d.milli_second = v;
   }
+
   void set_date(Date v) {
     type = PropertyType::kDate;
     value.d = v;

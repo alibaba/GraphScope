@@ -180,8 +180,8 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
     result_buffer.clear();
   }
 
-  const auto end = std::chrono::high_resolution_clock::now();
 #ifdef MONITOR_SESSIONS
+  const auto end = std::chrono::high_resolution_clock::now();
   eval_duration_.fetch_add(
       std::chrono::duration_cast<std::chrono::microseconds>(end - start)
           .count());
