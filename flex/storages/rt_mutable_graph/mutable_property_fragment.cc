@@ -112,6 +112,12 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
 }
 
 void MutablePropertyFragment::Open(const std::string& work_dir,
+                                   bool memory_only) {
+  Open(work_dir, MemoryStrategy::kMemoryOnly, MemoryStrategy::kMemoryOnly,
+       MemoryStrategy::kMemoryOnly);
+}
+
+void MutablePropertyFragment::Open(const std::string& work_dir,
                                    MemoryStrategy vertex_map_strategy,
                                    MemoryStrategy vertex_table_strategy,
                                    MemoryStrategy topology_strategy) {
