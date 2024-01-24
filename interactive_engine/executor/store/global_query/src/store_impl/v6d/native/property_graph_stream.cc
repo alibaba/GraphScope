@@ -35,6 +35,21 @@ std::shared_ptr<arrow::DataType> PropertyTypeToDataType(
           {SHORT, arrow::int16()},    {INT, arrow::int32()},
           {LONG, arrow::int64()},     {FLOAT, arrow::float32()},
           {DOUBLE, arrow::float64()}, {STRING, arrow::large_utf8()},
+          {DATE32, arrow::date32()}, {DATE64, arrow::date64()},
+          {TIME32_S, arrow::time32(arrow::TimeUnit::SECOND)},
+          {TIME32_MS, arrow::time32(arrow::TimeUnit::MILLI)},
+          // arrow reject this
+          // {TIME32_US, arrow::time32(arrow::TimeUnit::MICRO)},
+          // {TIME32_NS, arrow::time32(arrow::TimeUnit::NANO)},
+          // arrow reject this
+          // {TIME64_S, arrow::time64(arrow::TimeUnit::SECOND)},
+          // {TIME64_MS, arrow::time64(arrow::TimeUnit::MILLI)},
+          {TIME64_US, arrow::time64(arrow::TimeUnit::MICRO)},
+          {TIME64_NS, arrow::time64(arrow::TimeUnit::NANO)},
+          {TIMESTAMP_S, arrow::timestamp(arrow::TimeUnit::SECOND)},
+          {TIMESTAMP_MS, arrow::timestamp(arrow::TimeUnit::MILLI)},
+          {TIMESTAMP_US, arrow::timestamp(arrow::TimeUnit::MICRO)},
+          {TIMESTAMP_NS, arrow::timestamp(arrow::TimeUnit::NANO)},
       };
   auto iter = parse_type_dict.find(type);
   if (iter != parse_type_dict.end()) {
@@ -66,6 +81,43 @@ std::shared_ptr<arrow::DataType> PropertyTypeToDataType(
       return STRING;
     case arrow::Type::BINARY:
       return BYTES;
+    case arrow::Type::DATE32:
+      return DATE32;
+    case arrow::Type::DATE64:
+      return DATE64;
+    case arrow::Type::TIME32:
+      switch (static_cast<arrow::Time32Type const *>(type.get())->unit()) {
+        case arrow::TimeUnit::SECOND:
+          return TIME32_S;
+        case arrow::TimeUnit::MILLI:
+          return TIME32_MS;
+        case arrow::TimeUnit::MICRO:
+          return TIME32_US;
+        case arrow::TimeUnit::NANO:
+          return TIME32_NS;
+      }
+    case arrow::Type::TIME64:
+      switch (static_cast<arrow::Time64Type const *>(type.get())->unit()) {
+        case arrow::TimeUnit::SECOND:
+          return TIME64_S;
+        case arrow::TimeUnit::MILLI:
+          return TIME64_MS;
+        case arrow::TimeUnit::MICRO:
+          return TIME64_US;
+        case arrow::TimeUnit::NANO:
+          return TIME64_NS;
+      }
+    case arrow::Type::TIMESTAMP:
+      switch (static_cast<arrow::TimestampType const *>(type.get())->unit()) {
+        case arrow::TimeUnit::SECOND:
+          return TIMESTAMP_S;
+        case arrow::TimeUnit::MILLI:
+          return TIMESTAMP_MS;
+        case arrow::TimeUnit::MICRO:
+          return TIMESTAMP_US;
+        case arrow::TimeUnit::NANO:
+          return TIMESTAMP_NS;
+      }
     default:
       LOG(ERROR) << "Unknown arrow data type: " << type->ToString();
       return INVALID;
@@ -93,7 +145,7 @@ static std::shared_ptr<arrow::Schema> ToArrowSchema(
   kv->Append("label_index", std::to_string(entry.id));
   std::vector<std::shared_ptr<arrow::Field>> fields;
   for (auto const& prop : entry.props_) {
-    LOG(INFO) << "prop.id = " << prop.id << ", " << prop.name << " -> " << prop.type;
+    LOG(INFO) << "prop.id = " << prop.id << ", " << prop.name << " -> " << prop.type->ToString();
     fields.emplace_back(PropertyToField(prop));
   }
   return std::make_shared<arrow::Schema>(fields, kv);
@@ -103,26 +155,34 @@ PropertyTableAppender::PropertyTableAppender(
     std::shared_ptr<arrow::Schema> schema) {
   for (const auto& field : schema->fields()) {
     std::shared_ptr<arrow::DataType> type = field->type();
-    if (type == arrow::boolean()) {
+    if (arrow::null()->Equals(type)) {
+      funcs_.push_back(AppendProperty<void>::append);
+    } else if (arrow::boolean()->Equals(type)) {
       funcs_.push_back(AppendProperty<bool>::append);
-    } else if (type == arrow::int8()) {
+    } else if (arrow::int8()->Equals(type)) {
       funcs_.push_back(AppendProperty<char>::append);
-    } else if (type == arrow::int16()) {
+    } else if (arrow::int16()->Equals(type)) {
       funcs_.push_back(AppendProperty<int16_t>::append);
-    } else if (type == arrow::int32()) {
+    } else if (arrow::int32()->Equals(type)) {
       funcs_.push_back(AppendProperty<int32_t>::append);
-    } else if (type == arrow::int64()) {
+    } else if (arrow::int64()->Equals(type)) {
       funcs_.push_back(AppendProperty<int64_t>::append);
-    } else if (type == arrow::float32()) {
+    } else if (arrow::float32()->Equals(type)) {
       funcs_.push_back(AppendProperty<float>::append);
-    } else if (type == arrow::float64()) {
+    } else if (arrow::float64()->Equals(type)) {
       funcs_.push_back(AppendProperty<double>::append);
-    } else if (type == arrow::large_utf8()) {
+    } else if (arrow::large_utf8()->Equals(type)) {
       funcs_.push_back(AppendProperty<std::string>::append);
+    } else if (arrow::date32()->Equals(type)) {
+      funcs_.push_back(AppendProperty<arrow::Date32Type>::append);
+    } else if (arrow::date64()->Equals(type)) {
+      funcs_.push_back(AppendProperty<arrow::Date64Type>::append);
+    } else if (type->id() == arrow::Type::TIME32) {
+      funcs_.push_back(AppendProperty<arrow::Time32Type>::append);
+    } else if (type->id() == arrow::Type::TIME64) {
+      funcs_.push_back(AppendProperty<arrow::Time64Type>::append);
     } else if (type->id() == arrow::Type::TIMESTAMP) {
       funcs_.push_back(AppendProperty<arrow::TimestampType>::append);
-    } else if (type == arrow::null()) {
-      funcs_.push_back(AppendProperty<void>::append);
     } else {
       LOG(FATAL) << "Datatype [" << type->ToString() << "] not implemented...";
     }
@@ -207,7 +267,8 @@ void PropertyTableAppender::Apply(
               << properties[i].type
               << ", len = "
               << properties[i].len
-              << ", prop_id = " << properties[i].id;
+              << ", prop_id = " << properties[i].id
+              << ", builder type = " << builder->GetField(index)->type()->ToString();
 #endif
     funcs_[index](builder->GetField(index), properties + i);
   }

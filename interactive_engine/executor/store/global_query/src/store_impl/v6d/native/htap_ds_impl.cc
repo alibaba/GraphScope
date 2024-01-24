@@ -271,44 +271,107 @@ static int get_property_from_table(arrow::Table* table, int64_t row_id,
   if (dt == arrow::boolean()) {
     p_out->type = BOOL;
     pp.bool_value =
-        std::dynamic_pointer_cast<arrow::BooleanArray>(array)->Value(row_id);
+        static_cast<arrow::BooleanArray *>(array.get())->Value(row_id);
   } else if (dt == arrow::int8()) {
     p_out->type = CHAR;
     pp.char_value =
-        std::dynamic_pointer_cast<arrow::Int8Array>(array)->Value(row_id);
+        static_cast<arrow::Int8Array *>(array.get())->Value(row_id);
   } else if (dt == arrow::int16()) {
     p_out->type = SHORT;
     pp.int16_value =
-        std::dynamic_pointer_cast<arrow::Int16Array>(array)->Value(row_id);
+        static_cast<arrow::Int16Array *>(array.get())->Value(row_id);
   } else if (dt == arrow::int32()) {
     p_out->type = INT;
     pp.int_value =
-        std::dynamic_pointer_cast<arrow::Int32Array>(array)->Value(row_id);
+        static_cast<arrow::Int32Array *>(array.get())->Value(row_id);
   } else if (dt == arrow::int64()) {
     p_out->type = LONG;
     pp.long_value =
-        std::dynamic_pointer_cast<arrow::Int64Array>(array)->Value(row_id);
+        static_cast<arrow::Int64Array *>(array.get())->Value(row_id);
   } else if (dt == arrow::float32()) {
     p_out->type = FLOAT;
     pp.float_value =
-        std::dynamic_pointer_cast<arrow::FloatArray>(array)->Value(row_id);
+        static_cast<arrow::FloatArray *>(array.get())->Value(row_id);
   } else if (dt == arrow::float64()) {
     p_out->type = DOUBLE;
     pp.double_value =
-        std::dynamic_pointer_cast<arrow::DoubleArray>(array)->Value(row_id);
+        static_cast<arrow::DoubleArray *>(array.get())->Value(row_id);
   } else if (dt == arrow::utf8()) {
     p_out->type = STRING;
     auto view =
-        std::dynamic_pointer_cast<arrow::StringArray>(array)->GetView(row_id);
+        static_cast<arrow::StringArray *>(array.get())->GetView(row_id);
     pp.long_value = view.length();
     p_out->data = const_cast<void*>(static_cast<const void*>(view.data()));
   } else if (dt == arrow::large_utf8()) {
     p_out->type = STRING;
     auto view =
-        std::dynamic_pointer_cast<arrow::LargeStringArray>(array)->GetView(
+        static_cast<arrow::LargeStringArray *>(array.get())->GetView(
             row_id);
     pp.long_value = view.length();
     p_out->data = const_cast<void*>(static_cast<const void*>(view.data()));
+  } else if (dt == arrow::date32()) {
+    p_out->type = DATE32;
+    pp.int_value =
+        static_cast<arrow::Date32Array *>(array.get())->GetView(row_id);
+  } else if (dt == arrow::date64()) {
+    p_out->type = DATE64;
+    pp.long_value =
+        static_cast<arrow::Date64Array *>(array.get())->GetView(row_id);
+  } else if (dt->id() == arrow::Type::TIME32) {
+    auto time32_type = static_cast<arrow::Time32Type *>(dt.get());
+    switch (time32_type->unit()) {
+      case arrow::TimeUnit::SECOND:
+        p_out->type = TIME32_S;
+        break;
+      case arrow::TimeUnit::MILLI:
+        p_out->type = TIME32_MS;
+        break;
+      case arrow::TimeUnit::MICRO:
+        p_out->type = TIME32_US;
+        break;
+      case arrow::TimeUnit::NANO:
+        p_out->type = TIME32_NS;
+        break;
+    }
+    pp.int_value =
+        static_cast<arrow::Time32Array *>(array.get())->GetView(row_id);
+  } else if (dt->id() == arrow::Type::TIME64) {
+    auto time64_type = static_cast<arrow::Time64Type *>(dt.get());
+    switch (time64_type->unit()) {
+      case arrow::TimeUnit::SECOND:
+        p_out->type = TIME64_S;
+        break;
+      case arrow::TimeUnit::MILLI:
+        p_out->type = TIME64_MS;
+        break;
+      case arrow::TimeUnit::MICRO:
+        p_out->type = TIME64_US;
+        break;
+      case arrow::TimeUnit::NANO:
+        p_out->type = TIME64_NS;
+        break;
+    }
+    pp.long_value =
+        static_cast<arrow::Time64Array *>(array.get())->GetView(row_id);
+  } else if (dt->id() == arrow::Type::TIMESTAMP) {
+    auto timestamp_type = static_cast<arrow::TimestampType *>(dt.get());
+    switch (timestamp_type->unit()) {
+      case arrow::TimeUnit::SECOND:
+        p_out->type = TIMESTAMP_S;
+        break;
+      case arrow::TimeUnit::MILLI:
+        p_out->type = TIMESTAMP_MS;
+        break;
+      case arrow::TimeUnit::MICRO:
+        p_out->type = TIMESTAMP_US;
+        break;
+      case arrow::TimeUnit::NANO:
+        p_out->type = TIMESTAMP_NS;
+        break;
+    }
+    pp.long_value =
+        static_cast<arrow::TimestampArray *>(array.get())->GetView(row_id);
+    // TODO: the timezone is not supported yet, and ignored during returning.
   } else {
     LOG(ERROR) << "invalid dt is = " << dt->ToString();
     return -1;
@@ -1320,6 +1383,154 @@ int get_property_as_string_list(Property* property, const char*** out,
     return -1;
   }
   return -1;  // FIXME
+}
+
+int get_property_as_date32(struct Property* property, int32_t *out) {
+  if (property->type != DATE32) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.int_value;
+  return 0;
+}
+
+int get_property_as_date64(struct Property* property, int64_t *out) {
+  if (property->type != DATE64) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  return 0;
+}
+
+int get_property_as_time32_s(struct Property* property, int32_t *out) {
+  if (property->type != TIME32_S) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.int_value;
+  return 0;
+}
+
+int get_property_as_time32_ms(struct Property* property, int32_t *out) {
+  if (property->type != TIME32_MS) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.int_value;
+  return 0;
+}
+
+int get_property_as_time32_us(struct Property* property, int32_t *out) {
+  if (property->type != TIME32_US) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.int_value;
+  return 0;
+}
+
+int get_property_as_time32_ns(struct Property* property, int32_t *out) {
+  if (property->type != TIME32_NS) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.int_value;
+  return 0;
+}
+
+int get_property_as_time64_s(struct Property* property, int64_t *out) {
+  if (property->type != TIME64_S) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  return 0;
+}
+
+int get_property_as_time64_ms(struct Property* property, int64_t *out) {
+  if (property->type != TIME64_MS) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  return 0;
+}
+
+int get_property_as_time64_us(struct Property* property, int64_t *out) {
+  if (property->type != TIME64_US) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  return 0;
+}
+
+int get_property_as_time64_ns(struct Property* property, int64_t *out) {
+  if (property->type != TIME64_NS) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  return 0;
+}
+
+int get_property_as_timestamp_s(struct Property* property, int64_t *out,
+                                    const char **out_timezone, int *out_timezone_len) {
+  if (property->type != TIMESTAMP_S) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  // TODO: add timezone info to return value
+  return 0;
+}
+
+int get_property_as_timestamp_ms(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len) {
+  if (property->type != TIMESTAMP_MS) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  // TODO: add timezone info to return value
+  return 0;
+}
+
+int get_property_as_timestamp_us(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len) {
+  if (property->type != TIMESTAMP_US) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  // TODO: add timezone info to return value
+  return 0;
+}
+
+int get_property_as_timestamp_ns(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len) {
+  if (property->type != TIMESTAMP_NS) {
+    return -1;
+  }
+  PodProperties pp;
+  pp.long_value = property->len;
+  *out = pp.long_value;
+  // TODO: add timezone info to return value
+  return 0;
 }
 
 void free_property(Property* property) {}

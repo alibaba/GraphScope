@@ -38,7 +38,33 @@ namespace gs {
 
 class GraphDB;
 class GraphDBSession;
-class SessionLocalContext;
+struct SessionLocalContext;
+
+struct GraphDBConfig {
+  GraphDBConfig(const Schema& schema_, const std::string& data_dir_,
+                int thread_num_ = 1)
+      : schema(schema_),
+        data_dir(data_dir_),
+        thread_num(thread_num_),
+        warmup(false),
+        enable_auto_compaction(false),
+        service_port(-1),
+        vertex_map_strategy(MemoryStrategy::kMemoryOnly),
+        vertex_table_strategy(MemoryStrategy::kMemoryOnly),
+        topology_strategy(MemoryStrategy::kMemoryOnly),
+        allocator_strategy(MemoryStrategy::kMemoryOnly) {}
+
+  Schema schema;
+  std::string data_dir;
+  int thread_num;
+  bool warmup;
+  bool enable_auto_compaction;
+  int service_port;
+  MemoryStrategy vertex_map_strategy;
+  MemoryStrategy vertex_table_strategy;
+  MemoryStrategy topology_strategy;
+  MemoryStrategy allocator_strategy;
+};
 
 class GraphDB {
  public:
@@ -59,6 +85,8 @@ class GraphDB {
                     int32_t thread_num = 1, bool warmup = false,
                     bool memory_only = true,
                     bool enable_auto_compaction = false, int port = -1);
+
+  Result<bool> Open(const GraphDBConfig& config);
 
   /**
    * @brief Close the current opened graph.
@@ -113,6 +141,7 @@ class GraphDB {
   void GetAppInfo(Encoder& result);
 
   GraphDBSession& GetSession(int thread_id);
+  const GraphDBSession& GetSession(int thread_id) const;
 
   int SessionNum() const;
 
@@ -130,7 +159,9 @@ class GraphDB {
           plugins);
 
   void openWalAndCreateContexts(const std::string& data_dir_path,
-                                bool memory_only);
+                                MemoryStrategy allocator_strategy);
+
+  void showAppMetrics() const;
 
   size_t getExecutedQueryNum() const;
 

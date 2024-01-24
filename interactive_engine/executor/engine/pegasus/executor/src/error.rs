@@ -16,6 +16,30 @@
 use std::error::Error;
 use std::fmt::{self, Debug, Display};
 
+pub struct InternalError {
+    pub reason: String,
+}
+
+impl InternalError {
+    pub fn new(reason: String) -> Self {
+        InternalError { reason }
+    }
+}
+
+impl Debug for InternalError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Internal error occured {};", self.reason)
+    }
+}
+
+impl Display for InternalError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Internal error occurs {};", self.reason)
+    }
+}
+
+impl Error for InternalError {}
+
 pub struct RejectError<T>(pub T);
 
 impl<T> Debug for RejectError<T> {

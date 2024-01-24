@@ -93,6 +93,46 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(vineyard::PropertyType type) {
     return gs::rpc::graph::DataTypePb::STRING;
   } else if (arrow::large_utf8()->Equals(type)) {
     return gs::rpc::graph::DataTypePb::STRING;
+  } else if (arrow::date32()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::DATE32;
+  } else if (arrow::date64()->Equals(type)) {
+    return gs::rpc::graph::DataTypePb::DATE64;
+  } else if (type->id() == arrow::Type::TIME32) {
+    auto time32_type = std::dynamic_pointer_cast<arrow::Time32Type>(type);
+    switch (time32_type->unit()) {
+    case arrow::TimeUnit::SECOND:
+      return gs::rpc::graph::DataTypePb::TIME32_S;
+    case arrow::TimeUnit::MILLI:
+      return gs::rpc::graph::DataTypePb::TIME32_MS;
+    case arrow::TimeUnit::MICRO:
+      return gs::rpc::graph::DataTypePb::TIME32_US;
+    case arrow::TimeUnit::NANO:
+      return gs::rpc::graph::DataTypePb::TIME32_NS;
+    }
+  } else if (type->id() == arrow::Type::TIME64) {
+    auto time64_type = std::dynamic_pointer_cast<arrow::Time64Type>(type);
+    switch (time64_type->unit()) {
+    case arrow::TimeUnit::SECOND:
+      return gs::rpc::graph::DataTypePb::TIME64_S;
+    case arrow::TimeUnit::MILLI:
+      return gs::rpc::graph::DataTypePb::TIME64_MS;
+    case arrow::TimeUnit::MICRO:
+      return gs::rpc::graph::DataTypePb::TIME64_US;
+    case arrow::TimeUnit::NANO:
+      return gs::rpc::graph::DataTypePb::TIME64_NS;
+    }
+  } else if (type->id() == arrow::Type::TIMESTAMP) {
+    auto timestamp_type = std::dynamic_pointer_cast<arrow::TimestampType>(type);
+    switch (timestamp_type->unit()) {
+    case arrow::TimeUnit::SECOND:
+      return gs::rpc::graph::DataTypePb::TIMESTAMP_S;
+    case arrow::TimeUnit::MILLI:
+      return gs::rpc::graph::DataTypePb::TIMESTAMP_MS;
+    case arrow::TimeUnit::MICRO:
+      return gs::rpc::graph::DataTypePb::TIMESTAMP_US;
+    case arrow::TimeUnit::NANO:
+      return gs::rpc::graph::DataTypePb::TIMESTAMP_NS;
+    }
   } else if (arrow::large_list(arrow::int32())->Equals(type)) {
     return gs::rpc::graph::DataTypePb::INT_LIST;
   } else if (arrow::large_list(arrow::int64())->Equals(type)) {
@@ -138,6 +178,38 @@ gs::rpc::graph::DataTypePb PropertyTypeToPb(const std::string& type) {
     return gs::rpc::graph::DataTypePb::LONG_LIST;
   } else if (type == "float_list") {
     return gs::rpc::graph::DataTypePb::FLOAT_LIST;
+  } else if (type == "date32[day]") {
+    return gs::rpc::graph::DataTypePb::DATE32;
+  } else if (type == "date64[ms]") {
+    return gs::rpc::graph::DataTypePb::DATE64;
+  } else if (type == "time32[s]") {
+    return gs::rpc::graph::DataTypePb::TIME32_S;
+  } else if (type == "time32[ms]") {
+    return gs::rpc::graph::DataTypePb::TIME32_MS;
+  } else if (type == "time32[us]") {
+    return gs::rpc::graph::DataTypePb::TIME32_US;
+  } else if (type == "time32[ns]") {
+    return gs::rpc::graph::DataTypePb::TIME32_NS;
+  } else if (type == "time64[s]") {
+    return gs::rpc::graph::DataTypePb::TIME64_S;
+  } else if (type == "time64[ms]") {
+    return gs::rpc::graph::DataTypePb::TIME64_MS;
+  } else if (type == "time64[us]") {
+    return gs::rpc::graph::DataTypePb::TIME64_US;
+  } else if (type == "time64[ns]") {
+    return gs::rpc::graph::DataTypePb::TIME64_NS;
+  } else if (type.substr(0, std::string("timestamp[s]").length()) ==
+             "timestamp[s]") {
+    return gs::rpc::graph::DataTypePb::TIMESTAMP_S;
+  } else if (type.substr(0, std::string("timestamp[ms]").length()) ==
+             "timestamp[ms]") {
+    return gs::rpc::graph::DataTypePb::TIMESTAMP_MS;
+  } else if (type.substr(0, std::string("timestamp[us]").length()) ==
+             "timestamp[us]") {
+    return gs::rpc::graph::DataTypePb::TIMESTAMP_US;
+  } else if (type.substr(0, std::string("timestamp[ns]").length()) ==
+             "timestamp[ns]") {
+    return gs::rpc::graph::DataTypePb::TIMESTAMP_NS;
   } else if (type == "double_list") {
     return gs::rpc::graph::DataTypePb::DOUBLE_LIST;
   } else if (type == "string_list" || type == "str_list") {

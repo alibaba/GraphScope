@@ -21,6 +21,7 @@ extern crate lazy_static;
 extern crate enum_dispatch;
 #[macro_use]
 extern crate pegasus_common;
+extern crate core;
 
 use std::cell::Cell;
 use std::sync::atomic::AtomicUsize;
@@ -166,14 +167,17 @@ pub fn startup(conf: Configuration) -> Result<(), StartupError> {
             return Err(StartupError::CannotFindServers);
         }
     }
-    let mut lock = SERVERS
-        .write()
-        .expect("fetch servers lock failure;");
-    assert!(lock.is_empty());
-    for s in servers {
-        lock.push(s);
+    if let Ok(mut lock) = SERVERS.write() {
+        if !lock.is_empty() {
+            return Err(StartupError::InternalError("servers list is not empty".into()));
+        }
+        for s in servers {
+            lock.push(s);
+        }
+        lock.sort();
+    } else {
+        return Err(StartupError::InternalError("fetch servers lock failure".into()));
     }
-    lock.sort();
     Ok(())
 }
 

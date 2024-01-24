@@ -98,6 +98,8 @@ class GraphDBSession {
   double eval_duration() const;
 #endif
 
+  const AppMetric& GetAppMetric(int idx) const;
+
   int64_t query_num() const;
 
  private:
@@ -109,6 +111,7 @@ class GraphDBSession {
 
   std::array<AppWrapper, 256> app_wrappers_;
   std::array<AppBase*, 256> apps_;
+  std::array<AppMetric, 256> app_metrics_;
 
 #ifdef MONITOR_SESSIONS
   std::atomic<int64_t> eval_duration_;
