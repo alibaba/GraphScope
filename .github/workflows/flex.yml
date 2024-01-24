@@ -40,7 +40,7 @@ jobs:
         bash ./scripts/install_dependencies.sh 4
 
     - name: Setup tmate session
-      if: true
+      if: false
       uses: mxschmitt/action-tmate@v2
 
     - name: Build
@@ -48,7 +48,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
         mkdir build && cd build # only test default build
-        cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && make -j 4
+        cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && sudo make -j 4
 
   test-flex:
     runs-on: ubuntu-20.04
