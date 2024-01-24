@@ -45,5 +45,5 @@ cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX
 make -j ${parallelism} && sudo make install
 popd && rm -rf /tmp/hiactor
 
-sudo echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf
+sudo sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
 sudo sysctl -p /etc/sysctl.conf
