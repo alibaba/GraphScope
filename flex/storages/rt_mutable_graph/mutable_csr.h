@@ -1299,7 +1299,6 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
             const std::string& new_snapshot_dir) override {
     assert(!nbr_list_.filename().empty() &&
            std::filesystem::exists(nbr_list_.filename()));
-    assert(!nbr_list_.read_only());
     std::filesystem::create_hard_link(nbr_list_.filename(),
                                       new_snapshot_dir + "/" + name + ".snbr");
   }
