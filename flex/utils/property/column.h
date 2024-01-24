@@ -69,7 +69,7 @@ class TypedColumn : public ColumnBase {
             const std::string& work_dir) override {
     std::string basic_path = snapshot_dir + "/" + name;
     if (std::filesystem::exists(basic_path)) {
-      basic_buffer_.open_beta(basic_path, false);
+      basic_buffer_.open(basic_path, false);
       basic_size_ = basic_buffer_.size();
     } else {
       basic_size_ = 0;
@@ -77,14 +77,14 @@ class TypedColumn : public ColumnBase {
     if (work_dir == "") {
       extra_size_ = 0;
     } else {
-      extra_buffer_.open_beta(work_dir + "/" + name, true);
+      extra_buffer_.open(work_dir + "/" + name, true);
       extra_size_ = extra_buffer_.size();
     }
   }
 
   void open_in_memory(const std::string& name) override {
     if (!name.empty() && std::filesystem::exists(name)) {
-      basic_buffer_.open_beta(name, false);
+      basic_buffer_.open(name, false);
       basic_size_ = basic_buffer_.size();
     } else {
       basic_buffer_.reset();
@@ -110,7 +110,7 @@ class TypedColumn : public ColumnBase {
 
   void touch(const std::string& filename) override {
     mmap_array<T> tmp;
-    tmp.open_beta(filename, true);
+    tmp.open(filename, true);
     tmp.resize(basic_size_ + extra_size_);
     for (size_t k = 0; k < basic_size_; ++k) {
       tmp.set(k, basic_buffer_.get(k));
@@ -139,7 +139,7 @@ class TypedColumn : public ColumnBase {
     copy_file(cur_path, tmp_path);
     extra_size_ = basic_size_;
     basic_size_ = 0;
-    tmp.open_beta(tmp_path, true);
+    tmp.open(tmp_path, true);
     basic_buffer_.reset();
     extra_buffer_.swap(tmp);
     tmp.reset();
@@ -152,7 +152,7 @@ class TypedColumn : public ColumnBase {
       extra_buffer_.dump(filename);
     } else {
       mmap_array<T> tmp;
-      tmp.open_beta(filename, true);
+      tmp.open(filename, true);
       for (size_t k = 0; k < basic_size_; ++k) {
         tmp.set(k, basic_buffer_.get(k));
       }
@@ -238,7 +238,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
             const std::string& work_dir) override {
     std::string basic_path = snapshot_dir + "/" + name;
     if (std::filesystem::exists(basic_path + ".items")) {
-      basic_buffer_.open_beta(basic_path, false);
+      basic_buffer_.open(basic_path, false);
       basic_size_ = basic_buffer_.size();
     } else {
       basic_size_ = 0;
@@ -247,14 +247,14 @@ class TypedColumn<std::string_view> : public ColumnBase {
       extra_size_ = 0;
       pos_.store(0);
     } else {
-      extra_buffer_.open_beta(work_dir + "/" + name, true);
+      extra_buffer_.open(work_dir + "/" + name, true);
       extra_size_ = extra_buffer_.size();
       pos_.store(extra_buffer_.data_size());
     }
   }
 
   void open_in_memory(const std::string& prefix) override {
-    basic_buffer_.open_beta(prefix, false);
+    basic_buffer_.open(prefix, false);
     basic_size_ = basic_buffer_.size();
 
     extra_buffer_.reset();
@@ -274,7 +274,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
 
   void touch(const std::string& filename) override {
     mmap_array<std::string_view> tmp;
-    tmp.open_beta(filename, true);
+    tmp.open(filename, true);
     tmp.resize(basic_size_ + extra_size_, (basic_size_ + extra_size_) * width_);
     size_t offset = 0;
     for (size_t k = 0; k < basic_size_; ++k) {
@@ -314,7 +314,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
     extra_size_ = basic_size_ + extra_size_;
     basic_size_ = 0;
     basic_buffer_.reset();
-    tmp.open_beta(tmp_path, true);
+    tmp.open(tmp_path, true);
     extra_buffer_.swap(tmp);
     tmp.reset();
     pos_.store(extra_buffer_.data_size());
@@ -328,7 +328,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
       extra_buffer_.dump(filename);
     } else {
       mmap_array<std::string_view> tmp;
-      tmp.open_beta(filename, true);
+      tmp.open(filename, true);
       tmp.resize(basic_size_ + extra_size_,
                  (basic_size_ + extra_size_) * width_);
       size_t offset = 0;

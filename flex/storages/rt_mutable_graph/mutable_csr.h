@@ -678,7 +678,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
                     double reserve_ratio) override {
     reserve_ratio = std::max(reserve_ratio, 1.0);
     size_t vnum = degree.size();
-    adj_lists_.open_beta(work_dir + "/" + name + ".adj", true);
+    adj_lists_.open(work_dir + "/" + name + ".adj", true);
     adj_lists_.resize(vnum);
 
     locks_ = new grape::SpinLock[vnum];
@@ -687,7 +687,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     for (auto d : degree) {
       edge_num += (std::ceil(d * reserve_ratio));
     }
-    nbr_list_.open_beta(work_dir + "/" + name + ".nbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".nbr", true);
     nbr_list_.resize(edge_num);
 
     nbr_t* ptr = nbr_list_.data();
@@ -707,16 +707,16 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     mmap_array<int> degree_list;
     mmap_array<int>* cap_list = &degree_list;
     if (snapshot_dir != "") {
-      degree_list.open_beta(snapshot_dir + "/" + name + ".deg", false);
+      degree_list.open(snapshot_dir + "/" + name + ".deg", false);
       if (std::filesystem::exists(snapshot_dir + "/" + name + ".cap")) {
         cap_list = new mmap_array<int>();
-        cap_list->open_beta(snapshot_dir + "/" + name + ".cap", false);
+        cap_list->open(snapshot_dir + "/" + name + ".cap", false);
       }
-      nbr_list_.open_beta(snapshot_dir + "/" + name + ".nbr", false);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", false);
       load_meta(snapshot_dir + "/" + name);
     }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
-    adj_lists_.open_beta(work_dir + "/" + name + ".adj", true);
+    adj_lists_.open(work_dir + "/" + name + ".adj", true);
 
     adj_lists_.resize(degree_list.size());
     locks_ = new grape::SpinLock[degree_list.size()];
@@ -735,15 +735,15 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void open_in_memory(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
-    degree_list.open_beta(prefix + ".deg", false);
+    degree_list.open(prefix + ".deg", false);
     load_meta(prefix);
     mmap_array<int>* cap_list = &degree_list;
     if (std::filesystem::exists(prefix + ".cap")) {
       cap_list = new mmap_array<int>();
-      cap_list->open_beta(prefix + ".cap", false);
+      cap_list->open(prefix + ".cap", false);
     }
 
-    nbr_list_.open_beta(prefix + ".nbr", false);
+    nbr_list_.open(prefix + ".nbr", false);
 
     adj_lists_.reset();
     v_cap = std::max(v_cap, degree_list.size());
@@ -768,12 +768,12 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   void open_with_hugepages(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
-    degree_list.open_beta(prefix + ".deg", false);
+    degree_list.open(prefix + ".deg", false);
     load_meta(prefix);
     mmap_array<int>* cap_list = &degree_list;
     if (std::filesystem::exists(prefix + ".cap")) {
       cap_list = new mmap_array<int>();
-      cap_list->open_beta(prefix + ".cap", false);
+      cap_list->open(prefix + ".cap", false);
     }
 
     nbr_list_.open_with_hugepages(prefix + ".nbr");
@@ -841,7 +841,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     dump_meta(new_spanshot_dir + "/" + name);
     mmap_array<int> degree_list;
     std::vector<int> cap_list;
-    degree_list.open_beta(new_spanshot_dir + "/" + name + ".deg", true);
+    degree_list.open(new_spanshot_dir + "/" + name + ".deg", true);
     degree_list.resize(vnum);
     cap_list.resize(vnum);
     bool need_cap_list = false;
@@ -1020,7 +1020,7 @@ class MutableCsr<std::string_view>
                     const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    adj_lists_.open_beta(work_dir + "/" + name + ".adj", true);
+    adj_lists_.open(work_dir + "/" + name + ".adj", true);
     adj_lists_.resize(vnum);
 
     locks_ = new grape::SpinLock[vnum];
@@ -1029,7 +1029,7 @@ class MutableCsr<std::string_view>
     for (auto d : degree) {
       edge_num += d;
     }
-    nbr_list_.open_beta(work_dir + "/" + name + ".nbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".nbr", true);
     nbr_list_.resize(edge_num);
 
     nbr_t* ptr = nbr_list_.data();
@@ -1045,11 +1045,11 @@ class MutableCsr<std::string_view>
             const std::string& work_dir) override {
     mmap_array<int> degree_list;
     if (snapshot_dir != "") {
-      degree_list.open_beta(snapshot_dir + "/" + name + ".deg", false);
-      nbr_list_.open_beta(snapshot_dir + "/" + name + ".nbr", false);
+      degree_list.open(snapshot_dir + "/" + name + ".deg", false);
+      nbr_list_.open(snapshot_dir + "/" + name + ".nbr", false);
     }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
-    adj_lists_.open_beta(work_dir + "/" + name + ".adj", true);
+    adj_lists_.open(work_dir + "/" + name + ".adj", true);
 
     adj_lists_.resize(degree_list.size());
     locks_ = new grape::SpinLock[degree_list.size()];
@@ -1064,8 +1064,8 @@ class MutableCsr<std::string_view>
 
   void open_in_memory(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
-    degree_list.open_beta(prefix + ".deg", false);
-    nbr_list_.open_beta(prefix + ".nbr", false);
+    degree_list.open(prefix + ".deg", false);
+    nbr_list_.open(prefix + ".nbr", false);
     adj_lists_.reset();
     adj_lists_.resize(degree_list.size());
     locks_ = new grape::SpinLock[degree_list.size()];
@@ -1117,7 +1117,7 @@ class MutableCsr<std::string_view>
     size_t vnum = adj_lists_.size();
     bool reuse_nbr_list = true;
     mmap_array<int> degree_list;
-    degree_list.open_beta(new_spanshot_dir + "/" + name + ".deg", true);
+    degree_list.open(new_spanshot_dir + "/" + name + ".deg", true);
     degree_list.resize(vnum);
     size_t offset = 0;
     for (size_t i = 0; i < vnum; ++i) {
@@ -1246,7 +1246,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
                     const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open_beta(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -1260,11 +1260,11 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       copy_file(snapshot_dir + "/" + name + ".snbr",
                 work_dir + "/" + name + ".snbr");
     }
-    nbr_list_.open_beta(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
   }
 
   void open_in_memory(const std::string& prefix, size_t v_cap) override {
-    nbr_list_.open_beta(prefix + ".snbr", false);
+    nbr_list_.open(prefix + ".snbr", false);
     if (nbr_list_.size() < v_cap) {
       size_t old_size = nbr_list_.size();
       nbr_list_.reset();
@@ -1447,7 +1447,7 @@ class SingleMutableCsr<std::string_view>
                     const std::vector<int>& degree,
                     double reserve_ratio) override {
     size_t vnum = degree.size();
-    nbr_list_.open_beta(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -1461,11 +1461,11 @@ class SingleMutableCsr<std::string_view>
       copy_file(snapshot_dir + "/" + name + ".snbr",
                 work_dir + "/" + name + ".snbr");
     }
-    nbr_list_.open_beta(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
   }
 
   void open_in_memory(const std::string& prefix, size_t v_cap) override {
-    nbr_list_.open_beta(prefix + ".snbr", false);
+    nbr_list_.open(prefix + ".snbr", false);
   }
 
   void dump(const std::string& name,

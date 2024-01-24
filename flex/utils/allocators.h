@@ -90,14 +90,14 @@ class ArenaAllocator {
       if (strategy_ == MemoryStrategy::kHugepagePrefered) {
         buf->open_with_hugepages("", size);
       } else {
-        buf->open_beta("", false);
+        buf->open("", false);
       }
       buf->resize(size);
       mmap_buffers_.push_back(buf);
       return static_cast<void*>(buf->data());
     } else {
       mmap_array<char>* buf = new mmap_array<char>();
-      buf->open_beta(prefix_ + std::to_string(mmap_buffers_.size()), true);
+      buf->open(prefix_ + std::to_string(mmap_buffers_.size()), true);
       buf->resize(size);
       mmap_buffers_.push_back(buf);
       return static_cast<void*>(buf->data());

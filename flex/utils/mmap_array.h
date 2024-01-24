@@ -94,7 +94,7 @@ class mmap_array {
     hugepage_prefered_ = (val && !sync_to_file_);
   }
 
-  void open_beta(const std::string& filename, bool sync_to_file = false) {
+  void open(const std::string& filename, bool sync_to_file = false) {
     reset();
     filename_ = filename;
     sync_to_file_ = sync_to_file;
@@ -170,7 +170,7 @@ class mmap_array {
         } else {
           LOG(ERROR) << "allocating hugepage failed, " << strerror(errno)
                      << ", try with normal pages";
-          open_beta(filename, false);
+          open(filename, false);
         }
       } else {
         mmap_size_ = 0;
@@ -271,7 +271,7 @@ class mmap_array {
 
   void touch(const std::string& filename) {
     dump(filename);
-    open_beta(filename, true);
+    open(filename, true);
   }
 
   T* data() { return data_; }
@@ -331,9 +331,9 @@ class mmap_array<std::string_view> {
     data_.set_hugepage_prefered(val);
   }
 
-  void open_beta(const std::string& filename, bool sync_to_file) {
-    items_.open_beta(filename + ".items", sync_to_file);
-    data_.open_beta(filename + ".data", sync_to_file);
+  void open(const std::string& filename, bool sync_to_file) {
+    items_.open(filename + ".items", sync_to_file);
+    data_.open(filename + ".data", sync_to_file);
   }
 
   void open_with_hugepages(const std::string& filename) {
