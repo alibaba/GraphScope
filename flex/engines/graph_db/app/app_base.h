@@ -23,6 +23,7 @@
 
 #include <string>
 #include <vector>
+#include <limits>
 
 #include <glog/logging.h>
 
