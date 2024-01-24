@@ -63,6 +63,20 @@ enum PropertyType {
   FLOAT_LIST = 12,
   DOUBLE_LIST = 13,
   STRING_LIST = 14,
+  DATE32 = 15,
+  DATE64 = 16,
+  TIME32_S = 17,
+  TIME32_MS = 18,
+  TIME32_US = 19,
+  TIME32_NS = 20,
+  TIME64_S = 21,
+  TIME64_MS = 22,
+  TIME64_US = 23,
+  TIME64_NS = 24,
+  TIMESTAMP_S = 25,
+  TIMESTAMP_MS = 26,
+  TIMESTAMP_US = 27,
+  TIMESTAMP_NS = 28,
 };
 
 struct Property {
@@ -240,6 +254,24 @@ int v6d_get_property_as_double_list(struct Property* property, const double** ou
                                 int* out_len);
 int v6d_get_property_as_string_list(struct Property* property, const char*** out,
                                 const int** out_len, int* out_num);
+int v6d_get_property_as_date32(struct Property* property, int32_t *out);
+int v6d_get_property_as_date64(struct Property* property, int64_t *out);
+int v6d_get_property_as_time32_s(struct Property* property, int32_t *out);
+int v6d_get_property_as_time32_ms(struct Property* property, int32_t *out);
+int v6d_get_property_as_time32_us(struct Property* property, int32_t *out);
+int v6d_get_property_as_time32_ns(struct Property* property, int32_t *out);
+int v6d_get_property_as_time64_s(struct Property* property, int64_t *out);
+int v6d_get_property_as_time64_ms(struct Property* property, int64_t *out);
+int v6d_get_property_as_time64_us(struct Property* property, int64_t *out);
+int v6d_get_property_as_time64_ns(struct Property* property, int64_t *out);
+int v6d_get_property_as_timestamp_s(struct Property* property, int64_t *out,
+                                    const char **out_timezone, int *out_timezone_len);
+int v6d_get_property_as_timestamp_ms(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len);
+int v6d_get_property_as_timestamp_us(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len);
+int v6d_get_property_as_timestamp_ns(struct Property* property, int64_t *out,
+                                     const char **out_timezone, int *out_timezone_len);
 
 // *out_num为string的个数
 // (*out_len)[i]为第i个string的长度

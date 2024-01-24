@@ -214,7 +214,7 @@ static common::DataType eval_expr_return_type(const common::Expression& expr) {
         operator_stack.pop();
       }
     } else if (item_case == common::ExprOpr::kLogical ||
-               common::ExprOpr::kArith) {
+               item_case == common::ExprOpr::kArith) {
       operator_stack.push(opr);
     } else if (item_case == common::ExprOpr::kConst ||
                item_case == common::ExprOpr::kVar ||
@@ -275,7 +275,7 @@ class ExprBuilder {
     // If we meet label keys just ignore.
     auto size = expr_ops.size();
     VLOG(10) << "Adding expr of size: " << size;
-    for (auto i = 0; i < size;) {
+    for (int32_t i = 0; i < size;) {
       auto expr = expr_ops[i];
       if (expr.has_extract()) {
         // special case for extract
@@ -374,7 +374,7 @@ class ExprBuilder {
       auto vars = opr.vars();
       std::stringstream ss;
       ss << "std::tuple{";
-      for (auto i = 0; i < vars.keys_size(); ++i) {
+      for (int32_t i = 0; i < (int32_t) vars.keys_size(); ++i) {
         auto cur_var = vars.keys(i);
         auto param_const = variable_to_param_const(cur_var, ctx_);
         make_var_name_unique(param_const);
@@ -458,7 +458,7 @@ class ExprBuilder {
                      std::vector<common::DataType>>
   Build() const {
     // Insert param vars to context.
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ctx_.AddParameterVar(construct_params_[i]);
     }
 
@@ -491,10 +491,10 @@ class ExprBuilder {
   // return the concatenated string of constructor's input params
   std::string get_constructor_params_str() const {
     std::stringstream ss;
-    for (int i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name;
-      if (i != construct_params_.size() - 1) {
+      if (i + 1 != construct_params_.size()) {
         ss << ",";
       }
     }
@@ -506,7 +506,7 @@ class ExprBuilder {
     if (!construct_params_.empty()) {
       ss << ":";
     }
-    for (int i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << construct_params_[i].var_name << "_"
          << "(" << construct_params_[i].var_name << ")";
       if (i != construct_params_.size() - 1) {
@@ -526,7 +526,7 @@ class ExprBuilder {
 
   std::string get_func_call_params_str() const {
     std::stringstream ss;
-    for (int i = 0; i < func_call_vars_.size(); ++i) {
+    for (size_t i = 0; i < func_call_vars_.size(); ++i) {
       ss << data_type_2_string(func_call_vars_[i].type) << " "
          << func_call_vars_[i].var_name;
       if (i != func_call_vars_.size() - 1) {
@@ -539,7 +539,7 @@ class ExprBuilder {
   virtual std::string get_func_call_impl_str() const {
     std::stringstream ss;
     ss << "return ";
-    for (auto i = 0; i < expr_nodes_.size(); ++i) {
+    for (size_t i = 0; i < expr_nodes_.size(); ++i) {
       ss << expr_nodes_[i] << " ";
     }
     ss << ";";
@@ -548,7 +548,7 @@ class ExprBuilder {
 
   std::string get_private_filed_str() const {
     std::stringstream ss;
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name << "_;" << std::endl;
     }

@@ -49,52 +49,13 @@ public class MaxNode extends NodeBase {
         }
 
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
-        int ingestorCount = 2;
+        int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
 
         Configs baseConfigs =
                 Configs.newBuilder(configs)
                         .put(ZkConfig.ZK_CONNECT_STRING.getKey(), zkConnectString)
                         .put(KafkaConfig.KAFKA_SERVERS.getKey(), kafkaServers)
-                        .put(
-                                CommonConfig.INGESTOR_NODE_COUNT.getKey(),
-                                String.valueOf(ingestorCount))
-                        .put(
-                                CommonConfig.INGESTOR_QUEUE_COUNT.getKey(),
-                                String.valueOf(ingestorCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_ENGINE.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_GRAPH.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_MANAGE.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_QUERY.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.GAIA_RPC.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.GAIA_ENGINE.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                CommonConfig.FRONTEND_NODE_COUNT.getKey(),
-                                String.valueOf(frontendCount))
                         .build();
 
         Configs coordinatorConfigs =
@@ -108,8 +69,6 @@ public class MaxNode extends NodeBase {
                     Configs.newBuilder(baseConfigs)
                             .put(CommonConfig.ROLE_NAME.getKey(), RoleType.FRONTEND.getName())
                             .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                            .put(CommonConfig.RPC_PORT.getKey(), "55555")
-                            .put(FrontendConfig.FRONTEND_SERVICE_PORT.getKey(), "55556")
                             .build();
             this.frontends.add(new Frontend(frontendConfigs));
         }
@@ -133,6 +92,12 @@ public class MaxNode extends NodeBase {
 
     public void start() {
         List<Thread> startThreads = new ArrayList<>();
+        startThreads.add(
+                new Thread(
+                        () -> {
+                            this.coordinator.start();
+                            logger.info("[" + this.coordinator.getName() + "] started");
+                        }));
         for (NodeBase store : this.stores) {
             startThreads.add(
                     new Thread(
@@ -141,6 +106,7 @@ public class MaxNode extends NodeBase {
                                 logger.info("[" + store.getName() + "] started");
                             }));
         }
+
         for (NodeBase frontend : this.frontends) {
             startThreads.add(
                     new Thread(
@@ -158,12 +124,6 @@ public class MaxNode extends NodeBase {
                             }));
         }
 
-        startThreads.add(
-                new Thread(
-                        () -> {
-                            this.coordinator.start();
-                            logger.info("[" + this.coordinator.getName() + "] started");
-                        }));
         for (Thread startThread : startThreads) {
             startThread.start();
         }
@@ -202,7 +162,6 @@ public class MaxNode extends NodeBase {
     public static void main(String[] args) throws Exception {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
-        conf = Configs.newBuilder(conf).put(CommonConfig.ENGINE_TYPE.getKey(), "gaia").build();
         MaxNode maxNode = new MaxNode(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(maxNode);
         nodeLauncher.start();

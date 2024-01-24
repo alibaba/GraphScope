@@ -297,7 +297,7 @@ class AdjEdgeSet {
         prop_names_(prop_names),
         dir_(dir) {
     size_ = 0;
-    for (auto i = 0; i < adj_lists_.size(); ++i) {
+    for (size_t i = 0; i < adj_lists_.size(); ++i) {
       size_ += adj_lists_.get(i).size();
     }
   }
@@ -347,7 +347,7 @@ class AdjEdgeSet {
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
     std::vector<std::tuple<VID_T, VID_T, std::tuple<EDATA_T...>>> res;
     res.reserve(index_ele_tuple.size());
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto nbr = std::get<2>(cur_ind_ele);
       // auto ele = std::get<2>(cur_ind_ele);
@@ -419,7 +419,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
         dst_label_(dst_label),
         dir_(dir) {
     size_ = 0;
-    for (auto i = 0; i < adj_lists_.size(); ++i) {
+    for (size_t i = 0; i < adj_lists_.size(); ++i) {
       size_ += adj_lists_.get(i).size();
     }
   }
@@ -468,7 +468,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
     std::vector<std::tuple<VID_T, VID_T, grape::EmptyType>> res;
     res.reserve(index_ele_tuple.size());
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto iter = std::get<2>(cur_ind_ele);
       auto src = std::get<1>(cur_ind_ele);

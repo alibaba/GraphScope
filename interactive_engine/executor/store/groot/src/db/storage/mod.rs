@@ -16,6 +16,7 @@ pub trait ExternalStorage: Send + Sync {
     fn load(&self, files: &[&str]) -> GraphResult<()>;
     fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn ExternalStorageBackup>>;
     fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item = KvPair> + Send>>;
+    fn try_catch_up_with_primary(&self) -> GraphResult<()>;
 }
 
 pub trait ExternalStorageBackup {

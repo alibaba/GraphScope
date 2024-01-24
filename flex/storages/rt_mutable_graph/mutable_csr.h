@@ -43,6 +43,13 @@ struct MutableNbr {
         data(rhs.data) {}
   ~MutableNbr() = default;
 
+  MutableNbr& operator=(const MutableNbr& rhs) {
+    neighbor = rhs.neighbor;
+    timestamp.store(rhs.timestamp.load());
+    data = rhs.data;
+    return *this;
+  }
+
   const EDATA_T& get_data() const { return data; }
   vid_t get_neighbor() const { return neighbor; }
   timestamp_t get_timestamp() const { return timestamp.load(); }
@@ -65,6 +72,13 @@ struct MutableNbr<grape::EmptyType> {
   MutableNbr(const MutableNbr& rhs)
       : neighbor(rhs.neighbor), timestamp(rhs.timestamp.load()) {}
   ~MutableNbr() = default;
+
+  MutableNbr& operator=(const MutableNbr& rhs) {
+    neighbor = rhs.neighbor;
+    timestamp.store(rhs.timestamp.load());
+    return *this;
+  }
+
   void set_data(const grape::EmptyType&, timestamp_t ts) {
     timestamp.store(ts);
   }
@@ -86,6 +100,8 @@ class MutableNbrSlice {
   using const_nbr_t = const MutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const MutableNbr<EDATA_T>*;
   MutableNbrSlice() = default;
+  MutableNbrSlice(const MutableNbrSlice& rhs)
+      : ptr_(rhs.ptr_), size_(rhs.size_) {}
   ~MutableNbrSlice() = default;
 
   void set_size(int size) { size_ = size; }
@@ -156,7 +172,9 @@ class MutableNbrSlice<std::string_view> {
   };
   using const_nbr_t = const MutableColumnNbr;
   using const_nbr_ptr_t = const MutableColumnNbr;
-  MutableNbrSlice(const StringColumn& column) : column_(column) {}
+  MutableNbrSlice(const StringColumn& column) : slice_(), column_(column) {}
+  MutableNbrSlice(const MutableNbrSlice& rhs)
+      : slice_(rhs.slice_), column_(rhs.column_) {}
   ~MutableNbrSlice() = default;
   void set_size(int size) { slice_.set_size(size); }
   int size() const { return slice_.size(); }
@@ -287,7 +305,7 @@ class MutableNbrSliceMut<std::string_view> {
 template <typename T>
 struct UninitializedUtils {
   static void copy(T* new_buffer, T* old_buffer, size_t len) {
-    memcpy(new_buffer, old_buffer, len * sizeof(T));
+    memcpy((void*) new_buffer, (void*) old_buffer, len * sizeof(T));
   }
 };
 
@@ -298,6 +316,10 @@ class MutableAdjlist {
   using slice_t = MutableNbrSlice<EDATA_T>;
   using mut_slice_t = MutableNbrSliceMut<EDATA_T>;
   MutableAdjlist() : buffer_(NULL), size_(0), capacity_(0) {}
+  MutableAdjlist(const MutableAdjlist& rhs)
+      : buffer_(rhs.buffer_),
+        size_(rhs.size_.load(std::memory_order_acquire)),
+        capacity_(rhs.capacity_) {}
   ~MutableAdjlist() {}
 
   void init(nbr_t* ptr, int cap, int size) {
@@ -365,6 +387,11 @@ class MutableAdjlist<std::string_view> {
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
   MutableAdjlist(StringColumn& column)
       : buffer_(NULL), size_(0), capacity_(0) {}
+  MutableAdjlist(const MutableAdjlist& rhs)
+      : buffer_(rhs.buffer_),
+        size_(rhs.size_.load(std::memory_order_acquire)),
+        capacity_(rhs.capacity_) {}
+
   ~MutableAdjlist() {}
 
   void init(nbr_t* ptr, int cap, int size) {
@@ -463,6 +490,12 @@ class MutableCsrBase {
                             const std::string& work_dir,
                             const std::vector<int>& degree,
                             double reserve_ratio = 1.2) = 0;
+
+  virtual void batch_sort_by_edge_data(timestamp_t ts) {
+    LOG(FATAL) << "not supported...";
+  }
+
+  virtual timestamp_t unsorted_since() const { return 0; }
 
   virtual void open(const std::string& name, const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
@@ -660,6 +693,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       adj_lists_[i].init(ptr, cap, 0);
       ptr += cap;
     }
+
+    unsorted_since_ = 0;
     return edge_num;
   }
 
@@ -674,6 +709,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
         cap_list->open(snapshot_dir + "/" + name + ".cap", true);
       }
       nbr_list_.open(snapshot_dir + "/" + name + ".nbr", true);
+      load_meta(snapshot_dir + "/" + name);
     }
     nbr_list_.touch(work_dir + "/" + name + ".nbr");
     adj_lists_.open(work_dir + "/" + name + ".adj", false);
@@ -696,6 +732,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   void open_in_memory(const std::string& prefix, size_t v_cap) override {
     mmap_array<int> degree_list;
     degree_list.open_in_memory(prefix + ".deg");
+    load_meta(prefix);
     mmap_array<int>* cap_list = &degree_list;
     if (std::filesystem::exists(prefix + ".cap")) {
       cap_list = new mmap_array<int>();
@@ -763,6 +800,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
             const std::string& new_spanshot_dir) override {
     size_t vnum = adj_lists_.size();
     bool reuse_nbr_list = true;
+    dump_meta(new_spanshot_dir + "/" + name);
     mmap_array<int> degree_list;
     std::vector<int> cap_list;
     degree_list.open(new_spanshot_dir + "/" + name + ".deg", false);
@@ -789,7 +827,8 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     if (need_cap_list) {
       FILE* fcap_out =
           fopen((new_spanshot_dir + "/" + name + ".cap").c_str(), "wb");
-      fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out);
+      CHECK_EQ(fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out),
+               cap_list.size());
       fflush(fcap_out);
       fclose(fcap_out);
     }
@@ -802,8 +841,9 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
       FILE* fout =
           fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
-        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].capacity(),
-               fout);
+        CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
+                        adj_lists_[i].capacity(), fout),
+                 adj_lists_[i].capacity());
       }
       fflush(fout);
       fclose(fout);
@@ -880,10 +920,49 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(get_edges_mut(v));
   }
 
+  void batch_sort_by_edge_data(timestamp_t ts) override {
+    size_t vnum = adj_lists_.size();
+    for (size_t i = 0; i != vnum; ++i) {
+      std::sort(adj_lists_[i].data(),
+                adj_lists_[i].data() + adj_lists_[i].size(),
+                [](const nbr_t& lhs, const nbr_t& rhs) {
+                  return lhs.data < rhs.data;
+                });
+    }
+    unsorted_since_ = ts;
+  }
+
+  timestamp_t unsorted_since() const override { return unsorted_since_; }
+
  private:
+  void load_meta(const std::string& prefix) {
+    std::string meta_file_path = prefix + ".meta";
+    if (std::filesystem::exists(meta_file_path)) {
+      FILE* meta_file_fd = fopen(meta_file_path.c_str(), "r");
+      CHECK_EQ(
+          fread(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
+          1);
+      fclose(meta_file_fd);
+    } else {
+      unsorted_since_ = 0;
+    }
+  }
+
+  void dump_meta(const std::string& prefix) const {
+    std::string meta_file_path = prefix + ".meta";
+    FILE* meta_file_fd =
+        fopen((prefix + ".meta").c_str(), "wb");
+    CHECK_EQ(
+        fwrite(&unsorted_since_, sizeof(timestamp_t), 1, meta_file_fd),
+        1);
+    fflush(meta_file_fd);
+    fclose(meta_file_fd);
+  }
+
   grape::SpinLock* locks_;
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
+  timestamp_t unsorted_since_;
 };
 
 template <>
@@ -1026,7 +1105,9 @@ class MutableCsr<std::string_view>
       FILE* fout =
           fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
-        fwrite(adj_lists_[i].data(), sizeof(nbr_t), adj_lists_[i].size(), fout);
+        CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
+                        adj_lists_[i].size(), fout),
+                 adj_lists_[i].size());
       }
       fflush(fout);
       fclose(fout);
@@ -1110,11 +1191,11 @@ class MutableCsr<std::string_view>
   }
 
  private:
+  StringColumn& column_;
+  std::atomic<size_t>& column_idx_;
   grape::SpinLock* locks_;
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
-  StringColumn& column_;
-  std::atomic<size_t>& column_idx_;
 };
 
 template <typename EDATA_T>
@@ -1155,7 +1236,7 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       nbr_list_.reset();
       nbr_list_.resize(v_cap);
       FILE* fin = fopen((prefix + ".snbr").c_str(), "r");
-      fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin);
+      CHECK_EQ(fread(nbr_list_.data(), sizeof(nbr_t), old_size, fin), old_size);
       fclose(fin);
       for (size_t k = old_size; k != v_cap; ++k) {
         nbr_list_[k].timestamp.store(std::numeric_limits<timestamp_t>::max());
@@ -1293,6 +1374,12 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
       thrd.join();
     }
     (void) output.load();
+  }
+
+  void batch_sort_by_edge_data(timestamp_t ts) override {}
+
+  timestamp_t unsorted_since() const override {
+    return std::numeric_limits<timestamp_t>::max();
   }
 
  private:
@@ -1478,10 +1565,11 @@ class SingleMutableCsr<std::string_view>
   }
 
  private:
+  StringColumn& column_;
+  std::atomic<size_t>& column_idx_;
+
   mmap_array<nbr_t> nbr_list_;
   mutable MutableNbr<std::string_view> nbr_;
-  std::atomic<size_t>& column_idx_;
-  StringColumn& column_;
 };
 
 template <typename EDATA_T>
@@ -1542,6 +1630,12 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   std::shared_ptr<MutableCsrEdgeIterBase> edge_iter_mut(vid_t v) override {
     return std::make_shared<TypedMutableCsrEdgeIter<EDATA_T>>(
         MutableNbrSliceMut<EDATA_T>::empty());
+  }
+
+  void batch_sort_by_edge_data(timestamp_t ts) override {}
+
+  timestamp_t unsorted_since() const override {
+    return std::numeric_limits<timestamp_t>::max();
   }
 };
 
@@ -1609,8 +1703,8 @@ class EmptyCsr<std::string_view>
     return std::make_shared<TypedMutableCsrEdgeIter<std::string_view>>(
         MutableNbrSliceMut<std::string_view>::empty(column_));
   }
-  std::atomic<size_t>& column_idx_;
   StringColumn& column_;
+  std::atomic<size_t>& column_idx_;
 };
 }  // namespace gs
 

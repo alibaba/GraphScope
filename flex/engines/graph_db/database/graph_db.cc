@@ -20,6 +20,8 @@
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/utils/yaml_utils.h"
 
+#include "flex/third_party/httplib.h"
+
 namespace gs {
 
 struct SessionLocalContext {
@@ -41,6 +43,10 @@ struct SessionLocalContext {
 
 GraphDB::GraphDB() = default;
 GraphDB::~GraphDB() {
+  if (compact_thread_running_) {
+    compact_thread_running_ = false;
+    compact_thread_.join();
+  }
   for (int i = 0; i < thread_num_; ++i) {
     contexts_[i].~SessionLocalContext();
   }
@@ -53,7 +59,8 @@ GraphDB& GraphDB::get() {
 }
 
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
-                           int32_t thread_num, bool warmup, bool memory_only) {
+                           int32_t thread_num, bool warmup, bool memory_only,
+                           bool enable_auto_compaction, int port) {
   if (!std::filesystem::exists(data_dir)) {
     std::filesystem::create_directories(data_dir);
   }
@@ -97,11 +104,54 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
             });
   mutable_schema.EmplacePlugins(plugin_paths);
 
+  last_compaction_ts_ = 0;
   openWalAndCreateContexts(data_dir, memory_only);
 
   if ((!create_empty_graph) && warmup) {
     graph_.Warmup(thread_num_);
   }
+
+  if (enable_auto_compaction && (port != -1)) {
+    if (compact_thread_running_) {
+      compact_thread_running_ = false;
+      compact_thread_.join();
+    }
+    compact_thread_running_ = true;
+    compact_thread_ = std::thread([&](int http_port) {
+      size_t last_compaction_at = 0;
+      while (compact_thread_running_) {
+        size_t query_num_before = getExecutedQueryNum();
+        sleep(30);
+        if (!compact_thread_running_) {
+          break;
+        }
+        size_t query_num_after = getExecutedQueryNum();
+        if (query_num_before == query_num_after &&
+            (query_num_after > (last_compaction_at + 100000))) {
+          VLOG(10) << "Trigger auto compaction";
+          last_compaction_at = query_num_after;
+          std::string url = "127.0.0.1";
+          httplib::Client cli(url, http_port);
+          cli.set_connection_timeout(0, 300000);
+          cli.set_read_timeout(300, 0);
+          cli.set_write_timeout(300, 0);
+
+          std::vector<char> buf;
+          Encoder encoder(buf);
+          encoder.put_string("COMPACTION");
+          encoder.put_byte(0);
+          std::string content(buf.data(), buf.size());
+          auto res = cli.Post("/interactive/query", content, "text/plain");
+          std::string ret = res->body;
+          Decoder decoder(ret.data(), ret.size());
+          std::string_view info = decoder.get_string();
+
+          VLOG(10) << "Finish compaction, info: " << info;
+        }
+      }
+    }, port);
+  }
+
   return Result<bool>(true);
 }
 
@@ -110,6 +160,10 @@ void GraphDB::Close() {
   monitor_thread_running_ = false;
   monitor_thread_.join();
 #endif
+  if (compact_thread_running_) {
+    compact_thread_running_ = false;
+    compact_thread_.join();
+  }
   //-----------Clear graph_db----------------
   graph_.Clear();
   version_manager_.clear();
@@ -151,6 +205,13 @@ GraphDBSession& GraphDB::GetSession(int thread_id) {
 }
 
 int GraphDB::SessionNum() const { return thread_num_; }
+
+void GraphDB::UpdateCompactionTimestamp(timestamp_t ts) {
+  last_compaction_ts_ = ts;
+}
+timestamp_t GraphDB::GetLastCompactionTimestamp() const {
+  return last_compaction_ts_;
+}
 
 const MutablePropertyFragment& GraphDB::graph() const { return graph_; }
 MutablePropertyFragment& GraphDB::graph() { return graph_; }
@@ -236,8 +297,13 @@ void GraphDB::ingestWals(const std::vector<std::string>& wals,
     if (from_ts < to_ts) {
       IngestWalRange(contexts_, graph_, parser, from_ts, to_ts, thread_num);
     }
-    UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
-                                 update_wal.size, contexts_[0].allocator);
+    if (update_wal.size == 0) {
+      graph_.Compact(update_wal.timestamp);
+      last_compaction_ts_ = update_wal.timestamp;
+    } else {
+      UpdateTransaction::IngestWal(graph_, work_dir, to_ts, update_wal.ptr,
+                                   update_wal.size, contexts_[0].allocator);
+    }
     from_ts = to_ts + 1;
   }
   if (from_ts <= parser.last_ts()) {
@@ -351,6 +417,14 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
     }
   });
 #endif
+}
+
+size_t GraphDB::getExecutedQueryNum() const {
+  size_t ret = 0;
+  for (int i = 0; i < thread_num_; ++i) {
+    ret += contexts_[i].session.query_num();
+  }
+  return ret;
 }
 
 }  // namespace gs

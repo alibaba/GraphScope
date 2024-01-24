@@ -65,10 +65,6 @@ data:
     dns.name.prefix.coordinator=COORDINATOR
     dns.name.prefix.store=STORE
 
-    executor.graph.port=55556
-    executor.query.port=55557
-    executor.engine.port=55558
-
     log4rs.config=LOG4RS_CONFIG
 
     ## GAIA Config
@@ -85,6 +81,11 @@ data:
     pegasus.batch.size=1024
     pegasus.output.capacity=16
     pegasus.hosts=PEGASUS_HOSTS
+
+    ## Secondary config
+    secondary.instance.enabled={{ .Values.secondary.enabled }}
+    store.data.secondary.path={{ .Values.secondary.storeDataPath }}
+    store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
 
     ## Extra Config
     {{- if .Values.extraConfig }}

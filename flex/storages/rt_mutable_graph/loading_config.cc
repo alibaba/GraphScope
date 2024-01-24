@@ -26,6 +26,35 @@ namespace gs {
 
 namespace config_parsing {
 
+// When file_path is absolute path, try to find the file in the absolute path.
+// When data_location is give, try to find the file in data_location first.
+// When data_location is not given, try to find the file Under FLEX_DATA_DIR
+// When FLEX_DATA_DIR is not set, try to find the file under current path.
+
+static bool access_file(const std::string data_location,
+                        std::string& file_path) {
+  if (file_path.size() == 0) {
+    return false;
+  }
+  if (file_path[0] == '/') {
+    std::filesystem::path path(file_path);
+    return std::filesystem::exists(path);
+  }
+
+  std::string real_location;
+  if (!data_location.empty()) {
+    real_location = data_location;
+  } else if (std::getenv("FLEX_DATA_DIR") != NULL) {
+    real_location = std::string(std::getenv("FLEX_DATA_DIR"));
+  } else {
+    real_location = std::filesystem::current_path().generic_string();
+  }
+
+  file_path = real_location + "/" + file_path;
+  std::filesystem::path path(file_path);
+  return std::filesystem::exists(path);
+}
+
 // fetch the primary key of the src and dst vertex label in the edge file,
 // also check whether the primary key exists in the schema, and number equals.
 static bool fetch_src_dst_column_mapping(
@@ -47,7 +76,7 @@ static bool fetch_src_dst_column_mapping(
       return false;
     }
     columns.resize(column_mappings.size());
-    for (auto i = 0; i < column_mappings.size(); ++i) {
+    for (size_t i = 0; i < column_mappings.size(); ++i) {
       auto column_mapping = column_mappings[i]["column"];
 
       if (!get_scalar(column_mapping, "index", columns[i].second)) {
@@ -447,16 +476,15 @@ static bool parse_edges_files_schema(
   return true;
 }
 
-static bool parse_bulk_load_config_file(const std::string& config_file,
-                                        const Schema& schema,
-                                        LoadingConfig& load_config) {
+bool parse_bulk_load_config_file(const std::string& config_file,
+                                 const Schema& schema,
+                                 LoadingConfig& load_config) {
   YAML::Node root = YAML::LoadFile(config_file);
   return parse_bulk_load_config_yaml(root, schema, load_config);
 }
 
-static bool parse_bulk_load_config_yaml(const YAML::Node& root,
-                                        const Schema& schema,
-                                        LoadingConfig& load_config) {
+bool parse_bulk_load_config_yaml(const YAML::Node& root, const Schema& schema,
+                                 LoadingConfig& load_config) {
   std::string data_location;
   load_config.scheme_ = "file";  // default data source is file
   load_config.method_ = "init";

@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
         interface.GetEdges<int64_t>(1, 1, 8, vids, "Both", INT_MAX, prop_names);
     double t = -grape::GetCurrentTime();
     size_t cnt = 0;
-    for (auto i = 0; i < vids.size(); ++i) {
+    for (size_t i = 0; i < vids.size(); ++i) {
       auto adj_list = edges.get(i);
       for (auto iter : adj_list) {
         VLOG(10) << iter.neighbor() << ", " << gs::to_string(iter.properties());
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
     // visiting vertices properties
     auto vertex_prop =
         interface.GetVertexPropsFromVid<int64_t>(1, vids, {"id"});
-    for (auto i = 0; i < 10; ++i) {
+    for (size_t i = 0; i < 10; ++i) {
       VLOG(10) << "vid: " << vids[i]
                << ", prop: " << gs::to_string(vertex_prop[i]);
     }

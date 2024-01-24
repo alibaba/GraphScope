@@ -299,7 +299,6 @@ void AtomicityRBTest(const std::string& work_dir, int thread_num) {
 
   auto committed = AtomicityCheck(db);
 
-  int num_txns = 50;
   std::atomic<int> num_aborted_txns(0);
   std::atomic<int> num_committed_txns(0);
 
@@ -563,7 +562,6 @@ void G1ATest(const std::string& work_dir, int thread_num) {
 
   std::atomic<int64_t> num_incorrect_checks(0);
   int rc = thread_num / 2;
-  int wc = thread_num - rc;
 
   parallel_client(db, [&](GraphDBSession& db, int client_id) {
     if (client_id < rc) {
@@ -637,7 +635,6 @@ void G1BTest(const std::string& work_dir, int thread_num) {
 
   std::atomic<int64_t> num_incorrect_checks(0);
   int rc = thread_num / 2;
-  int wc = thread_num - rc;
 
   parallel_client(db, [&](GraphDBSession& session, int client_id) {
     if (client_id < rc) {
@@ -823,7 +820,6 @@ void IMPTest(const std::string& work_dir, int thread_num) {
 
   std::atomic<int64_t> num_incorrect_checks(0);
   int rc = thread_num / 2;
-  int wc = thread_num - rc;
 
   parallel_client(db, [&](GraphDBSession& session, int client_id) {
     if (client_id < rc) {
@@ -963,7 +959,6 @@ void PMPTest(const std::string& work_dir, int thread_num) {
   std::atomic<int64_t> num_incorrect_checks(0);
   std::atomic<int64_t> num_aborted_txns(0);
   int rc = thread_num / 2;
-  int wc = thread_num - rc;
 
   parallel_client(db, [&](GraphDBSession& session, int client_id) {
     std::random_device rand_dev;
@@ -1188,7 +1183,6 @@ void OTVTest(const std::string& work_dir, int thread_num) {
 
   std::atomic<int64_t> num_incorrect_checks(0);
   int rc = thread_num / 2;
-  int wc = thread_num - rc;
 
   parallel_client(db, [&](GraphDBSession& session, int client_id) {
     std::random_device rand_dev;
@@ -1243,7 +1237,6 @@ void FRTest(const std::string& work_dir, int thread_num) {
 
   std::atomic<int64_t> num_incorrect_checks(0);
   int rc = thread_num / 2;
-  int wc = thread_num - rc;
 
   parallel_client(db, [&](GraphDBSession& session, int client_id) {
     std::random_device rand_dev;

@@ -35,37 +35,26 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
     }
 
     @Override
-    public void notifyWriteSnapshotIdChanged(long snapshotId) {
+    public void notifyWriteSnapshotIdChanged(long si) {
+        CompletionCallback<Long> callback =
+                new CompletionCallback<Long>() {
+                    @Override
+                    public void onCompleted(Long prev) {
+                        if (prev > si) {
+                            logger.error(
+                                    "unexpected previousSnapshotId {}, should <= {}", prev, si);
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        logger.error("error in advanceIngestSnapshotId {}: {}", si, t.toString());
+                    }
+                };
         for (int i = 0; i < this.ingestorCount; i++) {
             try {
-                int realtimeWriterId = i;
-                this.ingestorSnapshotClients
-                        .getClient(realtimeWriterId)
-                        .advanceIngestSnapshotId(
-                                snapshotId,
-                                new CompletionCallback<Long>() {
-                                    @Override
-                                    public void onCompleted(Long previousSnapshotId) {
-                                        if (previousSnapshotId > snapshotId) {
-                                            logger.error(
-                                                    "unexpected previousSnapshotId [{}], should <="
-                                                            + " [{}]. target realtime writer [{}]",
-                                                    previousSnapshotId,
-                                                    snapshotId,
-                                                    realtimeWriterId);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable t) {
-                                        logger.error(
-                                                "error in advanceIngestSnapshotId [{}]. realtime"
-                                                        + " writer [{}], reason [{}]",
-                                                snapshotId,
-                                                realtimeWriterId,
-                                                t.getMessage());
-                                    }
-                                });
+                IngestorSnapshotClient client = ingestorSnapshotClients.getClient(i);
+                client.advanceIngestSnapshotId(si, callback);
             } catch (Exception e) {
                 logger.warn("update writeSnapshotId failed. realtimeWriter [{}]", i, e);
             }

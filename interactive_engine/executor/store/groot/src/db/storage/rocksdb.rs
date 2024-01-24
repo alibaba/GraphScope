@@ -11,6 +11,7 @@ use crate::db::storage::{KvPair, RawBytes};
 
 pub struct RocksDB {
     db: Arc<DB>,
+    is_secondary: bool,
 }
 
 pub struct RocksDBBackupEngine {
@@ -25,7 +26,32 @@ impl RocksDB {
             let msg = format!("open rocksdb at {} failed, because {}", path, e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open, options, path)
         })?;
-        let ret = RocksDB { db: Arc::new(db) };
+        let ret = RocksDB { db: Arc::new(db), is_secondary: false };
+        Ok(ret)
+    }
+
+    pub fn open_as_secondary(
+        options: &HashMap<String, String>, primary_path: &str, secondary_path: &str,
+    ) -> GraphResult<Self> {
+        let mut opts = Options::default();
+        opts.set_max_open_files(-1);
+        let db = DB::open_as_secondary(&opts, primary_path, secondary_path).map_err(|e| {
+            let msg = format!(
+                "open rocksdb at {}, {} failed, because {}",
+                primary_path,
+                secondary_path,
+                e.into_string()
+            );
+            gen_graph_err!(
+                GraphErrorCode::ExternalStorageError,
+                msg,
+                open_as_secondary,
+                options,
+                primary_path
+            )
+        })?;
+
+        let ret = RocksDB { db: Arc::new(db), is_secondary: true };
         Ok(ret)
     }
 }
@@ -44,6 +70,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn put(&self, key: &[u8], val: &[u8]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot put in secondary instance");
+            return Ok(());
+        }
         self.db.put(key, val).map_err(|e| {
             let msg = format!("rocksdb.put failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
@@ -51,6 +81,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn delete(&self, key: &[u8]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot delete in secondary instance");
+            return Ok(());
+        }
         self.db.delete(key).map_err(|e| {
             let msg = format!("rocksdb.delete failed because {}", e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
@@ -85,6 +119,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot delete_range in secondary instance");
+            return Ok(());
+        }
         let mut batch = WriteBatch::default();
         self.db
             .delete_file_in_range(start, end)
@@ -103,6 +141,10 @@ impl ExternalStorage for RocksDB {
     }
 
     fn load(&self, files: &[&str]) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot ingest in secondary instance");
+            return Ok(());
+        }
         let mut options = IngestExternalFileOptions::default();
         options.set_move_files(true);
         self.db
@@ -149,6 +191,19 @@ impl ExternalStorage for RocksDB {
         };
         iter.seek(prefix);
         Ok(Box::new(Scan::new(iter)))
+    }
+
+    fn try_catch_up_with_primary(&self) -> GraphResult<()> {
+        if self.is_secondary {
+            self.db
+                .try_catch_up_with_primary()
+                .map_err(|e| {
+                    let msg = format!("try to catch up with primary failed because {:?}", e);
+                    gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                })
+        } else {
+            return Ok(());
+        }
     }
 }
 
@@ -238,7 +293,14 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
 fn init_options(options: &HashMap<String, String>) -> Options {
     let mut ret = Options::default();
     ret.create_if_missing(true);
-    // TODO: Add other customized db options.
+    ret.set_max_background_jobs(6);
+    ret.set_write_buffer_size(256 << 20);
+    ret.set_max_open_files(-1);
+    ret.set_max_log_file_size(1024 << 10);
+    ret.set_keep_log_file_num(10);
+    // https://github.com/facebook/rocksdb/wiki/Basic-Operations#non-sync-writes
+    ret.set_use_fsync(true);
+
     if let Some(conf_str) = options.get("store.rocksdb.compression.type") {
         match conf_str.as_str() {
             "none" => ret.set_compression_type(DBCompressionType::None),

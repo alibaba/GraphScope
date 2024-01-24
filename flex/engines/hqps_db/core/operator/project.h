@@ -138,7 +138,7 @@ class ProjectOp {
     VLOG(10) << "Current head size: " << node_size;
 
     std::vector<offset_t> offsets(node_size + 1, 0);
-    for (auto i = 1; i <= node_size; ++i) {
+    for (size_t i = 1; i <= node_size; ++i) {
       offsets[i] = i;
     }
 
@@ -176,12 +176,12 @@ class ProjectOp {
     auto node_size = gs::Get<-1>(ctx).Size();
     // VLOG(10) << "Current head size: " << node_size;
     std::vector<offset_t> offset(node_size + 1, 0);
-    for (auto i = 1; i <= node_size; ++i) {
+    for (size_t i = 1; i <= node_size; ++i) {
       offset[i] = i;
     }
     std::vector<std::vector<offset_t>> offsets;
     offsets.reserve(proj_num - 1);
-    for (auto i = 0; i < proj_num - 1; ++i) {
+    for (size_t i = 0; i + 1 < proj_num; ++i) {
       offsets.push_back(offset);
     }
 
@@ -190,11 +190,6 @@ class ProjectOp {
         apply_single_project(graph, ctx, std::get<proj_num - 1>(mappers));
     auto prev_tuple = apply_single_project_until<proj_num - 1>(
         graph, ctx, mappers, std::make_index_sequence<proj_num - 1>{});
-    using new_head_t =
-        std::remove_const_t<std::remove_reference_t<decltype(head)>>;
-    using first_alias_t = std::tuple_element_t<0, std::tuple<ProjectMapper...>>;
-    using last_alias_t =
-        std::tuple_element_t<proj_num - 1, std::tuple<ProjectMapper...>>;
     return make_context<0, proj_num - 1>(std::move(prev_tuple), std::move(head),
                                          std::move(offsets));
   }
@@ -299,14 +294,13 @@ class ProjectOp {
       const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
       const std::vector<size_t>& repeat_array) {
     LOG(INFO) << "[Single project on labelKey]" << demangle(node);
-    auto size = node.Size();
     auto label_vec = node.GetLabelVec();
     std::vector<T> res_prop_vec;
     CHECK(label_vec.size() == repeat_array.size())
         << "label size: " << label_vec.size()
         << " repeat size: " << repeat_array.size();
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         res_prop_vec.emplace_back(label_vec[i]);
       }
     }
@@ -327,8 +321,8 @@ class ProjectOp {
     // VLOG(10) << "Finish fetching properties";
     node.fillBuiltinProps(prop_tuple_vec, {prop_name}, repeat_array);
     std::vector<T> res_prop_vec;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         res_prop_vec.push_back(std::get<0>(prop_tuple_vec[i]));
       }
     }
@@ -354,8 +348,8 @@ class ProjectOp {
     // VLOG(10) << "Finish fetching properties";
     node.fillBuiltinProps(prop_tuple_vec, {prop_name}, repeat_array);
     std::vector<T> res_prop_vec;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         res_prop_vec.push_back(std::get<0>(prop_tuple_vec[i]));
       }
     }
@@ -379,7 +373,7 @@ class ProjectOp {
     // make_repeat;
     size_t sum = 0;
     bool flag = true;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       if (repeat_array[i] != 1) {
         flag = false;
       }
@@ -397,8 +391,8 @@ class ProjectOp {
       return Collection<T>(std::move(res_prop_vec));
     } else {
       res_prop_vec.reserve(sum);
-      for (auto i = 0; i < repeat_array.size(); ++i) {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+      for (size_t i = 0; i < repeat_array.size(); ++i) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           res_prop_vec.emplace_back(std::get<0>(tmp_prop_vec[i]));
         }
       }
@@ -423,7 +417,7 @@ class ProjectOp {
     // make_repeat;
     size_t sum = 0;
     bool flag = true;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       if (repeat_array[i] != 1) {
         flag = false;
       }
@@ -440,8 +434,8 @@ class ProjectOp {
       return Collection<T>(std::move(res_prop_vec));
     } else {
       res_prop_vec.reserve(sum);
-      for (auto i = 0; i < repeat_array.size(); ++i) {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+      for (size_t i = 0; i < repeat_array.size(); ++i) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           res_prop_vec.push_back(std::get<0>(tmp_prop_vec[i]));
         }
       }
@@ -512,10 +506,10 @@ class ProjectOp {
     auto path_vec = node.get_all_valid_paths();
     CHECK(path_vec.size() == repeat_array.size());
     lengths_vec.reserve(path_vec.size());
-    for (auto i = 0; i < path_vec.size(); ++i) {
+    for (size_t i = 0; i < path_vec.size(); ++i) {
       if (repeat_array[i] > 0) {
         auto length = path_vec[i].length();
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           lengths_vec.push_back(length);
         }
       }

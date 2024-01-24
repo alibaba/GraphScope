@@ -92,7 +92,7 @@ class PegasusGenerator {
       // FIXME: ENable this line
       // the dynamic params can be duplicate.
       CHECK(vars[0].id == 0);
-      for (auto i = 0; i < vars.size(); ++i) {
+      for (size_t i = 0; i < vars.size(); ++i) {
         if (i > 0 && vars[i].id == vars[i - 1].id) {
           // found duplicate
           CHECK(vars[i] == vars[i - 1]);

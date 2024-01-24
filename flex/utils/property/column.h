@@ -330,7 +330,18 @@ class TypedColumn<std::string_view> : public ColumnBase {
     } else {
       basic_size_ = basic_buffer_.size();
       extra_size_ = size - basic_size_;
+#ifdef HUGEPAGE
+      if (basic_buffer_.size() != 0) {
+        size_t basic_avg_width =
+            (basic_buffer_.data_size() + basic_buffer_.size() - 1) /
+            basic_buffer_.size();
+        extra_buffer_.resize(extra_size_, extra_size_ * basic_avg_width);
+      } else {
+        extra_buffer_.resize(extra_size_, extra_size_ * width_);
+      }
+#else
       extra_buffer_.resize(extra_size_, extra_size_ * width_);
+#endif
     }
   }
 
@@ -458,8 +469,8 @@ class StringMapColumn : public ColumnBase {
   const LFIndexer<INDEX_T>& get_meta_map() const { return *meta_map_; }
 
  private:
-  LFIndexer<INDEX_T>* meta_map_;
   TypedColumn<INDEX_T> index_col_;
+  LFIndexer<INDEX_T>* meta_map_;
 };
 
 template <typename INDEX_T>

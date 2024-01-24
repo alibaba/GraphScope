@@ -515,6 +515,8 @@ storeDataPath: "/var/lib/graphscope-store"
 storeWriteThreadCount: 1
 storeQueueBufferSize: 102400
 
+storeGcIntervalMs: 5000
+
 ## Kafka Config
 kafkaTopic: "graphscope"
 kafkaProducerCustomConfigs: ""
@@ -535,3 +537,7 @@ pegasus:
   worker:
     num: 1
   timeout: 240000
+
+secondary:
+  enabled: false
+  storeDataPath: "./data_secondary"

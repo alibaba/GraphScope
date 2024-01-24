@@ -95,7 +95,7 @@ struct _add_vertex {
                    << col->type()->ToString();
       }
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
-      for (auto i = 0; i < row_num; ++i) {
+      for (size_t i = 0; i < row_num; ++i) {
         if (!indexer.add(casted_array->Value(i), vid)) {
           LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i)
                      << "..";
@@ -105,7 +105,7 @@ struct _add_vertex {
     } else {
       if (col->type()->Equals(arrow::utf8())) {
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
-        for (auto i = 0; i < row_num; ++i) {
+        for (size_t i = 0; i < row_num; ++i) {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
@@ -116,7 +116,7 @@ struct _add_vertex {
       } else if (col->type()->Equals(arrow::large_utf8())) {
         auto casted_array =
             std::static_pointer_cast<arrow::LargeStringArray>(col);
-        for (auto i = 0; i < row_num; ++i) {
+        for (size_t i = 0; i < row_num; ++i) {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
@@ -296,13 +296,12 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       CHECK_EQ(property_cols[i]->length(), row_num);
     }
 
-    double t = -grape::GetCurrentTime();
     std::vector<vid_t> vids;
     vids.reserve(row_num);
 
     _add_vertex<KEY_T>()(primary_key_col, indexer, vids);
 
-    for (auto j = 0; j < property_cols.size(); ++j) {
+    for (size_t j = 0; j < property_cols.size(); ++j) {
       auto array = property_cols[j];
       auto chunked_array = std::make_shared<arrow::ChunkedArray>(array);
       set_vertex_properties(
@@ -441,7 +440,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
             << " neq dst_col type: " << dst_col_type->ToString();
 
         std::vector<std::shared_ptr<arrow::Array>> property_cols;
-        for (auto i = 2; i < columns.size(); ++i) {
+        for (size_t i = 2; i < columns.size(); ++i) {
           property_cols.emplace_back(columns[i]);
         }
         CHECK(property_cols.size() <= 1)

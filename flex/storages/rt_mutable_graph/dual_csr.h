@@ -49,6 +49,8 @@ class DualCsrBase {
   virtual void PutEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
                        Allocator& alloc) = 0;
 
+  virtual void SortByEdgeData(timestamp_t ts) = 0;
+
   virtual void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc,
                           timestamp_t timestamp, Allocator& alloc) = 0;
 
@@ -125,6 +127,11 @@ class DualCsr : public DualCsrBase {
     ConvertAny<EDATA_T>::to(data, prop);
     in_csr_->put_edge(dst, src, prop, ts, alloc);
     out_csr_->put_edge(src, dst, prop, ts, alloc);
+  }
+
+  void SortByEdgeData(timestamp_t ts) override {
+    in_csr_->batch_sort_by_edge_data(ts);
+    out_csr_->batch_sort_by_edge_data(ts);
   }
 
   void UpdateEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
@@ -254,6 +261,10 @@ class DualCsr<std::string_view> : public DualCsrBase {
     column_.set_value(row_id, val);
     in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
     out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
+  }
+
+  void SortByEdgeData(timestamp_t ts) override {
+    LOG(FATAL) << "Not implemented";
   }
 
   void UpdateEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,

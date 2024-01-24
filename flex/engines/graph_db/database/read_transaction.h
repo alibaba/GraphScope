@@ -92,15 +92,111 @@ template <typename EDATA_T>
 class GraphView {
  public:
   GraphView(const MutableCsr<EDATA_T>& csr, timestamp_t timestamp)
-      : csr_(csr), timestamp_(timestamp) {}
+      : csr_(csr),
+        timestamp_(timestamp),
+        unsorted_since_(csr.unsorted_since()) {}
 
   AdjListView<EDATA_T> get_edges(vid_t v) const {
     return AdjListView<EDATA_T>(csr_.get_edges(v), timestamp_);
   }
 
+  // iterate edges with data in [min_value, max_value)
+  template <typename FUNC_T>
+  void foreach_edges_between(vid_t v, EDATA_T& min_value, EDATA_T& max_value,
+                             const FUNC_T& func) const {
+    const auto& edges = csr_.get_edges(v);
+    auto ptr = edges.end() - 1;
+    auto end = edges.begin() - 1;
+    while (ptr != end) {
+      if (ptr->timestamp > timestamp_) {
+        --ptr;
+        continue;
+      }
+      if (ptr->timestamp < unsorted_since_) {
+        break;
+      }
+      if (!(ptr->data < min_value) && (ptr->data < max_value)) {
+        func(*ptr, min_value, max_value);
+      }
+      --ptr;
+    }
+    if (ptr == end) {
+      return;
+    }
+    ptr = std::upper_bound(end + 1, ptr + 1, max_value,
+                           [](const EDATA_T& a, const MutableNbr<EDATA_T>& b) {
+                             return a < b.data;
+                           }) -
+          1;
+    while (ptr != end) {
+      if (ptr->data < min_value) {
+        break;
+      }
+      func(*ptr, min_value, max_value);
+      --ptr;
+    }
+  }
+
+  // iterate edges with data in (min_value, +inf)
+  template <typename FUNC_T>
+  void foreach_edges_gt(vid_t v, EDATA_T& min_value, const FUNC_T& func) const {
+    const auto& edges = csr_.get_edges(v);
+    auto ptr = edges.end() - 1;
+    auto end = edges.begin() - 1;
+    while (ptr != end) {
+      if (ptr->timestamp > timestamp_) {
+        --ptr;
+        continue;
+      }
+      if (ptr->timestamp < unsorted_since_) {
+        break;
+      }
+      if (min_value < ptr->data) {
+        func(*ptr, min_value);
+      }
+      --ptr;
+    }
+    while (ptr != end) {
+      if (!(min_value < ptr->data)) {
+        break;
+      }
+      func(*ptr, min_value);
+      --ptr;
+    }
+  }
+
+  // iterate edges with data in [min_value, +inf)
+  template <typename FUNC_T>
+  void foreach_edges_ge(vid_t v, EDATA_T& min_value, const FUNC_T& func) const {
+    const auto& edges = csr_.get_edges(v);
+    auto ptr = edges.end() - 1;
+    auto end = edges.begin() - 1;
+    while (ptr != end) {
+      if (ptr->timestamp > timestamp_) {
+        --ptr;
+        continue;
+      }
+      if (ptr->timestamp < unsorted_since_) {
+        break;
+      }
+      if (!(ptr->data < min_value)) {
+        func(*ptr, min_value);
+      }
+      --ptr;
+    }
+    while (ptr != end) {
+      if (ptr->data < min_value) {
+        break;
+      }
+      func(*ptr, min_value);
+      --ptr;
+    }
+  }
+
  private:
   const MutableCsr<EDATA_T>& csr_;
   timestamp_t timestamp_;
+  timestamp_t unsorted_since_;
 };
 
 template <typename EDATA_T>

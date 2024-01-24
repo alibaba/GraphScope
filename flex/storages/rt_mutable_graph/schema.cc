@@ -33,6 +33,7 @@ void Schema::Clear() {
   eprop_names_.clear();
   ie_strategy_.clear();
   oe_strategy_.clear();
+  sort_on_compactions_.clear();
   max_vnum_.clear();
   plugin_name_to_path_and_id_.clear();
   plugin_dir_.clear();
@@ -59,7 +60,8 @@ void Schema::add_edge_label(const std::string& src_label,
                             const std::string& edge_label,
                             const std::vector<PropertyType>& properties,
                             const std::vector<std::string>& prop_names,
-                            EdgeStrategy oe, EdgeStrategy ie) {
+                            EdgeStrategy oe, EdgeStrategy ie,
+                            bool sort_on_compaction) {
   label_t src_label_id = vertex_label_to_index(src_label);
   label_t dst_label_id = vertex_label_to_index(dst_label);
   label_t edge_label_id = edge_label_to_index(edge_label);
@@ -70,6 +72,7 @@ void Schema::add_edge_label(const std::string& src_label,
   oe_strategy_[label_id] = oe;
   ie_strategy_[label_id] = ie;
   eprop_names_[label_id] = prop_names;
+  sort_on_compactions_[label_id] = sort_on_compaction;
 }
 
 label_t Schema::vertex_label_num() const {
@@ -229,6 +232,18 @@ EdgeStrategy Schema::get_incoming_edge_strategy(
   return ie_strategy_.at(index);
 }
 
+bool Schema::get_sort_on_compaction(const std::string& src_label,
+                                    const std::string& dst_label,
+                                    const std::string& label) const {
+  label_t src, dst, edge;
+  CHECK(vlabel_indexer_.get_index(src_label, src));
+  CHECK(vlabel_indexer_.get_index(dst_label, dst));
+  CHECK(elabel_indexer_.get_index(label, edge));
+  uint32_t index = generate_edge_label(src, dst, edge);
+  CHECK(sort_on_compactions_.find(index) != sort_on_compactions_.end());
+  return sort_on_compactions_.at(index);
+}
+
 label_t Schema::get_edge_label_id(const std::string& label) const {
   label_t ret;
   CHECK(elabel_indexer_.get_index(label, ret));
@@ -265,7 +280,7 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   grape::InArchive arc;
   arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
-      << max_vnum_;
+      << sort_on_compactions_ << max_vnum_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -276,7 +291,8 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   grape::OutArchive arc;
   CHECK(reader->ReadArchive(arc));
   arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
-      eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >> max_vnum_;
+      eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
+      sort_on_compactions_ >> max_vnum_;
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
@@ -599,7 +615,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
 
   std::vector<int> primary_key_inds(primary_key_node.size(), -1);
   std::vector<std::tuple<PropertyType, std::string, size_t>> primary_keys;
-  for (auto i = 0; i < primary_key_node.size(); ++i) {
+  for (size_t i = 0; i < primary_key_node.size(); ++i) {
     auto cur_primary_key = primary_key_node[i];
     std::string primary_key_name = primary_key_node[0].as<std::string>();
     for (size_t j = 0; j < property_names.size(); ++j) {
@@ -676,6 +692,7 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
   }
   EdgeStrategy default_ie = EdgeStrategy::kMultiple;
   EdgeStrategy default_oe = EdgeStrategy::kMultiple;
+  bool default_sort_on_compaction = false;
 
   // get vertex type pair relation
   auto vertex_type_pair_node = node["vertex_type_pair_relations"];
@@ -688,11 +705,12 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
     LOG(ERROR) << "edge [vertex_type_pair_relations] should be a sequence";
     return false;
   }
-  for (auto i = 0; i < vertex_type_pair_node.size(); ++i) {
+  for (size_t i = 0; i < vertex_type_pair_node.size(); ++i) {
     std::string src_label_name, dst_label_name;
     auto cur_node = vertex_type_pair_node[i];
     EdgeStrategy cur_ie = default_ie;
     EdgeStrategy cur_oe = default_oe;
+    bool cur_sort_on_compaction = default_sort_on_compaction;
     if (!get_scalar(cur_node, "source_vertex", src_label_name)) {
       LOG(ERROR) << "Expect field source_vertex for edge [" << edge_label_name
                  << "] in vertex_type_pair_relations";
@@ -746,13 +764,40 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
           }
         }
       }
+      // try to parse sort on compaction
+      if (csr_node["sort_on_compaction"]) {
+        std::string sort_on_compaction_str;
+        if (get_scalar(csr_node, "sort_on_compaction",
+                       sort_on_compaction_str)) {
+          if (sort_on_compaction_str == "true" ||
+              sort_on_compaction_str == "TRUE") {
+            VLOG(10) << "Sort on compaction for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+            cur_sort_on_compaction = true;
+          } else if (sort_on_compaction_str == "false" ||
+                     sort_on_compaction_str == "FALSE") {
+            VLOG(10) << "Do not sort on compaction for edge: " << src_label_name
+                     << "-[" << edge_label_name << "]->" << dst_label_name;
+            cur_sort_on_compaction = false;
+          } else {
+            LOG(ERROR) << "sort_on_compaction is not set properly for edge: "
+                       << src_label_name << "-[" << edge_label_name << "]->"
+                       << dst_label_name << "expect TRUE/FALSE";
+            return false;
+          }
+        }
+      } else {
+        VLOG(10) << "Do not sort on compaction for edge: " << src_label_name
+                 << "-[" << edge_label_name << "]->" << dst_label_name;
+      }
     }
 
     VLOG(10) << "edge " << edge_label_name << " from " << src_label_name
              << " to " << dst_label_name << " with " << property_types.size()
              << " properties";
     schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
-                          property_types, prop_names, cur_oe, cur_ie);
+                          property_types, prop_names, cur_oe, cur_ie,
+                          cur_sort_on_compaction);
   }
 
   // check the type_id equals to storage's label_id
@@ -960,7 +1005,7 @@ bool Schema::vertex_has_primary_key(const std::string& label,
   auto v_label_id = get_vertex_label_id(label);
   CHECK(v_label_id < vprop_names_.size());
   auto& keys = v_primary_keys_[v_label_id];
-  for (auto i = 0; i < keys.size(); ++i) {
+  for (size_t i = 0; i < keys.size(); ++i) {
     if (std::get<1>(keys[i]) == prop) {
       return true;
     }

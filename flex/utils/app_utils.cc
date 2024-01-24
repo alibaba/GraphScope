@@ -79,6 +79,21 @@ void Encoder::put_string_view(const std::string_view& v) {
   memcpy(&buf_[size + 4], v.data(), len);
 }
 
+void Encoder::put_small_string(const std::string& v) {
+  size_t size = buf_.size();
+  int len = v.size();
+  buf_.resize(size + sizeof(uint8_t) + len);
+  buf_[size] = static_cast<char>(len);
+  memcpy(&buf_[size + 1], v.data(), len);
+}
+
+void Encoder::put_small_string_view(const std::string_view& v) {
+  size_t size = buf_.size();
+  int len = v.size();
+  buf_.resize(size + sizeof(uint8_t) + len);
+  buf_[size] = static_cast<char>(len);
+  memcpy(&buf_[size + 1], v.data(), len);
+}
 
 void Encoder::put_double(double v){
   size_t size = buf_.size();
@@ -123,6 +138,13 @@ double Decoder::get_double(){
 
 std::string_view Decoder::get_string() {
   int len = get_int();
+  std::string_view ret(data_, len);
+  data_ += len;
+  return ret;
+}
+
+std::string_view Decoder::get_small_string() {
+  int len = static_cast<int>(get_byte());
   std::string_view ret(data_, len);
   data_ += len;
   return ret;

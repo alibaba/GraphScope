@@ -43,6 +43,7 @@ pub enum IOErrorKind {
     WouldBlock,
     CannotBlock,
     Interrupt,
+    Internal,
     Unknown,
 }
 

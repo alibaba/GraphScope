@@ -163,7 +163,7 @@ void template_set_tuple_value(results::Collection* collection,
 template <typename T>
 void template_set_tuple_value(results::Collection* collection,
                               const std::vector<T>& t) {
-  for (auto i = 0; i < t.size(); ++i) {
+  for (size_t i = 0; i < t.size(); ++i) {
     auto cur_ele = collection->add_collection()->mutable_object();
     // if is tuple
     if constexpr (gs::is_tuple<T>::value) {
@@ -277,13 +277,11 @@ class SinkOp {
       std::array<int32_t, Context<CTX_HEAD_T, cur_alias, base_tag,
                                   CTX_PREV_T...>::col_num>
           tag_ids) {
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV_T...>;
-
     // prepare enough record rows.
     auto size = ctx.GetHead().Size();
     // std::vector<results::Results> results_vec(size);
     results::CollectiveResults results_vec;
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       results_vec.add_results();
     }
     LOG(INFO) << "reserve " << size << " records";
@@ -373,18 +371,18 @@ class SinkOp {
     prop_names[1] = schema.get_vertex_property_names(labels[1]);
     // get all properties
     std::array<std::vector<std::shared_ptr<RefColumnBase>>, 2> column_ptrs;
-    for (auto i = 0; i < prop_names[0].size(); ++i) {
+    for (size_t i = 0; i < prop_names[0].size(); ++i) {
       column_ptrs[0].emplace_back(
           graph.GetRefColumnBase(labels[0], prop_names[0][i]));
     }
-    for (auto i = 0; i < prop_names[1].size(); ++i) {
+    for (size_t i = 0; i < prop_names[1].size(); ++i) {
       column_ptrs[1].emplace_back(
           graph.GetRefColumnBase(labels[1], prop_names[1][i]));
     }
 
     label_t label;
     if (repeat_offsets.empty()) {
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -401,7 +399,7 @@ class SinkOp {
         vertex->mutable_label()->set_id(label);
         // set properties.
         auto columns = column_ptrs[label];
-        for (auto j = 0; j < columns.size(); ++j) {
+        for (size_t j = 0; j < columns.size(); ++j) {
           auto& column_ptr = columns[j];
           // Only set non-none properties.
           if (column_ptr) {
@@ -415,21 +413,21 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == vids.size());
       {
-        int32_t num_rows = 0;
-        for (auto i : repeat_offsets) {
+        size_t num_rows = 0;
+        for (size_t i : repeat_offsets) {
           num_rows += i;
         }
         CHECK(num_rows == results_vec.results_size())
             << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         if (bitset.get_bit(i)) {
           label = labels[0];
         } else {
           label = labels[1];
         }
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -441,7 +439,7 @@ class SinkOp {
           vertex->mutable_label()->set_id(label);
           // set properties.
           auto columns = column_ptrs[label];
-          for (auto j = 0; j < columns.size(); ++j) {
+          for (size_t j = 0; j < columns.size(); ++j) {
             auto& column_ptr = columns[j];
             // Only set non-none properties.
             if (column_ptr) {
@@ -469,12 +467,12 @@ class SinkOp {
     auto prop_names = schema.get_vertex_property_names(label);
     // get all properties
     std::vector<std::shared_ptr<RefColumnBase>> column_ptrs;
-    for (auto i = 0; i < prop_names.size(); ++i) {
+    for (size_t i = 0; i < prop_names.size(); ++i) {
       column_ptrs.emplace_back(graph.GetRefColumnBase(label, prop_names[i]));
     }
     VLOG(10) << "PropNames: " << prop_names.size();
     if (repeat_offsets.empty()) {
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -484,7 +482,7 @@ class SinkOp {
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
         vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         vertex->mutable_label()->set_id(label);
-        for (auto j = 0; j < column_ptrs.size(); ++j) {
+        for (size_t j = 0; j < column_ptrs.size(); ++j) {
           auto& column_ptr = column_ptrs[j];
           // Only set non-none properties.
           if (column_ptr) {
@@ -499,15 +497,15 @@ class SinkOp {
       CHECK(repeat_offsets.size() == vids.size());
       {
         int32_t num_rows = 0;
-        for (auto i : repeat_offsets) {
+        for (size_t i : repeat_offsets) {
           num_rows += i;
         }
         CHECK(num_rows == results_vec.results_size())
             << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
-      for (auto i = 0; i < vids.size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < vids.size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -516,7 +514,7 @@ class SinkOp {
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
           vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
-          for (auto j = 0; j < column_ptrs.size(); ++j) {
+          for (size_t j = 0; j < column_ptrs.size(); ++j) {
             auto& column_ptr = column_ptrs[j];
             // Only set non-none properties.
             if (column_ptr) {
@@ -542,10 +540,10 @@ class SinkOp {
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
-      CHECK(collection.Size() == results_vec.results_size())
+      CHECK((int32_t) collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -558,8 +556,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -580,10 +578,10 @@ class SinkOp {
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
-      CHECK(collection.Size() == results_vec.results_size())
+      CHECK((int32_t) collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -596,8 +594,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -624,7 +622,7 @@ class SinkOp {
       CHECK(collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -640,8 +638,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -669,7 +667,7 @@ class SinkOp {
       CHECK(collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -684,8 +682,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -710,7 +708,7 @@ class SinkOp {
       CHECK(collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
@@ -726,8 +724,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -753,15 +751,15 @@ class SinkOp {
     auto& bitsets = vertex_set.GetBitsets();
     CHECK(bitsets.size() == labels_vec.size());
     std::vector<std::vector<std::string>> prop_names;
-    for (auto i = 0; i < labels_vec.size(); ++i) {
+    for (size_t i = 0; i < labels_vec.size(); ++i) {
       prop_names.emplace_back(schema.get_vertex_property_names(labels_vec[i]));
     }
     // get all properties
     std::vector<std::vector<std::shared_ptr<RefColumnBase>>> column_ptrs(
         labels_vec.size());
     if (labels_vec.size() > 0) {
-      for (auto i = 0; i < labels_vec.size(); ++i) {
-        for (auto j = 0; j < prop_names[i].size(); ++j) {
+      for (size_t i = 0; i < labels_vec.size(); ++i) {
+        for (size_t j = 0; j < prop_names[i].size(); ++j) {
           column_ptrs[i].emplace_back(
               graph.GetRefColumnBase(labels_vec[i], prop_names[i][j]));
         }
@@ -775,7 +773,7 @@ class SinkOp {
           << "size neq " << vertex_set.Size() << " "
           << results_vec.results_size();
 
-      for (auto i = 0; i < vertices_vec.size(); ++i) {
+      for (size_t i = 0; i < vertices_vec.size(); ++i) {
         // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
@@ -787,7 +785,7 @@ class SinkOp {
         auto mutable_vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
         // todo: set properties.
-        for (auto j = 0; j < bitsets.size(); ++j) {
+        for (size_t j = 0; j < bitsets.size(); ++j) {
           if (bitsets[j].get_bit(i)) {
             label = labels_vec[j];
             label_vec_ind = j;
@@ -798,7 +796,7 @@ class SinkOp {
         mutable_vertex->set_id(encode_unique_vertex_id(label, vertices_vec[i]));
         // label must be set
         auto cur_column_ptrs = column_ptrs[label_vec_ind];
-        for (auto j = 0; j < cur_column_ptrs.size(); ++j) {
+        for (size_t j = 0; j < cur_column_ptrs.size(); ++j) {
           auto& column_ptr = cur_column_ptrs[j];
           // Only set non-none properties.
           if (column_ptr) {
@@ -812,15 +810,15 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == vertices_vec.size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < vertices_vec.size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < vertices_vec.size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          for (auto j = 0; j < bitsets.size(); ++j) {
+          for (size_t j = 0; j < bitsets.size(); ++j) {
             if (bitsets[j].get_bit(i)) {
               label = labels_vec[j];
               label_vec_ind = j;
@@ -832,7 +830,7 @@ class SinkOp {
               encode_unique_vertex_id(label, vertices_vec[i]));
           // label must be set
           auto cur_column_ptrs = column_ptrs[label_vec_ind];
-          for (auto j = 0; j < cur_column_ptrs.size(); ++j) {
+          for (size_t j = 0; j < cur_column_ptrs.size(); ++j) {
             auto& column_ptr = cur_column_ptrs[j];
             // Only set non-none properties.
             if (column_ptr) {
@@ -860,7 +858,7 @@ class SinkOp {
           << results_vec.results_size();
       auto iter = edge_set.begin();
       auto end_iter = edge_set.end();
-      for (auto i = 0; i < results_vec.results_size(); ++i) {
+      for (size_t i = 0; i < results_vec.results_size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -894,9 +892,9 @@ class SinkOp {
       size_t cur_ind = 0;
       auto iter = edge_set.begin();
       auto end_iter = edge_set.end();
-      for (auto i = 0; i < repeat_offsets.size(); ++i) {
+      for (size_t i = 0; i < repeat_offsets.size(); ++i) {
         CHECK(iter != end_iter);
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           CHECK(row->record().columns_size() == Ind)
               << "record column size: " << row->record().columns_size()
@@ -940,7 +938,7 @@ class SinkOp {
           << results_vec.results_size();
       auto iter = path_set.begin();
       auto end_iter = path_set.end();
-      for (auto i = 0; i < results_vec.results_size(); ++i) {
+      for (size_t i = 0; i < results_vec.results_size(); ++i) {
         // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
@@ -961,9 +959,9 @@ class SinkOp {
       size_t cur_ind = 0;
       auto iter = path_set.begin();
       auto end_iter = path_set.end();
-      for (auto i = 0; i < repeat_offsets.size(); ++i) {
+      for (size_t i = 0; i < repeat_offsets.size(); ++i) {
         CHECK(iter != end_iter);
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           // auto& row = results_vec[i];
           auto row = results_vec.mutable_results(cur_ind++);
           CHECK(row->record().columns_size() == Ind)
@@ -987,7 +985,7 @@ class SinkOp {
   static void add_path_to_pb(const Path<VID_T, LabelT>& path,
                              results::GraphPath& mutable_path) {
     auto& vertices = path.GetVertices();
-    for (auto i = 0; i < vertices.size(); ++i) {
+    for (size_t i = 0; i < vertices.size(); ++i) {
       mutable_path.add_path()->mutable_vertex()->set_id(vertices[i]);
     }
   }

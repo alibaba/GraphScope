@@ -24,21 +24,29 @@ pub trait MultiVersionGraph {
     type V: RocksVertex;
     type E: RocksEdge;
 
+    /// Get vertex of given `vertex_id` at `si`, with given properties.
+    /// In the following interfaces, for properties,
+    /// * `None`: no properties
+    /// * `Some(vec![])`: all properties
+    /// * `Some(property_ids)`: given properties
     fn get_vertex(
         &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::V>>;
 
+    /// Get edge of given `edge_id` at `si`, with given properties.
     fn get_edge(
         &self, snapshot_id: SnapshotId, edge_id: EdgeId, edge_relation: Option<&EdgeKind>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 
+    /// Scan vertices of given `label_id` at `si`, with given properties.
     fn scan_vertex(
         &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>>;
 
+    /// Scan edges of given `label_id` at `si`, with given properties.
     fn scan_edge(
         &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,

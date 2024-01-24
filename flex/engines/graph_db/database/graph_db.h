@@ -57,7 +57,8 @@ class GraphDB {
    */
   Result<bool> Open(const Schema& schema, const std::string& data_dir,
                     int32_t thread_num = 1, bool warmup = false,
-                    bool memory_only = true);
+                    bool memory_only = true,
+                    bool enable_auto_compaction = false, int port = -1);
 
   /**
    * @brief Close the current opened graph.
@@ -115,6 +116,9 @@ class GraphDB {
 
   int SessionNum() const;
 
+  void UpdateCompactionTimestamp(timestamp_t ts);
+  timestamp_t GetLastCompactionTimestamp() const;
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
@@ -127,6 +131,8 @@ class GraphDB {
 
   void openWalAndCreateContexts(const std::string& data_dir_path,
                                 bool memory_only);
+
+  size_t getExecutedQueryNum() const;
 
   friend class GraphDBSession;
 
@@ -145,6 +151,10 @@ class GraphDB {
   std::thread monitor_thread_;
   bool monitor_thread_running_;
 #endif
+
+  timestamp_t last_compaction_ts_;
+  bool compact_thread_running_ = false;
+  std::thread compact_thread_;
 };
 
 }  // namespace gs

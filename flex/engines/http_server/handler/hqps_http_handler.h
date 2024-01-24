@@ -67,7 +67,7 @@ class hqps_adhoc_query_handler : public seastar::httpd::handler_base {
 
  private:
   uint32_t cur_adhoc_group_id_, cur_codegen_group_id_;
-  const uint32_t group_inc_step_, max_group_id_;
+  const uint32_t max_group_id_, group_inc_step_;
   const uint32_t shard_concurrency_;
   uint32_t executor_idx_;
   std::vector<executor_ref> executor_refs_;

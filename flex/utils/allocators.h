@@ -41,9 +41,6 @@ class ArenaAllocator {
   {
   }
   ~ArenaAllocator() {
-    for (auto ptr : malloc_buffers_) {
-      free(ptr);
-    }
     for (auto ptr : mmap_buffers_) {
       delete ptr;
     }
@@ -85,9 +82,11 @@ class ArenaAllocator {
  private:
   void* allocate_batch(size_t size) {
     if (prefix_.empty()) {
-      void* ret = malloc(size);
-      malloc_buffers_.push_back(ret);
-      return ret;
+      mmap_array<char>* buf = new mmap_array<char>();
+      buf->open_in_memory("");
+      buf->resize(size);
+      mmap_buffers_.push_back(buf);
+      return static_cast<void*>(buf->data());
     } else {
       mmap_array<char>* buf = new mmap_array<char>();
       buf->open(prefix_ + std::to_string(mmap_buffers_.size()), false);
@@ -99,7 +98,6 @@ class ArenaAllocator {
 
   std::string prefix_;
   std::vector<mmap_array<char>*> mmap_buffers_;
-  std::vector<void*> malloc_buffers_;
 
   void* cur_buffer_;
   size_t cur_loc_;

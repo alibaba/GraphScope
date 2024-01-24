@@ -157,15 +157,15 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
     }
   }
 
-  for (auto i = 0; i < MAX_RETRY; ++i) {
+  for (size_t i = 0; i < MAX_RETRY; ++i) {
     if (app->Query(decoder, encoder)) {
 #ifdef MONITOR_SESSIONS
       const auto end = std::chrono::high_resolution_clock::now();
       eval_duration_.fetch_add(
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
               .count());
-      ++query_num_;
 #endif
+      ++query_num_;
       return result_buffer;
     }
 
@@ -184,8 +184,8 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   eval_duration_.fetch_add(
       std::chrono::duration_cast<std::chrono::microseconds>(end - start)
           .count());
-  ++query_num_;
 #endif
+  ++query_num_;
   return Result<std::vector<char>>(
       StatusCode::QueryFailed,
       "Query failed for procedure id:" + std::to_string((int) type),
@@ -220,7 +220,7 @@ Result<std::vector<char>> GraphDBSession::EvalAdhoc(
         "Fail to open dynamic lib for: " + input_lib_path, result_buffer);
   }
 
-  for (auto i = 0; i < MAX_RETRY; ++i) {
+  for (size_t i = 0; i < MAX_RETRY; ++i) {
     if (app_wrapper.app()->Query(decoder, encoder)) {
       return result_buffer;
     }
@@ -288,7 +288,7 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
   std::vector<char> input_buffer;
   gs::Encoder input_encoder(input_buffer);
   auto& args = query_pb.arguments();
-  for (auto i = 0; i < args.size(); ++i) {
+  for (int32_t i = 0; i < args.size(); ++i) {
     auto& arg = args[i];
     put_argment(input_encoder, arg);
   }
@@ -296,7 +296,7 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
   size_t str_len = input_buffer.size();
   gs::Decoder input_decoder(input_buffer.data(), input_buffer.size());
 
-  for (auto i = 0; i < MAX_RETRY; ++i) {
+  for (size_t i = 0; i < MAX_RETRY; ++i) {
     std::vector<char> result_buffer;
     gs::Encoder result_encoder(result_buffer);
     if (app->Query(input_decoder, result_encoder)) {
@@ -317,12 +317,30 @@ void GraphDBSession::GetAppInfo(Encoder& result) { db_.GetAppInfo(result); }
 
 int GraphDBSession::SessionId() const { return thread_id_; }
 
+CompactTransaction GraphDBSession::GetCompactTransaction() {
+  timestamp_t ts = db_.version_manager_.acquire_update_timestamp();
+  return CompactTransaction(db_.graph_, logger_, db_.version_manager_, ts);
+}
+
+bool GraphDBSession::Compact() {
+  auto txn = GetCompactTransaction();
+  if (txn.timestamp() > db_.GetLastCompactionTimestamp() + 100000) {
+    db_.UpdateCompactionTimestamp(txn.timestamp());
+    txn.Commit();
+    return true;
+  } else {
+    txn.Abort();
+    return false;
+  }
+}
+
 #ifdef MONITOR_SESSIONS
 double GraphDBSession::eval_duration() const {
   return static_cast<double>(eval_duration_.load()) / 1000000.0;
 }
 
-int64_t GraphDBSession::query_num() const { return query_num_.load(); }
 #endif
+
+int64_t GraphDBSession::query_num() const { return query_num_.load(); }
 
 }  // namespace gs

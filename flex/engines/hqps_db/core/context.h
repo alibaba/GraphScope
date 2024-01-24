@@ -31,7 +31,7 @@ static constexpr int INVALID_TAG = -2;
 std::vector<size_t> offset_array_to_repeat_array(
     std::vector<size_t>&& offset_array) {
   std::vector<size_t> repeat_array(offset_array.size() - 1);
-  for (auto i = 0; i < repeat_array.size(); ++i) {
+  for (size_t i = 0; i < repeat_array.size(); ++i) {
     repeat_array[i] = offset_array[i + 1] - offset_array[i];
   }
   return repeat_array;
@@ -113,8 +113,8 @@ class ContextIter<base_tag, std::tuple<SET_T, PREV_SETS...>> {
   ContextIter(head_iter_t&& cur_iter, others_iter_tuple_t&& others_iter_tuple,
               const std::vector<std::vector<offset_t>>& offsets)
       : cur_iter_(cur_iter),
-        others_iter_tuple_(std::move(others_iter_tuple)),
         offsets_arrays_(offsets),
+        others_iter_tuple_(std::move(others_iter_tuple)),
         cur_offset_(0) {
     others_offset_.fill(0);
     init_iter_tuple();  // init iterator tuple to a valid position.
@@ -293,9 +293,9 @@ class ContextIter<base_tag, std::tuple<SET_T, PREV_SETS...>> {
   typename SET_T::iterator cur_iter_;
   const std::vector<std::vector<offset_t>>& offsets_arrays_;
   others_iter_tuple_t others_iter_tuple_;
+  size_t cur_offset_;
   std::array<size_t, num_others> others_offset_;
   std::array<size_t, num_others> other_offset_limit_;
-  size_t cur_offset_;
 };
 
 /**
@@ -417,12 +417,12 @@ struct ResultContextT<append_opt, NEW_HEAD_T, old_alias, OLD_HEAD_T, base_tag,
 
 std::vector<offset_t> obtain_offset_between_tags_impl(
     const std::vector<std::vector<offset_t>>& offsets, int dst_tag) {
-  CHECK(offsets.size() > dst_tag)
+  CHECK((int32_t) offsets.size() > dst_tag)
       << "offset size" << offsets.size() << ", dst tag" << dst_tag;
   std::vector<offset_t> res = offsets[dst_tag];
   // VLOG(10) << "init offset: " << gs::to_string(res);
-  for (auto i = dst_tag + 1; i < offsets.size(); ++i) {
-    for (auto j = 0; j < res.size(); ++j) {
+  for (size_t i = dst_tag + 1; i < offsets.size(); ++i) {
+    for (size_t j = 0; j < res.size(); ++j) {
       res[j] = offsets[i][res[j]];
     }
   }
@@ -467,21 +467,21 @@ class Context {
           std::vector<std::vector<offset_t>>&& offset,
           int sub_task_start_tag = INVALID_TAG)
       : cur_(std::move(head)),
-        offsets_arrays_(std::move(offset)),
         prev_(std::move(old_cols)),
+        offsets_arrays_(std::move(offset)),
         sub_task_start_tag_(sub_task_start_tag) {}
 
   Context(Context<HEAD_T, cur_alias, base_tag, ALIAS_COL...>&& other) noexcept
       : cur_(std::move(other.cur_)),
-        offsets_arrays_(std::move(other.offsets_arrays_)),
         prev_(std::move(other.prev_)),
+        offsets_arrays_(std::move(other.offsets_arrays_)),
         sub_task_start_tag_(other.sub_task_start_tag_) {}
 
   // copy constructor
   Context(Context<HEAD_T, cur_alias, base_tag, ALIAS_COL...>& other)
       : cur_(other.cur_),
-        offsets_arrays_(other.offsets_arrays_),
         prev_(other.prev_),
+        offsets_arrays_(other.offsets_arrays_),
         sub_task_start_tag_(other.sub_task_start_tag_) {}
 
   // Merge another node with a different head. We expect the other things, like
@@ -513,7 +513,7 @@ class Context {
   // only filter, no data is append.
   void FilterWithOffsets(std::vector<size_t>& offset, JoinKind join_kind) {
     std::vector<size_t> active_indices;
-    for (auto i = 0; i < offset.size() - 1; ++i) {
+    for (size_t i = 0; i + 1 < offset.size(); ++i) {
       if (offset[i] < offset[i + 1]) {
         active_indices.emplace_back(i);
       }
@@ -535,7 +535,7 @@ class Context {
     } else {
       std::vector<offset_t> res;
       res.reserve(cur_.Size() + 1);
-      for (auto i = 0; i <= cur_.Size(); ++i) {
+      for (size_t i = 0; i <= cur_.Size(); ++i) {
         res.push_back(i);
       }
       return res;
@@ -551,8 +551,8 @@ class Context {
       // VLOG(10) << "dst tag: " << dst_tag
       //  << ", offset size: " << offsets_arrays_.size();
       std::vector<offset_t> res = offsets_arrays_[dst_tag];
-      for (auto i = dst_tag + 1; i < offsets_arrays_.size(); ++i) {
-        for (auto j = 0; j < res.size(); ++j) {
+      for (size_t i = dst_tag + 1; i < offsets_arrays_.size(); ++i) {
+        for (size_t j = 0; j < res.size(); ++j) {
           res[j] = offsets_arrays_[i][res[j]];
         }
       }
@@ -563,7 +563,7 @@ class Context {
       // Only support fold, no
       std::vector<offset_t> res;
       res.reserve(cur_.Size() + 1);
-      for (auto i = 0; i <= cur_.Size(); ++i) {
+      for (size_t i = 0; i <= cur_.Size(); ++i) {
         res.push_back(i);
       }
       return res;
@@ -782,7 +782,7 @@ class Context {
 
     std::vector<offset_t> removed_indices;
     // CHECK(removed_indices.size() != old_size);
-    for (auto i = 0; i < offset.size() - 1; ++i) {
+    for (size_t i = 0; i + 1 < offset.size(); ++i) {
       if (offset[i] == offset[i + 1]) {
         removed_indices.emplace_back(i);
       }
@@ -796,7 +796,7 @@ class Context {
     // create a vector contains all indices before this update. so we can gather
     // the offset range vec.
     std::vector<offset_t> all_indices;
-    for (auto i = 0; i < offset.size(); ++i) {
+    for (size_t i = 0; i < offset.size(); ++i) {
       all_indices.emplace_back(i);
     }
 
@@ -810,7 +810,7 @@ class Context {
   updateChildNodeAndOffset(std::vector<size_t>& all_indices,
                            std::vector<size_t>& removed_indices) {
     static constexpr size_t act_Is = Is - base_tag;
-    for (auto i = 0; i < all_indices.size(); ++i) {
+    for (size_t i = 0; i < all_indices.size(); ++i) {
       all_indices[i] = offsets_arrays_[act_Is - 1][all_indices[i]];
     }
     auto res_offset = std::get<act_Is>(prev_).SubSetWithRemovedIndices(
@@ -828,7 +828,7 @@ class Context {
   updateChildNodeAndOffset(std::vector<size_t>& all_indices,
                            std::vector<size_t>& removed_indices) {
     static constexpr size_t act_Is = Is - base_tag;
-    for (auto i = 0; i < all_indices.size(); ++i) {
+    for (size_t i = 0; i < all_indices.size(); ++i) {
       all_indices[i] = offsets_arrays_[act_Is - 1][all_indices[i]];
     }
     auto res_offset =
@@ -844,7 +844,6 @@ class Context {
     static_assert(std::tuple_size_v<std::tuple<index_ele_tuple_t...>> ==
                   1 + prev_alias_num);
     VLOG(10) << "Context: Flat";
-    size_t old_head_size = cur_.Size();
     auto flat_head = cur_.template Flat<prev_alias_num>(index_eles);
     auto flat_prev = flat_prev_tuple(index_eles);
     // now all values are 1-to-1 mapping.
@@ -854,11 +853,11 @@ class Context {
     size_t num_eles = index_eles.size();
 
     std::vector<offset_t> offset_vec(num_eles + 1, 0);
-    for (auto i = 0; i <= num_eles; ++i) {
+    for (size_t i = 0; i <= num_eles; ++i) {
       offset_vec[i] = i;
     }
 
-    for (auto i = 0; i < prev_alias_num; ++i) {
+    for (size_t i = 0; i < prev_alias_num; ++i) {
       new_offset_array.push_back(offset_vec);
     }
     VLOG(10) << "FInish flat";
@@ -902,7 +901,7 @@ class Context {
       auto offset_vec_toward_head = ObtainOffsetFromTag(deduped_tag);
       offset_vec.reserve(offset_vec_toward_head.size());
       offset_vec.emplace_back(0);
-      for (auto i = 0; i < offset_vec_toward_head.size() - 1; ++i) {
+      for (size_t i = 0; i < offset_vec_toward_head.size() - 1; ++i) {
         if (offset_vec_toward_head[i] < offset_vec_toward_head[i + 1]) {
           indices.emplace_back(i);
         }
@@ -911,7 +910,7 @@ class Context {
     }
     std::vector<std::vector<size_t>> all_indices;
     all_indices.push_back(indices);
-    for (auto i = deduped_tag; i < prev_alias_num; ++i) {
+    for (int32_t i = deduped_tag; i < prev_alias_num; ++i) {
       std::vector<size_t> new_indices;
       auto& cur_offset_vec = offsets_arrays_[i];
       VLOG(10) << "tag: " << i << " indices: " << gs::to_string(indices);
@@ -986,7 +985,7 @@ class Context {
     static constexpr size_t act_Is = Is - base_tag;
     VLOG(10) << "updateOffsetVec: tag: " << Is << ", act: " << act_Is;
 
-    auto size = 0;
+    size_t size = 0;
     if constexpr (act_Is < prev_alias_num) {
       size = std::get<act_Is>(prev_).Size();
     } else {
@@ -996,7 +995,7 @@ class Context {
     auto& offset_vec = offsets_arrays_[act_Is - 1];
     offset_vec.clear();
     offset_vec.reserve(size + 1);
-    for (auto i = 0; i <= size; ++i) {
+    for (size_t i = 0; i <= size; ++i) {
       offset_vec.emplace_back(i);
     }
     updateOffsetVec<Is + 1>();
@@ -1025,7 +1024,7 @@ class Context {
     CHECK(new_offset_array.size() == old_offset_array.back() + 1)
         << "new size " << new_offset_array.size() << ", old back"
         << old_offset_array.back();
-    for (auto i = 0; i < old_offset_array.size(); ++i) {
+    for (size_t i = 0; i < old_offset_array.size(); ++i) {
       old_offset_array[i] = new_offset_array[old_offset_array[i]];
     }
   }
@@ -1042,18 +1041,18 @@ class Context {
     if (from_ind != -1) {
       from_ind = from_ind - base_tag;
     }
-    if (from_ind == -1 || from_ind == offset_array.size()) {
+    if (from_ind == -1 || from_ind == (int32_t) offset_array.size()) {
       VLOG(10) << "No need to align with backend " << from_ind
                << ", offsets size: " << offset_array.size();
       return std::move(offset);
     }
     // First got offset array which indicate the repeated times.
-    CHECK(from_ind <= offset_array.size())
+    CHECK(from_ind <= (int32_t) offset_array.size())
         << "out of range: " << from_ind << ", " << offset_array.size();
     std::vector<offset_t> copied = offset_array[from_ind];
     VLOG(10) << "copied: " << gs::to_string(copied);
-    for (auto i = from_ind + 1; i < offset_array.size(); ++i) {
-      for (auto j = 0; j < copied.size(); ++j) {
+    for (size_t i = from_ind + 1; i < offset_array.size(); ++i) {
+      for (size_t j = 0; j < copied.size(); ++j) {
         copied[j] = offset_array[i][copied[j]];
       }
     }
@@ -1066,12 +1065,12 @@ class Context {
     {
       // apply repeat on offset array;
       size_t cur = 0;
-      for (auto i = 0; i + 1 < offset.size(); ++i) {
+      for (size_t i = 0; i + 1 < offset.size(); ++i) {
         if (copied[i] < copied[i + 1]) {
           int gap = offset[i + 1] - offset[i];
-          int times_to_copy = copied[i + 1] - copied[i];
+          size_t times_to_copy = copied[i + 1] - copied[i];
 
-          for (auto j = 0; j < times_to_copy; ++j) {
+          for (size_t j = 0; j < times_to_copy; ++j) {
             res_offset.push_back(cur);
             cur += gap;
           }
@@ -1189,7 +1188,7 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
     auto size = cur_.Size();
     std::vector<offset_t> res;
     res.reserve(size + 1);
-    for (auto i = 0; i <= size; ++i) {
+    for (size_t i = 0; i <= size; ++i) {
       res.push_back(i);
     }
     return res;
@@ -1199,7 +1198,7 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
     CHECK(sub_task_start_tag_ != INVALID_TAG);
     std::vector<offset_t> res;
     res.reserve(cur_.Size() + 1);
-    for (auto i = 0; i <= cur_.Size(); ++i) {
+    for (size_t i = 0; i <= cur_.Size(); ++i) {
       res.push_back(i);
     }
     return res;
@@ -1293,7 +1292,7 @@ class Context<HEAD_T, cur_alias, base_tag, grape::EmptyType> {
   void FilterWithOffsets(std::vector<size_t>& offset, JoinKind join_kind) {
     CHECK(join_kind == JoinKind::AntiJoin);
     std::vector<size_t> active_indices;
-    for (auto i = 0; i < offset.size() - 1; ++i) {
+    for (size_t i = 0; i + 1 < offset.size(); ++i) {
       if (offset[i] < offset[i + 1]) {
         active_indices.emplace_back(i);
       }

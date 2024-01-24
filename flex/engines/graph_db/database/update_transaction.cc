@@ -39,7 +39,7 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
 
   vertex_label_num_ = graph_.schema().vertex_label_num();
   edge_label_num_ = graph_.schema().edge_label_num();
-  for (auto idx = 0; idx < vertex_label_num_; ++idx) {
+  for (label_t idx = 0; idx < vertex_label_num_; ++idx) {
     if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<int64_t, vid_t>>());
@@ -515,7 +515,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
   size_t vertex_label_num = graph.schema().vertex_label_num();
   size_t edge_label_num = graph.schema().edge_label_num();
 
-  for (auto idx = 0; idx < vertex_label_num; ++idx) {
+  for (label_t idx = 0; idx < vertex_label_num; ++idx) {
     if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<int64_t, vid_t>>());
@@ -715,10 +715,12 @@ void UpdateTransaction::batch_commit(UpdateBatch& batch) {
   }
   auto& arc = batch.GetArc();
   auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
-  header->length = arc.GetSize() - sizeof(WalHeader);
-  header->type = 1;
-  header->timestamp = timestamp_;
-  logger_.append(arc.GetBuffer(), arc.GetSize());
+  if (arc.GetSize() != sizeof(WalHeader)) {
+    header->length = arc.GetSize() - sizeof(WalHeader);
+    header->type = 1;
+    header->timestamp = timestamp_;
+    logger_.append(arc.GetBuffer(), arc.GetSize());
+  }
 
   release();
 }
@@ -805,7 +807,7 @@ void UpdateTransaction::applyEdgesUpdates() {
           }
           std::sort(add_list.begin(), add_list.end());
           auto& edge_data = updated_edge_data_[oe_csr_index].at(v);
-          for (auto idx = 0; idx < add_list.size(); ++idx) {
+          for (size_t idx = 0; idx < add_list.size(); ++idx) {
             if (idx && add_list[idx] == add_list[idx - 1])
               continue;
             auto u = add_list[idx];

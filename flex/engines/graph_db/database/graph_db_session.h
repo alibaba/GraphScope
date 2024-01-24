@@ -17,6 +17,7 @@
 #define GRAPHSCOPE_DATABASE_GRAPH_DB_SESSION_H_
 
 #include "flex/engines/graph_db/app/app_base.h"
+#include "flex/engines/graph_db/database/compact_transaction.h"
 #include "flex/engines/graph_db/database/insert_transaction.h"
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
@@ -44,13 +45,11 @@ class GraphDBSession {
         alloc_(alloc),
         logger_(logger),
         work_dir_(work_dir),
-        thread_id_(thread_id)
+        thread_id_(thread_id),
 #ifdef MONITOR_SESSIONS
-        ,
         eval_duration_(0),
-        query_num_(0)
 #endif
-  {
+        query_num_(0) {
     for (auto& app : apps_) {
       app = nullptr;
     }
@@ -66,6 +65,8 @@ class GraphDBSession {
   SingleEdgeInsertTransaction GetSingleEdgeInsertTransaction();
 
   UpdateTransaction GetUpdateTransaction();
+
+  CompactTransaction GetCompactTransaction();
 
   bool BatchUpdate(UpdateBatch& batch);
 
@@ -93,10 +94,13 @@ class GraphDBSession {
 
   int SessionId() const;
 
+  bool Compact();
+
 #ifdef MONITOR_SESSIONS
   double eval_duration() const;
-  int64_t query_num() const;
 #endif
+
+  int64_t query_num() const;
 
  private:
   GraphDB& db_;
@@ -110,8 +114,8 @@ class GraphDBSession {
 
 #ifdef MONITOR_SESSIONS
   std::atomic<int64_t> eval_duration_;
-  std::atomic<int64_t> query_num_;
 #endif
+  std::atomic<int64_t> query_num_;
 };
 
 }  // namespace gs
