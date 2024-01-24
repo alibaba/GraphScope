@@ -84,6 +84,8 @@ void set_vertex_properties(gs::ColumnBase* col,
     set_vertex_column_from_string_array(col, array, vids);
   } else if (col_type == PropertyType::kDate) {
     set_vertex_column_from_timestamp_array(col, array, vids);
+  } else if (col_type == PropertyType::kDay) {
+    set_vertex_column_from_timestamp_array_to_day(col, array, vids);
   } else if (col_type.type_enum == impl::PropertyTypeImpl::kVarChar) {
     set_vertex_column_from_string_array(col, array, vids);
   } else {
@@ -104,6 +106,27 @@ void set_vertex_column_from_timestamp_array(
       for (auto k = 0; k < casted->length(); ++k) {
         col->set_any(vids[cur_ind++],
                      std::move(AnyConverter<Date>::to_any(casted->Value(k))));
+      }
+    }
+  } else {
+    LOG(FATAL) << "Not implemented: converting " << type->ToString() << " to "
+               << col_type;
+  }
+}
+
+void set_vertex_column_from_timestamp_array_to_day(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids) {
+  auto type = array->type();
+  auto col_type = col->type();
+  size_t cur_ind = 0;
+  if (type->Equals(arrow::timestamp(arrow::TimeUnit::type::MILLI))) {
+    for (auto j = 0; j < array->num_chunks(); ++j) {
+      auto casted =
+          std::static_pointer_cast<arrow::TimestampArray>(array->chunk(j));
+      for (auto k = 0; k < casted->length(); ++k) {
+        col->set_any(vids[cur_ind++],
+                     std::move(AnyConverter<Day>::to_any(casted->Value(k))));
       }
     }
   } else {
