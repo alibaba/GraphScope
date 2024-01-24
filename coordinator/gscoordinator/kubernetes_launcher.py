@@ -27,6 +27,8 @@ import subprocess
 import sys
 import time
 
+from graphscope.proto import message_pb2
+
 from gscoordinator.cluster_builder import EngineCluster
 from gscoordinator.cluster_builder import MarsCluster
 
@@ -57,7 +59,9 @@ from graphscope.proto import types_pb2
 
 from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
 from gscoordinator.constants import INTERACTIVE_EXECUTOR_CONTAINER_NAME
-from gscoordinator.constants import LEARNING_CONTAINER_NAME
+from gscoordinator.constants import (
+    GRAPHLEARN_CONTAINER_NAME, GRAPHLEARN_TORCH_CONTAINER_NAME
+)
 from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.utils import ANALYTICAL_ENGINE_PATH
 from gscoordinator.utils import GRAPHSCOPE_HOME
@@ -192,11 +196,16 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._interactive_pod_name = {}
         self._interactive_pod_ip = {}
         self._interactive_pod_host_ip = {}
-        # learning engine
-        self._learning_resource_object = {}
-        self._learning_pod_name = {}
-        self._learning_pod_ip = {}
-        self._learning_pod_host_ip = {}
+        # graphlearn engine
+        self._graphlearn_resource_object = {}
+        self._graphlearn_pod_name = {}
+        self._graphlearn_pod_ip = {}
+        self._graphlearn_pod_host_ip = {}
+        # graphlearn_torch engine
+        self._graphlearn_torch_resource_object = {}
+        self._graphlearn_torch_pod_name = {}
+        self._graphlearn_torch_pod_ip = {}
+        self._graphlearn_torch_pod_host_ip = {}
 
         self._analytical_engine_endpoint = None
         self._mars_service_endpoint = None
@@ -209,10 +218,15 @@ class KubernetesClusterLauncher(AbstractLauncher):
         # frontend port
         self._interactive_port = 8233
         # 8000 ~ 9000 is exposed
-        self._learning_start_port = 8000
+        self._graphlearn_start_port = 8000
+        # 9001 ~ 10001 is exposed
+        self._graphlearn_torch_start_port = 9001
 
         self._graphlearn_services = {}
-        self._learning_instance_processes = {}
+        self._graphlearn_instance_processes = {}
+
+        self._graphlearn_torch_services = {}
+        self._graphlearn_torch_instance_processes = {}
 
         # workspace
         self._instance_workspace = os.path.join(WORKSPACE, self._instance_id)
@@ -242,7 +256,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return EngineCluster(
             config=self._config,
             engine_pod_prefix=self._engine_pod_prefix,
-            learning_start_port=self._learning_start_port,
+            graphlearn_start_port=self._graphlearn_start_port,
+            graphlearn_torch_start_port=self._graphlearn_torch_start_port,
         )
 
     def get_coordinator_owner_references(self):
@@ -390,7 +405,10 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 engine_type == "interactive"
             )
             self._config.kubernetes_launcher.engine.enable_gle = (
-                engine_type == "learning"
+                engine_type == "graphlearn"
+            )
+            self._config.kubernetes_launcher.engine.enable_glt = (
+                engine_type == "graphlearn-torch"
             )
 
             self._engine_cluster = self._build_engine_cluster()
@@ -487,14 +505,20 @@ class KubernetesClusterLauncher(AbstractLauncher):
 
         return pod_name_list, pod_ip_list, pod_host_ip_list
 
-    def deploy_learning_engine(self, object_id):
-        return self.deploy_engine("learning", object_id)
+    def deploy_graphlearn_engine(self, object_id):
+        return self.deploy_engine("graphlearn", object_id)
+
+    def deploy_graphlearn_torch_engine(self, object_id):
+        return self.deploy_engine("graphlearn-torch", object_id)
 
     def delete_interactive_engine(self, object_id):
         self.delete_engine_stateful_set_with_object_id("interactive", object_id)
 
-    def delete_learning_engine(self, object_id):
-        self.delete_engine_stateful_set_with_object_id("learning", object_id)
+    def delete_graphlearn_engine(self, object_id):
+        self.delete_engine_stateful_set_with_object_id("graphlearn", object_id)
+
+    def delete_graphlearn_torch_engine(self, object_id):
+        self.delete_engine_stateful_set_with_object_id("graphlearn-torch", object_id)
 
     def _allocate_interactive_engine(self, object_id):
         # check the interactive engine flag
@@ -848,14 +872,24 @@ class KubernetesClusterLauncher(AbstractLauncher):
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._resource_object.append(response)
 
-    def _create_learning_service(self, object_id):
-        logger.info("Creating learning service...")
-        service = self._engine_cluster.get_learning_service(
-            object_id, self._learning_start_port
+    def _create_graphlearn_service(self, object_id):
+        logger.info("Creating graphlearn service...")
+        service = self._engine_cluster.get_graphlearn_service(
+            object_id, self._graphlearn_start_port
         )
         service.metadata.owner_references = self._owner_references
         response = self._core_api.create_namespaced_service(self._namespace, service)
         self._graphlearn_services[object_id] = response
+        self._resource_object.append(response)
+
+    def _create_graphlearn_torch_service(self, object_id):
+        logger.info("Creating graphlearn torch service...")
+        service = self._engine_cluster.get_graphlearn_torch_service(
+            object_id, self._graphlearn_torch_start_port
+        )
+        service.metadata.owner_references = self._owner_references
+        response = self._core_api.create_namespaced_service(self._namespace, service)
+        self._graphlearn_torch_services[object_id] = response
         self._resource_object.append(response)
 
     def get_engine_config(self):
@@ -1261,17 +1295,27 @@ class KubernetesClusterLauncher(AbstractLauncher):
             self._serving = False
             logger.info("Kubernetes launcher stopped")
 
-    def _allocate_learning_engine(self, object_id):
-        # check the learning engine flag
+    def _allocate_graphlearn_engine(self, object_id):
+        # check the graphlearn engine flag
         if not self._config.kubernetes_launcher.engine.enable_gle:
-            raise NotImplementedError("Learning engine not enabled")
+            raise NotImplementedError("GraphLearn engine not enabled")
 
-        # allocate learning engine based on the mode
+        # allocate graphlearn engine based on the mode
         if self._deploy_mode == "eager":
             return self._pod_name_list, self._pod_ip_list, self._pod_host_ip_list
-        return self.deploy_learning_engine(object_id)
+        return self.deploy_graphlearn_engine(object_id)
+    
+    def _allocate_graphlearn_torch_engine(self, object_id):
+        # check the graphlearn torch engine flag
+        if not self._config.kubernetes_launcher.engine.enable_glt:
+            raise NotImplementedError("GraphLearn torch engine not enabled")
 
-    def _distribute_learning_process(
+        # allocate graphlearn engine based on the mode
+        if self._deploy_mode == "eager":
+            return self._pod_name_list, self._pod_ip_list, self._pod_host_ip_list
+        return self.deploy_graphlearn_torch_engine(object_id)
+
+    def _distribute_graphlearn_process(
         self, pod_name_list, pod_host_ip_list, object_id, handle, config
     ):
         # allocate service for ports
@@ -1286,7 +1330,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 f"{pod_name}:{port}"
                 for pod_name, port in zip(
                     pod_name_list,
-                    self._engine_cluster.get_learning_ports(self._learning_start_port),
+                    self._engine_cluster.get_graphlearn_ports(self._graphlearn_start_port),
                 )
             ]
         )
@@ -1296,9 +1340,9 @@ class KubernetesClusterLauncher(AbstractLauncher):
         ).decode("utf-8", errors="ignore")
 
         # launch the server
-        self._learning_instance_processes[object_id] = []
+        self._graphlearn_instance_processes[object_id] = []
         for pod_index, pod in enumerate(self._pod_name_list):
-            container = LEARNING_CONTAINER_NAME
+            container = GRAPHLEARN_CONTAINER_NAME
             sub_cmd = f"python3 -m gscoordinator.launch_graphlearn {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
             logger.debug("launching learning server: %s", " ".join(cmd))
@@ -1318,30 +1362,106 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 suppressed=(not logger.isEnabledFor(logging.DEBUG)),
             )
             setattr(proc, "stdout_watcher", stdout_watcher)
-            self._learning_instance_processes[object_id].append(proc)
+            self._graphlearn_instance_processes[object_id].append(proc)
 
         # Create Service
-        self._create_learning_service(object_id)
+        self._create_graphlearn_service(object_id)
         # update the port usage record
-        self._learning_start_port += len(pod_name_list)
+        self._graphlearn_start_port += len(pod_name_list)
         # parse the service hosts and ports
         return self._engine_cluster.get_graphlearn_service_endpoint(
             self._api_client, object_id, pod_host_ip_list
         )
+        
+    def _distribute_graphlearn_torch_process(
+        self, pod_name_list, pod_host_ip_list, object_id, handle, config
+    ):
+        #TODO: add graphlearn torch process
+        # allocate service for ports
+        # prepare arguments
+        handle = json.loads(
+            base64.b64decode(handle.encode("utf-8", errors="ignore")).decode(
+                "utf-8", errors="ignore"
+            )
+        )
+        hosts = ",".join(
+            [
+                f"{pod_name}:{port}"
+                for pod_name, port in zip(
+                    pod_name_list,
+                    self._engine_cluster.get_graphlearn_torch_ports(
+                        self._graphlearn_torch_start_port),
+                )
+            ]
+        )
+        handle["server"] = hosts
+        handle = base64.b64encode(
+            json.dumps(handle).encode("utf-8", errors="ignore")
+        ).decode("utf-8", errors="ignore")
+        
+        # launch the server
+        self._graphlearn_torch_instance_processes[object_id] = []
+        for pod_index, pod in enumerate(self._pod_name_list):
+            container = GRAPHLEARN_TORCH_CONTAINER_NAME
+            sub_cmd = f"python3 -m gscoordinator.launch_graphlearn_torch {handle} {config} {pod_index}"
+            cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
+            logger.debug("launching learning server: %s", " ".join(cmd))
+            proc = subprocess.Popen(
+                shlex.split(cmd),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                encoding="utf-8",
+                errors="replace",
+                universal_newlines=True,
+                bufsize=1,
+            )
+            stdout_watcher = PipeWatcher(
+                proc.stdout,
+                sys.stdout,
+                suppressed=(not logger.isEnabledFor(logging.DEBUG)),
+            )
+            
+            import time
+            time.sleep(5)
+            logger.debug('process status: %s', proc.poll())
+
+            setattr(proc, "stdout_watcher", stdout_watcher)
+            self._graphlearn_torch_instance_processes[object_id].append(proc)
+
+        # Create Service
+        self._create_graphlearn_torch_service(object_id)
+        # update the port usage record
+        self._graphlearn_start_port += len(pod_name_list)
+        # parse the service hosts and ports
+        return self._engine_cluster.get_graphlearn_torch_service_endpoint(
+            self._api_client, object_id, pod_host_ip_list
+        )
+        
+        
 
     def create_learning_instance(self, object_id, handle, config, learning_backend):
-        pod_name_list, _, pod_host_ip_list = self._allocate_learning_engine(object_id)
-        if not pod_name_list or not pod_host_ip_list:
-            raise RuntimeError("Failed to allocate learning engine")
-        return self._distribute_learning_process(
-            pod_name_list, pod_host_ip_list, object_id, handle, config
-        )
+        if learning_backend == message_pb2.LearningBackend.GRAPHLEARN:
+            pod_name_list, _, pod_host_ip_list = self._allocate_graphlearn_engine(object_id)
+            if not pod_name_list or not pod_host_ip_list:
+                raise RuntimeError("Failed to allocate learning engine")
+            return self._distribute_learning_process(
+                pod_name_list, pod_host_ip_list, object_id, handle, config
+            )
+        elif learning_backend == message_pb2.LearningBackend.GRAPHLEARN_TORCH:
+            pod_name_list, _, pod_host_ip_list = self._allocate_graphlearn_torch_engine(object_id)
+            if not pod_name_list or not pod_host_ip_list:
+                raise RuntimeError("Failed to allocate learning engine")
+            return self._distribute_learning_process(
+                pod_name_list, pod_host_ip_list, object_id, handle, config
+            )
+        else:
+            raise ValueError("invalid learning backend")
 
-    def close_learning_instance(self, object_id):
+    def close_graphlearn_instance(self, object_id):
         if self._deploy_mode == "lazy":
-            self.delete_learning_engine(object_id)
+            self.delete_graphlearn_engine(object_id)
             return
-        if object_id not in self._learning_instance_processes:
+        if object_id not in self._graphlearn_instance_processes:
             return
         # delete the services
         target = self._graphlearn_services[object_id]
@@ -1356,14 +1476,40 @@ class KubernetesClusterLauncher(AbstractLauncher):
             logger.exception("Failed to delete graphlearn service for %s", object_id)
 
         # terminate the process
-        for proc in self._learning_instance_processes[object_id]:
+        for proc in self._graphlearn_instance_processes[object_id]:
             try:
                 proc.terminate()
                 proc.wait(1)
             except Exception:  # pylint: disable=broad-except
                 logger.exception("Failed to terminate graphlearn server")
-        self._learning_instance_processes[object_id].clear()
+        self._graphlearn_instance_processes[object_id].clear()
 
+    def close_graphlearn_torch_instance(self, object_id):
+        if self._deploy_mode == "lazy":
+            self.delete_graphlearn_torch_engine(object_id)
+            return
+        if object_id not in self._graphlearn_torch_instance_processes:
+            return
+        # delete the services
+        target = self._graphlearn_torch_services[object_id]
+        try:
+            delete_kubernetes_object(
+                api_client=self._api_client,
+                target=target,
+                wait=self._waiting_for_delete,
+                timeout_seconds=self._timeout_seconds,
+            )
+        except Exception:  # pylint: disable=broad-except
+            logger.exception("Failed to delete graphlearn torch service for %s", object_id)
+
+        # terminate the process
+        for proc in self._graphlearn_torch_instance_processes[object_id]:
+            try:
+                proc.terminate()
+                proc.wait(1)
+            except Exception:  # pylint: disable=broad-except
+                logger.exception("Failed to terminate graphlearn torch server")
+        self._graphlearn_torch_instance_processes[object_id].clear()
 
 class ResourceManager(object):
     """A class to manager kubernetes object.

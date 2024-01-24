@@ -121,7 +121,7 @@ class DatasetConfig:
 class EngineConfig:
     """Engine configuration"""
 
-    enabled_engines: str = "gae,gie"  # A set of engines to enable.
+    enabled_engines: str = "gae,gie,gle,glt"  # A set of engines to enable.
     # Node selector for engine pods, default is None.
     node_selector: Union[str, None] = None
 
@@ -129,7 +129,8 @@ class EngineConfig:
     # Enable or disable analytical engine with java support.
     enable_gae_java: bool = False
     enable_gie: bool = False  # Enable or disable interactive engine.
-    enable_gle: bool = False  # Enable or disable learning engine.
+    enable_gle: bool = False  # Enable or disable graphlearn engine.
+    enable_glt: bool = False  # Enable or disable graphlearn_torch engine.
 
     preemptive: bool = True
 
@@ -152,6 +153,11 @@ class EngineConfig:
     gle_resource: ResourceConfig = field(
         default_factory=lambda: ResourceConfig.make_burstable(0.2, "1Gi")
     )
+    
+    # Resource for learning pod
+    glt_resource: ResourceConfig = field(
+        default_factory=lambda: ResourceConfig.make_burstable(0.2, "1Gi")
+    )
 
     def post_setup(self):
         valid_engines = set(
@@ -166,8 +172,10 @@ class EngineConfig:
                 self.enable_gae = True
             if item == "interactive" or item == "gie":
                 self.enable_gie = True
-            if item == "learning" or item == "gle":
+            if item == "graphlearn" or item == "gle":
                 self.enable_gle = True
+            if item == "graphlearn-torch" or item == "glt":
+                self.enable_glt = True
             if item == "analytical-java" or item == "gae-java":
                 self.enable_gae_java = True
 
