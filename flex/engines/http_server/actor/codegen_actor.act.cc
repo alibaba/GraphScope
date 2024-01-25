@@ -37,13 +37,13 @@ codegen_actor::codegen_actor(hiactor::actor_base* exec_ctx,
   // ...
 }
 
-seastar::future<adhoc_result> codegen_actor::do_codegen(query_param&& param) {
+seastar::future<query_result> codegen_actor::do_codegen(query_param&& param) {
   LOG(INFO) << "Running codegen for " << param.content.size();
   // The received query's pay load shoud be able to deserialze to physical plan
   auto& str = param.content;
   if (str.size() <= 0) {
     LOG(INFO) << "Empty query";
-    return seastar::make_exception_future<adhoc_result>(
+    return seastar::make_exception_future<query_result>(
         std::runtime_error("Empty query string"));
   }
 
@@ -57,7 +57,7 @@ seastar::future<adhoc_result> codegen_actor::do_codegen(query_param&& param) {
     VLOG(10) << "Parse physical plan: " << plan.DebugString();
   } else {
     LOG(ERROR) << "Fail to parse physical plan";
-    return seastar::make_exception_future<adhoc_result>(
+    return seastar::make_exception_future<query_result>(
         std::runtime_error("Fail to parse physical plan"));
   }
 
@@ -69,7 +69,7 @@ seastar::future<adhoc_result> codegen_actor::do_codegen(query_param&& param) {
     return codegen_proxy.DoGen(plan).then(
         [](std::pair<int32_t, std::string>&& job_id_and_lib_path) {
           if (job_id_and_lib_path.first == -1) {
-            return seastar::make_exception_future<adhoc_result>(
+            return seastar::make_exception_future<query_result>(
                 std::runtime_error("Fail to parse job id from codegen proxy"));
           }
           // 1. load and run.
@@ -77,11 +77,11 @@ seastar::future<adhoc_result> codegen_actor::do_codegen(query_param&& param) {
                     << job_id_and_lib_path.second
                     << ", job id: " << job_id_and_lib_path.first
                     << "local shard id: " << hiactor::local_shard_id();
-          return seastar::make_ready_future<adhoc_result>(
-              std::move(job_id_and_lib_path));
+          return seastar::make_ready_future<query_result>(
+              std::move(job_id_and_lib_path.second));
         });
   } else {
-    return seastar::make_exception_future<adhoc_result>(
+    return seastar::make_exception_future<query_result>(
         std::runtime_error("Codegen proxy not initialized"));
   }
 }

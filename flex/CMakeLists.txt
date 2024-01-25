@@ -17,6 +17,14 @@ option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
 option(ENABLE_HUGEPAGE "Whether to use hugepages when open mmap array in memory" OFF)
 
+#print options
+message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
+message(STATUS "Build test: ${BUILD_TEST}")
+message(STATUS "Build doc: ${BUILD_DOC}")
+message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
+message(STATUS "Monitor sessions: ${MONITOR_SESSIONS}")
+message(STATUS "Enable hugepage: ${ENABLE_HUGEPAGE}")
+
 # ------------------------------------------------------------------------------
 # cmake configs
 # ------------------------------------------------------------------------------
@@ -30,6 +38,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+if (BUILD_HQPS)
+    message("Build HighQPS Engine")
+    add_definitions(-DBUILD_HQPS)
+endif ()
 
 if (MONITOR_SESSIONS)
     message("Monitor sessions is enabled")

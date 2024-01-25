@@ -276,7 +276,7 @@ compile_hqps_so() {
   if [ ! -z ${CMAKE_C_COMPILER} ]; then
     cmd="${cmd} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
   fi
-  info "Cmake command = ${cmd}"
+  info "CMake command = ${cmd}"
   info "---------------------------"
   eval ${cmd}
 
