@@ -1300,9 +1300,6 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   // Filter current vertices with expression.
   template <typename EXPR>
   std::pair<self_type_t, std::vector<offset_t>> Filter(EXPR&& expr) {
-    // Expression contains the property name, we extract vertex store here.
-    static constexpr size_t num_args = EXPR::num_args;
-
     size_t cur = 0;
     std::vector<offset_t> offset;
     std::vector<lid_t> res_lids;

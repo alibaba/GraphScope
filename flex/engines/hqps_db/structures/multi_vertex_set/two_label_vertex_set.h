@@ -1288,9 +1288,7 @@ static auto get_property_tuple_two_label(
     const TwoLabelVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                             VERTEX_SET_PROP_T...>& general_set,
     const std::array<std::string, sizeof...(T)>& prop_names) {
-  double t0 = -grape::GetCurrentTime();
   auto& label_array = general_set.GetLabels();
-  t0 += grape::GetCurrentTime();
 
   // Get data for multilabel vertices, mixed
   // double t1 = -grape::GetCurrentTime();
