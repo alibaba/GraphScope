@@ -41,6 +41,7 @@ namespace gs {
 enum class StorageStrategy {
   kNone,
   kMem,
+  kDisk,
 };
 
 namespace impl {
