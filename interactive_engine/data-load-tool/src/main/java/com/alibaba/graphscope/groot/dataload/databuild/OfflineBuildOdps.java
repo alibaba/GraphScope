@@ -60,6 +60,7 @@ public class OfflineBuildOdps {
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
         String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
+        long waitTimeBeforeCommit = Long.parseLong(properties.getProperty(DataLoadConfig.WAIT_TIME_BEFORE_COMMIT, "-1"));
 
         String uniquePath =
                 properties.getProperty(DataLoadConfig.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
@@ -156,6 +157,16 @@ public class OfflineBuildOdps {
                 client.ingestData(fullQualifiedDataPath, config);
                 logger.info("start committing bulk load");
                 Map<Long, DataLoadTargetPb> tableToTarget = Utils.getTableToTargets(schema, info);
+                if (waitTimeBeforeCommit > 0) {
+                    long waitStartTime = System.currentTimeMillis();
+                    logger.info("start wait before commit: " + waitStartTime);
+                    try {
+                        Thread.sleep(waitTimeBeforeCommit);
+                        logger.info("wait time has arrived. will commit soon.");
+                    } catch (InterruptedException e) {
+                        logger.warn("wait thread has been interrupt. will commit soon.");
+                    }
+                }
                 client.commitDataLoad(tableToTarget, uniquePath);
             } finally {
                 try {
