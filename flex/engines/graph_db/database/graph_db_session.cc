@@ -20,9 +20,34 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
+#ifdef BUILD_HQPS
+#include "flex/proto_generated_gie/stored_procedure.pb.h"
+#endif
 #include "flex/utils/app_utils.h"
 
 namespace gs {
+#ifdef BUILD_HQPS
+void put_argment(gs::Encoder& encoder, const query::Argument& argment) {
+  auto& value = argment.value();
+  auto item_case = value.item_case();
+  switch (item_case) {
+  case common::Value::kI32:
+    encoder.put_int(value.i32());
+    break;
+  case common::Value::kI64:
+    encoder.put_long(value.i64());
+    break;
+  case common::Value::kF64:
+    encoder.put_double(value.f64());
+    break;
+  case common::Value::kStr:
+    encoder.put_string(value.str());
+    break;
+  default:
+    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case);
+  }
+}
+#endif
 
 ReadTransaction GraphDBSession::GetReadTransaction() {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
@@ -171,7 +196,7 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       "Query failed for procedure id:" + std::to_string((int) type),
       result_buffer);
 }
-
+#ifdef BUILD_HQPS
 // Evaluating stored procedure for hqps adhoc query, the dynamic lib is closed
 // immediately after the query
 Result<std::vector<char>> GraphDBSession::EvalAdhoc(
@@ -216,7 +241,26 @@ Result<std::vector<char>> GraphDBSession::EvalAdhoc(
 }
 
 Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
-    const std::string& query_name, Decoder& input_decoder) {
+    const std::string& input_content) {
+  query::Query cur_query;
+  if (!cur_query.ParseFromArray(input_content.data(), input_content.size())) {
+    LOG(ERROR) << "Fail to parse query from input content";
+    return Result<std::vector<char>>(StatusCode::InValidArgument,
+                                     "Fail to parse query from input content",
+                                     {});
+  }
+  auto query_name = cur_query.query_name().name();
+
+  std::vector<char> input_buffer;
+  gs::Encoder input_encoder(input_buffer);
+  auto& args = cur_query.arguments();
+  for (int32_t i = 0; i < args.size(); ++i) {
+    put_argment(input_encoder, args[i]);
+  }
+  VLOG(10) << "Query name: " << query_name << ", args: " << input_buffer.size()
+           << " bytes";
+  gs::Decoder input_decoder(input_buffer.data(), input_buffer.size());
+
   if (query_name.empty()) {
     LOG(ERROR) << "Query name is empty";
     return Result<std::vector<char>>(StatusCode::InValidArgument,
@@ -280,6 +324,7 @@ Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
   return Result<std::vector<char>>(
       StatusCode::QueryFailed, "Query failed for procedure: " + query_name, {});
 }
+#endif  // BUILD_HQPS
 
 #undef likely
 

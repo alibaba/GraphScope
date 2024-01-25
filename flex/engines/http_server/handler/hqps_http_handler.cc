@@ -85,9 +85,10 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-  // first extract the query name and parameters
   auto& input_content = req->content;
-  input_content.append("\1", 1);
+  input_content.append(
+      "\1", 1);  // append int32_t 1 to the end of the query, indicate
+                 // GraphDBSession.EvalHqpsProcedure() should be called.
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(input_content)})
@@ -226,7 +227,8 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
       .do_codegen(query_param{std::move(req->content)})
       .then([this, dst_executor](auto&& param) {
         auto query_path = param.content;
-        // Emplace back int32_t 2 to the end of the query_path
+        // append int32_t value 2 to content, indicating
+        // GraphDBSession.EvalAdhoc() should be called.
         query_path.append("\2", 1);
         return executor_refs_[dst_executor].run_graph_db_query(
             query_param{std::move(query_path)});
