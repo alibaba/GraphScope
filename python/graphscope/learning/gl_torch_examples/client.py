@@ -52,7 +52,7 @@ def test(model, test_loader, dataset_name):
     y_true = [t.to(device) for t in y_true]
     y_pred = torch.cat(xs, dim=0).argmax(dim=-1, keepdim=True)
     y_true = torch.cat(y_true, dim=0)
-    test_acc = sum((y_pred.T == y_true.T)[0]) / len(y_true.T[0])
+    test_acc = sum((y_pred.T[0] == y_true)) / len(y_true)
 
     return test_acc.item()
 
