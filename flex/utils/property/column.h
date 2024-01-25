@@ -98,17 +98,21 @@ class TypedColumn : public ColumnBase {
 
 #ifdef HUGEPAGE
   void open_with_hugepages(const std::string& name) override {
-    if (!name.empty() && std::filesystem::exists(name)) {
-      basic_buffer_.open_with_hugepages(name);
-      basic_size_ = basic_buffer_.size();
-    } else {
-      basic_buffer_.reset();
-      basic_buffer_.set_hugepage_prefered(true);
-      basic_size_ = 0;
+    if (strategy_ == StorageStrategy::kMem) {
+      if (!name.empty() && std::filesystem::exists(name)) {
+        basic_buffer_.open_with_hugepages(name);
+        basic_size_ = basic_buffer_.size();
+      } else {
+        basic_buffer_.reset();
+        basic_buffer_.set_hugepage_prefered(true);
+        basic_size_ = 0;
+      }
+      extra_buffer_.reset();
+      extra_buffer_.set_hugepage_prefered(true);
+      extra_size_ = 0;
+    } else if (strategy_ == StorageStrategy::kDisk) {
+      open_in_memory(name);
     }
-    extra_buffer_.reset();
-    extra_buffer_.set_hugepage_prefered(true);
-    extra_size_ = 0;
   }
 #endif
 
@@ -235,7 +239,7 @@ class TypedColumn<std::string_view> : public ColumnBase {
  public:
   TypedColumn(StorageStrategy strategy,
               uint16_t width = PropertyType::STRING_DEFAULT_MAX_LENGTH)
-      : width_(width) {}
+      : strategy_(strategy), width_(width) {}
   ~TypedColumn() { close(); }
 
   void open(const std::string& name, const std::string& snapshot_dir,
@@ -268,13 +272,17 @@ class TypedColumn<std::string_view> : public ColumnBase {
 
 #ifdef HUGEPAGE
   void open_with_hugepages(const std::string& prefix) override {
-    basic_buffer_.open_with_hugepages(prefix);
-    basic_size_ = basic_buffer_.size();
+    if (strategy_ == StorageStrategy::kMem) {
+      basic_buffer_.open_with_hugepages(prefix);
+      basic_size_ = basic_buffer_.size();
 
-    extra_buffer_.reset();
-    extra_buffer_.set_hugepage_prefered(true);
-    extra_size_ = 0;
-    pos_.store(0);
+      extra_buffer_.reset();
+      extra_buffer_.set_hugepage_prefered(true);
+      extra_size_ = 0;
+      pos_.store(0);
+    } else if (strategy_ == StorageStrategy::kDisk) {
+      open_in_memory(prefix);
+    }
   }
 #endif
 
