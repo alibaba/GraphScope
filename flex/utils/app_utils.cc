@@ -95,7 +95,7 @@ void Encoder::put_small_string_view(const std::string_view& v) {
   memcpy(&buf_[size + 1], v.data(), len);
 }
 
-void Encoder::put_double(double v){
+void Encoder::put_double(double v) {
   size_t size = buf_.size();
   buf_.resize(size + sizeof(double));
   memcpy(&buf_[size], &v, sizeof(double));
@@ -113,7 +113,7 @@ static int char_ptr_to_int(const char* data) {
   return *ptr;
 }
 
-static double char_ptr_to_double(const char* data){
+static double char_ptr_to_double(const char* data) {
   const double* ptr = reinterpret_cast<const double*>(data);
   return *ptr;
 }
@@ -130,7 +130,7 @@ int64_t Decoder::get_long() {
   return ret;
 }
 
-double Decoder::get_double(){
+double Decoder::get_double() {
   double ret = char_ptr_to_double(data_);
   data_ += 8;
   return ret;
@@ -153,6 +153,8 @@ std::string_view Decoder::get_small_string() {
 uint8_t Decoder::get_byte() { return static_cast<uint8_t>(*(data_++)); }
 
 const char* Decoder::data() const { return data_; }
+
+size_t Decoder::size() const { return end_ - data_; }
 
 bool Decoder::empty() const { return data_ == end_; }
 

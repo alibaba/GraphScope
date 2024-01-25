@@ -3,9 +3,8 @@
 find_package(yaml-cpp REQUIRED)
 include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
 
-if (BUILD_ODPS_FRAGMENT_LOADER)
-        file(GLOB_RECURSE RT_MUTABLE_GRAPH_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
-else()
+file(GLOB_RECURSE RT_MUTABLE_GRAPH_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")
+if (NOT BUILD_ODPS_FRAGMENT_LOADER)
         # exclude odps_fragment_loader.cc
         message(STATUS "exclude odps_fragment_loader.cc")
         file(GLOB_RECURSE RT_MUTABLE_GRAPH_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.cc")

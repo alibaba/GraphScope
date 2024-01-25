@@ -50,6 +50,28 @@ jobs:
         mkdir build && cd build # only test default build
         cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && sudo make -j 4
 
+  # test the different combination of cmake options: -DBUILD_HQPS=ON/OFF -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
+  test-cmake-options:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+    strategy:
+      matrix:
+        BUILD_HQPS: [ON, OFF]
+        BUILD_TEST: [ON, OFF]
+        BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. -DBUILD_HQPS=${{ matrix.BUILD_HQPS }} -DBUILD_TEST=${{ matrix.BUILD_TEST }} \
+                 -DBUILD_ODPS_FRAGMENT_LOADER=${{ matrix.BUILD_ODPS_FRAGMENT_LOADER }}
+        sudo make -j4
+
   test-flex:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
@@ -72,9 +94,8 @@ jobs:
       env:
         HOME: /home/graphscope/
       run: |
-        cd ${GITHUB_WORKSPACE}/
-        git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
 
