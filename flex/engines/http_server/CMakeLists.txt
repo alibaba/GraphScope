@@ -6,12 +6,9 @@ if (Hiactor_FOUND)
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
         INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_SOURCE_DIR}/../../third_party/nlohmann-json/single_include/)
 
-    message(STATUS "server_actor_autogen_files: ${server_actor_autogen_files}")
-
   if (NOT BUILD_HQPS)
     list(FILTER server_actor_autogen_files EXCLUDE REGEX ".*admin.*")
     list(FILTER server_actor_autogen_files EXCLUDE REGEX ".*codegen.*")
-    message(STATUS "server_actor_autogen_files: ${server_actor_autogen_files}")
   endif ()
 
   # get all .cc files in current directory, except for generated/
@@ -24,7 +21,6 @@ if (Hiactor_FOUND)
     list(FILTER SERVER_FILES EXCLUDE REGEX ".*codegen*")
     list(FILTER SERVER_FILES EXCLUDE REGEX ".*workdir_manipulator*")
   endif ()
-  message(STATUS "SERVER_FILES: ${SERVER_FILES}")
 
   add_library(flex_server STATIC ${SERVER_FILES} ${server_actor_autogen_files})
   add_dependencies(flex_server server_actor_autogen)

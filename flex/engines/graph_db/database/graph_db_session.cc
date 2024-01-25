@@ -20,34 +20,9 @@
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/graph_db/database/graph_db_session.h"
-#ifdef BUILD_HQPS
-#include "flex/proto_generated_gie/stored_procedure.pb.h"
-#endif
 #include "flex/utils/app_utils.h"
 
 namespace gs {
-#ifdef BUILD_HQPS
-void put_argment(gs::Encoder& encoder, const query::Argument& argment) {
-  auto& value = argment.value();
-  auto item_case = value.item_case();
-  switch (item_case) {
-  case common::Value::kI32:
-    encoder.put_int(value.i32());
-    break;
-  case common::Value::kI64:
-    encoder.put_long(value.i64());
-    break;
-  case common::Value::kF64:
-    encoder.put_double(value.f64());
-    break;
-  case common::Value::kStr:
-    encoder.put_string(value.str());
-    break;
-  default:
-    LOG(ERROR) << "Not recognizable param type" << static_cast<int>(item_case);
-  }
-}
-#endif
 
 ReadTransaction GraphDBSession::GetReadTransaction() {
   uint32_t ts = db_.version_manager_.acquire_read_timestamp();
@@ -128,8 +103,6 @@ std::shared_ptr<RefColumnBase> GraphDBSession::get_vertex_id_column(
   }
 }
 
-#define likely(x) __builtin_expect(!!(x), 1)
-
 Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   const auto start = std::chrono::high_resolution_clock::now();
   uint8_t type = input.back();
@@ -141,22 +114,11 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
   Decoder decoder(str_data, str_len);
   Encoder encoder(result_buffer);
 
-  AppBase* app = nullptr;
-  if (likely(apps_[type] != nullptr)) {
-    app = apps_[type];
-  } else {
-    app_wrappers_[type] = db_.CreateApp(type, thread_id_);
-    if (app_wrappers_[type].app() == NULL) {
-      LOG(ERROR) << "[Query-" + std::to_string((int) type)
-                 << "] is not registered...";
-      return Result<std::vector<char>>(
-          StatusCode::NotExists,
-          "Query:" + std::to_string((int) type) + " is not registere",
-          result_buffer);
-    } else {
-      apps_[type] = app_wrappers_[type].app();
-      app = apps_[type];
-    }
+  AppBase* app = GetApp(type);
+  if (!app) {
+    return Result<std::vector<char>>(
+        StatusCode::NotFound,
+        "Procedure not found, id:" + std::to_string((int) type), result_buffer);
   }
 
   for (size_t i = 0; i < MAX_RETRY; ++i) {
@@ -196,137 +158,6 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       "Query failed for procedure id:" + std::to_string((int) type),
       result_buffer);
 }
-#ifdef BUILD_HQPS
-// Evaluating stored procedure for hqps adhoc query, the dynamic lib is closed
-// immediately after the query
-Result<std::vector<char>> GraphDBSession::EvalAdhoc(
-    const std::string& input_lib_path) {
-  std::vector<char> result_buffer;
-  std::vector<char> input_buffer;  // empty. Adhoc query receives no input
-  Decoder decoder(input_buffer.data(), input_buffer.size());
-  Encoder encoder(result_buffer);
-
-  // the dynamic library will automatically be closed after the query
-  auto app_factory = std::make_shared<SharedLibraryAppFactory>(input_lib_path);
-  AppWrapper app_wrapper;  // wrapper should be destroyed before the factory
-
-  if (app_factory) {
-    app_wrapper = app_factory->CreateApp(*this);
-    if (app_wrapper.app() == NULL) {
-      LOG(ERROR) << "Fail to create app for adhoc query: " << input_lib_path;
-      return Result<std::vector<char>>(
-          StatusCode::InternalError,
-          "Fail to create app for: " + input_lib_path, result_buffer);
-    }
-  } else {
-    LOG(ERROR) << "Fail to evaluate adhoc query: " << input_lib_path;
-    return Result<std::vector<char>>(
-        StatusCode::NotExists,
-        "Fail to open dynamic lib for: " + input_lib_path, result_buffer);
-  }
-
-  for (size_t i = 0; i < MAX_RETRY; ++i) {
-    if (app_wrapper.app()->Query(decoder, encoder)) {
-      return result_buffer;
-    }
-
-    LOG(INFO) << "[Query-" << input_lib_path << "][Thread-" << thread_id_
-              << "] retry - " << i << " / " << MAX_RETRY;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    result_buffer.clear();
-  }
-  return Result<std::vector<char>>(
-      StatusCode::QueryFailed,
-      "Query failed for adhoc query: " + input_lib_path, result_buffer);
-}
-
-Result<std::vector<char>> GraphDBSession::EvalHqpsProcedure(
-    const std::string& input_content) {
-  query::Query cur_query;
-  if (!cur_query.ParseFromArray(input_content.data(), input_content.size())) {
-    LOG(ERROR) << "Fail to parse query from input content";
-    return Result<std::vector<char>>(StatusCode::InValidArgument,
-                                     "Fail to parse query from input content",
-                                     {});
-  }
-  auto query_name = cur_query.query_name().name();
-
-  std::vector<char> input_buffer;
-  gs::Encoder input_encoder(input_buffer);
-  auto& args = cur_query.arguments();
-  for (int32_t i = 0; i < args.size(); ++i) {
-    put_argment(input_encoder, args[i]);
-  }
-  VLOG(10) << "Query name: " << query_name << ", args: " << input_buffer.size()
-           << " bytes";
-  gs::Decoder input_decoder(input_buffer.data(), input_buffer.size());
-
-  if (query_name.empty()) {
-    LOG(ERROR) << "Query name is empty";
-    return Result<std::vector<char>>(StatusCode::InValidArgument,
-                                     "Query name is empty", {});
-  }
-  auto& app_name_to_path_index = db_.schema().GetPlugins();
-  // get procedure id from name.
-  if (app_name_to_path_index.count(query_name) <= 0) {
-    LOG(ERROR) << "Query name is not registered: " << query_name;
-    return Result<std::vector<char>>(
-        StatusCode::NotExists, "Query name is not registered: " + query_name,
-        {});
-  }
-
-  // get app
-  auto type = app_name_to_path_index.at(query_name).second;
-  if (type >= apps_.size()) {
-    LOG(ERROR) << "Query type is not registered: " << type;
-    return Result<std::vector<char>>(
-        StatusCode::NotExists,
-        "Query type is not registered: " + std::to_string(type), {});
-  }
-  AppBase* app = nullptr;
-  if (likely(apps_[type] != nullptr)) {
-    app = apps_[type];
-  } else {
-    app_wrappers_[type] = db_.CreateApp(type, thread_id_);
-    if (app_wrappers_[type].app() == NULL) {
-      LOG(ERROR) << "[Query-" + std::to_string((int) type)
-                 << "] is not registered...";
-      return Result<std::vector<char>>(
-          StatusCode::NotExists,
-          "Query:" + std::to_string((int) type) + " is not registered", {});
-    } else {
-      apps_[type] = app_wrappers_[type].app();
-      app = apps_[type];
-    }
-  }
-
-  if (app == nullptr) {
-    LOG(ERROR) << "Query type is not registered: " << type
-               << ", query name: " << query_name;
-    return Result<std::vector<char>>(
-        StatusCode::NotExists,
-        "Query type is not registered: " + std::to_string(type), {});
-  }
-  const char* input_char = input_decoder.data();
-  size_t input_size = input_decoder.size();
-
-  for (size_t i = 0; i < MAX_RETRY; ++i) {
-    std::vector<char> result_buffer;
-    gs::Encoder result_encoder(result_buffer);
-    if (app->Query(input_decoder, result_encoder)) {
-      return Result<std::vector<char>>(std::move(result_buffer));
-    }
-    LOG(INFO) << "[Query-" << query_name << "][Thread-" << thread_id_
-              << "] retry - " << i << " / " << MAX_RETRY;
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    input_decoder.reset(input_char, input_size);
-  }
-  return Result<std::vector<char>>(
-      StatusCode::QueryFailed, "Query failed for procedure: " + query_name, {});
-}
-#endif  // BUILD_HQPS
-
-#undef likely
 
 void GraphDBSession::GetAppInfo(Encoder& result) { db_.GetAppInfo(result); }
 
@@ -357,6 +188,34 @@ double GraphDBSession::eval_duration() const {
 #endif
 
 int64_t GraphDBSession::query_num() const { return query_num_.load(); }
+
+#define likely(x) __builtin_expect(!!(x), 1)
+
+AppBase* GraphDBSession::GetApp(int type) {
+  // create if not exist
+  if (type > Schema::MAX_PLUGIN_ID) {
+    LOG(ERROR) << "Query type is out of range: " << type << " > "
+               << Schema::MAX_PLUGIN_ID;
+    return nullptr;
+  }
+  AppBase* app = nullptr;
+  if (likely(apps_[type] != nullptr)) {
+    app = apps_[type];
+  } else {
+    app_wrappers_[type] = db_.CreateApp(type, thread_id_);
+    if (app_wrappers_[type].app() == NULL) {
+      LOG(ERROR) << "[Query-" + std::to_string((int) type)
+                 << "] is not registered...";
+      return nullptr;
+    } else {
+      apps_[type] = app_wrappers_[type].app();
+      app = apps_[type];
+    }
+  }
+  return app;
+}
+
+#undef likely  // likely
 
 const AppMetric& GraphDBSession::GetAppMetric(int idx) const {
   return app_metrics_[idx];

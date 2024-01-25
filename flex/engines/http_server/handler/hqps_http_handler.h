@@ -25,7 +25,6 @@
 #include "flex/utils/app_utils.h"
 
 namespace server {
-void put_argment(gs::Encoder& encoder, const query::Argument& argment);
 
 class hqps_ic_handler : public seastar::httpd::handler_base {
  public:

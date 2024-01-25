@@ -40,74 +40,23 @@ seastar::future<query_result> executor::run_graph_db_query(
   auto& input_content = param.content;
   if (input_content.size() < 1) {
     return seastar::make_exception_future<query_result>(
-        seastar::sstring("Invalid status"));
+        seastar::sstring("Invalid input, input size: ") +
+        std::to_string(input_content.size()));
   }
   // get the last byte
   char type = input_content[input_content.size() - 1];
   input_content.resize(input_content.size() - 1);
-  LOG(INFO) << "Run graph db query, type: " << type;
-  if (type == '\0') {  // graph_db query
-    auto ret = gs::GraphDB::get()
-                   .GetSession(hiactor::local_shard_id())
-                   .Eval(input_content);
-    if (!ret.ok()) {
-      LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-    }
-    auto result = ret.value();
-    seastar::sstring content(result.data(), result.size());
-    return seastar::make_ready_future<query_result>(std::move(content));
-  } else if (type == '\1') {  // hqps procedure query.
-#ifndef BUILD_HQPS
+  auto ret = gs::GraphDB::get()
+                 .GetSession(hiactor::local_shard_id())
+                 .Eval(input_content);
+  if (!ret.ok()) {
+    LOG(ERROR) << "Eval failed: " << ret.status().error_message();
     return seastar::make_exception_future<query_result>(
-        seastar::sstring("HQPS is disabled, please recompile with "
-                         "BUILD_HQPS=ON to enable HQPS"));
-#else
-    auto ret = gs::GraphDB::get()
-                   .GetSession(hiactor::local_shard_id())
-                   .EvalHqpsProcedure(input_content);
-    if (!ret.ok()) {
-      LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-      return seastar::make_exception_future<query_result>(
-          seastar::sstring(ret.status().error_message()));
-    }
-    auto result = ret.value();
-    if (result.size() < 4) {
-      return seastar::make_exception_future<query_result>(
-          seastar::sstring("Internal Error when calling procedure, more than 4 "
-                           "bytes should be returned"));
-    }
-    // skip 4 bytes, since the first 4 bytes is the size of the result
-    seastar::sstring content(result.data() + 4, result.size() - 4);
-    return seastar::make_ready_future<query_result>(std::move(content));
-#endif                        // BUILD_HQPS
-  } else if (type == '\2') {  // hqp adhoc query
-#ifndef BUILD_HQPS
-    return seastar::make_exception_future<query_result>(
-        seastar::sstring("HQPS is disabled, please recompile with "
-                         "BUILD_HQPS=ON to enable HQPS"));
-#else
-    auto ret = gs::GraphDB::get()
-                   .GetSession(hiactor::local_shard_id())
-                   .EvalAdhoc(input_content);
-    if (!ret.ok()) {
-      LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-      return seastar::make_exception_future<query_result>(
-          seastar::sstring(ret.status().error_message()));
-    }
-    auto ret_value = ret.value();
-    if (ret_value.size() < 4) {
-      return seastar::make_exception_future<query_result>(
-          seastar::sstring("Internal Error when running Adhoc query, more than "
-                           "4 bytes should be returned"));
-    }
-    // skip 4 bytes, since the first 4 bytes is the size of the result
-    seastar::sstring result(ret_value.data() + 4, ret_value.size() - 4);
-    return seastar::make_ready_future<query_result>(std::move(result));
-#endif  // BUILD_HQPS
-  } else {
-    seastar::sstring error_msg = "Invalid query type: " + std::to_string(type);
-    return seastar::make_exception_future<query_result>(error_msg);
+        seastar::sstring("Eval failed: ") + ret.status().error_message());
   }
+  auto result = ret.value();
+  seastar::sstring content(result.data(), result.size());
+  return seastar::make_ready_future<query_result>(std::move(content));
 }
 
 }  // namespace server

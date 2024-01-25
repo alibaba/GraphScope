@@ -80,15 +80,6 @@ class GraphDBSession {
 
   Result<std::vector<char>> Eval(const std::string& input);
 
-#ifdef BUILD_HQPS
-  // Evaluate a temporary stored procedure. close the handle of the dynamic lib
-  // immediately.
-  Result<std::vector<char>> EvalAdhoc(const std::string& input_lib_path);
-
-  // Evaluate a stored procedure with input parameters given.
-  Result<std::vector<char>> EvalHqpsProcedure(const std::string& input);
-#endif
-
   void GetAppInfo(Encoder& result);
 
   int SessionId() const;
@@ -102,6 +93,8 @@ class GraphDBSession {
   const AppMetric& GetAppMetric(int idx) const;
 
   int64_t query_num() const;
+
+  AppBase* GetApp(int idx);
 
  private:
   GraphDB& db_;

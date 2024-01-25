@@ -927,6 +927,10 @@ bool Schema::EmplacePlugins(
   uint8_t cur_plugin_id = RESERVED_PLUGIN_NUM;
   std::unordered_set<std::string> plugin_names;
   for (auto& f : plugin_paths_or_names) {
+    if (cur_plugin_id > MAX_PLUGIN_ID) {
+      LOG(ERROR) << "Too many plugins, max plugin id is " << MAX_PLUGIN_ID;
+      return false;
+    }
     if (std::filesystem::exists(f)) {
       plugin_name_to_path_and_id_.emplace(f,
                                           std::make_pair(f, cur_plugin_id++));
@@ -949,6 +953,10 @@ bool Schema::EmplacePlugins(
   // if there exists any plugins specified by name, add them
   // Iterator over the map, and add the plugin path and name to the vector
   for (auto cur_yaml : all_procedure_yamls) {
+    if (cur_plugin_id > MAX_PLUGIN_ID) {
+      LOG(ERROR) << "Too many plugins, max plugin id is " << MAX_PLUGIN_ID;
+      return false;
+    }
     YAML::Node root;
     try {
       root = YAML::LoadFile(cur_yaml);
