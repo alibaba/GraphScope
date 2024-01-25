@@ -27,18 +27,16 @@
 namespace gs {
 
 class ArenaAllocator {
-  static constexpr size_t batch_size = 128 * 1024 * 1024;
+  static constexpr size_t batch_size = 16 * 1024 * 1024;
 
  public:
   ArenaAllocator(MemoryStrategy strategy, const std::string& prefix)
       : strategy_(strategy),
         prefix_(prefix),
         cur_loc_(0),
-        cur_size_(0)
-#ifdef MONITOR_SESSIONS
-        ,
-        allocated_memory_(0)
-#endif
+        cur_size_(0),
+        allocated_memory_(0),
+	allocated_batches_(0)
   {
     if (strategy_ != MemoryStrategy::kSyncToFile) {
       prefix_.clear();
@@ -48,6 +46,7 @@ class ArenaAllocator {
     for (auto ptr : mmap_buffers_) {
       delete ptr;
     }
+    LOG(INFO) << "|ALLOCATOR|" << allocated_batches_ << "|" << allocated_memory_ << "|";
   }
 
   void reserve(size_t cap) {
@@ -61,9 +60,7 @@ class ArenaAllocator {
   }
 
   void* allocate(size_t size) {
-#ifdef MONITOR_SESSIONS
     allocated_memory_ += size;
-#endif
     if (cur_size_ - cur_loc_ >= size) {
       void* ret = (char*) cur_buffer_ + cur_loc_;
       cur_loc_ += size;
@@ -79,23 +76,18 @@ class ArenaAllocator {
     }
   }
 
-#ifdef MONITOR_SESSIONS
   size_t allocated_memory() const { return allocated_memory_; }
-#endif
 
  private:
   void* allocate_batch(size_t size) {
+    allocated_batches_ += size;
     if (prefix_.empty()) {
       mmap_array<char>* buf = new mmap_array<char>();
-#ifdef HUGEPAGE
       if (strategy_ == MemoryStrategy::kHugepagePrefered) {
         buf->open_with_hugepages("", size);
       } else {
         buf->open("", false);
       }
-#else
-      buf->open("", false);
-#endif
       buf->resize(size);
       mmap_buffers_.push_back(buf);
       return static_cast<void*>(buf->data());
@@ -116,9 +108,8 @@ class ArenaAllocator {
   size_t cur_loc_;
   size_t cur_size_;
 
-#ifdef MONITOR_SESSIONS
   size_t allocated_memory_;
-#endif
+  size_t allocated_batches_;
 };
 
 using Allocator = ArenaAllocator;

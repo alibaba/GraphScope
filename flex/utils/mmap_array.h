@@ -27,8 +27,6 @@
 #include "glog/logging.h"
 #include "grape/util.h"
 
-#ifdef HUGEPAGE
-
 #ifdef __ia64__
 #define ADDR (void*) (0x8000000000000000UL)
 #define FLAGS (MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_FIXED)
@@ -55,16 +53,12 @@ inline size_t hugepage_round_up(size_t size) { return ROUND_UP(size); }
 #undef HUGEPAGE_MASK
 #undef ROUND_UP
 
-#endif
-
 namespace gs {
 
 enum class MemoryStrategy {
   kSyncToFile,
   kMemoryOnly,
-#ifdef HUGEPAGE
   kHugepagePrefered,
-#endif
 };
 
 template <typename T>
@@ -76,11 +70,8 @@ class mmap_array {
         data_(NULL),
         size_(0),
         mmap_size_(0),
-        sync_to_file_(false)
-#ifdef HUGEPAGE
-        ,
+        sync_to_file_(false),
         hugepage_prefered_(false)
-#endif
   {
   }
   mmap_array(mmap_array&& rhs) : mmap_array() { swap(rhs); }
@@ -101,19 +92,15 @@ class mmap_array {
     sync_to_file_ = false;
   }
 
-#ifdef HUGEPAGE
   void set_hugepage_prefered(bool val) {
     hugepage_prefered_ = (val && !sync_to_file_);
   }
-#endif
 
   void open(const std::string& filename, bool sync_to_file = false) {
     reset();
     filename_ = filename;
     sync_to_file_ = sync_to_file;
-#ifdef HUGEPAGE
     hugepage_prefered_ = false;
-#endif
     if (sync_to_file_) {
       bool creat = !std::filesystem::exists(filename_);
       fd_ = ::open(filename_.c_str(), O_RDWR | O_CREAT, 0777);
@@ -169,7 +156,6 @@ class mmap_array {
     }
   }
 
-#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& filename, size_t capacity = 0) {
     reset();
     hugepage_prefered_ = true;
@@ -193,7 +179,6 @@ class mmap_array {
       }
     }
   }
-#endif
 
   void dump(const std::string& filename) {
     if (sync_to_file_) {
@@ -252,7 +237,6 @@ class mmap_array {
       } else {
         T* new_data = NULL;
         size_t new_mmap_size = size * sizeof(T);
-#ifdef HUGEPAGE
         if (hugepage_prefered_) {
           new_data = reinterpret_cast<T*>(allocate_hugepages(new_mmap_size));
           if (new_data == MAP_FAILED) {
@@ -263,7 +247,6 @@ class mmap_array {
             new_mmap_size = hugepage_round_up(new_mmap_size);
           }
         }
-#endif
         if (new_data == NULL) {
           new_data = reinterpret_cast<T*>(
               mmap(NULL, new_mmap_size, PROT_READ | PROT_WRITE,
@@ -311,9 +294,7 @@ class mmap_array {
     std::swap(data_, rhs.data_);
     std::swap(size_, rhs.size_);
     std::swap(mmap_size_, rhs.mmap_size_);
-#ifdef HUGEPAGE
     std::swap(hugepage_prefered_, rhs.hugepage_prefered_);
-#endif
   }
 
   const std::string& filename() const { return filename_; }
@@ -327,9 +308,7 @@ class mmap_array {
   size_t mmap_size_;
 
   bool sync_to_file_;
-#ifdef HUGEPAGE
   bool hugepage_prefered_;
-#endif
 };
 
 struct string_item {
@@ -349,24 +328,20 @@ class mmap_array<std::string_view> {
     data_.reset();
   }
 
-#ifdef HUGEPAGE
   void set_hugepage_prefered(bool val) {
     items_.set_hugepage_prefered(val);
     data_.set_hugepage_prefered(val);
   }
-#endif
 
   void open(const std::string& filename, bool sync_to_file) {
     items_.open(filename + ".items", sync_to_file);
     data_.open(filename + ".data", sync_to_file);
   }
 
-#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& filename) {
     items_.open_with_hugepages(filename + ".items");
     data_.open_with_hugepages(filename + ".data");
   }
-#endif
 
   void touch(const std::string& filename) {
     items_.touch(filename + ".items");

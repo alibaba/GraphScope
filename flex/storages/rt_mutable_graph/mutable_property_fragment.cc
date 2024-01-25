@@ -156,11 +156,9 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
     if (vertex_map_strategy == MemoryStrategy::kMemoryOnly) {
       lf_indexers_[i].open_in_memory(snapshot_dir + "/" +
                                      vertex_map_prefix(v_label_name));
-#ifdef HUGEPAGE
     } else if (vertex_map_strategy == MemoryStrategy::kHugepagePrefered) {
       lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
                                           vertex_map_prefix(v_label_name));
-#endif
     } else {
       assert(vertex_map_strategy == MemoryStrategy::kSyncToFile);
       lf_indexers_[i].open(vertex_map_prefix(v_label_name), snapshot_dir,
@@ -173,14 +171,12 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
           schema_.get_vertex_property_names(i),
           schema_.get_vertex_properties(i),
           schema_.get_vertex_storage_strategies(v_label_name));
-#ifdef HUGEPAGE
     } else if (vertex_table_strategy == MemoryStrategy::kHugepagePrefered) {
       vertex_data_[i].open_with_hugepages(
           vertex_table_prefix(v_label_name), snapshot_dir,
           schema_.get_vertex_property_names(i),
           schema_.get_vertex_properties(i),
           schema_.get_vertex_storage_strategies(v_label_name));
-#endif
     } else {
       assert(vertex_table_strategy == MemoryStrategy::kSyncToFile);
       vertex_data_[i].open(vertex_table_prefix(v_label_name), snapshot_dir,
@@ -242,14 +238,12 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
               ie_prefix(src_label, dst_label, edge_label),
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
               vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
-#ifdef HUGEPAGE
         } else if (topology_strategy == MemoryStrategy::kHugepagePrefered) {
           dual_csr_list_[index]->OpenWithHugepages(
               oe_prefix(src_label, dst_label, edge_label),
               ie_prefix(src_label, dst_label, edge_label),
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
               vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
-#endif
         } else {
           assert(topology_strategy == MemoryStrategy::kSyncToFile);
           dual_csr_list_[index]->Open(

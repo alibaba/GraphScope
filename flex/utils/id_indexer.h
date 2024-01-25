@@ -384,7 +384,6 @@ class LFIndexer {
     keys_->resize(num_elements + (num_elements >> 2));
   }
 
-#ifdef HUGEPAGE
   void open_with_hugepages(const std::string& name) {
     if (std::filesystem::exists(name + ".meta")) {
       load_meta(name + ".meta");
@@ -397,7 +396,6 @@ class LFIndexer {
     size_t num_elements = num_elements_.load();
     keys_->resize(num_elements + (num_elements >> 2));
   }
-#endif
 
   void dump(const std::string& name, const std::string& snapshot_dir) {
     keys_->resize(num_elements_.load());
