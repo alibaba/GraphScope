@@ -193,9 +193,9 @@ int64_t GraphDBSession::query_num() const { return query_num_.load(); }
 
 AppBase* GraphDBSession::GetApp(int type) {
   // create if not exist
-  if (type > Schema::MAX_PLUGIN_ID) {
+  if (type >= GraphDBSession::MAX_PLUGIN_NUM) {
     LOG(ERROR) << "Query type is out of range: " << type << " > "
-               << Schema::MAX_PLUGIN_ID;
+               << GraphDBSession::MAX_PLUGIN_NUM;
     return nullptr;
   }
   AppBase* app = nullptr;

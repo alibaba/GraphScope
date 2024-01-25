@@ -36,6 +36,7 @@ class WalWriter;
 class GraphDBSession {
  public:
   static constexpr int32_t MAX_RETRY = 3;
+  static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
@@ -103,9 +104,9 @@ class GraphDBSession {
   std::string work_dir_;
   int thread_id_;
 
-  std::array<AppWrapper, 256> app_wrappers_;
-  std::array<AppBase*, 256> apps_;
-  std::array<AppMetric, 256> app_metrics_;
+  std::array<AppWrapper, MAX_PLUGIN_NUM> app_wrappers_;
+  std::array<AppBase*, MAX_PLUGIN_NUM> apps_;
+  std::array<AppMetric, MAX_PLUGIN_NUM> app_metrics_;
 
 #ifdef MONITOR_SESSIONS
   std::atomic<int64_t> eval_duration_;
