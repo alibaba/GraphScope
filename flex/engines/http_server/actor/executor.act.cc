@@ -72,8 +72,9 @@ seastar::future<query_result> executor::run_graph_db_query(
     }
     auto result = ret.value();
     if (result.size() < 4) {
-      return seastar::make_exception_future<query_result>(seastar::sstring(
-          "Internal Error, more than 4 bytes should be returned"));
+      return seastar::make_exception_future<query_result>(
+          seastar::sstring("Internal Error when calling procedure, more than 4 "
+                           "bytes should be returned"));
     }
     // skip 4 bytes, since the first 4 bytes is the size of the result
     seastar::sstring content(result.data() + 4, result.size() - 4);
@@ -85,7 +86,6 @@ seastar::future<query_result> executor::run_graph_db_query(
         seastar::sstring("HQPS is disabled, please recompile with "
                          "BUILD_HQPS=ON to enable HQPS"));
 #else
-    LOG(INFO) << "Okay, try to run adhoc query of lib path: " << input_content;
     auto ret = gs::GraphDB::get()
                    .GetSession(hiactor::local_shard_id())
                    .EvalAdhoc(input_content);
@@ -95,10 +95,10 @@ seastar::future<query_result> executor::run_graph_db_query(
           seastar::sstring(ret.status().error_message()));
     }
     auto ret_value = ret.value();
-    VLOG(10) << "Adhoc query result size: " << ret_value.size();
     if (ret_value.size() < 4) {
-      return seastar::make_exception_future<query_result>(seastar::sstring(
-          "Internal Error, more than 4 bytes should be returned"));
+      return seastar::make_exception_future<query_result>(
+          seastar::sstring("Internal Error when running Adhoc query, more than "
+                           "4 bytes should be returned"));
     }
     // skip 4 bytes, since the first 4 bytes is the size of the result
     seastar::sstring result(ret_value.data() + 4, ret_value.size() - 4);
