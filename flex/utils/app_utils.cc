@@ -101,12 +101,6 @@ void Encoder::put_double(double v) {
   memcpy(&buf_[size], &v, sizeof(double));
 }
 
-void Encoder::put_raw_bytes(const char* ptr, size_t size) {
-  size_t old_size = buf_.size();
-  buf_.resize(old_size + size);
-  memcpy(&buf_[old_size], ptr, size);
-}
-
 void Encoder::clear() { buf_.clear(); }
 
 static int64_t char_ptr_to_long(const char* data) {

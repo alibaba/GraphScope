@@ -54,8 +54,6 @@ class Encoder {
 
   void put_double(double v);
 
-  void put_raw_bytes(const char* ptr, size_t size);
-
   void clear();
 
  private:

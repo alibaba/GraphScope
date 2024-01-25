@@ -89,6 +89,14 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
 
   return executor_refs_[dst_executor]
       .run_graph_db_query(query_param{std::move(req->content)})
+      .then([](auto&& output) {
+        if (output.content.size() < 4) {
+          LOG(ERROR) << "Invalid output size: " << output.content.size();
+          return seastar::make_ready_future<query_param>(std::move(output));
+        }
+        return seastar::make_ready_future<query_param>(
+            std::move(output.content.substr(4)));
+      })
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
             if (__builtin_expect(fut.failed(), false)) {
@@ -226,6 +234,14 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
         return executor_refs_[dst_executor].run_graph_db_query(
             query_param{std::move(param.content)});
+      })
+      .then([](auto&& output) {
+        if (output.content.size() < 4) {
+          LOG(ERROR) << "Invalid output size: " << output.content.size();
+          return seastar::make_ready_future<query_param>(std::move(output));
+        }
+        return seastar::make_ready_future<query_param>(
+            std::move(output.content.substr(4)));
       })
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {

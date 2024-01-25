@@ -72,7 +72,7 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "    std::string res_str = res.SerializeAsString();\n"
     "    // encode results to encoder\n"
     "    if (!res_str.empty()){\n"
-    "      encoder.put_raw_bytes(res_str.data(), res_str.size());\n"
+    "      encoder.put_string_view(res_str);\n"
     "    }\n"
     "    return true;\n"
     "  }\n"
