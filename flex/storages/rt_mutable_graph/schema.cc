@@ -459,6 +459,8 @@ StorageStrategy StringToStorageStrategy(const std::string& str) {
     return StorageStrategy::kNone;
   } else if (str == "Mem") {
     return StorageStrategy::kMem;
+  } else if (str == "Disk") {
+    return StorageStrategy::kDisk;
   } else {
     return StorageStrategy::kMem;
   }
@@ -649,6 +651,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
     // remove primary key from properties.
     property_names.erase(property_names.begin() + primary_key_inds[i]);
     property_types.erase(property_types.begin() + primary_key_inds[i]);
+    strategies.erase(strategies.begin() + primary_key_inds[i]);
   }
 
   schema.add_vertex_label(label_name, property_types, property_names,
