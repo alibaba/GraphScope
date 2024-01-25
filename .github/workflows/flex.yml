@@ -95,6 +95,7 @@ jobs:
         HOME: /home/graphscope/
       run: |
         cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
 

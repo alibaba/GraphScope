@@ -54,7 +54,6 @@ struct payload {
 };
 
 using query_param = payload<seastar::sstring>;
-
 using query_result = payload<seastar::sstring>;
 using admin_query_result = payload<gs::Result<seastar::sstring>>;
 // url_path, query_param
