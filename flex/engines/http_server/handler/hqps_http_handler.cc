@@ -85,11 +85,10 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
-  auto& input_content = req->content;
-  input_content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
+  req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
 
   return executor_refs_[dst_executor]
-      .run_graph_db_query(query_param{std::move(input_content)})
+      .run_graph_db_query(query_param{std::move(req->content)})
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
             if (__builtin_expect(fut.failed(), false)) {
@@ -224,10 +223,9 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
   return codegen_actor_refs_[0]
       .do_codegen(query_param{std::move(req->content)})
       .then([this, dst_executor](auto&& param) {
-        auto query_path = param.content;
-        query_path.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
+        param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
         return executor_refs_[dst_executor].run_graph_db_query(
-            query_param{std::move(query_path)});
+            query_param{std::move(param.content)});
       })
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {

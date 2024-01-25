@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-#include "engines/graph_db/app/hqps_app.h"
-// Can not add guard #ifdef BUILD_HQPS here, will cause hiactor_codegen failure.
+#include "flex/engines/graph_db/app/hqps_app.h"
 #include "flex/proto_generated_gie/stored_procedure.pb.h"
 
 namespace gs {

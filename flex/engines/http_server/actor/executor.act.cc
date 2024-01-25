@@ -37,22 +37,11 @@ executor::executor(hiactor::actor_base* exec_ctx, const hiactor::byte_t* addr)
 
 seastar::future<query_result> executor::run_graph_db_query(
     query_param&& param) {
-  auto& input_content = param.content;
-  if (input_content.size() < 1) {
-    return seastar::make_exception_future<query_result>(
-        seastar::sstring("Invalid input, input size: ") +
-        std::to_string(input_content.size()));
-  }
-  // get the last byte
-  char type = input_content[input_content.size() - 1];
-  input_content.resize(input_content.size() - 1);
   auto ret = gs::GraphDB::get()
                  .GetSession(hiactor::local_shard_id())
-                 .Eval(input_content);
+                 .Eval(param.content);
   if (!ret.ok()) {
     LOG(ERROR) << "Eval failed: " << ret.status().error_message();
-    return seastar::make_exception_future<query_result>(
-        seastar::sstring("Eval failed: ") + ret.status().error_message());
   }
   auto result = ret.value();
   seastar::sstring content(result.data(), result.size());
