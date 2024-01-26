@@ -169,6 +169,7 @@ class mmap_array {
         if (data_ != MAP_FAILED) {
           FILE* fin = fopen(filename.c_str(), "rb");
           CHECK_EQ(fread(data_, sizeof(T), size_, fin), size_);
+	  fclose(fin);
         } else {
           LOG(ERROR) << "allocating hugepage failed, " << strerror(errno)
                      << ", try with normal pages";
