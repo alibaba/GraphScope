@@ -508,8 +508,9 @@ void admin_http_handler::start() {
             .then([this] { return set_routes(); })
             .then([this] { return server_.listen(http_port_); })
             .then([this] {
-              fmt::print("HQPS admin http handler is listening on port {} ...\n",
-                         http_port_);
+              fmt::print(
+                  "HQPS admin http handler is listening on port {} ...\n",
+                  http_port_);
             });
       });
   fut.wait();
