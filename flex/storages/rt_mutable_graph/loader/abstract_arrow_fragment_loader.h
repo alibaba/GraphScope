@@ -145,7 +145,8 @@ void check_edge_invariant(
 template <typename KEY_T>
 struct _add_vertex {
   void operator()(const std::shared_ptr<arrow::Array>& col,
-                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {
+                  IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids,
+                  std::mutex& mtx) {
     size_t row_num = col->length();
     vid_t vid;
     if constexpr (!std::is_same<std::string_view, KEY_T>::value) {
@@ -159,6 +160,7 @@ struct _add_vertex {
       }
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
       // auto batch = std::max((int) row_num / 5, 1);
+      std::unique_lock<std::mutex> lock(mtx);
       for (size_t i = 0; i < row_num; ++i) {
         if (!indexer.add(casted_array->Value(i), vid)) {
           VLOG(2) << "Duplicate vertex id: " << casted_array->Value(i) << "..";
@@ -171,6 +173,7 @@ struct _add_vertex {
         // }
       }
     } else {
+      std::unique_lock<std::mutex> lock(mtx);
       if (col->type()->Equals(arrow::utf8())) {
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
         for (size_t i = 0; i < row_num; ++i) {
@@ -357,14 +360,19 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         basic_fragment_loader_(schema_, work_dir) {
     vertex_label_num_ = schema_.vertex_label_num();
     edge_label_num_ = schema_.edge_label_num();
+    mtxs_ = new std::mutex[vertex_label_num_];
   }
 
-  ~AbstractArrowFragmentLoader() {}
+  ~AbstractArrowFragmentLoader() {
+    if (mtxs_) {
+      delete[] mtxs_;
+    }
+  }
 
   void AddVerticesRecordBatch(
       label_t v_label_id, const std::vector<std::string>& input_paths,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, const std::string&, const LoadingConfig&)>
+      std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+          label_t, const std::string&, const LoadingConfig&, int)>
           supplier_creator);
 
   // Add edges in record batch to output_parsed_edges, output_ie_degrees and
@@ -392,7 +400,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     std::vector<vid_t> vids;
     vids.reserve(row_num);
 
-    _add_vertex<KEY_T>()(primary_key_col, indexer, vids);
+    _add_vertex<KEY_T>()(primary_key_col, indexer, vids, mtxs_[v_label_id]);
 
     for (size_t j = 0; j < property_cols.size(); ++j) {
       auto array = property_cols[j];
@@ -408,8 +416,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   template <typename KEY_T>
   void addVertexRecordBatchImpl(
       label_t v_label_id, const std::vector<std::string>& v_files,
-      std::function<std::shared_ptr<IRecordBatchSupplier>(
-          label_t, const std::string&, const LoadingConfig&)>
+      std::function<std::vector<std::shared_ptr<IRecordBatchSupplier>>(
+          label_t, const std::string&, const LoadingConfig&, int)>
           supplier_creator) {
     std::string v_label_name = schema_.get_vertex_label_name(v_label_id);
     VLOG(10) << "Parsing vertex file:" << v_files.size() << " for label "
@@ -418,47 +426,80 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     auto primary_key_name = std::get<1>(primary_key);
     size_t primary_key_ind = std::get<2>(primary_key);
     IdIndexer<KEY_T, vid_t> indexer;
-
-    std::vector<std::shared_ptr<arrow::Array>> property_str_cols;
-
+    ConsumerQueue<std::shared_ptr<arrow::RecordBatch>> queue;
+    std::vector<std::thread> work_threads;
     for (auto& v_file : v_files) {
       VLOG(10) << "Parsing vertex file:" << v_file << " for label "
                << v_label_name;
-      auto record_batch_supplier =
-          supplier_creator(v_label_id, v_file, loading_config_);
+      auto record_batch_supplier_vec =
+          supplier_creator(v_label_id, v_file, loading_config_,
+                           std::thread::hardware_concurrency());
 
-      bool first_batch = true;
-      while (true) {
-        auto batch = record_batch_supplier->GetNextBatch();
-        if (!batch) {
-          break;
-        }
-        if (first_batch) {
-          auto header = batch->schema()->field_names();
-          auto schema_column_names =
-              schema_.get_vertex_property_names(v_label_id);
-          CHECK(schema_column_names.size() + 1 == header.size())
-              << "File header of size: " << header.size()
-              << " does not match schema column size: "
-              << schema_column_names.size() + 1;
-          first_batch = false;
-        }
-        auto columns = batch->columns();
-        CHECK(primary_key_ind < columns.size());
-        auto primary_key_column = columns[primary_key_ind];
-        auto other_columns_array = columns;
-        other_columns_array.erase(other_columns_array.begin() +
-                                  primary_key_ind);
-
-        for (size_t i = 0; i < other_columns_array.size(); ++i) {
-          if (other_columns_array[i]->type()->Equals(arrow::large_utf8()) ||
-              other_columns_array[i]->type()->Equals(arrow::utf8())) {
-            property_str_cols.emplace_back(other_columns_array[i]);
+      std::atomic<int> finish_reads(0);
+      work_threads.emplace_back([&]() {
+        while (true) {
+          if (finish_reads.load() ==
+                  static_cast<int>(record_batch_supplier_vec.size()) &&
+              queue.size() == 0) {
+            queue.finish();
+            break;
           }
+          std::this_thread::sleep_for(std::chrono::seconds(5));
         }
-        addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
-                                other_columns_array);
+      });
+
+      for (size_t idx = 0; idx < record_batch_supplier_vec.size(); ++idx) {
+        work_threads.emplace_back(
+            [&](int i) {
+              auto& record_batch_supplier = record_batch_supplier_vec[i];
+              bool first_batch = true;
+              while (true) {
+                auto batch = record_batch_supplier->GetNextBatch();
+                if (!batch) {
+                  finish_reads++;
+                  break;
+                }
+                if (first_batch) {
+                  auto header = batch->schema()->field_names();
+                  auto schema_column_names =
+                      schema_.get_vertex_property_names(v_label_id);
+                  CHECK(schema_column_names.size() + 1 == header.size())
+                      << "File header of size: " << header.size()
+                      << " does not match schema column size: "
+                      << schema_column_names.size() + 1;
+                  first_batch = false;
+                }
+                queue.push(batch);
+              }
+            },
+            idx);
       }
+      for (unsigned idx = 0; idx < std::thread::hardware_concurrency(); ++idx) {
+        work_threads.emplace_back(
+            [&](int i) {
+              while (true) {
+                auto batch = queue.pop();
+                if (!batch) {
+                  break;
+                }
+                auto columns = batch->columns();
+                CHECK(primary_key_ind < columns.size());
+                auto primary_key_column = columns[primary_key_ind];
+                auto other_columns_array = columns;
+                other_columns_array.erase(other_columns_array.begin() +
+                                          primary_key_ind);
+
+                addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
+                                        other_columns_array);
+              }
+            },
+            idx);
+      }
+      for (auto& t : work_threads) {
+        t.join();
+      }
+      work_threads.clear();
+
       VLOG(10) << "Finish parsing vertex file:" << v_file << " for label "
                << v_label_name;
     }
@@ -514,7 +555,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
              << " dst indexer size: " << dst_indexer.size();
     ConsumerQueue<std::shared_ptr<arrow::RecordBatch>> queue;
     std::vector<std::thread> work_threads;
-    std::atomic<int> finish_readers(0);
+
     const auto& work_dir = basic_fragment_loader_.work_dir();
     for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
       parsed_edges_vec.emplace_back(
@@ -523,9 +564,11 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     }
 
     for (auto filename : e_files) {
+      std::atomic<int> finish_readers(0);
       auto record_batch_supplier_vec =
           supplier_creator(src_label_id, dst_label_id, e_label_id, filename,
                            loading_config_, parsed_edges_vec.size());
+
       work_threads.emplace_back([&]() {
         while (true) {
           if (finish_readers.load() ==
@@ -663,6 +706,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   const Schema& schema_;
   size_t vertex_label_num_, edge_label_num_;
   int32_t thread_num_;
+  std::mutex* mtxs_;
 
   mutable BasicFragmentLoader basic_fragment_loader_;
 };

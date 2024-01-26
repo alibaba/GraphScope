@@ -239,21 +239,25 @@ void CSVFragmentLoader::addVertices(label_t v_label_id,
                                     const std::vector<std::string>& v_files) {
   auto record_batch_supplier_creator =
       [this](label_t label_id, const std::string& v_file,
-             const LoadingConfig& loading_config) {
+             const LoadingConfig& loading_config, int) {
         arrow::csv::ConvertOptions convert_options;
         arrow::csv::ReadOptions read_options;
         arrow::csv::ParseOptions parse_options;
         fillVertexReaderMeta(read_options, parse_options, convert_options,
                              v_file, label_id);
+        std::vector<std::shared_ptr<IRecordBatchSupplier>> suppliers;
         if (loading_config.GetIsBatchReader()) {
           auto res = std::make_shared<CSVStreamRecordBatchSupplier>(
               label_id, v_file, convert_options, read_options, parse_options);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+          suppliers.emplace_back(
+              std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
         } else {
           auto res = std::make_shared<CSVTableRecordBatchSupplier>(
               label_id, v_file, convert_options, read_options, parse_options);
-          return std::dynamic_pointer_cast<IRecordBatchSupplier>(res);
+          suppliers.emplace_back(
+              std::dynamic_pointer_cast<IRecordBatchSupplier>(res));
         }
+        return suppliers;
       };
   return AbstractArrowFragmentLoader::AddVerticesRecordBatch(
       v_label_id, v_files, record_batch_supplier_creator);
