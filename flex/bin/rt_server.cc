@@ -38,8 +38,8 @@ int main(int argc, char** argv) {
                                     "graph schema config file")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "warmup,w", bpo::value<bool>()->default_value(false),
-      "warmup graph data")("memory-only,m",
-                           bpo::value<bool>()->default_value(true));
+      "warmup graph data")("memory-level,m",
+                           bpo::value<int>()->default_value(1));
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
   bool enable_dpdk = false;
   bool warmup = vm["warmup"].as<bool>();
-  bool memory_only = vm["memory-only"].as<bool>();
+  int memory_level = vm["memory-level"].as<int>();
   uint32_t shard_num = vm["shard-num"].as<uint32_t>();
   uint16_t http_port = vm["http-port"].as<uint16_t>();
 
@@ -84,17 +84,7 @@ int main(int argc, char** argv) {
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   gs::GraphDBConfig config(schema, data_path, shard_num);
-#ifdef HUGEPAGE
-  config.allocator_strategy = gs::MemoryStrategy::kHugepagePrefered;
-  config.vertex_map_strategy = gs::MemoryStrategy::kHugepagePrefered;
-  config.vertex_table_strategy = gs::MemoryStrategy::kHugepagePrefered;
-  config.topology_strategy = gs::MemoryStrategy::kHugepagePrefered;
-#else
-  config.allocator_strategy = gs::MemoryStrategy::kMemoryOnly;
-  config.vertex_map_strategy = gs::MemoryStrategy::kMemoryOnly;
-  config.vertex_table_strategy = gs::MemoryStrategy::kMemoryOnly;
-  config.topology_strategy = gs::MemoryStrategy::kMemoryOnly;
-#endif
+  config.memory_level = memory_level;
   config.enable_auto_compaction = true;
   config.service_port = http_port;
   db.Open(config);

@@ -66,15 +66,9 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   GraphDBConfig config(schema, data_dir, thread_num);
   config.warmup = warmup;
   if (memory_only) {
-    config.allocator_strategy = MemoryStrategy::kMemoryOnly;
-    config.topology_strategy = MemoryStrategy::kMemoryOnly;
-    config.vertex_map_strategy = MemoryStrategy::kMemoryOnly;
-    config.vertex_table_strategy = MemoryStrategy::kMemoryOnly;
+    config.memory_level = 1;
   } else {
-    config.allocator_strategy = MemoryStrategy::kSyncToFile;
-    config.topology_strategy = MemoryStrategy::kSyncToFile;
-    config.vertex_map_strategy = MemoryStrategy::kSyncToFile;
-    config.vertex_table_strategy = MemoryStrategy::kSyncToFile;
+    config.memory_level = 0;
   }
   config.enable_auto_compaction = enable_auto_compaction;
   config.service_port = port;
@@ -97,8 +91,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   work_dir_ = data_dir;
   thread_num_ = config.thread_num;
   try {
-    graph_.Open(data_dir, config.vertex_map_strategy,
-                config.vertex_table_strategy, config.topology_strategy);
+    graph_.Open(data_dir, config.memory_level);
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
     return Result<bool>(StatusCode::InternalError,
@@ -129,7 +122,14 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
   mutable_schema.EmplacePlugins(plugin_paths);
 
   last_compaction_ts_ = 0;
-  openWalAndCreateContexts(data_dir, config.allocator_strategy);
+  MemoryStrategy allocator_strategy = MemoryStrategy::kMemoryOnly;
+  if (config.memory_level == 0) {
+    allocator_strategy = MemoryStrategy::kSyncToFile;
+  } else if (config.memory_level >= 2) {
+    allocator_strategy = MemoryStrategy::kHugepagePrefered;
+  }
+
+  openWalAndCreateContexts(data_dir, allocator_strategy);
 
   if ((!create_empty_graph) && config.warmup) {
     graph_.Warmup(thread_num_);

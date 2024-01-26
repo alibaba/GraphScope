@@ -34,9 +34,7 @@ class ColumnBase {
 
   virtual void open_in_memory(const std::string& name) = 0;
 
-#ifdef HUGEPAGE
-  virtual void open_with_hugepages(const std::string& name) = 0;
-#endif
+  virtual void open_with_hugepages(const std::string& name, bool force) = 0;
 
   virtual void close() = 0;
 
@@ -96,9 +94,8 @@ class TypedColumn : public ColumnBase {
     extra_size_ = 0;
   }
 
-#ifdef HUGEPAGE
-  void open_with_hugepages(const std::string& name) override {
-    if (strategy_ == StorageStrategy::kMem) {
+  void open_with_hugepages(const std::string& name, bool force) override {
+    if (strategy_ == StorageStrategy::kMem || force) {
       if (!name.empty() && std::filesystem::exists(name)) {
         basic_buffer_.open_with_hugepages(name);
         basic_size_ = basic_buffer_.size();
@@ -111,10 +108,10 @@ class TypedColumn : public ColumnBase {
       extra_buffer_.set_hugepage_prefered(true);
       extra_size_ = 0;
     } else if (strategy_ == StorageStrategy::kDisk) {
+      LOG(INFO) << "Open " << name << " with normal mmap pages";
       open_in_memory(name);
     }
   }
-#endif
 
   void touch(const std::string& filename) override {
     mmap_array<T> tmp;
@@ -270,9 +267,8 @@ class TypedColumn<std::string_view> : public ColumnBase {
     pos_.store(0);
   }
 
-#ifdef HUGEPAGE
-  void open_with_hugepages(const std::string& prefix) override {
-    if (strategy_ == StorageStrategy::kMem) {
+  void open_with_hugepages(const std::string& prefix, bool force) override {
+    if (strategy_ == StorageStrategy::kMem || force) {
       basic_buffer_.open_with_hugepages(prefix);
       basic_size_ = basic_buffer_.size();
 
@@ -281,10 +277,10 @@ class TypedColumn<std::string_view> : public ColumnBase {
       extra_size_ = 0;
       pos_.store(0);
     } else if (strategy_ == StorageStrategy::kDisk) {
+      LOG(INFO) << "Open " << prefix << " with normal mmap pages";
       open_in_memory(prefix);
     }
   }
-#endif
 
   void touch(const std::string& filename) override {
     mmap_array<std::string_view> tmp;
@@ -370,7 +366,6 @@ class TypedColumn<std::string_view> : public ColumnBase {
     } else {
       basic_size_ = basic_buffer_.size();
       extra_size_ = size - basic_size_;
-#ifdef HUGEPAGE
       if (basic_buffer_.size() != 0) {
         size_t basic_avg_width =
             (basic_buffer_.data_size() + basic_buffer_.size() - 1) /
@@ -379,9 +374,6 @@ class TypedColumn<std::string_view> : public ColumnBase {
       } else {
         extra_buffer_.resize(extra_size_, extra_size_ * width_);
       }
-#else
-      extra_buffer_.resize(extra_size_, extra_size_ * width_);
-#endif
     }
   }
 
@@ -465,9 +457,7 @@ class StringMapColumn : public ColumnBase {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override;
   void open_in_memory(const std::string& name) override;
-#ifdef HUGEPAGE
-  void open_with_hugepages(const std::string& name) override;
-#endif
+  void open_with_hugepages(const std::string& name, bool force) override;
   void dump(const std::string& filename) override;
 
   void touch(const std::string& filename) override {
@@ -532,14 +522,13 @@ void StringMapColumn<INDEX_T>::open_in_memory(const std::string& name) {
   meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
 }
 
-#ifdef HUGEPAGE
 template <typename INDEX_T>
-void StringMapColumn<INDEX_T>::open_with_hugepages(const std::string& name) {
-  index_col_.open_with_hugepages(name);
-  meta_map_->open_with_hugepages(name + ".map_meta");
+void StringMapColumn<INDEX_T>::open_with_hugepages(const std::string& name,
+                                                   bool force) {
+  index_col_.open_with_hugepages(name, force);
+  meta_map_->open_with_hugepages(name + ".map_meta", true);
   meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
 }
-#endif
 
 template <typename INDEX_T>
 void StringMapColumn<INDEX_T>::dump(const std::string& filename) {

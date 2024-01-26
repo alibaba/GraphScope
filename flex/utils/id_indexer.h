@@ -384,20 +384,22 @@ class LFIndexer {
     keys_->resize(num_elements + (num_elements >> 2));
   }
 
-#ifdef HUGEPAGE
-  void open_with_hugepages(const std::string& name) {
+  void open_with_hugepages(const std::string& name, bool hugepage_table) {
     if (std::filesystem::exists(name + ".meta")) {
       load_meta(name + ".meta");
     } else {
       num_elements_.store(0);
     }
-    keys_->open_with_hugepages(name + ".keys");
-    indices_.open_with_hugepages(name + ".indices");
+    keys_->open_with_hugepages(name + ".keys", true);
+    if (hugepage_table) {
+      indices_.open_with_hugepages(name + ".indices");
+    } else {
+      indices_.open(name + ".indices", false);
+    }
     indices_size_ = indices_.size();
     size_t num_elements = num_elements_.load();
     keys_->resize(num_elements + (num_elements >> 2));
   }
-#endif
 
   void dump(const std::string& name, const std::string& snapshot_dir) {
     keys_->resize(num_elements_.load());
