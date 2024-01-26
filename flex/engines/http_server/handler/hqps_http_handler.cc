@@ -15,7 +15,6 @@
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/service/hqps_service.h"
-
 #include "flex/engines/http_server/types.h"
 
 namespace server {
@@ -86,9 +85,18 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
 
   return executor_refs_[dst_executor]
-      .run_hqps_procedure_query(query_param{std::move(req->content)})
+      .run_graph_db_query(query_param{std::move(req->content)})
+      .then([](auto&& output) {
+        if (output.content.size() < 4) {
+          LOG(ERROR) << "Invalid output size: " << output.content.size();
+          return seastar::make_ready_future<query_param>(std::move(output));
+        }
+        return seastar::make_ready_future<query_param>(
+            std::move(output.content.substr(4)));
+      })
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
             if (__builtin_expect(fut.failed(), false)) {
@@ -223,8 +231,17 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
   return codegen_actor_refs_[0]
       .do_codegen(query_param{std::move(req->content)})
       .then([this, dst_executor](auto&& param) {
-        return executor_refs_[dst_executor].run_hqps_adhoc_query(
-            std::move(param));
+        param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
+        return executor_refs_[dst_executor].run_graph_db_query(
+            query_param{std::move(param.content)});
+      })
+      .then([](auto&& output) {
+        if (output.content.size() < 4) {
+          LOG(ERROR) << "Invalid output size: " << output.content.size();
+          return seastar::make_ready_future<query_param>(std::move(output));
+        }
+        return seastar::make_ready_future<query_param>(
+            std::move(output.content.substr(4)));
       })
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {

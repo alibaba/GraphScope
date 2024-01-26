@@ -16,6 +16,7 @@ public class DataLoadConfig {
     public static final String UNIQUE_PATH = "unique.path"; // generated automatically for each task
     public static final String USER_NAME = "auth.username";
     public static final String PASS_WORD = "auth.password";
+    public static final String WAIT_TIME_BEFORE_COMMIT = "wait.time.before.commit";
 
     /** job on HDFS configurations **/
 

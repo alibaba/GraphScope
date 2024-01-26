@@ -199,6 +199,9 @@ class ScanOpBuilder {
       VLOG(10) << "receive param const in index predicate: "
                << dyn_param_pb.DebugString();
       ctx_.AddParameterVar(param_const);
+      // set to oid_ and oid_type_name_
+      oid_ = param_const.var_name;
+      oid_type_name_ = data_type_2_string(param_const.type);
     }
 
     return *this;

@@ -14,9 +14,9 @@
  */
 
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/graph_db/database/graph_db_session.h"
-
+#include "flex/engines/graph_db/app/hqps_app.h"
 #include "flex/engines/graph_db/app/server_app.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/utils/yaml_utils.h"
 
@@ -351,7 +351,15 @@ void GraphDB::initApps(
   for (size_t i = 0; i < 256; ++i) {
     app_factories_[i] = nullptr;
   }
+  // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
+#ifdef BUILD_HQPS
+  app_factories_[Schema::HQPS_ADHOC_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocAppFactory>();
+  app_factories_[Schema::HQPS_PROCEDURE_PLUGIN_ID] =
+      std::make_shared<HQPSProcedureAppFactory>();
+#endif  // BUILD_HQPS
+
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {
     auto path = path_and_index.second.first;
