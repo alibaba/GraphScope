@@ -63,33 +63,25 @@ ODPSStreamRecordBatchSupplier::GetNextBatch() {
                    << cur_batch_reader_->GetErrorMessage() << ", "
                    << cur_batch_reader_->GetStatus()
                    << ", split id: " << cur_split_index_;
-      }
-      // Whether or not the status is ok, we always proceed on.
-      // else {
-      VLOG(1) << "Read split " << cur_split_index_ << " finished";
-      // move to next split
-      cur_split_index_ += worker_num_;
-      if (cur_split_index_ >= split_count_) {
-        VLOG(1) << "Finish Read all splits";
-        cur_batch_reader_.reset();
-        break;
-      } else {
-        VLOG(1) << "Start reading split " << cur_split_index_;
-        read_rows_req_.split_index_ = cur_split_index_;
         cur_batch_reader_ =
             odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
+      } else {
+        VLOG(1) << "Read split " << cur_split_index_ << " finished";
+        // move to next split
+        cur_split_index_ += worker_num_;
+        if (cur_split_index_ >= split_count_) {
+          VLOG(1) << "Finish Read all splits";
+          cur_batch_reader_.reset();
+          break;
+        } else {
+          VLOG(1) << "Start reading split " << cur_split_index_;
+          read_rows_req_.split_index_ = cur_split_index_;
+          cur_batch_reader_ =
+              odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
+        }
       }
-      // }
     } else {
       break;
-    }
-  }
-  if (record_batch) {
-    for (auto i = 0; i < record_batch->num_columns(); ++i) {
-      if (record_batch->column(i)->type()->Equals(arrow::utf8()) ||
-          record_batch->column(i)->type()->Equals(arrow::large_utf8())) {
-        string_arrays_.emplace_back(record_batch->column(i));
-      }
     }
   }
 

@@ -60,9 +60,6 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   int32_t worker_num_;
   ReadRowsReq read_rows_req_;
   std::shared_ptr<Reader> cur_batch_reader_;
-
-  // temporally store the string data from each record batch
-  std::vector<std::shared_ptr<arrow::Array>> string_arrays_;
 };
 
 class ODPSTableRecordBatchSupplier : public IRecordBatchSupplier {
