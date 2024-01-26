@@ -60,7 +60,9 @@ public class OfflineBuildOdps {
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
         String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
-        long waitTimeBeforeCommit = Long.parseLong(properties.getProperty(DataLoadConfig.WAIT_TIME_BEFORE_COMMIT, "-1"));
+        long waitTimeBeforeCommit =
+                Long.parseLong(
+                        properties.getProperty(DataLoadConfig.WAIT_TIME_BEFORE_COMMIT, "-1"));
 
         String uniquePath =
                 properties.getProperty(DataLoadConfig.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
