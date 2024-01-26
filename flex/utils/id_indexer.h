@@ -390,7 +390,7 @@ class LFIndexer {
     } else {
       num_elements_.store(0);
     }
-    keys_->open_with_hugepages(name + ".keys");
+    keys_->open_with_hugepages(name + ".keys", true);
     if (hugepage_table) {
       indices_.open_with_hugepages(name + ".indices");
     } else {

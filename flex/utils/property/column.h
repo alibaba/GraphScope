@@ -523,9 +523,10 @@ void StringMapColumn<INDEX_T>::open_in_memory(const std::string& name) {
 }
 
 template <typename INDEX_T>
-void StringMapColumn<INDEX_T>::open_with_hugepages(const std::string& name, bool force) {
-  index_col_.open_with_hugepages(name);
-  meta_map_->open_with_hugepages(name + ".map_meta");
+void StringMapColumn<INDEX_T>::open_with_hugepages(const std::string& name,
+                                                   bool force) {
+  index_col_.open_with_hugepages(name, force);
+  meta_map_->open_with_hugepages(name + ".map_meta", true);
   meta_map_->reserve(std::numeric_limits<INDEX_T>::max());
 }
 

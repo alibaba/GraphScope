@@ -30,7 +30,7 @@ class TypedEmptyColumn : public ColumnBase {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
   void open_in_memory(const std::string& name) override {}
-  void open_with_hugepages(const std::string& name) override {}
+  void open_with_hugepages(const std::string& name, bool force) override {}
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
   void copy_to_tmp(const std::string& cur_path,
@@ -69,7 +69,7 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
   void open_in_memory(const std::string& name) override {}
-  void open_with_hugepages(const std::string& name) override {}
+  void open_with_hugepages(const std::string& name, bool force) override {}
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
   void copy_to_tmp(const std::string& cur_path,

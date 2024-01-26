@@ -112,11 +112,7 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
 }
 
 void MutablePropertyFragment::Open(const std::string& work_dir,
-                                   bool memory_only) {
-  Open(work_dir, memory_only ? 1 : 0);
-}
-
-void MutablePropertyFragment::Open(const std::string& work_dir, int memory_level) {
+                                   int memory_level) {
   std::string schema_file = schema_path(work_dir);
   std::string snapshot_dir{};
   bool build_empty_graph = false;
@@ -169,8 +165,8 @@ void MutablePropertyFragment::Open(const std::string& work_dir, int memory_level
           schema_.get_vertex_properties(i),
           schema_.get_vertex_storage_strategies(v_label_name));
     } else if (memory_level == 2) {
-      lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
-                                          vertex_map_prefix(v_label_name), false);
+      lf_indexers_[i].open_with_hugepages(
+          snapshot_dir + "/" + vertex_map_prefix(v_label_name), false);
       vertex_data_[i].open_with_hugepages(
           vertex_table_prefix(v_label_name), snapshot_dir,
           schema_.get_vertex_property_names(i),
@@ -178,15 +174,15 @@ void MutablePropertyFragment::Open(const std::string& work_dir, int memory_level
           schema_.get_vertex_storage_strategies(v_label_name), false);
     } else {
       assert(memory_level == 3);
-      lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
-                                          vertex_map_prefix(v_label_name), true);
+      lf_indexers_[i].open_with_hugepages(
+          snapshot_dir + "/" + vertex_map_prefix(v_label_name), true);
       vertex_data_[i].open_with_hugepages(
           vertex_table_prefix(v_label_name), snapshot_dir,
           schema_.get_vertex_property_names(i),
           schema_.get_vertex_properties(i),
           schema_.get_vertex_storage_strategies(v_label_name), true);
     }
-    
+
     size_t vertex_capacity =
         schema_.get_max_vnum(v_label_name);  // lf_indexers_[i].capacity();
     if (build_empty_graph) {
