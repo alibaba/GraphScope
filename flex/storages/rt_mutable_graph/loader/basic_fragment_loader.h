@@ -169,11 +169,16 @@ class BasicFragmentLoader {
         t.join();
       }
 
+      if (schema_.get_sort_on_compaction(src_label_name, dst_label_name,
+                                         edge_label_name)) {
+        dual_csr->SortByEdgeData(1);
+      }
       dual_csr->Dump(
           oe_prefix(src_label_name, dst_label_name, edge_label_name),
           ie_prefix(src_label_name, dst_label_name, edge_label_name),
           edata_prefix(src_label_name, dst_label_name, edge_label_name),
           snapshot_dir(work_dir_, 0));
+
       dual_csr->Close();
       dual_csr->ClearTmp(
           oe_prefix(src_label_name, dst_label_name, edge_label_name),

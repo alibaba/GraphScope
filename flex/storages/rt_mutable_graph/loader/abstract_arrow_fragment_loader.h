@@ -49,76 +49,15 @@ void set_single_vertex_column(gs::ColumnBase* col,
   using arrow_array_type = typename gs::TypeConverter<COL_T>::ArrowArrayType;
   auto array_type = array->type();
   auto arrow_type = gs::TypeConverter<COL_T>::ArrowTypeValue();
-  // CHECK(array_type->Equals(arrow_type))
-  //     << "Inconsistent data type, expect " << arrow_type->ToString()
-  //     << ", but got " << array_type->ToString();
+  CHECK(array_type->Equals(arrow_type))
+      << "Inconsistent data type, expect " << arrow_type->ToString()
+      << ", but got " << array_type->ToString();
   size_t cur_ind = 0;
-  // We temporally support load
-  // 1. int64_t to uint8_t,
-  // 2. load double to uint8_t,
-  // 3. load int64_t to uint16_t
-  if (array_type->Equals(arrow_type)) {
-    for (auto j = 0; j < array->num_chunks(); ++j) {
-      auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
-      for (auto k = 0; k < casted->length(); ++k) {
-        if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
-          ++cur_ind;
-        } else {
-          col->set_any(
-              vids[cur_ind++],
-              std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
-        }
-      }
-    }
-  } else {
-    if (arrow_type->Equals(arrow::uint8()) &&
-        array_type->Equals(arrow::int64())) {
-      for (auto j = 0; j < array->num_chunks(); ++j) {
-        auto casted =
-            std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
-        for (auto k = 0; k < casted->length(); ++k) {
-          if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
-            ++cur_ind;
-          } else {
-            uint8_t val = casted->Value(k);
-            col->set_any(vids[cur_ind++],
-                         std::move(AnyConverter<COL_T>::to_any(val)));
-          }
-        }
-      }
-    } else if (arrow_type->Equals(arrow::uint16()) &&
-               array_type->Equals(arrow::int64())) {
-      for (auto j = 0; j < array->num_chunks(); ++j) {
-        auto casted =
-            std::static_pointer_cast<arrow::Int64Array>(array->chunk(j));
-        for (auto k = 0; k < casted->length(); ++k) {
-          if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
-            ++cur_ind;
-          } else {
-            uint16_t val = casted->Value(k);
-            col->set_any(vids[cur_ind++],
-                         std::move(AnyConverter<COL_T>::to_any(val)));
-          }
-        }
-      }
-    } else if (arrow_type->Equals(arrow::uint8()) &&
-               array_type->Equals(arrow::float64())) {
-      for (auto j = 0; j < array->num_chunks(); ++j) {
-        auto casted =
-            std::static_pointer_cast<arrow::DoubleArray>(array->chunk(j));
-        for (auto k = 0; k < casted->length(); ++k) {
-          if (vids[cur_ind] == std::numeric_limits<vid_t>::max()) {
-            ++cur_ind;
-          } else {
-            uint8_t val = casted->Value(k);
-            col->set_any(vids[cur_ind++],
-                         std::move(AnyConverter<COL_T>::to_any(val)));
-          }
-        }
-      }
-    } else {
-      LOG(FATAL) << "Not support type: " << array_type->ToString() << ", "
-                 << arrow_type->ToString();
+  for (auto j = 0; j < array->num_chunks(); ++j) {
+    auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(j));
+    for (auto k = 0; k < casted->length(); ++k) {
+      col->set_any(vids[cur_ind++],
+                   std::move(AnyConverter<COL_T>::to_any(casted->Value(k))));
     }
   }
 }
@@ -173,9 +112,6 @@ struct _add_vertex {
         } else {
           vids.emplace_back(vid);
         }
-        // if (i % batch == 0) {
-        //   VLOG(1) << "Inserting: " << i << "th vertices: " << row_num;
-        // }
       }
     } else {
       std::unique_lock<std::mutex> lock(mtx);
@@ -567,6 +503,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
           work_dir, src_label_name + "_" + dst_label_name + "_" +
                         edge_label_name + "_" + std::to_string(i) + ".tmp");
     }
+    std::vector<std::vector<std::shared_ptr<arrow::Array>>> string_columns(
+        std::thread::hardware_concurrency());
 
     for (auto filename : e_files) {
       std::atomic<int> finish_readers(0);
@@ -579,7 +517,6 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
           if (finish_readers.load() ==
                   static_cast<int>(record_batch_supplier_vec.size()) &&
               queue.size() == 0) {
-            // std::this_thread::sleep_for(std::chrono::seconds(5));
             queue.finish();
             break;
           }
@@ -590,6 +527,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       for (size_t i = 0; i < record_batch_supplier_vec.size(); ++i) {
         work_threads.emplace_back(
             [&](int idx) {
+              auto& string_column = string_columns[idx];
               bool first_batch = true;
               auto& record_batch_supplier = record_batch_supplier_vec[idx];
               while (true) {
@@ -608,6 +546,13 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                       << "schema size: " << schema_column_names.size()
                       << " neq header size: " << header.size();
                   first_batch = false;
+                }
+                for (auto i = 0; i < record_batch->num_columns(); ++i) {
+                  if (record_batch->column(i)->type()->Equals(arrow::utf8()) ||
+                      record_batch->column(i)->type()->Equals(
+                          arrow::large_utf8())) {
+                    string_column.emplace_back(record_batch->column(i));
+                  }
                 }
 
                 queue.push(record_batch);
@@ -646,8 +591,6 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
                 for (size_t i = 2; i < columns.size(); ++i) {
                   property_cols.emplace_back(columns[i]);
                 }
-                // CHECK(property_cols.size() <= 1)
-                //     << "Currently only support at most one property on edge";
                 auto edge_properties = schema_.get_edge_properties(
                     src_label_id, dst_label_id, e_label_id);
                 // add edges to vector
@@ -700,6 +643,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
 
     basic_fragment_loader_.PutEdges(src_label_id, dst_label_id, e_label_id,
                                     parsed_edges_vec, ie_deg, oe_deg);
+    string_columns.clear();
     size_t sum = 0;
     for (const auto& edges : parsed_edges_vec) {
       sum += edges.size();
