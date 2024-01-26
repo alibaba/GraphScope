@@ -46,7 +46,6 @@ class ArenaAllocator {
     for (auto ptr : mmap_buffers_) {
       delete ptr;
     }
-    LOG(INFO) << "|ALLOCATOR|" << allocated_batches_ << "|" << allocated_memory_ << "|";
   }
 
   void reserve(size_t cap) {
