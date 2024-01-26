@@ -113,14 +113,10 @@ inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
 
 void MutablePropertyFragment::Open(const std::string& work_dir,
                                    bool memory_only) {
-  Open(work_dir, MemoryStrategy::kMemoryOnly, MemoryStrategy::kMemoryOnly,
-       MemoryStrategy::kMemoryOnly);
+  Open(work_dir, memory_only ? 1 : 0);
 }
 
-void MutablePropertyFragment::Open(const std::string& work_dir,
-                                   MemoryStrategy vertex_map_strategy,
-                                   MemoryStrategy vertex_table_strategy,
-                                   MemoryStrategy topology_strategy) {
+void MutablePropertyFragment::Open(const std::string& work_dir, int memory_level) {
   std::string schema_file = schema_path(work_dir);
   std::string snapshot_dir{};
   bool build_empty_graph = false;
@@ -153,42 +149,44 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     std::string v_label_name = schema_.get_vertex_label_name(i);
 
-    if (vertex_map_strategy == MemoryStrategy::kMemoryOnly) {
-      lf_indexers_[i].open_in_memory(snapshot_dir + "/" +
-                                     vertex_map_prefix(v_label_name));
-    } else if (vertex_map_strategy == MemoryStrategy::kHugepagePrefered) {
-      lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
-                                          vertex_map_prefix(v_label_name));
-    } else {
-      assert(vertex_map_strategy == MemoryStrategy::kSyncToFile);
+    if (memory_level == 0) {
       lf_indexers_[i].open(vertex_map_prefix(v_label_name), snapshot_dir,
                            tmp_dir_path);
-    }
-
-    if (vertex_table_strategy == MemoryStrategy::kMemoryOnly) {
+      vertex_data_[i].open(vertex_table_prefix(v_label_name), snapshot_dir,
+                           tmp_dir_path, schema_.get_vertex_property_names(i),
+                           schema_.get_vertex_properties(i),
+                           schema_.get_vertex_storage_strategies(v_label_name));
+      if (!build_empty_graph) {
+        vertex_data_[i].copy_to_tmp(vertex_table_prefix(v_label_name),
+                                    snapshot_dir, tmp_dir_path);
+      }
+    } else if (memory_level == 1) {
+      lf_indexers_[i].open_in_memory(snapshot_dir + "/" +
+                                     vertex_map_prefix(v_label_name));
       vertex_data_[i].open_in_memory(
           vertex_table_prefix(v_label_name), snapshot_dir,
           schema_.get_vertex_property_names(i),
           schema_.get_vertex_properties(i),
           schema_.get_vertex_storage_strategies(v_label_name));
-    } else if (vertex_table_strategy == MemoryStrategy::kHugepagePrefered) {
+    } else if (memory_level == 2) {
+      lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
+                                          vertex_map_prefix(v_label_name), false);
       vertex_data_[i].open_with_hugepages(
           vertex_table_prefix(v_label_name), snapshot_dir,
           schema_.get_vertex_property_names(i),
           schema_.get_vertex_properties(i),
-          schema_.get_vertex_storage_strategies(v_label_name));
+          schema_.get_vertex_storage_strategies(v_label_name), false);
     } else {
-      assert(vertex_table_strategy == MemoryStrategy::kSyncToFile);
-      vertex_data_[i].open(vertex_table_prefix(v_label_name), snapshot_dir,
-                           tmp_dir_path, schema_.get_vertex_property_names(i),
-                           schema_.get_vertex_properties(i),
-                           schema_.get_vertex_storage_strategies(v_label_name));
+      assert(memory_level == 3);
+      lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
+                                          vertex_map_prefix(v_label_name), true);
+      vertex_data_[i].open_with_hugepages(
+          vertex_table_prefix(v_label_name), snapshot_dir,
+          schema_.get_vertex_property_names(i),
+          schema_.get_vertex_properties(i),
+          schema_.get_vertex_storage_strategies(v_label_name), true);
     }
-    if (!build_empty_graph &&
-        (vertex_table_strategy == MemoryStrategy::kSyncToFile)) {
-      vertex_data_[i].copy_to_tmp(vertex_table_prefix(v_label_name),
-                                  snapshot_dir, tmp_dir_path);
-    }
+    
     size_t vertex_capacity =
         schema_.get_max_vnum(v_label_name);  // lf_indexers_[i].capacity();
     if (build_empty_graph) {
@@ -232,25 +230,24 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
             create_csr(oe_strategy, ie_strategy, properties);
         ie_[index] = dual_csr_list_[index]->GetInCsr();
         oe_[index] = dual_csr_list_[index]->GetOutCsr();
-        if (topology_strategy == MemoryStrategy::kMemoryOnly) {
-          dual_csr_list_[index]->OpenInMemory(
+        if (memory_level == 0) {
+          dual_csr_list_[index]->Open(
               oe_prefix(src_label, dst_label, edge_label),
               ie_prefix(src_label, dst_label, edge_label),
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
-              vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
-        } else if (topology_strategy == MemoryStrategy::kHugepagePrefered) {
+              tmp_dir_path);
+        } else if (memory_level >= 2) {
           dual_csr_list_[index]->OpenWithHugepages(
               oe_prefix(src_label, dst_label, edge_label),
               ie_prefix(src_label, dst_label, edge_label),
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
               vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
         } else {
-          assert(topology_strategy == MemoryStrategy::kSyncToFile);
-          dual_csr_list_[index]->Open(
+          dual_csr_list_[index]->OpenInMemory(
               oe_prefix(src_label, dst_label, edge_label),
               ie_prefix(src_label, dst_label, edge_label),
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
-              tmp_dir_path);
+              vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
         }
         ie_[index]->resize(vertex_capacities[dst_label_i]);
         oe_[index]->resize(vertex_capacities[src_label_i]);

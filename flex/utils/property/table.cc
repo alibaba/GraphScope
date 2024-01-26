@@ -81,11 +81,11 @@ void Table::open_with_hugepages(
     const std::string& name, const std::string& snapshot_dir,
     const std::vector<std::string>& col_name,
     const std::vector<PropertyType>& property_types,
-    const std::vector<StorageStrategy>& strategies_) {
+    const std::vector<StorageStrategy>& strategies_, bool force) {
   initColumns(col_name, property_types, strategies_);
   for (size_t i = 0; i < columns_.size(); ++i) {
     columns_[i]->open_with_hugepages(snapshot_dir + "/" + name + ".col_" +
-                                     std::to_string(i));
+                                     std::to_string(i), force);
   }
   touched_ = true;
   buildColumnPtrs();

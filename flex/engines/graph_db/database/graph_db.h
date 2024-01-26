@@ -49,10 +49,7 @@ struct GraphDBConfig {
         warmup(false),
         enable_auto_compaction(false),
         service_port(-1),
-        vertex_map_strategy(MemoryStrategy::kMemoryOnly),
-        vertex_table_strategy(MemoryStrategy::kMemoryOnly),
-        topology_strategy(MemoryStrategy::kMemoryOnly),
-        allocator_strategy(MemoryStrategy::kMemoryOnly) {}
+        memory_level(1) {}
 
   Schema schema;
   std::string data_dir;
@@ -60,10 +57,14 @@ struct GraphDBConfig {
   bool warmup;
   bool enable_auto_compaction;
   int service_port;
-  MemoryStrategy vertex_map_strategy;
-  MemoryStrategy vertex_table_strategy;
-  MemoryStrategy topology_strategy;
-  MemoryStrategy allocator_strategy;
+
+  /*
+    0 - sync with disk; 
+    1 - mmap virtual memory; 
+    2 - prefering hugepages; 
+    3 - force hugepages;
+  */
+  int memory_level; 
 };
 
 class GraphDB {
