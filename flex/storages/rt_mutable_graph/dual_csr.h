@@ -139,19 +139,18 @@ class DualCsr : public DualCsrBase {
     out_csr_->open_with_hugepages(snapshot_dir + "/" + oe_name, src_vertex_cap);
   }
 #endif
+  void ClearTmp(const std::string& oe_name, const std::string& ie_name,
+                const std::string& edata_name,
+                const std::string& work_dir) override {
+    in_csr_->clear_tmp(ie_name, work_dir);
+    out_csr_->clear_tmp(oe_name, work_dir);
+  }
 
   void Dump(const std::string& oe_name, const std::string& ie_name,
             const std::string& edata_name,
             const std::string& new_snapshot_dir) override {
     in_csr_->dump(ie_name, new_snapshot_dir);
     out_csr_->dump(oe_name, new_snapshot_dir);
-  }
-
-  void ClearTmp(const std::string& oe_name, const std::string& ie_name,
-                const std::string& edata_name,
-                const std::string& work_dir) override {
-    in_csr_->clear_tmp(ie_name, work_dir);
-    out_csr_->clear_tmp(oe_name, work_dir);
   }
 
   MutableCsrBase* GetInCsr() override { return in_csr_; }
