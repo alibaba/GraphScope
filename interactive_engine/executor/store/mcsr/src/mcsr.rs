@@ -121,6 +121,7 @@ pub struct MutableCsr<I> {
     prev: Vec<I>,
     next: Vec<I>,
     edge_num: usize,
+    offset_size: usize,
     has_offset: bool,
 }
 
@@ -173,8 +174,13 @@ impl<I: IndexType> MutableCsr<I> {
             prev: vec![],
             next: vec![],
             edge_num: 0_usize,
+            offset_size: 0,
             has_offset: false,
         }
+    }
+
+    pub fn set_offset_size(&mut self, offset_size: usize) {
+        self.offset_size = offset_size;
     }
 
     pub fn set_offset(&mut self, has_offset: bool) {
@@ -280,6 +286,7 @@ impl<I: IndexType> MutableCsr<I> {
         let vnum = f.read_u64().unwrap() as usize;
         let total_capacity = f.read_u64().unwrap() as usize;
         self.edge_num = f.read_u64().unwrap() as usize;
+        self.offset_size = f.read_u64().unwrap() as usize;
         self.has_offset = if f.read_i32().unwrap() == 0 { false } else { true };
 
         let mut degree_vec = vec![0_i64; vnum];
@@ -371,6 +378,10 @@ impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
         self.edge_num
     }
 
+    fn offset_size(&self) -> usize {
+        self.offset_size
+    }
+
     fn degree(&self, src: I) -> i64 {
         if src.index() < self.adj_lists.len() {
             self.adj_lists[src.index()].degree()
@@ -420,6 +431,7 @@ impl<I: IndexType> CsrTrait<I> for MutableCsr<I> {
 
         f.write_u64(total_capacity as u64).unwrap();
         f.write_u64(self.edge_num as u64).unwrap();
+        f.write_u64(self.offset_size as u64).unwrap();
         if self.has_offset {
             f.write_i32(1).unwrap();
         } else {

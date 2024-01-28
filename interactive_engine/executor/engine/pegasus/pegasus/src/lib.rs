@@ -337,9 +337,7 @@ where
             Worker::new(&conf, worker_id, &peer_guard, sink.clone(), span)
         });
         let _g = crate::worker_id::guard(worker.id);
-        info!("Finished set worker id");
         logic(&mut worker)?;
-        info!("Finished build worker");
         workers.push(worker);
     }
 

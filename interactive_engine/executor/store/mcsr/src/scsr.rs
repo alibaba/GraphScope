@@ -61,6 +61,7 @@ pub struct SingleCsr<I> {
     nbr_exist: Vec<bool>,
     offset_list: Vec<usize>,
     edge_num: usize,
+    offset_size: usize,
     has_offset: bool,
 }
 
@@ -71,12 +72,17 @@ impl<I: IndexType> SingleCsr<I> {
             nbr_exist: vec![],
             offset_list: vec![],
             edge_num: 0_usize,
+            offset_size: 0_usize,
             has_offset: false,
         }
     }
 
     pub fn edge_num(&self) -> usize {
         self.edge_num
+    }
+
+    pub fn set_offset_size(&mut self, offset_size: usize) {
+        self.offset_size = offset_size;
     }
 
     pub fn set_offset(&mut self, has_offset: bool) {
@@ -136,6 +142,7 @@ impl<I: IndexType> SingleCsr<I> {
         let mut f = File::open(path).unwrap();
         let vnum = f.read_u64().unwrap() as usize;
         self.edge_num = f.read_u64().unwrap() as usize;
+        self.offset_size = f.read_u64().unwrap() as usize;
         self.has_offset = if f.read_i32().unwrap() == 0 { false } else { true };
 
         self.nbr_list
@@ -204,6 +211,10 @@ impl<I: IndexType> CsrTrait<I> for SingleCsr<I> {
         self.edge_num
     }
 
+    fn offset_size(&self) -> usize {
+        self.offset_size
+    }
+
     fn degree(&self, src: I) -> i64 {
         if self.nbr_exist[src.index()] {
             1
@@ -262,6 +273,7 @@ impl<I: IndexType> CsrTrait<I> for SingleCsr<I> {
         let vnum = self.nbr_list.len();
         f.write_u64(vnum as u64).unwrap();
         f.write_u64(self.edge_num as u64).unwrap();
+        f.write_u64(self.offset_size as u64).unwrap();
         if self.has_offset {
             f.write_i32(1).unwrap();
         } else {

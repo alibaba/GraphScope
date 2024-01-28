@@ -1,10 +1,10 @@
 use std::any::{Any, TypeId};
 use std::cell::{RefCell, UnsafeCell};
-use std::thread::LocalKey;
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::Arc;
+use std::thread::LocalKey;
 
 use crossbeam_utils::sync::ShardedLock;
 
@@ -37,10 +37,7 @@ impl REntry {
         let r = self.entry.downcast_ref::<T>()?;
         let ref_cnt = self.ref_cnt.clone();
         ref_cnt.fetch_add(1, Ordering::SeqCst);
-        Some(ArcRef {
-            cnt: ref_cnt,
-            inner: r,
-        })
+        Some(ArcRef { cnt: ref_cnt, inner: r })
     }
 
     fn get_ref_cnt(&self) -> usize {
@@ -83,20 +80,17 @@ impl<'a, T> Drop for ArcRef<'a, T> {
 
 impl KeyedResourceMap {
     fn new() -> Self {
-        KeyedResourceMap {
-            index: ShardedLock::new(HashMap::new()),
-            values: UnsafeCell::new(Vec::new()),
-        }
+        KeyedResourceMap { index: ShardedLock::new(HashMap::new()), values: UnsafeCell::new(Vec::new()) }
     }
 
-    pub fn add_resource<T: Send + Sync + 'static>(
-        &self,
-        key: String,
-        res: T,
-    ) -> Option<(String, T)> {
+    pub fn add_resource<T: Send + Sync + 'static>(&self, key: String, res: T) -> Option<(String, T)> {
         let mut locked = self.index.write().expect("lock write poisoned");
-        if locked.contains_key(&key) {
-            return Some((key, res));
+        if let Some(offset) = locked.get(&key) {
+            unsafe {
+                let v = &mut *self.values.get();
+                v[*offset] = Some(REntry::new(res));
+            }
+            return None;
         }
         let offset = unsafe {
             let v = &mut *self.values.get();
@@ -166,8 +160,7 @@ impl KeyedResourceMap {
 }
 
 lazy_static! {
-    static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> =
-        ShardedLock::new(Default::default());
+    static ref GLOBAL_RESOURCE_MAP: ShardedLock<SharedResourceMap> = ShardedLock::new(Default::default());
     static ref GLOBAL_KEYED_RESOURCES: KeyedResourceMap = KeyedResourceMap::new();
 }
 
@@ -182,9 +175,7 @@ pub struct ResourceBar {
 }
 impl ResourceBar {
     pub fn constructor() -> Self {
-        Self {
-            data: &RESOURCES,
-        }
+        Self { data: &RESOURCES }
     }
 }
 
@@ -194,9 +185,7 @@ pub struct KeyedResourceBar {
 }
 impl KeyedResourceBar {
     pub fn constructor() -> Self {
-        Self {
-            data: &KEYED_RESOURCES,
-        }
+        Self { data: &KEYED_RESOURCES }
     }
 }
 
@@ -415,10 +404,7 @@ impl<T> DistributedParResource<T> {
                     }
                 }
             }
-            let pr = DistributedParResource {
-                partitions,
-                start_index,
-            };
+            let pr = DistributedParResource { partitions, start_index };
             Ok(pr)
         }
     }
@@ -525,10 +511,7 @@ impl<T> DistributedParKeyedResource<T> {
                     }
                 }
             }
-            let pr = DistributedParKeyedResource {
-                partitions,
-                start_index,
-            };
+            let pr = DistributedParKeyedResource { partitions, start_index };
             Ok(pr)
         }
     }
@@ -558,7 +541,9 @@ impl<T: Send + Sync + 'static> PartitionedKeydResource for DistributedParKeyedRe
 pub fn add_resource<T: Any + Send + Sync>(res: T) {
     let type_id = TypeId::of::<T>();
     RESOURCES.with(|store| {
-        store.borrow_mut().insert(type_id, Box::new(res));
+        store
+            .borrow_mut()
+            .insert(type_id, Box::new(res));
     })
 }
 

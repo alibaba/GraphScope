@@ -529,6 +529,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             }
                             property_offset += 1;
                         }
+                        ie_csr.set_offset_size(property_offset);
+                        oe_csr.set_offset_size(property_offset);
 
                         info!("start export ie");
                         let ie_path = self
@@ -579,6 +581,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             }
                             property_offset += 1;
                         }
+                        ie_csr.set_offset_size(property_offset);
+                        oe_csr.set_offset_size(property_offset);
 
                         info!("start export ie");
                         let ie_path = self
@@ -627,6 +631,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                             }
                             property_offset += 1;
                         }
+                        ie_csr.set_offset_size(property_offset);
+                        oe_csr.set_offset_size(property_offset);
 
                         info!("start export ie, edge size {}", ie_csr.edge_num());
                         let ie_path = self

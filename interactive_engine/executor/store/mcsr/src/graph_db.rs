@@ -339,6 +339,8 @@ pub trait CsrTrait<I: IndexType>: Send + Sync {
 
     fn edge_num(&self) -> usize;
 
+    fn offset_size(&self) -> usize;
+
     fn degree(&self, src: I) -> i64;
 
     fn get_edges(&self, src: I) -> Option<NbrIter<'_, I>>;
