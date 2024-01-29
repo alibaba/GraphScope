@@ -23,7 +23,7 @@ use crate::col_table::ColTable;
 use crate::edge_trim::EdgeTrimJson;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
-use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, NbrIter, NbrOffsetIter, Nbr};
+use crate::graph_db::{CsrTrait, GlobalCsrTrait, LocalEdge, LocalVertex, Nbr, NbrIter, NbrOffsetIter};
 use crate::ldbc_parser::LDBCVertexParser;
 use crate::mcsr::MutableCsr;
 use crate::schema::{CsrGraphSchema, Schema};
@@ -697,6 +697,11 @@ where
 
     pub fn get_vertices_num(&self, label: LabelId) -> usize {
         self.vertex_map.vertex_num(label)
+    }
+
+    pub fn get_edges_num(&self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId) -> usize {
+        let index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
+        self.oe[index].offset_size()
     }
 
     pub fn get_global_id(&self, id: I, label: LabelId) -> Option<G> {
