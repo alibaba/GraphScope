@@ -20,10 +20,9 @@ import json
 import logging
 
 import requests
-from gs_flex_coordinator.core.utils import random_string
-
-from gs_flex_coordinator.core.config import INSTANCE_NAME
 from gs_flex_coordinator.core.alert.alert_message import AlertMessage
+from gs_flex_coordinator.core.config import INSTANCE_NAME
+from gs_flex_coordinator.core.utils import random_string
 
 logger = logging.getLogger("graphscope")
 

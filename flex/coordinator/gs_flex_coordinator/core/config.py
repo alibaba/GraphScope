@@ -41,6 +41,7 @@ def config_logging(log_level: str):
     handler.setFormatter(formatter)
     logger.addHandler(handler)
 
+
 config_logging("info")
 
 

@@ -20,16 +20,15 @@ import logging
 import os
 from typing import List, Union
 
-import hiactor_client
-from hiactor_client import Graph, ModelSchema, NodeStatus, Procedure, SchemaMapping, Service
-
-from gs_flex_coordinator.core.config import (
-    CLUSTER_TYPE,
-    HIACTOR_ADMIN_SERVICE_PORT,
-    WORKSPACE,
-)
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
+                                             HIACTOR_ADMIN_SERVICE_PORT,
+                                             WORKSPACE)
 from gs_flex_coordinator.core.utils import get_internal_ip
 from gs_flex_coordinator.models import StartServiceRequest
+
+import hiactor_client
+from hiactor_client import (Graph, ModelSchema, NodeStatus, Procedure,
+                            SchemaMapping, Service)
 
 logger = logging.getLogger("graphscope")
 

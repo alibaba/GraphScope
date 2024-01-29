@@ -20,8 +20,8 @@ import datetime
 import functools
 import logging
 import random
-import string
 import socket
+import string
 
 logger = logging.getLogger("graphscope")
 
@@ -44,7 +44,12 @@ def handle_api_exception():
 
 
 def decode_datetimestr(datetime_str):
-    formats = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d", "%Y-%m-%d-%H-%M-%S"]
+    formats = [
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M:%S.%f",
+        "%Y-%m-%d",
+        "%Y-%m-%d-%H-%M-%S",
+    ]
     for f in formats:
         try:
             return datetime.datetime.strptime(datetime_str, f)

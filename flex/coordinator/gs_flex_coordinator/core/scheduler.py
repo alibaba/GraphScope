@@ -20,15 +20,13 @@ import datetime
 import json
 import random
 import time
-from abc import ABCMeta
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from string import ascii_uppercase
 
 import schedule
-from schedule import CancelJob
-
 from gs_flex_coordinator.core.stoppable_thread import StoppableThread
 from gs_flex_coordinator.core.utils import decode_datetimestr
+from schedule import CancelJob
 
 
 class Schedule(object):

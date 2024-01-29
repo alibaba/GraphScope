@@ -18,16 +18,17 @@
 
 import itertools
 import logging
-import psutil
 import socket
 import threading
 from typing import List, Union
 
-from gs_flex_coordinator.core.config import CLUSTER_TYPE, INSTANCE_NAME, SOLUTION
+import psutil
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE, INSTANCE_NAME,
+                                             SOLUTION)
+from gs_flex_coordinator.core.interactive import init_hiactor_client
 from gs_flex_coordinator.models import (DeploymentInfo, Graph, ModelSchema,
                                         NodeStatus, Procedure, ServiceStatus,
                                         StartServiceRequest)
-from gs_flex_coordinator.core.interactive import init_hiactor_client
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -101,7 +102,7 @@ class ClientWrapper(object):
                 "node": socket.gethostname(),
                 "cpu_usage": psutil.cpu_percent(),
                 "memory_usage": psutil.virtual_memory().percent,
-                "disk_usage": float(f"{disk_info.used / disk_info.total * 100:.2f}")
+                "disk_usage": float(f"{disk_info.used / disk_info.total * 100:.2f}"),
             }
             rlt.append(NodeStatus.from_dict(status))
         return rlt

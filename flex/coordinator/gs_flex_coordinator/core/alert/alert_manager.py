@@ -23,10 +23,8 @@ import pickle
 from typing import List, Union
 
 from gs_flex_coordinator.core.alert.alert_receiver import DingTalkReceiver
-from gs_flex_coordinator.core.alert.builtin_rules import \
-    init_builtin_alert_rules
-from gs_flex_coordinator.core.alert.message_collector import \
-    AlertMessageCollector
+from gs_flex_coordinator.core.alert.builtin_rules import init_builtin_alert_rules
+from gs_flex_coordinator.core.alert.message_collector import AlertMessageCollector
 from gs_flex_coordinator.core.config import ALERT_WORKSPACE
 from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.core.utils import decode_datetimestr, encode_datetime

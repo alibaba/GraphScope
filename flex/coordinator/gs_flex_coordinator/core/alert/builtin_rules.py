@@ -18,12 +18,12 @@
 
 import datetime
 import logging
-import psutil
 import socket
 
-from gs_flex_coordinator.core.config import CLUSTER_TYPE, SOLUTION
+import psutil
 from gs_flex_coordinator.core.alert.alert_rule import AlertRule
 from gs_flex_coordinator.core.alert.message_collector import AlertMessageCollector
+from gs_flex_coordinator.core.config import CLUSTER_TYPE, SOLUTION
 
 logger = logging.getLogger("graphscope")
 
