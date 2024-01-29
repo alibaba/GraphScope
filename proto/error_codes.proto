@@ -84,6 +84,9 @@ enum Code {
   // Results of workers not consistent 
   WORKER_RESULTS_INCONSISTENT_ERROR = 41;
 
+  // Api exception during communication between coordinator and engines
+  API_EXCEPTION_ERROR = 51;
+
   // Unknown error.
   UNKNOWN_ERROR = 101;
 

@@ -219,6 +219,26 @@ def get_timestamp() -> float:
     return datetime.datetime.timestamp(datetime.datetime.now())
 
 
+def decode_datetimestr(datetime_str):
+    formats = ["%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d"]
+    for f in formats:
+        try:
+            return datetime.datetime.strptime(datetime_str, f)
+        except ValueError:
+            pass
+    raise RuntimeError(
+        "Decode '{0}' failed: format should be one of '{1}'".format(
+            datetime_str, str(formats)
+        )
+    )
+
+
+def encode_datetime(dt):
+    if isinstance(dt, datetime.datetime):
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    return str(dt)
+
+
 def get_lib_path(app_dir: str, app_name: str) -> str:
     if sys.platform == "linux" or sys.platform == "linux2":
         return os.path.join(app_dir, "lib%s.so" % app_name)

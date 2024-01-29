@@ -16,5 +16,24 @@
 # limitations under the License.
 #
 
-from gscoordinator.servicer.flex.service import *
-from gscoordinator.servicer.graphscope_one.service import *
+import threading
+
+
+class StoppableThread(threading.Thread):
+    """
+    This is one of the simplest mechaisms for a stoppable thread to
+    hold an 'exit_request' flag that each thread checks on a regular
+    interval to see if it is time for it to exit.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(StoppableThread, self).__init__(*args, **kwargs)
+        self._stop_event = threading.Event()
+
+    def stop(self):
+        self._stop_event.set()
+
+    def stopped(self):
+        """The thread itself should check regularly for the stopped() condition.
+        """
+        return self._stop_event.is_set()

@@ -25,7 +25,7 @@ try:
     import graphscope
 except ModuleNotFoundError:
     # if graphscope is not installed, only basic functions or utilities
-    # can be used, e.g. install dependencies
+    # can be used, e.g. install dependencies.
     graphscope = None
 
 
@@ -45,7 +45,8 @@ def cli():
     # get the specified commands under the FLEX architecture
     commands = get_command_collection(context)
     # serve the command
-    commands()
+    if commands is not None:
+        commands()
 
 
 if __name__ == "__main__":

@@ -16,6 +16,7 @@
 syntax = "proto3";
 package gs.rpc;
 
+import "flex.proto";
 import "message.proto";
 
 service CoordinatorService {
@@ -51,4 +52,36 @@ service CoordinatorService {
 
   // service functions under FLEX architecture
   rpc Connect(ConnectRequest) returns (ConnectResponse);
+
+  rpc ListGraph(ListGraphRequest) returns (ListGraphResponse);
+
+  rpc CreateGraph(CreateGraphRequest) returns (ApiResponse);
+
+  rpc DeleteGraph(DeleteGraphRequest) returns (ApiResponse);
+
+  rpc CreateJob(CreateJobRequest) returns (ApiResponse);
+
+  rpc ListJob(ListJobRequest) returns (ListJobResponse);
+
+  rpc CancelJob(CancelJobRequest) returns (ApiResponse);
+
+  rpc CreateProcedure(CreateProcedureRequest) returns (ApiResponse);
+
+  rpc ListProcedure(ListProcedureRequest) returns (ListProcedureResponse);
+
+  // end
+
+  rpc UpdateInteractiveProcedure(UpdateInteractiveProcedureRequest) returns (ApiResponse);
+
+  rpc RemoveInteractiveProcedure(RemoveInteractiveProcedureRequest) returns (ApiResponse);
+
+  rpc GetInteractiveServiceStatus(GetInteractiveServiceStatusRequest) returns (GetInteractiveServiceStatusResponse);
+
+  rpc StartInteractiveService(StartInteractiveServiceRequest) returns (ApiResponse);
+
+  rpc StopInteractiveService(StopInteractiveServiceRequest) returns (ApiResponse);
+
+  rpc RestartInteractiveService(RestartInteractiveServiceRequest) returns (ApiResponse);
+
+  rpc GetNodeStatus(GetNodeStatusRequest) returns (GetNodeStatusResponse);
 }
