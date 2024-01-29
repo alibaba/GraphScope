@@ -283,7 +283,7 @@ def find_graphscope_packages():
     packages = []
 
     # add graphscope
-    for pkg in find_packages("."):
+    for pkg in find_packages(".", exclude=["graphscope.flex.*"]):
         packages.append(pkg)
 
     return packages
