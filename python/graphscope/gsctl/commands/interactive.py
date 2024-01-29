@@ -19,7 +19,32 @@
 import click
 import yaml
 
-from graphscope.gsctl.impl import *
+from graphscope.gsctl.impl import connect_coordinator
+from graphscope.gsctl.impl import create_graph
+from graphscope.gsctl.impl import create_procedure
+from graphscope.gsctl.impl import delete_alert_receiver_by_id
+from graphscope.gsctl.impl import delete_alert_rule_by_name
+from graphscope.gsctl.impl import delete_graph_by_name
+from graphscope.gsctl.impl import delete_procedure_by_name
+from graphscope.gsctl.impl import disconnect_coordinator
+from graphscope.gsctl.impl import get_deployment_info
+from graphscope.gsctl.impl import get_node_status
+from graphscope.gsctl.impl import get_schema_by_name
+from graphscope.gsctl.impl import get_service_status
+from graphscope.gsctl.impl import import_data_to_interactive_graph
+from graphscope.gsctl.impl import list_alert_messages
+from graphscope.gsctl.impl import list_alert_receivers
+from graphscope.gsctl.impl import list_alert_rules
+from graphscope.gsctl.impl import list_graphs
+from graphscope.gsctl.impl import list_procedures
+from graphscope.gsctl.impl import register_receiver
+from graphscope.gsctl.impl import restart_service
+from graphscope.gsctl.impl import start_service
+from graphscope.gsctl.impl import stop_service
+from graphscope.gsctl.impl import update_alert_messages
+from graphscope.gsctl.impl import update_alert_receiver_by_id
+from graphscope.gsctl.impl import update_alert_rule
+from graphscope.gsctl.impl import update_procedure
 from graphscope.gsctl.utils import is_valid_file_path
 from graphscope.gsctl.utils import read_yaml_file
 from graphscope.gsctl.utils import terminal_display
@@ -96,7 +121,7 @@ def dataimport(filename):
     except Exception as e:
         click.secho(f"Failed to import data: {str(e)}", fg="red")
     else:
-        click.secho(f"Import data successfully.", fg="green")
+        click.secho("Import data successfully.", fg="green")
 
 
 @get.command()
@@ -130,7 +155,7 @@ def graph():
 
 @describe.command()
 @click.argument("graph_name", required=True)
-def graph(graph_name):
+def graph(graph_name):  # noqa: F811
     """Show details of graphs"""
     try:
         graphs = list_graphs()
@@ -160,7 +185,7 @@ def graph(graph_name):
     required=True,
     help="Path of yaml file to use to create a graph",
 )
-def graph(filename):
+def graph(filename):  # noqa: F811
     """Create a new graph in database, with the provided schema file"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
@@ -176,7 +201,7 @@ def graph(filename):
 
 @delete.command()
 @click.argument("graph_name", required=True)
-def graph(graph_name):
+def graph(graph_name):  # noqa: F811
     """Delete a graph by name in database"""
     try:
         delete_graph_by_name(graph_name)
@@ -224,7 +249,7 @@ def procedure(graph_name, filename):
     required=True,
     help="List stored procedures on a certain graph",
 )
-def procedure(graph_name):
+def procedure(graph_name):  # noqa: F811
     """Display stored procedures in database"""
 
     def _construct_and_display_data(procedures):
@@ -262,7 +287,7 @@ def procedure(graph_name):
     required=True,
     help="Describe stored procedures on a certain graph",
 )
-def procedure(procedure_name, graph_name):
+def procedure(procedure_name, graph_name):  # noqa: F811
     """Show details of stored procedure"""
     try:
         procedures = list_procedures(graph_name)
@@ -299,7 +324,7 @@ def procedure(procedure_name, graph_name):
     required=True,
     help="Path of yaml file to use to update a procedure",
 )
-def procedure(graph_name, filename):
+def procedure(graph_name, filename):  # noqa: F811
     """Update a stored procedure on a certain graph"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
@@ -325,7 +350,7 @@ def procedure(graph_name, filename):
     required=True,
     help="Delete a stored procedure on a certain graph",
 )
-def procedure(graph_name, procedure_name):
+def procedure(graph_name, procedure_name):  # noqa: F811
     """Delete a procedure on a certain graph in database"""
     try:
         delete_procedure_by_name(graph_name, procedure_name)
@@ -397,7 +422,7 @@ def service():
 
 
 @stop.command
-def service():
+def service():  # noqa: F811
     """Stop database service"""
     try:
         stop_service()
@@ -414,7 +439,7 @@ def service():
     required=True,
     help="Start service on a certain graph",
 )
-def service(graph_name):
+def service(graph_name):  # noqa: F811
     """Start database service on a certain graph"""
     try:
         start_service(graph_name)
@@ -427,7 +452,7 @@ def service(graph_name):
 
 
 @restart.command
-def service():
+def service():  # noqa: F811
     """Restart database service on current graph"""
     try:
         restart_service()
@@ -482,7 +507,7 @@ def alertrule():
     required=True,
     help="Path of yaml file to use to update an alertrule",
 )
-def alertrule(filename):
+def alertrule(filename):  # noqa: F811
     """Update an alert rule in database"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
@@ -498,7 +523,7 @@ def alertrule(filename):
 
 @delete.command()
 @click.argument("RULE_NAME", required=True)
-def alertrule(rule_name):
+def alertrule(rule_name):  # noqa: F811
     """Delete an alert rule indatabase"""
     try:
         delete_alert_rule_by_name(rule_name)
@@ -571,7 +596,7 @@ def alertmessage(status, severity, starttime, endtime, limit):
     required=True,
     help="Path of yaml file to use to update alert messages in batch",
 )
-def alertmessage(filename):
+def alertmessage(filename):  # noqa: F811
     """Update alert messages in batch"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
@@ -582,7 +607,7 @@ def alertmessage(filename):
     except Exception as e:
         click.secho(f"Failed to update alert messages: {str(e)}", fg="red")
     else:
-        click.secho(f"Update alert messages successfully.", fg="green")
+        click.secho("Update alert messages successfully.", fg="green")
 
 
 @get.command()
@@ -632,7 +657,7 @@ def alertreceiver():
     required=True,
     help="Path of yaml file to use to create an alert receiver",
 )
-def alertreceiver(filename):
+def alertreceiver(filename):  # noqa: F811
     """Create an alert receiver in database"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
@@ -644,7 +669,7 @@ def alertreceiver(filename):
     except Exception as e:
         click.secho(f"Failed to create alert receiver: {str(e)}", fg="red")
     else:
-        click.secho(f"Create alert receiver successfully.", fg="green")
+        click.secho("Create alert receiver successfully.", fg="green")
 
 
 @update.command()
@@ -655,7 +680,7 @@ def alertreceiver(filename):
     required=True,
     help="Path of yaml file to use to update an alert receiver",
 )
-def alertreceiver(receiver_id, filename):
+def alertreceiver(receiver_id, filename):  # noqa: F811
     """Update an alert receiver by id in database"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
@@ -671,7 +696,7 @@ def alertreceiver(receiver_id, filename):
 
 @delete.command()
 @click.argument("receiver_id", required=True)
-def alertreceiver(receiver_id):
+def alertreceiver(receiver_id):  # noqa: F811
     """Delete an alert receiver by id in database"""
     try:
         delete_alert_receiver_by_id(receiver_id)
