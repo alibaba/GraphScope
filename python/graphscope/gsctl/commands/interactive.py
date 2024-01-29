@@ -19,30 +19,7 @@
 import click
 import yaml
 
-from graphscope.gsctl.sdk import create_graph
-from graphscope.gsctl.sdk import create_procedure
-from graphscope.gsctl.sdk import delete_alert_rule_by_name
-from graphscope.gsctl.sdk import delete_graph_by_name
-from graphscope.gsctl.sdk import delete_procedure_by_name
-from graphscope.gsctl.sdk import get_deployment_info
-from graphscope.gsctl.sdk import get_node_status
-from graphscope.gsctl.sdk import get_schema_by_name
-from graphscope.gsctl.sdk import get_service_status
-from graphscope.gsctl.sdk import import_data_to_interactive_graph
-from graphscope.gsctl.sdk import list_alert_rules
-from graphscope.gsctl.sdk import list_graphs
-from graphscope.gsctl.sdk import list_procedures
-from graphscope.gsctl.sdk import list_alert_messages
-from graphscope.gsctl.sdk import restart_service
-from graphscope.gsctl.sdk import start_service
-from graphscope.gsctl.sdk import stop_service
-from graphscope.gsctl.sdk import update_alert_rule
-from graphscope.gsctl.sdk import update_alert_messages
-from graphscope.gsctl.sdk import update_procedure
-from graphscope.gsctl.sdk import list_alert_receivers
-from graphscope.gsctl.sdk import register_receiver
-from graphscope.gsctl.sdk import update_alert_receiver_by_id
-from graphscope.gsctl.sdk import delete_alert_receiver_by_id
+from graphscope.gsctl.impl import *
 from graphscope.gsctl.utils import is_valid_file_path
 from graphscope.gsctl.utils import read_yaml_file
 from graphscope.gsctl.utils import terminal_display

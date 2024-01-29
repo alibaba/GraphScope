@@ -18,12 +18,11 @@
 
 import click
 
-from graphscope.gsctl.config import Context
-
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
 from graphscope.gsctl.commands.interactive import cli as interactive
-from graphscope.gsctl.sdk import connect_coordinator
+from graphscope.gsctl.config import Context
+from graphscope.gsctl.impl import connect_coordinator
 
 
 def get_command_collection(context: Context):

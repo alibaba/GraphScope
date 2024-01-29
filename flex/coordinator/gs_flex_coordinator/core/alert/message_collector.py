@@ -25,6 +25,7 @@ from gs_flex_coordinator.core.config import ALERT_WORKSPACE
 from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.core.scheduler import cancel_job
 from gs_flex_coordinator.core.alert.alert_message import AlertMessage
+from gs_flex_coordinator.core.utils import decode_datetimestr
 
 logger = logging.getLogger("graphscope")
 
