@@ -86,10 +86,6 @@ public class GraphWriter implements MetricsAgent {
         this.kafkaAppender = appender;
     }
 
-    public void advanceIngestSnapshotId(long snapshotId, CompletionCallback<Long> callback) {
-        this.kafkaAppender.advanceIngestSnapshotId(snapshotId, callback);
-    }
-
     public void start() {
         this.scheduler =
                 Executors.newSingleThreadScheduledExecutor(

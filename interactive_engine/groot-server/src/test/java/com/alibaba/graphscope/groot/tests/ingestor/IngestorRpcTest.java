@@ -37,8 +37,8 @@ public class IngestorRpcTest {
 
     @Test
     void testIngestorSnapshotService() {
-        GraphWriter graphWriter = mock(GraphWriter.class);
-        IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(graphWriter);
+        KafkaAppender kafkaAppender = mock(KafkaAppender.class);
+        IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(kafkaAppender);
         AdvanceIngestSnapshotIdRequest req =
                 AdvanceIngestSnapshotIdRequest.newBuilder().setSnapshotId(10L).build();
         StreamObserver<AdvanceIngestSnapshotIdResponse> streamObserver = mock(StreamObserver.class);
@@ -48,7 +48,7 @@ public class IngestorRpcTest {
                             callback.onCompleted(9L);
                             return null;
                         })
-                .when(graphWriter)
+                .when(kafkaAppender)
                 .advanceIngestSnapshotId(anyLong(), any());
         ingestorSnapshotService.advanceIngestSnapshotId(req, streamObserver);
         verify(streamObserver)

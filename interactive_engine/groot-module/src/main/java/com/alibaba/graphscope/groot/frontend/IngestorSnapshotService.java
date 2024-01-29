@@ -2,6 +2,7 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
+import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdResponse;
 import com.alibaba.graphscope.proto.groot.IngestorSnapshotGrpc;
@@ -14,10 +15,10 @@ import org.slf4j.LoggerFactory;
 public class IngestorSnapshotService extends IngestorSnapshotGrpc.IngestorSnapshotImplBase {
     private static final Logger logger = LoggerFactory.getLogger(IngestorSnapshotService.class);
 
-    private final GraphWriter graphWriter;
+    private final KafkaAppender kafkaAppender;
 
-    public IngestorSnapshotService(GraphWriter graphWriter) {
-        this.graphWriter = graphWriter;
+    public IngestorSnapshotService(KafkaAppender kafkaAppender) {
+        this.kafkaAppender = kafkaAppender;
     }
 
     @Override
@@ -25,7 +26,7 @@ public class IngestorSnapshotService extends IngestorSnapshotGrpc.IngestorSnapsh
             AdvanceIngestSnapshotIdRequest request,
             StreamObserver<AdvanceIngestSnapshotIdResponse> responseObserver) {
         long snapshotId = request.getSnapshotId();
-        this.graphWriter.advanceIngestSnapshotId(
+        this.kafkaAppender.advanceIngestSnapshotId(
                 snapshotId,
                 new CompletionCallback<Long>() {
                     @Override

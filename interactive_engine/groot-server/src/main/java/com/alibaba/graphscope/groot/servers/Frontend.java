@@ -160,7 +160,7 @@ public class Frontend extends NodeBase {
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);
 
         IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
-        IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(graphWriter);
+        IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(kafkaAppender);
 
         this.rpcServer =
                 new RpcServer(
