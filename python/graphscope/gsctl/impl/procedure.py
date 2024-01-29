@@ -19,26 +19,26 @@
 from typing import List
 from typing import Union
 
-import graphscope.rest
+import graphscope.flex.rest
 from graphscope.gsctl.config import get_current_context
-from graphscope.rest import Procedure
+from graphscope.flex.rest import Procedure
 
 
 def create_procedure(graph_name: str, procedure: dict) -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ProcedureApi(api_client)
+        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
         return api_instance.create_procedure(graph_name, Procedure.from_dict(procedure))
 
 
 def list_procedures(graph_name: Union[None, str]) -> List[Procedure]:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ProcedureApi(api_client)
+        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
         if graph_name is None:
             procedures = api_instance.list_procedures()
         else:
@@ -48,11 +48,11 @@ def list_procedures(graph_name: Union[None, str]) -> List[Procedure]:
 
 def update_procedure(graph_name: str, procedure: dict) -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         procedure_name = procedure["name"]
-        api_instance = graphscope.rest.ProcedureApi(api_client)
+        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
         return api_instance.update_procedure(
             graph_name, procedure_name, Procedure.from_dict(procedure)
         )
@@ -60,8 +60,8 @@ def update_procedure(graph_name: str, procedure: dict) -> str:
 
 def delete_procedure_by_name(graph_name: str, procedure_name: str) -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ProcedureApi(api_client)
+        api_instance = graphscope.flex.rest.ProcedureApi(api_client)
         return api_instance.delete_procedure(graph_name, procedure_name)

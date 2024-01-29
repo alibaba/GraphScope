@@ -18,25 +18,25 @@
 
 from typing import List
 
-import graphscope.rest
+import graphscope.flex.rest
 from graphscope.gsctl.config import get_current_context
-from graphscope.rest import DeploymentInfo
-from graphscope.rest import NodeStatus
+from graphscope.flex.rest import DeploymentInfo
+from graphscope.flex.rest import NodeStatus
 
 
 def get_node_status() -> List[NodeStatus]:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.DeploymentApi(api_client)
+        api_instance = graphscope.flex.rest.DeploymentApi(api_client)
         return api_instance.get_node_status()
 
 
 def get_deployment_info() -> DeploymentInfo:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.DeploymentApi(api_client)
+        api_instance = graphscope.flex.rest.DeploymentApi(api_client)
         return api_instance.get_deployment_info()

@@ -18,45 +18,45 @@
 
 from typing import List
 
-import graphscope.rest
+import graphscope.flex.rest
 from graphscope.gsctl.config import get_current_context
-from graphscope.rest import Graph
-from graphscope.rest import ModelSchema
+from graphscope.flex.rest import Graph
+from graphscope.flex.rest import ModelSchema
 
 
 def list_graphs() -> List[Graph]:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.GraphApi(api_client)
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
         graphs = api_instance.list_graphs()
         return graphs
 
 
 def get_schema_by_name(graph_name: str) -> ModelSchema:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.GraphApi(api_client)
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
         schema = api_instance.get_schema(graph_name)
         return schema
 
 
 def create_graph(graph: dict) -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.GraphApi(api_client)
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
         return api_instance.create_graph(Graph.from_dict(graph))
 
 
 def delete_graph_by_name(graph_name: str) -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.GraphApi(api_client)
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
         return api_instance.delete_graph(graph_name)

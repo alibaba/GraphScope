@@ -16,27 +16,27 @@
 # limitations under the License.
 #
 
-import graphscope.rest
+import graphscope.flex.rest
 from graphscope.gsctl.config import get_current_context
-from graphscope.rest import ServiceStatus
-from graphscope.rest import StartServiceRequest
+from graphscope.flex.rest import ServiceStatus
+from graphscope.flex.rest import StartServiceRequest
 
 
 def get_service_status() -> ServiceStatus:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ServiceApi(api_client)
+        api_instance = graphscope.flex.rest.ServiceApi(api_client)
         return api_instance.get_service_status()
 
 
 def start_service(graph_name: str) -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ServiceApi(api_client)
+        api_instance = graphscope.flex.rest.ServiceApi(api_client)
         return api_instance.start_service(
             StartServiceRequest.from_dict({"graph_name": graph_name})
         )
@@ -44,17 +44,17 @@ def start_service(graph_name: str) -> str:
 
 def stop_service() -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ServiceApi(api_client)
+        api_instance = graphscope.flex.rest.ServiceApi(api_client)
         return api_instance.stop_service()
 
 
 def restart_service() -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ServiceApi(api_client)
+        api_instance = graphscope.flex.rest.ServiceApi(api_client)
         return api_instance.restart_service()

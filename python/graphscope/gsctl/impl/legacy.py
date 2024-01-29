@@ -16,16 +16,16 @@
 # limitations under the License.
 #
 
-import graphscope.rest
+import graphscope.flex.rest
 from graphscope.gsctl.config import get_current_context
-from graphscope.rest import SchemaMapping
+from graphscope.flex.rest import SchemaMapping
 
 
 def import_data_to_interactive_graph(config: dict) -> str:
     context = get_current_context()
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(context.coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         graph_name = config["graph"]
-        api_instance = graphscope.rest.LegacyApi(api_client)
+        api_instance = graphscope.flex.rest.LegacyApi(api_client)
         return api_instance.data_import(graph_name, SchemaMapping.from_dict(config))

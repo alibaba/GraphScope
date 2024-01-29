@@ -18,18 +18,18 @@
 
 from typing import Union
 
-import graphscope.rest
+import graphscope.flex.rest
 from graphscope.gsctl.config import Context
 from graphscope.gsctl.config import load_gs_config
-from graphscope.rest import ConnectionStatus
+from graphscope.flex.rest import ConnectionStatus
 
 
 def connect_coordinator(coordinator_endpoint: str) -> ConnectionStatus:
-    with graphscope.rest.ApiClient(
-        graphscope.rest.Configuration(coordinator_endpoint)
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(coordinator_endpoint)
     ) as api_client:
-        api_instance = graphscope.rest.ConnectionApi(api_client)
-        connection = graphscope.rest.Connection.from_dict(
+        api_instance = graphscope.flex.rest.ConnectionApi(api_client)
+        connection = graphscope.flex.rest.Connection.from_dict(
             {"coordinator_endpoint": coordinator_endpoint}
         )
         connection_status = api_instance.connect(connection)
