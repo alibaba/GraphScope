@@ -17,8 +17,8 @@
 #
 
 import graphscope.flex.rest
-from graphscope.gsctl.config import get_current_context
 from graphscope.flex.rest import SchemaMapping
+from graphscope.gsctl.config import get_current_context
 
 
 def import_data_to_interactive_graph(config: dict) -> str:

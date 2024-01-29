@@ -20,8 +20,8 @@ from typing import List
 from typing import Union
 
 import graphscope.flex.rest
-from graphscope.gsctl.config import get_current_context
 from graphscope.flex.rest import Procedure
+from graphscope.gsctl.config import get_current_context
 
 
 def create_procedure(graph_name: str, procedure: dict) -> str:

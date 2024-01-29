@@ -19,9 +19,9 @@
 from typing import Union
 
 import graphscope.flex.rest
+from graphscope.flex.rest import ConnectionStatus
 from graphscope.gsctl.config import Context
 from graphscope.gsctl.config import load_gs_config
-from graphscope.flex.rest import ConnectionStatus
 
 
 def connect_coordinator(coordinator_endpoint: str) -> ConnectionStatus:

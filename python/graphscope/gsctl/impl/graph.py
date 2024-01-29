@@ -19,9 +19,9 @@
 from typing import List
 
 import graphscope.flex.rest
-from graphscope.gsctl.config import get_current_context
 from graphscope.flex.rest import Graph
 from graphscope.flex.rest import ModelSchema
+from graphscope.gsctl.config import get_current_context
 
 
 def list_graphs() -> List[Graph]:

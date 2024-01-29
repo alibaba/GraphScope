@@ -13,7 +13,7 @@ exclude = '''
   | ^/dist.*
   | .*_pb2\.py
   | .*_pb2_grpc\.py
-  | graphscope/rest/*
+  | graphscope/flex/rest/*
 )
 '''
 

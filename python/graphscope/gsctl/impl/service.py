@@ -17,9 +17,9 @@
 #
 
 import graphscope.flex.rest
-from graphscope.gsctl.config import get_current_context
 from graphscope.flex.rest import ServiceStatus
 from graphscope.flex.rest import StartServiceRequest
+from graphscope.gsctl.config import get_current_context
 
 
 def get_service_status() -> ServiceStatus:

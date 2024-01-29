@@ -20,11 +20,11 @@ from typing import List
 from typing import Union
 
 import graphscope.flex.rest
-from graphscope.gsctl.config import get_current_context
 from graphscope.flex.rest import AlertMessage
 from graphscope.flex.rest import AlertReceiver
 from graphscope.flex.rest import AlertRule
 from graphscope.flex.rest import UpdateAlertMessagesRequest
+from graphscope.gsctl.config import get_current_context
 
 
 def list_alert_rules() -> List[AlertRule]:

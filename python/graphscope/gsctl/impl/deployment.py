@@ -19,9 +19,9 @@
 from typing import List
 
 import graphscope.flex.rest
-from graphscope.gsctl.config import get_current_context
 from graphscope.flex.rest import DeploymentInfo
 from graphscope.flex.rest import NodeStatus
+from graphscope.gsctl.config import get_current_context
 
 
 def get_node_status() -> List[NodeStatus]:
