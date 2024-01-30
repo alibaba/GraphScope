@@ -34,7 +34,7 @@ def cli():
         sys.path.insert(
             0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "commands")
         )
-        from dev_command import cli as dev_cli
+        from dev import cli as dev_cli
 
         dev_cli()
 
