@@ -6,7 +6,7 @@ In our guide on [using custom graph data](./custom_graph_data.md), we introduced
 
 Currently we only support import data to graph from local `csv` files or `odps` table. See configuration `loading_config.data_source.scheme`.
 
-## Sample Configuration for the "Modern" Graph
+## Sample Configuration for loading "Modern" Graph from csv files
 
 To illustrate, let's examine the `examples/modern_import_full.yaml` file. This configuration is designed for importing the "modern" graph and showcases the full range of configuration possibilities. We'll dissect each configuration item in the sections that follow.
 
@@ -98,6 +98,91 @@ edge_mappings:
         property: weight
 ```
 
+## Sample configuration for loading "Modern Graph" from odps tables
+
+```yaml
+graph: dd_graph
+loading_config:
+  data_source:
+    scheme: odps  # file, odps
+  import_option: init # init, overwrite
+  format:
+    type: arrow
+vertex_mappings:
+  - type_name: person  # must align with the schema
+    inputs:
+      - your_proj_name/table_name/partition_col_name=paritition_name
+    column_mappings:  
+          - column:
+              index: 0  
+              name: id 
+            property: id 
+          - column:
+              index: 1 
+              name: name
+            property: name
+          - column:
+              index: 2
+              name: age
+            property: age
+  - type_name: software
+    inputs:
+      - your_proj_name/table_name/partition_col_name=paritition_name
+    column_mappings:
+      - column:
+          index: 0      
+          name: id  
+        property: id  
+      - column:
+          index: 1
+          name: name
+        property: name
+      - column:
+          index: 2
+          name: lang
+        property: lang
+edge_mappings:
+  - type_triplet:
+      edge: knows
+      source_vertex: person
+      destination_vertex: person
+    inputs:
+      - your_proj_name/table_name/partition_col_name=paritition_name
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: src_user_id
+        property: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: dst_user_id
+        property: id
+    column_mappings:
+      - column:
+          index: 2
+          name: weight
+        property: weight
+  - type_triplet:
+      edge: created
+      source_vertex: person
+      destination_vertex: software
+    inputs:
+      - your_proj_name/table_name/partition_col_name=paritition_name
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    column_mappings:
+      - column:
+          index: 2
+          name: weight
+        property: weight
+```
 
 ## Configuration Breakdown
 The table below offers a detailed breakdown of each configuration item. In this table, we use the "." notation to represent the hierarchy within the YAML structure.

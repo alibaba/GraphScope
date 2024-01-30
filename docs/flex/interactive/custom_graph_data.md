@@ -137,7 +137,7 @@ The `import.yaml` file maps raw data fields to the schema of the "modern" graph 
 graph: movies
 loading_config:
   data_source:
-    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    scheme: file  # only file and odps is supported now
     location: /home/graphscope/movies/
   import_option: init # append, overwrite, only init is supported now
   format:
