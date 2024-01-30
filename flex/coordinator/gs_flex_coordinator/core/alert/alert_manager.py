@@ -38,7 +38,8 @@ class AlertManager(object):
         # receivers
         self._receivers = {}
         # pickle path
-        self._receiver_path = os.path.join(ALERT_WORKSPACE, "receiver.pickle")
+        self._receiver_path = os.path.join(ALERT_WORKSPACE, "receiver", "data.pickle")
+        os.makedirs(self._receiver_path, exist_ok=True)
         # recover
         self._try_to_recover_from_disk()
         # message collector

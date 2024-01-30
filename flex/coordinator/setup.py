@@ -1,21 +1,117 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+#
+# Copyright 2024 Alibaba Group Holding Limited.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+import os
+import shutil
+import subprocess
 import sys
-from setuptools import setup, find_packages
+import tempfile
+from distutils.cmd import Command
+
+from setuptools import find_packages, setup
 
 NAME = "gs_flex_coordinator"
 VERSION = "1.0.0"
 
-# To install the library, run the following
-#
-# python setup.py install
-#
-# prerequisite: setuptools
-# http://pypi.python.org/pypi/setuptools
+pkg_root = os.path.dirname(os.path.abspath(__file__))
 
-REQUIRES = [
-    "connexion>=2.0.2",
-    "swagger-ui-bundle>=0.0.2",
-    "python_dateutil>=2.6.0"
-]
+REQUIRES = ["connexion>=2.0.2", "swagger-ui-bundle>=0.0.2", "python_dateutil>=2.6.0"]
+
+
+class GenerateFlexServer(Command):
+    description = "generate flex server from openapi specification file"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # generate server code, note that controllers are not included here,
+        # see from .openapi-generator-ignore
+        specification = os.path.join(
+            pkg_root, "..", "openapi", "openapi_coordinator.yaml"
+        )
+        cmd = [
+            "openapi-generator-cli",
+            "generate",
+            "-g",
+            "python-flask",
+            "-i",
+            str(specification),
+            "-o",
+            str(pkg_root),
+            "--package-name",
+            "gs_flex_coordinator",
+        ]
+        print(" ".join(cmd))
+        subprocess.check_call(
+            cmd,
+            env=os.environ.copy(),
+        )
+
+
+class GenerateInteractiveSDK(Command):
+    description = "generate interactive client sdk from openapi specification file"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # remove
+        tempdir = os.path.join("/", tempfile.gettempprefix(), "flex_interactive")
+        if os.path.exists(tempdir):
+            shutil.rmtree(tempdir)
+        targetdir = os.path.join(
+            pkg_root, "gs_flex_coordinator", "core", "interactive", "hiactor_client"
+        )
+        if os.path.exists(targetdir):
+            shutil.rmtree(targetdir)
+        # generate
+        specification = os.path.join(
+            pkg_root, "..", "openapi", "openapi_interactive.yaml"
+        )
+        cmd = [
+            "openapi-generator-cli",
+            "generate",
+            "-g",
+            "python",
+            "-i",
+            str(specification),
+            "-o",
+            str(tempdir),
+            "--package-name",
+            "hiactor_client",
+        ]
+        print(" ".join(cmd))
+        subprocess.check_call(
+            cmd,
+            env=os.environ.copy(),
+        )
+        # cp
+        subprocess.run(["cp", "-r", os.path.join(tempdir, "hiactor_client"), targetdir])
+
 
 setup(
     name=NAME,
@@ -26,12 +122,16 @@ setup(
     keywords=["OpenAPI", "GraphScope FLEX HTTP SERVICE API"],
     install_requires=REQUIRES,
     packages=find_packages(),
-    package_data={'': ['openapi/openapi.yaml']},
+    package_data={"": ["openapi/openapi.yaml"]},
+    cmdclass={
+        "generate_flex_server": GenerateFlexServer,
+        "generate_interactive_sdk": GenerateInteractiveSDK,
+    },
     include_package_data=True,
     entry_points={
-        'console_scripts': ['gs_flex_coordinator=gs_flex_coordinator.__main__:main']},
+        "console_scripts": ["gs_flex_coordinator=gs_flex_coordinator.__main__:main"]
+    },
     long_description="""\
     This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about specification at [doc](https://swagger.io/specification/v3/).  Some useful links: - [GraphScope Repository](https://github.com/alibaba/GraphScope) - [The Source API definition for GraphScope Interactive](https://github.com/GraphScope/portal/tree/main/httpservice)
-    """
+    """,
 )
-

@@ -55,6 +55,5 @@ gs_flex_coordinator/test/__init__.py
 gs_flex_coordinator/typing_utils.py
 gs_flex_coordinator/util.py
 requirements.txt
-setup.py
 test-requirements.txt
 tox.ini

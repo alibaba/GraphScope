@@ -92,8 +92,8 @@ class BuildProto(Command):
         )
 
 
-class GenerateFlexClient(Command):
-    description = "generate flex client from openapi specification file"
+class GenerateFlexSDK(Command):
+    description = "generate flex client sdk from openapi specification file"
     user_options = []
 
     def initialize_options(self):
@@ -456,7 +456,7 @@ setup(
         "build_gltorch_ext": BuildGLTorchExt,
         "build_proto": BuildProto,
         "build_py": CustomBuildPy,
-        "generate_flex_client": GenerateFlexClient,
+        "generate_flex_sdk": GenerateFlexSDK,
         "bdist_wheel": CustomBDistWheel,
         "sdist": CustomSDist,
         "develop": CustomDevelop,
