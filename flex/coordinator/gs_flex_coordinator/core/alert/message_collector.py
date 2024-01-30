@@ -70,7 +70,7 @@ class OneDayAlertMessageCollector(object):
                 logger.info("Recover alert message from file %s", self._pickle_path)
 
                 with open(self._pickle_path, "rb") as f:
-                    self._messages = pickle.load(f)
+                    self._messages = pickle.load(f)  # noqa: B301
         except Exception as e:
             logger.warn(
                 "Failed to recover alert message from path %s: %s",
@@ -113,7 +113,7 @@ class OneDayAlertMessageCollector(object):
                 logger.info(
                     "%s: current alert message collector cleaned", str(self._date)
                 )
-        except:
+        except:  # noqa: E722, B110
             pass
 
 

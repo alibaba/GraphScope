@@ -136,7 +136,7 @@ class AlertRule(metaclass=ABCMeta):
             if self._enable and self._alert_job is not None:
                 cancel_job(self._alert_job, delete_scheduler=True)
                 self._enable = False
-        except:
+        except:  # noqa: E722, B110
             pass
 
     @abstractmethod

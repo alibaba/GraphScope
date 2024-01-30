@@ -51,7 +51,7 @@ class Schedule(object):
             try:
                 self._schedule.run_pending()
                 time.sleep(1)
-            except:  # noqa: E722
+            except:  # noqa: E722, B110
                 pass
 
 
