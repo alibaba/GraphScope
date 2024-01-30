@@ -1,13 +1,18 @@
 var searchData=
 [
-  ['i_1685',['i',['../uniongs_1_1AnyValue.html#a20be223eba5336a5931c47f369ad50cb',1,'gs::AnyValue']]],
-  ['ie_5f_1686',['ie_',['../classgs_1_1BasicFragmentLoader.html#ae3ca51b078a8cc34c0794ccc0bce9c0f',1,'gs::BasicFragmentLoader::ie_()'],['../classgs_1_1MutablePropertyFragment.html#a5cdfa5c2dd788f4635b204eaf7149cbd',1,'gs::MutablePropertyFragment::ie_()']]],
-  ['ie_5fstrategy_5f_1687',['ie_strategy_',['../classgs_1_1Schema.html#ad47143943d6a297cae15695067151cd5',1,'gs::Schema']]],
-  ['include_5fcolumns_1688',['INCLUDE_COLUMNS',['../namespacegs_1_1reader__options.html#a21fe7f7940e4abb730ddb38140d9e20f',1,'gs::reader_options']]],
-  ['indices_5f_1689',['indices_',['../classgs_1_1LFIndexer.html#abce13d1a72e233403bc782fdcba9512f',1,'gs::LFIndexer::indices_()'],['../classgs_1_1IdIndexer.html#ada46b870386d1828cb2081d070ab6ccf',1,'gs::IdIndexer::indices_()']]],
-  ['indices_5fsize_5f_1690',['indices_size_',['../classgs_1_1LFIndexer.html#a9240d3b2b224643aaf75dd03a6a66df5',1,'gs::LFIndexer']]],
-  ['init_5fiter_5f_1691',['init_iter_',['../classgs_1_1UpdateTransaction_1_1edge__iterator.html#a56730e1f1d2b093281300b7887a57606',1,'gs::UpdateTransaction::edge_iterator']]],
-  ['init_5fnbr_5flist_5f_1692',['init_nbr_list_',['../classgs_1_1MutableCsr.html#a8b88e5912da6a5cccff2b20c9c5983bf',1,'gs::MutableCsr']]],
-  ['insert_5fwal_5flist_5f_1693',['insert_wal_list_',['../classgs_1_1WalsParser.html#acd16dac97733924e62c1826acdab63cc',1,'gs::WalsParser']]],
-  ['iter_5f_1694',['iter_',['../classgs_1_1ReadTransaction_1_1edge__iterator.html#a56ee3059c74c9e6e7cd4a9041b8bd5b2',1,'gs::ReadTransaction::edge_iterator']]]
+  ['i_2240',['i',['../uniongs_1_1AnyValue.html#a20be223eba5336a5931c47f369ad50cb',1,'gs::AnyValue']]],
+  ['ie_5f_2241',['ie_',['../classgs_1_1BasicFragmentLoader.html#ae3ca51b078a8cc34c0794ccc0bce9c0f',1,'gs::BasicFragmentLoader::ie_()'],['../classgs_1_1MutablePropertyFragment.html#a5cdfa5c2dd788f4635b204eaf7149cbd',1,'gs::MutablePropertyFragment::ie_()']]],
+  ['ie_5fstrategy_5f_2242',['ie_strategy_',['../classgs_1_1Schema.html#ad47143943d6a297cae15695067151cd5',1,'gs::Schema']]],
+  ['in_5fcsr_5f_2243',['in_csr_',['../classgs_1_1DualCsr.html#ab78be842ba1ad3b12683abd32c8ffd9b',1,'gs::DualCsr::in_csr_()'],['../classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a6c9c9f8c0e86f1c2973c2de8e6ef3877',1,'gs::DualCsr&lt; std::string_view &gt;::in_csr_()']]],
+  ['include_5fcolumns_2244',['INCLUDE_COLUMNS',['../namespacegs_1_1reader__options.html#a21fe7f7940e4abb730ddb38140d9e20f',1,'gs::reader_options']]],
+  ['index_5fcol_5f_2245',['index_col_',['../classgs_1_1StringMapColumn.html#a56aa7dd9ca148f31a6bb576bfa1f90a3',1,'gs::StringMapColumn']]],
+  ['indices_5f_2246',['indices_',['../classgs_1_1LFIndexer.html#abce13d1a72e233403bc782fdcba9512f',1,'gs::LFIndexer::indices_()'],['../classgs_1_1IdIndexer.html#ada46b870386d1828cb2081d070ab6ccf',1,'gs::IdIndexer::indices_()']]],
+  ['indices_5fsize_5f_2247',['indices_size_',['../classgs_1_1LFIndexer.html#a9240d3b2b224643aaf75dd03a6a66df5',1,'gs::LFIndexer']]],
+  ['init_5fiter_5f_2248',['init_iter_',['../classgs_1_1UpdateTransaction_1_1edge__iterator.html#a56730e1f1d2b093281300b7887a57606',1,'gs::UpdateTransaction::edge_iterator']]],
+  ['insert_5fwal_5flist_5f_2249',['insert_wal_list_',['../classgs_1_1WalsParser.html#a1822af575491e007e31f1b46c9ff5e82',1,'gs::WalsParser']]],
+  ['insert_5fwal_5flist_5fsize_5f_2250',['insert_wal_list_size_',['../classgs_1_1WalsParser.html#a473cb5f4249b5a27ab1594a376f13026',1,'gs::WalsParser']]],
+  ['integer_2251',['integer',['../structgs_1_1Day.html#aa584d9e395da6fae20fc0c0c4b751aeb',1,'gs::Day']]],
+  ['internal_2252',['internal',['../structgs_1_1Day.html#abb8aea31441a7495564a3975754e44fe',1,'gs::Day']]],
+  ['items_5f_2253',['items_',['../classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html#aaddb6f96f021e9d3d682260c21691574',1,'gs::mmap_array&lt; std::string_view &gt;']]],
+  ['iter_5f_2254',['iter_',['../classgs_1_1ReadTransaction_1_1edge__iterator.html#a56ee3059c74c9e6e7cd4a9041b8bd5b2',1,'gs::ReadTransaction::edge_iterator']]]
 ];

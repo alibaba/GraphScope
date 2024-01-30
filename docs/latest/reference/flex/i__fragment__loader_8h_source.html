@@ -78,29 +78,21 @@ $(function() {
 <div class="line"><a name="l00020"></a><span class="lineno">   20</span>&#160; </div>
 <div class="line"><a name="l00021"></a><span class="lineno">   21</span>&#160;<span class="keyword">namespace </span><a class="code" href="namespacegs.html">gs</a> {</div>
 <div class="line"><a name="l00022"></a><span class="lineno">   22</span>&#160; </div>
-<div class="line"><a name="l00023"></a><span class="lineno"><a class="line" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">   23</a></span>&#160;<span class="keyword">enum class</span> <a class="code" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">FragmentLoaderType</a> { <a class="code" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5abe6422266a37be6797d5d7b45cf05f80">kCSVFragmentLoader</a> };</div>
-<div class="line"><a name="l00024"></a><span class="lineno">   24</span>&#160; </div>
-<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160;<span class="comment">// For different input format, we should implement different fragment loader.</span></div>
-<div class="line"><a name="l00026"></a><span class="lineno"><a class="line" href="classgs_1_1IFragmentLoader.html">   26</a></span>&#160;<span class="keyword">class </span><a class="code" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> {</div>
-<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160; <span class="keyword">public</span>:</div>
-<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;  <span class="keyword">virtual</span> <a class="code" href="classgs_1_1IFragmentLoader.html#af9118d3dccc4115c53847930575ac7d8">~IFragmentLoader</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160;  <span class="comment">// get the fragment loader type</span></div>
-<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;  <span class="keyword">virtual</span> <a class="code" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">FragmentLoaderType</a> <a class="code" href="classgs_1_1IFragmentLoader.html#aefe30b9063ab0101b64e7a4ffbbf19ef">GetFragmentLoaderType</a>() <span class="keyword">const</span> = 0;</div>
-<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classgs_1_1IFragmentLoader.html#abfe8b84da61f263ade2ac78295a62e04">LoadFragment</a>(<a class="code" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a>&amp; fragment) = 0;</div>
-<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;};</div>
-<div class="line"><a name="l00033"></a><span class="lineno">   33</span>&#160; </div>
-<div class="line"><a name="l00034"></a><span class="lineno">   34</span>&#160;}  <span class="comment">// namespace gs</span></div>
-<div class="line"><a name="l00035"></a><span class="lineno">   35</span>&#160; </div>
-<div class="line"><a name="l00036"></a><span class="lineno">   36</span>&#160;<span class="preprocessor">#endif  // STORAGES_RT_MUTABLE_GRAPH_LOADER_FRAGMENT_LOADER_H_</span></div>
+<div class="line"><a name="l00023"></a><span class="lineno">   23</span>&#160;<span class="comment">// For different input format, we should implement different fragment loader.</span></div>
+<div class="line"><a name="l00024"></a><span class="lineno"><a class="line" href="classgs_1_1IFragmentLoader.html">   24</a></span>&#160;<span class="keyword">class </span><a class="code" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> {</div>
+<div class="line"><a name="l00025"></a><span class="lineno">   25</span>&#160; <span class="keyword">public</span>:</div>
+<div class="line"><a name="l00026"></a><span class="lineno">   26</span>&#160;  <span class="keyword">virtual</span> <a class="code" href="classgs_1_1IFragmentLoader.html#af9118d3dccc4115c53847930575ac7d8">~IFragmentLoader</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a name="l00027"></a><span class="lineno">   27</span>&#160;  <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code" href="classgs_1_1IFragmentLoader.html#a3d5978de63840d2c1219b6ac4485a79a">LoadFragment</a>() = 0;</div>
+<div class="line"><a name="l00028"></a><span class="lineno">   28</span>&#160;};</div>
+<div class="line"><a name="l00029"></a><span class="lineno">   29</span>&#160; </div>
+<div class="line"><a name="l00030"></a><span class="lineno">   30</span>&#160;}  <span class="comment">// namespace gs</span></div>
+<div class="line"><a name="l00031"></a><span class="lineno">   31</span>&#160; </div>
+<div class="line"><a name="l00032"></a><span class="lineno">   32</span>&#160;<span class="preprocessor">#endif  // STORAGES_RT_MUTABLE_GRAPH_LOADER_FRAGMENT_LOADER_H_</span></div>
 </div><!-- fragment --></div><!-- contents -->
-<div class="ttc" id="aclassgs_1_1IFragmentLoader_html"><div class="ttname"><a href="classgs_1_1IFragmentLoader.html">gs::IFragmentLoader</a></div><div class="ttdef"><b>Definition:</b> i_fragment_loader.h:26</div></div>
-<div class="ttc" id="anamespacegs_html_af72311b6060166f7a160ef37bde0fbf5abe6422266a37be6797d5d7b45cf05f80"><div class="ttname"><a href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5abe6422266a37be6797d5d7b45cf05f80">gs::FragmentLoaderType::kCSVFragmentLoader</a></div><div class="ttdeci">@ kCSVFragmentLoader</div></div>
-<div class="ttc" id="anamespacegs_html_af72311b6060166f7a160ef37bde0fbf5"><div class="ttname"><a href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">gs::FragmentLoaderType</a></div><div class="ttdeci">FragmentLoaderType</div><div class="ttdef"><b>Definition:</b> i_fragment_loader.h:23</div></div>
-<div class="ttc" id="anamespacegs_html"><div class="ttname"><a href="namespacegs.html">gs</a></div><div class="ttdef"><b>Definition:</b> basic_fragment_loader.cc:19</div></div>
-<div class="ttc" id="aclassgs_1_1IFragmentLoader_html_aefe30b9063ab0101b64e7a4ffbbf19ef"><div class="ttname"><a href="classgs_1_1IFragmentLoader.html#aefe30b9063ab0101b64e7a4ffbbf19ef">gs::IFragmentLoader::GetFragmentLoaderType</a></div><div class="ttdeci">virtual FragmentLoaderType GetFragmentLoaderType() const =0</div></div>
+<div class="ttc" id="aclassgs_1_1IFragmentLoader_html_a3d5978de63840d2c1219b6ac4485a79a"><div class="ttname"><a href="classgs_1_1IFragmentLoader.html#a3d5978de63840d2c1219b6ac4485a79a">gs::IFragmentLoader::LoadFragment</a></div><div class="ttdeci">virtual void LoadFragment()=0</div></div>
+<div class="ttc" id="aclassgs_1_1IFragmentLoader_html"><div class="ttname"><a href="classgs_1_1IFragmentLoader.html">gs::IFragmentLoader</a></div><div class="ttdef"><b>Definition:</b> i_fragment_loader.h:24</div></div>
+<div class="ttc" id="anamespacegs_html"><div class="ttname"><a href="namespacegs.html">gs</a></div><div class="ttdef"><b>Definition:</b> dual_csr.h:25</div></div>
 <div class="ttc" id="amutable__property__fragment_8h_html"><div class="ttname"><a href="mutable__property__fragment_8h.html">mutable_property_fragment.h</a></div></div>
-<div class="ttc" id="aclassgs_1_1MutablePropertyFragment_html"><div class="ttname"><a href="classgs_1_1MutablePropertyFragment.html">gs::MutablePropertyFragment</a></div><div class="ttdef"><b>Definition:</b> mutable_property_fragment.h:36</div></div>
-<div class="ttc" id="aclassgs_1_1IFragmentLoader_html_abfe8b84da61f263ade2ac78295a62e04"><div class="ttname"><a href="classgs_1_1IFragmentLoader.html#abfe8b84da61f263ade2ac78295a62e04">gs::IFragmentLoader::LoadFragment</a></div><div class="ttdeci">virtual void LoadFragment(MutablePropertyFragment &amp;fragment)=0</div></div>
 <div class="ttc" id="aclassgs_1_1IFragmentLoader_html_af9118d3dccc4115c53847930575ac7d8"><div class="ttname"><a href="classgs_1_1IFragmentLoader.html#af9118d3dccc4115c53847930575ac7d8">gs::IFragmentLoader::~IFragmentLoader</a></div><div class="ttdeci">virtual ~IFragmentLoader()=default</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

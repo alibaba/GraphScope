@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -772,21 +774,25 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 <td><p>Number of Store Pod</p></td>
 <td><p>2</p></td>
 </tr>
-<tr class="row-even"><td><p>frontend.replicaCount</p></td>
-<td><p>Number of Frontend</p></td>
-<td><p>1</p></td>
-</tr>
-<tr class="row-odd"><td><p>ingestor.replicaCount</p></td>
+<tr class="row-even"><td><p>ingestor.replicaCount</p></td>
 <td><p>Number of Ingestor Pod</p></td>
 <td><p>2</p></td>
-</tr>
-<tr class="row-even"><td><p>frontend.service.type</p></td>
-<td><p>Kubernetes Service type of frontend</p></td>
-<td><p>NodePort</p></td>
 </tr>
 <tr class="row-odd"><td><p>dataset.modern</p></td>
 <td><p>Load <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started/">modern graph</a> dataset at the start</p></td>
 <td><p>false</p></td>
+</tr>
+<tr class="row-even"><td><p>frontend.replicaCount</p></td>
+<td><p>Number of Frontend</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p>frontend.service.type</p></td>
+<td><p>Kubernetes Service type of frontend</p></td>
+<td><p>NodePort</p></td>
+</tr>
+<tr class="row-even"><td><p>frontend.query.per.second.limit</p></td>
+<td><p>the maximum qps can be handled by frontend service</p></td>
+<td><p>2147483647 (without limitation)</p></td>
 </tr>
 </tbody>
 </table>
@@ -1292,6 +1298,32 @@ Else, please proceed to ingest and commit.</p>
 <p>Refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java">RealtimeWrite.java</a> for examples.</p>
 </section>
 </section>
+<section id="other-features">
+<h3>Other features<a class="headerlink" href="#other-features" title="Permalink to this heading">#</a></h3>
+<p>Groot could enable user to replay realtime write records from a specific offset, or a timestamp, this is useful when you want to restore some records before
+a offline load finished, since offload will overwrite all records.</p>
+<p>You can only specify one of <code class="docutils literal notranslate"><span class="pre">offset</span></code> and <code class="docutils literal notranslate"><span class="pre">timestamp</span></code>. The other unused one must be set to -1. If not, <code class="docutils literal notranslate"><span class="pre">offset</span></code> will take precedence.</p>
+<p>Example API:</p>
+<ul>
+<li><p>Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">graphscope</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">conn</span><span class="p">()</span>
+<span class="n">current_timestamp</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span> <span class="o">-</span> <span class="mi">100</span> <span class="o">*</span> <span class="mi">60</span> <span class="o">*</span> <span class="mi">1000</span>
+
+<span class="n">r</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">replay_records</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">current_timestamp</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Java</p>
+<div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="n">GrootClient</span><span class="w"> </span><span class="n">client</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GrootClientBuilder</span><span class="p">.</span><span class="na">build</span><span class="p">();</span>
+<span class="kt">long</span><span class="w"> </span><span class="n">timestamp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">currentTimeMillis</span><span class="p">();</span>
+<span class="n">client</span><span class="p">.</span><span class="na">replayRecords</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="n">timestamp</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
 </section>
 <section id="uninstalling-and-restarting">
 <h2>Uninstalling and Restarting<a class="headerlink" href="#uninstalling-and-restarting" title="Permalink to this heading">#</a></h2>
@@ -1370,6 +1402,15 @@ kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store
 <li><p>configuration file of <code class="docutils literal notranslate"><span class="pre">log4rs</span></code> is in <code class="docutils literal notranslate"><span class="pre">/usr/local/groot/conf/log4rs.yml</span></code></p></li>
 </ul>
 </section>
+</section>
+<section id="secondary-instance">
+<h3>Secondary Instance<a class="headerlink" href="#secondary-instance" title="Permalink to this heading">#</a></h3>
+<p>Groot support open secondary instance along with primary instances. It leverages the <a class="reference external" href="https://github.com/facebook/rocksdb/wiki/Read-only-and-Secondary-instances">Secondary Instance</a> of RocksDB
+to provide the ability to serve the querying requests as well as catching up the schema and data updates.</p>
+<p>To use it, just set the <code class="docutils literal notranslate"><span class="pre">secondary.enabled=true</span></code> in the helm charts.
+Also remember the data path, ZK connect string as well as Kafka endpoint and topic should be as same as the primary instance.
+And use a different <code class="docutils literal notranslate"><span class="pre">zk.base.path</span></code> for each secondary instance to avoid conflict with each other when doing node discovery.</p>
+<p><code class="docutils literal notranslate"><span class="pre">storeGcIntervalMs</span></code> controls how often should the secondary perform a <code class="docutils literal notranslate"><span class="pre">try_catch_up_with_primary</span></code> call, default to <code class="docutils literal notranslate"><span class="pre">5000</span></code> which is 5 seconds.</p>
 </section>
 </section>
 </section>
@@ -1475,6 +1516,7 @@ kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store
 <li><a class="reference internal" href="#id2">Java</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#other-features">Other features</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#uninstalling-and-restarting">Uninstalling and Restarting</a><ul>
@@ -1491,6 +1533,7 @@ kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store
 <li><a class="reference internal" href="#configuring-logs">Configuring logs</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#secondary-instance">Secondary Instance</a></li>
 </ul>
 </li>
 </ul>

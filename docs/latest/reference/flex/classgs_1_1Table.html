@@ -95,8 +95,20 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a49fbeeb00efc5d93e83cbcce0de2d0e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab0ff8f1b7d00d54a126d1274c217823"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#aab0ff8f1b7d00d54a126d1274c217823">~Table</a> ()</td></tr>
 <tr class="separator:aab0ff8f1b7d00d54a126d1274c217823"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad2d98df5a047409e8f38d2cb97a39e5a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ad2d98df5a047409e8f38d2cb97a39e5a">init</a> (const std::vector&lt; std::string &gt; &amp;col_name, const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;types, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies_, size_t max_row_num)</td></tr>
-<tr class="separator:ad2d98df5a047409e8f38d2cb97a39e5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6625288cac372136d4ef36f64ef3df57"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a6625288cac372136d4ef36f64ef3df57">init</a> (const std::string &amp;name, const std::string &amp;work_dir, const std::vector&lt; std::string &gt; &amp;col_name, const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;types, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies_)</td></tr>
+<tr class="separator:a6625288cac372136d4ef36f64ef3df57"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1ed1d15cacfbf5ba9fbf2cdec81669fa"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a1ed1d15cacfbf5ba9fbf2cdec81669fa">open</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir, const std::vector&lt; std::string &gt; &amp;col_name, const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;property_types, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies_)</td></tr>
+<tr class="separator:a1ed1d15cacfbf5ba9fbf2cdec81669fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0582c3eec20dca1fca334321ac073fe6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a0582c3eec20dca1fca334321ac073fe6">open_in_memory</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::vector&lt; std::string &gt; &amp;col_name, const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;property_types, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies_)</td></tr>
+<tr class="separator:a0582c3eec20dca1fca334321ac073fe6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af8cea9268dc618d9872e41d683bbfce0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#af8cea9268dc618d9872e41d683bbfce0">open_with_hugepages</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::vector&lt; std::string &gt; &amp;col_name, const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;property_types, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies_, bool force)</td></tr>
+<tr class="separator:af8cea9268dc618d9872e41d683bbfce0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a348645ae4889e3ac58218233d4dcba5e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a348645ae4889e3ac58218233d4dcba5e">touch</a> (const std::string &amp;name, const std::string &amp;work_dir)</td></tr>
+<tr class="separator:a348645ae4889e3ac58218233d4dcba5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a72aa9472c048168befb3d220eb4dc59b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a72aa9472c048168befb3d220eb4dc59b">copy_to_tmp</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir)</td></tr>
+<tr class="separator:a72aa9472c048168befb3d220eb4dc59b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ecbba4c52c30cce5c667e993000c435"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a4ecbba4c52c30cce5c667e993000c435">dump</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>)</td></tr>
+<tr class="separator:a4ecbba4c52c30cce5c667e993000c435"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a436714df0b244ec79cdcc8a72d03752e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a436714df0b244ec79cdcc8a72d03752e">reset_header</a> (const std::vector&lt; std::string &gt; &amp;col_name)</td></tr>
 <tr class="separator:a436714df0b244ec79cdcc8a72d03752e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa7b7ace5d0b2a88d0df780da705449d2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#aa7b7ace5d0b2a88d0df780da705449d2">column_names</a> () const</td></tr>
@@ -105,7 +117,7 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a85112e607b38fcb1c472c4eae69dfa22"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a282e8b1bfb492a1906d906ae857a9b27"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a282e8b1bfb492a1906d906ae857a9b27">get_column_id_by_name</a> (const std::string &amp;name) const</td></tr>
 <tr class="separator:a282e8b1bfb492a1906d906ae857a9b27"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a401cddb4c562de8fef52c5a5f4ec8b56"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a401cddb4c562de8fef52c5a5f4ec8b56">column_types</a> () const</td></tr>
+<tr class="memitem:a401cddb4c562de8fef52c5a5f4ec8b56"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a401cddb4c562de8fef52c5a5f4ec8b56">column_types</a> () const</td></tr>
 <tr class="separator:a401cddb4c562de8fef52c5a5f4ec8b56"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab026ec65598d1c02758bb8ef4b0cfcdc"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ab026ec65598d1c02758bb8ef4b0cfcdc">get_column</a> (const std::string &amp;name)</td></tr>
 <tr class="separator:ab026ec65598d1c02758bb8ef4b0cfcdc"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -119,6 +131,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aacc6cb8e8e0c8cc82aecbf8471241e3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afc99ad9f80e1f93ec5537f846142a0a4"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#afc99ad9f80e1f93ec5537f846142a0a4">col_num</a> () const</td></tr>
 <tr class="separator:afc99ad9f80e1f93ec5537f846142a0a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acaf92f98b3fa69f58134518781c4a041"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#acaf92f98b3fa69f58134518781c4a041">row_num</a> () const</td></tr>
+<tr class="separator:acaf92f98b3fa69f58134518781c4a041"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad894c6d928a74f81654b24d4acfa923e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ad894c6d928a74f81654b24d4acfa923e">columns</a> ()</td></tr>
 <tr class="separator:ad894c6d928a74f81654b24d4acfa923e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c2bc6c95a8253c55d3447cb9e91f982"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> * &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a6c2bc6c95a8253c55d3447cb9e91f982">column_ptrs</a> ()</td></tr>
@@ -127,10 +141,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ad238826670a14cd2c0cc1f6183ed52f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a52c88009b5305fdc978862fcd910d69e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a52c88009b5305fdc978862fcd910d69e">insert</a> (size_t index, const std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;values, const std::vector&lt; int32_t &gt; &amp;col_ind_mapping)</td></tr>
 <tr class="separator:a52c88009b5305fdc978862fcd910d69e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3447f5915d44d43ca40480f5a69689b3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a3447f5915d44d43ca40480f5a69689b3">Serialize</a> (std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;writer, const std::string &amp;prefix, size_t row_num)</td></tr>
-<tr class="separator:a3447f5915d44d43ca40480f5a69689b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aced930e6983c9292e91cc7d3a68ebfb8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#aced930e6983c9292e91cc7d3a68ebfb8">Deserialize</a> (std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;reader, const std::string &amp;prefix)</td></tr>
-<tr class="separator:aced930e6983c9292e91cc7d3a68ebfb8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9ea5829bafb93445ab07fc45958baac1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a9ea5829bafb93445ab07fc45958baac1">resize</a> (size_t <a class="el" href="classgs_1_1Table.html#acaf92f98b3fa69f58134518781c4a041">row_num</a>)</td></tr>
+<tr class="separator:a9ea5829bafb93445ab07fc45958baac1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab8df9a4e0fda6dc4d41b4f1e1b181973"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1Any.html">Any</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ab8df9a4e0fda6dc4d41b4f1e1b181973">at</a> (size_t row_id, size_t col_id)</td></tr>
 <tr class="separator:ab8df9a4e0fda6dc4d41b4f1e1b181973"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0aa7ecdfcdc823e75c8d06ac5a015c1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1Any.html">Any</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ac0aa7ecdfcdc823e75c8d06ac5a015c1">at</a> (size_t row_id, size_t col_id) const</td></tr>
@@ -142,15 +154,19 @@ Public Member Functions</h2></td></tr>
 Private Member Functions</h2></td></tr>
 <tr class="memitem:afa13517d960458358604e9242ab747fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#afa13517d960458358604e9242ab747fb">buildColumnPtrs</a> ()</td></tr>
 <tr class="separator:afa13517d960458358604e9242ab747fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd022cf9d255bdfa3e65805144b1cea6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#abd022cf9d255bdfa3e65805144b1cea6">initColumns</a> (const std::vector&lt; std::string &gt; &amp;col_name, const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;types, const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;strategies_)</td></tr>
+<tr class="separator:abd022cf9d255bdfa3e65805144b1cea6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
-<tr class="memitem:a53b85141a5a37602efdfcb5945dda56e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a53b85141a5a37602efdfcb5945dda56e">columns_</a></td></tr>
-<tr class="separator:a53b85141a5a37602efdfcb5945dda56e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0ac692affaaae690d9d92ec6336bfd8b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; std::string, int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a0ac692affaaae690d9d92ec6336bfd8b">col_id_indexer_</a></td></tr>
 <tr class="separator:a0ac692affaaae690d9d92ec6336bfd8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a53b85141a5a37602efdfcb5945dda56e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#a53b85141a5a37602efdfcb5945dda56e">columns_</a></td></tr>
+<tr class="separator:a53b85141a5a37602efdfcb5945dda56e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ada6a8bbb14de2c428414fcb678aa393f"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#ada6a8bbb14de2c428414fcb678aa393f">column_ptrs_</a></td></tr>
 <tr class="separator:ada6a8bbb14de2c428414fcb678aa393f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aec8fd94c7b2782ed23a4dcdeb3812c41"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Table.html#aec8fd94c7b2782ed23a4dcdeb3812c41">touched_</a></td></tr>
+<tr class="separator:aec8fd94c7b2782ed23a4dcdeb3812c41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a49fbeeb00efc5d93e83cbcce0de2d0e2"></a>
@@ -345,7 +361,7 @@ Private Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; gs::Table::column_types </td>
+          <td class="memname">std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; gs::Table::column_types </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -372,23 +388,57 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aced930e6983c9292e91cc7d3a68ebfb8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aced930e6983c9292e91cc7d3a68ebfb8">&#9670;&nbsp;</a></span>Deserialize()</h2>
+<a id="a72aa9472c048168befb3d220eb4dc59b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a72aa9472c048168befb3d220eb4dc59b">&#9670;&nbsp;</a></span>copy_to_tmp()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::Table::Deserialize </td>
+          <td class="memname">void gs::Table::copy_to_tmp </td>
           <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;&#160;</td>
-          <td class="paramname"><em>reader</em>, </td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>prefix</em>&#160;</td>
+          <td class="paramname"><em>snapshot_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4ecbba4c52c30cce5c667e993000c435"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ecbba4c52c30cce5c667e993000c435">&#9670;&nbsp;</a></span>dump()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Table::dump </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>snapshot_dir</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -536,8 +586,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ad2d98df5a047409e8f38d2cb97a39e5a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad2d98df5a047409e8f38d2cb97a39e5a">&#9670;&nbsp;</a></span>init()</h2>
+<a id="a6625288cac372136d4ef36f64ef3df57"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6625288cac372136d4ef36f64ef3df57">&#9670;&nbsp;</a></span>init()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -545,26 +595,32 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="memname">void gs::Table::init </td>
           <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
           <td class="paramname"><em>col_name</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;&#160;</td>
           <td class="paramname"><em>types</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>strategies_</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>max_row_num</em>&#160;</td>
+          <td class="paramname"><em>strategies_</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -572,6 +628,48 @@ Private Attributes</h2></td></tr>
           <td></td><td></td>
         </tr>
       </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abd022cf9d255bdfa3e65805144b1cea6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd022cf9d255bdfa3e65805144b1cea6">&#9670;&nbsp;</a></span>initColumns()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Table::initColumns </td>
+          <td>(</td>
+          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>col_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>types</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>strategies_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 </div>
@@ -638,6 +736,156 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a1ed1d15cacfbf5ba9fbf2cdec81669fa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1ed1d15cacfbf5ba9fbf2cdec81669fa">&#9670;&nbsp;</a></span>open()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Table::open </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>snapshot_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>col_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>property_types</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>strategies_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0582c3eec20dca1fca334321ac073fe6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0582c3eec20dca1fca334321ac073fe6">&#9670;&nbsp;</a></span>open_in_memory()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Table::open_in_memory </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>snapshot_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>col_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>property_types</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>strategies_</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af8cea9268dc618d9872e41d683bbfce0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af8cea9268dc618d9872e41d683bbfce0">&#9670;&nbsp;</a></span>open_with_hugepages()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Table::open_with_hugepages </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>snapshot_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
+          <td class="paramname"><em>col_name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>property_types</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::vector&lt; <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a> &gt; &amp;&#160;</td>
+          <td class="paramname"><em>strategies_</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>force</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a436714df0b244ec79cdcc8a72d03752e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a436714df0b244ec79cdcc8a72d03752e">&#9670;&nbsp;</a></span>reset_header()</h2>
 
@@ -656,29 +904,58 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a3447f5915d44d43ca40480f5a69689b3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3447f5915d44d43ca40480f5a69689b3">&#9670;&nbsp;</a></span>Serialize()</h2>
+<a id="a9ea5829bafb93445ab07fc45958baac1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9ea5829bafb93445ab07fc45958baac1">&#9670;&nbsp;</a></span>resize()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::Table::Serialize </td>
+          <td class="memname">void gs::Table::resize </td>
           <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; grape::LocalIOAdaptor &gt; &amp;&#160;</td>
-          <td class="paramname"><em>writer</em>, </td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>row_num</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="acaf92f98b3fa69f58134518781c4a041"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acaf92f98b3fa69f58134518781c4a041">&#9670;&nbsp;</a></span>row_num()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t gs::Table::row_num </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a348645ae4889e3ac58218233d4dcba5e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a348645ae4889e3ac58218233d4dcba5e">&#9670;&nbsp;</a></span>touch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Table::touch </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>prefix</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>row_num</em>&#160;</td>
+          <td class="paramname"><em>work_dir</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -746,6 +1023,28 @@ Private Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">std::vector&lt;std::shared_ptr&lt;<a class="el" href="classgs_1_1ColumnBase.html">ColumnBase</a>&gt; &gt; gs::Table::columns_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aec8fd94c7b2782ed23a4dcdeb3812c41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aec8fd94c7b2782ed23a4dcdeb3812c41">&#9670;&nbsp;</a></span>touched_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::Table::touched_</td>
         </tr>
       </table>
   </td>

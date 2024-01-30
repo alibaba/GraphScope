@@ -1,7 +1,10 @@
 var searchData=
 [
-  ['keybuffer_954',['KeyBuffer',['../structgs_1_1id__indexer__impl_1_1KeyBuffer.html',1,'gs::id_indexer_impl']]],
-  ['keybuffer_3c_20key_5ft_20_3e_955',['KeyBuffer&lt; KEY_T &gt;',['../structgs_1_1id__indexer__impl_1_1KeyBuffer.html',1,'gs::id_indexer_impl']]],
-  ['keybuffer_3c_20std_3a_3astring_20_3e_956',['KeyBuffer&lt; std::string &gt;',['../structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html',1,'gs::id_indexer_impl']]],
-  ['keybuffer_3c_20std_3a_3astring_5fview_20_3e_957',['KeyBuffer&lt; std::string_view &gt;',['../structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string__view_01_4.html',1,'gs::id_indexer_impl']]]
+  ['idindexer_1271',['IdIndexer',['../classgs_1_1IdIndexer.html',1,'gs']]],
+  ['idindexer_3c_20std_3a_3astring_2c_20int_20_3e_1272',['IdIndexer&lt; std::string, int &gt;',['../classgs_1_1IdIndexer.html',1,'gs']]],
+  ['idindexer_3c_20std_3a_3astring_2c_20label_5ft_20_3e_1273',['IdIndexer&lt; std::string, label_t &gt;',['../classgs_1_1IdIndexer.html',1,'gs']]],
+  ['idindexerbase_1274',['IdIndexerBase',['../classgs_1_1IdIndexerBase.html',1,'gs']]],
+  ['ifragmentloader_1275',['IFragmentLoader',['../classgs_1_1IFragmentLoader.html',1,'gs']]],
+  ['inserttransaction_1276',['InsertTransaction',['../classgs_1_1InsertTransaction.html',1,'gs']]],
+  ['irecordbatchsupplier_1277',['IRecordBatchSupplier',['../classgs_1_1IRecordBatchSupplier.html',1,'gs']]]
 ];

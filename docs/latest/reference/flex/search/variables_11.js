@@ -1,9 +1,11 @@
 var searchData=
 [
-  ['read_5fedge_5ftable_5ftime_5f_1741',['read_edge_table_time_',['../classgs_1_1CSVFragmentLoader.html#af74ecd47b82130d9c96eae2bb503643d',1,'gs::CSVFragmentLoader']]],
-  ['read_5fts_5f_1742',['read_ts_',['../classgs_1_1VersionManager.html#a8529758f1ca33647ca8379ed3993e754',1,'gs::VersionManager']]],
-  ['read_5fvertex_5ftable_5ftime_5f_1743',['read_vertex_table_time_',['../classgs_1_1CSVFragmentLoader.html#a70b36e49b40fccccec887f70a5460a40',1,'gs::CSVFragmentLoader']]],
-  ['reserved_5fplugin_5fnum_1744',['RESERVED_PLUGIN_NUM',['../classgs_1_1Schema.html#a931f5d511e6b089ecf55439e569147b4',1,'gs::Schema']]],
-  ['ring_5fbuf_5fsize_1745',['ring_buf_size',['../namespacegs.html#afc29cf5c8342961bc724945163e127b2',1,'gs']]],
-  ['ring_5findex_5fmask_1746',['ring_index_mask',['../namespacegs.html#a5f7a376fc98cd8979ce79dd8371ad854',1,'gs']]]
+  ['read_5frows_5freq_5f_2342',['read_rows_req_',['../classgs_1_1ODPSStreamRecordBatchSupplier.html#a206f104dc2de99d97668c8ffde3815ce',1,'gs::ODPSStreamRecordBatchSupplier']]],
+  ['read_5fts_5f_2343',['read_ts_',['../classgs_1_1VersionManager.html#a8529758f1ca33647ca8379ed3993e754',1,'gs::VersionManager']]],
+  ['read_5fwrite_5ftimeout_2344',['READ_WRITE_TIMEOUT',['../classgs_1_1ODPSReadClient.html#a4c7bfe36e51c6649e6cf5167924b1c92',1,'gs::ODPSReadClient']]],
+  ['reader_5f_2345',['reader_',['../classgs_1_1CSVStreamRecordBatchSupplier.html#a487c2223f678e7362ab5f9206c878a69',1,'gs::CSVStreamRecordBatchSupplier::reader_()'],['../classgs_1_1CSVTableRecordBatchSupplier.html#ab6ffcc073a5e1af995479288fe5f51cd',1,'gs::CSVTableRecordBatchSupplier::reader_()'],['../classgs_1_1ODPSTableRecordBatchSupplier.html#a258d694cb833a462c108bce6910edbe6',1,'gs::ODPSTableRecordBatchSupplier::reader_()']]],
+  ['registered_5f_2346',['registered_',['../classgs_1_1CSVFragmentLoader.html#a46b3aeaa6d007d16111a4e25569f9022',1,'gs::CSVFragmentLoader::registered_()'],['../classgs_1_1ODPSFragmentLoader.html#a5ebbdf8279fed3bca4910685a058e1d5',1,'gs::ODPSFragmentLoader::registered_()']]],
+  ['reserved_5fplugin_5fnum_2347',['RESERVED_PLUGIN_NUM',['../classgs_1_1Schema.html#a931f5d511e6b089ecf55439e569147b4',1,'gs::Schema']]],
+  ['ring_5fbuf_5fsize_2348',['ring_buf_size',['../namespacegs.html#afc29cf5c8342961bc724945163e127b2',1,'gs']]],
+  ['ring_5findex_5fmask_2349',['ring_index_mask',['../namespacegs.html#a5f7a376fc98cd8979ce79dd8371ad854',1,'gs']]]
 ];

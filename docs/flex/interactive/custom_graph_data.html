@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -700,7 +702,7 @@ bin/gs_interactive<span class="w"> </span>destroy
 </div>
 <p>To create a new graph, you will need the original data of the graph. We currently support files in CSV format. Fortunately, we have prepared it for you, and you can find it in the directory <code class="docutils literal notranslate"><span class="pre">{INTERACTIVE_HOME}/examples/movies/</span></code>.</p>
 <p>To begin, ensure you’ve adjusted the settings in the <code class="docutils literal notranslate"><span class="pre">{INTERACTIVE_HOME}/conf/interactive.yaml</span></code> file. By utilizing Docker’s volume mount feature, you can map an external folder containing the the CSV files of <code class="docutils literal notranslate"><span class="pre">movies</span></code> to the internal directory at <code class="docutils literal notranslate"><span class="pre">/home/graphscope/movies</span></code>. It’s crucial that the internal data path starts with <code class="docutils literal notranslate"><span class="pre">/home/graphscope</span></code> and concludes with <code class="docutils literal notranslate"><span class="pre">movies</span></code>, reflecting the name of your graph. If you’re looking to import custom data, you can do volume mapping in a similar way.</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v0.0.2</span>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">version</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">v0.0.3</span>
 <span class="nt">volume</span><span class="p">:</span>
 <span class="w">  </span><span class="c1"># replace INTERACTIVE_HOME with actual path.</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nv">INTERACTIVE_HOME</span><span class="p p-Indicator">}</span><span class="l l-Scalar l-Scalar-Plain">/examples/movies:/home/graphscope/movies</span><span class="w"> </span>
@@ -796,7 +798,10 @@ bin/gs_interactive<span class="w"> </span>destroy
 <li><p>DT_SIGNED_INT64</p></li>
 <li><p>DT_UNSIGNED_INT64</p></li>
 <li><p>DT_BOOL</p></li>
+<li><p>DT_FLOAT</p></li>
+<li><p>DT_DOUBLE</p></li>
 <li><p>DT_STRING</p></li>
+<li><p>DT_DATE32</p></li>
 </ul>
 <p>For a comprehensive list of supported types, please refer to the <a class="reference internal" href="data_model.html"><span class="doc std std-doc">data model</span></a> page.</p>
 </section>
@@ -879,6 +884,10 @@ bin/gs_interactive<span class="w"> </span>destroy
 <p>Note: Stopping a prior service is necessary to start a new service with an alternative graph.</p>
 <p>Now you can move to <a class="reference internal" href="stored_procedures.html"><span class="doc std std-doc">Stored Procedure</span></a> to explore querying via stored procedures.</p>
 </section>
+<section id="try-other-graphs">
+<h2>Try other graphs<a class="headerlink" href="#try-other-graphs" title="Permalink to this heading">#</a></h2>
+<p>In addition to <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph, we have also prepared the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph. You can find the raw CSV files, graph.yaml, and import.yaml in the <code class="docutils literal notranslate"><span class="pre">./examples/graph_algo/</span></code> directory. You can import the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph just like importing the <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph.</p>
+</section>
 </section>
 
         </article>
@@ -943,6 +952,7 @@ bin/gs_interactive<span class="w"> </span>destroy
 <li><a class="reference internal" href="#step-1-create-a-new-graph">Step 1: Create a New Graph</a></li>
 <li><a class="reference internal" href="#step-2-import-graph-data">Step 2: Import Graph Data</a></li>
 <li><a class="reference internal" href="#step-3-start-the-service-with-the-new-graph">Step 3: Start the Service with the New Graph</a></li>
+<li><a class="reference internal" href="#try-other-graphs">Try other graphs</a></li>
 </ul>
 </li>
 </ul>

@@ -67,6 +67,7 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="summary">
+<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classgs_1_1LDBCLongDateParser-members.html">List of all members</a>  </div>
   <div class="headertitle">
@@ -81,7 +82,7 @@ Inheritance diagram for gs::LDBCLongDateParser:</div>
 <div class="center"><img src="classgs_1_1LDBCLongDateParser__inherit__graph.png" border="0" usemap="#gs_1_1LDBCLongDateParser_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1LDBCLongDateParser_inherit__map" id="gs_1_1LDBCLongDateParser_inherit__map">
 <area shape="rect" title=" " alt="" coords="5,80,188,107"/>
-<area shape="rect" title=" " alt="" coords="29,5,165,32"/>
+<area shape="rect" title=" " alt="" coords="7,5,187,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
@@ -90,23 +91,43 @@ Collaboration diagram for gs::LDBCLongDateParser:</div>
 <div class="center"><img src="classgs_1_1LDBCLongDateParser__coll__graph.png" border="0" usemap="#gs_1_1LDBCLongDateParser_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1LDBCLongDateParser_coll__map" id="gs_1_1LDBCLongDateParser_coll__map">
 <area shape="rect" title=" " alt="" coords="5,80,188,107"/>
-<area shape="rect" title=" " alt="" coords="29,5,165,32"/>
+<area shape="rect" title=" " alt="" coords="7,5,187,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-types"></a>
+Public Types</h2></td></tr>
+<tr class="memitem:a385536cd2dbbc57d267a3e517ed2fa61"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LDBCLongDateParser.html#a385536cd2dbbc57d267a3e517ed2fa61">seconds_type</a> = std::chrono::duration&lt; arrow::TimestampType::c_type &gt;</td></tr>
+<tr class="separator:a385536cd2dbbc57d267a3e517ed2fa61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a5badf13804020cc4b666956ee2ba4194"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LDBCLongDateParser.html#a5badf13804020cc4b666956ee2ba4194">LDBCLongDateParser</a> ()=default</td></tr>
 <tr class="separator:a5badf13804020cc4b666956ee2ba4194"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8528efbaa1a1e8c6eaf3a5a651e5e1dd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LDBCLongDateParser.html#a8528efbaa1a1e8c6eaf3a5a651e5e1dd">~LDBCLongDateParser</a> () override</td></tr>
 <tr class="separator:a8528efbaa1a1e8c6eaf3a5a651e5e1dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6ae6839a178b82f417a450b08b9bf6cc"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LDBCLongDateParser.html#a6ae6839a178b82f417a450b08b9bf6cc">operator()</a> (const char *s, size_t length, arrow::TimeUnit::type out_unit, int64_t *out) const override</td></tr>
-<tr class="separator:a6ae6839a178b82f417a450b08b9bf6cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab12ea6945095928d5c9e7fe8ed65d9b0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LDBCLongDateParser.html#ab12ea6945095928d5c9e7fe8ed65d9b0">operator()</a> (const char *s, size_t length, arrow::TimeUnit::type out_unit, int64_t *out, bool *out_zone_offset_present=NULLPTR) const override</td></tr>
+<tr class="separator:ab12ea6945095928d5c9e7fe8ed65d9b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab800cdf93868ba3252c0d432ca2e5a76"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LDBCLongDateParser.html#ab800cdf93868ba3252c0d432ca2e5a76">kind</a> () const override</td></tr>
 <tr class="separator:ab800cdf93868ba3252c0d432ca2e5a76"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a83bf185016c13422c450e275220a487e"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LDBCLongDateParser.html#a83bf185016c13422c450e275220a487e">format</a> () const override</td></tr>
 <tr class="separator:a83bf185016c13422c450e275220a487e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Member Typedef Documentation</h2>
+<a id="a385536cd2dbbc57d267a3e517ed2fa61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a385536cd2dbbc57d267a3e517ed2fa61">&#9670;&nbsp;</a></span>seconds_type</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="classgs_1_1LDBCLongDateParser.html#a385536cd2dbbc57d267a3e517ed2fa61">gs::LDBCLongDateParser::seconds_type</a> =  std::chrono::duration&lt;arrow::TimestampType::c_type&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a5badf13804020cc4b666956ee2ba4194"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5badf13804020cc4b666956ee2ba4194">&#9670;&nbsp;</a></span>LDBCLongDateParser()</h2>
@@ -209,8 +230,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a6ae6839a178b82f417a450b08b9bf6cc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6ae6839a178b82f417a450b08b9bf6cc">&#9670;&nbsp;</a></span>operator()()</h2>
+<a id="ab12ea6945095928d5c9e7fe8ed65d9b0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab12ea6945095928d5c9e7fe8ed65d9b0">&#9670;&nbsp;</a></span>operator()()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -240,7 +261,13 @@ Public Member Functions</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">int64_t *&#160;</td>
-          <td class="paramname"><em>out</em>&#160;</td>
+          <td class="paramname"><em>out</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool *&#160;</td>
+          <td class="paramname"><em>out_zone_offset_present</em> = <code>NULLPTR</code>&#160;</td>
         </tr>
         <tr>
           <td></td>

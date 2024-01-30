@@ -80,8 +80,10 @@ Inheritance diagram for gs::IFragmentLoader:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1IFragmentLoader__inherit__graph.png" border="0" usemap="#gs_1_1IFragmentLoader_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1IFragmentLoader_inherit__map" id="gs_1_1IFragmentLoader_inherit__map">
-<area shape="rect" title=" " alt="" coords="17,5,171,32"/>
-<area shape="rect" href="classgs_1_1CSVFragmentLoader.html" title=" " alt="" coords="5,80,183,107"/>
+<area shape="rect" title=" " alt="" coords="119,5,274,32"/>
+<area shape="rect" href="classgs_1_1AbstractArrowFragmentLoader.html" title=" " alt="" coords="97,80,296,121"/>
+<area shape="rect" href="classgs_1_1CSVFragmentLoader.html" title=" " alt="" coords="5,169,183,196"/>
+<area shape="rect" href="classgs_1_1ODPSFragmentLoader.html" title=" " alt="" coords="207,169,394,196"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -89,10 +91,8 @@ Inheritance diagram for gs::IFragmentLoader:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:af9118d3dccc4115c53847930575ac7d8"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IFragmentLoader.html#af9118d3dccc4115c53847930575ac7d8">~IFragmentLoader</a> ()=default</td></tr>
 <tr class="separator:af9118d3dccc4115c53847930575ac7d8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aefe30b9063ab0101b64e7a4ffbbf19ef"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">FragmentLoaderType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IFragmentLoader.html#aefe30b9063ab0101b64e7a4ffbbf19ef">GetFragmentLoaderType</a> () const =0</td></tr>
-<tr class="separator:aefe30b9063ab0101b64e7a4ffbbf19ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abfe8b84da61f263ade2ac78295a62e04"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IFragmentLoader.html#abfe8b84da61f263ade2ac78295a62e04">LoadFragment</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;fragment)=0</td></tr>
-<tr class="separator:abfe8b84da61f263ade2ac78295a62e04"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3d5978de63840d2c1219b6ac4485a79a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IFragmentLoader.html#a3d5978de63840d2c1219b6ac4485a79a">LoadFragment</a> ()=0</td></tr>
+<tr class="separator:a3d5978de63840d2c1219b6ac4485a79a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="af9118d3dccc4115c53847930575ac7d8"></a>
@@ -121,35 +121,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="aefe30b9063ab0101b64e7a4ffbbf19ef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aefe30b9063ab0101b64e7a4ffbbf19ef">&#9670;&nbsp;</a></span>GetFragmentLoaderType()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual <a class="el" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">FragmentLoaderType</a> gs::IFragmentLoader::GetFragmentLoaderType </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Implemented in <a class="el" href="classgs_1_1CSVFragmentLoader.html#ae291a49ca9260bee121dc90489ca2b5b">gs::CSVFragmentLoader</a>.</p>
-
-</div>
-</div>
-<a id="abfe8b84da61f263ade2ac78295a62e04"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abfe8b84da61f263ade2ac78295a62e04">&#9670;&nbsp;</a></span>LoadFragment()</h2>
+<a id="a3d5978de63840d2c1219b6ac4485a79a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3d5978de63840d2c1219b6ac4485a79a">&#9670;&nbsp;</a></span>LoadFragment()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -160,8 +133,7 @@ Public Member Functions</h2></td></tr>
         <tr>
           <td class="memname">virtual void gs::IFragmentLoader::LoadFragment </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td>
-          <td class="paramname"><em>fragment</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -172,7 +144,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1CSVFragmentLoader.html#a30fa3cc4949d3688a3d9dc7976fef759">gs::CSVFragmentLoader</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1ODPSFragmentLoader.html#a8d12f878cc5afe44012a65d411bb5b36">gs::ODPSFragmentLoader</a>, and <a class="el" href="classgs_1_1CSVFragmentLoader.html#a9039aa72df6e01ef0cb17d418e30c2c5">gs::CSVFragmentLoader</a>.</p>
 
 </div>
 </div>

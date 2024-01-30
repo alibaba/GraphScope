@@ -568,6 +568,32 @@ APIs including:
 
 Refer to [RealtimeWrite.java](https://github.com/alibaba/GraphScope/blob/main/interactive_engine/groot-client/src/main/java/com/alibaba/graphscope/groot/sdk/example/RealtimeWrite.java) for examples.
 
+
+### Other features
+
+Groot could enable user to replay realtime write records from a specific offset, or a timestamp, this is useful when you want to restore some records before
+a offline load finished, since offload will overwrite all records.
+
+You can only specify one of `offset` and `timestamp`. The other unused one must be set to -1. If not, `offset` will take precedence.
+
+Example API:
+- Python:
+    ```python
+    import time
+    import graphscope
+    conn = graphscope.conn()
+    current_timestamp = int(time.time() * 1000) - 100 * 60 * 1000
+
+    r = conn.replay_records(-1, current_timestamp)
+    ```
+- Java
+
+    ```java
+    GrootClient client = GrootClientBuilder.build();
+    long timestamp = System.currentTimeMillis();
+    client.replayRecords(-1, timestamp);
+    ```
+
 ## Uninstalling and Restarting
 
 ### Uninstall Groot
@@ -652,3 +678,15 @@ The location of the logging configuration file in the container is:
 
 - configuration file of `logback` is in `/usr/local/groot/conf/logback.xml`
 - configuration file of `log4rs` is in `/usr/local/groot/conf/log4rs.yml` 
+
+### Secondary Instance
+
+Groot support open secondary instance along with primary instances. It leverages the [Secondary Instance](https://github.com/facebook/rocksdb/wiki/Read-only-and-Secondary-instances) of RocksDB
+to provide the ability to serve the querying requests as well as catching up the schema and data updates.
+
+To use it, just set the `secondary.enabled=true` in the helm charts.
+Also remember the data path, ZK connect string as well as Kafka endpoint and topic should be as same as the primary instance.
+And use a different `zk.base.path` for each secondary instance to avoid conflict with each other when doing node discovery.
+
+`storeGcIntervalMs` controls how often should the secondary perform a `try_catch_up_with_primary` call, default to `5000` which is 5 seconds.
+

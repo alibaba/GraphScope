@@ -11,7 +11,7 @@
 <meta name="description" content="When working with GraphScope Interactive, the data model must be defined while using custom graph data. This data model consists of two primary components: graph data and entity data. Graph Data: T..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Data Import Configuration" href="data_import.html" /><link rel="prev" title="Engine Configuration" href="configuration.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Data Model - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -249,6 +249,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -581,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -608,18 +621,6 @@ MathJax = {
               <dd><a href="../../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -699,10 +700,10 @@ MathJax = {
 <span class="w">  </span><span class="nt">properties</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">property_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span>
 <span class="w">      </span><span class="nt">property_type</span><span class="p">:</span>
-<span class="w">            </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_SIGNED_INT64</span>
+<span class="w">        </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_SIGNED_INT64</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">property_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">name</span>
 <span class="w">      </span><span class="nt">property_type</span><span class="p">:</span>
-<span class="w">            </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_STRING</span>
+<span class="w">        </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_STRING</span>
 <span class="w">  </span><span class="nt">primary_keys</span><span class="p">:</span><span class="w"> </span><span class="c1"># these must also be listed in the properties</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span><span class="w">  </span>
 </pre></div>
@@ -726,6 +727,23 @@ MathJax = {
 <li><p>A single edge type can have multiple <code class="docutils literal notranslate"><span class="pre">vertex_type_pair_relations</span></code>. For instance, a “knows” edge might connect one person to another, symbolizing their friendship. Alternatively, it could associate a person with a skill, indicating their proficiency in that skill.</p></li>
 <li><p>The permissible relations include: <code class="docutils literal notranslate"><span class="pre">ONE_TO_ONE</span></code>, <code class="docutils literal notranslate"><span class="pre">ONE_TO_MANY</span></code>, <code class="docutils literal notranslate"><span class="pre">MANY_TO_ONE</span></code>, and <code class="docutils literal notranslate"><span class="pre">MANY_TO_MANY</span></code>. These relations can be utilized by the optimizer to generate more efficient execution plans.</p></li>
 <li><p>Currently we only support at most one property for each edge triplet.</p></li>
+<li><p>All implementation related configuration are put under <code class="docutils literal notranslate"><span class="pre">x_csr_params</span></code>.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_vertex_num</span></code> limit the number of vertices of this type:</p>
+<ul>
+<li><p>The limit number is used to <code class="docutils literal notranslate"><span class="pre">mmap</span></code> memory, so it only takes virtual memory before vertices are actually inserted.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">max_vertex_num</span></code> is not set, a default large number (e.g.: 2^48) will be used.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">edge_storage_strategy</span></code> specifies the storing strategy of the incoming or outgoing edges of this type, there are 3 kinds of strategies</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ONLY_IN</span></code>: Only incoming edges are stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ONLY_OUT</span></code>: Only outgoing edges are stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BOTH_OUT_IN</span></code>(default): Both direction of edges are stored.</p></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </section>
 <section id="entity-data">
@@ -749,7 +767,6 @@ MathJax = {
 <span class="w">  </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_STRING</span>
 </pre></div>
 </div>
-<p>Please note that we currently do not support the use of string data type for properties on edges.</p>
 </section>
 <section id="array-types">
 <h3>Array Types<a class="headerlink" href="#array-types" title="Permalink to this heading">#</a></h3>

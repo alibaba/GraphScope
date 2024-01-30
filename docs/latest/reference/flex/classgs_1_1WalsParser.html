@@ -81,9 +81,8 @@ Collaboration diagram for gs::WalsParser:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1WalsParser__coll__graph.png" border="0" usemap="#gs_1_1WalsParser_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1WalsParser_coll__map" id="gs_1_1WalsParser_coll__map">
-<area shape="rect" title=" " alt="" coords="27,199,143,225"/>
-<area shape="rect" href="classgs_1_1mmap__array.html" title=" " alt="" coords="5,95,164,136"/>
-<area shape="rect" href="structgs_1_1WalContentUnit.html" title=" " alt="" coords="11,5,158,32"/>
+<area shape="rect" title=" " alt="" coords="21,95,137,121"/>
+<area shape="rect" href="structgs_1_1WalContentUnit.html" title=" " alt="" coords="5,5,152,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -108,8 +107,10 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a4f286dfde823a8f1add91e92e482b159"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a106797c79b1c5f8e6d60c2c6861bc9c2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalsParser.html#a106797c79b1c5f8e6d60c2c6861bc9c2">mmapped_size_</a></td></tr>
 <tr class="separator:a106797c79b1c5f8e6d60c2c6861bc9c2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acd16dac97733924e62c1826acdab63cc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt; <a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalsParser.html#acd16dac97733924e62c1826acdab63cc">insert_wal_list_</a></td></tr>
-<tr class="separator:acd16dac97733924e62c1826acdab63cc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1822af575491e007e31f1b46c9ff5e82"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalsParser.html#a1822af575491e007e31f1b46c9ff5e82">insert_wal_list_</a></td></tr>
+<tr class="separator:a1822af575491e007e31f1b46c9ff5e82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a473cb5f4249b5a27ab1594a376f13026"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalsParser.html#a473cb5f4249b5a27ab1594a376f13026">insert_wal_list_size_</a></td></tr>
+<tr class="separator:a473cb5f4249b5a27ab1594a376f13026"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8d8298ce00a205408eb7984240573e27"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalsParser.html#a8d8298ce00a205408eb7984240573e27">last_ts_</a> {0}</td></tr>
 <tr class="separator:a8d8298ce00a205408eb7984240573e27"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a65ca33dd6776e0d4003f683d29f56771"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structgs_1_1UpdateWalUnit.html">UpdateWalUnit</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1WalsParser.html#a65ca33dd6776e0d4003f683d29f56771">update_wal_list_</a></td></tr>
@@ -227,8 +228,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="acd16dac97733924e62c1826acdab63cc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acd16dac97733924e62c1826acdab63cc">&#9670;&nbsp;</a></span>insert_wal_list_</h2>
+<a id="a1822af575491e007e31f1b46c9ff5e82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1822af575491e007e31f1b46c9ff5e82">&#9670;&nbsp;</a></span>insert_wal_list_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -237,7 +238,29 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt;<a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a>&gt; gs::WalsParser::insert_wal_list_</td>
+          <td class="memname"><a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a>* gs::WalsParser::insert_wal_list_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a473cb5f4249b5a27ab1594a376f13026"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a473cb5f4249b5a27ab1594a376f13026">&#9670;&nbsp;</a></span>insert_wal_list_size_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t gs::WalsParser::insert_wal_list_size_</td>
         </tr>
       </table>
   </td>

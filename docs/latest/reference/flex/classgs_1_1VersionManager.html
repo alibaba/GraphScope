@@ -83,8 +83,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a6a7a5ca1b47b53b6342673fb6a68e9bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6e010ff0920a24c17d0792c30d06d282"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a6e010ff0920a24c17d0792c30d06d282">~VersionManager</a> ()</td></tr>
 <tr class="separator:a6e010ff0920a24c17d0792c30d06d282"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7bf912ff6943cd00756e268fd8c309b8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a7bf912ff6943cd00756e268fd8c309b8">init_ts</a> (uint32_t ts)</td></tr>
-<tr class="separator:a7bf912ff6943cd00756e268fd8c309b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7eb60ef821e7215338ab6048b943b762"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a7eb60ef821e7215338ab6048b943b762">init_ts</a> (uint32_t ts, int thread_num)</td></tr>
+<tr class="separator:a7eb60ef821e7215338ab6048b943b762"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2f82e79b436b308ceb3a896a806ba0d7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a2f82e79b436b308ceb3a896a806ba0d7">clear</a> ()</td></tr>
 <tr class="separator:a2f82e79b436b308ceb3a896a806ba0d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2aa0777b10498e015d0b46f27cfc9bea"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a2aa0777b10498e015d0b46f27cfc9bea">acquire_read_timestamp</a> ()</td></tr>
@@ -99,6 +99,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a40676d39ea5b4ff725957d0fab261f1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa58321bdb12fa87a947a8a521dd6fd15"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#aa58321bdb12fa87a947a8a521dd6fd15">release_update_timestamp</a> (uint32_t ts)</td></tr>
 <tr class="separator:aa58321bdb12fa87a947a8a521dd6fd15"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f1ef8ca31b63f60283fd4c3498ecd5d"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a0f1ef8ca31b63f60283fd4c3498ecd5d">revert_update_timestamp</a> (uint32_t ts)</td></tr>
+<tr class="separator:a0f1ef8ca31b63f60283fd4c3498ecd5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
@@ -108,10 +110,14 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a8529758f1ca33647ca8379ed3993e754"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa2a09ef38b9fe4a3719276482b67f701"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#aa2a09ef38b9fe4a3719276482b67f701">pending_reqs_</a> {0}</td></tr>
 <tr class="separator:aa2a09ef38b9fe4a3719276482b67f701"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a51fce54aa55243ec13f84e71376643c0"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a51fce54aa55243ec13f84e71376643c0">pending_update_reqs_</a> {0}</td></tr>
+<tr class="separator:a51fce54aa55243ec13f84e71376643c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a563402cda6d6c21378bb967c5f2c9b01"><td class="memItemLeft" align="right" valign="top">grape::Bitset&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a563402cda6d6c21378bb967c5f2c9b01">buf_</a></td></tr>
 <tr class="separator:a563402cda6d6c21378bb967c5f2c9b01"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1366cf9bb2a7bd2672e9359d0c56e11c"><td class="memItemLeft" align="right" valign="top">grape::SpinLock&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#a1366cf9bb2a7bd2672e9359d0c56e11c">lock_</a></td></tr>
 <tr class="separator:a1366cf9bb2a7bd2672e9359d0c56e11c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abd99a8da4a8f52f8b293d392fc8b8400"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1VersionManager.html#abd99a8da4a8f52f8b293d392fc8b8400">thread_num_</a></td></tr>
+<tr class="separator:abd99a8da4a8f52f8b293d392fc8b8400"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a6a7a5ca1b47b53b6342673fb6a68e9bb"></a>
@@ -217,8 +223,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a7bf912ff6943cd00756e268fd8c309b8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7bf912ff6943cd00756e268fd8c309b8">&#9670;&nbsp;</a></span>init_ts()</h2>
+<a id="a7eb60ef821e7215338ab6048b943b762"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7eb60ef821e7215338ab6048b943b762">&#9670;&nbsp;</a></span>init_ts()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -227,8 +233,18 @@ Private Attributes</h2></td></tr>
           <td class="memname">void gs::VersionManager::init_ts </td>
           <td>(</td>
           <td class="paramtype">uint32_t&#160;</td>
-          <td class="paramname"><em>ts</em></td><td>)</td>
+          <td class="paramname"><em>ts</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>thread_num</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -278,6 +294,24 @@ Private Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">void gs::VersionManager::release_update_timestamp </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>ts</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0f1ef8ca31b63f60283fd4c3498ecd5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f1ef8ca31b63f60283fd4c3498ecd5d">&#9670;&nbsp;</a></span>revert_update_timestamp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::VersionManager::revert_update_timestamp </td>
           <td>(</td>
           <td class="paramtype">uint32_t&#160;</td>
           <td class="paramname"><em>ts</em></td><td>)</td>
@@ -355,6 +389,28 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a51fce54aa55243ec13f84e71376643c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a51fce54aa55243ec13f84e71376643c0">&#9670;&nbsp;</a></span>pending_update_reqs_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::atomic&lt;int&gt; gs::VersionManager::pending_update_reqs_ {0}</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8529758f1ca33647ca8379ed3993e754"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8529758f1ca33647ca8379ed3993e754">&#9670;&nbsp;</a></span>read_ts_</h2>
 
@@ -366,6 +422,28 @@ Private Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">std::atomic&lt;uint32_t&gt; gs::VersionManager::read_ts_ {0}</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="abd99a8da4a8f52f8b293d392fc8b8400"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abd99a8da4a8f52f8b293d392fc8b8400">&#9670;&nbsp;</a></span>thread_num_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gs::VersionManager::thread_num_</td>
         </tr>
       </table>
   </td>

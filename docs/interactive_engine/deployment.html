@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -885,12 +887,46 @@ the above <code class="docutils literal notranslate"><span class="pre">data_path
 </pre></div>
 </div>
 <p>We’ve listed useful configuration keys in the following:</p>
-<ul class="simple">
-<li><p>gremlinPort: the port for accessing the Gremlin service (Default: 8182).</p></li>
-<li><p>pegasusWorkerNum: the number of working threads per each executor (Default: 2).
-Obviously, the total number of working threads is: ‘executor.replicaCount x pegasusWorkerNum’.</p></li>
-<li><p>pegasusTimeout: The maximum duration in <code class="docutils literal notranslate"><span class="pre">ms</span></code> you allow each query to run (Default: 24,000).</p></li>
-</ul>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head text-center"><p>Default Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>gremlinPort</p></td>
+<td><p>the port for accessing the Gremlin service</p></td>
+<td class="text-center"><p>8182</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>cypherPort</p></td>
+<td><p>the port for accessing the Cypher service</p></td>
+<td class="text-center"><p>7687</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>pegasusWorkerNum</p></td>
+<td><p>the number of working threads per each executor</p></td>
+<td class="text-center"><p>2</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>pegasusTimeout</p></td>
+<td><p>the maximum duration in <code class="docutils literal notranslate"><span class="pre">ms</span></code> you allow each query to run</p></td>
+<td class="text-center"><p>24,000</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>pegasusBatchSize</p></td>
+<td><p>the maximum size of streaming records can be output for an operator</p></td>
+<td class="text-center"><p>1024</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>pegasusOutputCapacity</p></td>
+<td><p>the maximum number of streaming records can be output for an operator</p></td>
+<td class="text-center"><p>16</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>frontendQueryPerSecondLimit</p></td>
+<td><p>the maximum qps can be handled by frontend service</p></td>
+<td class="text-center"><p>2147483647 (without limitation)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </section>
 </section>
 

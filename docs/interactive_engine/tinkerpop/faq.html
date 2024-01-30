@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -822,7 +824,12 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.has</span><span class="o">(</span><span class="s1">&#39;id&#39;</span><span class="o">,</span><span class="w"> </span><span class="nt">propertyIdValue</span><span class="o">)</span>
 </pre></div>
 </div>
-<p>Where ‘id’ is the property ID, and ‘propertyIdValue’ is the value of the property key. By directly using the primary key index, query performance can be significantly improved, avoiding full table scans and property value filtering, thereby optimizing query performance.</p>
+<p>Where ‘id’ is the property ID, and ‘propertyIdValue’ is the value of the property key.</p>
+<p>Moreover, we support the <code class="docutils literal notranslate"><span class="pre">within</span></code> operator to query multiple values of the same property key, which can also be optimized by the primary key index. For example:</p>
+<div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.has</span><span class="o">(</span><span class="s1">&#39;id&#39;</span><span class="o">,</span><span class="w"> </span><span class="nt">within</span><span class="o">(</span><span class="nt">propertyIdValue1</span><span class="o">,</span><span class="w"> </span><span class="nt">propertyIdValue2</span><span class="o">))</span>
+</pre></div>
+</div>
+<p>By directly using the primary key index, query performance can be significantly improved, avoiding full table scans and property value filtering, thereby optimizing query performance.</p>
 </section>
 </section>
 <section id="how-to-use-subgraph-in-gie-gremlin">

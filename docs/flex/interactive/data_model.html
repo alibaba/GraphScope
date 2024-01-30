@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -693,20 +695,24 @@ MathJax = {
 <li><p><strong>Edge (Edges)</strong>: Edges define the relationships between vertices. Each <strong>directed</strong> edge has a source vertex, a destination vertex, and a type that describes the nature of the relationship. Additionally, edges can also have properties. For instance, in a social network graph, an edge might represent a friendship between two people and could have properties like “since_date” indicating when the friendship started.</p></li>
 </ul>
 <p>Note: This graph model aligns with the property graph model, which offers a detailed explanation <a class="reference external" href="https://subscription.packtpub.com/book/data/9781784393441/1/ch01lvl1sec09/the-property-graph-model">here</a>. However, it’s essential to note our terminology: we use “vertex” instead of “node” and “edge” instead of “relationship”, and we only support <strong>directed</strong> edge instead of both directed and undirected edge.</p>
-<p>Within the <code class="docutils literal notranslate"><span class="pre">gs_interactive_image.yaml</span></code> file, vertices are delineated under the <code class="docutils literal notranslate"><span class="pre">vertex_types</span></code> section. Each vertex type is structured with mandatory fields: <code class="docutils literal notranslate"><span class="pre">type_name</span></code>, <code class="docutils literal notranslate"><span class="pre">properties</span></code>, and <code class="docutils literal notranslate"><span class="pre">primary_keys</span></code>. For instance:</p>
+<p>Within the <code class="docutils literal notranslate"><span class="pre">graph.yaml</span></code> file, vertices are delineated under the <code class="docutils literal notranslate"><span class="pre">vertex_types</span></code> section. Each vertex type is structured with mandatory fields: <code class="docutils literal notranslate"><span class="pre">type_name</span></code>, <code class="docutils literal notranslate"><span class="pre">properties</span></code>, and <code class="docutils literal notranslate"><span class="pre">primary_keys</span></code>. For instance:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">person</span>
 <span class="w">  </span><span class="nt">properties</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">property_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span>
-<span class="w">      </span><span class="nt">property_data_type</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">property_type</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_SIGNED_INT64</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">property_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">name</span>
-<span class="w">      </span><span class="nt">property_data_type</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">property_type</span><span class="p">:</span>
 <span class="w">        </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_STRING</span>
 <span class="w">  </span><span class="nt">primary_keys</span><span class="p">:</span><span class="w"> </span><span class="c1"># these must also be listed in the properties</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span><span class="w">  </span>
 </pre></div>
 </div>
-<p>Note: In the current version, only one single primary key can be specified, but we plan to support multiple primary keys in the future.</p>
+<p>Note:</p>
+<ul class="simple">
+<li><p>In the current version, only one single primary key can be specified, but we plan to support multiple primary keys in the future.</p></li>
+<li><p>The data type of primary key column must be one of <code class="docutils literal notranslate"><span class="pre">DT_SIGNED_INT32</span></code>, <code class="docutils literal notranslate"><span class="pre">DT_UNSIGNED_INT32</span></code>, <code class="docutils literal notranslate"><span class="pre">DT_SIGNED_INT64</span></code> or <code class="docutils literal notranslate"><span class="pre">DT_UNSIGNED_INT64</span></code>.</p></li>
+</ul>
 <p>Edges are defined within the <code class="docutils literal notranslate"><span class="pre">edge_types</span></code> section, characterized by the mandatory fields: <code class="docutils literal notranslate"><span class="pre">type_name</span></code>, <code class="docutils literal notranslate"><span class="pre">vertex_type_pair_relations</span></code>, and <code class="docutils literal notranslate"><span class="pre">properties</span></code>. The type_name and properties fields function similarly to those in vertices. However, the vertex_type_pair_relations field is exclusive to edges, specifying the permissible source and destination vertex types, as well as the relationship detailing how many source and destination vertices can be linked by this edge. Here’s an illustrative example:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">type_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">knows</span>
 <span class="nt">vertex_type_pair_relations</span><span class="p">:</span>
@@ -720,6 +726,24 @@ MathJax = {
 <ul class="simple">
 <li><p>A single edge type can have multiple <code class="docutils literal notranslate"><span class="pre">vertex_type_pair_relations</span></code>. For instance, a “knows” edge might connect one person to another, symbolizing their friendship. Alternatively, it could associate a person with a skill, indicating their proficiency in that skill.</p></li>
 <li><p>The permissible relations include: <code class="docutils literal notranslate"><span class="pre">ONE_TO_ONE</span></code>, <code class="docutils literal notranslate"><span class="pre">ONE_TO_MANY</span></code>, <code class="docutils literal notranslate"><span class="pre">MANY_TO_ONE</span></code>, and <code class="docutils literal notranslate"><span class="pre">MANY_TO_MANY</span></code>. These relations can be utilized by the optimizer to generate more efficient execution plans.</p></li>
+<li><p>Currently we only support at most one property for each edge triplet.</p></li>
+<li><p>All implementation related configuration are put under <code class="docutils literal notranslate"><span class="pre">x_csr_params</span></code>.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_vertex_num</span></code> limit the number of vertices of this type:</p>
+<ul>
+<li><p>The limit number is used to <code class="docutils literal notranslate"><span class="pre">mmap</span></code> memory, so it only takes virtual memory before vertices are actually inserted.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">max_vertex_num</span></code> is not set, a default large number (e.g.: 2^48) will be used.</p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">edge_storage_strategy</span></code> specifies the storing strategy of the incoming or outgoing edges of this type, there are 3 kinds of strategies</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">ONLY_IN</span></code>: Only incoming edges are stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ONLY_OUT</span></code>: Only outgoing edges are stored.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BOTH_OUT_IN</span></code>(default): Both direction of edges are stored.</p></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </section>
 <section id="entity-data">
@@ -738,8 +762,8 @@ MathJax = {
 <li><p>DT_STRING</p></li>
 <li><p>DT_DATE32</p></li>
 </ul>
-<p>In the <code class="docutils literal notranslate"><span class="pre">gs_interactive_image.yaml</span></code>, a primitive type, such as <code class="docutils literal notranslate"><span class="pre">DT_STRING</span></code>, can be written as:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">property_data_type</span><span class="p">:</span>
+<p>In the <code class="docutils literal notranslate"><span class="pre">graph.yaml</span></code>, a primitive type, such as <code class="docutils literal notranslate"><span class="pre">DT_STRING</span></code>, can be written as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">property_type</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_STRING</span>
 </pre></div>
 </div>
@@ -748,8 +772,8 @@ MathJax = {
 <h3>Array Types<a class="headerlink" href="#array-types" title="Permalink to this heading">#</a></h3>
 <p>Array types are currently not supported, but are planned to be supported in the near future.
 Once supported, albeit requiring that every element within the array adheres to one of the previously mentioned primitive types.
-It’s crucial that all elements within a single array share the same type. In <code class="docutils literal notranslate"><span class="pre">gs_interactive_image.yaml</span></code>, user can describe designating a property as an array of the <code class="docutils literal notranslate"><span class="pre">DT_STRING</span></code> type as:</p>
-<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">property_data_type</span><span class="p">:</span>
+It’s crucial that all elements within a single array share the same type. In <code class="docutils literal notranslate"><span class="pre">graph.yaml</span></code>, user can describe designating a property as an array of the <code class="docutils literal notranslate"><span class="pre">DT_STRING</span></code> type as:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">property_type</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">array</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">component_type</span><span class="p">:</span><span class="w"> </span>
 <span class="w">      </span><span class="nt">primitive_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">DT_UNSIGNED_INT64</span>

@@ -95,29 +95,29 @@ Collaboration diagram for gs::SessionLocalContext:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac5e9a28eacae8d432a7b5567b316c215"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#ac5e9a28eacae8d432a7b5567b316c215">SessionLocalContext</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db, int thread_id)</td></tr>
-<tr class="separator:ac5e9a28eacae8d432a7b5567b316c215"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a402e74c0cd9bc1a3d97cc77c587cc7bf"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a402e74c0cd9bc1a3d97cc77c587cc7bf">SessionLocalContext</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db, const std::string &amp;work_dir, int thread_id, <a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d">MemoryStrategy</a> allocator_strategy)</td></tr>
+<tr class="separator:a402e74c0cd9bc1a3d97cc77c587cc7bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5e26601ea4a44a99c68950ab754d0b0e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a5e26601ea4a44a99c68950ab754d0b0e">~SessionLocalContext</a> ()</td></tr>
 <tr class="separator:a5e26601ea4a44a99c68950ab754d0b0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5f0d7f0536ca35a03f12c98fbe6fb6f3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a5f0d7f0536ca35a03f12c98fbe6fb6f3">allocator</a></td></tr>
-<tr class="separator:a5f0d7f0536ca35a03f12c98fbe6fb6f3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae6c07d13e499920cb76e01d28efabc92"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#ae6c07d13e499920cb76e01d28efabc92">_padding0</a> [128 - sizeof(<a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a>) % 128]</td></tr>
-<tr class="separator:ae6c07d13e499920cb76e01d28efabc92"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acfc1662428385e5ff139b990c020d630"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#acfc1662428385e5ff139b990c020d630">allocator</a></td></tr>
+<tr class="separator:acfc1662428385e5ff139b990c020d630"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa11911532bad21839d775c1ce644191b"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a> [128 - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) % 128]</td></tr>
+<tr class="separator:aa11911532bad21839d775c1ce644191b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3927fb02f59f700c22886defa20b7d0e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a3927fb02f59f700c22886defa20b7d0e">logger</a></td></tr>
 <tr class="separator:a3927fb02f59f700c22886defa20b7d0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a068725bd5ee6403e05df187fe7c1c899"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a068725bd5ee6403e05df187fe7c1c899">_padding1</a> [4096 - sizeof(<a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>) - sizeof(<a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#ae6c07d13e499920cb76e01d28efabc92">_padding0</a>)]</td></tr>
-<tr class="separator:a068725bd5ee6403e05df187fe7c1c899"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6fcc0ba7c583c0c1a8dc1f5bebd00b8b"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a6fcc0ba7c583c0c1a8dc1f5bebd00b8b">_padding1</a> [4096 - sizeof(<a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>) - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a>)]</td></tr>
+<tr class="separator:a6fcc0ba7c583c0c1a8dc1f5bebd00b8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5d40f88ebb1e0f31d2a5c170097d6c13"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a5d40f88ebb1e0f31d2a5c170097d6c13">session</a></td></tr>
 <tr class="separator:a5d40f88ebb1e0f31d2a5c170097d6c13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9c2bf783708504e7bca015948af918e8"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1SessionLocalContext.html#a9c2bf783708504e7bca015948af918e8">_padding2</a> [4096 - sizeof(<a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a>) % 4096]</td></tr>
 <tr class="separator:a9c2bf783708504e7bca015948af918e8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ac5e9a28eacae8d432a7b5567b316c215"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5e9a28eacae8d432a7b5567b316c215">&#9670;&nbsp;</a></span>SessionLocalContext()</h2>
+<a id="a402e74c0cd9bc1a3d97cc77c587cc7bf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a402e74c0cd9bc1a3d97cc77c587cc7bf">&#9670;&nbsp;</a></span>SessionLocalContext()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -134,8 +134,20 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>thread_id</em>&#160;</td>
+          <td class="paramname"><em>thread_id</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d">MemoryStrategy</a>&#160;</td>
+          <td class="paramname"><em>allocator_strategy</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -178,28 +190,28 @@ Public Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="ae6c07d13e499920cb76e01d28efabc92"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae6c07d13e499920cb76e01d28efabc92">&#9670;&nbsp;</a></span>_padding0</h2>
+<a id="aa11911532bad21839d775c1ce644191b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa11911532bad21839d775c1ce644191b">&#9670;&nbsp;</a></span>_padding0</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">char gs::SessionLocalContext::_padding0[128 - sizeof(<a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a>) % 128]</td>
+          <td class="memname">char gs::SessionLocalContext::_padding0[128 - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) % 128]</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 </div>
 </div>
-<a id="a068725bd5ee6403e05df187fe7c1c899"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a068725bd5ee6403e05df187fe7c1c899">&#9670;&nbsp;</a></span>_padding1</h2>
+<a id="a6fcc0ba7c583c0c1a8dc1f5bebd00b8b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6fcc0ba7c583c0c1a8dc1f5bebd00b8b">&#9670;&nbsp;</a></span>_padding1</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">char gs::SessionLocalContext::_padding1[4096 - sizeof(<a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>) - sizeof(<a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#ae6c07d13e499920cb76e01d28efabc92">_padding0</a>)]</td>
+          <td class="memname">char gs::SessionLocalContext::_padding1[4096 - sizeof(<a class="el" href="classgs_1_1WalWriter.html">WalWriter</a>) - sizeof(<a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>) - sizeof(<a class="el" href="structgs_1_1SessionLocalContext.html#aa11911532bad21839d775c1ce644191b">_padding0</a>)]</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -220,14 +232,14 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a5f0d7f0536ca35a03f12c98fbe6fb6f3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5f0d7f0536ca35a03f12c98fbe6fb6f3">&#9670;&nbsp;</a></span>allocator</h2>
+<a id="acfc1662428385e5ff139b990c020d630"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acfc1662428385e5ff139b990c020d630">&#9670;&nbsp;</a></span>allocator</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> gs::SessionLocalContext::allocator</td>
+          <td class="memname"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> gs::SessionLocalContext::allocator</td>
         </tr>
       </table>
 </div><div class="memdoc">

@@ -1,7 +1,28 @@
 var searchData=
 [
-  ['walcontentunit_1024',['WalContentUnit',['../structgs_1_1WalContentUnit.html',1,'gs']]],
-  ['walheader_1025',['WalHeader',['../structgs_1_1WalHeader.html',1,'gs']]],
-  ['walsparser_1026',['WalsParser',['../classgs_1_1WalsParser.html',1,'gs']]],
-  ['walwriter_1027',['WalWriter',['../classgs_1_1WalWriter.html',1,'gs']]]
+  ['table_1339',['Table',['../classgs_1_1Table.html',1,'gs']]],
+  ['typeconverter_1340',['TypeConverter',['../structgs_1_1TypeConverter.html',1,'gs']]],
+  ['typeconverter_3c_20bool_20_3e_1341',['TypeConverter&lt; bool &gt;',['../structgs_1_1TypeConverter_3_01bool_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20date_20_3e_1342',['TypeConverter&lt; Date &gt;',['../structgs_1_1TypeConverter_3_01Date_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20day_20_3e_1343',['TypeConverter&lt; Day &gt;',['../structgs_1_1TypeConverter_3_01Day_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20double_20_3e_1344',['TypeConverter&lt; double &gt;',['../structgs_1_1TypeConverter_3_01double_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20float_20_3e_1345',['TypeConverter&lt; float &gt;',['../structgs_1_1TypeConverter_3_01float_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20int32_5ft_20_3e_1346',['TypeConverter&lt; int32_t &gt;',['../structgs_1_1TypeConverter_3_01int32__t_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20int64_5ft_20_3e_1347',['TypeConverter&lt; int64_t &gt;',['../structgs_1_1TypeConverter_3_01int64__t_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20std_3a_3astring_20_3e_1348',['TypeConverter&lt; std::string &gt;',['../structgs_1_1TypeConverter_3_01std_1_1string_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20std_3a_3astring_5fview_20_3e_1349',['TypeConverter&lt; std::string_view &gt;',['../structgs_1_1TypeConverter_3_01std_1_1string__view_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20uint32_5ft_20_3e_1350',['TypeConverter&lt; uint32_t &gt;',['../structgs_1_1TypeConverter_3_01uint32__t_01_4.html',1,'gs']]],
+  ['typeconverter_3c_20uint64_5ft_20_3e_1351',['TypeConverter&lt; uint64_t &gt;',['../structgs_1_1TypeConverter_3_01uint64__t_01_4.html',1,'gs']]],
+  ['typedcolumn_1352',['TypedColumn',['../classgs_1_1TypedColumn.html',1,'gs']]],
+  ['typedcolumn_3c_20index_5ft_20_3e_1353',['TypedColumn&lt; INDEX_T &gt;',['../classgs_1_1TypedColumn.html',1,'gs']]],
+  ['typedcolumn_3c_20std_3a_3astring_5fview_20_3e_1354',['TypedColumn&lt; std::string_view &gt;',['../classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html',1,'gs']]],
+  ['typedemptycolumn_1355',['TypedEmptyColumn',['../classgs_1_1TypedEmptyColumn.html',1,'gs']]],
+  ['typedemptycolumn_3c_20std_3a_3astring_5fview_20_3e_1356',['TypedEmptyColumn&lt; std::string_view &gt;',['../classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html',1,'gs']]],
+  ['typedmutablecsrbase_1357',['TypedMutableCsrBase',['../classgs_1_1TypedMutableCsrBase.html',1,'gs']]],
+  ['typedmutablecsrbase_3c_20std_3a_3astring_5fview_20_3e_1358',['TypedMutableCsrBase&lt; std::string_view &gt;',['../classgs_1_1TypedMutableCsrBase_3_01std_1_1string__view_01_4.html',1,'gs']]],
+  ['typedmutablecsrconstedgeiter_1359',['TypedMutableCsrConstEdgeIter',['../classgs_1_1TypedMutableCsrConstEdgeIter.html',1,'gs']]],
+  ['typedmutablecsredgeiter_1360',['TypedMutableCsrEdgeIter',['../classgs_1_1TypedMutableCsrEdgeIter.html',1,'gs']]],
+  ['typedmutablecsredgeiter_3c_20std_3a_3astring_5fview_20_3e_1361',['TypedMutableCsrEdgeIter&lt; std::string_view &gt;',['../classgs_1_1TypedMutableCsrEdgeIter_3_01std_1_1string__view_01_4.html',1,'gs']]],
+  ['typedrefcolumn_1362',['TypedRefColumn',['../classgs_1_1TypedRefColumn.html',1,'gs']]],
+  ['typedrefcolumn_3c_20labelkey_20_3e_1363',['TypedRefColumn&lt; LabelKey &gt;',['../classgs_1_1TypedRefColumn_3_01LabelKey_01_4.html',1,'gs']]]
 ];

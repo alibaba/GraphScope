@@ -1,5 +1,9 @@
 <map id="gs::Any" name="gs::Any">
-<area shape="rect" id="node1" title=" " alt="" coords="23,184,94,211"/>
-<area shape="rect" id="node2" href="$uniongs_1_1AnyValue.html" title=" " alt="" coords="5,95,112,121"/>
-<area shape="rect" id="node3" href="$structgs_1_1Date.html" title=" " alt="" coords="21,5,97,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="202,408,273,435"/>
+<area shape="rect" id="node2" href="$uniongs_1_1AnyValue.html" title=" " alt="" coords="103,251,209,278"/>
+<area shape="rect" id="node3" href="$structgs_1_1Day.html" title=" " alt="" coords="23,95,94,121"/>
+<area shape="rect" id="node4" href="$structgs_1_1DayValue.html" title=" " alt="" coords="5,5,112,32"/>
+<area shape="rect" id="node5" href="$structgs_1_1Date.html" title=" " alt="" coords="118,95,194,121"/>
+<area shape="rect" id="node6" href="$structgs_1_1PropertyType.html" title=" " alt="" coords="244,251,375,278"/>
+<area shape="rect" id="node7" href="$uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="219,95,421,121"/>
 </map>

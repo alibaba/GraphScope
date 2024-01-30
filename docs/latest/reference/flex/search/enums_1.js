@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['fragmentloadertype_1827',['FragmentLoaderType',['../namespacegs.html#af72311b6060166f7a160ef37bde0fbf5',1,'gs']]]
+  ['memorystrategy_2461',['MemoryStrategy',['../namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d',1,'gs']]]
 ];

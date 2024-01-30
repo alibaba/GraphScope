@@ -139,6 +139,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2693c83cd2774ec3e2d5476eeb84328c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2db5fd9052e9db7a51bca20f213ec5fd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a2db5fd9052e9db7a51bca20f213ec5fd">GetIsBatchReader</a> () const</td></tr>
 <tr class="separator:a2db5fd9052e9db7a51bca20f213ec5fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a89de7f49c43b311e020ea6bdb9ef29c7"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a89de7f49c43b311e020ea6bdb9ef29c7">GetMetaData</a> (const std::string &amp;key) const</td></tr>
+<tr class="separator:a89de7f49c43b311e020ea6bdb9ef29c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af08fef0ead3700a9c99a4d821366d373"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a9f995d0f77a0cafa2944219b3e439a86">schema_label_type</a>, std::vector&lt; std::string &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#af08fef0ead3700a9c99a4d821366d373">GetVertexLoadingMeta</a> () const</td></tr>
 <tr class="separator:af08fef0ead3700a9c99a4d821366d373"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4fe620dae3db49a599f045b439ba7288"><td class="memItemLeft" align="right" valign="top">const std::unordered_map&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>, std::vector&lt; std::string &gt;, boost::hash&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a4fe620dae3db49a599f045b439ba7288">GetEdgeLoadingMeta</a> () const</td></tr>
@@ -147,8 +149,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a01a474127d0e70aad9671124ea228b03"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afa6c9f25b76eed0b95bad3e7f4c29410"><td class="memItemLeft" align="right" valign="top">const std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#afa6c9f25b76eed0b95bad3e7f4c29410">GetEdgeColumnMappings</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_id) const</td></tr>
 <tr class="separator:afa6c9f25b76eed0b95bad3e7f4c29410"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa8e47031bf6939513cc1a41c45bd0613"><td class="memItemLeft" align="right" valign="top">const std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#aa8e47031bf6939513cc1a41c45bd0613">GetEdgeSrcDstCol</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_id) const</td></tr>
-<tr class="separator:aa8e47031bf6939513cc1a41c45bd0613"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac81289eefc3f1da68a260229f449ee8a"><td class="memItemLeft" align="right" valign="top">const std::pair&lt; std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt;, std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt; &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#ac81289eefc3f1da68a260229f449ee8a">GetEdgeSrcDstCol</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_id) const</td></tr>
+<tr class="separator:ac81289eefc3f1da68a260229f449ee8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -177,8 +179,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:aceb9167c875b3b519d54907011775c2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a557349d604c687665b4633a590282db5"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>, std::vector&lt; std::tuple&lt; size_t, std::string, std::string &gt; &gt;, boost::hash&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a557349d604c687665b4633a590282db5">edge_column_mappings_</a></td></tr>
 <tr class="separator:a557349d604c687665b4633a590282db5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa860411b110a639bd76029c1a97530a1"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>, std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt; &gt;, boost::hash&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#aa860411b110a639bd76029c1a97530a1">edge_src_dst_col_</a></td></tr>
-<tr class="separator:aa860411b110a639bd76029c1a97530a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9045f1918b7857d35044019ce8e27231"><td class="memItemLeft" align="right" valign="top">std::unordered_map&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>, std::pair&lt; std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt;, std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt; &gt;, boost::hash&lt; <a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html#a9045f1918b7857d35044019ce8e27231">edge_src_dst_col_</a></td></tr>
+<tr class="separator:a9045f1918b7857d35044019ce8e27231"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -447,14 +449,14 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="aa8e47031bf6939513cc1a41c45bd0613"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa8e47031bf6939513cc1a41c45bd0613">&#9670;&nbsp;</a></span>GetEdgeSrcDstCol()</h2>
+<a id="ac81289eefc3f1da68a260229f449ee8a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac81289eefc3f1da68a260229f449ee8a">&#9670;&nbsp;</a></span>GetEdgeSrcDstCol()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">const std::pair&lt; std::vector&lt; size_t &gt;, std::vector&lt; size_t &gt; &gt; &amp; gs::LoadingConfig::GetEdgeSrcDstCol </td>
+          <td class="memname">const std::pair&lt; std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt;, std::vector&lt; std::pair&lt; std::string, size_t &gt; &gt; &gt; &amp; gs::LoadingConfig::GetEdgeSrcDstCol </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
           <td class="paramname"><em>src_label_id</em>, </td>
@@ -593,6 +595,24 @@ Friends</h2></td></tr>
           <td class="memname">bool gs::LoadingConfig::GetIsQuoting </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a89de7f49c43b311e020ea6bdb9ef29c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a89de7f49c43b311e020ea6bdb9ef29c7">&#9670;&nbsp;</a></span>GetMetaData()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string gs::LoadingConfig::GetMetaData </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>key</em></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
@@ -823,7 +843,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="namespacegs_1_1config__parsing.html#a19c7b64f11668067e1825f2e2867c5f2">config_parsing::parse_bulk_load_config_file</a> </td>
+          <td class="memname">bool <a class="el" href="namespacegs_1_1config__parsing.html#af0cf7f6fdcc4d4d98b774ced10f07031">config_parsing::parse_bulk_load_config_file</a> </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>config_file</em>, </td>
@@ -865,7 +885,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="namespacegs_1_1config__parsing.html#a9cf7667168c3e6219e12ba0d23cde333">config_parsing::parse_bulk_load_config_yaml</a> </td>
+          <td class="memname">bool <a class="el" href="namespacegs_1_1config__parsing.html#a68de64220784469bfa0b090b53ef4d63">config_parsing::parse_bulk_load_config_yaml</a> </td>
           <td>(</td>
           <td class="paramtype">const YAML::Node &amp;&#160;</td>
           <td class="paramname"><em>root</em>, </td>
@@ -942,8 +962,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="aa860411b110a639bd76029c1a97530a1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa860411b110a639bd76029c1a97530a1">&#9670;&nbsp;</a></span>edge_src_dst_col_</h2>
+<a id="a9045f1918b7857d35044019ce8e27231"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9045f1918b7857d35044019ce8e27231">&#9670;&nbsp;</a></span>edge_src_dst_col_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -952,7 +972,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::unordered_map&lt;<a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>, std::pair&lt;std::vector&lt;size_t&gt;, std::vector&lt;size_t&gt; &gt;, boost::hash&lt;<a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>&gt; &gt; gs::LoadingConfig::edge_src_dst_col_</td>
+          <td class="memname">std::unordered_map&lt;<a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>, std::pair&lt;std::vector&lt;std::pair&lt;std::string, size_t&gt; &gt;, std::vector&lt;std::pair&lt;std::string, size_t&gt; &gt; &gt;, boost::hash&lt;<a class="el" href="classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b">edge_triplet_type</a>&gt; &gt; gs::LoadingConfig::edge_src_dst_col_</td>
         </tr>
       </table>
   </td>

@@ -98,8 +98,8 @@ Collaboration diagram for gs::GraphDBSession:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a22c92aa9068d9bd179739fbf01676915"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a22c92aa9068d9bd179739fbf01676915">GraphDBSession</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db, <a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;alloc, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, int thread_id)</td></tr>
-<tr class="separator:a22c92aa9068d9bd179739fbf01676915"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a74bf83ac7164cec88abd9050d283da86"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a74bf83ac7164cec88abd9050d283da86">GraphDBSession</a> (<a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;db, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, const std::string &amp;work_dir, int thread_id)</td></tr>
+<tr class="separator:a74bf83ac7164cec88abd9050d283da86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a003a2baa943d3fbeeefdd6f588517a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a2a003a2baa943d3fbeeefdd6f588517a">~GraphDBSession</a> ()</td></tr>
 <tr class="separator:a2a003a2baa943d3fbeeefdd6f588517a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3b3b39788764a25fcb090d5abad0ba46"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ReadTransaction.html">ReadTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a3b3b39788764a25fcb090d5abad0ba46">GetReadTransaction</a> ()</td></tr>
@@ -112,6 +112,10 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a039473d185d29c007fb05ab83f5bf6c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab07e95bde49b7b7aae06ef2e16b005f4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1UpdateTransaction.html">UpdateTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ab07e95bde49b7b7aae06ef2e16b005f4">GetUpdateTransaction</a> ()</td></tr>
 <tr class="separator:ab07e95bde49b7b7aae06ef2e16b005f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a93c2830b1feb578d98a5bc83dd867515"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1CompactTransaction.html">CompactTransaction</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a93c2830b1feb578d98a5bc83dd867515">GetCompactTransaction</a> ()</td></tr>
+<tr class="separator:a93c2830b1feb578d98a5bc83dd867515"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab2cc309fd306fe38a9e6fcc5249a734b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ab2cc309fd306fe38a9e6fcc5249a734b">BatchUpdate</a> (<a class="el" href="classgs_1_1UpdateBatch.html">UpdateBatch</a> &amp;batch)</td></tr>
+<tr class="separator:ab2cc309fd306fe38a9e6fcc5249a734b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9325bd51cbd28b6604ed7ff833d867a2"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a9325bd51cbd28b6604ed7ff833d867a2">graph</a> () const</td></tr>
 <tr class="separator:a9325bd51cbd28b6604ed7ff833d867a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8659a3941812e1ea3bbaefe44e7a9ef3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a8659a3941812e1ea3bbaefe44e7a9ef3">graph</a> ()</td></tr>
@@ -124,38 +128,50 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:abd41902ce4dffb11fd817377811b509b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb79ee8f47fbbb25cf0e4158fc4c6ba3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::vector&lt; char &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#abb79ee8f47fbbb25cf0e4158fc4c6ba3">Eval</a> (const std::string &amp;input)</td></tr>
 <tr class="separator:abb79ee8f47fbbb25cf0e4158fc4c6ba3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50d9f5d47d71c5736440cab9cb1fdbe0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::vector&lt; char &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a50d9f5d47d71c5736440cab9cb1fdbe0">EvalAdhoc</a> (const std::string &amp;input_lib_path)</td></tr>
-<tr class="separator:a50d9f5d47d71c5736440cab9cb1fdbe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aeed4b87f65dcff2d01f34d023c5d585d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::vector&lt; char &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#aeed4b87f65dcff2d01f34d023c5d585d">EvalHqpsProcedure</a> (const query::Query &amp;query_pb)</td></tr>
-<tr class="separator:aeed4b87f65dcff2d01f34d023c5d585d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab65f62a3d02a37128bd2532703c7eef1"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ab65f62a3d02a37128bd2532703c7eef1">GetAppInfo</a> (<a class="el" href="classgs_1_1Encoder.html">Encoder</a> &amp;result)</td></tr>
 <tr class="separator:ab65f62a3d02a37128bd2532703c7eef1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0e824d3027272b459067cfea1836073"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ac0e824d3027272b459067cfea1836073">SessionId</a> () const</td></tr>
 <tr class="separator:ac0e824d3027272b459067cfea1836073"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d89e34e55de81e334048b07cda2ed0f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a9d89e34e55de81e334048b07cda2ed0f">Compact</a> ()</td></tr>
+<tr class="separator:a9d89e34e55de81e334048b07cda2ed0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d4e6af088a81edcbb5b19d872854df6"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structgs_1_1AppMetric.html">AppMetric</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a0d4e6af088a81edcbb5b19d872854df6">GetAppMetric</a> (int idx) const</td></tr>
+<tr class="separator:a0d4e6af088a81edcbb5b19d872854df6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2105047554184e5aac30acc26cd51e82"><td class="memItemLeft" align="right" valign="top">int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a2105047554184e5aac30acc26cd51e82">query_num</a> () const</td></tr>
+<tr class="separator:a2105047554184e5aac30acc26cd51e82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa477d7a0e3d71431ef84341fa0b54baa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1AppBase.html">AppBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#aa477d7a0e3d71431ef84341fa0b54baa">GetApp</a> (int idx)</td></tr>
+<tr class="separator:aa477d7a0e3d71431ef84341fa0b54baa"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
-<tr class="memitem:abf103e090b592dcc4e95811a2f7f02ea"><td class="memItemLeft" align="right" valign="top">static constexpr int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#abf103e090b592dcc4e95811a2f7f02ea">MAX_RETRY</a> = 4</td></tr>
+<tr class="memitem:abf103e090b592dcc4e95811a2f7f02ea"><td class="memItemLeft" align="right" valign="top">static constexpr int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#abf103e090b592dcc4e95811a2f7f02ea">MAX_RETRY</a> = 3</td></tr>
 <tr class="separator:abf103e090b592dcc4e95811a2f7f02ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a782c0ee0f294f7babe55d6ebf5f192c1"><td class="memItemLeft" align="right" valign="top">static constexpr int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a> = 256</td></tr>
+<tr class="separator:a782c0ee0f294f7babe55d6ebf5f192c1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
 <tr class="memitem:a9973c50a1d6b38f7a56ee037294a208b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1GraphDB.html">GraphDB</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a9973c50a1d6b38f7a56ee037294a208b">db_</a></td></tr>
 <tr class="separator:a9973c50a1d6b38f7a56ee037294a208b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9f0992725cc1d1e362d32b411f4d852f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a9f0992725cc1d1e362d32b411f4d852f">alloc_</a></td></tr>
-<tr class="separator:a9f0992725cc1d1e362d32b411f4d852f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7de194c497d270a077ff957fe3f19439"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a7de194c497d270a077ff957fe3f19439">alloc_</a></td></tr>
+<tr class="separator:a7de194c497d270a077ff957fe3f19439"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adefbccfcfbedd24775e822021e8963be"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#adefbccfcfbedd24775e822021e8963be">logger_</a></td></tr>
 <tr class="separator:adefbccfcfbedd24775e822021e8963be"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a63607a652442fea093d64c53f64187b5"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a63607a652442fea093d64c53f64187b5">work_dir_</a></td></tr>
+<tr class="separator:a63607a652442fea093d64c53f64187b5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab476adcbfda17710d7588d89ddce660b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ab476adcbfda17710d7588d89ddce660b">thread_id_</a></td></tr>
 <tr class="separator:ab476adcbfda17710d7588d89ddce660b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a085f20e84ab2d9ad0b3ff6a98171b839"><td class="memItemLeft" align="right" valign="top">std::array&lt; <a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a>, 256 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a085f20e84ab2d9ad0b3ff6a98171b839">app_wrappers_</a></td></tr>
-<tr class="separator:a085f20e84ab2d9ad0b3ff6a98171b839"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8c488da9fd3495705f3780d3f10f0aa2"><td class="memItemLeft" align="right" valign="top">std::array&lt; <a class="el" href="classgs_1_1AppBase.html">AppBase</a> *, 256 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a8c488da9fd3495705f3780d3f10f0aa2">apps_</a></td></tr>
-<tr class="separator:a8c488da9fd3495705f3780d3f10f0aa2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae0f28dd49e789995819a78470e4005d1"><td class="memItemLeft" align="right" valign="top">std::array&lt; <a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a>, <a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#ae0f28dd49e789995819a78470e4005d1">app_wrappers_</a></td></tr>
+<tr class="separator:ae0f28dd49e789995819a78470e4005d1"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7d359bedf750181e6cae7a581d4e17c6"><td class="memItemLeft" align="right" valign="top">std::array&lt; <a class="el" href="classgs_1_1AppBase.html">AppBase</a> *, <a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a7d359bedf750181e6cae7a581d4e17c6">apps_</a></td></tr>
+<tr class="separator:a7d359bedf750181e6cae7a581d4e17c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a987a2d9f630e55c3a8473e4f28005342"><td class="memItemLeft" align="right" valign="top">std::array&lt; <a class="el" href="structgs_1_1AppMetric.html">AppMetric</a>, <a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a987a2d9f630e55c3a8473e4f28005342">app_metrics_</a></td></tr>
+<tr class="separator:a987a2d9f630e55c3a8473e4f28005342"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d866056341d87e917d6ee05b8b6e501"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a1d866056341d87e917d6ee05b8b6e501">query_num_</a></td></tr>
+<tr class="separator:a1d866056341d87e917d6ee05b8b6e501"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a22c92aa9068d9bd179739fbf01676915"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a22c92aa9068d9bd179739fbf01676915">&#9670;&nbsp;</a></span>GraphDBSession()</h2>
+<a id="a74bf83ac7164cec88abd9050d283da86"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a74bf83ac7164cec88abd9050d283da86">&#9670;&nbsp;</a></span>GraphDBSession()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -172,7 +188,7 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td>
           <td class="paramname"><em>alloc</em>, </td>
         </tr>
         <tr>
@@ -180,6 +196,12 @@ Private Attributes</h2></td></tr>
           <td></td>
           <td class="paramtype"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;&#160;</td>
           <td class="paramname"><em>logger</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -228,6 +250,41 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="ab2cc309fd306fe38a9e6fcc5249a734b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2cc309fd306fe38a9e6fcc5249a734b">&#9670;&nbsp;</a></span>BatchUpdate()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::GraphDBSession::BatchUpdate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classgs_1_1UpdateBatch.html">UpdateBatch</a> &amp;&#160;</td>
+          <td class="paramname"><em>batch</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9d89e34e55de81e334048b07cda2ed0f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d89e34e55de81e334048b07cda2ed0f">&#9670;&nbsp;</a></span>Compact()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::GraphDBSession::Compact </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="abb79ee8f47fbbb25cf0e4158fc4c6ba3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abb79ee8f47fbbb25cf0e4158fc4c6ba3">&#9670;&nbsp;</a></span>Eval()</h2>
 
@@ -239,42 +296,6 @@ Private Attributes</h2></td></tr>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>input</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a50d9f5d47d71c5736440cab9cb1fdbe0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a50d9f5d47d71c5736440cab9cb1fdbe0">&#9670;&nbsp;</a></span>EvalAdhoc()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::vector&lt; char &gt; &gt; gs::GraphDBSession::EvalAdhoc </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>input_lib_path</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="aeed4b87f65dcff2d01f34d023c5d585d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aeed4b87f65dcff2d01f34d023c5d585d">&#9670;&nbsp;</a></span>EvalHqpsProcedure()</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; std::vector&lt; char &gt; &gt; gs::GraphDBSession::EvalHqpsProcedure </td>
-          <td>(</td>
-          <td class="paramtype">const query::Query &amp;&#160;</td>
-          <td class="paramname"><em>query_pb</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -328,6 +349,24 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="aa477d7a0e3d71431ef84341fa0b54baa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa477d7a0e3d71431ef84341fa0b54baa">&#9670;&nbsp;</a></span>GetApp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1AppBase.html">AppBase</a> * gs::GraphDBSession::GetApp </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idx</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ab65f62a3d02a37128bd2532703c7eef1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab65f62a3d02a37128bd2532703c7eef1">&#9670;&nbsp;</a></span>GetAppInfo()</h2>
 
@@ -339,6 +378,41 @@ Private Attributes</h2></td></tr>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classgs_1_1Encoder.html">Encoder</a> &amp;&#160;</td>
           <td class="paramname"><em>result</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0d4e6af088a81edcbb5b19d872854df6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d4e6af088a81edcbb5b19d872854df6">&#9670;&nbsp;</a></span>GetAppMetric()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structgs_1_1AppMetric.html">AppMetric</a> &amp; gs::GraphDBSession::GetAppMetric </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>idx</em></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a93c2830b1feb578d98a5bc83dd867515"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a93c2830b1feb578d98a5bc83dd867515">&#9670;&nbsp;</a></span>GetCompactTransaction()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classgs_1_1CompactTransaction.html">CompactTransaction</a> gs::GraphDBSession::GetCompactTransaction </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -465,6 +539,23 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a2105047554184e5aac30acc26cd51e82"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2105047554184e5aac30acc26cd51e82">&#9670;&nbsp;</a></span>query_num()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int64_t gs::GraphDBSession::query_num </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a4c0fb4f40cf126fc16f1dad82fd2d9df"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4c0fb4f40cf126fc16f1dad82fd2d9df">&#9670;&nbsp;</a></span>schema()</h2>
 
@@ -500,8 +591,8 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a9f0992725cc1d1e362d32b411f4d852f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9f0992725cc1d1e362d32b411f4d852f">&#9670;&nbsp;</a></span>alloc_</h2>
+<a id="a7de194c497d270a077ff957fe3f19439"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7de194c497d270a077ff957fe3f19439">&#9670;&nbsp;</a></span>alloc_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -510,7 +601,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a>&amp; gs::GraphDBSession::alloc_</td>
+          <td class="memname"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>&amp; gs::GraphDBSession::alloc_</td>
         </tr>
       </table>
   </td>
@@ -522,8 +613,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a085f20e84ab2d9ad0b3ff6a98171b839"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a085f20e84ab2d9ad0b3ff6a98171b839">&#9670;&nbsp;</a></span>app_wrappers_</h2>
+<a id="a987a2d9f630e55c3a8473e4f28005342"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a987a2d9f630e55c3a8473e4f28005342">&#9670;&nbsp;</a></span>app_metrics_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -532,7 +623,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::array&lt;<a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a>, 256&gt; gs::GraphDBSession::app_wrappers_</td>
+          <td class="memname">std::array&lt;<a class="el" href="structgs_1_1AppMetric.html">AppMetric</a>, <a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a>&gt; gs::GraphDBSession::app_metrics_</td>
         </tr>
       </table>
   </td>
@@ -544,8 +635,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a8c488da9fd3495705f3780d3f10f0aa2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8c488da9fd3495705f3780d3f10f0aa2">&#9670;&nbsp;</a></span>apps_</h2>
+<a id="ae0f28dd49e789995819a78470e4005d1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae0f28dd49e789995819a78470e4005d1">&#9670;&nbsp;</a></span>app_wrappers_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -554,7 +645,29 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::array&lt;<a class="el" href="classgs_1_1AppBase.html">AppBase</a>*, 256&gt; gs::GraphDBSession::apps_</td>
+          <td class="memname">std::array&lt;<a class="el" href="classgs_1_1AppWrapper.html">AppWrapper</a>, <a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a>&gt; gs::GraphDBSession::app_wrappers_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a7d359bedf750181e6cae7a581d4e17c6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d359bedf750181e6cae7a581d4e17c6">&#9670;&nbsp;</a></span>apps_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::array&lt;<a class="el" href="classgs_1_1AppBase.html">AppBase</a>*, <a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a>&gt; gs::GraphDBSession::apps_</td>
         </tr>
       </table>
   </td>
@@ -610,6 +723,28 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a782c0ee0f294f7babe55d6ebf5f192c1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a782c0ee0f294f7babe55d6ebf5f192c1">&#9670;&nbsp;</a></span>MAX_PLUGIN_NUM</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">constexpr int32_t gs::GraphDBSession::MAX_PLUGIN_NUM = 256</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="abf103e090b592dcc4e95811a2f7f02ea"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abf103e090b592dcc4e95811a2f7f02ea">&#9670;&nbsp;</a></span>MAX_RETRY</h2>
 
@@ -620,12 +755,34 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">constexpr int32_t gs::GraphDBSession::MAX_RETRY = 4</td>
+          <td class="memname">constexpr int32_t gs::GraphDBSession::MAX_RETRY = 3</td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
 <span class="mlabels"><span class="mlabel">static</span><span class="mlabel">constexpr</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1d866056341d87e917d6ee05b8b6e501"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d866056341d87e917d6ee05b8b6e501">&#9670;&nbsp;</a></span>query_num_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::atomic&lt;int64_t&gt; gs::GraphDBSession::query_num_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
@@ -643,6 +800,28 @@ Private Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">int gs::GraphDBSession::thread_id_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a63607a652442fea093d64c53f64187b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a63607a652442fea093d64c53f64187b5">&#9670;&nbsp;</a></span>work_dir_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::string gs::GraphDBSession::work_dir_</td>
         </tr>
       </table>
   </td>

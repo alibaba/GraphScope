@@ -1,7 +1,4 @@
 var searchData=
 [
-  ['label_5ft_1806',['label_t',['../namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2',1,'gs']]],
-  ['label_5ftype_1807',['label_type',['../classgs_1_1Schema.html#a8bdcf6f3bfde202a9d38464861237b05',1,'gs::Schema']]],
-  ['longcolumn_1808',['LongColumn',['../namespacegs.html#ae3d3eda4b0ae9d9abfb55848e7b5dff5',1,'gs']]],
-  ['longemptycolumn_1809',['LongEmptyColumn',['../namespacegs.html#a1435fbe3eec7b86748ca1597f83c1f8f',1,'gs']]]
+  ['key_5fbuffer_5ft_2436',['key_buffer_t',['../classgs_1_1IdIndexer.html#ae7cebed159c7fe05c43e1e88c9695632',1,'gs::IdIndexer::key_buffer_t()'],['../structgs_1_1__move__data.html#a960baed791fd871bb5ac9a779a46162d',1,'gs::_move_data::key_buffer_t()'],['../structgs_1_1__move__data_3_01std_1_1string__view_00_01INDEX__T_01_4.html#a958b9b3df37d6159c4ab5dba8ee7b383',1,'gs::_move_data&lt; std::string_view, INDEX_T &gt;::key_buffer_t()']]]
 ];

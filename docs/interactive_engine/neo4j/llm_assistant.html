@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="../../flex/interactive/dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../flex/interactive/development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -779,9 +781,9 @@ type:<span class="w"> </span>EDGE
 </pre></div>
 </div>
 <p>The query sentence would be like:</p>
-<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span>MATCH (p:Person)-[:son_of]-&gt;(q:Person)
-WHERE p.name = &#39;贾宝玉&#39;
-RETURN q.name
+<div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">MATCH</span><span class="w"> </span><span class="p">(</span><span class="n">p</span><span class="p">:</span><span class="n">Person</span><span class="p">)</span><span class="o">-[</span><span class="p">:</span><span class="n">son_of</span><span class="o">]-&gt;</span><span class="p">(</span><span class="n">q</span><span class="p">:</span><span class="n">Person</span><span class="p">)</span>
+<span class="k">WHERE</span><span class="w"> </span><span class="n">p</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&#39;贾宝玉&#39;</span>
+<span class="k">RETURN</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">name</span>
 </pre></div>
 </div>
 <p>Please note that the generated query sentence may not be 100% correct, and you have the option to edit the query sentence as needed.</p>

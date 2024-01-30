@@ -11,7 +11,7 @@
 <meta name="description" content="We have developed a versatile graph optimizer for the Graph Interactive Engine (GIE), capable of optimizing the execution for multiple query languages in GraphScope, including Gremlin and Cypher. T..." />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of GIE" href="design_of_gie.html" /><link rel="prev" title="Using LLM as an Assistant in GIE" href="neo4j/llm_assistant.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>A Generic Graph Optimizer for GIE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
@@ -249,6 +249,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../flex/interactive/glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../flex/interactive/deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -581,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -608,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -774,6 +775,90 @@ This rule optimizes to retain only necessary data, significantly reducing the vo
 <h2>Cost-based Optimizer (CBO)<a class="headerlink" href="#cost-based-optimizer-cbo" title="Permalink to this heading">#</a></h2>
 <p>TODO</p>
 </section>
+<section id="graph-type-inference">
+<h2>Graph Type Inference<a class="headerlink" href="#graph-type-inference" title="Permalink to this heading">#</a></h2>
+<p>Traditional SQL only provides checks and inference for basic data types, such as int, double, string, boolean, etc. However, graph databases encompass more complex types. Beyond basic data types, they introduce special vertex and edge types. Vertex types constrain the range of entity types within the graph, while edge types constrain relationships between entities. While the introduction of vertex and edge types in graph databases provides a more flexible data model, it simultaneously adds complexity to the data, necessitating type checks and inference for graph data.</p>
+<p>We address this complexity through Graph Type Inference, offering functionality for type checks and inference for graph data. This feature examines whether vertex and edge types in graph data adhere to user-defined schemas and can infer vertex and edge types, laying the groundwork for subsequent optimizations in graph queries.</p>
+<p>Taking the example of a modern graph schema, which includes the following vertex and edge types:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Vertex types</span>
+<span class="n">person</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">age</span><span class="p">)</span>
+<span class="n">software</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">lang</span><span class="p">)</span>
+
+<span class="c1"># Edge types</span>
+<span class="n">knows</span> <span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+<span class="n">created</span> <span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Graph Type Inference provides the following capabilities:</p>
+<ul>
+<li><p>Checking if vertex and edge types in the graph conform to user-defined schemas:</p>
+<ul>
+<li><p>Reporting errors for nonexistent vertex or edge types:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># &#39;per&#39; is a nonexistent vertex type</span>
+Match<span class="w"> </span><span class="o">(</span>a:per<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>a<span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># &#39;kno&#39; is a nonexistent edge type</span>
+Match<span class="w"> </span><span class="o">(</span>a:person<span class="o">)</span>-<span class="o">[</span>b:kno<span class="o">]</span>-&gt;<span class="o">(</span>c<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>a,<span class="w"> </span>b,<span class="w"> </span>c<span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Reporting errors for nonexistent properties or mismatched property types in vertices or edges:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># The &#39;lang&#39; property does not exist in vertices of type &#39;person&#39;</span>
+Match<span class="w"> </span><span class="o">(</span>a:person<span class="w"> </span><span class="o">{</span>lang:<span class="w"> </span><span class="s1">&#39;java&#39;</span><span class="o">})</span><span class="w"> </span>Return<span class="w"> </span>a<span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># The &#39;name&#39; property in vertices of type &#39;person&#39; is of type string, cannot perform addition</span>
+Match<span class="w"> </span><span class="o">(</span>a:person<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>a.name<span class="w"> </span>+<span class="w"> </span><span class="m">1</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Reporting errors for invalid paths composed of vertices and edges:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># There is no edge of type &#39;created&#39; between vertices of type &#39;person&#39;</span>
+Match<span class="w"> </span><span class="o">(</span>a:person<span class="o">)</span>-<span class="o">[</span>:created<span class="o">]</span>-&gt;<span class="o">(</span>b:person<span class="o">)</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Vertices of type &#39;software&#39; have no outgoing edges</span>
+Match<span class="w"> </span><span class="o">(</span>a:software<span class="o">)</span>-<span class="o">[</span>b<span class="o">]</span>-&gt;<span class="o">(</span>c<span class="o">)</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+<li><p>Inferring vertex and edge types in the graph:</p>
+<ul>
+<li><p>Inferring vertex types given edge types:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># (?)-[knows]-&gt;(?) =&gt; (person)-[knows]-&gt;(person)</span>
+Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[</span>:knows<span class="o">]</span>-&gt;<span class="o">(</span>b<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>labels<span class="o">(</span>a<span class="o">)</span>,<span class="w"> </span>labels<span class="o">(</span>b<span class="o">)</span><span class="p">;</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># (?)-[knows*1..4]-&gt;(?) =&gt; (person)-[knows*1..2]-&gt;(person)</span>
+Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[</span>:knows*1..4<span class="o">]</span>-&gt;<span class="o">(</span>b<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>labels<span class="o">(</span>a<span class="o">)</span>,<span class="w"> </span>labels<span class="o">(</span>b<span class="o">)</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Inferring edge types given vertex types:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># (person)-[?]-&gt;(person) =&gt; (person)-[knows]-&gt;(person)</span>
+Match<span class="w"> </span><span class="o">(</span>a:person<span class="o">)</span>-<span class="o">[</span>b<span class="o">]</span>-&gt;<span class="o">(</span>c:person<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>type<span class="o">(</span>b<span class="o">)</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Inferring all vertex and edge types given a path:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># (?)-[?]-&gt;(?)-&gt;[?]-&gt;(software) =&gt; (person)-[knows]-&gt;(person)-&gt;[created]-&gt;(software)</span>
+Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[</span>b<span class="o">]</span>-&gt;<span class="o">(</span>c<span class="o">)</span>-<span class="o">[</span>d<span class="o">]</span>-&gt;<span class="o">(</span>:software<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>labels<span class="o">(</span>a<span class="o">)</span>,<span class="w"> </span>type<span class="o">(</span>b<span class="o">)</span>,<span class="w"> </span>labels<span class="o">(</span>c<span class="o">)</span>,<span class="w"> </span>type<span class="o">(</span>d<span class="o">)</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Inferring across multiple sentences:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># (?)-[]-&gt;(?), (?)-[knows]-(?) =&gt; (person)-[knows]-(person), (person)-[knows]-(person)</span>
+Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[</span>b<span class="o">]</span>-<span class="o">(</span>c<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[</span>:KNOWS<span class="o">]</span>-<span class="o">(</span>c<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>labels<span class="o">(</span>a<span class="o">)</span>,<span class="w"> </span>type<span class="o">(</span>b<span class="o">)</span>,<span class="w"> </span>labels<span class="o">(</span>c<span class="o">)</span><span class="p">;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</li>
+</ul>
+</section>
 </section>
 
         </article>
@@ -843,6 +928,7 @@ This rule optimizes to retain only necessary data, significantly reducing the vo
 </ul>
 </li>
 <li><a class="reference internal" href="#cost-based-optimizer-cbo">Cost-based Optimizer (CBO)</a></li>
+<li><a class="reference internal" href="#graph-type-inference">Graph Type Inference</a></li>
 </ul>
 </li>
 </ul>

@@ -85,6 +85,20 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a8191b5b47b88670cd20b856bbd0e5adc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb99c27c7a04f75c90f29d988c451f9f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#abb99c27c7a04f75c90f29d988c451f9f">~MutableNbr</a> ()=default</td></tr>
 <tr class="separator:abb99c27c7a04f75c90f29d988c451f9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a596b29ed214887f62b1f339a95ea8243"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1MutableNbr.html">MutableNbr</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#a596b29ed214887f62b1f339a95ea8243">operator=</a> (const <a class="el" href="structgs_1_1MutableNbr.html">MutableNbr</a> &amp;rhs)</td></tr>
+<tr class="separator:a596b29ed214887f62b1f339a95ea8243"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a69f898e9a22cbdf3f8304e644c364500"><td class="memItemLeft" align="right" valign="top">const EDATA_T &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#a69f898e9a22cbdf3f8304e644c364500">get_data</a> () const</td></tr>
+<tr class="separator:a69f898e9a22cbdf3f8304e644c364500"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4c7adddaa7e72197dbb134d0ed19a74"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#ab4c7adddaa7e72197dbb134d0ed19a74">get_neighbor</a> () const</td></tr>
+<tr class="separator:ab4c7adddaa7e72197dbb134d0ed19a74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4c32de13e0685509062e4d0c4cb5b540"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#a4c32de13e0685509062e4d0c4cb5b540">get_timestamp</a> () const</td></tr>
+<tr class="separator:a4c32de13e0685509062e4d0c4cb5b540"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d363f8f6c18dd22e83af49a3a646814"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#a1d363f8f6c18dd22e83af49a3a646814">set_data</a> (const EDATA_T &amp;val, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts)</td></tr>
+<tr class="separator:a1d363f8f6c18dd22e83af49a3a646814"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a569547898ed517a8757136ae9fb15d23"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#a569547898ed517a8757136ae9fb15d23">set_neighbor</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> <a class="el" href="structgs_1_1MutableNbr.html#a1098cb740e413dd30cb7a343e22c6853">neighbor</a>)</td></tr>
+<tr class="separator:a569547898ed517a8757136ae9fb15d23"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac3b86c0891fa2e189a25d4dc44b4ae58"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1MutableNbr.html#ac3b86c0891fa2e189a25d4dc44b4ae58">set_timestamp</a> (<a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts)</td></tr>
+<tr class="separator:ac3b86c0891fa2e189a25d4dc44b4ae58"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -172,6 +186,210 @@ template&lt;typename EDATA_T &gt; </div>
   </td>
   <td class="mlabels-right">
 <span class="mlabels"><span class="mlabel">default</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Member Function Documentation</h2>
+<a id="a69f898e9a22cbdf3f8304e644c364500"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a69f898e9a22cbdf3f8304e644c364500">&#9670;&nbsp;</a></span>get_data()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const EDATA_T&amp; <a class="el" href="structgs_1_1MutableNbr.html">gs::MutableNbr</a>&lt; EDATA_T &gt;::get_data </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ab4c7adddaa7e72197dbb134d0ed19a74"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4c7adddaa7e72197dbb134d0ed19a74">&#9670;&nbsp;</a></span>get_neighbor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> <a class="el" href="structgs_1_1MutableNbr.html">gs::MutableNbr</a>&lt; EDATA_T &gt;::get_neighbor </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a4c32de13e0685509062e4d0c4cb5b540"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c32de13e0685509062e4d0c4cb5b540">&#9670;&nbsp;</a></span>get_timestamp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="structgs_1_1MutableNbr.html">gs::MutableNbr</a>&lt; EDATA_T &gt;::get_timestamp </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a596b29ed214887f62b1f339a95ea8243"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a596b29ed214887f62b1f339a95ea8243">&#9670;&nbsp;</a></span>operator=()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="structgs_1_1MutableNbr.html">MutableNbr</a>&amp; <a class="el" href="structgs_1_1MutableNbr.html">gs::MutableNbr</a>&lt; EDATA_T &gt;::operator= </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structgs_1_1MutableNbr.html">MutableNbr</a>&lt; EDATA_T &gt; &amp;&#160;</td>
+          <td class="paramname"><em>rhs</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a1d363f8f6c18dd22e83af49a3a646814"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d363f8f6c18dd22e83af49a3a646814">&#9670;&nbsp;</a></span>set_data()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="structgs_1_1MutableNbr.html">gs::MutableNbr</a>&lt; EDATA_T &gt;::set_data </td>
+          <td>(</td>
+          <td class="paramtype">const EDATA_T &amp;&#160;</td>
+          <td class="paramname"><em>val</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td>
+          <td class="paramname"><em>ts</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a569547898ed517a8757136ae9fb15d23"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a569547898ed517a8757136ae9fb15d23">&#9670;&nbsp;</a></span>set_neighbor()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="structgs_1_1MutableNbr.html">gs::MutableNbr</a>&lt; EDATA_T &gt;::set_neighbor </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
+          <td class="paramname"><em>neighbor</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac3b86c0891fa2e189a25d4dc44b4ae58"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac3b86c0891fa2e189a25d4dc44b4ae58">&#9670;&nbsp;</a></span>set_timestamp()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void <a class="el" href="structgs_1_1MutableNbr.html">gs::MutableNbr</a>&lt; EDATA_T &gt;::set_timestamp </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td>
+          <td class="paramname"><em>ts</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">

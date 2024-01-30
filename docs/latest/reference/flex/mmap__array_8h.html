@@ -68,39 +68,42 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#nested-classes">Classes</a> &#124;
-<a href="#namespaces">Namespaces</a>  </div>
+<a href="#namespaces">Namespaces</a> &#124;
+<a href="#define-members">Macros</a> &#124;
+<a href="#enum-members">Enumerations</a> &#124;
+<a href="#func-members">Functions</a>  </div>
   <div class="headertitle">
 <div class="title">mmap_array.h File Reference</div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &lt;fcntl.h&gt;</code><br />
-<code>#include &lt;string.h&gt;</code><br />
-<code>#include &lt;sys/mman.h&gt;</code><br />
-<code>#include &lt;sys/stat.h&gt;</code><br />
-<code>#include &lt;sys/types.h&gt;</code><br />
-<code>#include &lt;unistd.h&gt;</code><br />
+<div class="textblock"><code>#include &lt;assert.h&gt;</code><br />
 <code>#include &lt;atomic&gt;</code><br />
 <code>#include &lt;filesystem&gt;</code><br />
 <code>#include &lt;string&gt;</code><br />
 <code>#include &lt;string_view&gt;</code><br />
+<code>#include &quot;<a class="el" href="file__names_8h_source.html">flex/storages/rt_mutable_graph/file_names.h</a>&quot;</code><br />
 <code>#include &quot;glog/logging.h&quot;</code><br />
+<code>#include &quot;grape/util.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for mmap_array.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="mmap__array_8h__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2mmap__array_8h" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2mmap__array_8h" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2mmap__array_8h">
-<area shape="rect" title=" " alt="" coords="467,5,694,61"/>
-<area shape="rect" title=" " alt="" coords="5,109,68,136"/>
-<area shape="rect" title=" " alt="" coords="92,109,163,136"/>
-<area shape="rect" title=" " alt="" coords="187,109,289,136"/>
-<area shape="rect" title=" " alt="" coords="314,109,399,136"/>
-<area shape="rect" title=" " alt="" coords="423,109,519,136"/>
-<area shape="rect" title=" " alt="" coords="543,109,618,136"/>
-<area shape="rect" title=" " alt="" coords="642,109,709,136"/>
-<area shape="rect" title=" " alt="" coords="733,109,823,136"/>
-<area shape="rect" title=" " alt="" coords="847,109,906,136"/>
-<area shape="rect" title=" " alt="" coords="931,109,1028,136"/>
-<area shape="rect" title=" " alt="" coords="1053,109,1167,136"/>
+<area shape="rect" title=" " alt="" coords="480,5,707,61"/>
+<area shape="rect" title=" " alt="" coords="5,199,80,225"/>
+<area shape="rect" title=" " alt="" coords="596,117,663,143"/>
+<area shape="rect" title=" " alt="" coords="104,199,195,225"/>
+<area shape="rect" title=" " alt="" coords="687,117,745,143"/>
+<area shape="rect" title=" " alt="" coords="770,117,867,143"/>
+<area shape="rect" href="file__names_8h.html" title=" " alt="" coords="340,109,521,151"/>
+<area shape="rect" title=" " alt="" coords="856,199,971,225"/>
+<area shape="rect" title=" " alt="" coords="892,117,988,143"/>
+<area shape="rect" title=" " alt="" coords="547,199,610,225"/>
+<area shape="rect" title=" " alt="" coords="634,199,705,225"/>
+<area shape="rect" title=" " alt="" coords="729,199,831,225"/>
+<area shape="rect" title=" " alt="" coords="219,199,304,225"/>
+<area shape="rect" title=" " alt="" coords="328,199,424,225"/>
+<area shape="rect" title=" " alt="" coords="448,199,523,225"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -108,44 +111,54 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="mmap__array_8h__dep__incl.png" border="0" usemap="#_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2mmap__array_8hdep" alt=""/></div>
 <map name="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2mmap__array_8hdep" id="_2home_2runner_2work_2GraphScope_2GraphScope_2flex_2utils_2mmap__array_8hdep">
-<area shape="rect" title=" " alt="" coords="1295,5,1521,61"/>
-<area shape="rect" href="mutable__csr_8h.html" title=" " alt="" coords="1110,421,1346,477"/>
-<area shape="rect" href="wal_8h.html" title=" " alt="" coords="1244,651,1471,707"/>
-<area shape="rect" href="id__indexer_8h.html" title=" " alt="" coords="1420,213,1647,269"/>
-<area shape="rect" href="column_8h.html" title=" " alt="" coords="1471,109,1697,165"/>
-<area shape="rect" href="mutable__csr_8cc.html" title=" " alt="" coords="1052,533,1295,589"/>
-<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1545,525,1772,596"/>
-<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="736,651,1011,707"/>
-<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="801,525,1028,596"/>
-<area shape="rect" href="basic__fragment__loader_8h.html" title=" " alt="" coords="2303,644,2529,715"/>
-<area shape="rect" href="csv__fragment__loader_8h.html" title=" " alt="" coords="2648,763,2875,833"/>
-<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="685,1007,912,1063"/>
-<area shape="rect" href="i__fragment__loader_8h.html" title=" " alt="" coords="2623,644,2849,715"/>
-<area shape="rect" href="mutable__property__fragment_8cc.html" title=" " alt="" coords="1545,644,1772,715"/>
-<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="384,763,611,833"/>
-<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="2147,763,2373,833"/>
-<area shape="rect" href="read__transaction_8cc.html" title=" " alt="" coords="737,770,1018,826"/>
-<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="1093,763,1320,833"/>
-<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="1645,763,1872,833"/>
-<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="1847,651,2121,707"/>
-<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="1896,763,2123,833"/>
-<area shape="rect" href="basic__fragment__loader_8cc.html" title=" " alt="" coords="2397,763,2624,833"/>
-<area shape="rect" href="csv__fragment__loader_8cc.html" title=" " alt="" coords="2648,881,2875,952"/>
-<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="3001,881,3231,952"/>
-<area shape="rect" href="loader__factory_8cc.html" title=" " alt="" coords="3001,1000,3231,1071"/>
-<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="5,1126,237,1182"/>
-<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="609,1119,836,1189"/>
-<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="384,889,611,945"/>
-<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="133,889,360,945"/>
-<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="184,1007,411,1063"/>
-<area shape="rect" href="wal_8cc.html" title=" " alt="" coords="1395,770,1621,826"/>
-<area shape="rect" href="schema_8h.html" title=" " alt="" coords="1921,421,2148,477"/>
-<area shape="rect" href="table_8h.html" title=" " alt="" coords="1571,317,1797,373"/>
-<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="2873,644,3100,715"/>
-<area shape="rect" href="schema_8cc.html" title=" " alt="" coords="1921,533,2148,589"/>
-<area shape="rect" href="loading__config_8cc.html" title=" " alt="" coords="3000,763,3227,833"/>
-<area shape="rect" href="table_8cc.html" title=" " alt="" coords="1671,421,1897,477"/>
-<area shape="rect" href="column_8cc.html" title=" " alt="" coords="1721,213,1948,269"/>
+<area shape="rect" title=" " alt="" coords="1967,5,2193,61"/>
+<area shape="rect" href="mutable__csr_8h.html" title=" " alt="" coords="2154,317,2390,373"/>
+<area shape="rect" href="allocators_8h.html" title=" " alt="" coords="2645,221,2889,262"/>
+<area shape="rect" href="id__indexer_8h.html" title=" " alt="" coords="1567,213,1793,269"/>
+<area shape="rect" href="column_8h.html" title=" " alt="" coords="1892,109,2119,165"/>
+<area shape="rect" href="dual__csr_8h.html" title=" " alt="" coords="2185,421,2412,477"/>
+<area shape="rect" href="mutable__property__fragment_8h.html" title=" " alt="" coords="1467,525,1693,596"/>
+<area shape="rect" href="read__transaction_8h.html" title=" " alt="" coords="2220,651,2495,707"/>
+<area shape="rect" href="update__transaction_8h.html" title=" " alt="" coords="2075,763,2301,833"/>
+<area shape="rect" href="mutable__csr_8cc.html" title=" " alt="" coords="1919,421,2161,477"/>
+<area shape="rect" href="abstract__arrow__fragment__loader_8h.html" title=" " alt="" coords="337,763,580,833"/>
+<area shape="rect" href="csv__fragment__loader_8h.html" title=" " alt="" coords="605,881,832,952"/>
+<area shape="rect" href="odps__fragment__loader_8h.html" title=" " alt="" coords="857,881,1084,952"/>
+<area shape="rect" href="basic__fragment__loader_8h.html" title=" " alt="" coords="268,644,495,715"/>
+<area shape="rect" href="i__fragment__loader_8h.html" title=" " alt="" coords="1007,644,1233,715"/>
+<area shape="rect" href="graph__db_8h.html" title=" " alt="" coords="2247,889,2473,945"/>
+<area shape="rect" href="mutable__property__fragment_8cc.html" title=" " alt="" coords="1617,644,1844,715"/>
+<area shape="rect" href="compact__transaction_8cc.html" title=" " alt="" coords="1868,644,2095,715"/>
+<area shape="rect" href="graph__db__session_8h.html" title=" " alt="" coords="3181,881,3408,952"/>
+<area shape="rect" href="insert__transaction_8cc.html" title=" " alt="" coords="2740,763,2967,833"/>
+<area shape="rect" href="read__transaction_8cc.html" title=" " alt="" coords="1671,770,1953,826"/>
+<area shape="rect" href="single__edge__insert__transaction_8cc.html" title=" " alt="" coords="2489,763,2716,833"/>
+<area shape="rect" href="single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="2991,763,3217,833"/>
+<area shape="rect" href="transaction__utils_8h.html" title=" " alt="" coords="2620,651,2895,707"/>
+<area shape="rect" href="update__transaction_8cc.html" title=" " alt="" coords="1688,881,1915,952"/>
+<area shape="rect" href="abstract__arrow__fragment__loader_8cc.html" title=" " alt="" coords="337,881,580,952"/>
+<area shape="rect" href="csv__fragment__loader_8cc.html" title=" " alt="" coords="605,1000,832,1071"/>
+<area shape="rect" href="odps__fragment__loader_8cc.html" title=" " alt="" coords="857,1000,1084,1071"/>
+<area shape="rect" href="basic__fragment__loader_8cc.html" title=" " alt="" coords="36,763,263,833"/>
+<area shape="rect" href="loader__factory_8h.html" title=" " alt="" coords="1109,763,1339,833"/>
+<area shape="rect" href="loader__factory_8cc.html" title=" " alt="" coords="1109,881,1339,952"/>
+<area shape="rect" href="graph__db_8cc.html" title=" " alt="" coords="3053,1119,3285,1175"/>
+<area shape="rect" href="graph__db__session_8cc.html" title=" " alt="" coords="2492,1000,2719,1071"/>
+<area shape="rect" href="app__base_8cc.html" title=" " alt="" coords="3031,1007,3257,1063"/>
+<area shape="rect" href="hqps__app_8h.html" title=" " alt="" coords="3332,1007,3559,1063"/>
+<area shape="rect" href="server__app_8h.html" title=" " alt="" coords="2780,1007,3007,1063"/>
+<area shape="rect" href="hqps__app_8cc.html" title=" " alt="" coords="3332,1119,3559,1175"/>
+<area shape="rect" href="server__app_8cc.html" title=" " alt="" coords="2780,1119,3007,1175"/>
+<area shape="rect" href="insert__transaction_8h.html" title=" " alt="" coords="3071,644,3297,715"/>
+<area shape="rect" href="single__edge__insert__transaction_8h.html" title=" " alt="" coords="3572,644,3799,715"/>
+<area shape="rect" href="single__vertex__insert__transaction_8h.html" title=" " alt="" coords="3321,644,3548,715"/>
+<area shape="rect" href="schema_8h.html" title=" " alt="" coords="1164,421,1391,477"/>
+<area shape="rect" href="column_8cc.html" title=" " alt="" coords="1872,317,2099,373"/>
+<area shape="rect" href="table_8h.html" title=" " alt="" coords="1567,317,1793,373"/>
+<area shape="rect" href="loading__config_8h.html" title=" " alt="" coords="705,644,932,715"/>
+<area shape="rect" href="schema_8cc.html" title=" " alt="" coords="1013,533,1240,589"/>
+<area shape="rect" href="loading__config_8cc.html" title=" " alt="" coords="655,763,881,833"/>
+<area shape="rect" href="table_8cc.html" title=" " alt="" coords="1567,421,1793,477"/>
 </map>
 </div>
 </div>
@@ -164,7 +177,182 @@ Classes</h2></td></tr>
 Namespaces</h2></td></tr>
 <tr class="memitem:namespacegs"><td class="memItemLeft" align="right" valign="top"> &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html">gs</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="define-members"></a>
+Macros</h2></td></tr>
+<tr class="memitem:ac9f31f726d2933782e2efda7136a25fd"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#ac9f31f726d2933782e2efda7136a25fd">ADDR</a>&#160;&#160;&#160;(void*) (0x0UL)</td></tr>
+<tr class="separator:ac9f31f726d2933782e2efda7136a25fd"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ccad09b4a2a06ae178418fdccf5940d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#a6ccad09b4a2a06ae178418fdccf5940d">FLAGS</a>&#160;&#160;&#160;(MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB)</td></tr>
+<tr class="separator:a6ccad09b4a2a06ae178418fdccf5940d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3edd319ff92fe698be953178dc1cec70"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#a3edd319ff92fe698be953178dc1cec70">PROTECTION</a>&#160;&#160;&#160;(PROT_READ | PROT_WRITE)</td></tr>
+<tr class="separator:a3edd319ff92fe698be953178dc1cec70"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaedc9400de80509cdd8c2d38c0f98d0b"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#aaedc9400de80509cdd8c2d38c0f98d0b">HUGEPAGE_SIZE</a>&#160;&#160;&#160;(2UL * 1024 * 1024)</td></tr>
+<tr class="separator:aaedc9400de80509cdd8c2d38c0f98d0b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b7f1ac65d0696c87830a2f33a16ef2d"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#a9b7f1ac65d0696c87830a2f33a16ef2d">HUGEPAGE_MASK</a>&#160;&#160;&#160;(2UL * 1024 * 1024 - 1UL)</td></tr>
+<tr class="separator:a9b7f1ac65d0696c87830a2f33a16ef2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3be6edddde4d8247411f975223cec04f"><td class="memItemLeft" align="right" valign="top">#define&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#a3be6edddde4d8247411f975223cec04f">ROUND_UP</a>(size)&#160;&#160;&#160;(((size) + <a class="el" href="mmap__array_8h.html#a9b7f1ac65d0696c87830a2f33a16ef2d">HUGEPAGE_MASK</a>) &amp; (~<a class="el" href="mmap__array_8h.html#a9b7f1ac65d0696c87830a2f33a16ef2d">HUGEPAGE_MASK</a>))</td></tr>
+<tr class="separator:a3be6edddde4d8247411f975223cec04f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:a57a745e0663ab8f5127539515b5c5d9d"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9d">gs::MemoryStrategy</a> { <a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9da17de2439ba7e96cc94de4f54a3363f6b">gs::MemoryStrategy::kSyncToFile</a>, 
+<a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9da694e0b5bf64105925f50727b7ddb7466">gs::MemoryStrategy::kMemoryOnly</a>, 
+<a class="el" href="namespacegs.html#a57a745e0663ab8f5127539515b5c5d9dad1a74527cd0ced5950f2312efd5e96db">gs::MemoryStrategy::kHugepagePrefered</a>
+ }</td></tr>
+<tr class="separator:a57a745e0663ab8f5127539515b5c5d9d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
+Functions</h2></td></tr>
+<tr class="memitem:ac2150429813cc597ca67d088e95d2d68"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#ac2150429813cc597ca67d088e95d2d68">allocate_hugepages</a> (size_t size)</td></tr>
+<tr class="separator:ac2150429813cc597ca67d088e95d2d68"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a08bd014fcf96f7795e3a7ba2aa3bcd83"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="mmap__array_8h.html#a08bd014fcf96f7795e3a7ba2aa3bcd83">hugepage_round_up</a> (size_t size)</td></tr>
+<tr class="separator:a08bd014fcf96f7795e3a7ba2aa3bcd83"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
+<h2 class="groupheader">Macro Definition Documentation</h2>
+<a id="ac9f31f726d2933782e2efda7136a25fd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9f31f726d2933782e2efda7136a25fd">&#9670;&nbsp;</a></span>ADDR</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ADDR&#160;&#160;&#160;(void*) (0x0UL)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Copyright 2020 Alibaba Group Holding Limited.</p>
+<p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at </p><pre class="fragment">http://www.apache.org/licenses/LICENSE-2.0
+</pre><p>Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License. </p>
+
+</div>
+</div>
+<a id="a6ccad09b4a2a06ae178418fdccf5940d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ccad09b4a2a06ae178418fdccf5940d">&#9670;&nbsp;</a></span>FLAGS</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define FLAGS&#160;&#160;&#160;(MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9b7f1ac65d0696c87830a2f33a16ef2d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b7f1ac65d0696c87830a2f33a16ef2d">&#9670;&nbsp;</a></span>HUGEPAGE_MASK</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define HUGEPAGE_MASK&#160;&#160;&#160;(2UL * 1024 * 1024 - 1UL)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="aaedc9400de80509cdd8c2d38c0f98d0b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaedc9400de80509cdd8c2d38c0f98d0b">&#9670;&nbsp;</a></span>HUGEPAGE_SIZE</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define HUGEPAGE_SIZE&#160;&#160;&#160;(2UL * 1024 * 1024)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a3edd319ff92fe698be953178dc1cec70"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3edd319ff92fe698be953178dc1cec70">&#9670;&nbsp;</a></span>PROTECTION</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define PROTECTION&#160;&#160;&#160;(PROT_READ | PROT_WRITE)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a3be6edddde4d8247411f975223cec04f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3be6edddde4d8247411f975223cec04f">&#9670;&nbsp;</a></span>ROUND_UP</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define ROUND_UP</td>
+          <td>(</td>
+          <td class="paramtype">&#160;</td>
+          <td class="paramname">size</td><td>)</td>
+          <td>&#160;&#160;&#160;(((size) + <a class="el" href="mmap__array_8h.html#a9b7f1ac65d0696c87830a2f33a16ef2d">HUGEPAGE_MASK</a>) &amp; (~<a class="el" href="mmap__array_8h.html#a9b7f1ac65d0696c87830a2f33a16ef2d">HUGEPAGE_MASK</a>))</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<h2 class="groupheader">Function Documentation</h2>
+<a id="ac2150429813cc597ca67d088e95d2d68"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac2150429813cc597ca67d088e95d2d68">&#9670;&nbsp;</a></span>allocate_hugepages()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void* allocate_hugepages </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a08bd014fcf96f7795e3a7ba2aa3bcd83"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a08bd014fcf96f7795e3a7ba2aa3bcd83">&#9670;&nbsp;</a></span>hugepage_round_up()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t hugepage_round_up </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>size</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>

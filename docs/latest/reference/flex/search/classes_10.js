@@ -1,7 +1,6 @@
 var searchData=
 [
-  ['uninitializedutils_1017',['UninitializedUtils',['../structgs_1_1UninitializedUtils.html',1,'gs']]],
-  ['uninitializedutils_3c_20mutablenbr_3c_20std_3a_3astring_20_3e_20_3e_1018',['UninitializedUtils&lt; MutableNbr&lt; std::string &gt; &gt;',['../structgs_1_1UninitializedUtils_3_01MutableNbr_3_01std_1_1string_01_4_01_4.html',1,'gs']]],
-  ['updatetransaction_1019',['UpdateTransaction',['../classgs_1_1UpdateTransaction.html',1,'gs']]],
-  ['updatewalunit_1020',['UpdateWalUnit',['../structgs_1_1UpdateWalUnit.html',1,'gs']]]
+  ['readtransaction_1322',['ReadTransaction',['../classgs_1_1ReadTransaction.html',1,'gs']]],
+  ['refcolumnbase_1323',['RefColumnBase',['../classgs_1_1RefColumnBase.html',1,'gs']]],
+  ['result_1324',['Result',['../classgs_1_1Result.html',1,'gs']]]
 ];

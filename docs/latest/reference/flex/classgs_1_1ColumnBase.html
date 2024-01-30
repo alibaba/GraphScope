@@ -80,9 +80,13 @@ Inheritance diagram for gs::ColumnBase:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1ColumnBase__inherit__graph.png" border="0" usemap="#gs_1_1ColumnBase_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1ColumnBase_inherit__map" id="gs_1_1ColumnBase_inherit__map">
-<area shape="rect" title=" " alt="" coords="135,5,262,32"/>
-<area shape="rect" href="classgs_1_1TypedColumn.html" title=" " alt="" coords="5,80,176,107"/>
-<area shape="rect" href="classgs_1_1TypedEmptyColumn.html" title=" " alt="" coords="200,80,413,107"/>
+<area shape="rect" title=" " alt="" coords="5,159,132,186"/>
+<area shape="rect" href="classgs_1_1StringMapColumn.html" title=" " alt="" coords="209,5,370,47"/>
+<area shape="rect" href="classgs_1_1TypedColumn.html" title=" " alt="" coords="204,71,375,98"/>
+<area shape="rect" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="205,123,373,164"/>
+<area shape="rect" href="classgs_1_1TypedEmptyColumn.html" title=" " alt="" coords="183,189,396,215"/>
+<area shape="rect" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="202,240,377,281"/>
+<area shape="rect" href="classgs_1_1TypedColumn.html" title=" " alt="" coords="180,306,399,333"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -90,26 +94,32 @@ Inheritance diagram for gs::ColumnBase:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a2f6c77d932134b81dd2252d8e0dd9e6d"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a2f6c77d932134b81dd2252d8e0dd9e6d">~ColumnBase</a> ()</td></tr>
 <tr class="separator:a2f6c77d932134b81dd2252d8e0dd9e6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af144e7cd70c71cbefadb6b7bbddd1bf3"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#af144e7cd70c71cbefadb6b7bbddd1bf3">init</a> (size_t max_vnum)=0</td></tr>
-<tr class="separator:af144e7cd70c71cbefadb6b7bbddd1bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0f90552f80aaa32446d00233357bfc9b"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a0f90552f80aaa32446d00233357bfc9b">type</a> () const =0</td></tr>
+<tr class="memitem:aa714ea4fc80518f1c5e8be19b0aa054d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#aa714ea4fc80518f1c5e8be19b0aa054d">open</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir)=0</td></tr>
+<tr class="separator:aa714ea4fc80518f1c5e8be19b0aa054d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9b1bb569965b1d4412470b061e1dc2cf"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a9b1bb569965b1d4412470b061e1dc2cf">open_in_memory</a> (const std::string &amp;name)=0</td></tr>
+<tr class="separator:a9b1bb569965b1d4412470b061e1dc2cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a77fe46f74794734762df08d1d0c07436"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a77fe46f74794734762df08d1d0c07436">open_with_hugepages</a> (const std::string &amp;name, bool force)=0</td></tr>
+<tr class="separator:a77fe46f74794734762df08d1d0c07436"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa4d331a6746648dac4569b9d70542c0c"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#aa4d331a6746648dac4569b9d70542c0c">close</a> ()=0</td></tr>
+<tr class="separator:aa4d331a6746648dac4569b9d70542c0c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d3e2b589d6797e7076cfc2253070c6f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a1d3e2b589d6797e7076cfc2253070c6f">touch</a> (const std::string &amp;filename)=0</td></tr>
+<tr class="separator:a1d3e2b589d6797e7076cfc2253070c6f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab69e274520eab7088cabd5ca1e8cd897"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#ab69e274520eab7088cabd5ca1e8cd897">dump</a> (const std::string &amp;filename)=0</td></tr>
+<tr class="separator:ab69e274520eab7088cabd5ca1e8cd897"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3f44d5651c204aec64d1166031a4a5c3"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a> () const =0</td></tr>
+<tr class="separator:a3f44d5651c204aec64d1166031a4a5c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a085450c864fb65c08e01edf4c339cb07"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a085450c864fb65c08e01edf4c339cb07">copy_to_tmp</a> (const std::string &amp;cur_path, const std::string &amp;tmp_path)=0</td></tr>
+<tr class="separator:a085450c864fb65c08e01edf4c339cb07"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab08f8c143d3ea6f6fd7861608868764e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#ab08f8c143d3ea6f6fd7861608868764e">resize</a> (size_t <a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a>)=0</td></tr>
+<tr class="separator:ab08f8c143d3ea6f6fd7861608868764e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f90552f80aaa32446d00233357bfc9b"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a0f90552f80aaa32446d00233357bfc9b">type</a> () const =0</td></tr>
 <tr class="separator:a0f90552f80aaa32446d00233357bfc9b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a16e5b36a6ed1c4ef6bbbf1f4fa97abc4"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a16e5b36a6ed1c4ef6bbbf1f4fa97abc4">set_any</a> (size_t index, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;value)=0</td></tr>
 <tr class="separator:a16e5b36a6ed1c4ef6bbbf1f4fa97abc4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6427a00b8c6dacd3457b3ecc39a02215"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="structgs_1_1Any.html">Any</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a6427a00b8c6dacd3457b3ecc39a02215">get</a> (size_t index) const =0</td></tr>
 <tr class="separator:a6427a00b8c6dacd3457b3ecc39a02215"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3f44d5651c204aec64d1166031a4a5c3"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a> () const =0</td></tr>
-<tr class="separator:a3f44d5651c204aec64d1166031a4a5c3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5e377a81371e43fc00d48869da19b34e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a5e377a81371e43fc00d48869da19b34e">clear</a> ()=0</td></tr>
-<tr class="separator:a5e377a81371e43fc00d48869da19b34e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab08f8c143d3ea6f6fd7861608868764e"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#ab08f8c143d3ea6f6fd7861608868764e">resize</a> (size_t <a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a>)=0</td></tr>
-<tr class="separator:ab08f8c143d3ea6f6fd7861608868764e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58889b5be1a462289718f7e0c19bb22a"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a58889b5be1a462289718f7e0c19bb22a">ingest</a> (uint32_t index, grape::OutArchive &amp;arc)=0</td></tr>
 <tr class="separator:a58889b5be1a462289718f7e0c19bb22a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a00d5681fd6224210233374943ebd5318"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a00d5681fd6224210233374943ebd5318">Serialize</a> (const std::string &amp;filename, size_t <a class="el" href="classgs_1_1ColumnBase.html#a3f44d5651c204aec64d1166031a4a5c3">size</a>)=0</td></tr>
-<tr class="separator:a00d5681fd6224210233374943ebd5318"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a83f5c3ec88591592686a3a5841ee7534"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a83f5c3ec88591592686a3a5841ee7534">Deserialize</a> (const std::string &amp;filename)=0</td></tr>
-<tr class="separator:a83f5c3ec88591592686a3a5841ee7534"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a46c2acdab0314191f7e0e70a223253e3"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ColumnBase.html#a46c2acdab0314191f7e0e70a223253e3">storage_strategy</a> () const =0</td></tr>
 <tr class="separator:a46c2acdab0314191f7e0e70a223253e3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -140,8 +150,8 @@ Public Member Functions</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a5e377a81371e43fc00d48869da19b34e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5e377a81371e43fc00d48869da19b34e">&#9670;&nbsp;</a></span>clear()</h2>
+<a id="aa4d331a6746648dac4569b9d70542c0c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa4d331a6746648dac4569b9d70542c0c">&#9670;&nbsp;</a></span>close()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -150,7 +160,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void gs::ColumnBase::clear </td>
+          <td class="memname">virtual void gs::ColumnBase::close </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -163,12 +173,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#aad90f1f23db4094b8afd5b3f8f9c9e6e">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a45c4c96a54c1791436a82919d377115a">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#a16d809f40a06d7ff29bb7178302a4c95">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a05635be7decb8e76d1f9f1b5ac31585b">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#af4599e25381b8d9c38fe0849a5ded035">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#af4599e25381b8d9c38fe0849a5ded035">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a5e7cc7c53a1a1bed5fc2d5f986133d99">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#ab93268263b9736518272538454400625">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
-<a id="a83f5c3ec88591592686a3a5841ee7534"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a83f5c3ec88591592686a3a5841ee7534">&#9670;&nbsp;</a></span>Deserialize()</h2>
+<a id="a085450c864fb65c08e01edf4c339cb07"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a085450c864fb65c08e01edf4c339cb07">&#9670;&nbsp;</a></span>copy_to_tmp()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -177,7 +187,45 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void gs::ColumnBase::Deserialize </td>
+          <td class="memname">virtual void gs::ColumnBase::copy_to_tmp </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>cur_path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>tmp_path</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#abcb1ca946e5bd1e9c6ceb142376bca94">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a4f05a6a7a049d043e6122cd2503e232e">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#aa928b64446f7c4ac6b530fe98b9c967a">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#aa928b64446f7c4ac6b530fe98b9c967a">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#acc1cfbcf467db1d97e25d59c57b6acd5">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a7903672014143a8f2bacac9812394fc4">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="ab69e274520eab7088cabd5ca1e8cd897"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab69e274520eab7088cabd5ca1e8cd897">&#9670;&nbsp;</a></span>dump()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::ColumnBase::dump </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>filename</em></td><td>)</td>
@@ -191,7 +239,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#abad0580a97ee945c50492e087a3f0821">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a1060ad465e58f5ffb19515fe397831f8">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#ad3892c4865a1ad19028b5f5349aa348b">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a59a56489644185f5bf6e9b25f287fd45">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a38e3ae26a4e42924ed96bd66b00582b5">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a38e3ae26a4e42924ed96bd66b00582b5">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a9c6a558dd17bc96bb498d105e25fa300">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a47154a3ec3dd70a0fa5cc67a3c163963">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -219,7 +267,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a1f66f30a5ed5575ea400baaa36f73d3c">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a0dc1eb3f71de89fe76aa9060da2e9715">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a1f66f30a5ed5575ea400baaa36f73d3c">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a1f66f30a5ed5575ea400baaa36f73d3c">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a875b00bd13a382f6f2c44655a8dd227c">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn.html#a0dc1eb3f71de89fe76aa9060da2e9715">gs::TypedEmptyColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1StringMapColumn.html#ad5a79bc1a24d980f352ea05193e12a73">gs::StringMapColumn&lt; INDEX_T &gt;</a>, and <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a063b2b41620950d9dc8078ccf53fbff5">gs::TypedColumn&lt; std::string_view &gt;</a>.</p>
 
 </div>
 </div>
@@ -257,12 +305,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a0bd34f82816020c16e5aa256cd0ed886">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a6fc554ed02021437b252c8f90b0f3f10">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#a1ba0e823e9358ec5b054b2a33c873fa3">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a1ab24990000f087c0e31de9e6c4b406a">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a0bd34f82816020c16e5aa256cd0ed886">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a0bd34f82816020c16e5aa256cd0ed886">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#ab5e646f8399d400e88169abcae03d693">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a6fc554ed02021437b252c8f90b0f3f10">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
-<a id="af144e7cd70c71cbefadb6b7bbddd1bf3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af144e7cd70c71cbefadb6b7bbddd1bf3">&#9670;&nbsp;</a></span>init()</h2>
+<a id="aa714ea4fc80518f1c5e8be19b0aa054d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa714ea4fc80518f1c5e8be19b0aa054d">&#9670;&nbsp;</a></span>open()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -271,10 +319,54 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void gs::ColumnBase::init </td>
+          <td class="memname">virtual void gs::ColumnBase::open </td>
           <td>(</td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>max_vnum</em></td><td>)</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>snapshot_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#ac12f5e5b2b1b489bc1ecb8ce24f606e9">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#adfca9926d678c2cea5d9d82779ee7cef">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a424367d5cbed5941b4067b24de3b6a1a">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a82a84d5af95012f7dbb763eafc69b4c3">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a82a84d5af95012f7dbb763eafc69b4c3">gs::TypedColumn&lt; INDEX_T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#ab3cfce1371710588894f76611aed4dfb">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a9b1bb569965b1d4412470b061e1dc2cf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9b1bb569965b1d4412470b061e1dc2cf">&#9670;&nbsp;</a></span>open_in_memory()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::ColumnBase::open_in_memory </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -285,7 +377,45 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a05452061b849d9a381f46adefae9e2f9">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a00988469d322e44e48664d3ef97a35c8">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a1f8b132779406961fda8d766d2abcf72">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1StringMapColumn.html#a1510f09f745f670bca63acd4ca26181f">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a92be78bf19124379e0a88b4fb9ce126c">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a92be78bf19124379e0a88b4fb9ce126c">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a1bb7d4391d6ddba5016f3cd5d9b78bbf">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#ada358d38e398d85029c20bc2d7fdd73c">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a77fe46f74794734762df08d1d0c07436"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a77fe46f74794734762df08d1d0c07436">&#9670;&nbsp;</a></span>open_with_hugepages()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::ColumnBase::open_with_hugepages </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>name</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>force</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#ae7418d0310e7958d95d6fc1407604b4b">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1StringMapColumn.html#a1c50ff0a0b3306abaf9fce542a5602f8">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#afe115c5386ecc61854867989aed4fcd5">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#afe115c5386ecc61854867989aed4fcd5">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a4e7f90315a8012b6c4fa3da6dc1fde72">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a6236ffb2d3cc0dd12bd86673071178d2">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -313,45 +443,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedEmptyColumn.html#af48d468115b9b2107a0ca18614ff6cf5">gs::TypedEmptyColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedColumn.html#abd07c385eb58f0d63ac0b444eac12e7b">gs::TypedColumn&lt; T &gt;</a>.</p>
-
-</div>
-</div>
-<a id="a00d5681fd6224210233374943ebd5318"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a00d5681fd6224210233374943ebd5318">&#9670;&nbsp;</a></span>Serialize()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void gs::ColumnBase::Serialize </td>
-          <td>(</td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>filename</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">size_t&#160;</td>
-          <td class="paramname"><em>size</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a71897d073cb9cb670e597b92d5bf62e7">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a4326a1cd6e3b7b9d3bac2d464de246aa">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#a635e40fe964e409aa9172aee9e3e8227">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#aa5e76bf81ecf579f4938bc18616c3900">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#abd07c385eb58f0d63ac0b444eac12e7b">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#abd07c385eb58f0d63ac0b444eac12e7b">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#aa50b101d281f0a896907b9e5706e5239">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#aaf00a68d0975590e7349e0beeb948aea">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -389,7 +481,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a44fd806b2b737c22bf52a083716e22e8">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#af98f42ddba698bb04a36bfbdd66668d8">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a44fd806b2b737c22bf52a083716e22e8">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a44fd806b2b737c22bf52a083716e22e8">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a8d097fb518775695fcef35d3d6b89d30">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn.html#af98f42ddba698bb04a36bfbdd66668d8">gs::TypedEmptyColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1StringMapColumn.html#a27f47d004178e2d19459d22bbc1d5f42">gs::StringMapColumn&lt; INDEX_T &gt;</a>, and <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#ab90d5952820d6bfe7c8df740e31878a9">gs::TypedColumn&lt; std::string_view &gt;</a>.</p>
 
 </div>
 </div>
@@ -416,7 +508,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a7109f0f7c591f5382f3cde6e9769980c">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a665cccec5ba641709eac40bf65bf642e">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#a7aeea87a7ace1e8a02a9e5d7d791c773">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a2f62cd49da1d041ec594051d4c4adf7b">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a7109f0f7c591f5382f3cde6e9769980c">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#a1ecd84f42f1ce4e562c86850ecdc6035">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a665cccec5ba641709eac40bf65bf642e">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -443,7 +535,35 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a243c29e0949270accd3ca5231edfb618">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#aac2dff3a33b03fc3832e596d0e0992ae">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#a4cd888a896713915bcb3384460848ac2">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a21f8408b1c1897bc25e6e144c292e721">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a243c29e0949270accd3ca5231edfb618">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#acb0005603b5be640e623cf45e5b93e30">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#aac2dff3a33b03fc3832e596d0e0992ae">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a1d3e2b589d6797e7076cfc2253070c6f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d3e2b589d6797e7076cfc2253070c6f">&#9670;&nbsp;</a></span>touch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual void gs::ColumnBase::touch </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>filename</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#ac6710cf0f96ac9507db5c4611cbeddbf">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a79f64ed28bf5299efa360efc994bbf61">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a682dc8e27a3ad242cd54b8859bc5d15e">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a682dc8e27a3ad242cd54b8859bc5d15e">gs::TypedColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#abe68f8e8185a7ea8bd1e5957074dd5a0">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a42845e26435e839e043cd2b56af23001">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>
@@ -457,7 +577,7 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> gs::ColumnBase::type </td>
+          <td class="memname">virtual <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> gs::ColumnBase::type </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -470,7 +590,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1TypedColumn.html#a0a5578312a630fff9b4bcd3466c9c22b">gs::TypedColumn&lt; T &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a5be725d3668f8a4e5224c2a3ee2c7930">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1StringMapColumn.html#add9f20b1a807ee97ca99472f1039efad">gs::StringMapColumn&lt; INDEX_T &gt;</a>, <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#adab564f934daa135917b4732f75a803b">gs::TypedColumn&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1TypedColumn.html#a0a5578312a630fff9b4bcd3466c9c22b">gs::TypedColumn&lt; T &gt;</a>, <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#afc178dbb6f5cd4c33dc91ed303d2d443">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1TypedEmptyColumn.html#a5be725d3668f8a4e5224c2a3ee2c7930">gs::TypedEmptyColumn&lt; T &gt;</a>.</p>
 
 </div>
 </div>

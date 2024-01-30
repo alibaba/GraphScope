@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['floatcolumn_1800',['FloatColumn',['../namespacegs.html#ac86726b211d2ff412286bd0945b7be60',1,'gs']]],
-  ['floatemptycolumn_1801',['FloatEmptyColumn',['../namespacegs.html#a6c9f600c366c6bd434bf66704ebe2fcf',1,'gs']]]
+  ['edge_5ftriplet_5ftype_2430',['edge_triplet_type',['../classgs_1_1LoadingConfig.html#a234f4c960989e6e7ccb7e19f143e321b',1,'gs::LoadingConfig']]]
 ];

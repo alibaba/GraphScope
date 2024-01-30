@@ -82,9 +82,13 @@ Collaboration diagram for gs::Any:</div>
 <div class="dyncontent">
 <div class="center"><img src="structgs_1_1Any__coll__graph.png" border="0" usemap="#gs_1_1Any_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1Any_coll__map" id="gs_1_1Any_coll__map">
-<area shape="rect" title=" " alt="" coords="23,184,94,211"/>
-<area shape="rect" href="uniongs_1_1AnyValue.html" title=" " alt="" coords="5,95,112,121"/>
-<area shape="rect" href="structgs_1_1Date.html" title=" " alt="" coords="21,5,97,32"/>
+<area shape="rect" title=" " alt="" coords="202,408,273,435"/>
+<area shape="rect" href="uniongs_1_1AnyValue.html" title=" " alt="" coords="103,251,209,278"/>
+<area shape="rect" href="structgs_1_1Day.html" title=" " alt="" coords="23,95,94,121"/>
+<area shape="rect" href="structgs_1_1DayValue.html" title=" " alt="" coords="5,5,112,32"/>
+<area shape="rect" href="structgs_1_1Date.html" title=" " alt="" coords="118,95,194,121"/>
+<area shape="rect" href="structgs_1_1PropertyType.html" title=" " alt="" coords="244,251,375,278"/>
+<area shape="rect" href="uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="219,95,421,121"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -92,6 +96,8 @@ Collaboration diagram for gs::Any:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ad4ccdabf90979b09c0afdfa1040aed29"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#ad4ccdabf90979b09c0afdfa1040aed29">Any</a> ()</td></tr>
 <tr class="separator:ad4ccdabf90979b09c0afdfa1040aed29"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5ebf71fd1d2d037b585e0fde1bea55e5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a5ebf71fd1d2d037b585e0fde1bea55e5">Any</a> (const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;other)</td></tr>
+<tr class="separator:a5ebf71fd1d2d037b585e0fde1bea55e5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6d753c51f639b80f4ee6d672092d74a3"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a6d753c51f639b80f4ee6d672092d74a3"><td class="memTemplItemLeft" align="right" valign="top">&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a6d753c51f639b80f4ee6d672092d74a3">Any</a> (const T &amp;val)</td></tr>
 <tr class="separator:a6d753c51f639b80f4ee6d672092d74a3"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -101,24 +107,30 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a060fc89991e80cc7a5afd61b2f532efb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1de32faba44bd937e19ec67f9262bc06"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a1de32faba44bd937e19ec67f9262bc06">set_bool</a> (bool v)</td></tr>
 <tr class="separator:a1de32faba44bd937e19ec67f9262bc06"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5595021a137c3ed2357d076f44b9202a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a5595021a137c3ed2357d076f44b9202a">set_signed_integer</a> (int32_t v)</td></tr>
-<tr class="separator:a5595021a137c3ed2357d076f44b9202a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aad5235569a57d17e32bff9ec78265ecd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#aad5235569a57d17e32bff9ec78265ecd">set_unsigned_integer</a> (uint32_t v)</td></tr>
-<tr class="separator:aad5235569a57d17e32bff9ec78265ecd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5fd03eda71404462aa6063ca6ee7537e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a5fd03eda71404462aa6063ca6ee7537e">set_signed_long</a> (int64_t v)</td></tr>
-<tr class="separator:a5fd03eda71404462aa6063ca6ee7537e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa59bfb57ebcc369a0d958ddbdbc8c599"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#aa59bfb57ebcc369a0d958ddbdbc8c599">set_unsigned_long</a> (uint64_t v)</td></tr>
-<tr class="separator:aa59bfb57ebcc369a0d958ddbdbc8c599"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a426458c0c70ad322aa4b38f33381cc51"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a426458c0c70ad322aa4b38f33381cc51">set_i32</a> (int32_t v)</td></tr>
+<tr class="separator:a426458c0c70ad322aa4b38f33381cc51"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a815cb3d1a1d8c9515fd172edb481b40c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a815cb3d1a1d8c9515fd172edb481b40c">set_u32</a> (uint32_t v)</td></tr>
+<tr class="separator:a815cb3d1a1d8c9515fd172edb481b40c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:add5343c1135f7a791e0308a15a2548b4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#add5343c1135f7a791e0308a15a2548b4">set_i64</a> (int64_t v)</td></tr>
+<tr class="separator:add5343c1135f7a791e0308a15a2548b4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a042de4170c14da78cecfec26b228f8c7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a042de4170c14da78cecfec26b228f8c7">set_u64</a> (uint64_t v)</td></tr>
+<tr class="separator:a042de4170c14da78cecfec26b228f8c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab21d5b9d01a5f5c5757fe200bb5d2b5b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#ab21d5b9d01a5f5c5757fe200bb5d2b5b">set_date</a> (int64_t v)</td></tr>
 <tr class="separator:ab21d5b9d01a5f5c5757fe200bb5d2b5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae59439315df866bf050f23d9ad7d1556"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#ae59439315df866bf050f23d9ad7d1556">set_date</a> (<a class="el" href="structgs_1_1Date.html">Date</a> v)</td></tr>
 <tr class="separator:ae59439315df866bf050f23d9ad7d1556"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acafc3346c77c103619f377d2fd4419fb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#acafc3346c77c103619f377d2fd4419fb">set_day</a> (<a class="el" href="structgs_1_1Day.html">Day</a> v)</td></tr>
+<tr class="separator:acafc3346c77c103619f377d2fd4419fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00b2a784a9cbfe19546063459f9e5eeb"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a00b2a784a9cbfe19546063459f9e5eeb">set_string</a> (std::string_view v)</td></tr>
 <tr class="separator:a00b2a784a9cbfe19546063459f9e5eeb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adb3499b90956bfc1e77d12b4ef35dd78"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#adb3499b90956bfc1e77d12b4ef35dd78">set_float</a> (float v)</td></tr>
 <tr class="separator:adb3499b90956bfc1e77d12b4ef35dd78"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac4ba6ae95ab1135053777dee44de4497"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#ac4ba6ae95ab1135053777dee44de4497">set_double</a> (double db)</td></tr>
 <tr class="separator:ac4ba6ae95ab1135053777dee44de4497"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31d7381ead08f27af8fe97c0356df423"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a31d7381ead08f27af8fe97c0356df423">set_u8</a> (uint8_t v)</td></tr>
+<tr class="separator:a31d7381ead08f27af8fe97c0356df423"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab25062597c059a6ca5e5a94ed307516a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#ab25062597c059a6ca5e5a94ed307516a">set_u16</a> (uint16_t v)</td></tr>
+<tr class="separator:ab25062597c059a6ca5e5a94ed307516a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aec739495e902283a9607453b511cdfa1"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#aec739495e902283a9607453b511cdfa1">to_string</a> () const</td></tr>
 <tr class="separator:aec739495e902283a9607453b511cdfa1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab788f5cc40ed5bcddb94b9e12575ba3"><td class="memItemLeft" align="right" valign="top">std::string&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#aab788f5cc40ed5bcddb94b9e12575ba3">AsString</a> () const</td></tr>
@@ -141,6 +153,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aa8ac33069197af2cbb9c9b8c34547818"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac5c9a63c4bd8a083fb10a73a0393f767"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structgs_1_1Date.html">Date</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#ac5c9a63c4bd8a083fb10a73a0393f767">AsDate</a> () const</td></tr>
 <tr class="separator:ac5c9a63c4bd8a083fb10a73a0393f767"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a73e1b6fb64709a6755df0d227529681f"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structgs_1_1Day.html">Day</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a73e1b6fb64709a6755df0d227529681f">AsDay</a> () const</td></tr>
+<tr class="separator:a73e1b6fb64709a6755df0d227529681f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a439e0ac668cbfbd370dab30eae3f91ac"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#a439e0ac668cbfbd370dab30eae3f91ac">operator==</a> (const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;other) const</td></tr>
 <tr class="separator:a439e0ac668cbfbd370dab30eae3f91ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aebd80e2b50cb7bc83326c31c24487915"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#aebd80e2b50cb7bc83326c31c24487915">operator&lt;</a> (const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;other) const</td></tr>
@@ -154,14 +168,14 @@ Static Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:abc448d5232c0146bceb98f34649baae0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#abc448d5232c0146bceb98f34649baae0">type</a></td></tr>
+<tr class="memitem:abc448d5232c0146bceb98f34649baae0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1PropertyType.html">PropertyType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#abc448d5232c0146bceb98f34649baae0">type</a></td></tr>
 <tr class="separator:abc448d5232c0146bceb98f34649baae0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aaafafdaae98d6cbb8fb4e9a926b50d88"><td class="memItemLeft" align="right" valign="top"><a class="el" href="uniongs_1_1AnyValue.html">AnyValue</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgs_1_1Any.html#aaafafdaae98d6cbb8fb4e9a926b50d88">value</a></td></tr>
 <tr class="separator:aaafafdaae98d6cbb8fb4e9a926b50d88"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ad4ccdabf90979b09c0afdfa1040aed29"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad4ccdabf90979b09c0afdfa1040aed29">&#9670;&nbsp;</a></span>Any() <span class="overload">[1/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#ad4ccdabf90979b09c0afdfa1040aed29">&#9670;&nbsp;</a></span>Any() <span class="overload">[1/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -185,8 +199,34 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a5ebf71fd1d2d037b585e0fde1bea55e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5ebf71fd1d2d037b585e0fde1bea55e5">&#9670;&nbsp;</a></span>Any() <span class="overload">[2/3]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">gs::Any::Any </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;&#160;</td>
+          <td class="paramname"><em>other</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a6d753c51f639b80f4ee6d672092d74a3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6d753c51f639b80f4ee6d672092d74a3">&#9670;&nbsp;</a></span>Any() <span class="overload">[2/2]</span></h2>
+<h2 class="memtitle"><span class="permalink"><a href="#a6d753c51f639b80f4ee6d672092d74a3">&#9670;&nbsp;</a></span>Any() <span class="overload">[3/3]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -275,6 +315,31 @@ template&lt;typename T &gt; </div>
       <table class="memname">
         <tr>
           <td class="memname">const <a class="el" href="structgs_1_1Date.html">Date</a>&amp; gs::Any::AsDate </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a73e1b6fb64709a6755df0d227529681f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73e1b6fb64709a6755df0d227529681f">&#9670;&nbsp;</a></span>AsDay()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="structgs_1_1Day.html">Day</a>&amp; gs::Any::AsDay </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td> const</td>
@@ -672,6 +737,32 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a id="acafc3346c77c103619f377d2fd4419fb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acafc3346c77c103619f377d2fd4419fb">&#9670;&nbsp;</a></span>set_day()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Any::set_day </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="structgs_1_1Day.html">Day</a>&#160;</td>
+          <td class="paramname"><em>v</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ac4ba6ae95ab1135053777dee44de4497"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac4ba6ae95ab1135053777dee44de4497">&#9670;&nbsp;</a></span>set_double()</h2>
 
@@ -724,8 +815,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a5595021a137c3ed2357d076f44b9202a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5595021a137c3ed2357d076f44b9202a">&#9670;&nbsp;</a></span>set_signed_integer()</h2>
+<a id="a426458c0c70ad322aa4b38f33381cc51"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a426458c0c70ad322aa4b38f33381cc51">&#9670;&nbsp;</a></span>set_i32()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -734,7 +825,7 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::Any::set_signed_integer </td>
+          <td class="memname">void gs::Any::set_i32 </td>
           <td>(</td>
           <td class="paramtype">int32_t&#160;</td>
           <td class="paramname"><em>v</em></td><td>)</td>
@@ -750,8 +841,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="a5fd03eda71404462aa6063ca6ee7537e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5fd03eda71404462aa6063ca6ee7537e">&#9670;&nbsp;</a></span>set_signed_long()</h2>
+<a id="add5343c1135f7a791e0308a15a2548b4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#add5343c1135f7a791e0308a15a2548b4">&#9670;&nbsp;</a></span>set_i64()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -760,7 +851,7 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::Any::set_signed_long </td>
+          <td class="memname">void gs::Any::set_i64 </td>
           <td>(</td>
           <td class="paramtype">int64_t&#160;</td>
           <td class="paramname"><em>v</em></td><td>)</td>
@@ -802,8 +893,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="aad5235569a57d17e32bff9ec78265ecd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aad5235569a57d17e32bff9ec78265ecd">&#9670;&nbsp;</a></span>set_unsigned_integer()</h2>
+<a id="ab25062597c059a6ca5e5a94ed307516a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab25062597c059a6ca5e5a94ed307516a">&#9670;&nbsp;</a></span>set_u16()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -812,7 +903,33 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::Any::set_unsigned_integer </td>
+          <td class="memname">void gs::Any::set_u16 </td>
+          <td>(</td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>v</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a815cb3d1a1d8c9515fd172edb481b40c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a815cb3d1a1d8c9515fd172edb481b40c">&#9670;&nbsp;</a></span>set_u32()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Any::set_u32 </td>
           <td>(</td>
           <td class="paramtype">uint32_t&#160;</td>
           <td class="paramname"><em>v</em></td><td>)</td>
@@ -828,8 +945,8 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
-<a id="aa59bfb57ebcc369a0d958ddbdbc8c599"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa59bfb57ebcc369a0d958ddbdbc8c599">&#9670;&nbsp;</a></span>set_unsigned_long()</h2>
+<a id="a042de4170c14da78cecfec26b228f8c7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a042de4170c14da78cecfec26b228f8c7">&#9670;&nbsp;</a></span>set_u64()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -838,9 +955,35 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void gs::Any::set_unsigned_long </td>
+          <td class="memname">void gs::Any::set_u64 </td>
           <td>(</td>
           <td class="paramtype">uint64_t&#160;</td>
+          <td class="paramname"><em>v</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a31d7381ead08f27af8fe97c0356df423"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a31d7381ead08f27af8fe97c0356df423">&#9670;&nbsp;</a></span>set_u8()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::Any::set_u8 </td>
+          <td>(</td>
+          <td class="paramtype">uint8_t&#160;</td>
           <td class="paramname"><em>v</em></td><td>)</td>
           <td></td>
         </tr>
@@ -887,7 +1030,7 @@ template&lt;typename T &gt; </div>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="namespacegs.html#ab0c6617542660e43c1b61e46d8fcf08f">PropertyType</a> gs::Any::type</td>
+          <td class="memname"><a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> gs::Any::type</td>
         </tr>
       </table>
 </div><div class="memdoc">

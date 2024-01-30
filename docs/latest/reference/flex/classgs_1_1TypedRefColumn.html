@@ -119,8 +119,14 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
 Private Attributes</h2></td></tr>
-<tr class="memitem:a45a3b539bd4bcedb70a1c1826abdbc98"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt; T &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedRefColumn.html#a45a3b539bd4bcedb70a1c1826abdbc98">buffer_</a></td></tr>
-<tr class="separator:a45a3b539bd4bcedb70a1c1826abdbc98"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a3146f78223fac1aa6d3fc21c5ba4298b"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt; T &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedRefColumn.html#a3146f78223fac1aa6d3fc21c5ba4298b">basic_buffer</a></td></tr>
+<tr class="separator:a3146f78223fac1aa6d3fc21c5ba4298b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a05d40ee7308c02f80baeb8b77be35a94"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedRefColumn.html#a05d40ee7308c02f80baeb8b77be35a94">basic_size</a></td></tr>
+<tr class="separator:a05d40ee7308c02f80baeb8b77be35a94"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a966b46fb5c37958cb4d76fce381f7f6d"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt; T &gt; &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedRefColumn.html#a966b46fb5c37958cb4d76fce381f7f6d">extra_buffer</a></td></tr>
+<tr class="separator:a966b46fb5c37958cb4d76fce381f7f6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2fe35dbd0a2c3d41f2cc8e16b2e57921"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedRefColumn.html#a2fe35dbd0a2c3d41f2cc8e16b2e57921">extra_size</a></td></tr>
+<tr class="separator:a2fe35dbd0a2c3d41f2cc8e16b2e57921"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6833e52db22359f9341704d0aa6a85a5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#ab0648a77c869a5dba149125848991be4">StorageStrategy</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedRefColumn.html#a6833e52db22359f9341704d0aa6a85a5">strategy_</a></td></tr>
 <tr class="separator:a6833e52db22359f9341704d0aa6a85a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -295,8 +301,8 @@ template&lt;typename T &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a45a3b539bd4bcedb70a1c1826abdbc98"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a45a3b539bd4bcedb70a1c1826abdbc98">&#9670;&nbsp;</a></span>buffer_</h2>
+<a id="a3146f78223fac1aa6d3fc21c5ba4298b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3146f78223fac1aa6d3fc21c5ba4298b">&#9670;&nbsp;</a></span>basic_buffer</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -307,7 +313,79 @@ template&lt;typename T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt;T&gt;&amp; <a class="el" href="classgs_1_1TypedRefColumn.html">gs::TypedRefColumn</a>&lt; T &gt;::buffer_</td>
+          <td class="memname">const <a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt;T&gt;&amp; <a class="el" href="classgs_1_1TypedRefColumn.html">gs::TypedRefColumn</a>&lt; T &gt;::basic_buffer</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a05d40ee7308c02f80baeb8b77be35a94"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05d40ee7308c02f80baeb8b77be35a94">&#9670;&nbsp;</a></span>basic_size</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t <a class="el" href="classgs_1_1TypedRefColumn.html">gs::TypedRefColumn</a>&lt; T &gt;::basic_size</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a966b46fb5c37958cb4d76fce381f7f6d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a966b46fb5c37958cb4d76fce381f7f6d">&#9670;&nbsp;</a></span>extra_buffer</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const <a class="el" href="classgs_1_1mmap__array.html">mmap_array</a>&lt;T&gt;&amp; <a class="el" href="classgs_1_1TypedRefColumn.html">gs::TypedRefColumn</a>&lt; T &gt;::extra_buffer</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a2fe35dbd0a2c3d41f2cc8e16b2e57921"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2fe35dbd0a2c3d41f2cc8e16b2e57921">&#9670;&nbsp;</a></span>extra_size</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t <a class="el" href="classgs_1_1TypedRefColumn.html">gs::TypedRefColumn</a>&lt; T &gt;::extra_size</td>
         </tr>
       </table>
   </td>

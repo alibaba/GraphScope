@@ -1,9 +1,4 @@
 <map id="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/csv_fragment_loader.h" name="/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/csv_fragment_loader.h">
-<area shape="rect" id="node1" title=" " alt="" coords="132,5,359,76"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,5,232,76"/>
 <area shape="rect" id="node2" href="$csv__fragment__loader_8cc.html" title=" " alt="" coords="5,124,232,195"/>
-<area shape="rect" id="node3" href="$loader__factory_8h.html" title=" " alt="" coords="257,124,487,195"/>
-<area shape="rect" id="node4" href="$loader__factory_8cc.html" title=" " alt="" coords="130,243,361,313"/>
-<area shape="rect" id="node5" href="$graph__db_8h.html" title=" " alt="" coords="385,250,612,306"/>
-<area shape="rect" id="node6" href="$graph__db_8cc.html" title=" " alt="" coords="256,369,488,425"/>
-<area shape="rect" id="node7" href="$graph__db__session_8cc.html" title=" " alt="" coords="512,361,739,432"/>
 </map>

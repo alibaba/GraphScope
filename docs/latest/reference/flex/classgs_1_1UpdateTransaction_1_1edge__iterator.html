@@ -108,6 +108,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:aa96ff293f5c467556b165ef2f8261d0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a259db653ef2e29b81ebf3c1c09d6a52b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction_1_1edge__iterator.html#a259db653ef2e29b81ebf3c1c09d6a52b">Next</a> ()</td></tr>
 <tr class="separator:a259db653ef2e29b81ebf3c1c09d6a52b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac78ddba85d53c665ab927429f6d0755f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction_1_1edge__iterator.html#ac78ddba85d53c665ab927429f6d0755f">Forward</a> (size_t offset)</td></tr>
+<tr class="separator:ac78ddba85d53c665ab927429f6d0755f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a36d64487ac192064c8b93ed5aca48ca6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction_1_1edge__iterator.html#a36d64487ac192064c8b93ed5aca48ca6">GetNeighbor</a> () const</td></tr>
 <tr class="separator:a36d64487ac192064c8b93ed5aca48ca6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:afada75e90957799d0ddbb3433fb36647"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction_1_1edge__iterator.html#afada75e90957799d0ddbb3433fb36647">GetNeighborLabel</a> () const</td></tr>
@@ -135,6 +137,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a56730e1f1d2b093281300b7887a57606"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad3925b4f0ad0f86674f17c7261e1c36d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1UpdateTransaction.html">UpdateTransaction</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction_1_1edge__iterator.html#ad3925b4f0ad0f86674f17c7261e1c36d">txn_</a></td></tr>
 <tr class="separator:ad3925b4f0ad0f86674f17c7261e1c36d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac0f7115c6cac5e33b4fffdb35f4a7ae3"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction_1_1edge__iterator.html#ac0f7115c6cac5e33b4fffdb35f4a7ae3">offset_</a></td></tr>
+<tr class="separator:ac0f7115c6cac5e33b4fffdb35f4a7ae3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a9c68c2f5f63ed81d3d50980a762788be"></a>
@@ -233,6 +237,24 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="ac78ddba85d53c665ab927429f6d0755f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac78ddba85d53c665ab927429f6d0755f">&#9670;&nbsp;</a></span>Forward()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::UpdateTransaction::edge_iterator::Forward </td>
+          <td>(</td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ab97b18b9a0a45960e657d93fbb972efe"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab97b18b9a0a45960e657d93fbb972efe">&#9670;&nbsp;</a></span>GetData()</h2>
 
@@ -497,6 +519,28 @@ Private Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> gs::UpdateTransaction::edge_iterator::neighbor_label_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac0f7115c6cac5e33b4fffdb35f4a7ae3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac0f7115c6cac5e33b4fffdb35f4a7ae3">&#9670;&nbsp;</a></span>offset_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">size_t gs::UpdateTransaction::edge_iterator::offset_</td>
         </tr>
       </table>
   </td>

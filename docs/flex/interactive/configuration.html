@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -708,16 +710,20 @@ MathJax = {
 <p>Here’s a glimpse of what a typical YAML configuration file might look like:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span><span class="w"> </span><span class="c1"># default INFO</span>
 <span class="nt">compute_engine</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">shard_num</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">  </span><span class="c1"># the number of shared workers, default 1</span>
+<span class="w">  </span><span class="nt">thread_num_per_worker</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">  </span><span class="c1"># the number of shared workers, default 1</span>
 <span class="nt">compiler</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">planner</span><span class="p">:</span>
-<span class="w">  </span><span class="nt">is_one</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">is_on</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
 <span class="w">  </span><span class="nt">opt</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">RBO</span>
 <span class="w">  </span><span class="nt">rules</span><span class="p">:</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FilterMatchRule</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">FilterIntoJoinRule</span>
 <span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">NotExistToAntiJoinRule</span>
 <span class="w">  </span><span class="nt">query_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">20000</span><span class="w">  </span><span class="c1"># query timeout in milliseconds, default 20000</span>
+<span class="nt">http_service</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">default_listen_address</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">localhost</span>
+<span class="w">  </span><span class="nt">admin_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">7777</span>
+<span class="w">  </span><span class="nt">query_port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
 </pre></div>
 </div>
 </section>
@@ -747,12 +753,12 @@ MathJax = {
 <td><p>The name of default graph on which to start the graph service.</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-even"><td><p>compute_engine.shard_num</p></td>
+<tr class="row-even"><td><p>compute_engine.thread_num_per_worker</p></td>
 <td><p>1</p></td>
 <td><p>The number of threads will be used to process the queries. Increase the number can benefit the query throughput</p></td>
 <td><p>0.0.1</p></td>
 </tr>
-<tr class="row-odd"><td><p>compiler.planner.isOn</p></td>
+<tr class="row-odd"><td><p>compiler.planner.is_on</p></td>
 <td><p>true</p></td>
 <td><p>Determines if query optimization is enabled for compiling Cypher queries</p></td>
 <td><p>0.0.1</p></td>
@@ -776,6 +782,21 @@ MathJax = {
 <td><p>N/A</p></td>
 <td><p>An optimization rule that transforms a “not exist” pattern into an anti-join operation</p></td>
 <td><p>0.0.1</p></td>
+</tr>
+<tr class="row-even"><td><p>http_service.default_listen_address</p></td>
+<td><p>localhost</p></td>
+<td><p>The address for http service to bind</p></td>
+<td><p>0.0.2</p></td>
+</tr>
+<tr class="row-odd"><td><p>http_service.admin_port</p></td>
+<td><p>7777</p></td>
+<td><p>The port for admin service to listen on</p></td>
+<td><p>0.0.2</p></td>
+</tr>
+<tr class="row-even"><td><p>http_service.query_port</p></td>
+<td><p>10000</p></td>
+<td><p>The port for query service to listen on, for stored procedure queries, user can directory submit queries to query_port without compiler involved</p></td>
+<td><p>0.0.2</p></td>
 </tr>
 </tbody>
 </table>

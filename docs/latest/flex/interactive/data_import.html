@@ -11,7 +11,7 @@
 <meta name="description" content="In our guide on using custom graph data, we introduced the basics of importing graph data using a simple YAML configuration. This section delves deeper, providing a thorough exploration of the exte..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="GraphScope Interactive Development guide" href="dev_guide.html" /><link rel="prev" title="Data Model" href="data_model.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>Data Import Configuration - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=135e06be" />
@@ -249,6 +249,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -581,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -608,18 +621,6 @@ MathJax = {
               <dd><a href="../../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -686,11 +687,16 @@ MathJax = {
           <section class="tex2jax_ignore mathjax_ignore" id="data-import-configuration">
 <h1>Data Import Configuration<a class="headerlink" href="#data-import-configuration" title="Permalink to this heading">#</a></h1>
 <p>In our guide on <a class="reference internal" href="custom_graph_data.html"><span class="std std-doc">using custom graph data</span></a>, we introduced the basics of importing graph data using a simple YAML configuration. This section delves deeper, providing a thorough exploration of the extensive configuration options available for data import.</p>
-<section id="sample-configuration-for-the-modern-graph">
-<h2>Sample Configuration for the “Modern” Graph<a class="headerlink" href="#sample-configuration-for-the-modern-graph" title="Permalink to this heading">#</a></h2>
+<section id="supported-data-source">
+<h2>Supported data source<a class="headerlink" href="#supported-data-source" title="Permalink to this heading">#</a></h2>
+<p>Currently we only support import data to graph from local <code class="docutils literal notranslate"><span class="pre">csv</span></code> files or <code class="docutils literal notranslate"><span class="pre">odps</span></code> table. See configuration <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.scheme</span></code>.</p>
+</section>
+<section id="sample-configuration-for-loading-modern-graph-from-csv-files">
+<h2>Sample Configuration for loading “Modern” Graph from csv files<a class="headerlink" href="#sample-configuration-for-loading-modern-graph-from-csv-files" title="Permalink to this heading">#</a></h2>
 <p>To illustrate, let’s examine the <code class="docutils literal notranslate"><span class="pre">examples/modern_import_full.yaml</span></code> file. This configuration is designed for importing the “modern” graph and showcases the full range of configuration possibilities. We’ll dissect each configuration item in the sections that follow.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">loading_config</span><span class="p">:</span><span class="w"> </span>
 <span class="w">  </span><span class="nt">data_source</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file</span>
 <span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/modern_graph/</span><span class="w"> </span>
 <span class="w">  </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span>
 <span class="w">    </span><span class="nt">metadata</span><span class="p">:</span><span class="w"> </span>
@@ -776,6 +782,92 @@ MathJax = {
 </pre></div>
 </div>
 </section>
+<section id="sample-configuration-for-loading-modern-graph-from-odps-tables">
+<h2>Sample configuration for loading “Modern Graph” from odps tables<a class="headerlink" href="#sample-configuration-for-loading-modern-graph-from-odps-tables" title="Permalink to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dd_graph</span>
+<span class="nt">loading_config</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">data_source</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">odps</span><span class="w">  </span><span class="c1"># file, odps</span>
+<span class="w">  </span><span class="nt">import_option</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">init</span><span class="w"> </span><span class="c1"># init, overwrite</span>
+<span class="w">  </span><span class="nt">format</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">arrow</span>
+<span class="nt">vertex_mappings</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">person</span><span class="w">  </span><span class="c1"># must align with the schema</span>
+<span class="w">    </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">your_proj_name/table_name/partition_col_name=paritition_name</span>
+<span class="w">    </span><span class="nt">column_mappings</span><span class="p">:</span><span class="w">  </span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">  </span>
+<span class="w">              </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span><span class="w"> </span>
+<span class="w">            </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span><span class="w"> </span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w"> </span>
+<span class="w">              </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">name</span>
+<span class="w">            </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">name</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">              </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">age</span>
+<span class="w">            </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">age</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">software</span>
+<span class="w">    </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">your_proj_name/table_name/partition_col_name=paritition_name</span>
+<span class="w">    </span><span class="nt">column_mappings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">      </span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span><span class="w">  </span>
+<span class="w">        </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span><span class="w">  </span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">name</span>
+<span class="w">        </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">name</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lang</span>
+<span class="w">        </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">lang</span>
+<span class="nt">edge_mappings</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type_triplet</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">knows</span>
+<span class="w">      </span><span class="nt">source_vertex</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">person</span>
+<span class="w">      </span><span class="nt">destination_vertex</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">person</span>
+<span class="w">    </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">your_proj_name/table_name/partition_col_name=paritition_name</span>
+<span class="w">    </span><span class="nt">source_vertex_mappings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">src_user_id</span>
+<span class="w">        </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span>
+<span class="w">    </span><span class="nt">destination_vertex_mappings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dst_user_id</span>
+<span class="w">        </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span>
+<span class="w">    </span><span class="nt">column_mappings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">weight</span>
+<span class="w">        </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">weight</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type_triplet</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">edge</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">created</span>
+<span class="w">      </span><span class="nt">source_vertex</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">person</span>
+<span class="w">      </span><span class="nt">destination_vertex</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">software</span>
+<span class="w">    </span><span class="nt">inputs</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">your_proj_name/table_name/partition_col_name=paritition_name</span>
+<span class="w">    </span><span class="nt">source_vertex_mappings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span>
+<span class="w">    </span><span class="nt">destination_vertex_mappings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">id</span>
+<span class="w">    </span><span class="nt">column_mappings</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">index</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">weight</span>
+<span class="w">        </span><span class="nt">property</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">weight</span>
+</pre></div>
+</div>
+</section>
 <section id="configuration-breakdown">
 <h2>Configuration Breakdown<a class="headerlink" href="#configuration-breakdown" title="Permalink to this heading">#</a></h2>
 <p>The table below offers a detailed breakdown of each configuration item. In this table, we use the “.” notation to represent the hierarchy within the YAML structure.</p>
@@ -804,177 +896,182 @@ MathJax = {
 <td><p>Path to the data source in the container, which must be mapped from the host machine while intializing the service</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format</p></td>
+<tr class="row-odd"><td><p>loading_config.scheme</p></td>
+<td><p>file</p></td>
+<td><p>The source of input data. Currently only <code class="docutils literal notranslate"><span class="pre">file</span></code> and <code class="docutils literal notranslate"><span class="pre">odps</span></code> are supported</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>loading_config.format</p></td>
 <td><p>N/A</p></td>
 <td><p>The format of the raw data in CSV</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata</p></td>
 <td><p>N/A</p></td>
 <td><p>Mainly for configuring the options for reading CSV</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.delimiter</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.delimiter</p></td>
 <td><p>‘|’</p></td>
 <td><p>Delimiter used to split a row of data</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.header_row</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.header_row</p></td>
 <td><p>true</p></td>
 <td><p>Indicate if the first row should be used as the header</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.quoting</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.quoting</p></td>
 <td><p>false</p></td>
 <td><p>Whether quoting is used</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.quote_char</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.quote_char</p></td>
 <td><p>‘”’</p></td>
 <td><p>Quoting character (if <code class="docutils literal notranslate"><span class="pre">quoting</span></code> is true)</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.double_quote</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.double_quote</p></td>
 <td><p>true</p></td>
 <td><p>Whether a quote inside a value is double-quoted</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.escaping</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.escaping</p></td>
 <td><p>false</p></td>
 <td><p>Whether escaping is used</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.escape_char</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.escape_char</p></td>
 <td><p>‘\’</p></td>
 <td><p>Escaping character (if <code class="docutils literal notranslate"><span class="pre">escaping</span></code> is true)</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.batch_size</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.batch_size</p></td>
 <td><p>4MB</p></td>
 <td><p>The size of batch for reading from files</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p></p></td>
+<tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><strong>vertex_mappings</strong></p></td>
+<tr class="row-odd"><td><p><strong>vertex_mappings</strong></p></td>
 <td><p>N/A</p></td>
 <td><p>Define how to map the raw data into a graph vertex in the schema</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.type_name</p></td>
+<tr class="row-even"><td><p>vertex_mappings.type_name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the vertex type</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.inputs</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.inputs</p></td>
 <td><p>N/A</p></td>
 <td><p>List of files containing raw data for the vertex type, relative to <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.location</span></code></p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.column_mappings</p></td>
+<tr class="row-even"><td><p>vertex_mappings.column_mappings</p></td>
 <td><p>The columns in the raw data will be automatically mapped to the properties, in given order</p></td>
 <td><p>Define which column of the vertex data maps to a given property</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.column_mappings.column.index</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.column_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.column_mappings.column.name</p></td>
+<tr class="row-even"><td><p>vertex_mappings.column_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.column_mappings.property</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.column_mappings.property</p></td>
 <td><p>N/A</p></td>
 <td><p>Property in the schema to which the column maps.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p></p></td>
+<tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><strong>edge_mappings</strong></p></td>
+<tr class="row-odd"><td><p><strong>edge_mappings</strong></p></td>
 <td><p>N/A</p></td>
 <td><p>Define how to map the raw data into a graph edge in the schema</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.type_triplet</p></td>
+<tr class="row-even"><td><p>edge_mappings.type_triplet</p></td>
 <td><p>N/A</p></td>
 <td><p>A triplet that uniquely defines an edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.type_triplet.edge</p></td>
+<tr class="row-odd"><td><p>edge_mappings.type_triplet.edge</p></td>
 <td><p>N/A</p></td>
 <td><p>The type of the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.type_triplet.source_vertex</p></td>
+<tr class="row-even"><td><p>edge_mappings.type_triplet.source_vertex</p></td>
 <td><p>N/A</p></td>
 <td><p>Type of the source vertex for the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.type_triplet.destination_vertex</p></td>
+<tr class="row-odd"><td><p>edge_mappings.type_triplet.destination_vertex</p></td>
 <td><p>N/A</p></td>
 <td><p>Type of the destination vertex for the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.inputs</p></td>
+<tr class="row-even"><td><p>edge_mappings.inputs</p></td>
 <td><p>N/A</p></td>
 <td><p>List of files containing raw data for the edge type, relative to <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.location</span></code></p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings</p></td>
+<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings</p></td>
 <td><p>The first column of the edge data</p></td>
 <td><p>Define which columns of the edge data map to its source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings.column.index</p></td>
+<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data representing the source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings.column.name</p></td>
+<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data representing the source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings</p></td>
+<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings</p></td>
 <td><p>The second column of the edge data</p></td>
 <td><p>Define which columns of the edge data map to its source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings.column.index</p></td>
+<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data representing the destination vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings.column.name</p></td>
+<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data representing the destination vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.column_mappings</p></td>
+<tr class="row-odd"><td><p>edge_mappings.column_mappings</p></td>
 <td><p>The columns in the raw data will be automatically mapped to the properties, in given order</p></td>
 <td><p>Define which column of the edge data maps to a given property.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.column_mappings.column.index</p></td>
+<tr class="row-even"><td><p>edge_mappings.column_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.column_mappings.column.name</p></td>
+<tr class="row-odd"><td><p>edge_mappings.column_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.column_mappings.property</p></td>
+<tr class="row-even"><td><p>edge_mappings.column_mappings.property</p></td>
 <td><p>N/A</p></td>
 <td><p>Property in the schema to which the column maps.</p></td>
 <td><p>No (but must present if column presents)</p></td>
@@ -1115,7 +1212,9 @@ MathJax = {
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Data Import Configuration</a><ul>
-<li><a class="reference internal" href="#sample-configuration-for-the-modern-graph">Sample Configuration for the “Modern” Graph</a></li>
+<li><a class="reference internal" href="#supported-data-source">Supported data source</a></li>
+<li><a class="reference internal" href="#sample-configuration-for-loading-modern-graph-from-csv-files">Sample Configuration for loading “Modern” Graph from csv files</a></li>
+<li><a class="reference internal" href="#sample-configuration-for-loading-modern-graph-from-odps-tables">Sample configuration for loading “Modern Graph” from odps tables</a></li>
 <li><a class="reference internal" href="#configuration-breakdown">Configuration Breakdown</a><ul>
 <li><a class="reference internal" href="#loading-configurations">Loading Configurations</a></li>
 <li><a class="reference internal" href="#vertex-mappings">Vertex Mappings</a></li>

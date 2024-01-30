@@ -72,6 +72,7 @@ $(function() {
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pri-methods">Private Member Functions</a> &#124;
 <a href="#pri-attribs">Private Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classgs_1_1UpdateTransaction-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">gs::UpdateTransaction Class Reference</div>  </div>
@@ -105,8 +106,8 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a1ee8be78d6c116e70db7564b48e5e9e7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a1ee8be78d6c116e70db7564b48e5e9e7">UpdateTransaction</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, <a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;alloc, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1UpdateTransaction.html#aff2348d926510f96545054a9e63ce1ff">timestamp</a>)</td></tr>
-<tr class="separator:a1ee8be78d6c116e70db7564b48e5e9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7f7ccd549fa1b4283c0b885b9e48ed93"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a7f7ccd549fa1b4283c0b885b9e48ed93">UpdateTransaction</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc, const std::string &amp;work_dir, <a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;logger, <a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;vm, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> <a class="el" href="classgs_1_1UpdateTransaction.html#aff2348d926510f96545054a9e63ce1ff">timestamp</a>)</td></tr>
+<tr class="separator:a7f7ccd549fa1b4283c0b885b9e48ed93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae4d72620b9dd4dd5f48598810df1e269"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#ae4d72620b9dd4dd5f48598810df1e269">~UpdateTransaction</a> ()</td></tr>
 <tr class="separator:ae4d72620b9dd4dd5f48598810df1e269"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aff2348d926510f96545054a9e63ce1ff"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#aff2348d926510f96545054a9e63ce1ff">timestamp</a> () const</td></tr>
@@ -136,11 +137,15 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a229b0ddff01cd53633f20877c453715e"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a229b0ddff01cd53633f20877c453715e">IngestWal</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, uint32_t <a class="el" href="classgs_1_1UpdateTransaction.html#aff2348d926510f96545054a9e63ce1ff">timestamp</a>, char *data, size_t length, <a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;alloc)</td></tr>
-<tr class="separator:a229b0ddff01cd53633f20877c453715e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa7b3526cb7d70827ced6884202cf4f0d"><td class="memItemLeft" align="right" valign="top">static void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#aa7b3526cb7d70827ced6884202cf4f0d">IngestWal</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;graph, const std::string &amp;work_dir, uint32_t <a class="el" href="classgs_1_1UpdateTransaction.html#aff2348d926510f96545054a9e63ce1ff">timestamp</a>, char *data, size_t length, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)</td></tr>
+<tr class="separator:aa7b3526cb7d70827ced6884202cf4f0d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
+<tr class="memitem:a5c4c468736ee7e4e143ab1dc2a7e6cf3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a5c4c468736ee7e4e143ab1dc2a7e6cf3">batch_commit</a> (<a class="el" href="classgs_1_1UpdateBatch.html">UpdateBatch</a> &amp;batch)</td></tr>
+<tr class="separator:a5c4c468736ee7e4e143ab1dc2a7e6cf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a16a7a17cc3285a8ccee75bfa23448a9f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a16a7a17cc3285a8ccee75bfa23448a9f">set_edge_data_with_offset</a> (bool dir, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> neighbor_label, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> nbr, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;value, size_t offset)</td></tr>
+<tr class="separator:a16a7a17cc3285a8ccee75bfa23448a9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a984da0e2faf5ea68c75f1ce0fd99820b"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a984da0e2faf5ea68c75f1ce0fd99820b">get_in_csr_index</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
 <tr class="separator:a984da0e2faf5ea68c75f1ce0fd99820b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2a679a0169b66bf562bde8475bbb6e24"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a2a679a0169b66bf562bde8475bbb6e24">get_out_csr_index</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label) const</td></tr>
@@ -160,8 +165,8 @@ Private Member Functions</h2></td></tr>
 Private Attributes</h2></td></tr>
 <tr class="memitem:ab79e33b7782221166c870434ea392637"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#ab79e33b7782221166c870434ea392637">graph_</a></td></tr>
 <tr class="separator:ab79e33b7782221166c870434ea392637"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a88c904c36e1929c57c01ee6225929add"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a88c904c36e1929c57c01ee6225929add">alloc_</a></td></tr>
-<tr class="separator:a88c904c36e1929c57c01ee6225929add"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0177ac31faf115a6adf8c4d51ab4c4e9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a0177ac31faf115a6adf8c4d51ab4c4e9">alloc_</a></td></tr>
+<tr class="separator:a0177ac31faf115a6adf8c4d51ab4c4e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abb9942ea1ead22586c48e64c485cb39c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1WalWriter.html">WalWriter</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#abb9942ea1ead22586c48e64c485cb39c">logger_</a></td></tr>
 <tr class="separator:abb9942ea1ead22586c48e64c485cb39c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a484d3832d52c63aca8dabd32c801f280"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1VersionManager.html">VersionManager</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a484d3832d52c63aca8dabd32c801f280">vm_</a></td></tr>
@@ -188,14 +193,19 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a393c3bf1efe35797d2255c11deadf8a9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4df07d256e85b42667805e967467c87c"><td class="memItemLeft" align="right" valign="top">std::vector&lt; ska::flat_hash_map&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, std::vector&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a4df07d256e85b42667805e967467c87c">added_edges_</a></td></tr>
 <tr class="separator:a4df07d256e85b42667805e967467c87c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac5643a938866a9a7fefd8d45433942b6"><td class="memItemLeft" align="right" valign="top">std::vector&lt; ska::flat_hash_map&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, ska::flat_hash_map&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#ac5643a938866a9a7fefd8d45433942b6">updated_edge_data_</a></td></tr>
-<tr class="separator:ac5643a938866a9a7fefd8d45433942b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad17217159ce0fa34231118a1314103f2"><td class="memItemLeft" align="right" valign="top">std::vector&lt; ska::flat_hash_map&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, ska::flat_hash_map&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, std::pair&lt; <a class="el" href="structgs_1_1Any.html">Any</a>, size_t &gt; &gt; &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#ad17217159ce0fa34231118a1314103f2">updated_edge_data_</a></td></tr>
+<tr class="separator:ad17217159ce0fa34231118a1314103f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6abdbe5e918de2bb2c6d1becb600cc2d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a6abdbe5e918de2bb2c6d1becb600cc2d">sv_vec_</a></td></tr>
 <tr class="separator:a6abdbe5e918de2bb2c6d1becb600cc2d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a0b4d57ebb58b9ea0063493d723462431"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1UpdateTransaction.html#a0b4d57ebb58b9ea0063493d723462431">GraphDBSession</a></td></tr>
+<tr class="separator:a0b4d57ebb58b9ea0063493d723462431"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a1ee8be78d6c116e70db7564b48e5e9e7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1ee8be78d6c116e70db7564b48e5e9e7">&#9670;&nbsp;</a></span>UpdateTransaction()</h2>
+<a id="a7f7ccd549fa1b4283c0b885b9e48ed93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7f7ccd549fa1b4283c0b885b9e48ed93">&#9670;&nbsp;</a></span>UpdateTransaction()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -209,8 +219,14 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td>
           <td class="paramname"><em>alloc</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -399,6 +415,32 @@ Private Attributes</h2></td></tr>
           <td class="memname">void gs::UpdateTransaction::applyVerticesUpdates </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a5c4c468736ee7e4e143ab1dc2a7e6cf3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c4c468736ee7e4e143ab1dc2a7e6cf3">&#9670;&nbsp;</a></span>batch_commit()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::UpdateTransaction::batch_commit </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="classgs_1_1UpdateBatch.html">UpdateBatch</a> &amp;&#160;</td>
+          <td class="paramname"><em>batch</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -702,8 +744,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a229b0ddff01cd53633f20877c453715e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a229b0ddff01cd53633f20877c453715e">&#9670;&nbsp;</a></span>IngestWal()</h2>
+<a id="aa7b3526cb7d70827ced6884202cf4f0d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa7b3526cb7d70827ced6884202cf4f0d">&#9670;&nbsp;</a></span>IngestWal()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -716,6 +758,12 @@ Private Attributes</h2></td></tr>
           <td>(</td>
           <td class="paramtype"><a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td>
           <td class="paramname"><em>graph</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -738,7 +786,7 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a> &amp;&#160;</td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td>
           <td class="paramname"><em>alloc</em>&#160;</td>
         </tr>
         <tr>
@@ -848,6 +896,78 @@ Private Attributes</h2></td></tr>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a16a7a17cc3285a8ccee75bfa23448a9f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a16a7a17cc3285a8ccee75bfa23448a9f">&#9670;&nbsp;</a></span>set_edge_data_with_offset()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::UpdateTransaction::set_edge_data_with_offset </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
+          <td class="paramname"><em>v</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>neighbor_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
+          <td class="paramname"><em>nbr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
+          <td class="paramname"><em>edge_label</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;&#160;</td>
+          <td class="paramname"><em>value</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>offset</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
         </tr>
       </table>
   </td>
@@ -974,6 +1094,29 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
+<h2 class="groupheader">Friends And Related Function Documentation</h2>
+<a id="a0b4d57ebb58b9ea0063493d723462431"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b4d57ebb58b9ea0063493d723462431">&#9670;&nbsp;</a></span>GraphDBSession</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="classgs_1_1GraphDBSession.html">GraphDBSession</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <h2 class="groupheader">Member Data Documentation</h2>
 <a id="a4df07d256e85b42667805e967467c87c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4df07d256e85b42667805e967467c87c">&#9670;&nbsp;</a></span>added_edges_</h2>
@@ -1041,8 +1184,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a88c904c36e1929c57c01ee6225929add"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a88c904c36e1929c57c01ee6225929add">&#9670;&nbsp;</a></span>alloc_</h2>
+<a id="a0177ac31faf115a6adf8c4d51ab4c4e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0177ac31faf115a6adf8c4d51ab4c4e9">&#9670;&nbsp;</a></span>alloc_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1051,7 +1194,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a>&amp; gs::UpdateTransaction::alloc_</td>
+          <td class="memname"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a>&amp; gs::UpdateTransaction::alloc_</td>
         </tr>
       </table>
   </td>
@@ -1239,8 +1382,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ac5643a938866a9a7fefd8d45433942b6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac5643a938866a9a7fefd8d45433942b6">&#9670;&nbsp;</a></span>updated_edge_data_</h2>
+<a id="ad17217159ce0fa34231118a1314103f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad17217159ce0fa34231118a1314103f2">&#9670;&nbsp;</a></span>updated_edge_data_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1249,7 +1392,7 @@ Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;ska::flat_hash_map&lt;<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, ska::flat_hash_map&lt;<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="structgs_1_1Any.html">Any</a>&gt; &gt; &gt; gs::UpdateTransaction::updated_edge_data_</td>
+          <td class="memname">std::vector&lt;ska::flat_hash_map&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, ska::flat_hash_map&lt;<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, std::pair&lt;<a class="el" href="structgs_1_1Any.html">Any</a>, size_t&gt; &gt; &gt; &gt; gs::UpdateTransaction::updated_edge_data_</td>
         </tr>
       </table>
   </td>

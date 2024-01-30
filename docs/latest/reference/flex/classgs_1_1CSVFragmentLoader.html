@@ -68,8 +68,9 @@ $(function() {
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pri-methods">Private Member Functions</a> &#124;
-<a href="#pri-attribs">Private Attributes</a> &#124;
+<a href="#pri-static-attribs">Static Private Attributes</a> &#124;
 <a href="classgs_1_1CSVFragmentLoader-members.html">List of all members</a>  </div>
   <div class="headertitle">
 <div class="title">gs::CSVFragmentLoader Class Reference</div>  </div>
@@ -82,8 +83,9 @@ Inheritance diagram for gs::CSVFragmentLoader:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1CSVFragmentLoader__inherit__graph.png" border="0" usemap="#gs_1_1CSVFragmentLoader_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1CSVFragmentLoader_inherit__map" id="gs_1_1CSVFragmentLoader_inherit__map">
-<area shape="rect" title=" " alt="" coords="5,80,183,107"/>
-<area shape="rect" href="classgs_1_1IFragmentLoader.html" title=" " alt="" coords="17,5,171,32"/>
+<area shape="rect" title=" " alt="" coords="16,169,193,196"/>
+<area shape="rect" href="classgs_1_1AbstractArrowFragmentLoader.html" title=" " alt="" coords="5,80,204,121"/>
+<area shape="rect" href="classgs_1_1IFragmentLoader.html" title=" " alt="" coords="27,5,182,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
@@ -91,7 +93,8 @@ Collaboration diagram for gs::CSVFragmentLoader:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1CSVFragmentLoader__coll__graph.png" border="0" usemap="#gs_1_1CSVFragmentLoader_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1CSVFragmentLoader_coll__map" id="gs_1_1CSVFragmentLoader_coll__map">
-<area shape="rect" title=" " alt="" coords="169,407,346,433"/>
+<area shape="rect" title=" " alt="" coords="169,497,346,524"/>
+<area shape="rect" href="classgs_1_1AbstractArrowFragmentLoader.html" title=" " alt="" coords="158,407,357,448"/>
 <area shape="rect" href="classgs_1_1IFragmentLoader.html" title=" " alt="" coords="5,317,160,344"/>
 <area shape="rect" href="classgs_1_1LoadingConfig.html" title=" " alt="" coords="295,317,433,344"/>
 <area shape="rect" href="classgs_1_1Schema.html" title=" " alt="" coords="315,228,413,255"/>
@@ -104,17 +107,29 @@ Collaboration diagram for gs::CSVFragmentLoader:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac1cfb964dea5a123613147d42621af71"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#ac1cfb964dea5a123613147d42621af71">CSVFragmentLoader</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int32_t thread_num)</td></tr>
-<tr class="separator:ac1cfb964dea5a123613147d42621af71"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af3a500ce7dea1476853aab62a0750fe6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#af3a500ce7dea1476853aab62a0750fe6">CSVFragmentLoader</a> (const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int32_t thread_num)</td></tr>
+<tr class="separator:af3a500ce7dea1476853aab62a0750fe6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9796fb7b9e2524cf2ded0720ee2740b3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a9796fb7b9e2524cf2ded0720ee2740b3">~CSVFragmentLoader</a> ()</td></tr>
 <tr class="separator:a9796fb7b9e2524cf2ded0720ee2740b3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae291a49ca9260bee121dc90489ca2b5b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">FragmentLoaderType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#ae291a49ca9260bee121dc90489ca2b5b">GetFragmentLoaderType</a> () const override</td></tr>
-<tr class="separator:ae291a49ca9260bee121dc90489ca2b5b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a30fa3cc4949d3688a3d9dc7976fef759"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a30fa3cc4949d3688a3d9dc7976fef759">LoadFragment</a> (<a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;fragment) override</td></tr>
-<tr class="separator:a30fa3cc4949d3688a3d9dc7976fef759"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9039aa72df6e01ef0cb17d418e30c2c5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a9039aa72df6e01ef0cb17d418e30c2c5">LoadFragment</a> () override</td></tr>
+<tr class="separator:a9039aa72df6e01ef0cb17d418e30c2c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1AbstractArrowFragmentLoader')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html">gs::AbstractArrowFragmentLoader</a></td></tr>
+<tr class="memitem:a756788e2358acc58fc05ef68de7560f2 inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a756788e2358acc58fc05ef68de7560f2">AbstractArrowFragmentLoader</a> (const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int32_t thread_num)</td></tr>
+<tr class="separator:a756788e2358acc58fc05ef68de7560f2 inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a6990caf96d7131a2a48456f884cab9 inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a6a6990caf96d7131a2a48456f884cab9">~AbstractArrowFragmentLoader</a> ()</td></tr>
+<tr class="separator:a6a6990caf96d7131a2a48456f884cab9 inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a160303b8ee924d3764720843faef1fff inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a160303b8ee924d3764720843faef1fff">AddVerticesRecordBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;input_paths, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
+<tr class="separator:a160303b8ee924d3764720843faef1fff inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8368cd9a962c3479375db5be88378d1f inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a8368cd9a962c3479375db5be88378d1f">AddEdgesRecordBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> edge_label_id, const std::vector&lt; std::string &gt; &amp;input_paths, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
+<tr class="separator:a8368cd9a962c3479375db5be88378d1f inherit pub_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="inherit_header pub_methods_classgs_1_1IFragmentLoader"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1IFragmentLoader')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1IFragmentLoader.html">gs::IFragmentLoader</a></td></tr>
 <tr class="memitem:af9118d3dccc4115c53847930575ac7d8 inherit pub_methods_classgs_1_1IFragmentLoader"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1IFragmentLoader.html#af9118d3dccc4115c53847930575ac7d8">~IFragmentLoader</a> ()=default</td></tr>
 <tr class="separator:af9118d3dccc4115c53847930575ac7d8 inherit pub_methods_classgs_1_1IFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-static-methods"></a>
+Static Public Member Functions</h2></td></tr>
+<tr class="memitem:a1c62b8bc69916aff8043570601b21a8b"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a1c62b8bc69916aff8043570601b21a8b">Make</a> (const std::string &amp;work_dir, const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;schema, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;loading_config, int32_t thread_num)</td></tr>
+<tr class="separator:a1c62b8bc69916aff8043570601b21a8b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-methods"></a>
 Private Member Functions</h2></td></tr>
@@ -124,55 +139,47 @@ Private Member Functions</h2></td></tr>
 <tr class="separator:ac189f0838b09544a01c0ccc7487eb946"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa0130898c51396470f66de702d5bd42d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#aa0130898c51396470f66de702d5bd42d">addVertices</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;v_files)</td></tr>
 <tr class="separator:aa0130898c51396470f66de702d5bd42d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a212ecd65d3d53c7de6c73ecd1d21d612"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
-<tr class="memitem:a212ecd65d3d53c7de6c73ecd1d21d612"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a212ecd65d3d53c7de6c73ecd1d21d612">addVerticesImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::string &amp;v_label_name, const std::vector&lt; std::string &gt; v_file, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer)</td></tr>
-<tr class="separator:a212ecd65d3d53c7de6c73ecd1d21d612"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aebdeffac50b2923d10b56761429d40a7"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
-<tr class="memitem:aebdeffac50b2923d10b56761429d40a7"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#aebdeffac50b2923d10b56761429d40a7">addVertexBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer, std::shared_ptr&lt; arrow::Array &gt; &amp;primary_key_col, const std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;property_cols)</td></tr>
-<tr class="separator:aebdeffac50b2923d10b56761429d40a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7fa64e27bd81d4c248b8f310064adcb"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
-<tr class="memitem:af7fa64e27bd81d4c248b8f310064adcb"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#af7fa64e27bd81d4c248b8f310064adcb">addVertexBatch</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer, std::shared_ptr&lt; arrow::ChunkedArray &gt; &amp;primary_key_col, const std::vector&lt; std::shared_ptr&lt; arrow::ChunkedArray &gt;&gt; &amp;property_cols)</td></tr>
-<tr class="separator:af7fa64e27bd81d4c248b8f310064adcb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8da4c32a26f5b6ff0c08680a69b0d140"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a8da4c32a26f5b6ff0c08680a69b0d140">addEdges</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> e_label_id, const std::vector&lt; std::string &gt; &amp;e_files)</td></tr>
 <tr class="separator:a8da4c32a26f5b6ff0c08680a69b0d140"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9833e364c1423a004d8d55986dd5d80e"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
-<tr class="memitem:a9833e364c1423a004d8d55986dd5d80e"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a9833e364c1423a004d8d55986dd5d80e">addEdgesImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> e_label_id, const std::vector&lt; std::string &gt; &amp;e_files)</td></tr>
-<tr class="separator:a9833e364c1423a004d8d55986dd5d80e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad48f36bbbfff9f574813cb3fa719d4a2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#ad48f36bbbfff9f574813cb3fa719d4a2">fillEdgeReaderMeta</a> (arrow::csv::ReadOptions &amp;read_options, arrow::csv::ParseOptions &amp;parse_options, arrow::csv::ConvertOptions &amp;convert_options, const std::string &amp;e_file, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> label_id) const</td></tr>
 <tr class="separator:ad48f36bbbfff9f574813cb3fa719d4a2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a358beab0b8ef7c9ba8dea97638d7a1dd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a358beab0b8ef7c9ba8dea97638d7a1dd">fillVertexReaderMeta</a> (arrow::csv::ReadOptions &amp;read_options, arrow::csv::ParseOptions &amp;parse_options, arrow::csv::ConvertOptions &amp;convert_options, const std::string &amp;v_file, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label) const</td></tr>
 <tr class="separator:a358beab0b8ef7c9ba8dea97638d7a1dd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-attribs"></a>
-Private Attributes</h2></td></tr>
-<tr class="memitem:a4b4512713a07192659e89cf7df6cd6b1"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a4b4512713a07192659e89cf7df6cd6b1">loading_config_</a></td></tr>
-<tr class="separator:a4b4512713a07192659e89cf7df6cd6b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8ab7859cd5579cc70a72bbad2819e415"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a8ab7859cd5579cc70a72bbad2819e415">schema_</a></td></tr>
-<tr class="separator:a8ab7859cd5579cc70a72bbad2819e415"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24741226ab58c5a7c6b878b16f8f2112"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a24741226ab58c5a7c6b878b16f8f2112">vertex_label_num_</a></td></tr>
-<tr class="separator:a24741226ab58c5a7c6b878b16f8f2112"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1be3b57b471c4e295564f21a6756def2"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a1be3b57b471c4e295564f21a6756def2">edge_label_num_</a></td></tr>
-<tr class="separator:a1be3b57b471c4e295564f21a6756def2"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4058cc365754fb0689a538339145803f"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a4058cc365754fb0689a538339145803f">thread_num_</a></td></tr>
-<tr class="separator:a4058cc365754fb0689a538339145803f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af673a52b4dad9bee0a9dd2edf81e68ca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1BasicFragmentLoader.html">BasicFragmentLoader</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#af673a52b4dad9bee0a9dd2edf81e68ca">basic_fragment_loader_</a></td></tr>
-<tr class="separator:af673a52b4dad9bee0a9dd2edf81e68ca"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a70b36e49b40fccccec887f70a5460a40"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a70b36e49b40fccccec887f70a5460a40">read_vertex_table_time_</a></td></tr>
-<tr class="separator:a70b36e49b40fccccec887f70a5460a40"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af74ecd47b82130d9c96eae2bb503643d"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#af74ecd47b82130d9c96eae2bb503643d">read_edge_table_time_</a></td></tr>
-<tr class="separator:af74ecd47b82130d9c96eae2bb503643d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae738783eeb94c6057896c6557c8d1b70"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#ae738783eeb94c6057896c6557c8d1b70">convert_to_internal_vertex_time_</a></td></tr>
-<tr class="separator:ae738783eeb94c6057896c6557c8d1b70"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8e6488172b5fb3b09523fac08338a245"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a8e6488172b5fb3b09523fac08338a245">convert_to_internal_edge_time_</a></td></tr>
-<tr class="separator:a8e6488172b5fb3b09523fac08338a245"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4d1bf63032c84b2acd96d89e738942a6"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a4d1bf63032c84b2acd96d89e738942a6">basic_frag_loader_vertex_time_</a></td></tr>
-<tr class="separator:a4d1bf63032c84b2acd96d89e738942a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a995321b72a09a9eb0ba121dd47ee30bf"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; double &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a995321b72a09a9eb0ba121dd47ee30bf">basic_frag_loader_edge_time_</a></td></tr>
-<tr class="separator:a995321b72a09a9eb0ba121dd47ee30bf"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pri-static-attribs"></a>
+Static Private Attributes</h2></td></tr>
+<tr class="memitem:a46b3aeaa6d007d16111a4e25569f9022"><td class="memItemLeft" align="right" valign="top">static const bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CSVFragmentLoader.html#a46b3aeaa6d007d16111a4e25569f9022">registered_</a></td></tr>
+<tr class="separator:a46b3aeaa6d007d16111a4e25569f9022"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
+<tr class="inherit_header pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td colspan="2" onclick="javascript:toggleInherit('pro_methods_classgs_1_1AbstractArrowFragmentLoader')"><img src="closed.png" alt="-"/>&#160;Protected Member Functions inherited from <a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html">gs::AbstractArrowFragmentLoader</a></td></tr>
+<tr class="memitem:a6868b0828d34e79e360ceeb4783ac7e6 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
+<tr class="memitem:a6868b0828d34e79e360ceeb4783ac7e6 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a6868b0828d34e79e360ceeb4783ac7e6">addVertexBatchFromArray</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;indexer, std::shared_ptr&lt; arrow::Array &gt; &amp;primary_key_col, const std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;property_cols)</td></tr>
+<tr class="separator:a6868b0828d34e79e360ceeb4783ac7e6 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5968f8c95ecccfbea4cdc00f5d394f61 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
+<tr class="memitem:a5968f8c95ecccfbea4cdc00f5d394f61 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a5968f8c95ecccfbea4cdc00f5d394f61">addVertexRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;v_files, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
+<tr class="separator:a5968f8c95ecccfbea4cdc00f5d394f61 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a663a7c186690b6eb1c3a13f23c04e634 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
+<tr class="memitem:a663a7c186690b6eb1c3a13f23c04e634 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a663a7c186690b6eb1c3a13f23c04e634">addEdgesRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> e_label_id, const std::vector&lt; std::string &gt; &amp;e_files, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
+<tr class="separator:a663a7c186690b6eb1c3a13f23c04e634 inherit pro_methods_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td colspan="2" onclick="javascript:toggleInherit('pro_attribs_classgs_1_1AbstractArrowFragmentLoader')"><img src="closed.png" alt="-"/>&#160;Protected Attributes inherited from <a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html">gs::AbstractArrowFragmentLoader</a></td></tr>
+<tr class="memitem:ae958479bc8c25ef1847c8a58aac59974 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#ae958479bc8c25ef1847c8a58aac59974">loading_config_</a></td></tr>
+<tr class="separator:ae958479bc8c25ef1847c8a58aac59974 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa079b70efa367db8d1f2a58c66daacc6 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#aa079b70efa367db8d1f2a58c66daacc6">schema_</a></td></tr>
+<tr class="separator:aa079b70efa367db8d1f2a58c66daacc6 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac2b23c5beeb32efaa349a0cb76ac1604 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#ac2b23c5beeb32efaa349a0cb76ac1604">vertex_label_num_</a></td></tr>
+<tr class="separator:ac2b23c5beeb32efaa349a0cb76ac1604 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afcb2b39c772396c603d9c48ab21d58c8 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#afcb2b39c772396c603d9c48ab21d58c8">edge_label_num_</a></td></tr>
+<tr class="separator:afcb2b39c772396c603d9c48ab21d58c8 inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4280c6aa85a39c91486a04b6ca632f9a inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top">int32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a4280c6aa85a39c91486a04b6ca632f9a">thread_num_</a></td></tr>
+<tr class="separator:a4280c6aa85a39c91486a04b6ca632f9a inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab0edb43e0de49f7cff079aa86da7ca4c inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1BasicFragmentLoader.html">BasicFragmentLoader</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#ab0edb43e0de49f7cff079aa86da7ca4c">basic_fragment_loader_</a></td></tr>
+<tr class="separator:ab0edb43e0de49f7cff079aa86da7ca4c inherit pro_attribs_classgs_1_1AbstractArrowFragmentLoader"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="ac1cfb964dea5a123613147d42621af71"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac1cfb964dea5a123613147d42621af71">&#9670;&nbsp;</a></span>CSVFragmentLoader()</h2>
+<a id="af3a500ce7dea1476853aab62a0750fe6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af3a500ce7dea1476853aab62a0750fe6">&#9670;&nbsp;</a></span>CSVFragmentLoader()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -183,6 +190,12 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="memname">gs::CSVFragmentLoader::CSVFragmentLoader </td>
           <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
           <td class="paramtype">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td>
           <td class="paramname"><em>schema</em>, </td>
         </tr>
@@ -287,156 +300,6 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a9833e364c1423a004d8d55986dd5d80e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9833e364c1423a004d8d55986dd5d80e">&#9670;&nbsp;</a></span>addEdgesImpl()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename EDATA_T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::CSVFragmentLoader::addEdgesImpl </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>src_label_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>dst_label_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>e_label_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
-          <td class="paramname"><em>e_files</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="aebdeffac50b2923d10b56761429d40a7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aebdeffac50b2923d10b56761429d40a7">&#9670;&nbsp;</a></span>addVertexBatch() <span class="overload">[1/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename KEY_T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::CSVFragmentLoader::addVertexBatch </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>v_label_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>indexer</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::shared_ptr&lt; arrow::Array &gt; &amp;&#160;</td>
-          <td class="paramname"><em>primary_key_col</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>property_cols</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af7fa64e27bd81d4c248b8f310064adcb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af7fa64e27bd81d4c248b8f310064adcb">&#9670;&nbsp;</a></span>addVertexBatch() <span class="overload">[2/2]</span></h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename KEY_T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::CSVFragmentLoader::addVertexBatch </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>v_label_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>indexer</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">std::shared_ptr&lt; arrow::ChunkedArray &gt; &amp;&#160;</td>
-          <td class="paramname"><em>primary_key_col</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::shared_ptr&lt; arrow::ChunkedArray &gt;&gt; &amp;&#160;</td>
-          <td class="paramname"><em>property_cols</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="aa0130898c51396470f66de702d5bd42d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa0130898c51396470f66de702d5bd42d">&#9670;&nbsp;</a></span>addVertices()</h2>
 
@@ -457,56 +320,6 @@ template&lt;typename KEY_T &gt; </div>
           <td></td>
           <td class="paramtype">const std::vector&lt; std::string &gt; &amp;&#160;</td>
           <td class="paramname"><em>v_files</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a212ecd65d3d53c7de6c73ecd1d21d612"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a212ecd65d3d53c7de6c73ecd1d21d612">&#9670;&nbsp;</a></span>addVerticesImpl()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename KEY_T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void gs::CSVFragmentLoader::addVerticesImpl </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>&#160;</td>
-          <td class="paramname"><em>v_label_id</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::string &amp;&#160;</td>
-          <td class="paramname"><em>v_label_name</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const std::vector&lt; std::string &gt;&#160;</td>
-          <td class="paramname"><em>v_file</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;&#160;</td>
-          <td class="paramname"><em>indexer</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -643,33 +456,6 @@ template&lt;typename KEY_T &gt; </div>
 
 </div>
 </div>
-<a id="ae291a49ca9260bee121dc90489ca2b5b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae291a49ca9260bee121dc90489ca2b5b">&#9670;&nbsp;</a></span>GetFragmentLoaderType()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="namespacegs.html#af72311b6060166f7a160ef37bde0fbf5">FragmentLoaderType</a> gs::CSVFragmentLoader::GetFragmentLoaderType </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td> const</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">override</span><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Implements <a class="el" href="classgs_1_1IFragmentLoader.html#aefe30b9063ab0101b64e7a4ffbbf19ef">gs::IFragmentLoader</a>.</p>
-
-</div>
-</div>
 <a id="ac189f0838b09544a01c0ccc7487eb946"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac189f0838b09544a01c0ccc7487eb946">&#9670;&nbsp;</a></span>loadEdges()</h2>
 
@@ -695,8 +481,8 @@ template&lt;typename KEY_T &gt; </div>
 
 </div>
 </div>
-<a id="a30fa3cc4949d3688a3d9dc7976fef759"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30fa3cc4949d3688a3d9dc7976fef759">&#9670;&nbsp;</a></span>LoadFragment()</h2>
+<a id="a9039aa72df6e01ef0cb17d418e30c2c5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9039aa72df6e01ef0cb17d418e30c2c5">&#9670;&nbsp;</a></span>LoadFragment()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -707,8 +493,7 @@ template&lt;typename KEY_T &gt; </div>
         <tr>
           <td class="memname">void gs::CSVFragmentLoader::LoadFragment </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="classgs_1_1MutablePropertyFragment.html">MutablePropertyFragment</a> &amp;&#160;</td>
-          <td class="paramname"><em>fragment</em></td><td>)</td>
+          <td class="paramname"></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -719,7 +504,7 @@ template&lt;typename KEY_T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Implements <a class="el" href="classgs_1_1IFragmentLoader.html#abfe8b84da61f263ade2ac78295a62e04">gs::IFragmentLoader</a>.</p>
+<p>Implements <a class="el" href="classgs_1_1IFragmentLoader.html#a3d5978de63840d2c1219b6ac4485a79a">gs::IFragmentLoader</a>.</p>
 
 </div>
 </div>
@@ -748,9 +533,57 @@ template&lt;typename KEY_T &gt; </div>
 
 </div>
 </div>
+<a id="a1c62b8bc69916aff8043570601b21a8b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1c62b8bc69916aff8043570601b21a8b">&#9670;&nbsp;</a></span>Make()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt; <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a> &gt; gs::CSVFragmentLoader::Make </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>work_dir</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;&#160;</td>
+          <td class="paramname"><em>schema</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;&#160;</td>
+          <td class="paramname"><em>loading_config</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int32_t&#160;</td>
+          <td class="paramname"><em>thread_num</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a995321b72a09a9eb0ba121dd47ee30bf"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a995321b72a09a9eb0ba121dd47ee30bf">&#9670;&nbsp;</a></span>basic_frag_loader_edge_time_</h2>
+<a id="a46b3aeaa6d007d16111a4e25569f9022"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a46b3aeaa6d007d16111a4e25569f9022">&#9670;&nbsp;</a></span>registered_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -759,258 +592,19 @@ template&lt;typename KEY_T &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::atomic&lt;double&gt; gs::CSVFragmentLoader::basic_frag_loader_edge_time_</td>
+          <td class="memname">const bool gs::CSVFragmentLoader::registered_</td>
         </tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+<span class="mlabels"><span class="mlabel">static</span><span class="mlabel">private</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
-
-</div>
-</div>
-<a id="a4d1bf63032c84b2acd96d89e738942a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4d1bf63032c84b2acd96d89e738942a6">&#9670;&nbsp;</a></span>basic_frag_loader_vertex_time_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::atomic&lt;double&gt; gs::CSVFragmentLoader::basic_frag_loader_vertex_time_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af673a52b4dad9bee0a9dd2edf81e68ca"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af673a52b4dad9bee0a9dd2edf81e68ca">&#9670;&nbsp;</a></span>basic_fragment_loader_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="classgs_1_1BasicFragmentLoader.html">BasicFragmentLoader</a> gs::CSVFragmentLoader::basic_fragment_loader_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">mutable</span><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a8e6488172b5fb3b09523fac08338a245"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8e6488172b5fb3b09523fac08338a245">&#9670;&nbsp;</a></span>convert_to_internal_edge_time_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::atomic&lt;double&gt; gs::CSVFragmentLoader::convert_to_internal_edge_time_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="ae738783eeb94c6057896c6557c8d1b70"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae738783eeb94c6057896c6557c8d1b70">&#9670;&nbsp;</a></span>convert_to_internal_vertex_time_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::atomic&lt;double&gt; gs::CSVFragmentLoader::convert_to_internal_vertex_time_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a1be3b57b471c4e295564f21a6756def2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1be3b57b471c4e295564f21a6756def2">&#9670;&nbsp;</a></span>edge_label_num_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t gs::CSVFragmentLoader::edge_label_num_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a4b4512713a07192659e89cf7df6cd6b1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4b4512713a07192659e89cf7df6cd6b1">&#9670;&nbsp;</a></span>loading_config_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a>&amp; gs::CSVFragmentLoader::loading_config_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="af74ecd47b82130d9c96eae2bb503643d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af74ecd47b82130d9c96eae2bb503643d">&#9670;&nbsp;</a></span>read_edge_table_time_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::atomic&lt;double&gt; gs::CSVFragmentLoader::read_edge_table_time_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a70b36e49b40fccccec887f70a5460a40"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a70b36e49b40fccccec887f70a5460a40">&#9670;&nbsp;</a></span>read_vertex_table_time_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::atomic&lt;double&gt; gs::CSVFragmentLoader::read_vertex_table_time_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a8ab7859cd5579cc70a72bbad2819e415"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8ab7859cd5579cc70a72bbad2819e415">&#9670;&nbsp;</a></span>schema_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">const <a class="el" href="classgs_1_1Schema.html">Schema</a>&amp; gs::CSVFragmentLoader::schema_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a4058cc365754fb0689a538339145803f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4058cc365754fb0689a538339145803f">&#9670;&nbsp;</a></span>thread_num_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int32_t gs::CSVFragmentLoader::thread_num_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="a24741226ab58c5a7c6b878b16f8f2112"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a24741226ab58c5a7c6b878b16f8f2112">&#9670;&nbsp;</a></span>vertex_label_num_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t gs::CSVFragmentLoader::vertex_label_num_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
+<b>Initial value:</b><div class="fragment"><div class="line">= <a class="code" href="classgs_1_1LoaderFactory.html#a929e747f1ad61bcd7f3374c6ac208597">LoaderFactory::Register</a>(</div>
+<div class="line">    <span class="stringliteral">&quot;file&quot;</span>, <span class="stringliteral">&quot;csv&quot;</span>,</div>
+<div class="line">    <span class="keyword">static_cast&lt;</span><a class="code" href="classgs_1_1LoaderFactory.html#a7c82d851cf8049972a125f70a0f81b63">LoaderFactory::loader_initializer_t</a><span class="keyword">&gt;</span>(&amp;<a class="code" href="classgs_1_1CSVFragmentLoader.html#a1c62b8bc69916aff8043570601b21a8b">CSVFragmentLoader::Make</a>))</div>
+</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
@@ -1018,6 +612,9 @@ template&lt;typename KEY_T &gt; </div>
 <li>/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/loader/<a class="el" href="csv__fragment__loader_8cc.html">csv_fragment_loader.cc</a></li>
 </ul>
 </div><!-- contents -->
+<div class="ttc" id="aclassgs_1_1LoaderFactory_html_a929e747f1ad61bcd7f3374c6ac208597"><div class="ttname"><a href="classgs_1_1LoaderFactory.html#a929e747f1ad61bcd7f3374c6ac208597">gs::LoaderFactory::Register</a></div><div class="ttdeci">static bool Register(const std::string &amp;scheme_type, const std::string &amp;format_type, loader_initializer_t initializer)</div><div class="ttdef"><b>Definition:</b> loader_factory.cc:63</div></div>
+<div class="ttc" id="aclassgs_1_1LoaderFactory_html_a7c82d851cf8049972a125f70a0f81b63"><div class="ttname"><a href="classgs_1_1LoaderFactory.html#a7c82d851cf8049972a125f70a0f81b63">gs::LoaderFactory::loader_initializer_t</a></div><div class="ttdeci">std::shared_ptr&lt; IFragmentLoader &gt;(*)(const std::string &amp;work_dir, const Schema &amp;schema, const LoadingConfig &amp;loading_config, int thread_num) loader_initializer_t</div><div class="ttdef"><b>Definition:</b> loader_factory.h:33</div></div>
+<div class="ttc" id="aclassgs_1_1CSVFragmentLoader_html_a1c62b8bc69916aff8043570601b21a8b"><div class="ttname"><a href="classgs_1_1CSVFragmentLoader.html#a1c62b8bc69916aff8043570601b21a8b">gs::CSVFragmentLoader::Make</a></div><div class="ttdeci">static std::shared_ptr&lt; IFragmentLoader &gt; Make(const std::string &amp;work_dir, const Schema &amp;schema, const LoadingConfig &amp;loading_config, int32_t thread_num)</div><div class="ttdef"><b>Definition:</b> csv_fragment_loader.cc:231</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
 Generated by &#160;<a href="http://www.doxygen.org/index.html">

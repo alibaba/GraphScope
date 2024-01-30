@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 has-children"><a class="reference internal" href="dev_guide.html">GraphScope Interactive Development guide</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -685,11 +687,16 @@ MathJax = {
           <section class="tex2jax_ignore mathjax_ignore" id="data-import-configuration">
 <h1>Data Import Configuration<a class="headerlink" href="#data-import-configuration" title="Permalink to this heading">#</a></h1>
 <p>In our guide on <a class="reference internal" href="custom_graph_data.html"><span class="std std-doc">using custom graph data</span></a>, we introduced the basics of importing graph data using a simple YAML configuration. This section delves deeper, providing a thorough exploration of the extensive configuration options available for data import.</p>
+<section id="supported-data-source">
+<h2>Supported data source<a class="headerlink" href="#supported-data-source" title="Permalink to this heading">#</a></h2>
+<p>Currently we only support import data to graph from local <code class="docutils literal notranslate"><span class="pre">csv</span></code> files or <code class="docutils literal notranslate"><span class="pre">odps</span></code> table. See configuration <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.scheme</span></code>.</p>
+</section>
 <section id="sample-configuration-for-the-modern-graph">
 <h2>Sample Configuration for the “Modern” Graph<a class="headerlink" href="#sample-configuration-for-the-modern-graph" title="Permalink to this heading">#</a></h2>
 <p>To illustrate, let’s examine the <code class="docutils literal notranslate"><span class="pre">examples/modern_import_full.yaml</span></code> file. This configuration is designed for importing the “modern” graph and showcases the full range of configuration possibilities. We’ll dissect each configuration item in the sections that follow.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">loading_config</span><span class="p">:</span><span class="w"> </span>
 <span class="w">  </span><span class="nt">data_source</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">file</span>
 <span class="w">    </span><span class="nt">location</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/home/modern_graph/</span><span class="w"> </span>
 <span class="w">  </span><span class="nt">format</span><span class="p">:</span><span class="w"> </span>
 <span class="w">    </span><span class="nt">metadata</span><span class="p">:</span><span class="w"> </span>
@@ -803,177 +810,182 @@ MathJax = {
 <td><p>Path to the data source in the container, which must be mapped from the host machine while intializing the service</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format</p></td>
+<tr class="row-odd"><td><p>loading_config.scheme</p></td>
+<td><p>file</p></td>
+<td><p>The source of input data. Currently only <code class="docutils literal notranslate"><span class="pre">file</span></code> and <code class="docutils literal notranslate"><span class="pre">odps</span></code> are supported</p></td>
+<td><p>No</p></td>
+</tr>
+<tr class="row-even"><td><p>loading_config.format</p></td>
 <td><p>N/A</p></td>
 <td><p>The format of the raw data in CSV</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata</p></td>
 <td><p>N/A</p></td>
 <td><p>Mainly for configuring the options for reading CSV</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.delimiter</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.delimiter</p></td>
 <td><p>‘|’</p></td>
 <td><p>Delimiter used to split a row of data</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.header_row</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.header_row</p></td>
 <td><p>true</p></td>
 <td><p>Indicate if the first row should be used as the header</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.quoting</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.quoting</p></td>
 <td><p>false</p></td>
 <td><p>Whether quoting is used</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.quote_char</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.quote_char</p></td>
 <td><p>‘”’</p></td>
 <td><p>Quoting character (if <code class="docutils literal notranslate"><span class="pre">quoting</span></code> is true)</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.double_quote</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.double_quote</p></td>
 <td><p>true</p></td>
 <td><p>Whether a quote inside a value is double-quoted</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.escaping</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.escaping</p></td>
 <td><p>false</p></td>
 <td><p>Whether escaping is used</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>loading_config.format.metadata.escape_char</p></td>
+<tr class="row-even"><td><p>loading_config.format.metadata.escape_char</p></td>
 <td><p>‘\’</p></td>
 <td><p>Escaping character (if <code class="docutils literal notranslate"><span class="pre">escaping</span></code> is true)</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>loading_config.format.metadata.batch_size</p></td>
+<tr class="row-odd"><td><p>loading_config.format.metadata.batch_size</p></td>
 <td><p>4MB</p></td>
 <td><p>The size of batch for reading from files</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p></p></td>
+<tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><strong>vertex_mappings</strong></p></td>
+<tr class="row-odd"><td><p><strong>vertex_mappings</strong></p></td>
 <td><p>N/A</p></td>
 <td><p>Define how to map the raw data into a graph vertex in the schema</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.type_name</p></td>
+<tr class="row-even"><td><p>vertex_mappings.type_name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the vertex type</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.inputs</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.inputs</p></td>
 <td><p>N/A</p></td>
 <td><p>List of files containing raw data for the vertex type, relative to <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.location</span></code></p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.column_mappings</p></td>
+<tr class="row-even"><td><p>vertex_mappings.column_mappings</p></td>
 <td><p>The columns in the raw data will be automatically mapped to the properties, in given order</p></td>
 <td><p>Define which column of the vertex data maps to a given property</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.column_mappings.column.index</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.column_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>vertex_mappings.column_mappings.column.name</p></td>
+<tr class="row-even"><td><p>vertex_mappings.column_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>vertex_mappings.column_mappings.property</p></td>
+<tr class="row-odd"><td><p>vertex_mappings.column_mappings.property</p></td>
 <td><p>N/A</p></td>
 <td><p>Property in the schema to which the column maps.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p></p></td>
+<tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><strong>edge_mappings</strong></p></td>
+<tr class="row-odd"><td><p><strong>edge_mappings</strong></p></td>
 <td><p>N/A</p></td>
 <td><p>Define how to map the raw data into a graph edge in the schema</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.type_triplet</p></td>
+<tr class="row-even"><td><p>edge_mappings.type_triplet</p></td>
 <td><p>N/A</p></td>
 <td><p>A triplet that uniquely defines an edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.type_triplet.edge</p></td>
+<tr class="row-odd"><td><p>edge_mappings.type_triplet.edge</p></td>
 <td><p>N/A</p></td>
 <td><p>The type of the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.type_triplet.source_vertex</p></td>
+<tr class="row-even"><td><p>edge_mappings.type_triplet.source_vertex</p></td>
 <td><p>N/A</p></td>
 <td><p>Type of the source vertex for the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.type_triplet.destination_vertex</p></td>
+<tr class="row-odd"><td><p>edge_mappings.type_triplet.destination_vertex</p></td>
 <td><p>N/A</p></td>
 <td><p>Type of the destination vertex for the edge</p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.inputs</p></td>
+<tr class="row-even"><td><p>edge_mappings.inputs</p></td>
 <td><p>N/A</p></td>
 <td><p>List of files containing raw data for the edge type, relative to <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.location</span></code></p></td>
 <td><p>Yes</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings</p></td>
+<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings</p></td>
 <td><p>The first column of the edge data</p></td>
 <td><p>Define which columns of the edge data map to its source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings.column.index</p></td>
+<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data representing the source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.source_vertex_mappings.column.name</p></td>
+<tr class="row-odd"><td><p>edge_mappings.source_vertex_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data representing the source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings</p></td>
+<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings</p></td>
 <td><p>The second column of the edge data</p></td>
 <td><p>Define which columns of the edge data map to its source vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings.column.index</p></td>
+<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data representing the destination vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.destination_vertex_mappings.column.name</p></td>
+<tr class="row-even"><td><p>edge_mappings.destination_vertex_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data representing the destination vertex.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.column_mappings</p></td>
+<tr class="row-odd"><td><p>edge_mappings.column_mappings</p></td>
 <td><p>The columns in the raw data will be automatically mapped to the properties, in given order</p></td>
 <td><p>Define which column of the edge data maps to a given property.</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.column_mappings.column.index</p></td>
+<tr class="row-even"><td><p>edge_mappings.column_mappings.column.index</p></td>
 <td><p>N/A</p></td>
 <td><p>Index of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-even"><td><p>edge_mappings.column_mappings.column.name</p></td>
+<tr class="row-odd"><td><p>edge_mappings.column_mappings.column.name</p></td>
 <td><p>N/A</p></td>
 <td><p>Name of the column in the raw data</p></td>
 <td><p>No</p></td>
 </tr>
-<tr class="row-odd"><td><p>edge_mappings.column_mappings.property</p></td>
+<tr class="row-even"><td><p>edge_mappings.column_mappings.property</p></td>
 <td><p>N/A</p></td>
 <td><p>Property in the schema to which the column maps.</p></td>
 <td><p>No (but must present if column presents)</p></td>
@@ -1114,6 +1126,7 @@ MathJax = {
           <div class="toc-tree">
             <ul>
 <li><a class="reference internal" href="#">Data Import Configuration</a><ul>
+<li><a class="reference internal" href="#supported-data-source">Supported data source</a></li>
 <li><a class="reference internal" href="#sample-configuration-for-the-modern-graph">Sample Configuration for the “Modern” Graph</a></li>
 <li><a class="reference internal" href="#configuration-breakdown">Configuration Breakdown</a><ul>
 <li><a class="reference internal" href="#loading-configurations">Loading Configurations</a></li>

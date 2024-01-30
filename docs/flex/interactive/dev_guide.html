@@ -7,8 +7,8 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="flex/interactive/dev_guide.html" />
 <meta property="og:site_name" content="GraphScope" />
-<meta property="og:description" content="Users can develop C++ stored procedures and Cypher stored procedures based on GraphScope Interactive. Turning Cypher Queries into Stored Procedures with GraphScope Interactive- Crafting a Cypher St..." />
-<meta name="description" content="Users can develop C++ stored procedures and Cypher stored procedures based on GraphScope Interactive. Turning Cypher Queries into Stored Procedures with GraphScope Interactive- Crafting a Cypher St..." />
+<meta property="og:description" content="Users can develop C++ stored procedures and Cypher stored procedures based on GraphScope Interactive. Interactive also provides an Admin Service for managing graph data and stored procedures at run..." />
+<meta name="description" content="Users can develop C++ stored procedures and Cypher stored procedures based on GraphScope Interactive. Interactive also provides an Admin Service for managing graph data and stored procedures at run..." />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Turning Cypher Queries into Stored Procedures with GraphScope Interactive" href="development/cypher_procedure.html" /><link rel="prev" title="Data Import Configuration" href="data_import.html" />
 
     <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
@@ -245,9 +245,11 @@ MathJax = {
 <li class="toctree-l2 current has-children current-page"><a class="current reference internal" href="#">GraphScope Interactive Development guide</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of GraphScope Interactive Development guide</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a></li>
 <li class="toctree-l3"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html">GraphScope Interactive Admin Service Documentation</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -580,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -607,18 +621,6 @@ MathJax = {
               <dd><a href="../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -684,7 +686,8 @@ MathJax = {
         <article role="main">
           <section class="tex2jax_ignore mathjax_ignore" id="graphscope-interactive-development-guide">
 <h1>GraphScope Interactive Development guide<a class="headerlink" href="#graphscope-interactive-development-guide" title="Permalink to this heading">#</a></h1>
-<p>Users can develop C++ stored procedures and Cypher stored procedures based on <code class="docutils literal notranslate"><span class="pre">GraphScope</span> <span class="pre">Interactive</span></code>.</p>
+<p>Users can develop C++ stored procedures and Cypher stored procedures based on <code class="docutils literal notranslate"><span class="pre">GraphScope</span> <span class="pre">Interactive</span></code>.
+Interactive also provides an Admin Service for managing graph data and stored procedures at runtime, and it can also retrieve the running status of the service.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="development/cypher_procedure.html">Turning Cypher Queries into Stored Procedures with GraphScope Interactive</a><ul>
@@ -694,6 +697,117 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="development/cpp_procedure.html">Create c++ Stored Procedures on GraphScope Interactive</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/admin_service.html">GraphScope Interactive Admin Service Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/admin_service.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/admin_service.html#api-overview">API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/admin_service.html#detailed-api-documentation">Detailed API Documentation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#listgraphs-api-graphmanagement-category">ListGraphs API (GraphManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#description">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#http-request">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#curl-command-example">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#expected-response">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#status-codes">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#creategraph-graphmanagement-category">CreateGraph (GraphManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id1">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id2">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id3">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id4">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id5">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#deletegraph-graphmanagement-category">DeleteGraph  (GraphManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id6">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id7">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id8">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id9">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id10">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#getgraphschema-graphmanagement-category">GetGraphSchema  (GraphManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id11">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id12">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id13">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id14">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id15">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#importgraph-graphmanagement-category">ImportGraph  (GraphManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id16">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id17">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id18">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id19">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id20">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#createprocedure-proceduremanagement-category">CreateProcedure (ProcedureManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id21">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id22">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id23">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id24">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id25">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#listallprocedure-proceduremanagement-category">ListAllProcedure  (ProcedureManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id26">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id27">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id28">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id29">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id30">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#getprocedure-proceduremanagement-category">GetProcedure (ProcedureManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id31">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id32">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id33">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id34">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id35">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#updateprocedure-proceduremanagement-category">UpdateProcedure (ProcedureManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id36">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id37">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id38">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id39">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id40">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#deleteprocedure-proceduremanagement-category">DeleteProcedure (ProcedureManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id41">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id42">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id43">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id44">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id45">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#startservice-servicemanagement-category">StartService (ServiceManagement Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id46">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id47">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id48">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id49">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id50">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#servicestatus">ServiceStatus</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id51">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id52">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id53">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id54">Status Codes</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="development/admin_service.html#systemmetrics-nodemetrics-category">SystemMetrics (NodeMetrics Category)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id55">Description</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id56">HTTP Request</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id57">Curl Command Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id58">Expected Response</a></li>
+<li class="toctree-l4"><a class="reference internal" href="development/admin_service.html#id59">Status Codes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </div>
 </section>

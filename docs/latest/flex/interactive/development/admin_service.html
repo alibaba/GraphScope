@@ -11,7 +11,7 @@
 <meta name="description" content="Introduction: Welcome to the GraphScope Interactive Admin Service documentation. This guide is tailored for developers and administrators seeking to manage the Interactive service more efficiently...." />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="Glossary" href="../glossary.html" /><link rel="prev" title="Create c++ Stored Procedures on GraphScope Interactive" href="cpp_procedure.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.1.2 and Furo 2024.01.29 -->
         <title>GraphScope Interactive Admin Service Documentation - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
@@ -249,6 +249,7 @@ MathJax = {
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="../glossary.html">Glossary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../deployment.html">GraphScope Interactive Deployment</a></li>
 </ul>
 </li>
 </ul>
@@ -581,6 +582,18 @@ MathJax = {
         
           
             
+              <dd><a href="../../../../v0.26.0/index.html">
+                
+                  v0.26.0
+                
+              </a></dd>
+            
+          
+        
+      
+        
+          
+            
               <dd><a href="../../../../v0.25.0/index.html">
                 
                   v0.25.0
@@ -608,18 +621,6 @@ MathJax = {
               <dd><a href="../../../../v0.23.0/index.html">
                 
                   v0.23.0
-                
-              </a></dd>
-            
-          
-        
-      
-        
-          
-            
-              <dd><a href="../../../../v0.21.3/index.html">
-                
-                  v0.21.3
                 
               </a></dd>
             
@@ -691,94 +692,66 @@ MathJax = {
 </section>
 <section id="api-overview">
 <h2>API Overview<a class="headerlink" href="#api-overview" title="Permalink to this heading">#</a></h2>
-<p>The table below provides an overview of the available APIs, categorized for ease of understanding:</p>
+<p>The table below provides an overview of the available APIs:</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>Category</p></th>
-<th class="head"><p>API name</p></th>
-<th class="head"><p>Method</p></th>
-<th class="head"><p>URL</p></th>
+<tr class="row-odd"><th class="head"><p>API name</p></th>
+<th class="head"><p>Method and URL</p></th>
 <th class="head"><p>Explanation</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>GraphManagement</p></td>
-<td><p>ListGraphs</p></td>
-<td><p>GET</p></td>
-<td><p>/v1/graph</p></td>
+<tr class="row-even"><td><p>ListGraphs</p></td>
+<td><p>GET /v1/graph</p></td>
 <td><p>Get all graphs in current interactive service, the schema for each graph is returned.</p></td>
 </tr>
-<tr class="row-odd"><td><p>GraphManagement</p></td>
-<td><p>GetGraphSchema</p></td>
-<td><p>GET</p></td>
-<td><p>/v1/graph/{graph_name}/schema</p></td>
+<tr class="row-odd"><td><p>GetGraphSchema</p></td>
+<td><p>GET /v1/graph/{graph}/schema</p></td>
 <td><p>Get the schema for the specified graph.</p></td>
 </tr>
-<tr class="row-even"><td><p>GraphManagement</p></td>
-<td><p>CreateGraph</p></td>
-<td><p>POST</p></td>
-<td><p>/v1/graph</p></td>
+<tr class="row-even"><td><p>CreateGraph</p></td>
+<td><p>POST /v1/graph</p></td>
 <td><p>Create an empty graph with the specified schema.</p></td>
 </tr>
-<tr class="row-odd"><td><p>GraphManagement</p></td>
-<td><p>DeleteGraph</p></td>
-<td><p>DELETE</p></td>
-<td><p>/v1/graph/{graph_name}</p></td>
+<tr class="row-odd"><td><p>DeleteGraph</p></td>
+<td><p>DELETE /v1/graph/{graph}</p></td>
 <td><p>Delete the specified graph.</p></td>
 </tr>
-<tr class="row-even"><td><p>GraphManagement</p></td>
-<td><p>ImportGraph</p></td>
-<td><p>POST</p></td>
-<td><p>/v1/graph/{graph_name}/dataloading</p></td>
+<tr class="row-even"><td><p>ImportGraph</p></td>
+<td><p>POST /v1/graph/{graph}/dataloading</p></td>
 <td><p>Import data to graph.</p></td>
 </tr>
-<tr class="row-odd"><td><p>ProcedureManagement</p></td>
-<td><p>CreateProcedure</p></td>
-<td><p>POST</p></td>
-<td><p>/v1/graph/{graph_name}/procedure</p></td>
+<tr class="row-odd"><td><p>CreateProcedure</p></td>
+<td><p>POST /v1/graph/{graph}/procedure</p></td>
 <td><p>Create a new stored procedure bound to a graph.</p></td>
 </tr>
-<tr class="row-even"><td><p>ProcedureManagement</p></td>
-<td><p>ShowProcedures</p></td>
-<td><p>GET</p></td>
-<td><p>/v1/graph/{graph_name}/procedure</p></td>
+<tr class="row-even"><td><p>ShowProcedures</p></td>
+<td><p>GET /v1/graph/{graph}/procedure</p></td>
 <td><p>Get all procedures bound to the specified graph.</p></td>
 </tr>
-<tr class="row-odd"><td><p>ProcedureManagement</p></td>
-<td><p>GetProcedure</p></td>
-<td><p>GET</p></td>
-<td><p>/v1/graph/{graph_name}/procedure/{procedure_name}</p></td>
+<tr class="row-odd"><td><p>GetProcedure</p></td>
+<td><p>GET /v1/graph/{graph}/procedure/{proc_name}</p></td>
 <td><p>Get the metadata of the procedure.</p></td>
 </tr>
-<tr class="row-even"><td><p>ProcedureManagement</p></td>
-<td><p>DeleteProcedure</p></td>
-<td><p>DELETE</p></td>
-<td><p>/v1/graph/{graph_name}/procedure/{procedure_name}</p></td>
+<tr class="row-even"><td><p>DeleteProcedure</p></td>
+<td><p>DELETE /v1/graph/{graph}/procedure/{proc_name}</p></td>
 <td><p>Delete the specified procedure.</p></td>
 </tr>
-<tr class="row-odd"><td><p>ProcedureManagement</p></td>
-<td><p>UpdateProcedure</p></td>
-<td><p>PUT</p></td>
-<td><p>/v1/graph/{graph_name}/procedure/{procedure_name}</p></td>
+<tr class="row-odd"><td><p>UpdateProcedure</p></td>
+<td><p>PUT /v1/graph/{graph}/procedure/{proc_name}</p></td>
 <td><p>Update some metadata for the specified procedure, i.e. update description, enable/disable.</p></td>
 </tr>
-<tr class="row-even"><td><p>ServiceManagement</p></td>
-<td><p>StartService</p></td>
-<td><p>POST</p></td>
-<td><p>/v1/service/start</p></td>
+<tr class="row-even"><td><p>StartService</p></td>
+<td><p>POST /v1/service/start</p></td>
 <td><p>Start the service on the graph specified in request body.</p></td>
 </tr>
-<tr class="row-odd"><td><p>ServiceManagement</p></td>
-<td><p>ServiceStatus</p></td>
-<td><p>GET</p></td>
-<td><p>/v1/service/status</p></td>
+<tr class="row-odd"><td><p>ServiceStatus</p></td>
+<td><p>GET /v1/service/status</p></td>
 <td><p>Get current service status.</p></td>
 </tr>
 <tr class="row-even"><td><p>SystemMetrics</p></td>
-<td><p>SystemMetrics</p></td>
-<td><p>GET</p></td>
-<td><p>/v1/node/status</p></td>
+<td><p>GET /v1/node/status</p></td>
 <td><p>Get the system metrics of current host/pod, i.e. CPU usage, memory usages.</p></td>
 </tr>
 </tbody>
@@ -1799,7 +1772,22 @@ MathJax = {
 <h3>StartService (ServiceManagement Category)<a class="headerlink" href="#startservice-servicemanagement-category" title="Permalink to this heading">#</a></h3>
 <section id="id46">
 <h4>Description<a class="headerlink" href="#id46" title="Permalink to this heading">#</a></h4>
-<p>Start the query service on a graph.</p>
+<p>Start the query service on a graph. The <code class="docutils literal notranslate"><span class="pre">graph_name</span></code> param can be empty, indicating restarting on current running graph.</p>
+<ol class="arabic simple">
+<li><p>After the AdminService receives this request, the current actor scope for query actors will be cancelled.</p></li>
+<li><p>During the scope cancellation process of the query actors or after scope cancellation is completed, all requests sent to the query_service will fail and be rejected.
+The response of the http request will be like</p></li>
+</ol>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;code&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;message&quot;</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Unable to send message, the target actor has been canceled!&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>After the previous graph is closed and new graph is opened, the new query actors will be available in a new scope.</p></li>
+<li><p>The query service is now ready to serve requests on the new graph.</p></li>
+</ol>
 </section>
 <section id="id47">
 <h4>HTTP Request<a class="headerlink" href="#id47" title="Permalink to this heading">#</a></h4>
