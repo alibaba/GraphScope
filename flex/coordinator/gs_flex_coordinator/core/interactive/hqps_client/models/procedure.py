@@ -20,19 +20,37 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel
-from hiactor_client.models.edge_mapping_source_vertex_mappings_inner_column import EdgeMappingSourceVertexMappingsInnerColumn
+from pydantic import BaseModel, StrictBool, StrictStr, field_validator
+from hqps_client.models.procedure_params_inner import ProcedureParamsInner
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class EdgeMappingSourceVertexMappingsInner(BaseModel):
+class Procedure(BaseModel):
     """
-    Mapping column to the primary key of source vertex
+    Procedure
     """ # noqa: E501
-    column: Optional[EdgeMappingSourceVertexMappingsInnerColumn] = None
-    __properties: ClassVar[List[str]] = ["column"]
+    name: Optional[StrictStr] = None
+    bound_graph: Optional[StrictStr] = None
+    description: Optional[StrictStr] = None
+    type: Optional[StrictStr] = None
+    query: Optional[StrictStr] = None
+    enable: Optional[StrictBool] = None
+    runnable: Optional[StrictBool] = None
+    params: Optional[List[ProcedureParamsInner]] = None
+    returns: Optional[List[ProcedureParamsInner]] = None
+    __properties: ClassVar[List[str]] = ["name", "bound_graph", "description", "type", "query", "enable", "runnable", "params", "returns"]
+
+    @field_validator('type')
+    def type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in ('cpp', 'cypher'):
+            raise ValueError("must be one of enum values ('cpp', 'cypher')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -52,7 +70,7 @@ class EdgeMappingSourceVertexMappingsInner(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of EdgeMappingSourceVertexMappingsInner from a JSON string"""
+        """Create an instance of Procedure from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -71,14 +89,25 @@ class EdgeMappingSourceVertexMappingsInner(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of column
-        if self.column:
-            _dict['column'] = self.column.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of each item in params (list)
+        _items = []
+        if self.params:
+            for _item in self.params:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['params'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in returns (list)
+        _items = []
+        if self.returns:
+            for _item in self.returns:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['returns'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of EdgeMappingSourceVertexMappingsInner from a dict"""
+        """Create an instance of Procedure from a dict"""
         if obj is None:
             return None
 
@@ -86,7 +115,15 @@ class EdgeMappingSourceVertexMappingsInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "column": EdgeMappingSourceVertexMappingsInnerColumn.from_dict(obj.get("column")) if obj.get("column") is not None else None
+            "name": obj.get("name"),
+            "bound_graph": obj.get("bound_graph"),
+            "description": obj.get("description"),
+            "type": obj.get("type"),
+            "query": obj.get("query"),
+            "enable": obj.get("enable"),
+            "runnable": obj.get("runnable"),
+            "params": [ProcedureParamsInner.from_dict(_item) for _item in obj.get("params")] if obj.get("params") is not None else None,
+            "returns": [ProcedureParamsInner.from_dict(_item) for _item in obj.get("returns")] if obj.get("returns") is not None else None
         })
         return _obj
 

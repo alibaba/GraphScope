@@ -21,32 +21,30 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr, field_validator
-from pydantic import Field
-from hiactor_client.models.graph_stored_procedures import GraphStoredProcedures
-from hiactor_client.models.model_schema import ModelSchema
+from hqps_client.models.edge_type_vertex_type_pair_relations_inner_x_csr_params import EdgeTypeVertexTypePairRelationsInnerXCsrParams
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class Graph(BaseModel):
+class EdgeTypeVertexTypePairRelationsInner(BaseModel):
     """
-    Graph
+    EdgeTypeVertexTypePairRelationsInner
     """ # noqa: E501
-    name: Optional[StrictStr] = None
-    store_type: Optional[StrictStr] = None
-    stored_procedures: Optional[GraphStoredProcedures] = None
-    var_schema: Optional[ModelSchema] = Field(default=None, alias="schema")
-    __properties: ClassVar[List[str]] = ["name", "store_type", "stored_procedures", "schema"]
+    source_vertex: Optional[StrictStr] = None
+    destination_vertex: Optional[StrictStr] = None
+    relation: Optional[StrictStr] = None
+    x_csr_params: Optional[EdgeTypeVertexTypePairRelationsInnerXCsrParams] = None
+    __properties: ClassVar[List[str]] = ["source_vertex", "destination_vertex", "relation", "x_csr_params"]
 
-    @field_validator('store_type')
-    def store_type_validate_enum(cls, value):
+    @field_validator('relation')
+    def relation_validate_enum(cls, value):
         """Validates the enum"""
         if value is None:
             return value
 
-        if value not in ('mutable_csr'):
-            raise ValueError("must be one of enum values ('mutable_csr')")
+        if value not in ('MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE'):
+            raise ValueError("must be one of enum values ('MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE')")
         return value
 
     model_config = {
@@ -67,7 +65,7 @@ class Graph(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of Graph from a JSON string"""
+        """Create an instance of EdgeTypeVertexTypePairRelationsInner from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -86,17 +84,14 @@ class Graph(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of stored_procedures
-        if self.stored_procedures:
-            _dict['stored_procedures'] = self.stored_procedures.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of var_schema
-        if self.var_schema:
-            _dict['schema'] = self.var_schema.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of x_csr_params
+        if self.x_csr_params:
+            _dict['x_csr_params'] = self.x_csr_params.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of Graph from a dict"""
+        """Create an instance of EdgeTypeVertexTypePairRelationsInner from a dict"""
         if obj is None:
             return None
 
@@ -104,10 +99,10 @@ class Graph(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "name": obj.get("name"),
-            "store_type": obj.get("store_type"),
-            "stored_procedures": GraphStoredProcedures.from_dict(obj.get("stored_procedures")) if obj.get("stored_procedures") is not None else None,
-            "schema": ModelSchema.from_dict(obj.get("schema")) if obj.get("schema") is not None else None
+            "source_vertex": obj.get("source_vertex"),
+            "destination_vertex": obj.get("destination_vertex"),
+            "relation": obj.get("relation"),
+            "x_csr_params": EdgeTypeVertexTypePairRelationsInnerXCsrParams.from_dict(obj.get("x_csr_params")) if obj.get("x_csr_params") is not None else None
         })
         return _obj
 

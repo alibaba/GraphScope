@@ -26,11 +26,11 @@ except ImportError:
 
 from pydantic import StrictStr
 
-from hiactor_client.models.schema_mapping import SchemaMapping
+from hqps_client.models.schema_mapping import SchemaMapping
 
-from hiactor_client.api_client import ApiClient
-from hiactor_client.api_response import ApiResponse
-from hiactor_client.rest import RESTResponseType
+from hqps_client.api_client import ApiClient
+from hqps_client.api_response import ApiResponse
+from hqps_client.rest import RESTResponseType
 
 
 class DataloadingApi:

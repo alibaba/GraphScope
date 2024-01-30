@@ -20,21 +20,21 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictStr
-from pydantic import Field
-from hiactor_client.models.edge_mapping_source_vertex_mappings_inner_column import EdgeMappingSourceVertexMappingsInnerColumn
+from pydantic import BaseModel, StrictInt, StrictStr
+from hqps_client.models.property_property_type import PropertyPropertyType
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class ColumnMapping(BaseModel):
+class ModelProperty(BaseModel):
     """
-    ColumnMapping
+    ModelProperty
     """ # noqa: E501
-    column: Optional[EdgeMappingSourceVertexMappingsInnerColumn] = None
-    var_property: Optional[StrictStr] = Field(default=None, description="must align with the schema", alias="property")
-    __properties: ClassVar[List[str]] = ["column", "property"]
+    property_id: Optional[StrictInt] = None
+    property_name: Optional[StrictStr] = None
+    property_type: Optional[PropertyPropertyType] = None
+    __properties: ClassVar[List[str]] = ["property_id", "property_name", "property_type"]
 
     model_config = {
         "populate_by_name": True,
@@ -54,7 +54,7 @@ class ColumnMapping(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of ColumnMapping from a JSON string"""
+        """Create an instance of ModelProperty from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,14 +73,14 @@ class ColumnMapping(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of column
-        if self.column:
-            _dict['column'] = self.column.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of property_type
+        if self.property_type:
+            _dict['property_type'] = self.property_type.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of ColumnMapping from a dict"""
+        """Create an instance of ModelProperty from a dict"""
         if obj is None:
             return None
 
@@ -88,8 +88,9 @@ class ColumnMapping(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "column": EdgeMappingSourceVertexMappingsInnerColumn.from_dict(obj.get("column")) if obj.get("column") is not None else None,
-            "property": obj.get("property")
+            "property_id": obj.get("property_id"),
+            "property_name": obj.get("property_name"),
+            "property_type": PropertyPropertyType.from_dict(obj.get("property_type")) if obj.get("property_type") is not None else None
         })
         return _obj
 

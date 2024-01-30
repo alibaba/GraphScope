@@ -28,11 +28,11 @@ from pydantic import StrictStr
 
 from typing import List, Optional
 
-from hiactor_client.models.procedure import Procedure
+from hqps_client.models.procedure import Procedure
 
-from hiactor_client.api_client import ApiClient
-from hiactor_client.api_response import ApiResponse
-from hiactor_client.rest import RESTResponseType
+from hqps_client.api_client import ApiClient
+from hqps_client.api_response import ApiResponse
+from hqps_client.rest import RESTResponseType
 
 
 class ProcedureApi:

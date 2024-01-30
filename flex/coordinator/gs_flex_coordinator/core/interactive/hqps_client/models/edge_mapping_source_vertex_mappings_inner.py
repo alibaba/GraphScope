@@ -20,32 +20,19 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictStr, field_validator
-from hiactor_client.models.schema_mapping_loading_config_data_source import SchemaMappingLoadingConfigDataSource
-from hiactor_client.models.schema_mapping_loading_config_format import SchemaMappingLoadingConfigFormat
+from pydantic import BaseModel
+from hqps_client.models.edge_mapping_source_vertex_mappings_inner_column import EdgeMappingSourceVertexMappingsInnerColumn
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class SchemaMappingLoadingConfig(BaseModel):
+class EdgeMappingSourceVertexMappingsInner(BaseModel):
     """
-    SchemaMappingLoadingConfig
+    Mapping column to the primary key of source vertex
     """ # noqa: E501
-    data_source: Optional[SchemaMappingLoadingConfigDataSource] = None
-    import_option: Optional[StrictStr] = None
-    format: Optional[SchemaMappingLoadingConfigFormat] = None
-    __properties: ClassVar[List[str]] = ["data_source", "import_option", "format"]
-
-    @field_validator('import_option')
-    def import_option_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in ('init', 'overwrite'):
-            raise ValueError("must be one of enum values ('init', 'overwrite')")
-        return value
+    column: Optional[EdgeMappingSourceVertexMappingsInnerColumn] = None
+    __properties: ClassVar[List[str]] = ["column"]
 
     model_config = {
         "populate_by_name": True,
@@ -65,7 +52,7 @@ class SchemaMappingLoadingConfig(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of SchemaMappingLoadingConfig from a JSON string"""
+        """Create an instance of EdgeMappingSourceVertexMappingsInner from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -84,17 +71,14 @@ class SchemaMappingLoadingConfig(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of data_source
-        if self.data_source:
-            _dict['data_source'] = self.data_source.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of format
-        if self.format:
-            _dict['format'] = self.format.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of column
+        if self.column:
+            _dict['column'] = self.column.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of SchemaMappingLoadingConfig from a dict"""
+        """Create an instance of EdgeMappingSourceVertexMappingsInner from a dict"""
         if obj is None:
             return None
 
@@ -102,9 +86,7 @@ class SchemaMappingLoadingConfig(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "data_source": SchemaMappingLoadingConfigDataSource.from_dict(obj.get("data_source")) if obj.get("data_source") is not None else None,
-            "import_option": obj.get("import_option"),
-            "format": SchemaMappingLoadingConfigFormat.from_dict(obj.get("format")) if obj.get("format") is not None else None
+            "column": EdgeMappingSourceVertexMappingsInnerColumn.from_dict(obj.get("column")) if obj.get("column") is not None else None
         })
         return _obj
 

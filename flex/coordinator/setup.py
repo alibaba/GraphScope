@@ -84,7 +84,7 @@ class GenerateInteractiveSDK(Command):
         if os.path.exists(tempdir):
             shutil.rmtree(tempdir)
         targetdir = os.path.join(
-            pkg_root, "gs_flex_coordinator", "core", "interactive", "hiactor_client"
+            pkg_root, "gs_flex_coordinator", "core", "interactive", "hqps_client"
         )
         if os.path.exists(targetdir):
             shutil.rmtree(targetdir)
@@ -102,7 +102,7 @@ class GenerateInteractiveSDK(Command):
             "-o",
             str(tempdir),
             "--package-name",
-            "hiactor_client",
+            "hqps_client",
         ]
         print(" ".join(cmd))
         subprocess.check_call(
@@ -110,7 +110,7 @@ class GenerateInteractiveSDK(Command):
             env=os.environ.copy(),
         )
         # cp
-        subprocess.run(["cp", "-r", os.path.join(tempdir, "hiactor_client"), targetdir])
+        subprocess.run(["cp", "-r", os.path.join(tempdir, "hqps_client"), targetdir])
 
 
 setup(

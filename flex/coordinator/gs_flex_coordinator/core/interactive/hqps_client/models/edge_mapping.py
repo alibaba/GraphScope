@@ -21,10 +21,10 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr
-from hiactor_client.models.column_mapping import ColumnMapping
-from hiactor_client.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner
-from hiactor_client.models.edge_mapping_source_vertex_mappings_inner import EdgeMappingSourceVertexMappingsInner
-from hiactor_client.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
+from hqps_client.models.column_mapping import ColumnMapping
+from hqps_client.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner
+from hqps_client.models.edge_mapping_source_vertex_mappings_inner import EdgeMappingSourceVertexMappingsInner
+from hqps_client.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
 try:
     from typing import Self
 except ImportError:

@@ -20,32 +20,21 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictStr, field_validator
-from hiactor_client.models.edge_type_vertex_type_pair_relations_inner_x_csr_params import EdgeTypeVertexTypePairRelationsInnerXCsrParams
+from pydantic import BaseModel
+from hqps_client.models.edge_type import EdgeType
+from hqps_client.models.vertex_type import VertexType
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class EdgeTypeVertexTypePairRelationsInner(BaseModel):
+class ModelSchema(BaseModel):
     """
-    EdgeTypeVertexTypePairRelationsInner
+    ModelSchema
     """ # noqa: E501
-    source_vertex: Optional[StrictStr] = None
-    destination_vertex: Optional[StrictStr] = None
-    relation: Optional[StrictStr] = None
-    x_csr_params: Optional[EdgeTypeVertexTypePairRelationsInnerXCsrParams] = None
-    __properties: ClassVar[List[str]] = ["source_vertex", "destination_vertex", "relation", "x_csr_params"]
-
-    @field_validator('relation')
-    def relation_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in ('MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE'):
-            raise ValueError("must be one of enum values ('MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE')")
-        return value
+    vertex_types: Optional[List[VertexType]] = None
+    edge_types: Optional[List[EdgeType]] = None
+    __properties: ClassVar[List[str]] = ["vertex_types", "edge_types"]
 
     model_config = {
         "populate_by_name": True,
@@ -65,7 +54,7 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of EdgeTypeVertexTypePairRelationsInner from a JSON string"""
+        """Create an instance of ModelSchema from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -84,14 +73,25 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of x_csr_params
-        if self.x_csr_params:
-            _dict['x_csr_params'] = self.x_csr_params.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of each item in vertex_types (list)
+        _items = []
+        if self.vertex_types:
+            for _item in self.vertex_types:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['vertex_types'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in edge_types (list)
+        _items = []
+        if self.edge_types:
+            for _item in self.edge_types:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['edge_types'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of EdgeTypeVertexTypePairRelationsInner from a dict"""
+        """Create an instance of ModelSchema from a dict"""
         if obj is None:
             return None
 
@@ -99,10 +99,8 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "source_vertex": obj.get("source_vertex"),
-            "destination_vertex": obj.get("destination_vertex"),
-            "relation": obj.get("relation"),
-            "x_csr_params": EdgeTypeVertexTypePairRelationsInnerXCsrParams.from_dict(obj.get("x_csr_params")) if obj.get("x_csr_params") is not None else None
+            "vertex_types": [VertexType.from_dict(_item) for _item in obj.get("vertex_types")] if obj.get("vertex_types") is not None else None,
+            "edge_types": [EdgeType.from_dict(_item) for _item in obj.get("edge_types")] if obj.get("edge_types") is not None else None
         })
         return _obj
 

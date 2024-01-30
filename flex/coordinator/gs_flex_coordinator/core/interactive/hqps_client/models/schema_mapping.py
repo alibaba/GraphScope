@@ -20,37 +20,24 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictBool, StrictStr, field_validator
-from hiactor_client.models.procedure_params_inner import ProcedureParamsInner
+from pydantic import BaseModel, StrictStr
+from hqps_client.models.edge_mapping import EdgeMapping
+from hqps_client.models.schema_mapping_loading_config import SchemaMappingLoadingConfig
+from hqps_client.models.vertex_mapping import VertexMapping
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class Procedure(BaseModel):
+class SchemaMapping(BaseModel):
     """
-    Procedure
+    SchemaMapping
     """ # noqa: E501
-    name: Optional[StrictStr] = None
-    bound_graph: Optional[StrictStr] = None
-    description: Optional[StrictStr] = None
-    type: Optional[StrictStr] = None
-    query: Optional[StrictStr] = None
-    enable: Optional[StrictBool] = None
-    runnable: Optional[StrictBool] = None
-    params: Optional[List[ProcedureParamsInner]] = None
-    returns: Optional[List[ProcedureParamsInner]] = None
-    __properties: ClassVar[List[str]] = ["name", "bound_graph", "description", "type", "query", "enable", "runnable", "params", "returns"]
-
-    @field_validator('type')
-    def type_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in ('cpp', 'cypher'):
-            raise ValueError("must be one of enum values ('cpp', 'cypher')")
-        return value
+    graph: Optional[StrictStr] = None
+    loading_config: Optional[SchemaMappingLoadingConfig] = None
+    vertex_mappings: Optional[List[VertexMapping]] = None
+    edge_mappings: Optional[List[EdgeMapping]] = None
+    __properties: ClassVar[List[str]] = ["graph", "loading_config", "vertex_mappings", "edge_mappings"]
 
     model_config = {
         "populate_by_name": True,
@@ -70,7 +57,7 @@ class Procedure(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of Procedure from a JSON string"""
+        """Create an instance of SchemaMapping from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -89,25 +76,28 @@ class Procedure(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in params (list)
+        # override the default output from pydantic by calling `to_dict()` of loading_config
+        if self.loading_config:
+            _dict['loading_config'] = self.loading_config.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of each item in vertex_mappings (list)
         _items = []
-        if self.params:
-            for _item in self.params:
+        if self.vertex_mappings:
+            for _item in self.vertex_mappings:
                 if _item:
                     _items.append(_item.to_dict())
-            _dict['params'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in returns (list)
+            _dict['vertex_mappings'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in edge_mappings (list)
         _items = []
-        if self.returns:
-            for _item in self.returns:
+        if self.edge_mappings:
+            for _item in self.edge_mappings:
                 if _item:
                     _items.append(_item.to_dict())
-            _dict['returns'] = _items
+            _dict['edge_mappings'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of Procedure from a dict"""
+        """Create an instance of SchemaMapping from a dict"""
         if obj is None:
             return None
 
@@ -115,15 +105,10 @@ class Procedure(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "name": obj.get("name"),
-            "bound_graph": obj.get("bound_graph"),
-            "description": obj.get("description"),
-            "type": obj.get("type"),
-            "query": obj.get("query"),
-            "enable": obj.get("enable"),
-            "runnable": obj.get("runnable"),
-            "params": [ProcedureParamsInner.from_dict(_item) for _item in obj.get("params")] if obj.get("params") is not None else None,
-            "returns": [ProcedureParamsInner.from_dict(_item) for _item in obj.get("returns")] if obj.get("returns") is not None else None
+            "graph": obj.get("graph"),
+            "loading_config": SchemaMappingLoadingConfig.from_dict(obj.get("loading_config")) if obj.get("loading_config") is not None else None,
+            "vertex_mappings": [VertexMapping.from_dict(_item) for _item in obj.get("vertex_mappings")] if obj.get("vertex_mappings") is not None else None,
+            "edge_mappings": [EdgeMapping.from_dict(_item) for _item in obj.get("edge_mappings")] if obj.get("edge_mappings") is not None else None
         })
         return _obj
 

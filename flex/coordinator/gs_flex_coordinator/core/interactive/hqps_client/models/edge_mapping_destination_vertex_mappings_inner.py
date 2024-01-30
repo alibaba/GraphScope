@@ -20,22 +20,19 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictInt, StrictStr
-from hiactor_client.models.model_property import ModelProperty
+from pydantic import BaseModel
+from hqps_client.models.edge_mapping_source_vertex_mappings_inner_column import EdgeMappingSourceVertexMappingsInnerColumn
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class VertexType(BaseModel):
+class EdgeMappingDestinationVertexMappingsInner(BaseModel):
     """
-    VertexType
+    Mapping column to the primary key of destination vertex
     """ # noqa: E501
-    type_id: Optional[StrictInt] = None
-    type_name: Optional[StrictStr] = None
-    properties: Optional[List[ModelProperty]] = None
-    primary_keys: Optional[List[StrictStr]] = None
-    __properties: ClassVar[List[str]] = ["type_id", "type_name", "properties", "primary_keys"]
+    column: Optional[EdgeMappingSourceVertexMappingsInnerColumn] = None
+    __properties: ClassVar[List[str]] = ["column"]
 
     model_config = {
         "populate_by_name": True,
@@ -55,7 +52,7 @@ class VertexType(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of VertexType from a JSON string"""
+        """Create an instance of EdgeMappingDestinationVertexMappingsInner from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -74,18 +71,14 @@ class VertexType(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in properties (list)
-        _items = []
-        if self.properties:
-            for _item in self.properties:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['properties'] = _items
+        # override the default output from pydantic by calling `to_dict()` of column
+        if self.column:
+            _dict['column'] = self.column.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of VertexType from a dict"""
+        """Create an instance of EdgeMappingDestinationVertexMappingsInner from a dict"""
         if obj is None:
             return None
 
@@ -93,10 +86,7 @@ class VertexType(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "type_id": obj.get("type_id"),
-            "type_name": obj.get("type_name"),
-            "properties": [ModelProperty.from_dict(_item) for _item in obj.get("properties")] if obj.get("properties") is not None else None,
-            "primary_keys": obj.get("primary_keys")
+            "column": EdgeMappingSourceVertexMappingsInnerColumn.from_dict(obj.get("column")) if obj.get("column") is not None else None
         })
         return _obj
 

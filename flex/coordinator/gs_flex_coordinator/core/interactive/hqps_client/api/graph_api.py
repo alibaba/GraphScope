@@ -28,12 +28,12 @@ from pydantic import StrictStr
 
 from typing import List
 
-from hiactor_client.models.graph import Graph
-from hiactor_client.models.model_schema import ModelSchema
+from hqps_client.models.graph import Graph
+from hqps_client.models.model_schema import ModelSchema
 
-from hiactor_client.api_client import ApiClient
-from hiactor_client.api_response import ApiResponse
-from hiactor_client.rest import RESTResponseType
+from hqps_client.api_client import ApiClient
+from hqps_client.api_response import ApiResponse
+from hqps_client.rest import RESTResponseType
 
 
 class GraphApi:

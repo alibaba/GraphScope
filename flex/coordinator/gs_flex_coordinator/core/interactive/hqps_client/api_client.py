@@ -25,11 +25,11 @@ import tempfile
 from urllib.parse import quote
 from typing import Tuple, Optional, List
 
-from hiactor_client.configuration import Configuration
-from hiactor_client.api_response import ApiResponse
-import hiactor_client.models
-from hiactor_client import rest
-from hiactor_client.exceptions import (
+from hqps_client.configuration import Configuration
+from hqps_client.api_response import ApiResponse
+import hqps_client.models
+from hqps_client import rest
+from hqps_client.exceptions import (
     ApiValueError,
     ApiException,
     BadRequestException,
@@ -416,7 +416,7 @@ class ApiClient:
             if klass in self.NATIVE_TYPES_MAPPING:
                 klass = self.NATIVE_TYPES_MAPPING[klass]
             else:
-                klass = getattr(hiactor_client.models, klass)
+                klass = getattr(hqps_client.models, klass)
 
         if klass in self.PRIMITIVE_TYPES:
             return self.__deserialize_primitive(data, klass)

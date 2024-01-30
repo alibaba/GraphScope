@@ -20,21 +20,22 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictStr
-from hiactor_client.models.column_mapping import ColumnMapping
+from pydantic import BaseModel, StrictInt, StrictStr
+from hqps_client.models.model_property import ModelProperty
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class VertexMapping(BaseModel):
+class VertexType(BaseModel):
     """
-    VertexMapping
+    VertexType
     """ # noqa: E501
+    type_id: Optional[StrictInt] = None
     type_name: Optional[StrictStr] = None
-    inputs: Optional[List[StrictStr]] = None
-    column_mappings: Optional[List[ColumnMapping]] = None
-    __properties: ClassVar[List[str]] = ["type_name", "inputs", "column_mappings"]
+    properties: Optional[List[ModelProperty]] = None
+    primary_keys: Optional[List[StrictStr]] = None
+    __properties: ClassVar[List[str]] = ["type_id", "type_name", "properties", "primary_keys"]
 
     model_config = {
         "populate_by_name": True,
@@ -54,7 +55,7 @@ class VertexMapping(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of VertexMapping from a JSON string"""
+        """Create an instance of VertexType from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,18 +74,18 @@ class VertexMapping(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in column_mappings (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in properties (list)
         _items = []
-        if self.column_mappings:
-            for _item in self.column_mappings:
+        if self.properties:
+            for _item in self.properties:
                 if _item:
                     _items.append(_item.to_dict())
-            _dict['column_mappings'] = _items
+            _dict['properties'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of VertexMapping from a dict"""
+        """Create an instance of VertexType from a dict"""
         if obj is None:
             return None
 
@@ -92,9 +93,10 @@ class VertexMapping(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "type_id": obj.get("type_id"),
             "type_name": obj.get("type_name"),
-            "inputs": obj.get("inputs"),
-            "column_mappings": [ColumnMapping.from_dict(_item) for _item in obj.get("column_mappings")] if obj.get("column_mappings") is not None else None
+            "properties": [ModelProperty.from_dict(_item) for _item in obj.get("properties")] if obj.get("properties") is not None else None,
+            "primary_keys": obj.get("primary_keys")
         })
         return _obj
 

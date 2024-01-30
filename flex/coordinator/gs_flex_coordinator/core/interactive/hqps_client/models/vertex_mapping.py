@@ -20,21 +20,21 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel
-from hiactor_client.models.edge_type import EdgeType
-from hiactor_client.models.vertex_type import VertexType
+from pydantic import BaseModel, StrictStr
+from hqps_client.models.column_mapping import ColumnMapping
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class ModelSchema(BaseModel):
+class VertexMapping(BaseModel):
     """
-    ModelSchema
+    VertexMapping
     """ # noqa: E501
-    vertex_types: Optional[List[VertexType]] = None
-    edge_types: Optional[List[EdgeType]] = None
-    __properties: ClassVar[List[str]] = ["vertex_types", "edge_types"]
+    type_name: Optional[StrictStr] = None
+    inputs: Optional[List[StrictStr]] = None
+    column_mappings: Optional[List[ColumnMapping]] = None
+    __properties: ClassVar[List[str]] = ["type_name", "inputs", "column_mappings"]
 
     model_config = {
         "populate_by_name": True,
@@ -54,7 +54,7 @@ class ModelSchema(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of ModelSchema from a JSON string"""
+        """Create an instance of VertexMapping from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,25 +73,18 @@ class ModelSchema(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in vertex_types (list)
+        # override the default output from pydantic by calling `to_dict()` of each item in column_mappings (list)
         _items = []
-        if self.vertex_types:
-            for _item in self.vertex_types:
+        if self.column_mappings:
+            for _item in self.column_mappings:
                 if _item:
                     _items.append(_item.to_dict())
-            _dict['vertex_types'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in edge_types (list)
-        _items = []
-        if self.edge_types:
-            for _item in self.edge_types:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['edge_types'] = _items
+            _dict['column_mappings'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of ModelSchema from a dict"""
+        """Create an instance of VertexMapping from a dict"""
         if obj is None:
             return None
 
@@ -99,8 +92,9 @@ class ModelSchema(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "vertex_types": [VertexType.from_dict(_item) for _item in obj.get("vertex_types")] if obj.get("vertex_types") is not None else None,
-            "edge_types": [EdgeType.from_dict(_item) for _item in obj.get("edge_types")] if obj.get("edge_types") is not None else None
+            "type_name": obj.get("type_name"),
+            "inputs": obj.get("inputs"),
+            "column_mappings": [ColumnMapping.from_dict(_item) for _item in obj.get("column_mappings")] if obj.get("column_mappings") is not None else None
         })
         return _obj
 

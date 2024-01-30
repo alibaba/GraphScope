@@ -78,4 +78,4 @@ CLUSTER_TYPE = os.environ.get("CLUSTER_TYPE", "HOSTS")
 
 
 # interactive configuration
-HIACTOR_ADMIN_SERVICE_PORT = os.environ.get("HIACTOR_ADMIN_SERVICE_PORT", 7777)
+HQPS_ADMIN_SERVICE_PORT = os.environ.get("HIACTOR_ADMIN_SERVICE_PORT", 7777)

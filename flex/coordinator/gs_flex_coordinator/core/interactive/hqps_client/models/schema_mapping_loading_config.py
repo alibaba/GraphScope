@@ -20,24 +20,32 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictStr
-from hiactor_client.models.edge_mapping import EdgeMapping
-from hiactor_client.models.schema_mapping_loading_config import SchemaMappingLoadingConfig
-from hiactor_client.models.vertex_mapping import VertexMapping
+from pydantic import BaseModel, StrictStr, field_validator
+from hqps_client.models.schema_mapping_loading_config_data_source import SchemaMappingLoadingConfigDataSource
+from hqps_client.models.schema_mapping_loading_config_format import SchemaMappingLoadingConfigFormat
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class SchemaMapping(BaseModel):
+class SchemaMappingLoadingConfig(BaseModel):
     """
-    SchemaMapping
+    SchemaMappingLoadingConfig
     """ # noqa: E501
-    graph: Optional[StrictStr] = None
-    loading_config: Optional[SchemaMappingLoadingConfig] = None
-    vertex_mappings: Optional[List[VertexMapping]] = None
-    edge_mappings: Optional[List[EdgeMapping]] = None
-    __properties: ClassVar[List[str]] = ["graph", "loading_config", "vertex_mappings", "edge_mappings"]
+    data_source: Optional[SchemaMappingLoadingConfigDataSource] = None
+    import_option: Optional[StrictStr] = None
+    format: Optional[SchemaMappingLoadingConfigFormat] = None
+    __properties: ClassVar[List[str]] = ["data_source", "import_option", "format"]
+
+    @field_validator('import_option')
+    def import_option_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in ('init', 'overwrite'):
+            raise ValueError("must be one of enum values ('init', 'overwrite')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -57,7 +65,7 @@ class SchemaMapping(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of SchemaMapping from a JSON string"""
+        """Create an instance of SchemaMappingLoadingConfig from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -76,28 +84,17 @@ class SchemaMapping(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of loading_config
-        if self.loading_config:
-            _dict['loading_config'] = self.loading_config.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of each item in vertex_mappings (list)
-        _items = []
-        if self.vertex_mappings:
-            for _item in self.vertex_mappings:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['vertex_mappings'] = _items
-        # override the default output from pydantic by calling `to_dict()` of each item in edge_mappings (list)
-        _items = []
-        if self.edge_mappings:
-            for _item in self.edge_mappings:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['edge_mappings'] = _items
+        # override the default output from pydantic by calling `to_dict()` of data_source
+        if self.data_source:
+            _dict['data_source'] = self.data_source.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of format
+        if self.format:
+            _dict['format'] = self.format.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of SchemaMapping from a dict"""
+        """Create an instance of SchemaMappingLoadingConfig from a dict"""
         if obj is None:
             return None
 
@@ -105,10 +102,9 @@ class SchemaMapping(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "graph": obj.get("graph"),
-            "loading_config": SchemaMappingLoadingConfig.from_dict(obj.get("loading_config")) if obj.get("loading_config") is not None else None,
-            "vertex_mappings": [VertexMapping.from_dict(_item) for _item in obj.get("vertex_mappings")] if obj.get("vertex_mappings") is not None else None,
-            "edge_mappings": [EdgeMapping.from_dict(_item) for _item in obj.get("edge_mappings")] if obj.get("edge_mappings") is not None else None
+            "data_source": SchemaMappingLoadingConfigDataSource.from_dict(obj.get("data_source")) if obj.get("data_source") is not None else None,
+            "import_option": obj.get("import_option"),
+            "format": SchemaMappingLoadingConfigFormat.from_dict(obj.get("format")) if obj.get("format") is not None else None
         })
         return _obj
 

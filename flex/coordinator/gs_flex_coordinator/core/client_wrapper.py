@@ -23,12 +23,17 @@ import threading
 from typing import List, Union
 
 import psutil
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE, INSTANCE_NAME,
-                                             SOLUTION)
-from gs_flex_coordinator.core.interactive import init_hiactor_client
-from gs_flex_coordinator.models import (DeploymentInfo, Graph, ModelSchema,
-                                        NodeStatus, Procedure, ServiceStatus,
-                                        StartServiceRequest)
+from gs_flex_coordinator.core.config import CLUSTER_TYPE, INSTANCE_NAME, SOLUTION
+from gs_flex_coordinator.core.interactive import init_hqps_client
+from gs_flex_coordinator.models import (
+    DeploymentInfo,
+    Graph,
+    ModelSchema,
+    NodeStatus,
+    Procedure,
+    ServiceStatus,
+    StartServiceRequest,
+)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -44,7 +49,7 @@ class ClientWrapper(object):
         self._client = self._initialize_client()
 
     def _initialize_client(self):
-        service_initializer = {"INTERACTIVE": init_hiactor_client}
+        service_initializer = {"INTERACTIVE": init_hqps_client}
         initializer = service_initializer.get(SOLUTION)
         if initializer is None:
             raise RuntimeError(

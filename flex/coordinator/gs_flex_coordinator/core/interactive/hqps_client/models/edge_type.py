@@ -21,8 +21,8 @@ import json
 
 from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictInt, StrictStr
-from hiactor_client.models.edge_type_vertex_type_pair_relations_inner import EdgeTypeVertexTypePairRelationsInner
-from hiactor_client.models.model_property import ModelProperty
+from hqps_client.models.edge_type_vertex_type_pair_relations_inner import EdgeTypeVertexTypePairRelationsInner
+from hqps_client.models.model_property import ModelProperty
 try:
     from typing import Self
 except ImportError:

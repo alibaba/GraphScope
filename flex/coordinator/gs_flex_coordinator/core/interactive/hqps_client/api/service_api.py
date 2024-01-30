@@ -28,12 +28,12 @@ from pydantic import Field
 from typing_extensions import Annotated
 from typing import Optional
 
-from hiactor_client.models.service import Service
-from hiactor_client.models.service_status import ServiceStatus
+from hqps_client.models.service import Service
+from hqps_client.models.service_status import ServiceStatus
 
-from hiactor_client.api_client import ApiClient
-from hiactor_client.api_response import ApiResponse
-from hiactor_client.rest import RESTResponseType
+from hqps_client.api_client import ApiClient
+from hqps_client.api_response import ApiResponse
+from hqps_client.rest import RESTResponseType
 
 
 class ServiceApi:

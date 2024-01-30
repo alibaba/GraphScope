@@ -20,19 +20,34 @@ import json
 
 
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel
-from hiactor_client.models.edge_mapping_source_vertex_mappings_inner_column import EdgeMappingSourceVertexMappingsInnerColumn
+from pydantic import BaseModel, StrictStr, field_validator
+from pydantic import Field
+from hqps_client.models.graph_stored_procedures import GraphStoredProcedures
+from hqps_client.models.model_schema import ModelSchema
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
-class EdgeMappingDestinationVertexMappingsInner(BaseModel):
+class Graph(BaseModel):
     """
-    Mapping column to the primary key of destination vertex
+    Graph
     """ # noqa: E501
-    column: Optional[EdgeMappingSourceVertexMappingsInnerColumn] = None
-    __properties: ClassVar[List[str]] = ["column"]
+    name: Optional[StrictStr] = None
+    store_type: Optional[StrictStr] = None
+    stored_procedures: Optional[GraphStoredProcedures] = None
+    var_schema: Optional[ModelSchema] = Field(default=None, alias="schema")
+    __properties: ClassVar[List[str]] = ["name", "store_type", "stored_procedures", "schema"]
+
+    @field_validator('store_type')
+    def store_type_validate_enum(cls, value):
+        """Validates the enum"""
+        if value is None:
+            return value
+
+        if value not in ('mutable_csr'):
+            raise ValueError("must be one of enum values ('mutable_csr')")
+        return value
 
     model_config = {
         "populate_by_name": True,
@@ -52,7 +67,7 @@ class EdgeMappingDestinationVertexMappingsInner(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of EdgeMappingDestinationVertexMappingsInner from a JSON string"""
+        """Create an instance of Graph from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -71,14 +86,17 @@ class EdgeMappingDestinationVertexMappingsInner(BaseModel):
             },
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of column
-        if self.column:
-            _dict['column'] = self.column.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of stored_procedures
+        if self.stored_procedures:
+            _dict['stored_procedures'] = self.stored_procedures.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of var_schema
+        if self.var_schema:
+            _dict['schema'] = self.var_schema.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of EdgeMappingDestinationVertexMappingsInner from a dict"""
+        """Create an instance of Graph from a dict"""
         if obj is None:
             return None
 
@@ -86,7 +104,10 @@ class EdgeMappingDestinationVertexMappingsInner(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "column": EdgeMappingSourceVertexMappingsInnerColumn.from_dict(obj.get("column")) if obj.get("column") is not None else None
+            "name": obj.get("name"),
+            "store_type": obj.get("store_type"),
+            "stored_procedures": GraphStoredProcedures.from_dict(obj.get("stored_procedures")) if obj.get("stored_procedures") is not None else None,
+            "schema": ModelSchema.from_dict(obj.get("schema")) if obj.get("schema") is not None else None
         })
         return _obj
 
