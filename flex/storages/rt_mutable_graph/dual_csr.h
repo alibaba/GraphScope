@@ -20,6 +20,7 @@
 
 #include <grape/serialization/in_archive.h>
 #include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/immutable_csr.h"
 #include "flex/utils/allocators.h"
 
 namespace gs {
@@ -64,21 +65,29 @@ class DualCsrBase {
 template <typename EDATA_T>
 class DualCsr : public DualCsrBase {
  public:
-  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy)
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, bool oe_mutable, bool ie_mutable)
       : in_csr_(nullptr), out_csr_(nullptr) {
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<EDATA_T>();
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
       in_csr_ = new MutableCsr<EDATA_T>();
     } else if (ie_strategy == EdgeStrategy::kSingle) {
-      in_csr_ = new SingleMutableCsr<EDATA_T>();
+      if (ie_mutable) {
+        in_csr_ = new SingleMutableCsr<EDATA_T>();
+      } else {
+        in_csr_ = new SingleImmutableCsr<EDATA_T>();
+      }
     }
     if (oe_strategy == EdgeStrategy::kNone) {
       out_csr_ = new EmptyCsr<EDATA_T>();
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
       out_csr_ = new MutableCsr<EDATA_T>();
     } else if (oe_strategy == EdgeStrategy::kSingle) {
-      out_csr_ = new SingleMutableCsr<EDATA_T>();
+      if (oe_mutable) {
+        out_csr_ = new SingleMutableCsr<EDATA_T>();
+      } else {
+        out_csr_ = new SingleImmutableCsr<EDATA_T>();
+      }
     }
   }
   ~DualCsr() {

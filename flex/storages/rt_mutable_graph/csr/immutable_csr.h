@@ -52,8 +52,8 @@ class ImmutableCsrConstEdgeIter : public CsrConstEdgeIterBase {
 template <typename EDATA_T>
 class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
  public:
-  using nbr_t = ImutableNbr<EDATA_T>;
-  using slice_t = ImutableNbrSlice<EDATA_T>;
+  using nbr_t = ImmutableNbr<EDATA_T>;
+  using slice_t = ImmutableNbrSlice<EDATA_T>;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
                     const std::vector<int>& degree,
@@ -63,7 +63,7 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     adj_lists_.resize(vnum);
 
     size_t edge_num = 0;
-    for (auto d : degree_list) {
+    for (auto d : degree) {
       edge_num += d;
     }
 
@@ -136,9 +136,9 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     load_meta(prefix);
     nbr_list_.open(prefix + ".nbr", false);
     adj_lists_.reset();
-    v_cap = std::max(v_cap, degree_list.size());
+    v_cap = std::max(v_cap, degree_list_.size());
     adj_lists_.resize(v_cap);
-    size_t old_degree_size = degree_list.size();
+    size_t old_degree_size = degree_list_.size();
     degree_list_.resize(v_cap);
 
     nbr_t* ptr = nbr_list_.data();
@@ -184,17 +184,17 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   }
 
   void dump(const std::string& name,
-            const std::string& new_spanshot_dir) override {
-    dump_meta(new_spanshot_dir + "/" + name);
+            const std::string& new_snapshot_dir) override {
+    dump_meta(new_snapshot_dir + "/" + name);
     size_t vnum = adj_lists_.size();
     {
-      FILE* fout = fopen(new_spanshot_dir + "/" + name + ".deg", "wb");
+      FILE* fout = fopen((new_snapshot_dir + "/" + name + ".deg").c_str(), "wb");
       fwrite(degree_list_.data(), sizeof(int), vnum, fout);
       fflush(fout);
       fclose(fout);
     }
     {
-      FILE* fout = fopen(new_spanshot_dir + "/" + name + ".nbr", "wb");
+      FILE* fout = fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t k = 0; k < vnum; ++k) {
         if (adj_lists_[k] != NULL && degree_list_[k] != 0) {
           fwrite(adj_lists_[k], sizeof(nbr_t), degree_list_[k], fout);
@@ -347,7 +347,7 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   }
 
   void dump(const std::string& name,
-            const std::string& new_spanshot_dir) override {
+            const std::string& new_snapshot_dir) override {
     assert(!nbr_list_.filename().empty() &&
            std::filesystem::exists(nbr_list_.filename()));
     std::filesystem::create_hard_link(nbr_list_.filename(),
@@ -425,7 +425,7 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     nbr_list_[src].data = data;
   }
 
-  slice_t get_edges(vid_t i) const {
+  slice_t get_edges(vid_t i) const override {
     slice_t ret;
     ret.set_size(
         nbr_list_[i].neighbor == std::numeric_limits<vid_t>::max() ? 0 : 1);

@@ -80,26 +80,26 @@ void MutablePropertyFragment::DumpSchema(const std::string& schema_path) {
 }
 
 inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
-                               const std::vector<PropertyType>& properties) {
+                               const std::vector<PropertyType>& properties, bool oe_mutable, bool ie_mutable) {
   if (properties.empty()) {
-    return new DualCsr<grape::EmptyType>(oes, ies);
+    return new DualCsr<grape::EmptyType>(oes, ies, oe_mutable, ie_mutable);
   } else if (properties.size() == 1) {
     if (properties[0] == PropertyType::kBool) {
-      return new DualCsr<bool>(oes, ies);
+      return new DualCsr<bool>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kInt32) {
-      return new DualCsr<int32_t>(oes, ies);
+      return new DualCsr<int32_t>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kUInt32) {
-      return new DualCsr<uint32_t>(oes, ies);
+      return new DualCsr<uint32_t>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kDate) {
-      return new DualCsr<Date>(oes, ies);
+      return new DualCsr<Date>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kInt64) {
-      return new DualCsr<int64_t>(oes, ies);
+      return new DualCsr<int64_t>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kUInt64) {
-      return new DualCsr<uint64_t>(oes, ies);
+      return new DualCsr<uint64_t>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kDouble) {
-      return new DualCsr<double>(oes, ies);
+      return new DualCsr<double>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0] == PropertyType::kFloat) {
-      return new DualCsr<float>(oes, ies);
+      return new DualCsr<float>(oes, ies, oe_mutable, ie_mutable);
     } else if (properties[0].type_enum == impl::PropertyTypeImpl::kVarChar) {
       return new DualCsr<std::string_view>(
           oes, ies, properties[0].additional_type_info.max_length);
@@ -222,8 +222,10 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
             src_label, dst_label, edge_label);
         EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
             src_label, dst_label, edge_label);
+        bool oe_mutable = schema_.outgoing_edge_mutable(src_label, dst_label, edge_label);
+        bool ie_mutable = schema_.incoming_edge_mutable(src_label, dst_label, edge_label);
         dual_csr_list_[index] =
-            create_csr(oe_strategy, ie_strategy, properties);
+            create_csr(oe_strategy, ie_strategy, properties, oe_mutable, ie_mutable);
         ie_[index] = dual_csr_list_[index]->GetInCsr();
         oe_[index] = dual_csr_list_[index]->GetOutCsr();
         if (memory_level == 0) {

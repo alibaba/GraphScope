@@ -218,6 +218,24 @@ class SingleGraphView {
   timestamp_t timestamp_;
 };
 
+template <typename EDATA_T>
+class SingleImmutableGraphView {
+ public:
+  SingleImmutableGraphView(const SingleImmutableCsr<EDATA_T>& csr)
+      : csr_(csr) {}
+
+  bool exist(vid_t v) const {
+    return (csr_.get_edge(v).neighbor != std::numeric_limits<vid_t>::max());
+  }
+
+  const ImmutableNbr<EDATA_T>& get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleImmutableCsr<EDATA_T>& csr_;
+};
+
 class ReadTransaction {
  public:
   ReadTransaction(const MutablePropertyFragment& graph, VersionManager& vm,
@@ -348,6 +366,22 @@ class ReadTransaction {
     auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
         graph_.get_ie_csr(v_label, neighbor_label, edge_label));
     return SingleGraphView<EDATA_T>(*csr, timestamp_);
+  }
+
+  template <typename EDATA_T>
+  SingleImmutableGraphView<EDATA_T> GetOutgoingSingleImmutableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const SingleImmutableCsr<EDATA_T>*>(
+        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+    return SingleImmutableGraphView<EDATA_T>(*csr);
+  }
+
+  template <typename EDATA_T>
+  SingleImmutableGraphView<EDATA_T> GetIncomingSingleImmutableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const SingleImmutableCsr<EDATA_T>*>(
+        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+    return SingleImmutableGraphView<EDATA_T>(*csr);
   }
 
  private:
