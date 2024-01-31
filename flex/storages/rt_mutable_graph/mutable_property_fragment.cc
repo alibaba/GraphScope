@@ -354,7 +354,9 @@ void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
                                          Allocator& alloc) {
   size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                  dst_label * edge_label_num_ + edge_label;
-  ie_[index]->peek_ingest_edge(dst_lid, src_lid, arc, ts, alloc);
+  grape::OutArchive arc_view;
+  arc_view.SetSlice(arc.GetBuffer(), arc.GetSize());
+  ie_[index]->ingest_edge(dst_lid, src_lid, arc_view, ts, alloc);
   oe_[index]->ingest_edge(src_lid, dst_lid, arc, ts, alloc);
 }
 
@@ -396,7 +398,7 @@ vid_t MutablePropertyFragment::add_vertex(label_t label, const Any& id) {
   return lf_indexers_[label].insert(id);
 }
 
-std::shared_ptr<MutableCsrConstEdgeIterBase>
+std::shared_ptr<CsrConstEdgeIterBase>
 MutablePropertyFragment::get_outgoing_edges(label_t label, vid_t u,
                                             label_t neighbor_label,
                                             label_t edge_label) const {
@@ -405,7 +407,7 @@ MutablePropertyFragment::get_outgoing_edges(label_t label, vid_t u,
   return oe_[index]->edge_iter(u);
 }
 
-std::shared_ptr<MutableCsrConstEdgeIterBase>
+std::shared_ptr<CsrConstEdgeIterBase>
 MutablePropertyFragment::get_incoming_edges(label_t label, vid_t u,
                                             label_t neighbor_label,
                                             label_t edge_label) const {
@@ -414,21 +416,21 @@ MutablePropertyFragment::get_incoming_edges(label_t label, vid_t u,
   return ie_[index]->edge_iter(u);
 }
 
-MutableCsrConstEdgeIterBase* MutablePropertyFragment::get_outgoing_edges_raw(
+CsrConstEdgeIterBase* MutablePropertyFragment::get_outgoing_edges_raw(
     label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const {
   size_t index = label * vertex_label_num_ * edge_label_num_ +
                  neighbor_label * edge_label_num_ + edge_label;
   return oe_[index]->edge_iter_raw(u);
 }
 
-MutableCsrConstEdgeIterBase* MutablePropertyFragment::get_incoming_edges_raw(
+CsrConstEdgeIterBase* MutablePropertyFragment::get_incoming_edges_raw(
     label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const {
   size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
                  label * edge_label_num_ + edge_label;
   return ie_[index]->edge_iter_raw(u);
 }
 
-std::shared_ptr<MutableCsrEdgeIterBase>
+std::shared_ptr<CsrEdgeIterBase>
 MutablePropertyFragment::get_outgoing_edges_mut(label_t label, vid_t u,
                                                 label_t neighbor_label,
                                                 label_t edge_label) {
@@ -437,7 +439,7 @@ MutablePropertyFragment::get_outgoing_edges_mut(label_t label, vid_t u,
   return oe_[index]->edge_iter_mut(u);
 }
 
-std::shared_ptr<MutableCsrEdgeIterBase>
+std::shared_ptr<CsrEdgeIterBase>
 MutablePropertyFragment::get_incoming_edges_mut(label_t label, vid_t u,
                                                 label_t neighbor_label,
                                                 label_t edge_label) {
@@ -446,7 +448,7 @@ MutablePropertyFragment::get_incoming_edges_mut(label_t label, vid_t u,
   return ie_[index]->edge_iter_mut(u);
 }
 
-MutableCsrBase* MutablePropertyFragment::get_oe_csr(label_t label,
+CsrBase* MutablePropertyFragment::get_oe_csr(label_t label,
                                                     label_t neighbor_label,
                                                     label_t edge_label) {
   size_t index = label * vertex_label_num_ * edge_label_num_ +
@@ -454,14 +456,14 @@ MutableCsrBase* MutablePropertyFragment::get_oe_csr(label_t label,
   return oe_[index];
 }
 
-const MutableCsrBase* MutablePropertyFragment::get_oe_csr(
+const CsrBase* MutablePropertyFragment::get_oe_csr(
     label_t label, label_t neighbor_label, label_t edge_label) const {
   size_t index = label * vertex_label_num_ * edge_label_num_ +
                  neighbor_label * edge_label_num_ + edge_label;
   return oe_[index];
 }
 
-MutableCsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
+CsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
                                                     label_t neighbor_label,
                                                     label_t edge_label) {
   size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
@@ -469,7 +471,7 @@ MutableCsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
   return ie_[index];
 }
 
-const MutableCsrBase* MutablePropertyFragment::get_ie_csr(
+const CsrBase* MutablePropertyFragment::get_ie_csr(
     label_t label, label_t neighbor_label, label_t edge_label) const {
   size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
                  label * edge_label_num_ + edge_label;

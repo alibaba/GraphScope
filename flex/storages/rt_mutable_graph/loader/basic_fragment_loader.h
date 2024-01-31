@@ -176,7 +176,7 @@ class BasicFragmentLoader {
   std::string work_dir_;
   size_t vertex_label_num_, edge_label_num_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;
-  std::vector<MutableCsrBase*> ie_, oe_;
+  std::vector<CsrBase*> ie_, oe_;
   std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
 };

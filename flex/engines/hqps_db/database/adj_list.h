@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "flex/engines/hqps_db/core/null_record.h"
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/utils/property/types.h"
 
 namespace gs {
@@ -40,7 +40,7 @@ class EdgeIter {
         ptr1_(other.ptr1_),
         prop_names_(other.prop_names_) {}
   EdgeIter(const std::array<LabelT, 3>& label_triplet,
-           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr,
+           std::shared_ptr<CsrConstEdgeIterBase> ptr,
            const std::vector<std::string>* prop_names)
       : label_triplet_(label_triplet), ptr1_(ptr), prop_names_(prop_names) {}
 
@@ -72,7 +72,7 @@ class EdgeIter {
 
  private:
   std::array<LabelT, 3> label_triplet_;
-  std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
+  std::shared_ptr<CsrConstEdgeIterBase> ptr1_;
   const std::vector<std::string>* prop_names_;
 };
 
@@ -83,7 +83,7 @@ class SubGraph {
  public:
   using iterator = EdgeIter<LabelT>;
   using label_id_t = LabelT;
-  SubGraph(const MutableCsrBase* first,
+  SubGraph(const CsrBase* first,
            const std::array<label_id_t, 3>& label_triplet,
            const std::vector<std::string>& prop_names)
       : first_(first), label_triplet_(label_triplet), prop_names_(prop_names) {}
@@ -103,7 +103,7 @@ class SubGraph {
   const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
  private:
-  const MutableCsrBase* first_;
+  const CsrBase* first_;
   // We assume first is out edge, second is in edge.
   std::array<label_id_t, 3> label_triplet_;
   std::vector<std::string> prop_names_;
@@ -477,7 +477,7 @@ class AdjListArray {};
 template <typename T>
 class AdjListArray<T> {
  public:
-  using csr_base_t = MutableCsrBase;
+  using csr_base_t = CsrBase;
   using typed_csr_base_t = MutableCsr<T>;
   using slice_t = MutableNbrSlice<T>;
   AdjListArray() = default;
@@ -557,7 +557,7 @@ class AdjListArray<T> {
 template <>
 class AdjListArray<grape::EmptyType> {
  public:
-  using csr_base_t = MutableCsrBase;
+  using csr_base_t = CsrBase;
   using typed_csr_base_t = MutableCsr<grape::EmptyType>;
   using slice_t = MutableNbrSlice<grape::EmptyType>;
   AdjListArray() = default;

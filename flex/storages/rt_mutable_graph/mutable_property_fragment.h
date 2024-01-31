@@ -23,7 +23,7 @@
 #include "flex/storages/rt_mutable_graph/schema.h"
 
 #include "flex/storages/rt_mutable_graph/dual_csr.h"
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/arrow_utils.h"
 #include "flex/utils/id_indexer.h"
@@ -75,43 +75,43 @@ class MutablePropertyFragment {
   Any get_oid(label_t label, vid_t lid) const;
 
   vid_t add_vertex(label_t label, const Any& id);
-  std::shared_ptr<MutableCsrConstEdgeIterBase> get_outgoing_edges(
+  std::shared_ptr<CsrConstEdgeIterBase> get_outgoing_edges(
       label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const;
 
-  std::shared_ptr<MutableCsrConstEdgeIterBase> get_incoming_edges(
+  std::shared_ptr<CsrConstEdgeIterBase> get_incoming_edges(
       label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const;
 
-  std::shared_ptr<MutableCsrEdgeIterBase> get_outgoing_edges_mut(
+  std::shared_ptr<CsrEdgeIterBase> get_outgoing_edges_mut(
       label_t label, vid_t u, label_t neighbor_label, label_t edge_label);
 
-  std::shared_ptr<MutableCsrEdgeIterBase> get_incoming_edges_mut(
+  std::shared_ptr<CsrEdgeIterBase> get_incoming_edges_mut(
       label_t label, vid_t u, label_t neighbor_label, label_t edge_label);
 
-  MutableCsrConstEdgeIterBase* get_outgoing_edges_raw(label_t label, vid_t u,
+  CsrConstEdgeIterBase* get_outgoing_edges_raw(label_t label, vid_t u,
                                                       label_t neighbor_label,
                                                       label_t edge_label) const;
 
-  MutableCsrConstEdgeIterBase* get_incoming_edges_raw(label_t label, vid_t u,
+  CsrConstEdgeIterBase* get_incoming_edges_raw(label_t label, vid_t u,
                                                       label_t neighbor_label,
                                                       label_t edge_label) const;
 
-  MutableCsrBase* get_oe_csr(label_t label, label_t neighbor_label,
+  CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
                              label_t edge_label);
 
-  const MutableCsrBase* get_oe_csr(label_t label, label_t neighbor_label,
+  const CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
                                    label_t edge_label) const;
 
-  MutableCsrBase* get_ie_csr(label_t label, label_t neighbor_label,
+  CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
                              label_t edge_label);
 
-  const MutableCsrBase* get_ie_csr(label_t label, label_t neighbor_label,
+  const CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
                                    label_t edge_label) const;
 
   void loadSchema(const std::string& filename);
 
   Schema schema_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;
-  std::vector<MutableCsrBase*> ie_, oe_;
+  std::vector<CsrBase*> ie_, oe_;
   std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
 

@@ -19,7 +19,7 @@
 #include <limits>
 #include <utility>
 
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 
@@ -256,7 +256,7 @@ class ReadTransaction {
   class edge_iterator {
    public:
     edge_iterator(label_t neighbor_label, label_t edge_label,
-                  std::shared_ptr<MutableCsrConstEdgeIterBase> iter);
+                  std::shared_ptr<CsrConstEdgeIterBase> iter);
     ~edge_iterator();
 
     Any GetData() const;
@@ -275,7 +275,7 @@ class ReadTransaction {
     label_t neighbor_label_;
     label_t edge_label_;
 
-    std::shared_ptr<MutableCsrConstEdgeIterBase> iter_;
+    std::shared_ptr<CsrConstEdgeIterBase> iter_;
   };
 
   vertex_iterator GetVertexIterator(label_t label) const;

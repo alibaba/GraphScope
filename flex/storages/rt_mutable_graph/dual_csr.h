@@ -19,7 +19,7 @@
 #include <stdio.h>
 
 #include <grape/serialization/in_archive.h>
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/utils/allocators.h"
 
 namespace gs {
@@ -52,19 +52,13 @@ class DualCsrBase {
                     const std::string& edata_name,
                     const std::string& new_snapshot_dir) = 0;
 
-  virtual void PutEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-                       Allocator& alloc) = 0;
-
   virtual void SortByEdgeData(timestamp_t ts) = 0;
-
-  virtual void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc,
-                          timestamp_t timestamp, Allocator& alloc) = 0;
 
   virtual void UpdateEdge(vid_t src, vid_t dst, const Any& oarc,
                           timestamp_t timestamp, Allocator& alloc) = 0;
 
-  virtual MutableCsrBase* GetInCsr() = 0;
-  virtual MutableCsrBase* GetOutCsr() = 0;
+  virtual CsrBase* GetInCsr() = 0;
+  virtual CsrBase* GetOutCsr() = 0;
 };
 
 template <typename EDATA_T>
@@ -133,15 +127,8 @@ class DualCsr : public DualCsrBase {
     out_csr_->dump(oe_name, new_snapshot_dir);
   }
 
-  MutableCsrBase* GetInCsr() override { return in_csr_; }
-  MutableCsrBase* GetOutCsr() override { return out_csr_; }
-  void PutEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-               Allocator& alloc) override {
-    EDATA_T prop;
-    ConvertAny<EDATA_T>::to(data, prop);
-    in_csr_->put_edge(dst, src, prop, ts, alloc);
-    out_csr_->put_edge(src, dst, prop, ts, alloc);
-  }
+  CsrBase* GetInCsr() override { return in_csr_; }
+  CsrBase* GetOutCsr() override { return out_csr_; }
 
   void SortByEdgeData(timestamp_t ts) override {
     in_csr_->batch_sort_by_edge_data(ts);
@@ -177,22 +164,14 @@ class DualCsr : public DualCsrBase {
     }
   }
 
-  void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
-                  Allocator& alloc) override {
-    EDATA_T data;
-    oarc >> data;
-    in_csr_->put_edge(dst, src, data, ts, alloc);
-    out_csr_->put_edge(src, dst, data, ts, alloc);
-  }
-
   void BatchPutEdge(vid_t src, vid_t dst, const EDATA_T& data) {
     in_csr_->batch_put_edge(dst, src, data);
     out_csr_->batch_put_edge(src, dst, data);
   }
 
  private:
-  TypedMutableCsrBase<EDATA_T>* in_csr_;
-  TypedMutableCsrBase<EDATA_T>* out_csr_;
+  TypedCsrBase<EDATA_T>* in_csr_;
+  TypedCsrBase<EDATA_T>* out_csr_;
 };
 
 template <>
@@ -273,16 +252,8 @@ class DualCsr<std::string_view> : public DualCsrBase {
     column_.dump(new_snapshot_dir + "/" + edata_name);
   }
 
-  MutableCsrBase* GetInCsr() override { return in_csr_; }
-  MutableCsrBase* GetOutCsr() override { return out_csr_; }
-  void PutEdge(vid_t src, vid_t dst, const Any& data, timestamp_t ts,
-               Allocator& alloc) override {
-    std::string_view val = data.AsStringView();
-    size_t row_id = column_idx_.fetch_add(1);
-    column_.set_value(row_id, val);
-    in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
-    out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
-  }
+  CsrBase* GetInCsr() override { return in_csr_; }
+  CsrBase* GetOutCsr() override { return out_csr_; }
 
   void SortByEdgeData(timestamp_t ts) override {
     LOG(FATAL) << "Not implemented";
@@ -293,7 +264,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
     auto oe_ptr = out_csr_->edge_iter_mut(src);
     std::string_view prop = data.AsStringView();
     auto oe =
-        dynamic_cast<TypedMutableCsrEdgeIter<std::string_view>*>(oe_ptr.get());
+        dynamic_cast<MutableCsrEdgeIter<std::string_view>*>(oe_ptr.get());
     size_t index = std::numeric_limits<size_t>::max();
     while (oe != nullptr && oe->is_valid()) {
       if (oe->get_neighbor() == dst) {
@@ -305,7 +276,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
     }
     auto ie_ptr = in_csr_->edge_iter_mut(dst);
     auto ie =
-        dynamic_cast<TypedMutableCsrEdgeIter<std::string_view>*>(ie_ptr.get());
+        dynamic_cast<MutableCsrEdgeIter<std::string_view>*>(ie_ptr.get());
     while (ie != nullptr && ie->is_valid()) {
       if (ie->get_neighbor() == src) {
         ie->set_timestamp(ts);
@@ -324,16 +295,6 @@ class DualCsr<std::string_view> : public DualCsrBase {
     }
   }
 
-  void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
-                  Allocator& alloc) override {
-    std::string_view prop;
-    oarc >> prop;
-    size_t row_id = column_idx_.fetch_add(1);
-    column_.set_value(row_id, prop);
-    in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
-    out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
-  }
-
   void BatchPutEdge(vid_t src, vid_t dst, const std::string_view& data) {
     size_t row_id = column_idx_.fetch_add(1);
     column_.set_value(row_id, data);
@@ -350,8 +311,8 @@ class DualCsr<std::string_view> : public DualCsrBase {
   }
 
  private:
-  TypedMutableCsrBase<std::string_view>* in_csr_;
-  TypedMutableCsrBase<std::string_view>* out_csr_;
+  TypedCsrBase<std::string_view>* in_csr_;
+  TypedCsrBase<std::string_view>* out_csr_;
   std::atomic<size_t> column_idx_;
   StringColumn column_;
 };
