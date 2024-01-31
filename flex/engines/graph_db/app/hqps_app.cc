@@ -47,7 +47,8 @@ bool HQPSAdhocApp::Query(Decoder& input, Encoder& output) {
                << input.size();
     return false;
   }
-  std::string input_lib_path = std::string(input.get_string());
+  std::string_view str_view(input.data(), input.size());
+  std::string input_lib_path = std::string(str_view);
   auto app_factory = std::make_shared<SharedLibraryAppFactory>(input_lib_path);
   AppWrapper app_wrapper;  // wrapper should be destroyed before the factory
 
