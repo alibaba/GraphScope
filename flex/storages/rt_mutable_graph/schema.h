@@ -65,8 +65,7 @@ class Schema {
                       const std::vector<std::string>& prop_names,
                       EdgeStrategy oe = EdgeStrategy::kMultiple,
                       EdgeStrategy ie = EdgeStrategy::kMultiple,
-                      bool oe_mutable = true,
-                      bool ie_mutable = true,
+                      bool oe_mutable = true, bool ie_mutable = true,
                       bool sort_on_compaction = false);
 
   label_t vertex_label_num() const;
@@ -148,12 +147,12 @@ class Schema {
                                           const std::string& label) const;
 
   bool outgoing_edge_mutable(const std::string& src_label,
-                                          const std::string& dst_label,
-                                          const std::string& label) const;
+                             const std::string& dst_label,
+                             const std::string& label) const;
 
   bool incoming_edge_mutable(const std::string& src_label,
-                                          const std::string& dst_label,
-                                          const std::string& label) const;
+                             const std::string& dst_label,
+                             const std::string& label) const;
 
   bool get_sort_on_compaction(const std::string& src_label,
                               const std::string& dst_label,

@@ -631,8 +631,7 @@ class MutableCsr<std::string_view>
     put_edge(src, dst, row_id - 1, ts, alloc);
   }
 
-  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(
-      vid_t v) const override {
+  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<std::string_view>>(
         get_edges(v));
   }
@@ -658,11 +657,14 @@ class MutableCsr<std::string_view>
     put_edge(src, dst, index, ts, alloc);
   }
 
-  slice_t get_edges(vid_t i) const override { return adj_lists_[i].get_edges(column_); }
+  slice_t get_edges(vid_t i) const override {
+    return adj_lists_[i].get_edges(column_);
+  }
 
   mut_slice_t get_edges_mut(vid_t i) {
     return adj_lists_[i].get_edges_mut(column_);
   }
+
  private:
   StringColumn& column_;
   std::atomic<size_t>& column_idx_;
@@ -961,8 +963,7 @@ class SingleMutableCsr<std::string_view>
     put_edge(src, dst, row_id - 1, ts, alloc);
   }
 
-  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(
-      vid_t v) const override {
+  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<std::string_view>>(
         get_edges(v));
   }
@@ -1020,7 +1021,7 @@ class SingleMutableCsr<std::string_view>
     nbr.data = column_.get_view(nbr_list_[i].data);
     return nbr;
   }
-  
+
  private:
   StringColumn& column_;
   std::atomic<size_t>& column_idx_;
@@ -1068,8 +1069,7 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
     arc >> value;
   }
 
-  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(
-      vid_t v) const override {
+  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<EDATA_T>>(
         MutableNbrSlice<EDATA_T>::empty());
   }
@@ -1088,9 +1088,7 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
     return std::numeric_limits<timestamp_t>::max();
   }
 
-  slice_t get_edges(vid_t v) const override {
-    return slice_t::empty();
-  }
+  slice_t get_edges(vid_t v) const override { return slice_t::empty(); }
 };
 
 template <>
@@ -1125,13 +1123,12 @@ class EmptyCsr<std::string_view>
 
   void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
                    Allocator&) override {}
-  
+
   void put_edge_with_index(vid_t src, vid_t dst, size_t index, timestamp_t ts,
                            Allocator& alloc) override {}
   void batch_put_edge_with_index(vid_t src, vid_t dst, size_t data,
                                  timestamp_t ts = 0) override {}
-  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(
-      vid_t v) const override {
+  std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<std::string_view>>(
         MutableNbrSlice<std::string_view>::empty(column_));
   }
@@ -1144,9 +1141,7 @@ class EmptyCsr<std::string_view>
         MutableNbrSliceMut<std::string_view>::empty(column_));
   }
 
-  slice_t get_edges(vid_t v) const override {
-    return slice_t::empty(column_);
-  }
+  slice_t get_edges(vid_t v) const override { return slice_t::empty(column_); }
 
   StringColumn& column_;
   std::atomic<size_t>& column_idx_;

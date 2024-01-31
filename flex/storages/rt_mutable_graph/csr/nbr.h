@@ -75,7 +75,8 @@ class ImmutableNbrSlice {
   using const_nbr_t = const ImmutableNbr<EDATA_T>;
   using const_nbr_ptr_t = const ImmutableNbr<EDATA_T>*;
   ImmutableNbrSlice() = default;
-  ImmutableNbrSlice(const ImmutableNbrSlice& rhs) : ptr_(rhs.ptr_), size_(rhs.size_) {}
+  ImmutableNbrSlice(const ImmutableNbrSlice& rhs)
+      : ptr_(rhs.ptr_), size_(rhs.size_) {}
   ~ImmutableNbrSlice() = default;
 
   void set_size(int size) { size_ = size; }

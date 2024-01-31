@@ -22,8 +22,8 @@
 
 #include "flex/storages/rt_mutable_graph/schema.h"
 
-#include "flex/storages/rt_mutable_graph/dual_csr.h"
 #include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/dual_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/arrow_utils.h"
 #include "flex/utils/id_indexer.h"
@@ -88,24 +88,24 @@ class MutablePropertyFragment {
       label_t label, vid_t u, label_t neighbor_label, label_t edge_label);
 
   CsrConstEdgeIterBase* get_outgoing_edges_raw(label_t label, vid_t u,
-                                                      label_t neighbor_label,
-                                                      label_t edge_label) const;
+                                               label_t neighbor_label,
+                                               label_t edge_label) const;
 
   CsrConstEdgeIterBase* get_incoming_edges_raw(label_t label, vid_t u,
-                                                      label_t neighbor_label,
-                                                      label_t edge_label) const;
+                                               label_t neighbor_label,
+                                               label_t edge_label) const;
 
   CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
-                             label_t edge_label);
+                      label_t edge_label);
 
   const CsrBase* get_oe_csr(label_t label, label_t neighbor_label,
-                                   label_t edge_label) const;
+                            label_t edge_label) const;
 
   CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
-                             label_t edge_label);
+                      label_t edge_label);
 
   const CsrBase* get_ie_csr(label_t label, label_t neighbor_label,
-                                   label_t edge_label) const;
+                            label_t edge_label) const;
 
   void loadSchema(const std::string& filename);
 

@@ -69,9 +69,7 @@ class CsrBase {
   virtual void batch_sort_by_edge_data(timestamp_t ts) {
     LOG(FATAL) << "not supported...";
   }
-  virtual timestamp_t unsorted_since() const {
-    return 0;
-  }
+  virtual timestamp_t unsorted_since() const { return 0; }
 
   virtual void open(const std::string& name, const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;

@@ -19,8 +19,8 @@
 #include <stdio.h>
 
 #include <grape/serialization/in_archive.h>
-#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/csr/immutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/utils/allocators.h"
 
 namespace gs {
@@ -65,7 +65,8 @@ class DualCsrBase {
 template <typename EDATA_T>
 class DualCsr : public DualCsrBase {
  public:
-  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, bool oe_mutable, bool ie_mutable)
+  DualCsr(EdgeStrategy oe_strategy, EdgeStrategy ie_strategy, bool oe_mutable,
+          bool ie_mutable)
       : in_csr_(nullptr), out_csr_(nullptr) {
     if (ie_strategy == EdgeStrategy::kNone) {
       in_csr_ = new EmptyCsr<EDATA_T>();
@@ -272,8 +273,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
                   Allocator& alloc) override {
     auto oe_ptr = out_csr_->edge_iter_mut(src);
     std::string_view prop = data.AsStringView();
-    auto oe =
-        dynamic_cast<MutableCsrEdgeIter<std::string_view>*>(oe_ptr.get());
+    auto oe = dynamic_cast<MutableCsrEdgeIter<std::string_view>*>(oe_ptr.get());
     size_t index = std::numeric_limits<size_t>::max();
     while (oe != nullptr && oe->is_valid()) {
       if (oe->get_neighbor() == dst) {
@@ -284,8 +284,7 @@ class DualCsr<std::string_view> : public DualCsrBase {
       oe->next();
     }
     auto ie_ptr = in_csr_->edge_iter_mut(dst);
-    auto ie =
-        dynamic_cast<MutableCsrEdgeIter<std::string_view>*>(ie_ptr.get());
+    auto ie = dynamic_cast<MutableCsrEdgeIter<std::string_view>*>(ie_ptr.get());
     while (ie != nullptr && ie->is_valid()) {
       if (ie->get_neighbor() == src) {
         ie->set_timestamp(ts);

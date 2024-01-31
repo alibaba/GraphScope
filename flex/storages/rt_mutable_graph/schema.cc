@@ -62,8 +62,8 @@ void Schema::add_edge_label(const std::string& src_label,
                             const std::string& edge_label,
                             const std::vector<PropertyType>& properties,
                             const std::vector<std::string>& prop_names,
-                            EdgeStrategy oe, EdgeStrategy ie, bool oe_mutable, bool ie_mutable,
-                            bool sort_on_compaction) {
+                            EdgeStrategy oe, EdgeStrategy ie, bool oe_mutable,
+                            bool ie_mutable, bool sort_on_compaction) {
   label_t src_label_id = vertex_label_to_index(src_label);
   label_t dst_label_id = vertex_label_to_index(dst_label);
   label_t edge_label_id = edge_label_to_index(edge_label);
@@ -236,8 +236,9 @@ EdgeStrategy Schema::get_incoming_edge_strategy(
   return ie_strategy_.at(index);
 }
 
-bool Schema::outgoing_edge_mutable(    const std::string& src_label, const std::string& dst_label,
-    const std::string& label) const {
+bool Schema::outgoing_edge_mutable(const std::string& src_label,
+                                   const std::string& dst_label,
+                                   const std::string& label) const {
   label_t src, dst, edge;
   CHECK(vlabel_indexer_.get_index(src_label, src));
   CHECK(vlabel_indexer_.get_index(dst_label, dst));
@@ -246,15 +247,15 @@ bool Schema::outgoing_edge_mutable(    const std::string& src_label, const std::
   return oe_mutability_.at(index);
 }
 
-bool Schema::incoming_edge_mutable(    const std::string& src_label, const std::string& dst_label,
-    const std::string& label) const {
+bool Schema::incoming_edge_mutable(const std::string& src_label,
+                                   const std::string& dst_label,
+                                   const std::string& label) const {
   label_t src, dst, edge;
   CHECK(vlabel_indexer_.get_index(src_label, src));
   CHECK(vlabel_indexer_.get_index(dst_label, dst));
   CHECK(elabel_indexer_.get_index(label, edge));
   uint32_t index = generate_edge_label(src, dst, edge);
   return ie_mutability_.at(index);
-
 }
 
 bool Schema::get_sort_on_compaction(const std::string& src_label,
@@ -305,8 +306,7 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   grape::InArchive arc;
   arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
-      << ie_mutability_ << oe_mutability_
-      << sort_on_compactions_ << max_vnum_;
+      << ie_mutability_ << oe_mutability_ << sort_on_compactions_ << max_vnum_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -318,8 +318,7 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   CHECK(reader->ReadArchive(arc));
   arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
-      ie_mutability_ >> oe_mutability_ >>
-      sort_on_compactions_ >> max_vnum_;
+      ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_;
 }
 
 label_t Schema::vertex_label_to_index(const std::string& label) {
@@ -871,8 +870,8 @@ static bool parse_edge_schema(YAML::Node node, Schema& schema) {
              << " to " << dst_label_name << " with " << property_types.size()
              << " properties";
     schema.add_edge_label(src_label_name, dst_label_name, edge_label_name,
-                          property_types, prop_names, cur_oe, cur_ie, oe_mutable, ie_mutable,
-                          cur_sort_on_compaction);
+                          property_types, prop_names, cur_oe, cur_ie,
+                          oe_mutable, ie_mutable, cur_sort_on_compaction);
   }
 
   // check the type_id equals to storage's label_id

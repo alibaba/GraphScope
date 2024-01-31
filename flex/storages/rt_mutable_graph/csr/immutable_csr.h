@@ -188,13 +188,15 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     dump_meta(new_snapshot_dir + "/" + name);
     size_t vnum = adj_lists_.size();
     {
-      FILE* fout = fopen((new_snapshot_dir + "/" + name + ".deg").c_str(), "wb");
+      FILE* fout =
+          fopen((new_snapshot_dir + "/" + name + ".deg").c_str(), "wb");
       fwrite(degree_list_.data(), sizeof(int), vnum, fout);
       fflush(fout);
       fclose(fout);
     }
     {
-      FILE* fout = fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");
+      FILE* fout =
+          fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t k = 0; k < vnum; ++k) {
         if (adj_lists_[k] != NULL && degree_list_[k] != 0) {
           fwrite(adj_lists_[k], sizeof(nbr_t), degree_list_[k], fout);

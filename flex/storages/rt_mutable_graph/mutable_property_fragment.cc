@@ -80,7 +80,8 @@ void MutablePropertyFragment::DumpSchema(const std::string& schema_path) {
 }
 
 inline DualCsrBase* create_csr(EdgeStrategy oes, EdgeStrategy ies,
-                               const std::vector<PropertyType>& properties, bool oe_mutable, bool ie_mutable) {
+                               const std::vector<PropertyType>& properties,
+                               bool oe_mutable, bool ie_mutable) {
   if (properties.empty()) {
     return new DualCsr<grape::EmptyType>(oes, ies, oe_mutable, ie_mutable);
   } else if (properties.size() == 1) {
@@ -222,10 +223,12 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
             src_label, dst_label, edge_label);
         EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
             src_label, dst_label, edge_label);
-        bool oe_mutable = schema_.outgoing_edge_mutable(src_label, dst_label, edge_label);
-        bool ie_mutable = schema_.incoming_edge_mutable(src_label, dst_label, edge_label);
-        dual_csr_list_[index] =
-            create_csr(oe_strategy, ie_strategy, properties, oe_mutable, ie_mutable);
+        bool oe_mutable =
+            schema_.outgoing_edge_mutable(src_label, dst_label, edge_label);
+        bool ie_mutable =
+            schema_.incoming_edge_mutable(src_label, dst_label, edge_label);
+        dual_csr_list_[index] = create_csr(oe_strategy, ie_strategy, properties,
+                                           oe_mutable, ie_mutable);
         ie_[index] = dual_csr_list_[index]->GetInCsr();
         oe_[index] = dual_csr_list_[index]->GetOutCsr();
         if (memory_level == 0) {
@@ -451,30 +454,32 @@ MutablePropertyFragment::get_incoming_edges_mut(label_t label, vid_t u,
 }
 
 CsrBase* MutablePropertyFragment::get_oe_csr(label_t label,
-                                                    label_t neighbor_label,
-                                                    label_t edge_label) {
+                                             label_t neighbor_label,
+                                             label_t edge_label) {
   size_t index = label * vertex_label_num_ * edge_label_num_ +
                  neighbor_label * edge_label_num_ + edge_label;
   return oe_[index];
 }
 
-const CsrBase* MutablePropertyFragment::get_oe_csr(
-    label_t label, label_t neighbor_label, label_t edge_label) const {
+const CsrBase* MutablePropertyFragment::get_oe_csr(label_t label,
+                                                   label_t neighbor_label,
+                                                   label_t edge_label) const {
   size_t index = label * vertex_label_num_ * edge_label_num_ +
                  neighbor_label * edge_label_num_ + edge_label;
   return oe_[index];
 }
 
 CsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
-                                                    label_t neighbor_label,
-                                                    label_t edge_label) {
+                                             label_t neighbor_label,
+                                             label_t edge_label) {
   size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
                  label * edge_label_num_ + edge_label;
   return ie_[index];
 }
 
-const CsrBase* MutablePropertyFragment::get_ie_csr(
-    label_t label, label_t neighbor_label, label_t edge_label) const {
+const CsrBase* MutablePropertyFragment::get_ie_csr(label_t label,
+                                                   label_t neighbor_label,
+                                                   label_t edge_label) const {
   size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
                  label * edge_label_num_ + edge_label;
   return ie_[index];

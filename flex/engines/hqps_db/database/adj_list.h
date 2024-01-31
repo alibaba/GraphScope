@@ -83,8 +83,7 @@ class SubGraph {
  public:
   using iterator = EdgeIter<LabelT>;
   using label_id_t = LabelT;
-  SubGraph(const CsrBase* first,
-           const std::array<label_id_t, 3>& label_triplet,
+  SubGraph(const CsrBase* first, const std::array<label_id_t, 3>& label_triplet,
            const std::vector<std::string>& prop_names)
       : first_(first), label_triplet_(label_triplet), prop_names_(prop_names) {}
 

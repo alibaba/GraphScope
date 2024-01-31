@@ -153,8 +153,8 @@ bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
   return true;
 }
 
-static size_t get_offset(
-    const std::shared_ptr<CsrConstEdgeIterBase>& base, vid_t target) {
+static size_t get_offset(const std::shared_ptr<CsrConstEdgeIterBase>& base,
+                         vid_t target) {
   size_t offset = 0;
   while (base != nullptr && base->is_valid()) {
     if (base->get_neighbor() == target) {
@@ -245,8 +245,7 @@ bool UpdateTransaction::vertex_iterator::SetField(int col_id,
 UpdateTransaction::edge_iterator::edge_iterator(
     bool dir, label_t label, vid_t v, label_t neighbor_label,
     label_t edge_label, const vid_t* aeb, const vid_t* aee,
-    std::shared_ptr<CsrConstEdgeIterBase> init_iter,
-    UpdateTransaction* txn)
+    std::shared_ptr<CsrConstEdgeIterBase> init_iter, UpdateTransaction* txn)
     : dir_(dir),
       label_(label),
       v_(v),
