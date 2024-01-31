@@ -31,12 +31,12 @@
     <article class="post">
 
         <header class="post-header">
-            <h1 class="post-title">Release Notes: v0.8.0</h1>
+            <h1 class="post-title">Release Notes: v0.26.0</h1>
             <section class="post-meta">
                 
                 on ReleaseNotes
                 
-                <time class="post-date" datetime=" 2021-11-06">06 Nov 2021</time>
+                <time class="post-date" datetime=" 2024-01-31">31 Jan 2024</time>
             </section>
         </header>
 
@@ -49,42 +49,45 @@
         </header> -->
 
         <!-- <span class="post-meta">
-            <time datetime="2021-11-06">06 Nov 2021</time>
+            <time datetime="2024-01-31">31 Jan 2024</time>
             
                 on ReleaseNotes
             
         </span> -->
 
-        <!-- <h1 class="post-title">Release Notes: v0.8.0</h1> -->
+        <!-- <h1 class="post-title">Release Notes: v0.26.0</h1> -->
 
         <section class="post-content">
             <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
-We are glad to announce the availability of GraphScope v0.8. This release is a major update on many aspects of the project including deployment, system speed and APIs. For quickly getting started, this release supports to use GraphScope on standalone mode without Kubernetes. To improve the efficiency of operators and applications in NetworkX module, an immutable graph is applied by default, while it is converted to a dynamic graph only if modification operators for graphs are triggered. In addition, a notebook is integrated into the helm charts.</p>
+We are pleased to announce an array of improvements in the GraphScope 0.26.0 release. In this release, under the original GraphScope framework, the persistent storage Groot of the Graph Interactive Query Engine (GIE) allows users to launch a Secondary Instance in read-only mode, thereby enhancing the performance of reading graph data. Under the GraphScope Flex architecture, the graph query engine GraphScope Interactive, which is designed for high-concurrency scenarios, now supports running on macOS and has introduced compaction operations for graph data.</p>
 
 <p>We highlight the following improvements included in this release:</p>
 
-<ol>
-  <li>Standalone mode support for GraphScope:
-    <ul>
-      <li>Users now can do <code class="language-plaintext highlighter-rouge">pip install graphscope</code> to deploy GraphScope together with runtime dependencies;</li>
-      <li>Users now switch to <code class="language-plaintext highlighter-rouge">pip install graphscope_client</code> to install python client of GraphScope;</li>
-      <li>MacOS support is added, and it is compatible with Apple clang 13.0.0.</li>
-    </ul>
-  </li>
-  <li>Enhancement on <code class="language-plaintext highlighter-rouge">graphscope.nx</code> module:
-    <ul>
-      <li>Support NetworkX operators over immutable graphs;</li>
-      <li>Support holding an immutable graph in <code class="language-plaintext highlighter-rouge">nx.Graph</code> and <code class="language-plaintext highlighter-rouge">copy-on-write</code> to a dynamic graph.</li>
-    </ul>
-  </li>
-  <li>Enhancement of deployment, performance and APIs:
-    <ul>
-      <li>Integrate a jupyter-lab notebook container into the helm charts.</li>
-    </ul>
-  </li>
-</ol>
+<p><strong>1. Optimization of the Graph Interactive Engine GIE</strong></p>
 
-<p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.8.0">changelog</a>.</p>
+<ul>
+  <li>Persistent storage Groot leverages RocksDB’s read-only mode to support the creation of a <a href="https://graphscope.io/docs/latest/storage_engine/groot#secondary-instance">Secondary Instance</a> to improve the performance of reading graph data. Meanwhile, new graph update operations will be periodically synchronized to the Secondary Instance;</li>
+  <li>Added support for automatically inferring the types of vertices/edges in queries, providing more friendly error messages and some performance improvements.</li>
+</ul>
+
+<p><strong>2. Improvements to GraphScope Interactive</strong></p>
+
+<p>GraphScope Interactive is committed to providing users with exceptional query processing capabilities in high-concurrency scenarios. In this update, we have made the following improvements:</p>
+
+<ul>
+  <li>Added support for macOS;</li>
+  <li>Introduced operations for graph data compaction to optimize the reading performance of graph data;</li>
+  <li>Added support for <code class="language-plaintext highlighter-rouge">STRING</code> type edge properties.</li>
+</ul>
+
+<p><strong>3. Fixes for other stability issues</strong></p>
+
+<ul>
+  <li>Fixed a memory leak issue in GIE;</li>
+  <li>Resolved data race conditions in Groot.</li>
+</ul>
+
+<p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.26.0">changelog</a>.</p>
 
         </section>
 
@@ -110,15 +113,15 @@ We are glad to announce the availability of GraphScope v0.8. This release is a m
         <!-- Share links section -->
         <!-- <section class="share">
     <h4>Share this post</h4>
-    <a class="icon-twitter" href="http://twitter.com/share?text=Release Notes: v0.8.0&amp;url=https://graphscope.io/releasenotes/2021/11/06/release-notes-0.8.0.html"
+    <a class="icon-twitter" href="http://twitter.com/share?text=Release Notes: v0.26.0&amp;url=https://graphscope.io/releasenotes/2024/01/31/release-notes-0.26.0.html"
         onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
         <span class="hidden">Twitter</span>
     </a>
-    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/releasenotes/2021/11/06/release-notes-0.8.0.html"
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/releasenotes/2024/01/31/release-notes-0.26.0.html"
         onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
         <span class="hidden">Facebook</span>
     </a>
-    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/releasenotes/2021/11/06/release-notes-0.8.0.html"
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/releasenotes/2024/01/31/release-notes-0.26.0.html"
        onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
         <span class="hidden">Google+</span>
     </a>
