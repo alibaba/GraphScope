@@ -42,7 +42,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.18.2
+VINEYARD_VERSION ?= v0.20.2
 PROFILE ?= release
 CI ?= false
 
@@ -157,7 +157,7 @@ graphscope-manylinux2014-py3:
 graphscope-client-manylinux2014-py3-nodocker:
 	set -euxo pipefail && \
 	cd $(WORKING_DIR)/../../python && \
-		python3 -m pip install ${PIP_ARGS} "torch" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
@@ -216,7 +216,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 
 graphscope-client-darwin-py3:
 	cd $(WORKING_DIR)/../../python && \
-		python3 -m pip install ${PIP_ARGS} "torch" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
 		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		(git submodule update --init third_party/pybind11 || true) && \

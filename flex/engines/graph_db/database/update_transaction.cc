@@ -715,10 +715,12 @@ void UpdateTransaction::batch_commit(UpdateBatch& batch) {
   }
   auto& arc = batch.GetArc();
   auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
-  header->length = arc.GetSize() - sizeof(WalHeader);
-  header->type = 1;
-  header->timestamp = timestamp_;
-  logger_.append(arc.GetBuffer(), arc.GetSize());
+  if (arc.GetSize() != sizeof(WalHeader)) {
+    header->length = arc.GetSize() - sizeof(WalHeader);
+    header->type = 1;
+    header->timestamp = timestamp_;
+    logger_.append(arc.GetBuffer(), arc.GetSize());
+  }
 
   release();
 }

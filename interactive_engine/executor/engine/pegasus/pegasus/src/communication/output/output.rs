@@ -26,7 +26,7 @@ use crate::communication::output::BlockScope;
 use crate::communication::IOResult;
 use crate::data::MicroBatch;
 use crate::data_plane::Push;
-use crate::errors::IOError;
+use crate::errors::{IOError, IOErrorKind};
 use crate::graph::Port;
 use crate::progress::EndOfScope;
 use crate::tag::tools::map::TidyTagMap;
@@ -160,7 +160,14 @@ impl<D: Data> OutputHandle<D> {
                                     if let Err(e) = self.push(bk.tag(), x) {
                                         if e.is_would_block() {
                                             let b = self.blocks.pop_back().expect("can't be none");
-                                            assert_eq!(b.tag, bk.tag);
+                                            if b.tag != bk.tag {
+                                                let mut err = IOError::new(IOErrorKind::Internal);
+                                                err.set_io_cause(std::io::Error::new(
+                                                    std::io::ErrorKind::Other,
+                                                    "tags of block scope are not same",
+                                                ));
+                                                return Err(err);
+                                            }
                                             self.blocks.push_back(bk);
                                         } else {
                                             return Err(e);
@@ -323,7 +330,14 @@ impl<D: Data> OutputHandle<D> {
 
     #[inline]
     fn send_batch(&mut self, mut batch: MicroBatch<D>) -> IOResult<()> {
-        assert_eq!(batch.tag().len(), self.scope_level as usize);
+        if batch.tag().len() != self.scope_level as usize {
+            let mut err = IOError::new(IOErrorKind::Internal);
+            err.set_io_cause(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Tag len is not equal to scope level",
+            ));
+            return Err(err);
+        }
         if batch.is_empty() {
             if batch.is_last() {
                 let seq = self.seq_emit.remove(&batch.tag).unwrap_or(0);
@@ -438,7 +452,14 @@ impl<'a, D: Data> OutputSession<'a, D> {
         if self.skip {
             self.output.notify_end(end)
         } else {
-            assert_eq!(self.tag, end.tag);
+            if self.tag != end.tag {
+                let mut err = IOError::new(IOErrorKind::Internal);
+                err.set_io_cause(std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    "Session tag is not equal to endscope tag",
+                ));
+                return Err(err);
+            }
             self.output.push_last(msg, end)
         }
     }
@@ -455,7 +476,14 @@ impl<'a, D: Data> OutputSession<'a, D> {
     }
 
     pub fn notify_end(&mut self, end: EndOfScope) -> IOResult<()> {
-        assert_eq!(self.tag, end.tag);
+        if self.tag != end.tag {
+            let mut err = IOError::new(IOErrorKind::Internal);
+            err.set_io_cause(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "Session tag is not equal to endscope tag",
+            ));
+            return Err(err);
+        }
         self.output.notify_end(end)
     }
 

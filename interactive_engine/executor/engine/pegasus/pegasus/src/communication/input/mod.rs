@@ -33,7 +33,7 @@ pub trait InputProxy: AsAny + Send {
 
     fn is_exhaust(&self) -> bool;
 
-    fn cancel_scope(&self, tag: &Tag);
+    fn cancel_scope(&self, tag: &Tag) -> IOResult<()>;
 }
 
 mod input;

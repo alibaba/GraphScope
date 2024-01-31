@@ -16,6 +16,13 @@ option(BUILD_DOC "Whether to build doc" ON)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
 
+#print options
+message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
+message(STATUS "Build test: ${BUILD_TEST}")
+message(STATUS "Build doc: ${BUILD_DOC}")
+message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
+message(STATUS "Monitor sessions: ${MONITOR_SESSIONS}")
+message(STATUS "Enable hugepage: ${ENABLE_HUGEPAGE}")
 
 # ------------------------------------------------------------------------------
 # cmake configs
@@ -30,6 +37,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+if (BUILD_HQPS)
+    message("Build HighQPS Engine")
+    add_definitions(-DBUILD_HQPS)
+endif ()
 
 if (MONITOR_SESSIONS)
     message("Monitor sessions is enabled")
@@ -55,16 +67,6 @@ if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
                "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
 
-if (APPLE)
-  set(CMAKE_MACOSX_RPATH ON)
-else ()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wl,-rpath,$ORIGIN")
-endif ()
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -fPIC")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
-
 add_compile_definitions(FLEX_VERSION="${FLEX_VERSION}")
 
 if (APPLE)
@@ -76,6 +78,10 @@ else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -Wl,-rpath,$ORIGIN")
     endif ()
 endif ()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
@@ -107,7 +113,7 @@ endif ()
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
-             context program_options regex thread)
+             context program_options regex thread date_time)
 
 #find arrow----------------------------------------------------------------------
 include("cmake/FindArrow.cmake")

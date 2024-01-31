@@ -384,7 +384,7 @@ class Config(Serializable):
         elif key == "etcd_listening_peer_port":
             self.hosts_launcher.etcd.listening_peer_port = value
         elif key == "k8s_vineyard_image":
-            self.kubernetes_launcher.image.vineyard_image = value
+            self.vineyard.image = value
         elif key == "k8s_vineyard_deployment":
             self.vineyard.deployment_name = value
         elif key == "k8s_vineyard_cpu":

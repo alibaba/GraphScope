@@ -41,6 +41,8 @@ constexpr int phase_one_minor_step_0 = 0;
 constexpr int phase_one_minor_step_1 = 1;
 constexpr int phase_one_minor_step_2 = 2;
 
+constexpr double min_quality_improvement = 0.001;
+
 /**
  * The state of a vertex.
  */

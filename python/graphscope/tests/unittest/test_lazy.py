@@ -231,6 +231,7 @@ def test_across_engine(sess):
     assert res[0] == 62586
 
 
+@pytest.mark.skip(reason="FIXME(@shirly121): The regex pattern is not correct.")
 def test_gremlin_timeout(sess):
     g_node = load_p2p_network(sess)
     interactive = sess.gremlin(g_node)

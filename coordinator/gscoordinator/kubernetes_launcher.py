@@ -413,15 +413,21 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 setattr(self, f"_{engine_type}_pod_host_ip", self._pod_host_ip_list)
 
         return (
-            getattr(self, f"_{engine_type}_pod_name")
-            if object_id is None
-            else getattr(self, f"_{engine_type}_pod_name")[object_id],
-            getattr(self, f"_{engine_type}_pod_ip")
-            if object_id is None
-            else getattr(self, f"_{engine_type}_pod_ip")[object_id],
-            getattr(self, f"_{engine_type}_pod_host_ip")
-            if object_id is None
-            else getattr(self, f"_{engine_type}_pod_host_ip")[object_id],
+            (
+                getattr(self, f"_{engine_type}_pod_name")
+                if object_id is None
+                else getattr(self, f"_{engine_type}_pod_name")[object_id]
+            ),
+            (
+                getattr(self, f"_{engine_type}_pod_ip")
+                if object_id is None
+                else getattr(self, f"_{engine_type}_pod_ip")[object_id]
+            ),
+            (
+                getattr(self, f"_{engine_type}_pod_host_ip")
+                if object_id is None
+                else getattr(self, f"_{engine_type}_pod_host_ip")[object_id]
+            ),
         )
 
     def delete_engine_stateful_set_with_object_id(self, engine_type, object_id):

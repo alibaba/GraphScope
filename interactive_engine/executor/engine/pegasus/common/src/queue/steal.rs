@@ -77,7 +77,6 @@ impl<T: Send> WorkStealQueue<T> {
 
 impl<T: Send> WorkStealFactory<T> {
     pub fn new(size: usize) -> Self {
-        assert!(size > 0);
         let mut steals = Vec::with_capacity(size);
         let mut workers = Vec::with_capacity(size);
         for _ in 0..size {
