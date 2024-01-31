@@ -1,7 +1,6 @@
 package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
-import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdResponse;

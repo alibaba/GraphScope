@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.frontend.IngestorSnapshotService;
 import com.alibaba.graphscope.groot.frontend.IngestorWriteService;
-import com.alibaba.graphscope.groot.frontend.write.GraphWriter;
 import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
@@ -38,7 +37,8 @@ public class IngestorRpcTest {
     @Test
     void testIngestorSnapshotService() {
         KafkaAppender kafkaAppender = mock(KafkaAppender.class);
-        IngestorSnapshotService ingestorSnapshotService = new IngestorSnapshotService(kafkaAppender);
+        IngestorSnapshotService ingestorSnapshotService =
+                new IngestorSnapshotService(kafkaAppender);
         AdvanceIngestSnapshotIdRequest req =
                 AdvanceIngestSnapshotIdRequest.newBuilder().setSnapshotId(10L).build();
         StreamObserver<AdvanceIngestSnapshotIdResponse> streamObserver = mock(StreamObserver.class);
