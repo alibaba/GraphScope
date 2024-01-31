@@ -331,6 +331,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     size_t primary_key_ind = std::get<2>(primary_key);
     IdIndexer<KEY_T, vid_t> indexer;
 
+    // use a dummy vector to store the string columns, to avoid the strings
+    // being released as record batch is released.
+    std::vector<std::shared_ptr<arrow::Array>> string_cols;
+
     for (auto& v_file : v_files) {
       VLOG(10) << "Parsing vertex file:" << v_file << " for label "
                << v_label_name;
@@ -359,6 +363,12 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         auto other_columns_array = columns;
         other_columns_array.erase(other_columns_array.begin() +
                                   primary_key_ind);
+        for (size_t i = 0; i < other_columns_array.size(); ++i) {
+          if (other_columns_array[i]->type()->Equals(arrow::utf8()) ||
+              other_columns_array[i]->type()->Equals(arrow::large_utf8())) {
+            string_cols.emplace_back(other_columns_array[i]);
+          }
+        }
         addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
                                 other_columns_array);
       }
@@ -409,6 +419,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     VLOG(10) << "src indexer size: " << src_indexer.size()
              << " dst indexer size: " << dst_indexer.size();
 
+    // use a dummy vector to store the string columns, to avoid the strings
+    // being released as record batch is released.
+    std::vector<std::shared_ptr<arrow::Array>> string_cols;
+
     for (auto filename : e_files) {
       auto record_batch_supplier = supplier_creator(
           src_label_id, dst_label_id, e_label_id, filename, loading_config_);
@@ -447,6 +461,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         std::vector<std::shared_ptr<arrow::Array>> property_cols;
         for (size_t i = 2; i < columns.size(); ++i) {
           property_cols.emplace_back(columns[i]);
+          if (columns[i]->type()->Equals(arrow::utf8()) ||
+              columns[i]->type()->Equals(arrow::large_utf8())) {
+            string_cols.emplace_back(columns[i]);
+          }
         }
         CHECK(property_cols.size() <= 1)
             << "Currently only support at most one property on edge";
