@@ -331,10 +331,6 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     size_t primary_key_ind = std::get<2>(primary_key);
     IdIndexer<KEY_T, vid_t> indexer;
 
-    // use a dummy vector to store the string columns, to avoid the strings
-    // being released as record batch is released.
-    std::vector<std::shared_ptr<arrow::Array>> string_cols;
-
     for (auto& v_file : v_files) {
       VLOG(10) << "Parsing vertex file:" << v_file << " for label "
                << v_label_name;
@@ -363,12 +359,6 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         auto other_columns_array = columns;
         other_columns_array.erase(other_columns_array.begin() +
                                   primary_key_ind);
-        for (size_t i = 0; i < other_columns_array.size(); ++i) {
-          if (other_columns_array[i]->type()->Equals(arrow::utf8()) ||
-              other_columns_array[i]->type()->Equals(arrow::large_utf8())) {
-            string_cols.emplace_back(other_columns_array[i]);
-          }
-        }
         addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
                                 other_columns_array);
       }

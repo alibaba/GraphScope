@@ -97,7 +97,7 @@ class ODPSReadClient {
       const std::string& session_id, const TableIdentifier& table_identifier,
       std::vector<std::vector<std::shared_ptr<arrow::RecordBatch>>>&
           all_batches_,
-      const std::vector<int>& indices) const;
+      std::vector<int>&& indices) const;
 
   bool readRows(std::string session_id, const TableIdentifier& table_identifier,
                 std::vector<std::shared_ptr<arrow::RecordBatch>>& res_batches,
