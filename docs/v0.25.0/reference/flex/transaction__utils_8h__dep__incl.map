@@ -1,7 +1,0 @@
-<map id="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/transaction_utils.h" name="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database/transaction_utils.h">
-<area shape="rect" id="node1" title=" " alt="" coords="357,5,632,61"/>
-<area shape="rect" id="node2" href="$insert__transaction_8cc.html" title=" " alt="" coords="5,109,232,180"/>
-<area shape="rect" id="node3" href="$single__edge__insert__transaction_8cc.html" title=" " alt="" coords="256,109,483,180"/>
-<area shape="rect" id="node4" href="$single__vertex__insert__transaction_8cc.html" title=" " alt="" coords="507,109,733,180"/>
-<area shape="rect" id="node5" href="$update__transaction_8cc.html" title=" " alt="" coords="757,109,984,180"/>
-</map>
