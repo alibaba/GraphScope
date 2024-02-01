@@ -16,27 +16,20 @@
 # limitations under the License.
 #
 
+import datetime
 import logging
 import os
 from typing import List, Union
 
-from gs_flex_coordinator.core.config import (
-    CLUSTER_TYPE,
-    HQPS_ADMIN_SERVICE_PORT,
-    WORKSPACE,
-)
-from gs_flex_coordinator.core.utils import get_internal_ip
-from gs_flex_coordinator.models import StartServiceRequest
-
 import hqps_client
-from hqps_client import (
-    Graph,
-    ModelSchema,
-    NodeStatus,
-    Procedure,
-    SchemaMapping,
-    Service,
-)
+from hqps_client import (Graph, JobResponse, JobStatus, ModelSchema, Procedure,
+                         SchemaMapping, Service)
+
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
+                                             HQPS_ADMIN_SERVICE_PORT,
+                                             WORKSPACE)
+from gs_flex_coordinator.core.utils import encode_datetime, get_internal_ip
+from gs_flex_coordinator.models import StartServiceRequest
 
 logger = logging.getLogger("graphscope")
 
@@ -170,15 +163,57 @@ class HQPSClient(object):
                 Service.from_dict({"graph_name": request.graph_name})
             )
 
-    def data_import(self, graph_name: str, schema_mapping: dict) -> str:
-        print(graph_name, schema_mapping)
+    def list_jobs(self) -> List[dict]:
         with hqps_client.ApiClient(
             hqps_client.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.DataloadingApi(api_client)
-            return api_instance.create_dataloading_job(
+            api_instance = hqps_client.JobApi(api_client)
+            rlt = []
+            for s in api_instance.list_jobs():
+                job_status = s.to_dict()
+                job_status["start_time"] = encode_datetime(
+                    datetime.datetime.fromtimestamp(job_status["start_time"] / 1000)
+                )
+                if "end_time" in job_status:
+                    job_status["end_time"] = encode_datetime(
+                        datetime.datetime.fromtimestamp(job_status["end_time"] / 1000)
+                    )
+                rlt.append(job_status)
+            return rlt
+
+    def get_job_by_id(self, job_id: str) -> dict:
+        with hqps_client.ApiClient(
+            hqps_client.Configuration(self._hqps_endpoint)
+        ) as api_client:
+            api_instance = hqps_client.JobApi(api_client)
+            job_status = api_instance.get_job_by_id(job_id).to_dict()
+            job_status["start_time"] = encode_datetime(
+                datetime.datetime.fromtimestamp(job_status["start_time"] / 1000)
+            )
+            if "end_time" in job_status:
+                job_status["end_time"] = encode_datetime(
+                    datetime.datetime.fromtimestamp(job_status["end_time"] / 1000)
+                )
+            return job_status
+
+    def delete_job_by_id(self, job_id: str) -> str:
+        with hqps_client.ApiClient(
+            hqps_client.Configuration(self._hqps_endpoint)
+        ) as api_client:
+            api_instance = hqps_client.JobApi(api_client)
+            return api_instance.delete_job_by_id(job_id)
+
+    def create_dataloading_job(
+        self, graph_name: str, schema_mapping: dict
+    ) -> JobResponse:
+        with hqps_client.ApiClient(
+            hqps_client.Configuration(self._hqps_endpoint)
+        ) as api_client:
+            api_instance = hqps_client.JobApi(api_client)
+            response = api_instance.create_dataloading_job(
                 graph_name, SchemaMapping.from_dict(schema_mapping)
             )
+            return response.job_id
 
 
 def init_hqps_client():

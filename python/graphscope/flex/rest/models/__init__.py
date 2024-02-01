@@ -40,6 +40,7 @@ from graphscope.flex.rest.models.groot_graph_gremlin_interface import GrootGraph
 from graphscope.flex.rest.models.groot_property import GrootProperty
 from graphscope.flex.rest.models.groot_schema import GrootSchema
 from graphscope.flex.rest.models.groot_vertex_type import GrootVertexType
+from graphscope.flex.rest.models.job_status import JobStatus
 from graphscope.flex.rest.models.model_property import ModelProperty
 from graphscope.flex.rest.models.model_schema import ModelSchema
 from graphscope.flex.rest.models.node_status import NodeStatus
