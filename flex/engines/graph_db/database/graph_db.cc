@@ -457,12 +457,8 @@ void GraphDB::showAppMetrics() const {
       std::string query_name = "UNKNOWN";
       if (i == 0) {
         query_name = "ServerApp";
-      } else if (i <= 14) {
-        query_name = "IC" + std::to_string(i);
-      } else if (i <= 21) {
-        query_name = "IS" + std::to_string(i - 14);
-      } else if (i <= 29) {
-        query_name = "INS" + std::to_string(i - 21);
+      } else {
+        query_name = "Query-" + std::to_string(i);
       }
       summary.output(query_name);
     }
