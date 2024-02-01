@@ -432,12 +432,14 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 };
 
 template <>
-class SingleImmutableCsr<std::string_view> : public TypedImmutableCsrBase<std::string_view> {
+class SingleImmutableCsr<std::string_view>
+    : public TypedImmutableCsrBase<std::string_view> {
  public:
   using nbr_t = ImmutableNbr<size_t>;
   using slice_t = ImmutableNbrSlice<std::string_view>;
 
-  SingleImmutableCsr(StringColumn& column, std::atomic<size_t>& column_idx) : column_(column), column_idx_(column_idx) {}
+  SingleImmutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
+      : column_(column), column_idx_(column_idx) {}
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -453,7 +455,7 @@ class SingleImmutableCsr<std::string_view> : public TypedImmutableCsrBase<std::s
   }
 
   void batch_put_edge_with_index(vid_t src, vid_t dst, size_t data,
-                      timestamp_t ts) override {
+                                 timestamp_t ts) override {
     CHECK_EQ(nbr_list_[src].neighbor, std::numeric_limits<vid_t>::max());
     nbr_list_[src].neighbor = dst;
     nbr_list_[src].data = data;
@@ -553,7 +555,8 @@ class SingleImmutableCsr<std::string_view> : public TypedImmutableCsrBase<std::s
   size_t size() const override { return nbr_list_.size(); }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
-    return std::make_shared<ImmutableCsrConstEdgeIter<std::string_view>>(get_edges(v));
+    return std::make_shared<ImmutableCsrConstEdgeIter<std::string_view>>(
+        get_edges(v));
   }
 
   CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const override {
@@ -564,7 +567,8 @@ class SingleImmutableCsr<std::string_view> : public TypedImmutableCsrBase<std::s
     return nullptr;
   }
 
-  void put_edge_with_index(vid_t src, vid_t dst, size_t data, timestamp_t ts, Allocator&) override {
+  void put_edge_with_index(vid_t src, vid_t dst, size_t data, timestamp_t ts,
+                           Allocator&) override {
     CHECK_LT(src, nbr_list_.size());
     CHECK_EQ(nbr_list_[src].neighbor, std::numeric_limits<vid_t>::max());
     nbr_list_[src].neighbor = dst;
@@ -581,7 +585,7 @@ class SingleImmutableCsr<std::string_view> : public TypedImmutableCsrBase<std::s
     return ret;
   }
 
-  ImmutableNbr<std::string_view> get_edge(vid_t i) const { 
+  ImmutableNbr<std::string_view> get_edge(vid_t i) const {
     ImmutableNbr<std::string_view> nbr;
     nbr.neighbor = nbr_list_[i].neighbor;
     nbr.data = column_.get_view(nbr_list_[i].data);
