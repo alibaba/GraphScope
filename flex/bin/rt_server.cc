@@ -85,8 +85,9 @@ int main(int argc, char** argv) {
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
   gs::GraphDBConfig config(schema, data_path, shard_num);
   config.memory_level = memory_level;
-  config.enable_auto_compaction = true;
-  config.service_port = http_port;
+  if (config.memory_level >= 2) {
+    config.enable_auto_compaction = true;
+  }
   db.Open(config);
 
   t0 += grape::GetCurrentTime();
