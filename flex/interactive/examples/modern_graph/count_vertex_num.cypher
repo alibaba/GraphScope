@@ -1,1 +1,1 @@
-MATCH(v:person { id: $personId}) RETURN COUNT(v);
+MATCH(v:person) RETURN COUNT(v);

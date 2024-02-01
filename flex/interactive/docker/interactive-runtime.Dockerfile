@@ -11,7 +11,7 @@ SHELL ["/bin/bash", "-c"]
 RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates lsb-release wget && \
     curl -o apache-arrow-apt-source-latest.deb https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb && \
     sudo apt-get install -y ./apache-arrow-apt-source-latest.deb && \
-    sudo apt-get update && sudo apt-get install -y libarrow-dev=6.0.1-1
+    sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
 
 RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   sh -s -- -y --profile minimal --default-toolchain=1.70.0 && \

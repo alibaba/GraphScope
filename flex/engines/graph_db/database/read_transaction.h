@@ -19,7 +19,7 @@
 #include <limits>
 #include <utility>
 
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 
@@ -218,6 +218,62 @@ class SingleGraphView {
   timestamp_t timestamp_;
 };
 
+template <>
+class SingleGraphView<std::string_view> {
+ public:
+  SingleGraphView(const SingleMutableCsr<std::string_view>& csr,
+                  timestamp_t timestamp)
+      : csr_(csr), timestamp_(timestamp) {}
+
+  bool exist(vid_t v) const {
+    return (csr_.get_edge(v).timestamp.load() <= timestamp_);
+  }
+
+  MutableNbr<std::string_view> get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleMutableCsr<std::string_view>& csr_;
+  timestamp_t timestamp_;
+};
+
+template <typename EDATA_T>
+class SingleImmutableGraphView {
+ public:
+  SingleImmutableGraphView(const SingleImmutableCsr<EDATA_T>& csr)
+      : csr_(csr) {}
+
+  bool exist(vid_t v) const {
+    return (csr_.get_edge(v).neighbor != std::numeric_limits<vid_t>::max());
+  }
+
+  const ImmutableNbr<EDATA_T>& get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleImmutableCsr<EDATA_T>& csr_;
+};
+
+template <>
+class SingleImmutableGraphView<std::string_view> {
+ public:
+  SingleImmutableGraphView(const SingleImmutableCsr<std::string_view>& csr)
+      : csr_(csr) {}
+
+  bool exist(vid_t v) const {
+    return (csr_.get_edge(v).neighbor != std::numeric_limits<vid_t>::max());
+  }
+
+  ImmutableNbr<std::string_view> get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleImmutableCsr<std::string_view>& csr_;
+};
+
 class ReadTransaction {
  public:
   ReadTransaction(const MutablePropertyFragment& graph, VersionManager& vm,
@@ -256,7 +312,7 @@ class ReadTransaction {
   class edge_iterator {
    public:
     edge_iterator(label_t neighbor_label, label_t edge_label,
-                  std::shared_ptr<MutableCsrConstEdgeIterBase> iter);
+                  std::shared_ptr<CsrConstEdgeIterBase> iter);
     ~edge_iterator();
 
     Any GetData() const;
@@ -275,7 +331,7 @@ class ReadTransaction {
     label_t neighbor_label_;
     label_t edge_label_;
 
-    std::shared_ptr<MutableCsrConstEdgeIterBase> iter_;
+    std::shared_ptr<CsrConstEdgeIterBase> iter_;
   };
 
   vertex_iterator GetVertexIterator(label_t label) const;
@@ -348,6 +404,22 @@ class ReadTransaction {
     auto csr = dynamic_cast<const SingleMutableCsr<EDATA_T>*>(
         graph_.get_ie_csr(v_label, neighbor_label, edge_label));
     return SingleGraphView<EDATA_T>(*csr, timestamp_);
+  }
+
+  template <typename EDATA_T>
+  SingleImmutableGraphView<EDATA_T> GetOutgoingSingleImmutableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const SingleImmutableCsr<EDATA_T>*>(
+        graph_.get_oe_csr(v_label, neighbor_label, edge_label));
+    return SingleImmutableGraphView<EDATA_T>(*csr);
+  }
+
+  template <typename EDATA_T>
+  SingleImmutableGraphView<EDATA_T> GetIncomingSingleImmutableGraphView(
+      label_t v_label, label_t neighbor_label, label_t edge_label) const {
+    auto csr = dynamic_cast<const SingleImmutableCsr<EDATA_T>*>(
+        graph_.get_ie_csr(v_label, neighbor_label, edge_label));
+    return SingleImmutableGraphView<EDATA_T>(*csr);
   }
 
  private:

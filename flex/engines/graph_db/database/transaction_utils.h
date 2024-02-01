@@ -34,6 +34,8 @@ inline void serialize_field(grape::InArchive& arc, const Any& prop) {
     arc << prop.value.ui;
   } else if (prop.type == PropertyType::Date()) {
     arc << prop.value.d.milli_second;
+  } else if (prop.type == PropertyType::Day()) {
+    arc << prop.value.day.to_u32();
   } else if (prop.type == PropertyType::String()) {
     arc << prop.value.s;
   } else if (prop.type == PropertyType::Int64()) {
@@ -58,7 +60,13 @@ inline void deserialize_field(grape::OutArchive& arc, Any& prop) {
   } else if (prop.type == PropertyType::UInt32()) {
     arc >> prop.value.ui;
   } else if (prop.type == PropertyType::Date()) {
-    arc >> prop.value.d.milli_second;
+    int64_t date_val;
+    arc >> date_val;
+    prop.value.d.milli_second = date_val;
+  } else if (prop.type == PropertyType::Day()) {
+    uint32_t val;
+    arc >> val;
+    prop.value.day.from_u32(val);
   } else if (prop.type == PropertyType::String()) {
     arc >> prop.value.s;
   } else if (prop.type == PropertyType::Int64()) {

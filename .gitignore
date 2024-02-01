@@ -18,6 +18,9 @@ python/proto
 # dot file
 *.dot
 
+# swp file
+*.swp
+
 # Protobuf GRPC
 *.pb.*
 *_pb2.py

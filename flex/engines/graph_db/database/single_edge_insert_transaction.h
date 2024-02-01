@@ -25,7 +25,7 @@ namespace gs {
 class MutablePropertyFragment;
 class WalWriter;
 class VersionManager;
-class Any;
+struct Any;
 
 class SingleEdgeInsertTransaction {
  public:

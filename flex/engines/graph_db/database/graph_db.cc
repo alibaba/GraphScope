@@ -14,9 +14,9 @@
  */
 
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/graph_db/database/graph_db_session.h"
-
+#include "flex/engines/graph_db/app/hqps_app.h"
 #include "flex/engines/graph_db/app/server_app.h"
+#include "flex/engines/graph_db/database/graph_db_session.h"
 #include "flex/engines/graph_db/database/wal.h"
 #include "flex/utils/yaml_utils.h"
 
@@ -26,10 +26,11 @@ namespace gs {
 
 struct SessionLocalContext {
   SessionLocalContext(GraphDB& db, const std::string& work_dir, int thread_id,
-                      bool memory_only)
-      : allocator(memory_only
-                      ? ""
-                      : thread_local_allocator_prefix(work_dir, thread_id)),
+                      MemoryStrategy allocator_strategy)
+      : allocator(allocator_strategy,
+                  (allocator_strategy != MemoryStrategy::kSyncToFile
+                       ? ""
+                       : thread_local_allocator_prefix(work_dir, thread_id))),
         session(db, allocator, logger, work_dir, thread_id) {}
   ~SessionLocalContext() { logger.close(); }
   Allocator allocator;
@@ -47,6 +48,7 @@ GraphDB::~GraphDB() {
     compact_thread_running_ = false;
     compact_thread_.join();
   }
+  showAppMetrics();
   for (int i = 0; i < thread_num_; ++i) {
     contexts_[i].~SessionLocalContext();
   }
@@ -60,7 +62,21 @@ GraphDB& GraphDB::get() {
 
 Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
                            int32_t thread_num, bool warmup, bool memory_only,
-                           bool enable_auto_compaction, int port) {
+                           bool enable_auto_compaction) {
+  GraphDBConfig config(schema, data_dir, thread_num);
+  config.warmup = warmup;
+  if (memory_only) {
+    config.memory_level = 1;
+  } else {
+    config.memory_level = 0;
+  }
+  config.enable_auto_compaction = enable_auto_compaction;
+  return Open(config);
+}
+
+Result<bool> GraphDB::Open(const GraphDBConfig& config) {
+  const std::string& data_dir = config.data_dir;
+  const Schema& schema = config.schema;
   if (!std::filesystem::exists(data_dir)) {
     std::filesystem::create_directories(data_dir);
   }
@@ -72,9 +88,9 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
     graph_.mutable_schema() = schema;
   }
   work_dir_ = data_dir;
-  thread_num_ = thread_num;
+  thread_num_ = config.thread_num;
   try {
-    graph_.Open(data_dir, memory_only);
+    graph_.Open(data_dir, config.memory_level);
   } catch (std::exception& e) {
     LOG(ERROR) << "Exception: " << e.what();
     return Result<bool>(StatusCode::InternalError,
@@ -105,19 +121,86 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
   mutable_schema.EmplacePlugins(plugin_paths);
 
   last_compaction_ts_ = 0;
-  openWalAndCreateContexts(data_dir, memory_only);
+  MemoryStrategy allocator_strategy = MemoryStrategy::kMemoryOnly;
+  if (config.memory_level == 0) {
+    allocator_strategy = MemoryStrategy::kSyncToFile;
+  } else if (config.memory_level >= 2) {
+    allocator_strategy = MemoryStrategy::kHugepagePrefered;
+  }
 
-  if ((!create_empty_graph) && warmup) {
+  openWalAndCreateContexts(data_dir, allocator_strategy);
+
+  if ((!create_empty_graph) && config.warmup) {
     graph_.Warmup(thread_num_);
   }
 
-  if (enable_auto_compaction && (port != -1)) {
+  if (config.enable_monitering) {
+    if (monitor_thread_running_) {
+      monitor_thread_running_ = false;
+      monitor_thread_.join();
+    }
+    monitor_thread_running_ = true;
+    monitor_thread_ = std::thread([&]() {
+      std::vector<double> last_eval_durations(thread_num_, 0);
+      std::vector<int64_t> last_query_nums(thread_num_, 0);
+      while (monitor_thread_running_) {
+        sleep(10);
+        size_t curr_allocated_size = 0;
+        double total_eval_durations = 0;
+        double min_eval_duration = std::numeric_limits<double>::max();
+        double max_eval_duration = 0;
+        int64_t total_query_num = 0;
+        int64_t min_query_num = std::numeric_limits<int64_t>::max();
+        int64_t max_query_num = 0;
+
+        for (int i = 0; i < thread_num_; ++i) {
+          curr_allocated_size += contexts_[i].allocator.allocated_memory();
+          if (last_eval_durations[i] == 0) {
+            last_eval_durations[i] = contexts_[i].session.eval_duration();
+          } else {
+            double curr = contexts_[i].session.eval_duration();
+            double eval_duration = curr;
+            total_eval_durations += eval_duration;
+            min_eval_duration = std::min(min_eval_duration, eval_duration);
+            max_eval_duration = std::max(max_eval_duration, eval_duration);
+
+            last_eval_durations[i] = curr;
+          }
+          if (last_query_nums[i] == 0) {
+            last_query_nums[i] = contexts_[i].session.query_num();
+          } else {
+            int64_t curr = contexts_[i].session.query_num();
+            total_query_num += curr;
+            min_query_num = std::min(min_query_num, curr);
+            max_query_num = std::max(max_query_num, curr);
+
+            last_query_nums[i] = curr;
+          }
+        }
+        if (max_query_num != 0) {
+          double avg_eval_durations =
+              total_eval_durations / static_cast<double>(thread_num_);
+          double avg_query_num = static_cast<double>(total_query_num) /
+                                 static_cast<double>(thread_num_);
+          double allocated_size_in_gb =
+              static_cast<double>(curr_allocated_size) / 1024.0 / 1024.0 /
+              1024.0;
+          LOG(INFO) << "allocated: " << allocated_size_in_gb << " GB, eval: ["
+                    << min_eval_duration << ", " << avg_eval_durations << ", "
+                    << max_eval_duration << "] s, query num: [" << min_query_num
+                    << ", " << avg_query_num << ", " << max_query_num << "]";
+        }
+      }
+    });
+  }
+
+  if (config.enable_auto_compaction) {
     if (compact_thread_running_) {
       compact_thread_running_ = false;
       compact_thread_.join();
     }
     compact_thread_running_ = true;
-    compact_thread_ = std::thread([&](int http_port) {
+    compact_thread_ = std::thread([&]() {
       size_t last_compaction_at = 0;
       while (compact_thread_running_) {
         size_t query_num_before = getExecutedQueryNum();
@@ -130,36 +213,24 @@ Result<bool> GraphDB::Open(const Schema& schema, const std::string& data_dir,
             (query_num_after > (last_compaction_at + 100000))) {
           VLOG(10) << "Trigger auto compaction";
           last_compaction_at = query_num_after;
-          std::string url = "127.0.0.1";
-          httplib::Client cli(url, http_port);
-          cli.set_connection_timeout(0, 300000);
-          cli.set_read_timeout(300, 0);
-          cli.set_write_timeout(300, 0);
-
-          std::vector<char> buf;
-          Encoder encoder(buf);
-          encoder.put_string("COMPACTION");
-          encoder.put_byte(0);
-          std::string content(buf.data(), buf.size());
-          auto res = cli.Post("/interactive/query", content, "text/plain");
-          std::string ret = res->body;
-          Decoder decoder(ret.data(), ret.size());
-          std::string_view info = decoder.get_string();
-
-          VLOG(10) << "Finish compaction, info: " << info;
+          timestamp_t ts = this->version_manager_.acquire_update_timestamp();
+          auto txn = CompactTransaction(this->graph_, this->contexts_[0].logger,
+                                        this->version_manager_, ts);
+          txn.Commit();
+          VLOG(10) << "Finish compaction";
         }
       }
-    }, port);
+    });
   }
 
   return Result<bool>(true);
 }
 
 void GraphDB::Close() {
-#ifdef MONITOR_SESSIONS
-  monitor_thread_running_ = false;
-  monitor_thread_.join();
-#endif
+  if (monitor_thread_running_) {
+    monitor_thread_running_ = false;
+    monitor_thread_.join();
+  }
   if (compact_thread_running_) {
     compact_thread_running_ = false;
     compact_thread_.join();
@@ -201,6 +272,10 @@ UpdateTransaction GraphDB::GetUpdateTransaction(int thread_id) {
 }
 
 GraphDBSession& GraphDB::GetSession(int thread_id) {
+  return contexts_[thread_id].session;
+}
+
+const GraphDBSession& GraphDB::GetSession(int thread_id) const {
   return contexts_[thread_id].session;
 }
 
@@ -321,7 +396,15 @@ void GraphDB::initApps(
   for (size_t i = 0; i < 256; ++i) {
     app_factories_[i] = nullptr;
   }
+  // Builtin apps
   app_factories_[0] = std::make_shared<ServerAppFactory>();
+#ifdef BUILD_HQPS
+  app_factories_[Schema::HQPS_ADHOC_PLUGIN_ID] =
+      std::make_shared<HQPSAdhocAppFactory>();
+  app_factories_[Schema::HQPS_PROCEDURE_PLUGIN_ID] =
+      std::make_shared<HQPSProcedureAppFactory>();
+#endif  // BUILD_HQPS
+
   size_t valid_plugins = 0;
   for (auto& path_and_index : plugins) {
     auto path = path_and_index.second.first;
@@ -335,7 +418,7 @@ void GraphDB::initApps(
 }
 
 void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
-                                       bool memory_only) {
+                                       MemoryStrategy allocator_strategy) {
   std::string wal_dir_path = wal_dir(data_dir);
   if (!std::filesystem::exists(wal_dir_path)) {
     std::filesystem::create_directory(wal_dir_path);
@@ -350,7 +433,8 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
       aligned_alloc(4096, sizeof(SessionLocalContext) * thread_num_));
   std::filesystem::create_directories(allocator_dir(data_dir));
   for (int i = 0; i < thread_num_; ++i) {
-    new (&contexts_[i]) SessionLocalContext(*this, data_dir, i, memory_only);
+    new (&contexts_[i])
+        SessionLocalContext(*this, data_dir, i, allocator_strategy);
   }
   ingestWals(wal_files, data_dir, thread_num_);
 
@@ -360,63 +444,25 @@ void GraphDB::openWalAndCreateContexts(const std::string& data_dir,
 
   initApps(graph_.schema().GetPlugins());
   VLOG(1) << "Successfully restore load plugins";
+}
 
-#ifdef MONITOR_SESSIONS
-  monitor_thread_running_ = true;
-  monitor_thread_ = std::thread([&]() {
-    size_t last_allocated_size = 0;
-    std::vector<double> last_eval_durations(thread_num_, 0);
-    std::vector<int64_t> last_query_nums(thread_num_, 0);
-    while (monitor_thread_running_) {
-      sleep(10);
-      size_t curr_allocated_size = 0;
-      double total_eval_durations = 0;
-      double min_eval_duration = std::numeric_limits<double>::max();
-      double max_eval_duration = 0;
-      int64_t total_query_num = 0;
-      int64_t min_query_num = std::numeric_limits<int64_t>::max();
-      int64_t max_query_num = 0;
-
-      for (int i = 0; i < thread_num_; ++i) {
-        curr_allocated_size += contexts_[i].allocator.allocated_memory();
-        if (last_eval_durations[i] == 0) {
-          last_eval_durations[i] = contexts_[i].session.eval_duration();
-        } else {
-          double curr = contexts_[i].session.eval_duration();
-          double eval_duration = curr;
-          total_eval_durations += eval_duration;
-          min_eval_duration = std::min(min_eval_duration, eval_duration);
-          max_eval_duration = std::max(max_eval_duration, eval_duration);
-
-          last_eval_durations[i] = curr;
-        }
-        if (last_query_nums[i] == 0) {
-          last_query_nums[i] = contexts_[i].session.query_num();
-        } else {
-          int64_t curr = contexts_[i].session.query_num();
-          total_query_num += curr;
-          min_query_num = std::min(min_query_num, curr);
-          max_query_num = std::max(max_query_num, curr);
-
-          last_query_nums[i] = curr;
-        }
-      }
-      last_allocated_size = curr_allocated_size;
-      if (max_query_num != 0) {
-        double avg_eval_durations =
-            total_eval_durations / static_cast<double>(thread_num_);
-        double avg_query_num = static_cast<double>(total_query_num) /
-                               static_cast<double>(thread_num_);
-        double allocated_size_in_gb =
-            static_cast<double>(curr_allocated_size) / 1024.0 / 1024.0 / 1024.0;
-        LOG(INFO) << "allocated: " << allocated_size_in_gb << " GB, eval: ["
-                  << min_eval_duration << ", " << avg_eval_durations << ", "
-                  << max_eval_duration << "] s, query num: [" << min_query_num
-                  << ", " << avg_query_num << ", " << max_query_num << "]";
-      }
+void GraphDB::showAppMetrics() const {
+  int session_num = SessionNum();
+  for (int i = 0; i < 256; ++i) {
+    AppMetric summary;
+    for (int k = 0; k < session_num; ++k) {
+      summary += GetSession(k).GetAppMetric(i);
     }
-  });
-#endif
+    if (!summary.empty()) {
+      std::string query_name = "UNKNOWN";
+      if (i == 0) {
+        query_name = "ServerApp";
+      } else {
+        query_name = "Query-" + std::to_string(i);
+      }
+      summary.output(query_name);
+    }
+  }
 }
 
 size_t GraphDB::getExecutedQueryNum() const {

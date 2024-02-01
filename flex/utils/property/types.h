@@ -18,9 +18,12 @@ limitations under the License.
 
 #include <assert.h>
 
+#include <chrono>
 #include <istream>
 #include <ostream>
 #include <vector>
+
+#include <boost/date_time/posix_time/posix_time.hpp>
 
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
@@ -38,6 +41,7 @@ namespace gs {
 enum class StorageStrategy {
   kNone,
   kMem,
+  kDisk,
 };
 
 namespace impl {
@@ -45,6 +49,7 @@ namespace impl {
 enum class PropertyTypeImpl {
   kInt32,
   kDate,
+  kDay,
   kString,
   kEmpty,
   kInt64,
@@ -92,6 +97,7 @@ struct PropertyType {
   static PropertyType UInt64();
   static PropertyType Double();
   static PropertyType Date();
+  static PropertyType Day();
   static PropertyType String();
   static PropertyType StringMap();
   static PropertyType Varchar(uint16_t max_length);
@@ -107,6 +113,7 @@ struct PropertyType {
   static const PropertyType kUInt64;
   static const PropertyType kDouble;
   static const PropertyType kDate;
+  static const PropertyType kDay;
   static const PropertyType kString;
   static const PropertyType kStringMap;
 
@@ -114,7 +121,7 @@ struct PropertyType {
   bool operator!=(const PropertyType& other) const;
 };
 
-struct Date {
+struct __attribute__((packed)) Date {
   Date() = default;
   ~Date() = default;
   Date(int64_t x);
@@ -126,6 +133,68 @@ struct Date {
   }
 
   int64_t milli_second;
+};
+
+struct DayValue {
+  uint32_t year : 18;
+  uint32_t month : 4;
+  uint32_t day : 5;
+  uint32_t hour : 5;
+};
+
+struct Day {
+  Day() = default;
+  ~Day() = default;
+
+  Day(int64_t ts);
+
+  std::string to_string() const;
+
+  uint32_t to_u32() const;
+  void from_u32(uint32_t val);
+
+  int64_t to_timestamp() const {
+    const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+
+    boost::gregorian::date new_date(year(), month(), day());
+    boost::posix_time::ptime new_time_point(
+        new_date, boost::posix_time::time_duration(hour(), 0, 0));
+    boost::posix_time::time_duration diff = new_time_point - epoch;
+    int64_t new_timestamp_sec = diff.total_seconds();
+
+    return new_timestamp_sec * 1000;
+  }
+
+  void from_timestamp(int64_t ts) {
+    const boost::posix_time::ptime epoch(boost::gregorian::date(1970, 1, 1));
+    int64_t ts_sec = ts / 1000;
+    boost::posix_time::ptime time_point =
+        epoch + boost::posix_time::seconds(ts_sec);
+    boost::posix_time::ptime::date_type date = time_point.date();
+    boost::posix_time::time_duration td = time_point.time_of_day();
+    this->value.internal.year = date.year();
+    this->value.internal.month = date.month().as_number();
+    this->value.internal.day = date.day();
+    this->value.internal.hour = td.hours();
+
+    int64_t ts_back = to_timestamp();
+    CHECK_EQ(ts, ts_back);
+  }
+
+  bool operator<(const Day& rhs) const { return this->to_u32() < rhs.to_u32(); }
+  bool operator==(const Day& rhs) const {
+    return this->to_u32() == rhs.to_u32();
+  }
+
+  int year() const;
+  int month() const;
+  int day() const;
+  int hour() const;
+
+  union {
+    DayValue internal;
+    uint32_t integer;
+  } value;
 };
 
 struct LabelKey {
@@ -155,6 +224,7 @@ union AnyValue {
   uint64_t ul;
 
   Date d;
+  Day day;
   std::string_view s;
   double db;
   uint8_t u8;
@@ -211,9 +281,15 @@ struct Any {
     type = PropertyType::kDate;
     value.d.milli_second = v;
   }
+
   void set_date(Date v) {
     type = PropertyType::kDate;
     value.d = v;
+  }
+
+  void set_day(Day v) {
+    type = PropertyType::kDay;
+    value.day = v;
   }
 
   void set_string(std::string_view v) {
@@ -251,6 +327,8 @@ struct Any {
       //      return value.s.to_string();
     } else if (type == PropertyType::kDate) {
       return value.d.to_string();
+    } else if (type == PropertyType::kDay) {
+      return value.day.to_string();
     } else if (type == PropertyType::kEmpty) {
       return "NULL";
     } else if (type == PropertyType::kDouble) {
@@ -324,6 +402,11 @@ struct Any {
     return value.d;
   }
 
+  const Day& AsDay() const {
+    assert(type == PropertyType::kDay);
+    return value.day;
+  }
+
   template <typename T>
   static Any From(const T& value) {
     return AnyConverter<T>::to_any(value);
@@ -337,6 +420,8 @@ struct Any {
         return value.l == other.value.l;
       } else if (type == PropertyType::kDate) {
         return value.d.milli_second == other.value.d.milli_second;
+      } else if (type == PropertyType::kDay) {
+        return value.day == other.value.day;
       } else if (type == PropertyType::kString) {
         return value.s == other.value.s;
       } else if (type == PropertyType::kEmpty) {
@@ -372,6 +457,8 @@ struct Any {
         return value.l < other.value.l;
       } else if (type == PropertyType::kDate) {
         return value.d.milli_second < other.value.d.milli_second;
+      } else if (type == PropertyType::kDay) {
+        return value.day < other.value.day;
       } else if (type == PropertyType::kString) {
         return value.s < other.value.s;
       } else if (type == PropertyType::kEmpty) {
@@ -452,6 +539,14 @@ struct ConvertAny<Date> {
   static void to(const Any& value, Date& out) {
     CHECK(value.type == PropertyType::kDate);
     out = value.value.d;
+  }
+};
+
+template <>
+struct ConvertAny<Day> {
+  static void to(const Any& value, Day& out) {
+    CHECK(value.type == PropertyType::kDay);
+    out = value.value.day;
   }
 };
 
@@ -684,6 +779,37 @@ struct AnyConverter<Date> {
 };
 
 template <>
+struct AnyConverter<Day> {
+  static PropertyType type() { return PropertyType::kDay; }
+
+  static Any to_any(const Day& value) {
+    Any ret;
+    ret.set_day(value);
+    return ret;
+  }
+
+  static Any to_any(int64_t value) {
+    Day dval(value);
+    Any ret;
+    ret.set_day(dval);
+    return ret;
+  }
+
+  static AnyValue to_any_value(const Day& value) {
+    AnyValue ret;
+    ret.day = value;
+    return ret;
+  }
+
+  static const Day& from_any(const Any& value) {
+    CHECK(value.type == PropertyType::kDay);
+    return value.value.day;
+  }
+
+  static const Day& from_any_value(const AnyValue& value) { return value.day; }
+};
+
+template <>
 struct AnyConverter<std::string_view> {
   static PropertyType type() { return PropertyType::kString; }
 
@@ -844,6 +970,11 @@ inline ostream& operator<<(ostream& os, const gs::Date& dt) {
   return os;
 }
 
+inline ostream& operator<<(ostream& os, const gs::Day& dt) {
+  os << dt.to_string();
+  return os;
+}
+
 inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
   if (pt == gs::PropertyType::Bool()) {
     os << "bool";
@@ -867,6 +998,8 @@ inline ostream& operator<<(ostream& os, gs::PropertyType pt) {
     os << "double";
   } else if (pt == gs::PropertyType::Date()) {
     os << "date";
+  } else if (pt == gs::PropertyType::Day()) {
+    os << "day";
   } else if (pt == gs::PropertyType::String()) {
     os << "string";
   } else if (pt == gs::PropertyType::StringMap()) {
