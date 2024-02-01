@@ -13,31 +13,20 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
-import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
 import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
-import io.grpc.stub.StreamObserver;
-
-import java.util.List;
 
 public class IngestorWriteClient extends RpcClient {
 
     private final IngestorWriteGrpc.IngestorWriteBlockingStub stub;
-    private IngestorWriteGrpc.IngestorWriteStub asyncStub;
 
     public IngestorWriteClient(ManagedChannel channel) {
         super(channel);
         this.stub = IngestorWriteGrpc.newBlockingStub(channel);
-        this.asyncStub = IngestorWriteGrpc.newStub(channel);
-    }
-
-    public IngestorWriteClient(IngestorWriteGrpc.IngestorWriteBlockingStub stub) {
-        super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
     }
 
     public BatchId writeIngestor(String requestId, int queueId, OperationBatch operationBatch) {
@@ -49,41 +38,5 @@ public class IngestorWriteClient extends RpcClient {
                         .build();
         WriteIngestorResponse response = this.stub.writeIngestor(request);
         return new BatchId(response.getSnapshotId());
-    }
-
-    public List<Long> replayWALFrom(long offset, long timestamp) {
-        ReplayWALRequest request =
-                ReplayWALRequest.newBuilder().setOffset(offset).setTimestamp(timestamp).build();
-        ReplayWALResponse response = stub.replayWAL(request);
-        return response.getSnapshotIdList();
-    }
-
-    public void writeIngestorAsync(
-            String requestId,
-            int queueId,
-            OperationBatch operationBatch,
-            CompletionCallback<Long> callback) {
-        WriteIngestorRequest request =
-                WriteIngestorRequest.newBuilder()
-                        .setRequestId(requestId)
-                        .setQueueId(queueId)
-                        .setOperationBatch(operationBatch.toProto())
-                        .build();
-        this.asyncStub.writeIngestor(
-                request,
-                new StreamObserver<WriteIngestorResponse>() {
-                    @Override
-                    public void onNext(WriteIngestorResponse response) {
-                        callback.onCompleted(response.getSnapshotId());
-                    }
-
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
-
-                    @Override
-                    public void onCompleted() {}
-                });
     }
 }

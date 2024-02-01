@@ -367,7 +367,7 @@ public class SnapshotManager {
                 if (snapshotId > currentSnapshotId) {
                     try {
                         if (ddlSnapshotId < currentDdlSnapshotId) {
-                            // During failover, store might send smaller ddlSnapshotId
+                            // During fail over, store might send smaller ddlSnapshotId
                             minSnapshotInfo = new SnapshotInfo(snapshotId, currentDdlSnapshotId);
                             //                            throw new
                             // IllegalStateException("minSnapshotInfo [" + minSnapshotInfo +

@@ -34,7 +34,8 @@ public class DefaultMetaService implements MetaService {
 
     public DefaultMetaService(Configs configs) {
         this.partitionCount = CommonConfig.PARTITION_COUNT.get(configs);
-        this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
+        //        this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
+        this.queueCount = 1;
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.kafkaServers = KafkaConfig.KAFKA_SERVERS.get(configs);
         this.kafkaTopicName = KafkaConfig.KAKFA_TOPIC.get(configs);

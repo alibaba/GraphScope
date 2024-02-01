@@ -46,19 +46,19 @@ public class ClientService extends ClientGrpc.ClientImplBase {
 
     private final SnapshotCache snapshotCache;
     private final MetricsAggregator metricsAggregator;
-    private final StoreIngestor storeIngestor;
+    private final StoreIngestClients storeIngestor;
     private final MetaService metaService;
     private final BatchDdlClient batchDdlClient;
 
-    private final StoreStateFetcher storeStateFetcher;
+    private final StoreStateClients storeStateFetcher;
 
     public ClientService(
             SnapshotCache snapshotCache,
             MetricsAggregator metricsAggregator,
-            StoreIngestor storeIngestor,
+            StoreIngestClients storeIngestor,
             MetaService metaService,
             BatchDdlClient batchDdlClient,
-            StoreStateFetcher storeStateFetcher) {
+            StoreStateClients storeStateFetcher) {
         this.snapshotCache = snapshotCache;
         this.metricsAggregator = metricsAggregator;
         this.storeIngestor = storeIngestor;

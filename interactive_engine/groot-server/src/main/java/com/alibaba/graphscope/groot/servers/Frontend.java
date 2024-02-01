@@ -104,7 +104,7 @@ public class Frontend extends NodeBase {
                         //                        ingestorMetricsCollectClients,
                         storeMetricsCollectClients);
 
-        StoreIngestor storeIngestClients =
+        StoreIngestClients storeIngestClients =
                 new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
         SchemaWriter schemaWriter =
                 new SchemaWriter(
@@ -113,7 +113,7 @@ public class Frontend extends NodeBase {
 
         BatchDdlClient batchDdlClient =
                 new BatchDdlClient(new DdlExecutors(), snapshotCache, schemaWriter);
-        StoreStateFetcher storeStateClients =
+        StoreStateClients storeStateClients =
                 new StoreStateClients(this.channelManager, RoleType.STORE, StoreStateClient::new);
 
         this.metaService = new DefaultMetaService(configs);
@@ -159,7 +159,6 @@ public class Frontend extends NodeBase {
                 new RoleClients<>(this.channelManager, RoleType.COORDINATOR, BackupClient::new);
         ClientBackupService clientBackupService = new ClientBackupService(backupClients);
 
-        IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
         IngestorSnapshotService ingestorSnapshotService =
                 new IngestorSnapshotService(kafkaAppender);
 
@@ -169,7 +168,6 @@ public class Frontend extends NodeBase {
                         localNodeProvider,
                         frontendSnapshotService,
                         metricsCollectService,
-                        ingestorWriteService,
                         ingestorSnapshotService);
 
         this.serviceServer =

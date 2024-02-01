@@ -19,14 +19,9 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.frontend.IngestorSnapshotService;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteService;
 import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
-import com.alibaba.graphscope.groot.ingestor.IngestCallback;
-import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdRequest;
 import com.alibaba.graphscope.proto.groot.AdvanceIngestSnapshotIdResponse;
-import com.alibaba.graphscope.proto.groot.WriteIngestorRequest;
-import com.alibaba.graphscope.proto.groot.WriteIngestorResponse;
 
 import io.grpc.stub.StreamObserver;
 
@@ -57,29 +52,5 @@ public class IngestorRpcTest {
                                 .setPreviousSnapshotId(9L)
                                 .build());
         verify(streamObserver).onCompleted();
-    }
-
-    @Test
-    void testIngestorWriteService() {
-        KafkaAppender kafkaAppender = mock(KafkaAppender.class);
-        IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
-        WriteIngestorRequest req =
-                WriteIngestorRequest.newBuilder()
-                        .setQueueId(2)
-                        .setRequestId("test_req")
-                        .setOperationBatch(OperationBatch.newBuilder().build().toProto())
-                        .build();
-        doAnswer(
-                        invocation -> {
-                            IngestCallback callback = invocation.getArgument(3);
-                            callback.onSuccess(10L);
-                            return null;
-                        })
-                .when(kafkaAppender)
-                .ingestBatch(eq("test_req"), eq(OperationBatch.newBuilder().build()), any());
-        StreamObserver<WriteIngestorResponse> observer = mock(StreamObserver.class);
-        ingestorWriteService.writeIngestor(req, observer);
-        verify(observer).onNext(WriteIngestorResponse.newBuilder().setSnapshotId(10L).build());
-        verify(observer).onCompleted();
     }
 }

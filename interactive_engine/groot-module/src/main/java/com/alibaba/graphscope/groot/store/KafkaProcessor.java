@@ -138,7 +138,7 @@ public class KafkaProcessor {
             offsets = objectMapper.readValue(offsetBytes, new TypeReference<>() {});
         }
         queueOffsetsRef = new AtomicReference<>(offsets);
-        logger.info("recovered queue offsets {}", offsets);
+        logger.info("[STORE] recovered queue offsets {}", offsets);
         if (offsets.size() != QUEUE_COUNT) {
             String msg =
                     String.format(

@@ -72,15 +72,6 @@ public class MaxNode extends NodeBase {
                             .build();
             this.frontends.add(new Frontend(frontendConfigs));
         }
-        //        for (int i = 0; i < ingestorCount; i++) {
-        //            Configs ingestConfigs =
-        //                    Configs.newBuilder(baseConfigs)
-        //                            .put(CommonConfig.ROLE_NAME.getKey(),
-        // RoleType.INGESTOR.getName())
-        //                            .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-        //                            .build();
-        //            this.ingestors.add(new Ingestor(ingestConfigs));
-        //        }
         for (int i = 0; i < storeCount; i++) {
             Configs storeConfigs =
                     Configs.newBuilder(baseConfigs)
@@ -116,14 +107,6 @@ public class MaxNode extends NodeBase {
                                 logger.info("[" + frontend.getName() + "] started");
                             }));
         }
-        //        for (NodeBase ingestor : this.ingestors) {
-        //            startThreads.add(
-        //                    new Thread(
-        //                            () -> {
-        //                                ingestor.start();
-        //                                logger.info("[" + ingestor.getName() + "] started");
-        //                            }));
-        //        }
 
         for (Thread startThread : startThreads) {
             startThread.start();

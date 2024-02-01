@@ -14,7 +14,6 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.common.util.*;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
@@ -24,7 +23,6 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
-import com.alibaba.graphscope.groot.rpc.RoleClients;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +58,6 @@ public class GraphWriter implements MetricsAgent {
     private SnapshotCache snapshotCache;
     private EdgeIdGenerator edgeIdGenerator;
     private MetaService metaService;
-    private RoleClients<IngestorWriteClient> ingestWriteClients;
     private AtomicLong lastWrittenSnapshotId = new AtomicLong(0L);
 
     private final KafkaAppender kafkaAppender;
@@ -70,14 +67,12 @@ public class GraphWriter implements MetricsAgent {
             SnapshotCache snapshotCache,
             EdgeIdGenerator edgeIdGenerator,
             MetaService metaService,
-            //            RoleClients<IngestorWriteClient> ingestWriteClients,
             MetricsCollector metricsCollector,
             KafkaAppender appender,
             Configs configs) {
         this.snapshotCache = snapshotCache;
         this.edgeIdGenerator = edgeIdGenerator;
         this.metaService = metaService;
-        //        this.ingestWriteClients = ingestWriteClients;
         initMetrics();
         metricsCollector.register(this, this::updateMetrics);
         // default for increment eid generate
@@ -214,15 +209,6 @@ public class GraphWriter implements MetricsAgent {
     public boolean flushLastSnapshot(long waitTimeMs) throws InterruptedException {
         long snapshotId = this.lastWrittenSnapshotId.get();
         return this.flushSnapshot(snapshotId, waitTimeMs);
-    }
-
-    private int getWriteQueueId(String session) {
-        int queueCount = this.metaService.getQueueCount();
-        if (queueCount <= 1) {
-            throw new IllegalStateException("expect queueCount > 1, but was [" + queueCount + "]");
-        }
-        long clientIdx = WriteSessionUtil.getClientIdx(session);
-        return (int) (clientIdx % (queueCount - 1)) + 1;
     }
 
     private void addDeleteEdgeOperation(

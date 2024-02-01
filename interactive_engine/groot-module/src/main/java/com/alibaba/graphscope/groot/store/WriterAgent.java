@@ -161,6 +161,7 @@ public class WriterAgent implements MetricsAgent {
         int queueId = storeDataBatch.getQueueId();
         long beforeOfferTime = System.nanoTime();
         boolean suc = this.bufferQueue.offerQueue(queueId, storeDataBatch);
+        logger.info("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
         long afterOfferTime = System.nanoTime();
         this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
         return suc;

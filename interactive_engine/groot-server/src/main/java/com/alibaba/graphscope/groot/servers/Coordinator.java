@@ -107,8 +107,6 @@ public class Coordinator extends NodeBase {
                         this.snapshotManager,
                         this.schemaManager,
                         frontendSnapshotClients);
-        IngestProgressService ingestProgressService =
-                new IngestProgressService(this.snapshotManager);
         SnapshotCommitService snapshotCommitService =
                 new SnapshotCommitService(this.snapshotManager);
         SchemaService schemaService = new SchemaService(this.schemaManager);
@@ -138,7 +136,6 @@ public class Coordinator extends NodeBase {
                 new RpcServer(
                         configs,
                         localNodeProvider,
-                        ingestProgressService,
                         snapshotCommitService,
                         schemaService,
                         idAllocateService,

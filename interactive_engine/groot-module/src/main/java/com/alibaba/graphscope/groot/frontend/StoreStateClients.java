@@ -22,7 +22,7 @@ import io.grpc.ManagedChannel;
 
 import java.util.function.Function;
 
-public class StoreStateClients extends RoleClients<StoreStateClient> implements StoreStateFetcher {
+public class StoreStateClients extends RoleClients<StoreStateClient> {
 
     public StoreStateClients(
             ChannelManager channelManager,

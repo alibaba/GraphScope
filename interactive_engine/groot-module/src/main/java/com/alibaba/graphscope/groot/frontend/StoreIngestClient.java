@@ -42,7 +42,7 @@ public class StoreIngestClient extends RpcClient {
         builder.putAllConfig(config);
         this.stub.storeIngest(
                 builder.build(),
-                new StreamObserver<StoreIngestResponse>() {
+                new StreamObserver<>() {
                     @Override
                     public void onNext(StoreIngestResponse value) {
                         callback.onCompleted(null);
@@ -61,7 +61,7 @@ public class StoreIngestClient extends RpcClient {
     public void storeClearIngest(String path, CompletionCallback<Void> callback) {
         this.stub.storeClearIngest(
                 StoreClearIngestRequest.newBuilder().setDataPath(path).build(),
-                new StreamObserver<StoreClearIngestResponse>() {
+                new StreamObserver<>() {
                     @Override
                     public void onNext(StoreClearIngestResponse storeClearIngestResponse) {
                         callback.onCompleted(null);

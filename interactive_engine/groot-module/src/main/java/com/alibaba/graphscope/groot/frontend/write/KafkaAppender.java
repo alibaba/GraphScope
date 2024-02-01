@@ -36,6 +36,8 @@ public class KafkaAppender {
     private final MetaService metaService;
     private final LogService logService;
 
+    private final int queue;
+
     private final int storeCount;
     private final int partitionCount;
     private final int bufferSize;
@@ -50,6 +52,7 @@ public class KafkaAppender {
     public KafkaAppender(Configs configs, MetaService metaService, LogService logService) {
         this.metaService = metaService;
         this.logService = logService;
+        this.queue = CommonConfig.NODE_IDX.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.partitionCount = metaService.getPartitionCount();
         this.bufferSize = IngestorConfig.INGESTOR_QUEUE_BUFFER_MAX_COUNT.get(configs);
@@ -57,7 +60,7 @@ public class KafkaAppender {
     }
 
     public void start() {
-        logger.info("staring KafkaAppender queue#[]");
+        logger.info("staring KafkaAppender queue#[{}]", queue);
         this.ingestBuffer = new ArrayBlockingQueue<>(this.bufferSize);
 
         this.shouldStop = false;
@@ -88,7 +91,7 @@ public class KafkaAppender {
     }
 
     public void stop() {
-        logger.info("stopping KafkaAppender queue#[]");
+        logger.info("stopping KafkaAppender queue#[{}]", queue);
         this.shouldStop = true;
         this.started = false;
         if (this.ingestThread != null && this.ingestThread.isAlive()) {
@@ -159,7 +162,7 @@ public class KafkaAppender {
                 for (Map.Entry<Integer, OperationBatch.Builder> entry : builderMap.entrySet()) {
                     int storeId = entry.getKey();
                     OperationBatch batch = entry.getValue().build();
-                    // logger.info("Log writer append partitionId [{}]", partitionId);
+                    // logger.info("Log writer append partitionId [{}]", storeId);
                     logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
                 }
             } catch (Exception e) {
