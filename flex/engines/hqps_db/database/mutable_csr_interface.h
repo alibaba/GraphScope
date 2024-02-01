@@ -498,7 +498,7 @@ class MutableCSRInterface {
   GetSubGraph(const label_id_t src_label_id, const label_id_t dst_label_id,
               const label_id_t edge_label_id, const std::string& direction_str,
               const std::vector<std::string>& prop_names) const {
-    const MutableCsrBase *csr = nullptr, *other_csr = nullptr;
+    const CsrBase *csr = nullptr, *other_csr = nullptr;
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
       csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,

@@ -193,7 +193,9 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
   } else if (value.type == PropertyType::Double()) {
     out_archive >> value.value.db;
   } else if (value.type == PropertyType::Date()) {
-    out_archive >> value.value.d.milli_second;
+    int64_t date_val;
+    out_archive >> date_val;
+    value.value.d.milli_second = date_val;
   } else if (value.type == PropertyType::Day()) {
     uint32_t val;
     out_archive >> val;

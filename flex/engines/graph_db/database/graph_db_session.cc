@@ -13,9 +13,7 @@
  * limitations under the License.
  */
 
-#ifdef MONITOR_SESSIONS
 #include <chrono>
-#endif
 
 #include "flex/engines/graph_db/app/app_base.h"
 #include "flex/engines/graph_db/database/graph_db.h"
@@ -127,11 +125,9 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
       app_metrics_[type].add_record(
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
               .count());
-#ifdef MONITOR_SESSIONS
       eval_duration_.fetch_add(
           std::chrono::duration_cast<std::chrono::microseconds>(end - start)
               .count());
-#endif
       ++query_num_;
       return result_buffer;
     }
@@ -146,12 +142,10 @@ Result<std::vector<char>> GraphDBSession::Eval(const std::string& input) {
     result_buffer.clear();
   }
 
-#ifdef MONITOR_SESSIONS
   const auto end = std::chrono::high_resolution_clock::now();
   eval_duration_.fetch_add(
       std::chrono::duration_cast<std::chrono::microseconds>(end - start)
           .count());
-#endif
   ++query_num_;
   return Result<std::vector<char>>(
       StatusCode::QueryFailed,
@@ -180,12 +174,9 @@ bool GraphDBSession::Compact() {
   }
 }
 
-#ifdef MONITOR_SESSIONS
 double GraphDBSession::eval_duration() const {
   return static_cast<double>(eval_duration_.load()) / 1000000.0;
 }
-
-#endif
 
 int64_t GraphDBSession::query_num() const { return query_num_.load(); }
 
