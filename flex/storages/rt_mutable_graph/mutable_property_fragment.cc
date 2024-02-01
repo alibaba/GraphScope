@@ -35,7 +35,8 @@ MutablePropertyFragment::~MutablePropertyFragment() {
         size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                        dst_label * edge_label_num_ + e_label;
         if (dual_csr_list_[index] != NULL) {
-          dual_csr_list_[index]->Resize(degree_list[src_label], degree_list[dst_label]);
+          dual_csr_list_[index]->Resize(degree_list[src_label],
+                                        degree_list[dst_label]);
           delete dual_csr_list_[index];
         }
       }
@@ -245,7 +246,8 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
               vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
         }
-        dual_csr_list_[index]->Resize(vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
+        dual_csr_list_[index]->Resize(vertex_capacities[src_label_i],
+                                      vertex_capacities[dst_label_i]);
       }
     }
   }
@@ -310,7 +312,8 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
         size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
                        dst_label_i * edge_label_num_ + e_label_i;
         if (dual_csr_list_[index] != NULL) {
-          dual_csr_list_[index]->Resize(vertex_num[src_label_i], vertex_num[dst_label_i]);
+          dual_csr_list_[index]->Resize(vertex_num[src_label_i],
+                                        vertex_num[dst_label_i]);
           if (schema_.get_sort_on_compaction(src_label, dst_label,
                                              edge_label)) {
             dual_csr_list_[index]->SortByEdgeData(version + 1);

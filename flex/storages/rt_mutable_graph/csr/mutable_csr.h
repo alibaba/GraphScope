@@ -457,8 +457,7 @@ class MutableCsr<std::string_view>
   using slice_t = MutableNbrSlice<std::string_view>;
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
 
-  MutableCsr(StringColumn& column)
-      : column_(column), locks_(nullptr) {}
+  MutableCsr(StringColumn& column) : column_(column), locks_(nullptr) {}
   ~MutableCsr() {
     if (locks_ != nullptr) {
       delete[] locks_;
@@ -840,8 +839,7 @@ class SingleMutableCsr<std::string_view>
   using slice_t = MutableNbrSlice<std::string_view>;
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
 
-  SingleMutableCsr(StringColumn& column)
-      : column_(column) {}
+  SingleMutableCsr(StringColumn& column) : column_(column) {}
   ~SingleMutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,

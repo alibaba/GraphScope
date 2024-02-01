@@ -438,8 +438,7 @@ class SingleImmutableCsr<std::string_view>
   using nbr_t = ImmutableNbr<size_t>;
   using slice_t = ImmutableNbrSlice<std::string_view>;
 
-  SingleImmutableCsr(StringColumn& column)
-      : column_(column) {}
+  SingleImmutableCsr(StringColumn& column) : column_(column) {}
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
