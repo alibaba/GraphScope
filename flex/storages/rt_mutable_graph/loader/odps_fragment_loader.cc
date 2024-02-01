@@ -282,6 +282,8 @@ ODPSStreamRecordBatchSupplier::GetNextBatch() {
                    << cur_batch_reader_->GetErrorMessage() << ", "
                    << cur_batch_reader_->GetStatus()
                    << ", split id: " << cur_split_index_;
+        cur_batch_reader_ =
+            odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
       } else {
         VLOG(1) << "Read split " << cur_split_index_ << " finished";
         // move to next split
