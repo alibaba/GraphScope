@@ -200,7 +200,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
       compact_thread_.join();
     }
     compact_thread_running_ = true;
-    compact_thread_ = std::thread([&](int http_port) {
+    compact_thread_ = std::thread([&]() {
       size_t last_compaction_at = 0;
       while (compact_thread_running_) {
         size_t query_num_before = getExecutedQueryNum();
