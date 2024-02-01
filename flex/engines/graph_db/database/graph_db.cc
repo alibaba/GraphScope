@@ -141,7 +141,6 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
     }
     monitor_thread_running_ = true;
     monitor_thread_ = std::thread([&]() {
-      size_t last_allocated_size = 0;
       std::vector<double> last_eval_durations(thread_num_, 0);
       std::vector<int64_t> last_query_nums(thread_num_, 0);
       while (monitor_thread_running_) {
@@ -178,7 +177,6 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
             last_query_nums[i] = curr;
           }
         }
-        last_allocated_size = curr_allocated_size;
         if (max_query_num != 0) {
           double avg_eval_durations =
               total_eval_durations / static_cast<double>(thread_num_);
