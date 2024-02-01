@@ -89,9 +89,6 @@ class CsrBase {
   virtual void resize(vid_t vnum) = 0;
   virtual size_t size() const = 0;
 
-  virtual void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc,
-                           timestamp_t ts, Allocator& alloc) = 0;
-
   virtual std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const = 0;
   virtual CsrConstEdgeIterBase* edge_iter_raw(vid_t v) const = 0;
   virtual std::shared_ptr<CsrEdgeIterBase> edge_iter_mut(vid_t v) = 0;

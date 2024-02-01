@@ -359,10 +359,7 @@ void MutablePropertyFragment::IngestEdge(label_t src_label, vid_t src_lid,
                                          Allocator& alloc) {
   size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                  dst_label * edge_label_num_ + edge_label;
-  grape::OutArchive arc_view;
-  arc_view.SetSlice(arc.GetBuffer(), arc.GetSize());
-  ie_[index]->ingest_edge(dst_lid, src_lid, arc_view, ts, alloc);
-  oe_[index]->ingest_edge(src_lid, dst_lid, arc, ts, alloc);
+  dual_csr_list_[index]->IngestEdge(src_lid, dst_lid, arc, ts, alloc);
 }
 
 void MutablePropertyFragment::UpdateEdge(label_t src_label, vid_t src_lid,

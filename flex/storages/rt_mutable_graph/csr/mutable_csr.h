@@ -397,13 +397,6 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   }
   size_t size() const override { return adj_lists_.size(); }
 
-  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator& alloc) override {
-    EDATA_T value;
-    arc >> value;
-    put_edge(src, dst, value, ts, alloc);
-  }
-
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
@@ -625,12 +618,6 @@ class MutableCsr<std::string_view>
 
   size_t size() const override { return adj_lists_.size(); }
 
-  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator& alloc) override {
-    auto row_id = column_idx_.load();
-    put_edge(src, dst, row_id - 1, ts, alloc);
-  }
-
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<std::string_view>>(
         get_edges(v));
@@ -797,13 +784,6 @@ class SingleMutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
   size_t size() const override { return nbr_list_.size(); }
 
-  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator& alloc) override {
-    EDATA_T value;
-    arc >> value;
-    put_edge(src, dst, value, ts, alloc);
-  }
-
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<EDATA_T>>(get_edges(v));
   }
@@ -957,12 +937,6 @@ class SingleMutableCsr<std::string_view>
 
   size_t size() const override { return nbr_list_.size(); }
 
-  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator& alloc) override {
-    auto row_id = column_idx_.load();
-    put_edge(src, dst, row_id - 1, ts, alloc);
-  }
-
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<std::string_view>>(
         get_edges(v));
@@ -1063,11 +1037,6 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
                       timestamp_t ts = 0) override {}
   void put_edge(vid_t src, vid_t dst, const EDATA_T& data, timestamp_t ts,
                 Allocator&) override {}
-  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator&) override {
-    EDATA_T value;
-    arc >> value;
-  }
 
   std::shared_ptr<CsrConstEdgeIterBase> edge_iter(vid_t v) const override {
     return std::make_shared<MutableCsrConstEdgeIter<EDATA_T>>(
@@ -1120,9 +1089,6 @@ class EmptyCsr<std::string_view>
   void resize(vid_t vnum) override {}
 
   size_t size() const override { return 0; }
-
-  void ingest_edge(vid_t src, vid_t dst, grape::OutArchive& arc, timestamp_t ts,
-                   Allocator&) override {}
 
   void put_edge_with_index(vid_t src, vid_t dst, size_t index, timestamp_t ts,
                            Allocator& alloc) override {}

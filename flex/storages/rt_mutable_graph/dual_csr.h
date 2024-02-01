@@ -53,6 +53,9 @@ class DualCsrBase {
                     const std::string& edata_name,
                     const std::string& new_snapshot_dir) = 0;
 
+  virtual void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc,
+                          timestamp_t timestamp, Allocator& alloc) = 0;
+
   virtual void SortByEdgeData(timestamp_t ts) = 0;
 
   virtual void UpdateEdge(vid_t src, vid_t dst, const Any& oarc,
@@ -139,6 +142,14 @@ class DualCsr : public DualCsrBase {
 
   CsrBase* GetInCsr() override { return in_csr_; }
   CsrBase* GetOutCsr() override { return out_csr_; }
+
+  void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
+                  Allocator& alloc) override {
+    EDATA_T data;
+    oarc >> data;
+    in_csr_->put_edge(dst, src, data, ts, alloc);
+    out_csr_->put_edge(src, dst, data, ts, alloc);
+  }
 
   void SortByEdgeData(timestamp_t ts) override {
     in_csr_->batch_sort_by_edge_data(ts);
@@ -264,6 +275,16 @@ class DualCsr<std::string_view> : public DualCsrBase {
 
   CsrBase* GetInCsr() override { return in_csr_; }
   CsrBase* GetOutCsr() override { return out_csr_; }
+
+  void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
+                  Allocator& alloc) override {
+    std::string_view prop;
+    oarc >> prop;
+    size_t row_id = column_idx_.fetch_add(1);
+    column_.set_value(row_id, prop);
+    in_csr_->put_edge_with_index(dst, src, row_id, ts, alloc);
+    out_csr_->put_edge_with_index(src, dst, row_id, ts, alloc);
+  }
 
   void SortByEdgeData(timestamp_t ts) override {
     LOG(FATAL) << "Not implemented";
