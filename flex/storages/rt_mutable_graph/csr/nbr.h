@@ -20,11 +20,12 @@
 
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
+#include "flex/utils/property/types.h"
 
 namespace gs {
 
 template <typename EDATA_T>
-struct __attribute__((packed)) ImmutableNbr {
+struct ImmutableNbr {
   ImmutableNbr() = default;
   ImmutableNbr(const ImmutableNbr& rhs)
       : neighbor(rhs.neighbor), data(rhs.data) {}
@@ -46,6 +47,31 @@ struct __attribute__((packed)) ImmutableNbr {
 
   vid_t neighbor;
   EDATA_T data;
+};
+
+template <>
+struct __attribute__((packed)) ImmutableNbr<Date> {
+  ImmutableNbr() = default;
+  ImmutableNbr(const ImmutableNbr& rhs)
+      : neighbor(rhs.neighbor), data(rhs.data) {}
+  ~ImmutableNbr() = default;
+
+  ImmutableNbr& operator=(const ImmutableNbr& rhs) {
+    neighbor = rhs.neighbor;
+    data = rhs.data;
+    return *this;
+  }
+
+  const Date& get_data() const { return data; }
+  vid_t get_neighbor() const { return neighbor; }
+
+  void set_data(const Date& val) { data = val; }
+  void set_neighbor(vid_t neighbor) { this->neighbor = neighbor; }
+
+  bool exists() const { return neighbor != std::numeric_limits<vid_t>::max(); }
+
+  vid_t neighbor;
+  Date data;
 };
 
 template <>
