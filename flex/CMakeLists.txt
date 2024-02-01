@@ -14,15 +14,12 @@ option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
-option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
 
 #print options
 message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")
 message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
-message(STATUS "Monitor sessions: ${MONITOR_SESSIONS}")
-message(STATUS "Enable hugepage: ${ENABLE_HUGEPAGE}")
 
 # ------------------------------------------------------------------------------
 # cmake configs
@@ -41,11 +38,6 @@ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 if (BUILD_HQPS)
     message("Build HighQPS Engine")
     add_definitions(-DBUILD_HQPS)
-endif ()
-
-if (MONITOR_SESSIONS)
-    message("Monitor sessions is enabled")
-    add_definitions(-DMONITOR_SESSIONS)
 endif ()
 
 execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
