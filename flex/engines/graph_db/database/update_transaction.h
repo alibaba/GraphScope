@@ -21,7 +21,7 @@
 
 #include "flat_hash_map/flat_hash_map.hpp"
 #include "flex/engines/graph_db/database/transaction_utils.h"
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/allocators.h"
 #include "flex/utils/id_indexer.h"
@@ -83,7 +83,7 @@ class UpdateTransaction {
    public:
     edge_iterator(bool dir, label_t label, vid_t v, label_t neighbor_label,
                   label_t edge_label, const vid_t* aeb, const vid_t* aee,
-                  std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter,
+                  std::shared_ptr<CsrConstEdgeIterBase> init_iter,
                   UpdateTransaction* txn);
     ~edge_iterator();
 
@@ -115,7 +115,7 @@ class UpdateTransaction {
     const vid_t* added_edges_cur_;
     const vid_t* added_edges_end_;
 
-    std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter_;
+    std::shared_ptr<CsrConstEdgeIterBase> init_iter_;
     UpdateTransaction* txn_;
     size_t offset_;
   };

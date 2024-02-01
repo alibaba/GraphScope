@@ -47,24 +47,24 @@ struct GraphDBConfig {
         data_dir(data_dir_),
         thread_num(thread_num_),
         warmup(false),
+        enable_monitering(false),
         enable_auto_compaction(false),
-        service_port(-1),
         memory_level(1) {}
 
   Schema schema;
   std::string data_dir;
   int thread_num;
   bool warmup;
+  bool enable_monitering;
   bool enable_auto_compaction;
-  int service_port;
 
   /*
-    0 - sync with disk; 
-    1 - mmap virtual memory; 
-    2 - prefering hugepages; 
+    0 - sync with disk;
+    1 - mmap virtual memory;
+    2 - prefering hugepages;
     3 - force hugepages;
   */
-  int memory_level; 
+  int memory_level;
 };
 
 class GraphDB {
@@ -85,7 +85,7 @@ class GraphDB {
   Result<bool> Open(const Schema& schema, const std::string& data_dir,
                     int32_t thread_num = 1, bool warmup = false,
                     bool memory_only = true,
-                    bool enable_auto_compaction = false, int port = -1);
+                    bool enable_auto_compaction = false);
 
   Result<bool> Open(const GraphDBConfig& config);
 
@@ -179,10 +179,8 @@ class GraphDB {
   std::array<std::string, 256> app_paths_;
   std::array<std::shared_ptr<AppFactoryBase>, 256> app_factories_;
 
-#ifdef MONITOR_SESSIONS
   std::thread monitor_thread_;
   bool monitor_thread_running_;
-#endif
 
   timestamp_t last_compaction_ts_;
   bool compact_thread_running_ = false;
