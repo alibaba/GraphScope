@@ -10,3 +10,7 @@ id|solution
 8|Aggregation
 9|Message Coordinating
 10|Message Buffering
+11|Other(Parallelism)
+12|Other(Load Balance)
+13|Other(Communication Overhead)
+14|Other(Bandwidth)
