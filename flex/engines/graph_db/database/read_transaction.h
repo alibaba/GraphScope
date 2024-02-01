@@ -218,6 +218,26 @@ class SingleGraphView {
   timestamp_t timestamp_;
 };
 
+template <>
+class SingleGraphView<std::string_view> {
+ public:
+  SingleGraphView(const SingleMutableCsr<std::string_view>& csr,
+                  timestamp_t timestamp)
+      : csr_(csr), timestamp_(timestamp) {}
+
+  bool exist(vid_t v) const {
+    return (csr_.get_edge(v).timestamp.load() <= timestamp_);
+  }
+
+  MutableNbr<std::string_view> get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleMutableCsr<std::string_view>& csr_;
+  timestamp_t timestamp_;
+};
+
 template <typename EDATA_T>
 class SingleImmutableGraphView {
  public:
@@ -234,6 +254,24 @@ class SingleImmutableGraphView {
 
  private:
   const SingleImmutableCsr<EDATA_T>& csr_;
+};
+
+template <>
+class SingleImmutableGraphView<std::string_view> {
+ public:
+  SingleImmutableGraphView(const SingleImmutableCsr<std::string_view>& csr)
+      : csr_(csr) {}
+
+  bool exist(vid_t v) const {
+    return (csr_.get_edge(v).neighbor != std::numeric_limits<vid_t>::max());
+  }
+
+  ImmutableNbr<std::string_view> get_edge(vid_t v) const {
+    return csr_.get_edge(v);
+  }
+
+ private:
+  const SingleImmutableCsr<std::string_view>& csr_;
 };
 
 class ReadTransaction {
