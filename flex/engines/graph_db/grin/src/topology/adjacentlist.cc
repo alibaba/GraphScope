@@ -67,7 +67,7 @@ void grin_destroy_adjacent_list_iter(GRIN_GRAPH g,
                                      GRIN_ADJACENT_LIST_ITERATOR iter) {
   if (iter.edge_iter != nullptr) {
     auto edge_iter =
-        static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+        static_cast<gs::CsrConstEdgeIterBase*>(iter.edge_iter);
     delete edge_iter;
   }
 }
@@ -75,7 +75,7 @@ void grin_destroy_adjacent_list_iter(GRIN_GRAPH g,
 void grin_get_next_adjacent_list_iter(GRIN_GRAPH g,
                                       GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto edge_iter =
-      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+      static_cast<gs::CsrConstEdgeIterBase*>(iter.edge_iter);
   edge_iter->next();
 }
 
@@ -84,14 +84,14 @@ bool grin_is_adjacent_list_end(GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
     return true;
   }
   auto edge_iter =
-      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+      static_cast<gs::CsrConstEdgeIterBase*>(iter.edge_iter);
   return !edge_iter->is_valid();
 }
 
 GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto edge_iter =
-      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+      static_cast<gs::CsrConstEdgeIterBase*>(iter.edge_iter);
   auto vid = edge_iter->get_neighbor();
   auto label = iter.adj_list.edge_label;
 
@@ -106,7 +106,7 @@ GRIN_VERTEX grin_get_neighbor_from_adjacent_list_iter(
 GRIN_EDGE grin_get_edge_from_adjacent_list_iter(
     GRIN_GRAPH g, GRIN_ADJACENT_LIST_ITERATOR iter) {
   auto edge_iter =
-      static_cast<gs::MutableCsrConstEdgeIterBase*>(iter.edge_iter);
+      static_cast<gs::CsrConstEdgeIterBase*>(iter.edge_iter);
   GRIN_EDGE_T* edge = new GRIN_EDGE_T();
   auto nbr = grin_get_neighbor_from_adjacent_list_iter(g, iter);
   if (iter.adj_list.dir == GRIN_DIRECTION::IN) {

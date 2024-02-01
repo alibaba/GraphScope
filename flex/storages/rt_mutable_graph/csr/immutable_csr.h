@@ -438,8 +438,8 @@ class SingleImmutableCsr<std::string_view>
   using nbr_t = ImmutableNbr<size_t>;
   using slice_t = ImmutableNbrSlice<std::string_view>;
 
-  SingleImmutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
-      : column_(column), column_idx_(column_idx) {}
+  SingleImmutableCsr(StringColumn& column)
+      : column_(column) {}
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -594,8 +594,6 @@ class SingleImmutableCsr<std::string_view>
 
  private:
   StringColumn& column_;
-  std::atomic<size_t>& column_idx_;
-
   mmap_array<nbr_t> nbr_list_;
 };
 

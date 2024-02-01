@@ -61,8 +61,20 @@ class DualCsrBase {
   virtual void UpdateEdge(vid_t src, vid_t dst, const Any& oarc,
                           timestamp_t timestamp, Allocator& alloc) = 0;
 
+  void Resize(vid_t src_vertex_num, vid_t dst_vertex_num) {
+    GetInCsr()->resize(dst_vertex_num);
+    GetOutCsr()->resize(src_vertex_num);
+  }
+
+  void Warmup(int thread_num) {
+    GetInCsr()->warmup(thread_num);
+    GetOutCsr()->warmup(thread_num);
+  }
+
   virtual CsrBase* GetInCsr() = 0;
   virtual CsrBase* GetOutCsr() = 0;
+  virtual const CsrBase* GetInCsr() const = 0;
+  virtual const CsrBase* GetOutCsr() const = 0;
 };
 
 template <typename EDATA_T>
@@ -142,6 +154,8 @@ class DualCsr : public DualCsrBase {
 
   CsrBase* GetInCsr() override { return in_csr_; }
   CsrBase* GetOutCsr() override { return out_csr_; }
+  const CsrBase* GetInCsr() const override { return in_csr_; }
+  const CsrBase* GetOutCsr() const override { return out_csr_; }
 
   void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
                   Allocator& alloc) override {
@@ -203,18 +217,18 @@ class DualCsr<std::string_view> : public DualCsrBase {
         out_csr_(nullptr),
         column_(StorageStrategy::kMem, width) {
     if (ie_strategy == EdgeStrategy::kNone) {
-      in_csr_ = new EmptyCsr<std::string_view>(column_, column_idx_);
+      in_csr_ = new EmptyCsr<std::string_view>(column_);
     } else if (ie_strategy == EdgeStrategy::kMultiple) {
-      in_csr_ = new MutableCsr<std::string_view>(column_, column_idx_);
+      in_csr_ = new MutableCsr<std::string_view>(column_);
     } else if (ie_strategy == EdgeStrategy::kSingle) {
-      in_csr_ = new SingleMutableCsr<std::string_view>(column_, column_idx_);
+      in_csr_ = new SingleMutableCsr<std::string_view>(column_);
     }
     if (oe_strategy == EdgeStrategy::kNone) {
-      out_csr_ = new EmptyCsr<std::string_view>(column_, column_idx_);
+      out_csr_ = new EmptyCsr<std::string_view>(column_);
     } else if (oe_strategy == EdgeStrategy::kMultiple) {
-      out_csr_ = new MutableCsr<std::string_view>(column_, column_idx_);
+      out_csr_ = new MutableCsr<std::string_view>(column_);
     } else if (oe_strategy == EdgeStrategy::kSingle) {
-      out_csr_ = new SingleMutableCsr<std::string_view>(column_, column_idx_);
+      out_csr_ = new SingleMutableCsr<std::string_view>(column_);
     }
   }
   ~DualCsr() {
@@ -275,6 +289,8 @@ class DualCsr<std::string_view> : public DualCsrBase {
 
   CsrBase* GetInCsr() override { return in_csr_; }
   CsrBase* GetOutCsr() override { return out_csr_; }
+  const CsrBase* GetInCsr() const override { return in_csr_; }
+  const CsrBase* GetOutCsr() const override { return out_csr_; }
 
   void IngestEdge(vid_t src, vid_t dst, grape::OutArchive& oarc, timestamp_t ts,
                   Allocator& alloc) override {

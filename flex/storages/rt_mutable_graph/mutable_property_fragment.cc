@@ -34,13 +34,8 @@ MutablePropertyFragment::~MutablePropertyFragment() {
       for (size_t e_label = 0; e_label != edge_label_num_; ++e_label) {
         size_t index = src_label * vertex_label_num_ * edge_label_num_ +
                        dst_label * edge_label_num_ + e_label;
-        if (ie_[index] != NULL) {
-          ie_[index]->resize(degree_list[dst_label]);
-        }
-        if (oe_[index] != NULL) {
-          oe_[index]->resize(degree_list[src_label]);
-        }
         if (dual_csr_list_[index] != NULL) {
+          dual_csr_list_[index]->Resize(degree_list[src_label], degree_list[dst_label]);
           delete dual_csr_list_[index];
         }
       }
@@ -250,8 +245,7 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
               edata_prefix(src_label, dst_label, edge_label), snapshot_dir,
               vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
         }
-        ie_[index]->resize(vertex_capacities[dst_label_i]);
-        oe_[index]->resize(vertex_capacities[src_label_i]);
+        dual_csr_list_[index]->Resize(vertex_capacities[src_label_i], vertex_capacities[dst_label_i]);
       }
     }
   }
@@ -316,8 +310,7 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
         size_t index = src_label_i * vertex_label_num_ * edge_label_num_ +
                        dst_label_i * edge_label_num_ + e_label_i;
         if (dual_csr_list_[index] != NULL) {
-          ie_[index]->resize(vertex_num[dst_label_i]);
-          oe_[index]->resize(vertex_num[src_label_i]);
+          dual_csr_list_[index]->Resize(vertex_num[src_label_i], vertex_num[dst_label_i]);
           if (schema_.get_sort_on_compaction(src_label, dst_label,
                                              edge_label)) {
             dual_csr_list_[index]->SortByEdgeData(version + 1);
@@ -336,14 +329,9 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
 
 void MutablePropertyFragment::Warmup(int thread_num) {
   double t = -grape::GetCurrentTime();
-  for (auto ptr : ie_) {
+  for (auto ptr : dual_csr_list_) {
     if (ptr != NULL) {
-      ptr->warmup(thread_num);
-    }
-  }
-  for (auto ptr : oe_) {
-    if (ptr != NULL) {
-      ptr->warmup(thread_num);
+      ptr->Warmup(thread_num);
     }
   }
   for (auto& indexer : lf_indexers_) {
@@ -404,50 +392,38 @@ std::shared_ptr<CsrConstEdgeIterBase>
 MutablePropertyFragment::get_outgoing_edges(label_t label, vid_t u,
                                             label_t neighbor_label,
                                             label_t edge_label) const {
-  size_t index = label * vertex_label_num_ * edge_label_num_ +
-                 neighbor_label * edge_label_num_ + edge_label;
-  return oe_[index]->edge_iter(u);
+  return get_oe_csr(label, neighbor_label, edge_label)->edge_iter(u);
 }
 
 std::shared_ptr<CsrConstEdgeIterBase>
 MutablePropertyFragment::get_incoming_edges(label_t label, vid_t u,
                                             label_t neighbor_label,
                                             label_t edge_label) const {
-  size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
-                 label * edge_label_num_ + edge_label;
-  return ie_[index]->edge_iter(u);
+  return get_ie_csr(label, neighbor_label, edge_label)->edge_iter(u);
 }
 
 CsrConstEdgeIterBase* MutablePropertyFragment::get_outgoing_edges_raw(
     label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const {
-  size_t index = label * vertex_label_num_ * edge_label_num_ +
-                 neighbor_label * edge_label_num_ + edge_label;
-  return oe_[index]->edge_iter_raw(u);
+  return get_oe_csr(label, neighbor_label, edge_label)->edge_iter_raw(u);
 }
 
 CsrConstEdgeIterBase* MutablePropertyFragment::get_incoming_edges_raw(
     label_t label, vid_t u, label_t neighbor_label, label_t edge_label) const {
-  size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
-                 label * edge_label_num_ + edge_label;
-  return ie_[index]->edge_iter_raw(u);
+  return get_ie_csr(label, neighbor_label, edge_label)->edge_iter_raw(u);
 }
 
 std::shared_ptr<CsrEdgeIterBase>
 MutablePropertyFragment::get_outgoing_edges_mut(label_t label, vid_t u,
                                                 label_t neighbor_label,
                                                 label_t edge_label) {
-  size_t index = label * vertex_label_num_ * edge_label_num_ +
-                 neighbor_label * edge_label_num_ + edge_label;
-  return oe_[index]->edge_iter_mut(u);
+  return get_oe_csr(label, neighbor_label, edge_label)->edge_iter_mut(u);
 }
 
 std::shared_ptr<CsrEdgeIterBase>
 MutablePropertyFragment::get_incoming_edges_mut(label_t label, vid_t u,
                                                 label_t neighbor_label,
                                                 label_t edge_label) {
-  size_t index = neighbor_label * vertex_label_num_ * edge_label_num_ +
-                 label * edge_label_num_ + edge_label;
-  return ie_[index]->edge_iter_mut(u);
+  return get_ie_csr(label, neighbor_label, edge_label)->edge_iter_mut(u);
 }
 
 CsrBase* MutablePropertyFragment::get_oe_csr(label_t label,

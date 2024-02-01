@@ -457,8 +457,8 @@ class MutableCsr<std::string_view>
   using slice_t = MutableNbrSlice<std::string_view>;
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
 
-  MutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
-      : column_(column), column_idx_(column_idx), locks_(nullptr) {}
+  MutableCsr(StringColumn& column)
+      : column_(column), locks_(nullptr) {}
   ~MutableCsr() {
     if (locks_ != nullptr) {
       delete[] locks_;
@@ -654,7 +654,6 @@ class MutableCsr<std::string_view>
 
  private:
   StringColumn& column_;
-  std::atomic<size_t>& column_idx_;
   grape::SpinLock* locks_;
   mmap_array<adjlist_t> adj_lists_;
   mmap_array<nbr_t> nbr_list_;
@@ -841,8 +840,8 @@ class SingleMutableCsr<std::string_view>
   using slice_t = MutableNbrSlice<std::string_view>;
   using mut_slice_t = MutableNbrSliceMut<std::string_view>;
 
-  SingleMutableCsr(StringColumn& column, std::atomic<size_t>& column_idx)
-      : column_(column), column_idx_(column_idx) {}
+  SingleMutableCsr(StringColumn& column)
+      : column_(column) {}
   ~SingleMutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -998,8 +997,6 @@ class SingleMutableCsr<std::string_view>
 
  private:
   StringColumn& column_;
-  std::atomic<size_t>& column_idx_;
-
   mmap_array<nbr_t> nbr_list_;
 };
 
@@ -1066,8 +1063,7 @@ class EmptyCsr<std::string_view>
  public:
   using slice_t = MutableNbrSlice<std::string_view>;
 
-  EmptyCsr(StringColumn& column, std::atomic<size_t>& column_idx)
-      : column_(column), column_idx_(column_idx) {}
+  EmptyCsr(StringColumn& column) : column_(column) {}
   ~EmptyCsr() = default;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
@@ -1110,7 +1106,6 @@ class EmptyCsr<std::string_view>
   slice_t get_edges(vid_t v) const override { return slice_t::empty(column_); }
 
   StringColumn& column_;
-  std::atomic<size_t>& column_idx_;
 };
 
 }  // namespace gs
