@@ -259,7 +259,7 @@ def job(filename):  # noqa: F811
 @delete.command()
 @click.argument("job_id", required=True)
 def job(job_id):  # noqa: F811
-    """Delete a job by id in database"""
+    """Cancel a job by id in database"""
     try:
         delete_job_by_id(job_id)
     except Exception as e:
