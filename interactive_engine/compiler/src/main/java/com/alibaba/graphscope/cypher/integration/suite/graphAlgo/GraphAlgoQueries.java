@@ -31,12 +31,13 @@ public class GraphAlgoQueries {
                         + "ORDER BY paperCount desc;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Traversal\", paperCount: 31}>",
-                        "Record<{category: \"Cohesive Subgraph\", paperCount:" + " 27}>",
-                        "Record<{category: \"Centrality\", paperCount: 22}>",
-                        "Record<{category: \"Community Detection\", paperCount: 16}>",
-                        "Record<{category: \"Pattern Matching\", paperCount: 15}>",
-                        "Record<{category: \"Similarity\", paperCount: 12}>");
+                        "Record<{category: \"Pattern Matching\", paperCount: 30}>",
+                        "Record<{category: \"Traversal\", paperCount:" + " 29}>",
+                        "Record<{category: \"Centrality\", paperCount: 18}>",
+                        "Record<{category: \"Covering\", paperCount: 14}>",
+                        "Record<{category: \"Community Detection\", paperCount: 13}>",
+                        "Record<{category: \"Cohesive Subgraph\", paperCount: 12}>",
+                        "Record<{category: \"Similarity\", paperCount: 7}>");
         return new QueryContext(query, expected);
     }
 
@@ -50,16 +51,16 @@ public class GraphAlgoQueries {
                         + "ORDER BY num DESC LIMIT 5;";
         List<String> expected =
                 Arrays.asList(
-                        "Record<{category: \"Cohesive Subgraph\", challenge:"
-                                + " \"Communication Overhead\", num: 6}>",
-                        "Record<{category: \"Similarity\", challenge:"
-                                + " \"Parallelism\", num: 6}>",
-                        "Record<{category: \"Similarity\", challenge:"
-                                + " \"Communication Overhead\", num: 6}>",
-                        "Record<{category: \"Community Detection\", challenge: \"Communication"
-                                + " Overhead\", num: 4}>",
-                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Load Balance\", num:"
-                                + " 4}>");
+                        "Record<{category: \"Pattern Matching\", challenge:"
+                                + " \"Communication Overhead\", num: 22}>",
+                        "Record<{category: \"Pattern Matching\", challenge:"
+                                + " \"Load Balance\", num: 16}>",
+                        "Record<{category: \"Traversal\", challenge:"
+                                + " \"Communication Overhead\", num: 13}>",
+                        "Record<{category: \"Traversal\", challenge: \"Parallelism"
+                                + "\", num: 12}>",
+                        "Record<{category: \"Centrality\", challenge: \"Parallelism\", num:"
+                                + " 11}>");
         return new QueryContext(query, expected);
     }
 

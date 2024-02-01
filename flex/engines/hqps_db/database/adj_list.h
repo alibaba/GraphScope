@@ -571,6 +571,7 @@ template <>
 class AdjListArray<grape::EmptyType> {
  public:
   // MutableCSR.
+  using csr_base_t = CsrBase;
   using typed_csr_base_t = MutableCsr<grape::EmptyType>;
   using single_typed_csr_base_t = SingleMutableCsr<grape::EmptyType>;
   using slice_t = MutableNbrSlice<grape::EmptyType>;
