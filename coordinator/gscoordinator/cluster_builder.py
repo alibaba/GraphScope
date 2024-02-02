@@ -263,7 +263,7 @@ class EngineCluster:
         )
         return container
 
-    def get_learning_container(self, volume_mounts):
+    def get_graphlearn_container(self, volume_mounts):
         name = GRAPHLEARN_CONTAINER_NAME
         image = self._graphlearn_image
         args = ["tail", "-f", "/dev/null"]
@@ -273,7 +273,21 @@ class EngineCluster:
         )
         container.ports = [
             kube_client.V1ContainerPort(container_port=p)
-            for p in range(self._learning_start_port, self._learning_start_port + 1000)
+            for p in range(self._graphlearn_start_port, self._graphlearn_start_port + 1000)
+        ]
+        return container
+
+    def get_graphlearn_torch_container(self, volume_mounts):
+        name = GRAPHLEARN_TORCH_CONTAINER_NAME
+        image = self._graphlearn_torch_image
+        args = ["tail", "-f", "/dev/null"]
+        resource = self._engine_resources.glt_resource
+        container = self.get_engine_container_helper(
+            name, image, args, volume_mounts, resource
+        )
+        container.ports = [
+            kube_client.V1ContainerPort(container_port=p)
+            for p in range(self._graphlearn_torch_start_port, self._graphlearn_torch_start_port + 1000)
         ]
         return container
 
@@ -346,9 +360,14 @@ class EngineCluster:
                     volume_mounts=engine_volume_mounts
                 )
             )
-        if self._with_learning:
+        if self._with_graphlearn:
             containers.append(
-                self.get_learning_container(volume_mounts=engine_volume_mounts)
+                self.get_graphlearn_container(volume_mounts=engine_volume_mounts)
+            )
+            
+        if self._with_graphlearn_torch:
+            containers.append(
+                self.get_graphlearn_torch_container(volume_mounts=engine_volume_mounts)
             )
 
         if self._with_dataset:
@@ -408,7 +427,7 @@ class EngineCluster:
     def get_learning_service(self, object_id, start_port):
         service_type = self._service_type
         num_workers = self._num_workers
-        name = self.get_learning_service_name(object_id)
+        name = self.get_graphlearn_service_name(object_id)
         ports = []
         for i in range(start_port, start_port + num_workers):
             port = kube_client.V1ServicePort(name=f"{name}-{i}", port=i, protocol="TCP")
@@ -420,13 +439,30 @@ class EngineCluster:
             self._namespace, name, service_spec, self._engine_labels
         )
         return service
+    
+    def get_graphlearn_torch_service(self, object_id, start_port):
+        service_type = self._service_type
+        num_workers = self._num_workers
+        name = self.get_graphlearn_torch_service_name(object_id)
+        ports = []
+        for i in range(start_port, start_port + num_workers):
+            port = kube_client.V1ServicePort(name=f"{name}-{i}", port=i, protocol="TCP")
+            ports.append(port)
+        service_spec = ResourceBuilder.get_service_spec(
+            service_type, ports, self._engine_labels, "Local"
+        )
+        service = ResourceBuilder.get_service(
+            self._namespace, name, service_spec, self._engine_labels
+        )
+        return service
+    
 
     def get_graphlearn_ports(self, start_port):
         num_workers = self._num_workers
         return [i for i in range(start_port, start_port + num_workers)]
 
     def get_graphlearn_torch_ports(self, start_port):
-        num_workers = self._num_workers
+        num_workers = 4
         return [i for i in range(start_port, start_port + num_workers)]
 
     @property
@@ -459,6 +495,9 @@ class EngineCluster:
     def get_graphlearn_service_name(self, object_id):
         return f"{self._graphlearn_prefix}{object_id}"
 
+    def get_graphlearn_torch_service_name(self, object_id):
+        return f"{self._graphlearn_torch_prefix}{object_id}"
+
     def get_graphlearn_service_endpoint(self, api_client, object_id, pod_host_ip_list):
         service_name = self.get_graphlearn_service_name(object_id)
         service_type = self._service_type
@@ -488,11 +527,33 @@ class EngineCluster:
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
     
-    def get_graphlearn_torch_service_endpoint(self, api_client, object_id, pod_host_ip_list):
-        service_name = self.get_learning_service_name(object_id)
-        service_type = self._service_type
-        core_api = kube_client.CoreV1Api(api_client)
-        if service_type == "NodePort":
+    # def get_graphlearn_torch_service_endpoint(self, api_client, object_id, pod_host_ip_list):
+    #     service_name = self.get_graphlearn_torch_service_name(object_id)
+    #     service_type = self._service_type
+    #     core_api = kube_client.CoreV1Api(api_client)
+    #     if service_type == "NodePort":
+    #         services = core_api.list_namespaced_service(self._namespace)
+    #         for svc in services.items:
+    #             if svc.metadata.name == service_name:
+    #                 endpoints = []
+    #                 for ip, port_spec in zip(pod_host_ip_list, svc.spec.ports):
+    #                     endpoints.append(
+    #                         (
+    #                             f"{ip}:{port_spec.node_port}",
+    #                             int(port_spec.name.split("-")[-1]),
+    #                         )
+    #                     )
+    #                 endpoints.sort(key=lambda ep: ep[1])
+    #                 return [ep[0] for ep in endpoints]
+    #     elif service_type == "LoadBalancer":
+    #         endpoints = get_service_endpoints(
+    #             api_client=api_client,
+    #             namespace=self._namespace,
+    #             name=service_name,
+    #             service_type=service_type,
+    #         )
+    #         return endpoints
+    #     raise RuntimeError("Get graphlearn torch service endpoint failed.")
 
     def get_interactive_frontend_container(self):
         name = INTERACTIVE_FRONTEND_CONTAINER_NAME

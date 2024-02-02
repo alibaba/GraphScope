@@ -161,7 +161,7 @@ class EngineConfig:
 
     def post_setup(self):
         valid_engines = set(
-            "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle".split(
+            "analytical,analytical-java,interactive,learning,gae,gae-java,gie,gle,glt".split(
                 ","
             )
         )
@@ -182,6 +182,7 @@ class EngineConfig:
         if self.preemptive:
             self.gae_resource.requests = None
             self.gle_resource.requests = None
+            self.glt_resource.requests = None
             self.gie_executor_resource.requests = None
             self.gie_frontend_resource.requests = None
 

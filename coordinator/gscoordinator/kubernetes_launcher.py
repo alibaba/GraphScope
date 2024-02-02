@@ -1384,21 +1384,31 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 "utf-8", errors="ignore"
             )
         )
-        hosts = ",".join(
-            [
-                f"{pod_name}:{port}"
-                for pod_name, port in zip(
-                    pod_name_list,
-                    self._engine_cluster.get_graphlearn_torch_ports(
-                        self._graphlearn_torch_start_port),
-                )
-            ]
+        # hosts = ",".join(
+        #     [
+        #         f"{pod_name}:{port}"
+        #         for pod_name, port in zip(
+        #             pod_name_list,
+        #             self._engine_cluster.get_graphlearn_torch_ports(
+        #                 self._graphlearn_torch_start_port),
+        #         )
+        #     ]
+        # )
+        ports = self._engine_cluster.get_graphlearn_torch_ports(
+            self._graphlearn_torch_start_port
         )
-        handle["server"] = hosts
+        logger.info(f"ports: {ports}")
+        if handle["master_id"] != -1:
+            handle["master_addr"] = pod_host_ip_list[handle["master_id"]]
+        else:
+            handle["master_addr"] = "localhost"
+        handle["server_client_master_port"] = ports[0]
+        server_list = [f"{pod_host_ip_list[0]}:{ports[i]}" for i in range(4)]
+
         handle = base64.b64encode(
             json.dumps(handle).encode("utf-8", errors="ignore")
         ).decode("utf-8", errors="ignore")
-        
+
         # launch the server
         self._graphlearn_torch_instance_processes[object_id] = []
         for pod_index, pod in enumerate(self._pod_name_list):
@@ -1433,25 +1443,26 @@ class KubernetesClusterLauncher(AbstractLauncher):
         # update the port usage record
         self._graphlearn_start_port += len(pod_name_list)
         # parse the service hosts and ports
-        return self._engine_cluster.get_graphlearn_torch_service_endpoint(
-            self._api_client, object_id, pod_host_ip_list
-        )
+        return server_list
         
-        
+ 
 
     def create_learning_instance(self, object_id, handle, config, learning_backend):
+        logger.info(learning_backend)
         if learning_backend == message_pb2.LearningBackend.GRAPHLEARN:
+            logger.info("wtf!!!!!!!")
             pod_name_list, _, pod_host_ip_list = self._allocate_graphlearn_engine(object_id)
             if not pod_name_list or not pod_host_ip_list:
                 raise RuntimeError("Failed to allocate learning engine")
-            return self._distribute_learning_process(
+            return self._distribute_graphlearn_process(
                 pod_name_list, pod_host_ip_list, object_id, handle, config
             )
         elif learning_backend == message_pb2.LearningBackend.GRAPHLEARN_TORCH:
+            logger.info("???????????????????")
             pod_name_list, _, pod_host_ip_list = self._allocate_graphlearn_torch_engine(object_id)
             if not pod_name_list or not pod_host_ip_list:
                 raise RuntimeError("Failed to allocate learning engine")
-            return self._distribute_learning_process(
+            return self._distribute_graphlearn_torch_process(
                 pod_name_list, pod_host_ip_list, object_id, handle, config
             )
         else:

@@ -457,6 +457,7 @@ class GraphScopeOneServiceServicer(
 
     def CreateLearningInstance(self, request, context):
         object_id = request.object_id
+        logger.info(f"Handle: {request.handle}, Config: {request.config}, Learning backend: {request.learning_backend}")
         logger.info("Create learning instance with object id %ld", object_id)
         handle, config, learning_backend = (
             request.handle,

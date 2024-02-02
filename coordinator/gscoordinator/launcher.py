@@ -95,13 +95,7 @@ class AbstractLauncher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def create_graphlearn_instance(
-        self, object_id: int, handle: str, config: str, learning_backend: int
-    ):
-        pass
-    
-    @abstractmethod
-    def create_graphlearn_torch_instance(
+    def create_learning_instance(
         self, object_id: int, handle: str, config: str, learning_backend: int
     ):
         pass

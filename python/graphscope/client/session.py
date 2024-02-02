@@ -1335,6 +1335,7 @@ class Session(object):
         node_labels=None,
         edge_dir="out",
         random_node_split=None,
+        master_id=-1,
     ):
         from graphscope.learning.gl_torch_graph import GLTorchGraph
 
@@ -1342,7 +1343,7 @@ class Session(object):
             "vineyard_socket": self._engine_config["vineyard_socket"],
             "vineyard_id": graph.vineyard_id,
             "fragments": graph.fragments,
-            "master_addr": "localhost",
+            "master_id": master_id, # -1 means local mode
             "num_servers": len(graph.fragments),
             "num_clients": 1,
         }
@@ -1370,7 +1371,7 @@ class Session(object):
             config,
             message_pb2.LearningBackend.GRAPHLEARN_TORCH,
         )
-
+        logger.info(f"endpoints: {endpoints}")
         g = GLTorchGraph(endpoints)
         self._learning_instance_dict[graph.vineyard_id] = g
         graph._attach_learning_instance(g)
@@ -1673,6 +1674,7 @@ def graphlearn_torch(
     node_labels=None,
     edge_dir="out",
     random_node_split=None,
+    master_id=-1,
 ):
     assert graph is not None, "graph cannot be None"
     assert (
@@ -1687,4 +1689,5 @@ def graphlearn_torch(
         node_labels,
         edge_dir,
         random_node_split,
+        master_id,
     )  # pylint: disable=protected-access
