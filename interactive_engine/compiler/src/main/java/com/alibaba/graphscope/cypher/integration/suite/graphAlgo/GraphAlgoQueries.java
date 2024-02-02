@@ -170,4 +170,69 @@ public class GraphAlgoQueries {
         List<String> expected = Arrays.asList("Record<{count: 69}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_graph_algo_test12() {
+        String query =
+                "MATCH (p:Paper)-[:WorkOn]->(a:Task),(a)-[:Belong]->(t: Topic)\n"
+                        + " RETURN t.category,COUNT(p);";
+        List expected =
+                Arrays.asList(
+                        "Record<{category: \"Centrality\", $f1: 18}>",
+                        "Record<{category: \"Community Detection\", $f1: 13}>",
+                        "Record<{category: \"Similarity\", $f1: 7}>",
+                        "Record<{category: \"Cohesive Subgraph\", $f1: 12}>",
+                        "Record<{category: \"Pattern Matching\", $f1: 30}>",
+                        "Record<{category: \"Traversal\", $f1: 29}>",
+                        "Record<{category: \"Covering\", $f1: 14}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_graph_algo_test13() {
+        String query =
+                "MATCH (t: Topic)<-[:Belong]-(a:Task),\n"
+                        + " (a)<-[:WorkOn]-(p:Paper)-[:Use]->(s:Solution),\n"
+                        + " (s)-[:ApplyOn]->(ch:Challenge)\n"
+                        + " RETURN t.category, ch.challenge, COUNT(p);";
+        List expected =
+                Arrays.asList(
+                        "Record<{category: \"Centrality\", challenge: \"Parallelism\", $f2: 11}>",
+                        "Record<{category: \"Centrality\", challenge: \"Bandwidth\", $f2: 5}>",
+                        "Record<{category: \"Centrality\", challenge: \"Communication Overhead\","
+                                + " $f2: 9}>",
+                        "Record<{category: \"Centrality\", challenge: \"Load Balance\", $f2: 4}>",
+                        "Record<{category: \"Community Detection\", challenge: \"Communication"
+                                + " Overhead\", $f2: 9}>",
+                        "Record<{category: \"Community Detection\", challenge: \"Load Balance\","
+                                + " $f2: 4}>",
+                        "Record<{category: \"Community Detection\", challenge: \"Parallelism\","
+                                + " $f2: 4}>",
+                        "Record<{category: \"Similarity\", challenge: \"Communication Overhead\","
+                                + " $f2: 7}>",
+                        "Record<{category: \"Similarity\", challenge: \"Parallelism\", $f2: 2}>",
+                        "Record<{category: \"Similarity\", challenge: \"Load Balance\", $f2: 1}>",
+                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Parallelism\", $f2:"
+                            + " 7}>",
+                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Communication"
+                                + " Overhead\", $f2: 9}>",
+                        "Record<{category: \"Cohesive Subgraph\", challenge: \"Load Balance\", $f2:"
+                            + " 4}>",
+                        "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\", $f2:"
+                            + " 16}>",
+                        "Record<{category: \"Pattern Matching\", challenge: \"Communication"
+                                + " Overhead\", $f2: 22}>",
+                        "Record<{category: \"Pattern Matching\", challenge: \"Parallelism\", $f2:"
+                            + " 1}>",
+                        "Record<{category: \"Pattern Matching\", challenge: \"Bandwidth\", $f2:"
+                            + " 6}>",
+                        "Record<{category: \"Traversal\", challenge: \"Parallelism\", $f2: 12}>",
+                        "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
+                                + " $f2: 13}>",
+                        "Record<{category: \"Traversal\", challenge: \"Load Balance\", $f2: 8}>",
+                        "Record<{category: \"Traversal\", challenge: \"Bandwidth\", $f2: 2}>",
+                        "Record<{category: \"Covering\", challenge: \"Parallelism\", $f2: 9}>",
+                        "Record<{category: \"Covering\", challenge: \"Communication Overhead\","
+                                + " $f2: 4}>",
+                        "Record<{category: \"Covering\", challenge: \"Load Balance\", $f2: 1}>");
+        return new QueryContext(query, expected);
+    }
 }
