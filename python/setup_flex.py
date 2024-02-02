@@ -35,6 +35,7 @@ from setuptools import setup
 
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
+
 def parse_version(root, **kwargs):
     """
     Parse function for setuptools_scm that first tries to read '../VERSION' file
@@ -48,6 +49,7 @@ def parse_version(root, **kwargs):
         with open(version_file, "r", encoding="utf-8") as fp:
             return meta(fp.read().strip())
     return parse(root, **kwargs)
+
 
 # To install the library, run the following
 #
