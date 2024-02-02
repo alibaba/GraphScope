@@ -12,7 +12,8 @@ ARCH := $(shell uname -m)
 
 VERSION ?= latest
 
-BUILD_PROGRESS  	?= auto
+BUILD_PROGRESS     ?= auto
+ENABLE_COORDINATOR ?= false
 
 .PHONY: all interactive-base interactive-runtime
 
@@ -29,4 +30,5 @@ interactive-runtime:
 		-f ${WORKING_DIR}/interactive-runtime.Dockerfile \
 		--target final_image \
 		--build-arg ARCH=$(ARCH) \
+		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		-t registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${SHORT_SHA}-${ARCH} --push .

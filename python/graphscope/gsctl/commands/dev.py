@@ -87,7 +87,7 @@ def interactive(app, graphscope_repo):
             fg="red",
         )
         return
-    cmd = ["make", "interactive-runtime"]
+    cmd = ["make", "interactive-runtime", "ENABLE_COORDINATOR=true"]
     run_shell_cmd(cmd, os.path.join(graphscope_repo, interactive_build_dir))
 
 

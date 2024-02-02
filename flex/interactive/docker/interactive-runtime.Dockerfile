@@ -2,6 +2,7 @@ ARG ARCH=x86_64
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:latest AS builder
 
 ARG ARCH
+ARG ENABLE_COORDINATOR="false"
 
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
@@ -31,12 +32,15 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
 # build coordinator
-RUN cd ${HOME}/GraphScope/flex/coordinator && \
-    python3 setup.py bdist_wheel && \
-    mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+        cd ${HOME}/GraphScope/flex/coordinator && \
+        python3 setup.py bdist_wheel && \
+        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
+    fi
 
 from ubuntu:20.04 as final_image
 ARG ARCH
+ARG ENABLE_COORDINATOR="false"
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -47,8 +51,14 @@ RUN useradd -m graphscope -u 1001 && \
     echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # g++ + jre 500MB
-RUN apt-get update && apt-get -y install locales g++-9 cmake openjdk-11-jre-headless python3 python3-pip && \
+RUN apt-get update && apt-get -y install locales g++-9 cmake openjdk-11-jre-headless && \
     ln -sf /usr/bin/g++-9 /usr/bin/g++ && locale-gen en_US.UTF-8 && apt-get clean -y && sudo rm -rf /var/lib/apt/lists/* 
+
+# python3
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      apt-get update && apt-get -y install python3 python3-pip && \
+      apt-get clean -y && sudo rm -rf /var/lib/apt/lists/*; \
+    fi
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
@@ -109,7 +119,9 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 
 RUN chmod +x /opt/flex/bin/*
 
-RUN pip3 install /opt/flex/wheel/*.whl
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      pip3 install /opt/flex/wheel/*.whl; \
+    fi
 
 ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
 # flex solution
