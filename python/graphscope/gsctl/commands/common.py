@@ -49,7 +49,7 @@ def connect(coordinator_endpoint):
         if context is None:
             click.secho(
                 "No available context found, try to connect to coordinator with --coordinator-endpoint",
-                fg="blug",
+                fg="blue",
             )
             return
         coordinator_endpoint = context.coordinator_endpoint

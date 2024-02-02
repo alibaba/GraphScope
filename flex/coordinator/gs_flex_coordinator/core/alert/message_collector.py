@@ -171,7 +171,7 @@ class AlertMessageCollector(object):
                 message.trigger_time
             )
 
-        logger.info("Alert message generated: %s", str(message.to_dict()))
+        # logger.info("Alert message generated: %s", str(message.to_dict()))
 
         # add message to current collector
         self._current_message_collector.add_message(message)

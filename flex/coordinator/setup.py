@@ -30,7 +30,10 @@ VERSION = "1.0.0"
 
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
-REQUIRES = ["connexion>=2.0.2", "swagger-ui-bundle>=0.0.2", "python_dateutil>=2.6.0"]
+
+def parsed_reqs():
+    with open(os.path.join(pkg_root, "requirements.txt"), "r", encoding="utf-8") as fp:
+        return fp.read().splitlines()
 
 
 class GenerateFlexServer(Command):
@@ -120,7 +123,7 @@ setup(
     author_email="graphscope@alibaba-inc.com",
     url="",
     keywords=["OpenAPI", "GraphScope FLEX HTTP SERVICE API"],
-    install_requires=REQUIRES,
+    install_requires=parsed_reqs(),
     packages=find_packages(),
     package_data={"": ["openapi/openapi.yaml"]},
     cmdclass={

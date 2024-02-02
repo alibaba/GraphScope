@@ -210,7 +210,7 @@ def job():
                     j.type,
                     j.status,
                     j.start_time,
-                    j.end_time,
+                    str(j.end_time),
                 ]
             )
         terminal_display(data)

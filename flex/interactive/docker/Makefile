@@ -1,6 +1,7 @@
 MKFILE_PATH 			:= $(abspath $(lastword $(MAKEFILE_LIST)))
 WORKING_DIR 			:= $(dir $(MKFILE_PATH))
-DOCKERFILES_DIR			:= $(WORKING_DIR)
+DOCKERFILES_DIR	  := $(WORKING_DIR)
+SHORT_SHA   			:= $(shell git rev-parse --short HEAD)
 
 ifeq ($(REGISTRY),)
     REGISTRY := registry.cn-hongkong.aliyuncs.com
@@ -23,9 +24,9 @@ interactive-base:
 
 interactive-runtime:
 	cd $(WORKING_DIR) && \
+	cd ../../../ && \
 	docker build \
-		-f interactive-runtime.Dockerfile \
+		-f ${WORKING_DIR}/interactive-runtime.Dockerfile \
 		--target final_image \
 		--build-arg ARCH=$(ARCH) \
-		-t registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${VERSION}-${ARCH} --push .
-
+		-t registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${SHORT_SHA}-${ARCH} --push .
