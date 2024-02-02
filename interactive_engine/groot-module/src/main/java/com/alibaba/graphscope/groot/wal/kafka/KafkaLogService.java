@@ -93,6 +93,8 @@ public class KafkaLogService implements LogService {
 
     @Override
     public LogWriter createWriter() {
+        while (!initialized())
+            ;
         String customConfigsStr = KafkaConfig.KAFKA_PRODUCER_CUSTOM_CONFIGS.get(configs);
         Map<String, String> customConfigs = new HashMap<>();
         if (!customConfigsStr.isEmpty()) {
@@ -111,6 +113,8 @@ public class KafkaLogService implements LogService {
 
     @Override
     public LogReader createReader(int queueId, long offset) throws IOException {
+        while (!initialized())
+            ;
         return createReader(queueId, offset, -1);
     }
 
@@ -152,12 +156,12 @@ public class KafkaLogService implements LogService {
         Map<String, Object> adminConfig = new HashMap<>();
         adminConfig.put("bootstrap.servers", this.servers);
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 30; ++i) {
             try {
                 return AdminClient.create(adminConfig);
             } catch (Exception e) {
                 logger.warn("Error creating Kafka AdminClient", e);
-                Thread.sleep(5000);
+                Thread.sleep(10000);
             }
         }
         throw new RuntimeException("Create Kafka Client failed");
