@@ -17,15 +17,4 @@
 #
 
 import graphscope.flex.rest
-from graphscope.flex.rest import SchemaMapping
 from graphscope.gsctl.config import get_current_context
-
-
-def import_data_to_interactive_graph(config: dict) -> str:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        graph_name = config["graph"]
-        api_instance = graphscope.flex.rest.LegacyApi(api_client)
-        return api_instance.data_import(graph_name, SchemaMapping.from_dict(config))

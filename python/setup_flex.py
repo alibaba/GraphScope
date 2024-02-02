@@ -28,9 +28,28 @@
     Do not edit the class manually.
 """  # noqa: E501
 
+import os
 
 from setuptools import find_packages  # noqa: H301
 from setuptools import setup
+
+pkg_root = os.path.dirname(os.path.abspath(__file__))
+
+
+def parse_version(root, **kwargs):
+    """
+    Parse function for setuptools_scm that first tries to read '../VERSION' file
+    to get a version number.
+    """
+    from setuptools_scm.git import parse
+    from setuptools_scm.version import meta
+
+    version_file = os.path.join(pkg_root, "..", "VERSION")
+    if os.path.isfile(version_file):
+        with open(version_file, "r", encoding="utf-8") as fp:
+            return meta(fp.read().strip())
+    return parse(root, **kwargs)
+
 
 # To install the library, run the following
 #
@@ -50,12 +69,15 @@ REQUIRES = [
 
 setup(
     name=NAME,
-    version=VERSION,
     description="GraphScope FLEX HTTP SERVICE API",
     author="GraphScope",
     author_email="graphscope@alibaba-inc.com",
     url="",
     keywords=["OpenAPI", "OpenAPI-Generator", "GraphScope FLEX HTTP SERVICE API"],
+    use_scm_version={
+        "root": pkg_root,
+        "parse": parse_version,
+    },
     install_requires=REQUIRES,
     packages=find_packages(include=["graphscope.flex.rest"]),
     include_package_data=True,

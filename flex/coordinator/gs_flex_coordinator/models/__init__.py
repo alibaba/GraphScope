@@ -25,6 +25,7 @@ from gs_flex_coordinator.models.groot_graph_gremlin_interface import GrootGraphG
 from gs_flex_coordinator.models.groot_property import GrootProperty
 from gs_flex_coordinator.models.groot_schema import GrootSchema
 from gs_flex_coordinator.models.groot_vertex_type import GrootVertexType
+from gs_flex_coordinator.models.job_status import JobStatus
 from gs_flex_coordinator.models.model_property import ModelProperty
 from gs_flex_coordinator.models.model_schema import ModelSchema
 from gs_flex_coordinator.models.node_status import NodeStatus
