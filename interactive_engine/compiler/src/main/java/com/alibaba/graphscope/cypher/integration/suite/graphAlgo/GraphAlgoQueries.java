@@ -211,19 +211,19 @@ public class GraphAlgoQueries {
                         "Record<{category: \"Similarity\", challenge: \"Parallelism\", $f2: 2}>",
                         "Record<{category: \"Similarity\", challenge: \"Load Balance\", $f2: 1}>",
                         "Record<{category: \"Cohesive Subgraph\", challenge: \"Parallelism\", $f2:"
-                            + " 7}>",
+                                + " 7}>",
                         "Record<{category: \"Cohesive Subgraph\", challenge: \"Communication"
                                 + " Overhead\", $f2: 9}>",
                         "Record<{category: \"Cohesive Subgraph\", challenge: \"Load Balance\", $f2:"
-                            + " 4}>",
+                                + " 4}>",
                         "Record<{category: \"Pattern Matching\", challenge: \"Load Balance\", $f2:"
-                            + " 16}>",
+                                + " 16}>",
                         "Record<{category: \"Pattern Matching\", challenge: \"Communication"
                                 + " Overhead\", $f2: 22}>",
                         "Record<{category: \"Pattern Matching\", challenge: \"Parallelism\", $f2:"
-                            + " 1}>",
+                                + " 1}>",
                         "Record<{category: \"Pattern Matching\", challenge: \"Bandwidth\", $f2:"
-                            + " 6}>",
+                                + " 6}>",
                         "Record<{category: \"Traversal\", challenge: \"Parallelism\", $f2: 12}>",
                         "Record<{category: \"Traversal\", challenge: \"Communication Overhead\","
                                 + " $f2: 13}>",
