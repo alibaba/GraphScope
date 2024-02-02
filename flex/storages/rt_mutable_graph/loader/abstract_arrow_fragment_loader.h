@@ -409,6 +409,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     VLOG(10) << "src indexer size: " << src_indexer.size()
              << " dst indexer size: " << dst_indexer.size();
 
+    // use a dummy vector to store the string columns, to avoid the strings
+    // being released as record batch is released.
+    std::vector<std::shared_ptr<arrow::Array>> string_cols;
+
     for (auto filename : e_files) {
       auto record_batch_supplier = supplier_creator(
           src_label_id, dst_label_id, e_label_id, filename, loading_config_);
@@ -447,6 +451,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         std::vector<std::shared_ptr<arrow::Array>> property_cols;
         for (size_t i = 2; i < columns.size(); ++i) {
           property_cols.emplace_back(columns[i]);
+          if (columns[i]->type()->Equals(arrow::utf8()) ||
+              columns[i]->type()->Equals(arrow::large_utf8())) {
+            string_cols.emplace_back(columns[i]);
+          }
         }
         CHECK(property_cols.size() <= 1)
             << "Currently only support at most one property on edge";
