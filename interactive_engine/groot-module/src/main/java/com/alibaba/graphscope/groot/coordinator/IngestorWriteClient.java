@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.frontend;
+package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;

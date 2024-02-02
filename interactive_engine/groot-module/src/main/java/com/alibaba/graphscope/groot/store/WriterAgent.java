@@ -158,9 +158,9 @@ public class WriterAgent implements MetricsAgent {
      */
     public boolean writeStore(StoreDataBatch storeDataBatch) throws InterruptedException {
         // logger.info("writeStore {}", storeDataBatch.toProto());
-        int queueId = storeDataBatch.getQueueId();
+        //        int queueId = storeDataBatch.getQueueId();
         long beforeOfferTime = System.nanoTime();
-        boolean suc = this.bufferQueue.offerQueue(queueId, storeDataBatch);
+        boolean suc = this.bufferQueue.offerQueue(0, storeDataBatch);
         logger.debug("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
         long afterOfferTime = System.nanoTime();
         this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);

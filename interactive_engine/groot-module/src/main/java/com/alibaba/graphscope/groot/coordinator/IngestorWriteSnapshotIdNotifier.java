@@ -51,7 +51,9 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
                         logger.error("error in advanceIngestSnapshotId {}: {}", si, t.toString());
                     }
                 };
-        for (int i = 0; i < this.frontendCount; i++) {
+        // TODO(siyuan): Send to frontend service
+        //        for (int i = 0; i < this.frontendCount; i++) {
+        for (int i = 0; i < 1; i++) {
             try {
                 IngestorSnapshotClient client = ingestorSnapshotClients.getClient(i);
                 client.advanceIngestSnapshotId(si, callback);

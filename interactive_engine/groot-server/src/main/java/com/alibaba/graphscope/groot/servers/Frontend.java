@@ -150,14 +150,15 @@ public class Frontend extends NodeBase {
 
         IngestorSnapshotService ingestorSnapshotService =
                 new IngestorSnapshotService(kafkaAppender);
-
+        IngestorWriteService ingestorWriteService = new IngestorWriteService(kafkaAppender);
         this.rpcServer =
                 new RpcServer(
                         configs,
                         localNodeProvider,
                         frontendSnapshotService,
                         metricsCollectService,
-                        ingestorSnapshotService);
+                        ingestorSnapshotService,
+                        ingestorWriteService);
 
         this.serviceServer =
                 buildServiceServer(

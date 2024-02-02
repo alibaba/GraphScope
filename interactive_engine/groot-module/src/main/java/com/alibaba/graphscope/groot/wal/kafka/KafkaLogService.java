@@ -149,6 +149,7 @@ public class KafkaLogService implements LogService {
                 }
             }
         }
+        logger.info("Created AdminClient");
         return this.adminClient;
     }
 
