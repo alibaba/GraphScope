@@ -115,7 +115,6 @@ public class SnapshotManager {
     private final WriteSnapshotIdNotifier writeSnapshotIdNotifier;
 
     private final int storeCount;
-    private final int queueCount;
     private final long snapshotIncreaseIntervalMs;
     private final long offsetsPersistIntervalMs;
 
@@ -123,7 +122,7 @@ public class SnapshotManager {
     private volatile long writeSnapshotId;
 
     private final Map<Integer, SnapshotInfo> storeToSnapshotInfo;
-    private final Map<Integer, List<Long>> storeToOffsets;
+    private final Map<Integer, Long> storeToOffsets;
     private AtomicReference<List<Long>> queueOffsetsRef;
 
     private ScheduledExecutorService increaseWriteSnapshotIdScheduler;
@@ -137,7 +136,7 @@ public class SnapshotManager {
 
     private final ObjectMapper objectMapper;
 
-    private boolean isSecondary;
+    private final boolean isSecondary;
 
     public SnapshotManager(
             Configs configs,
@@ -149,7 +148,6 @@ public class SnapshotManager {
         this.writeSnapshotIdNotifier = writeSnapshotIdNotifier;
 
         this.objectMapper = new ObjectMapper();
-        this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
 
         this.snapshotIncreaseIntervalMs =
@@ -253,19 +251,16 @@ public class SnapshotManager {
         byte[] offsetBytes = this.metaStore.read(QUEUE_OFFSETS_PATH);
         List<Long> offsets = objectMapper.readValue(offsetBytes, new TypeReference<>() {});
         logger.info("recovered queue offsets {}", offsets);
-        if (isSecondary) {
-            offsets = offsets.subList(0, 1);
-        }
-        if (offsets.size() != this.queueCount) {
+        if (offsets.size() != this.storeCount) {
             throw new IllegalStateException(
                     "recovered queueCount ["
                             + offsets.size()
                             + "], but expect queueCount ["
-                            + this.queueCount
+                            + this.storeCount
                             + "]");
         }
 
-        for (int i = 0; i < this.queueCount; i++) {
+        for (int i = 0; i < this.storeCount; i++) {
             long recoveredOffset = offsets.get(i);
             try (LogReader reader = logService.createReader(i, recoveredOffset + 1)) {
             } catch (Exception e) {
@@ -304,21 +299,15 @@ public class SnapshotManager {
                 storeId,
                 (k, v) -> {
                     if (v != null) {
-                        if (v.size() != queueOffsets.size()) {
+                        if (1 != queueOffsets.size()) {
                             throw new IllegalArgumentException(
-                                    "current offset size ["
-                                            + v.size()
-                                            + "], commit offset size ["
-                                            + queueOffsets.size()
-                                            + "]");
+                                    "committed offset is [" + queueOffsets + "]");
                         }
-                        for (int i = 0; i < v.size(); i++) {
-                            if (v.get(i) > queueOffsets.get(i)) {
-                                return v;
-                            }
+                        if (v > queueOffsets.get(0)) {
+                            return v;
                         }
                     }
-                    return queueOffsets;
+                    return queueOffsets.get(0);
                 });
         maybeUpdateQuerySnapshotId();
     }
@@ -448,8 +437,8 @@ public class SnapshotManager {
         boolean changed = false;
         for (int qId = 0; qId < queueOffsets.size(); qId++) {
             long minOffset = Long.MAX_VALUE;
-            for (List<Long> storeOffsets : this.storeToOffsets.values()) {
-                minOffset = Math.min(storeOffsets.get(qId), minOffset);
+            for (Long storeOffsets : this.storeToOffsets.values()) {
+                minOffset = Math.min(storeOffsets, minOffset);
             }
             if (minOffset != Long.MAX_VALUE && minOffset > newQueueOffsets.get(qId)) {
                 newQueueOffsets.set(qId, minOffset);
@@ -468,22 +457,6 @@ public class SnapshotManager {
         }
         byte[] b = objectMapper.writeValueAsBytes(value);
         metaStore.write(path, b);
-    }
-
-    /**
-     * Get offset list according to the input queueId list. This is for IngestNode to get the
-     * correct start offset for replay.
-     *
-     * @param queueIdList
-     * @return
-     */
-    public List<Long> getTailOffsets(List<Integer> queueIdList) {
-        List<Long> tailOffsets = new ArrayList<>(queueIdList.size());
-        List<Long> queueOffsets = getQueueOffsets();
-        for (int queueId : queueIdList) {
-            tailOffsets.add(queueOffsets.get(queueId));
-        }
-        return tailOffsets;
     }
 
     public List<Long> getQueueOffsets() {

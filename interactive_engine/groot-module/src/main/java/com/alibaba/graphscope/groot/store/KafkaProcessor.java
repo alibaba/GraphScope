@@ -220,8 +220,8 @@ public class KafkaProcessor {
             } else {
                 int partitionId =
                         PartitionUtils.getPartitionIdFromKey(partitionKey, partitionCount);
-                int curStoreId = metaService.getStoreIdByPartition(partitionId);
-                if (curStoreId == storeId) {
+                int batchStoreId = metaService.getStoreIdByPartition(partitionId);
+                if (batchStoreId == storeId) {
                     builder.addOperation(partitionId, operationBlob);
                 } else {
                     logger.error("Should not happen: {} {}", partitionId, operationBlob.toProto());

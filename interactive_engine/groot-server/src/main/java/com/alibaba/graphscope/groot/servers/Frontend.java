@@ -91,18 +91,11 @@ public class Frontend extends NodeBase {
         RoleClients<MetricsCollectClient> frontendMetricsCollectClients =
                 new RoleClients<>(
                         this.channelManager, RoleType.FRONTEND, MetricsCollectClient::new);
-        //        RoleClients<MetricsCollectClient> ingestorMetricsCollectClients =
-        //                new RoleClients<>(
-        //                        this.channelManager, RoleType.INGESTOR,
-        // MetricsCollectClient::new);
         RoleClients<MetricsCollectClient> storeMetricsCollectClients =
                 new RoleClients<>(this.channelManager, RoleType.STORE, MetricsCollectClient::new);
         MetricsAggregator metricsAggregator =
                 new MetricsAggregator(
-                        configs,
-                        frontendMetricsCollectClients,
-                        //                        ingestorMetricsCollectClients,
-                        storeMetricsCollectClients);
+                        configs, frontendMetricsCollectClients, storeMetricsCollectClients);
 
         StoreIngestClients storeIngestClients =
                 new StoreIngestClients(this.channelManager, RoleType.STORE, StoreIngestClient::new);
@@ -136,9 +129,6 @@ public class Frontend extends NodeBase {
         GrootDdlService clientDdlService = new GrootDdlService(snapshotCache, batchDdlClient);
 
         EdgeIdGenerator edgeIdGenerator = new DefaultEdgeIdGenerator(configs, this.channelManager);
-        //        RoleClients<IngestorWriteClient> ingestorWriteClients =
-        //                new RoleClients<>(this.channelManager, RoleType.INGESTOR,
-        // IngestorWriteClient::new);
 
         LogService logService = LogServiceFactory.makeLogService(configs);
         KafkaAppender kafkaAppender = new KafkaAppender(configs, metaService, logService);
@@ -147,7 +137,6 @@ public class Frontend extends NodeBase {
                         snapshotCache,
                         edgeIdGenerator,
                         this.metaService,
-                        //                        ingestorWriteClients,
                         metricsCollector,
                         kafkaAppender,
                         configs);

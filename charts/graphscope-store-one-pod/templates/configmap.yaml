@@ -21,20 +21,13 @@ data:
     rpc.max.bytes.mb={{ .Values.rpcMaxBytesMb }}
     store.node.count={{ .Values.store.replicaCount }}
     frontend.node.count=1
-    ingestor.node.count={{ .Values.ingestor.replicaCount }}
     coordinator.node.count=1
-    ingestor.queue.count={{ .Values.ingestor.replicaCount }}
     partition.count={{ .Values.store.replicaCount | mul 16 }}
     discovery.mode=zookeeper
 
     ## Frontend Config
     frontend.server.num=1
     enable.hash.generate.eid={{ .Values.enableHashGenerateEid }}
-
-    ## Ingestor Config
-    ingestor.queue.buffer.max.count={{ .Values.ingestorQueueBufferMaxCount }}
-    ingestor.sender.buffer.max.count={{ .Values.ingestorSenderBufferMaxCount }}
-    ingestor.sender.operation.max.count={{ .Values.ingestorSenderOperationMaxCount }}
 
     ## Coordinator Config
     snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
@@ -53,7 +46,6 @@ data:
     neo4j.bolt.server.disabled=true
 
     dns.name.prefix.frontend=localhost
-    dns.name.prefix.ingestor=localhost
     dns.name.prefix.coordinator=localhost
     dns.name.prefix.store=localhost
 

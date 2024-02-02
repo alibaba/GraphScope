@@ -82,7 +82,7 @@ public class GraphInitializer {
             this.metaStore.write(SnapshotManager.WRITE_SNAPSHOT_ID_PATH, b);
         }
         if (!this.metaStore.exists(SnapshotManager.QUEUE_OFFSETS_PATH)) {
-            int queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(this.configs);
+            int queueCount = CommonConfig.STORE_NODE_COUNT.get(this.configs);
             List<Long> offsets = new ArrayList<>(queueCount);
             for (int i = 0; i < queueCount; i++) {
                 offsets.add(-1L);

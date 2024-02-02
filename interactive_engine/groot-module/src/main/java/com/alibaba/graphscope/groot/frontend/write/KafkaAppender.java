@@ -6,7 +6,7 @@ import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.IngestorConfig;
+import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
 import com.alibaba.graphscope.groot.ingestor.IngestCallback;
@@ -55,7 +55,7 @@ public class KafkaAppender {
         this.queue = CommonConfig.NODE_IDX.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.partitionCount = metaService.getPartitionCount();
-        this.bufferSize = IngestorConfig.INGESTOR_QUEUE_BUFFER_MAX_COUNT.get(configs);
+        this.bufferSize = FrontendConfig.WRITE_QUEUE_BUFFER_MAX_COUNT.get(configs);
         this.ingestSnapshotId = new AtomicLong(-1);
     }
 

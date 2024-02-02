@@ -33,8 +33,6 @@ public class Utils {
         switch (role) {
             case FRONTEND:
                 return DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
-            case INGESTOR:
-                return DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(configs);
             case COORDINATOR:
                 return DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
             case STORE:
@@ -62,9 +60,6 @@ public class Utils {
         switch (role) {
             case FRONTEND:
                 s = CommonConfig.FRONTEND_RPC_PORT.get(configs);
-                break;
-            case INGESTOR:
-                s = CommonConfig.INGESTOR_RPC_PORT.get(configs);
                 break;
             case COORDINATOR:
                 s = CommonConfig.COORDINATOR_RPC_PORT.get(configs);

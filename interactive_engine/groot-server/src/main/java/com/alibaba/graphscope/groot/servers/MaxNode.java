@@ -33,7 +33,6 @@ public class MaxNode extends NodeBase {
     private KafkaTestCluster kafkaTestCluster;
     private final NodeBase coordinator;
     private final List<NodeBase> frontends = new ArrayList<>();
-    private final List<NodeBase> ingestors = new ArrayList<>();
     private final List<NodeBase> stores = new ArrayList<>();
 
     public MaxNode(Configs configs) throws Exception {
@@ -49,7 +48,6 @@ public class MaxNode extends NodeBase {
         }
 
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
-        int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
 
         Configs baseConfigs =
@@ -123,9 +121,6 @@ public class MaxNode extends NodeBase {
 
     @Override
     public void close() throws IOException {
-        //        for (NodeBase ingestor : this.ingestors) {
-        //            ingestor.close();
-        //        }
         for (NodeBase frontend : this.frontends) {
             frontend.close();
         }

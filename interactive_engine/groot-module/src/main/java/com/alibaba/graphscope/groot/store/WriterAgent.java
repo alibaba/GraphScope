@@ -161,7 +161,7 @@ public class WriterAgent implements MetricsAgent {
         int queueId = storeDataBatch.getQueueId();
         long beforeOfferTime = System.nanoTime();
         boolean suc = this.bufferQueue.offerQueue(queueId, storeDataBatch);
-        logger.info("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
+        logger.debug("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
         long afterOfferTime = System.nanoTime();
         this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
         return suc;
@@ -202,7 +202,9 @@ public class WriterAgent implements MetricsAgent {
                 if (hasDdl) {
                     this.consumeDdlSnapshotId = batchSnapshotId;
                 }
-                this.consumedQueueOffsets.set(batch.getQueueId(), batch.getOffset());
+                //                this.consumedQueueOffsets.set(batch.getQueueId(),
+                // batch.getOffset());
+                this.consumedQueueOffsets.set(0, batch.getOffset());
             } catch (InterruptedException e) {
                 logger.error("processBatches interrupted");
             } catch (Exception e) {

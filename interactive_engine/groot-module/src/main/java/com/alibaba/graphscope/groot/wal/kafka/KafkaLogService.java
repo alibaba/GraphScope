@@ -39,7 +39,7 @@ public class KafkaLogService implements LogService {
     private final Configs configs;
     private final String servers;
     private final String topic;
-    private final int queueCount;
+    private final int storeCount;
     private final short replicationFactor;
     private final int maxMessageMb;
 
@@ -49,7 +49,7 @@ public class KafkaLogService implements LogService {
         this.configs = configs;
         this.servers = KafkaConfig.KAFKA_SERVERS.get(configs);
         this.topic = KafkaConfig.KAKFA_TOPIC.get(configs);
-        this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
+        this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.replicationFactor = KafkaConfig.KAFKA_REPLICATION_FACTOR.get(configs);
         this.maxMessageMb = KafkaConfig.KAFKA_MAX_MESSAGE_MB.get(configs);
         logger.info("Initialized KafkaLogService");
@@ -58,7 +58,7 @@ public class KafkaLogService implements LogService {
     @Override
     public void init() {
         AdminClient admin = getAdmin();
-        NewTopic newTopic = new NewTopic(this.topic, this.queueCount, this.replicationFactor);
+        NewTopic newTopic = new NewTopic(this.topic, this.storeCount, this.replicationFactor);
         Map<String, String> configs = new HashMap<>();
         configs.put("retention.ms", "-1");
         configs.put("retention.bytes", "-1");

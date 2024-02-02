@@ -44,19 +44,19 @@ import java.io.IOException;
 public class Coordinator extends NodeBase {
 
     private CuratorFramework curator;
-    private NodeDiscovery discovery;
-    private SnapshotManager snapshotManager;
-    private MetaService metaService;
-    private SchemaManager schemaManager;
-    private SnapshotNotifier snapshotNotifier;
-    private RpcServer rpcServer;
-    private ChannelManager channelManager;
-    private LogRecycler logRecycler;
-    private GraphInitializer graphInitializer;
-    private IdAllocator idAllocator;
-    private BackupManager backupManager;
+    private final NodeDiscovery discovery;
+    private final SnapshotManager snapshotManager;
+    private final MetaService metaService;
+    private final SchemaManager schemaManager;
+    private final SnapshotNotifier snapshotNotifier;
+    private final RpcServer rpcServer;
+    private final ChannelManager channelManager;
+    private final LogRecycler logRecycler;
+    private final GraphInitializer graphInitializer;
+    private final IdAllocator idAllocator;
+    private final BackupManager backupManager;
 
-    private GarbageCollectManager garbageCollectManager;
+    private final GarbageCollectManager garbageCollectManager;
 
     public Coordinator(Configs configs) {
         super(configs);
