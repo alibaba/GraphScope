@@ -393,6 +393,27 @@ class SyncEngine : public BaseEngine {
     // old context will be abondon here.
   }
 
+  template <AppendOpt opt, int alias_to_use, typename CTX_HEAD_T, int cur_alias,
+            int base_tag, typename... CTX_PREV, typename LabelT,
+            typename EDGE_FILTER_T>
+  static auto EdgeExpandV(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
+      EdgeExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt) {
+    // Unwrap params here.
+    auto& select_node = gs::Get<alias_to_use>(ctx);
+    // Modifiy offsets.
+    // pass select node by reference.
+    auto pair = EdgeExpand<GRAPH_INTERFACE>::EdgeExpandV(
+        graph, select_node, edge_expand_opt.direction_,
+        edge_expand_opt.edge_label_triplets_,
+        std::move(edge_expand_opt.edge_filter_));
+    // create new context node, update offsets.
+    return ctx.template AddNode<opt>(std::move(pair.first),
+                                     std::move(pair.second), alias_to_use);
+    // old context will be abondon here.
+  }
+
   //////////////////////////////////////Path Expand/////////////////////////
   // Path Expand to vertices with columns
   template <AppendOpt opt, int alias_to_use, typename VERTEX_FILTER_T,

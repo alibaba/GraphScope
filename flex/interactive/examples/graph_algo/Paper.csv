@@ -20,84 +20,105 @@ id|conference|CCF Rank|CCF field|year|paper
 18|TJSC|C|计算机体系结构/并行与分布计算/存储系统|2022|Scalable distributed Louvain algorithm for community detection in large graphs
 19|IPDPS|B|计算机体系结构/并行与分布计算/存储系统|2018|Distributed Louvain Algorithm for Graph Community Detection
 20|DASC|/|/|2018|Parallelizing Louvain Algorithm: Distributed Memory Challenges
-21|CLUSTER|B|计算机体系结构/并行与分布计算/存储系统|2018|A Scalable Distributed Louvain Algorithm for Large-scale Graph Community Detection
+21|CLUSTER|B|计算机体系结构/并行与分布计算/存储系统|2018|A Scalable Distributed Louvain Algorithm for Large-scale Graph Community Detection 
 22|HPEC|/|/|2019|Distributed Direction-Optimizing Label Propagation for Community Detection
 23|Concurrency and Computation|C|计算机体系结构/并行与分布计算/存储系统|2019|Parallel and distributed core label propagation with graph coloring
-24|TC|A|计算机体系结构/并行与分布计算/存储系统|2022|Distributed Detection of Minimum Cuts in Wireless Multi-Hop Networks
-25|JNCA|C|计算机网络|2019|A Distributed Evolutionary algorithm for detecting minimum vertex cuts for wireless ad hoc and sensor networks
-26|DISC|/|/|2013| Distributed Minimum Cut Approximation
+24|Physica A|/|/|2018|PSPLPA: Probability and similarity based parallel label propagation algorithm on spark
+25|Procedia computer science|/|/|2017|An evidential influence-based label propagation algorithm for distributed community detection in social network
+26|WWW|A|交叉/综合/新兴|2017|When Hashes Met Wedges: A Distributed Algorithm for Finding High Similarity Vectors
 27|IPDPS|B|计算机体系结构/并行与分布计算/存储系统|2020|Communication-Efficient Jaccard similarity for High-Performance Distributed Genome Comparisons
-28|VLDBJ|A|数据库/数据挖掘/内容检索|2020|DISK: A Distributed Framework for Single-Source SimRank with Accuracy Guarantee
-29|VLDB|A|数据库/数据挖掘/内容检索|2022|Distributed D-core Decomposition over Large Directed Graphs
-30|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2021|Distributed approximate k-core decomposition and min-max edge orientation: Breaking the diameter barrier
-31|BigData|C|交叉/综合/新兴|2017|A distributed k-core decomposition algorithm on spark
-32|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2013|Distributed k-Core Decomposition
-33|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2022|Efficient Distributed Approaches to Core Maintenance on Large Dynamic Graphs
-34|BigData|C|交叉/综合/新兴|2014|Distributed algorithms for k-truss decomposition
-35|TC|A|计算机体系结构/并行与分布计算/存储系统|2023|Exploring Truss Maintenance in Fully Dynamic Graphs: A Mixed Structure-Based Approach
-36|IS|B|信息系统|2019|KTMiner: Distributed k-truss detection in big graphs
-37|SIGMOD|A|数据库/数据挖掘/内容检索|2014|Efficient Cohesive Subgraphs Detection in Parallel
-38|PODC|B|计算机体系结构/并行与分布计算/存储系统|2022|Deterministic Near-Optimal Distributed Listing of Cliques
-39|TKDE|A|数据库/数据挖掘/内容检索|2021|Efficient Distributed k-Clique Mining for Large Networks Using MapReduce
-40|SODA|A|计算机科学理论|2021|Tight Distributed Listing of Cliques
-41|PODC|B|计算机体系结构/并行与分布计算/存储系统|2020|On Distributed Listing of Cliques
-42|ICALP|B|计算机科学理论|2019|Distributed Detection of Cliques in Dynamic Networks
-43|SEKE|C|软件工程/系统软件/程序设计语言|2018|A Formal Approach for Distributed Computing of Maximal Cliques in Dynamic Networks
-44|TSC|A|软件工程/系统软件/程序设计语言|2016|Distributed Maximal Clique Computation and Management
-45|IJUFKS|C|人工智能|2015|Finding Maximum Clique in Stochastic Graphs Using Distributed Learning Automata
-46|MSN|C|计算机网络|2015|Distributed Algorithms for Maximum Clique in Wireless Networks
-47|ICPP|B|计算机体系结构/并行与分布计算/存储系统|2015|PDTL: Parallel and Distributed triangle listing for Massive Graphs.
-48|TC|A|计算机体系结构/并行与分布计算/存储系统|2022|Svelto: High-Level Synthesis of Multi-Threaded Accelerators for Graph Analytics
-49|SC|A|计算机体系结构/并行与分布计算/存储系统|2021|TriPoll: Computing Surveys of Triangles in Massive-Scale Temporal Graphs with Metadata
-50|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2020|TRUST: Triangle Counting Reloaded on GPUs
+28|Int. J. Comput. Appl.|/|/|2015|Scaling Up a Distributed Computing Of Similarity Coefficient with Mapreduce
+29|VLDBJ|A|数据库/数据挖掘/内容检索|2015|Walking  in the Cloud: Parallel SimRank at Scale
+30|VLDBJ|A|数据库/数据挖掘/内容检索|2020|DISK: A Distributed Framework for Single-Source SimRank with Accuracy Guarantee
+31|arXiv|/|/|2023|Massively Parallel Single-Source SimRanks in $ o ($\backslash$log n) $ Rounds
+32|ICDE|A|数据库/数据挖掘/内容检索|2017|UniWalk: Unidirectional Random  Walk Based Scalable SimRank Computation over Large Graph
+33|VLDB|A|数据库/数据挖掘/内容检索|2022|Distributed D-core Decomposition over Large Directed Graphs
+34|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2021|Distributed approximate k-core decomposition and min-max edge orientation: Breaking the diameter barrier
+35|BigData|C|交叉/综合/新兴|2017|A distributed k-core decomposition algorithm on spark
+36|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2013|Distributed k-Core Decomposition
+37|ICDE|A|数据库/数据挖掘/内容检索|2023|Distributed (α β)-Core Decomposition over Bipartite Graphs
+38|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2022|Efficient Distributed Approaches to Core Maintenance on Large Dynamic Graphs
+39|BigData|C|交叉/综合/新兴|2014|Distributed algorithms for k-truss decomposition
+40|IS|B|信息系统|2019|KTMiner: Distributed k-truss detection in big graphs
+41|SIGMOD|A|数据库/数据挖掘/内容检索|2014|Efficient Cohesive Subgraphs Detection in Parallel
+42|PODC|B|计算机体系结构/并行与分布计算/存储系统|2022|Deterministic Near-Optimal Distributed Listing of Cliques
+43|TKDE|A|数据库/数据挖掘/内容检索|2021|Efficient Distributed k-Clique Mining for Large Networks Using MapReduce
+44|SODA|A|计算机科学理论|2021|Tight Distributed Listing of Cliques
+45|PODC|B|计算机体系结构/并行与分布计算/存储系统|2020|On Distributed Listing of Cliques
+46|ICALP|B|计算机科学理论|2019|Distributed Detection of Cliques in Dynamic Networks
+47|TSC|A|软件工程/系统软件/程序设计语言|2016|Distributed Maximal Clique Computation and Management
+48|IEEE Trans. Big Data|/|/|2014|Distributed Maximal Clique Computation
+49|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2015|Mining maximal cliques from a large graph using MapReduce: Tackling highly uneven subproblem sizes
+50|ICPP|B|计算机体系结构/并行与分布计算/存储系统|2019|A 2D Parallel Triangle Counting Algorithm for Distributed-Memory Architectures
 51|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2022|A Block-Based Triangle Counting Algorithm on Heterogeneous Environments
-52|VLDBJ|A|数据库/数据挖掘/内容检索|2022|G-thinker: a general distributed framework for finding qualified subgraphs in a big graph with load balancing
-53|VLDBJ|A|数据库/数据挖掘/内容检索|2017|Path-based holistic detection plan for multiple patterns in distributed graph frameworks
-54|VLDBJ|A|数据库/数据挖掘/内容检索|2016|Efficient distributed subgraph similarity matching
-55|ICDE|A|数据库/数据挖掘/内容检索|2019|BENU: Distributed Subgraph Enumeration with Backtracking-Based Framework
-56|ICDE|A|数据库/数据挖掘/内容检索|2019|Improving Distributed Subgraph Matching Algorithm on Timely Dataflow
-57|EuroSys|A|计算机体系结构/并行与分布计算/存储系统|2018|G-Miner: an efficient task-oriented graph mining system
-58|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2018|Exploiting social network graph characteristics for efficient BFS on heterogeneous chips
-59|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2016|Silent self-stabilizing BFS tree algorithms revisited
-60|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2015|Solutions to the st-connectivity problem using a GPU-based_istributed BFS.
-61|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2015|BFS-4K: An Efficient Implementation of BFS for Kepler GPU Architectures.
-62|TOS|A|计算机体系结构/并行与分布计算/存储系统|2020|TH-DPMS: Design and Implementation of an RDMA-enabled Distributed Persistent Memory Storage System
-63|PPoPP|A|计算机体系结构/并行与分布计算/存储系统|2022|Scaling Graph Traversal to 281 Trillion Edges with 40 Million Cores
-64|DC|C|计算机体系结构/并行与分布计算/存储系统|2022|Single-source shortest paths in the CONGEST model with improved bounds
-65|SODA|A|计算机科学理论|2022|Universally-Optimal Distributed Shortest Paths and Transshipment via Graph-Based {\(\mathscr{l}\)}\({}_{\mbox{1}}\)-Oblivious Routing
-66|STOC|A|计算机科学理论|2022|Undirected (1+\emph{{\(\epsilon\)}})-shortest paths via minor-aggregates: near-optimal deterministic parallel and distributed algorithms
-67|SICOMP|A|计算机科学理论|2021|Near-Optimal Approximate Shortest Paths and Transshipment in Distributed and Streaming Models
-68|SICOMP|A|计算机科学理论|2021|A Deterministic Almost-Tight Distributed Algorithm for Approximating Single-Source Shortest Paths
-69|PODC|B|计算机体系结构/并行与分布计算/存储系统|2021|Brief Announcement: An Improved Distributed Approximate Single Source Shortest Paths Algorithm
-70|JACM|A|交叉/综合/新兴|2020|Distributed Exact Shortest Paths in Sublinear Time
-71|FOCS|A|计算机科学理论 |2018|A Faster Distributed Single-Source Shortest Paths Algorithm
-72|PPoPP|A|计算机体系结构/并行与分布计算/存储系统 |2016|DSMR: a shared and distributed memory algorithm for single-source shortest path problem
-73|SC|A|计算机体系结构/并行与分布计算/存储系统 |2022|Scaling Graph 500 SSSP to 140 Trillion Edges with over 40 Million Cores
-74|SIGMOD|A|数据库/数据挖掘/内容检索|2020|Distributed Processing of k Shortest Path Queries over Dynamic Road Networks
-75|TKDE|A|数据库/数据挖掘/内容检索|2022|Distributed Multimodal Path Queries
-76|TPDS|A|计算机体系结构/并行与分布计算/存储系统 |2017|Scalable Single Source Shortest Path Algorithms for Massively Parallel Systems
-77|VLDBJ|A|数据库/数据挖掘/内容检索|2017|Distributed shortest path query processing on dynamic road networks
-78|TPDS|A|计算机体系结构/并行与分布计算/存储系统 |2022|A Parallel Algorithm Template for Updating Single-Source Shortest Paths in Large-Scale Dynamic Networks
-79|STOC|A|计算机科学理论|2023|Maximum Length-Constrained Flows and Disjoint Paths: Distributed Deterministic and Fast
-80|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2022|A fast parallel max-flow algorithm
-81|SICOMP|A|计算机科学理论 |2018|Near-Optimal Distributed Maximum Flow
-82|DC|C|计算机体系结构/并行与分布计算/存储系统|2023|A distributed algorithm for directed minimum-weight spanning tree
-83|DC|C|计算机体系结构/并行与分布计算/存储系统|2021|Broadcast and minimum spanning tree with o(m) messages in the asynchronous CONGEST model.
-84|STOC|B|计算机科学理论 |2017|A Time- and Message-Optimal Distributed Algorithm for Minimum Spanning Trees
-85|PODC|B|计算机体系结构/并行与分布计算/存储系统|2019|Distributed Minimum Degree Spanning Trees
-86|SIGMOD|A|数据库/数据挖掘/内容检索|2021|Fast Parallel Algorithms for Euclidean Minimum Spanning Tree and Hierarchical Spatial Clustering
-87|ISAAC|C|计算机科学理论 |2021|Lower Bounds for Induced Cycle Detection in Distributed Computing
-88|SPAA|B|计算机体系结构/并行与分布计算/存储系统|2017|Distributed Detection of Cycles
-89|TAC|B|人工智能|2023|A Scalable Distributed Dynamical Systems Approach to Learn the Strongly Connected Components and Diameter of Networks
-90|IPDPS|B|计算机体系结构/并行与分布计算/存储系统|2022|Communication-efficient Massively Distributed Connected Components
-91|DPD|C|数据库/数据挖掘/内容检索|2018|Distributed computing connected components with linear communication cost
-92|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2017|Fast Connected Components Computation in Large Graphs by Vertex Pruning
-93|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2017|An Adaptive Parallel Algorithm for Computing Connected Components
-94|TON|A|计算机网络|2016|Distributed Greedy Approximation to Maximum Weighted Independent Set for Scheduling With Fading Channels
-95|IA3|/|/|2020|Distributed Memory Graph Coloring Algorithms for Multiple GPUs
-96|IEEE CLOUD|C|交叉/综合/新兴|2020|A distributed large graph coloring algorithm on Giraph
-97|AE|/|/|2015|A Distributed Hybrid Algorithm for the Graph Coloring Problem
-98|SICOMP|A|计算机体系结构/并行与分布计算/存储系统|2014|Distributed (Delta+1)-Coloring in Linear (in Delta) Time
-99|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2019|Vertex Coloring with Communication Constraints in Synchronous Broadcast Networks
-100|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2018|A Parallel Complex Coloring Algorithm for Scheduling of Input-Queued Switches
-101|SC|A|计算机体系结构/并行与分布计算/存储系统 |2011|Parallel breadth-first search on distributed memory systems
+52|IPDPS|B|计算机体系结构/并行与分布计算/存储系统|2022|Asynchronous Distributed-Memory Triangle Counting and LCC with RMA Caching
+53|HPEC|/|/|2019|DistTC: High Performance Distributed Triangle Counting
+54|IPDPS|B|计算机体系结构/并行与分布计算/存储系统|2023|Engineering a Distributed-Memory Triangle Counting Algorithm
+55|PODC|B|计算机体系结构/并行与分布计算/存储系统|2019|Improved Distributed Expander Decomposition and Nearly Optimal Triangle Enumeration
+56|HPEC|/|/|2022|Improved Distributed-memory Triangle Counting by Exploiting the Graph Structure
+57|JACM|A|交叉/综合/新兴|2021|Near-optimal Distributed Triangle Enumeration via Expander Decompositions
+58|SODA|A|计算机科学理论|2019|Distributed Triangle Detection via Expander Decomposition
+59|KDD|A|数据库/数据挖掘/内容检索|2016|PTE: Enumerating Trillion Triangles On Distributed Systems
+60|HPEC|/|/|2020|TriC: Distributed-memory Triangle Counting by Exploiting the Graph Structure
+61|SC|A|计算机体系结构/并行与分布计算/存储系统|2021|TriPoll: Computing Surveys of Triangles in Massive-Scale Temporal Graphs with Metadata
+62|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2021|TRUST: Triangle Counting Reloaded on GPUs
+63|VLDB|A|数据库/数据挖掘/内容检索|2019|Distributed subgraph matching on timely dataflow
+64|ICDE|A|数据库/数据挖掘/内容检索|2019|BENU: Distributed Subgraph Enumeration with Backtracking-based Framework
+65|SC|A|计算机体系结构/并行与分布计算/存储系统|2021|cuTS: Scaling Subgraph Isomorphism on Distributed Multi-GPU Systems Using Trie Based Data Structure
+66|VLDB|A|数据库/数据挖掘/内容检索|2015|Scalable subgraph enumeration in mapreduce
+67|SOCC|B|计算机体系结构/并行与分布计算/存储系统|2017|Qfrag: Distributed graph search via subgraph isomorphism
+68|VLDB|A|数据库/数据挖掘/内容检索|2016|Scalable distributed subgraph enumeration
+69|SIGMOD|A|数据库/数据挖掘/内容检索|2021|HUGE: An Efficient and Scalable Subgraph Enumeration System
+70|SOSP|A|软件工程/系统软件/程序设计语言|2015|Arabesque: a system for distributed graph mining
+71|ISCA|A|计算机体系结构/并行与分布计算/存储系统|2021|FlexMiner: A Pattern-Aware Accelerator for Graph Pattern Mining
+72|EuroSys|A|计算机体系结构/并行与分布计算/存储系统|2018|G-Miner: An Efficient Task-Oriented Graph Mining System
+73|ASPLOS|A|计算机体系结构/并行与分布计算/存储系统|2023|Khuzdul: Efficient and Scalable Distributed Graph Pattern Mining Engine
+74|DMKD|B|数据库/数据挖掘/内容检索|2016|A distributed approach for graph mining in massive networks
+75|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2018|Exploiting social network graph characteristics for efficient BFS on heterogeneous chips
+76|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2016|Silent self-stabilizing BFS tree algorithms revisited
+77|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2015|Solutions to the st-connectivity problem using a GPU-based_istributed BFS.
+78|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2015|BFS-4K: An Efficient Implementation of BFS for Kepler GPU Architectures.
+79|TOS|A|计算机体系结构/并行与分布计算/存储系统|2020|TH-DPMS: Design and Implementation of an RDMA-enabled Distributed Persistent Memory Storage System
+80|PPoPP|A|计算机体系结构/并行与分布计算/存储系统|2022|Scaling Graph Traversal to 281 Trillion Edges with 40 Million Cores
+81|DC|C|计算机体系结构/并行与分布计算/存储系统|2022|Single-source shortest paths in the CONGEST model with improved bounds
+82|SODA|A|计算机科学理论|2022|Universally-Optimal Distributed Shortest Paths and Transshipment via Graph-Based {\(\mathscr{l}\)}\({}_{\mbox{1}}\)-Oblivious Routing
+83|STOC|A|计算机科学理论|2022|Undirected (1+\emph{{\(\epsilon\)}})-shortest paths via minor-aggregates: near-optimal deterministic parallel and distributed algorithms
+84|SICOMP|A|计算机科学理论|2021|Near-Optimal Approximate Shortest Paths and Transshipment in Distributed and Streaming Models
+85|SICOMP|A|计算机科学理论|2021|A Deterministic Almost-Tight Distributed Algorithm for Approximating Single-Source Shortest Paths
+86|PODC|B|计算机体系结构/并行与分布计算/存储系统|2021|Brief Announcement: An Improved Distributed Approximate Single Source Shortest Paths Algorithm
+87|JACM|A|交叉/综合/新兴|2020|Distributed Exact Shortest Paths in Sublinear Time
+88|FOCS|A|计算机科学理论|2018|A Faster Distributed Single-Source Shortest Paths Algorithm
+89|PPoPP|A|计算机体系结构/并行与分布计算/存储系统|2016|DSMR: a shared and distributed memory algorithm for single-source shortest path problem
+90|SC|A|计算机体系结构/并行与分布计算/存储系统|2022|Scaling Graph 500 SSSP to 140 Trillion Edges with over 40 Million Cores
+91|SIGMOD|A|数据库/数据挖掘/内容检索|2020|Distributed Processing of k Shortest Path Queries over Dynamic Road Networks
+92|TKDE|A|数据库/数据挖掘/内容检索|2022|Distributed Multimodal Path Queries
+93|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2017|Scalable Single Source Shortest Path Algorithms for Massively Parallel Systems
+94|VLDBJ|A|数据库/数据挖掘/内容检索|2017|Distributed shortest path query processing on dynamic road networks
+95|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2022|A Parallel Algorithm Template for Updating Single-Source Shortest Paths in Large-Scale Dynamic Networks
+96|JPDC|B|计算机体系结构/并行与分布计算/存储系统|2022|A fast parallel max-flow algorithm
+97|SICOMP|A|计算机科学理论|2018|Near-Optimal Distributed Maximum Flow
+98|DC|C|计算机体系结构/并行与分布计算/存储系统|2023|A distributed algorithm for directed minimum-weight spanning tree
+99|DC|C|计算机体系结构/并行与分布计算/存储系统|2021|Broadcast and minimum spanning tree with o(m) messages in the asynchronous CONGEST model.
+100|STOC|B|计算机科学理论|2017|A Time- and Message-Optimal Distributed Algorithm for Minimum Spanning Trees
+101|PODC|B|计算机体系结构/并行与分布计算/存储系统|2019|Distributed Minimum Degree Spanning Trees
+102|ISAAC|C|计算机科学理论|2021|Lower Bounds for Induced Cycle Detection in Distributed Computing
+103|SPAA|B|计算机体系结构/并行与分布计算/存储系统|2017|Distributed Detection of Cycles
+104|TAC|B|人工智能|2023|A Scalable Distributed Dynamical Systems Approach to Learn the Strongly Connected Components and Diameter of Networks
+105|IPDPS|B|计算机体系结构/并行与分布计算/存储系统|2022|Communication-efficient Massively Distributed Connected Components
+106|DPD|C|数据库/数据挖掘/内容检索|2018|Distributed computing connected components with linear communication cost 
+107|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2017|Fast Connected Components Computation in Large Graphs by Vertex Pruning
+108|TPDS|A|计算机体系结构/并行与分布计算/存储系统|2017|An Adaptive Parallel Algorithm for Computing Connected Components
+109|CLUSTER|B|计算机体系结构/并行与分布计算/存储系统|2015|Distributed-Memory Algorithms for Maximal Cardinality Matching using Matrix Algebra
+110|ICDCN|/|/|2015|Distributed Maximum Matching in Bounded Degree Graphs
+111|DISC|/|/|2018|Distributed Approximate Maximum Matching in the CONGEST Model
+112|DC|C|计算机体系结构/并行与分布计算/存储系统|2023|Wake up and join me! An energy-efficient algorithm for maximal matching in radio networks
+113|CDC|/|/|2020|Distributed Optimization for Weighted Vertex Cover via Heuristic Game Theoretic Learning
+114|ISCAS|C|计算机体系结构/并行与分布计算/存储系统|2021|A Minimal Memory Game-based Distributed Algorithm to Vertex Cover of Networks
+115|TSMC|B|人机交互与普适计算|2022|Better Approximation for Distributed Weighted Vertex Cover via Game-Theoretic Learning
+116|SCIS|A|交叉/综合/新兴|2023|Toward the minimum vertex cover of complex networks using distributed potential games
+117|SICOMP|A|计算机科学理论|2014|Distributed(Delta+1)-Coloring in Linear(in Delta) Time
+118|ICDE|A|数据库/数据挖掘/内容检索|2016|VColor: A Practical Vertex-cut Based Approach for Coloring Large Graphs
+119|TPDS|A|数据库/数据挖掘/内容检索|2019|Vertex Coloring with Communication Constraints in Synchronous Broadcast Networks
+120|SODA|A|计算机科学理论|2019|Optimal Distributed Coloring Algorithms for Planar Graphs in the LOCAL model
+121|IA3|/|/|2020|Distributed Memory Graph Coloring Algorithms for Multiple GPUs
+122|PPoPP|A|计算机体系结构/并行与分布计算/存储系统|2020|Increasing the Parallelism of Graph Coloring via Shortcutting

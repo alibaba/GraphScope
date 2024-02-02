@@ -1,8 +1,8 @@
-id|category
+id|topic
 0|Centrality
-1|Clustering
+1|Community Detection
 2|Similarity
-3|Cohesive_Subgraph
-4|Pattern Matching
-5|Traversal
-6|Other
+3|Cohesive Subgraph
+4|Traversal
+5|Pattern Matching
+6|Covering

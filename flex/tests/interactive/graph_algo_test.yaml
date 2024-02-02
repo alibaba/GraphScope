@@ -58,27 +58,27 @@ schema:
       primary_keys:
         - id
     - type_id: 3
-      type_name: Algorithm
+      type_name: Task
       properties:
         - property_id: 0
           property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
         - property_id: 1
-          property_name: algorithm
+          property_name: task
           property_type:
             primitive_type: DT_STRING
       primary_keys:
         - id
     - type_id: 4
-      type_name: Strategy
+      type_name: Solution
       properties:
         - property_id: 0
           property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
         - property_id: 1
-          property_name: strategy
+          property_name: solution
           property_type:
             primitive_type: DT_STRING
       primary_keys:
@@ -101,7 +101,7 @@ schema:
       type_name: WorkOn
       vertex_type_pair_relations:
         - source_vertex: Paper
-          destination_vertex: Algorithm
+          destination_vertex: Task
           relation: MANY_TO_ONE
     - type_id: 1
       type_name: Resolve
@@ -112,7 +112,7 @@ schema:
     - type_id: 2
       type_name: Target
       vertex_type_pair_relations:
-        - source_vertex: Algorithm
+        - source_vertex: Task
           destination_vertex: Challenge
           relation: MANY_TO_MANY
       properties:
@@ -123,19 +123,19 @@ schema:
     - type_id: 3
       type_name: Belong
       vertex_type_pair_relations:
-        - source_vertex: Algorithm
+        - source_vertex: Task
           destination_vertex: Topic
           relation: MANY_TO_ONE
     - type_id: 4
       type_name: Use
       vertex_type_pair_relations:
         - source_vertex: Paper
-          destination_vertex: Strategy
+          destination_vertex: Solution
           relation: MANY_TO_MANY
     - type_id: 5
       type_name: ApplyOn
       vertex_type_pair_relations:
-        - source_vertex: Strategy
+        - source_vertex: Solution
           destination_vertex: Challenge
           relation: MANY_TO_ONE
     - type_id: 6
