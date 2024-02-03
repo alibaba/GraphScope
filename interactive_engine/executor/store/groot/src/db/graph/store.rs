@@ -675,6 +675,10 @@ impl GraphStore {
         self.storage.try_catch_up_with_primary()
     }
 
+    pub fn reopen(&self) -> GraphResult<()> {
+        self.storage.reopen()
+    }
+
     fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>, path: &str) -> GraphResult<Self> {
         let meta = Meta::new(storage.clone());
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;

@@ -1,8 +1,11 @@
 use std::collections::HashMap;
+use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
 use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
+use crossbeam_epoch::{self as epoch, Atomic, Guard, Shared, Owned};
+use libc::THREAD_BACKGROUND_POLICY_DARWIN_BG;
 use rocksdb::{DBCompactionStyle, DBCompressionType, WriteBatch};
 
 use super::{ExternalStorage, ExternalStorageBackup, StorageIter, StorageRes};
@@ -10,7 +13,7 @@ use crate::db::api::*;
 use crate::db::storage::{KvPair, RawBytes};
 
 pub struct RocksDB {
-    db: Arc<DB>,
+    db: Atomic<Arc<DB>>,
     is_secondary: bool,
 }
 
@@ -26,7 +29,7 @@ impl RocksDB {
             let msg = format!("open rocksdb at {} failed, because {}", path, e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open, options, path)
         })?;
-        let ret = RocksDB { db: Arc::new(db), is_secondary: false };
+        let ret = RocksDB { db: Atomic::new(Arc::new(db)), is_secondary: false };
         Ok(ret)
     }
 
@@ -51,21 +54,48 @@ impl RocksDB {
             )
         })?;
 
-        let ret = RocksDB { db: Arc::new(db), is_secondary: true };
+        let ret = RocksDB { db: Atomic::new(Arc::new(db)), is_secondary: true };
         Ok(ret)
+    }
+
+    fn get_db<'g>(&self, guard: &'g Guard) -> Shared<'g, Arc<DB>> {
+        self.db.load(Ordering::Acquire, guard)
+    }
+
+    fn replace_db(&self, db: DB) {
+        let guard = epoch::pin();
+        let new_db = Arc::new(db);
+        let new_db_shared = Owned::new(new_db).into_shared(&guard);
+        let old_db_shared = self.db.swap(new_db_shared, Ordering::Release, &guard);
+
+        // Use Crossbeam's 'defer' mechanism to safely drop the old Arc
+        unsafe {
+            // Convert 'Shared' back to 'Arc' for deferred dropping
+            let old_db_arc = old_db_shared.into_owned();
+            // guard.defer_destroy(old_db_shared)
+            guard.defer(|| drop(old_db_arc))
+        }
     }
 }
 
 impl ExternalStorage for RocksDB {
     fn get(&self, key: &[u8]) -> GraphResult<Option<StorageRes>> {
-        match self.db.get(key) {
-            Ok(Some(v)) => Ok(Some(StorageRes::RocksDB(v))),
-            Ok(None) => Ok(None),
-            Err(e) => {
-                let msg = format!("rocksdb.get failed because {}", e.into_string());
-                let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
-                Err(err)
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            match db.get(key) {
+                Ok(Some(v)) => Ok(Some(StorageRes::RocksDB(v))),
+                Ok(None) => Ok(None),
+                Err(e) => {
+                    let msg = format!("rocksdb.get failed because {}", e.into_string());
+                    let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+                    Err(err)
+                }
             }
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
         }
     }
 
@@ -74,10 +104,18 @@ impl ExternalStorage for RocksDB {
             info!("Cannot put in secondary instance");
             return Ok(());
         }
-        self.db.put(key, val).map_err(|e| {
-            let msg = format!("rocksdb.put failed because {}", e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-        })
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            db.put(key, val).map_err(|e| {
+                let msg = format!("rocksdb.put failed because {}", e.into_string());
+                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+            })
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn delete(&self, key: &[u8]) -> GraphResult<()> {
@@ -85,37 +123,54 @@ impl ExternalStorage for RocksDB {
             info!("Cannot delete in secondary instance");
             return Ok(());
         }
-        self.db.delete(key).map_err(|e| {
-            let msg = format!("rocksdb.delete failed because {}", e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-        })
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            db.delete(key).map_err(|e| {
+                let msg = format!("rocksdb.delete failed because {}", e.into_string());
+                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+            })
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn scan_prefix(&self, prefix: &[u8]) -> GraphResult<StorageIter> {
-        let mut iter = match bytes_upper_bound(prefix) {
-            Some(upper) => {
-                let mut option = ReadOptions::default();
-                option.set_iterate_upper_bound(upper);
-                self.db.raw_iterator_opt(option)
-            }
-            None => self.db.raw_iterator(),
-        };
-        iter.seek(prefix);
-        Ok(StorageIter::RocksDB(RocksDBIter::new(iter)))
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            Ok(StorageIter::RocksDB(RocksDBIter::new_prefix(db.clone(), prefix)))
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn scan_from(&self, start: &[u8]) -> GraphResult<StorageIter> {
-        let mut iter = self.db.raw_iterator();
-        iter.seek(start);
-        Ok(StorageIter::RocksDB(RocksDBIter::new(iter)))
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            Ok(StorageIter::RocksDB(RocksDBIter::new_start(db.clone(), start)))
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn scan_range(&self, start: &[u8], end: &[u8]) -> GraphResult<StorageIter> {
-        let mut option = ReadOptions::default();
-        option.set_iterate_upper_bound(end.to_vec());
-        let mut iter = self.db.raw_iterator_opt(option);
-        iter.seek(start);
-        Ok(StorageIter::RocksDB(RocksDBIter::new(iter)))
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            Ok(StorageIter::RocksDB(RocksDBIter::new_range(db.clone(), start, end)))
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
@@ -124,20 +179,26 @@ impl ExternalStorage for RocksDB {
             return Ok(());
         }
         let mut batch = WriteBatch::default();
-        self.db
-            .delete_file_in_range(start, end)
-            .map_err(|e| {
-                let msg = format!("rocksdb.delete_files_in_range failed because {}", e.into_string());
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            db.delete_file_in_range(start, end)
+                .map_err(|e| {
+                    let msg = format!("rocksdb.delete_files_in_range failed because {}", e.into_string());
+                    gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                })?;
+            batch.delete_range(start, end);
+            db.write(batch).map_err(|e| {
+                let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
                 gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
             })?;
-        batch.delete_range(start, end);
-        self.db.write(batch).map_err(|e| {
-            let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-        })?;
-        self.db
-            .compact_range(Option::Some(start), Option::Some(end));
-        Ok(())
+            db.compact_range(Option::Some(start), Option::Some(end));
+            Ok(())
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn load(&self, files: &[&str]) -> GraphResult<()> {
@@ -147,12 +208,20 @@ impl ExternalStorage for RocksDB {
         }
         let mut options = IngestExternalFileOptions::default();
         options.set_move_files(true);
-        self.db
-            .ingest_external_file_opts(&options, files.to_vec())
-            .map_err(|e| {
-                let msg = format!("rocksdb.ingest_sst file {:?} failed because {}", files, e.into_string());
-                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-            })
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            db.ingest_external_file_opts(&options, files.to_vec())
+                .map_err(|e| {
+                    let msg =
+                        format!("rocksdb.ingest_sst file {:?} failed because {}", files, e.into_string());
+                    gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+                })
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn ExternalStorageBackup>> {
@@ -176,34 +245,51 @@ impl ExternalStorage for RocksDB {
             );
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
         })?;
-        let ret = RocksDBBackupEngine { db: self.db.clone(), backup_engine };
-        Ok(Box::from(ret))
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            let ret = RocksDBBackupEngine { db: db.clone(), backup_engine };
+            Ok(Box::from(ret))
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item = KvPair> + Send>> {
-        let mut iter = match bytes_upper_bound(prefix) {
-            Some(upper) => {
-                let mut option = ReadOptions::default();
-                option.set_iterate_upper_bound(upper);
-                self.db.raw_iterator_opt(option)
-            }
-            None => self.db.raw_iterator(),
-        };
-        iter.seek(prefix);
-        Ok(Box::new(Scan::new(iter)))
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            Ok(Box::new(Scan::new(db.clone(), prefix)))
+        } else {
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
     }
 
     fn try_catch_up_with_primary(&self) -> GraphResult<()> {
-        if self.is_secondary {
-            self.db
-                .try_catch_up_with_primary()
-                .map_err(|e| {
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            if self.is_secondary {
+                db.try_catch_up_with_primary().map_err(|e| {
                     let msg = format!("try to catch up with primary failed because {:?}", e);
                     gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
                 })
+            } else {
+                return Ok(());
+            }
         } else {
-            return Ok(());
+            let msg = format!("rocksdb.get failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
         }
+    }
+
+    fn reopen(&self) -> GraphResult<()> {
+        Ok(())
     }
 }
 
@@ -212,8 +298,8 @@ pub struct Scan {
 }
 
 impl Scan {
-    pub fn new(iter: DBRawIterator) -> Self {
-        Scan { inner_iter: unsafe { std::mem::transmute(RocksDBIter::new(iter)) } }
+    pub fn new(db: Arc<DB>, prefix: &[u8]) -> Self {
+        Scan { inner_iter: RocksDBIter::new_prefix(db, prefix) }
     }
 }
 
@@ -346,28 +432,73 @@ fn init_options(options: &HashMap<String, String>) -> Options {
 }
 
 pub struct RocksDBIter<'a> {
-    inner: DBRawIterator<'a>,
+    _db: Arc<DB>,
+    inner: Option<DBRawIterator<'a>>,
     just_seeked: bool,
 }
 
 impl<'a> RocksDBIter<'a> {
-    fn new(iter: DBRawIterator<'a>) -> Self {
-        RocksDBIter { inner: iter, just_seeked: true }
+    fn new_prefix(db: Arc<DB>, prefix: &[u8]) -> Self {
+        let db_ptr = Arc::into_raw(db.clone()) as *const DB;
+        let mut db_iter = Self { _db: db, inner: None, just_seeked: true };
+        let db_ref = unsafe { &*db_ptr };
+        let mut iter = match bytes_upper_bound(prefix) {
+            Some(upper) => {
+                let mut option = ReadOptions::default();
+                option.set_iterate_upper_bound(upper);
+                db_ref.raw_iterator_opt(option)
+            }
+            None => db_ref.raw_iterator(),
+        };
+        iter.seek(prefix);
+
+        db_iter.inner = Some(iter);
+
+        db_iter
+    }
+
+    fn new_start(db: Arc<DB>, start: &[u8]) -> Self {
+        let db_ptr = Arc::into_raw(db.clone()) as *const DB;
+        let mut db_iter = Self { _db: db, inner: None, just_seeked: true };
+        let db_ref = unsafe { &*db_ptr };
+        let mut iter = db_ref.raw_iterator();
+        iter.seek(start);
+        db_iter.inner = Some(iter);
+
+        db_iter
+    }
+
+    fn new_range(db: Arc<DB>, start: &[u8], end: &[u8]) -> Self {
+        let db_ptr = Arc::into_raw(db.clone()) as *const DB;
+        let mut db_iter = Self { _db: db, inner: None, just_seeked: true };
+        let db_ref = unsafe { &*db_ptr };
+        let mut option = ReadOptions::default();
+        option.set_iterate_upper_bound(end.to_vec());
+        let mut iter = db_ref.raw_iterator_opt(option);
+        iter.seek(start);
+
+        db_iter.inner = Some(iter);
+
+        db_iter
     }
 
     pub fn next(&mut self) -> Option<(&[u8], &[u8])> {
-        if !self.inner.valid() {
-            return None;
-        }
+        if let Some(inner) = &mut self.inner {
+            if !inner.valid() {
+                return None;
+            }
 
-        if self.just_seeked {
-            self.just_seeked = false;
-        } else {
-            self.inner.next();
-        }
+            if self.just_seeked {
+                self.just_seeked = false;
+            } else {
+                inner.next();
+            }
 
-        if self.inner.valid() {
-            Some((self.inner.key().unwrap(), self.inner.value().unwrap()))
+            if inner.valid() {
+                Some((inner.key().unwrap(), inner.value().unwrap()))
+            } else {
+                None
+            }
         } else {
             None
         }

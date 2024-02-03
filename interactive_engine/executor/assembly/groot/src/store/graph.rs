@@ -441,6 +441,17 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
     graph.delete_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward())
 }
 
+pub extern "C" fn reopenSecondary(ptr: GraphHandle) -> Box<JnaResponse> {
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    match graph_store_ptr.reopen() {
+        Ok(_) => JnaResponse::new_success(),
+        Err(e) => {
+            let msg = format!("Error during reopening {:?}", e);
+            JnaResponse::new_error(&msg)
+        }
+    }
+}
+
 #[no_mangle]
 pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
