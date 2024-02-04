@@ -351,10 +351,13 @@ public class StoreService implements MetricsAgent {
             return;
         }
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
-        Path downloadPath = Paths.get(dataRoot, "download", dataPath);
+        String downloadPath = StoreConfig.STORE_DATA_DOWNLOAD_PATH.get(storeConfigs);
+        if (downloadPath.isEmpty()) {
+            downloadPath = Paths.get(dataRoot, "download").toString();
+        }
         try {
             logger.info("Clearing directory {}", downloadPath);
-            FileUtils.forceDelete(downloadPath.toFile());
+            FileUtils.forceDelete(new File(downloadPath));
         } catch (FileNotFoundException e) {
             // Ignore
         }

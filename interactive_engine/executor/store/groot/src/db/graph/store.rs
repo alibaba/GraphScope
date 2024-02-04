@@ -684,9 +684,9 @@ impl GraphStore {
         let meta = Meta::new(storage.clone());
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;
         let data_root = path.to_string();
-        let download_path = config.get_storage_option("store.data.download.path").unwrap_or("");
-        let mut download_root= download_path.clone();
-        if download_path.is_empty() {
+        let mut download_root = "".to_string();
+        download_root = config.get_storage_option("store.data.download.path").unwrap_or(&download_root).clone();
+        if download_root.is_empty() {
             download_root = format!("{}/..{}", data_root, "download");
         }
 
