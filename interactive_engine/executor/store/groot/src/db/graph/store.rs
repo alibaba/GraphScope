@@ -600,7 +600,6 @@ impl MultiVersionGraph for GraphStore {
         &self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32,
         unique_path: &str,
     ) -> GraphResult<bool> {
-        info!("committing data load from path {}", unique_path);
         let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -610,6 +609,8 @@ impl MultiVersionGraph for GraphStore {
             .commit_data_load(si, schema_version, target, table_id)?;
         let data_file_path =
             format!("{}/{}/part-r-{:0>5}.sst", self.data_download_root, unique_path, partition_id);
+        info!("committing data load from path {}", data_file_path);
+
         if Path::new(data_file_path.as_str()).exists() {
             if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
                 let size = metadata.len();
@@ -687,7 +688,7 @@ impl GraphStore {
         let mut download_root = "".to_string();
         download_root = config.get_storage_option("store.data.download.path").unwrap_or(&download_root).clone();
         if download_root.is_empty() {
-            download_root = format!("{}/..{}", data_root, "download");
+            download_root = format!("{}/../{}", data_root, "download");
         }
 
         let ret = GraphStore {

@@ -393,6 +393,7 @@ impl RocksDBBackupEngine {
 fn init_secondary_options(options: &HashMap<String, String>) -> Options {
     let mut opts = Options::default();
     opts.set_max_open_files(-1);
+    opts.set_max_write_buffer_number(4);
     if let Some(conf_str) = options.get("store.rocksdb.paranoid.checks") {
         let check = conf_str.parse().unwrap();
         opts.set_paranoid_checks(check);
@@ -411,6 +412,7 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     opts.set_keep_log_file_num(10);
     // https://github.com/facebook/rocksdb/wiki/Basic-Operations#non-sync-writes
     opts.set_use_fsync(true);
+    opts.set_max_write_buffer_number(4);
 
     if let Some(conf_str) = options.get("store.rocksdb.compression.type") {
         match conf_str.as_str() {
