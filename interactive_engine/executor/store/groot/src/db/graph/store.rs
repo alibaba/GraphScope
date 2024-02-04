@@ -36,6 +36,7 @@ pub struct GraphStore {
     edge_manager: EdgeTypeManager,
     storage: Arc<RocksDB>,
     data_root: String,
+    data_download_root: String,
     // ensure all modification to graph is in ascending order of snapshot id
     si_guard: AtomicIsize,
     lock: GraphMutexLock<()>,
@@ -608,7 +609,7 @@ impl MultiVersionGraph for GraphStore {
         self.meta
             .commit_data_load(si, schema_version, target, table_id)?;
         let data_file_path =
-            format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
+            format!("{}/{}/part-r-{:0>5}.sst", self.data_download_root, unique_path, partition_id);
         if Path::new(data_file_path.as_str()).exists() {
             if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
                 let size = metadata.len();
@@ -682,13 +683,21 @@ impl GraphStore {
     fn init(config: &GraphConfig, storage: Arc<RocksDB>, path: &str) -> GraphResult<Self> {
         let meta = Meta::new(storage.clone());
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;
+        let data_root = path.to_string();
+        let download_path = config.get_storage_option("store.data.download.path").unwrap_or("");
+        let mut download_root= download_path.clone();
+        if download_path.is_empty() {
+            download_root = format!("{}/..{}", data_root, "download");
+        }
+
         let ret = GraphStore {
             config: config.clone(),
             meta,
             vertex_manager,
             edge_manager,
             storage,
-            data_root: path.to_string(),
+            data_root: data_root,
+            data_download_root: download_root,
             si_guard: AtomicIsize::new(0),
             lock: GraphMutexLock::new(()),
         };

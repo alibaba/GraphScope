@@ -17,6 +17,9 @@ public class StoreConfig {
     public static final Config<String> STORE_DATA_PATH =
             Config.stringConfig("store.data.path", "./data");
 
+    public static final Config<String> STORE_DATA_DOWNLOAD_PATH =
+            Config.stringConfig("store.data.download.path", "");
+
     public static final Config<Integer> STORE_WRITE_THREAD_COUNT =
             Config.intConfig("store.write.thread.count", 1);
 

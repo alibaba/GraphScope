@@ -280,7 +280,10 @@ public class StoreService implements MetricsAgent {
     public void ingestData(
             String path, Map<String, String> config, CompletionCallback<Void> callback) {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
-        String downloadPath = Paths.get(dataRoot, "download").toString();
+        String downloadPath = StoreConfig.STORE_DATA_DOWNLOAD_PATH.get(storeConfigs);
+        if (downloadPath.isEmpty()) {
+            downloadPath = Paths.get(dataRoot, "download").toString();
+        }
         String[] items = path.split("/");
         // Get the  unique path  (uuid)
         String unique_path = items[items.length - 1];
