@@ -63,9 +63,6 @@ pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHa
     config_builder.set_storage_engine(engine);
     config_builder.set_storage_options(proto.get_configs().clone());
     let config = config_builder.build();
-    let path = config
-        .get_storage_option("store.data.path")
-        .expect("invalid config, missing store.data.path");
     INIT.call_once(|| {
         if let Some(config_file) = config.get_storage_option("log4rs.config") {
             log4rs::init_file(config_file, Default::default()).expect("init log4rs failed");
@@ -74,14 +71,14 @@ pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHa
             println!("No valid log4rs.config, rust won't print logs");
         }
     });
-    let handle = Box::new(GraphStore::open(&config, path).unwrap());
+    let handle = Box::new(GraphStore::open(&config).unwrap());
     let ret = Box::into_raw(handle);
     ret as GraphHandle
 }
 
 #[no_mangle]
 pub extern "C" fn closeGraphStore(handle: GraphHandle) -> bool {
-    trace!("closeGraphStore");
+    info!("closeGraphStore");
     let graph_store_ptr = handle as *mut GraphStore;
     unsafe {
         drop(Box::from_raw(graph_store_ptr));
@@ -455,13 +452,6 @@ pub extern "C" fn reopenSecondary(ptr: GraphHandle) -> Box<JnaResponse> {
 #[no_mangle]
 pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
-
-    match graph_store_ptr.try_catch_up_with_primary() {
-        Ok(_) => (),
-        Err(e) => {
-            error!("Error during catch up primary {:?}", e);
-        }
-    };
     if snapshot_id % 3600 != 0 {
         return JnaResponse::new_success();
     }
@@ -469,6 +459,19 @@ pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> 
         Ok(_) => JnaResponse::new_success(),
         Err(e) => {
             let msg = format!("{:?}", e);
+            JnaResponse::new_error(&msg)
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    match graph_store_ptr.try_catch_up_with_primary() {
+        Ok(_) => JnaResponse::new_success(),
+        Err(e) => {
+            let msg = format!("Error during catch up primary {:?}", e);
+            error!("{}", msg);
             JnaResponse::new_error(&msg)
         }
     }

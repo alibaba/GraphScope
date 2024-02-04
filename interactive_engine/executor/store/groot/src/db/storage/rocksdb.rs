@@ -8,12 +8,13 @@ use crossbeam_epoch::{self as epoch, Atomic, Guard, Shared, Owned};
 use libc::THREAD_BACKGROUND_POLICY_DARWIN_BG;
 use rocksdb::{DBCompactionStyle, DBCompressionType, WriteBatch};
 
-use super::{ExternalStorage, ExternalStorageBackup, StorageIter, StorageRes};
+use super::{StorageIter, StorageRes};
 use crate::db::api::*;
 use crate::db::storage::{KvPair, RawBytes};
 
 pub struct RocksDB {
     db: Atomic<Arc<DB>>,
+    options: HashMap<String, String>,
     is_secondary: bool,
 }
 
@@ -23,39 +24,41 @@ pub struct RocksDBBackupEngine {
 }
 
 impl RocksDB {
-    pub fn open(options: &HashMap<String, String>, path: &str) -> GraphResult<Self> {
+    pub fn open(options: &HashMap<String, String>) -> GraphResult<Self> {
         let opts = init_options(options);
+        let path = options
+            .get("store.data.path")
+            .expect("invalid config, missing store.data.path");
         let db = DB::open(&opts, path).map_err(|e| {
-            let msg = format!("open rocksdb at {} failed, because {}", path, e.into_string());
+            let msg = format!("open rocksdb at {} failed: {}", path, e.into_string());
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open, options, path)
         })?;
-        let ret = RocksDB { db: Atomic::new(Arc::new(db)), is_secondary: false };
+        let ret = RocksDB { db: Atomic::new(Arc::new(db)), options: options.clone(), is_secondary: false };
         Ok(ret)
     }
 
-    pub fn open_as_secondary(
-        options: &HashMap<String, String>, primary_path: &str, secondary_path: &str,
-    ) -> GraphResult<Self> {
-        let mut opts = Options::default();
-        opts.set_max_open_files(-1);
-        let db = DB::open_as_secondary(&opts, primary_path, secondary_path).map_err(|e| {
-            let msg = format!(
-                "open rocksdb at {}, {} failed, because {}",
-                primary_path,
-                secondary_path,
-                e.into_string()
-            );
-            gen_graph_err!(
-                GraphErrorCode::ExternalStorageError,
-                msg,
-                open_as_secondary,
-                options,
-                primary_path
-            )
+    pub fn open_as_secondary(options: &HashMap<String, String>) -> GraphResult<Self> {
+        let db = RocksDB::open_helper(options).map_err(|e| {
+            let msg = format!("open rocksdb at {:?}, error: {:?}", options, e);
+            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
         })?;
 
-        let ret = RocksDB { db: Atomic::new(Arc::new(db)), is_secondary: true };
+        let ret = RocksDB { db: Atomic::new(Arc::new(db)), options: options.clone(), is_secondary: true };
         Ok(ret)
+    }
+
+    pub fn open_helper(options: &HashMap<String, String>) -> Result<DB, ::rocksdb::Error> {
+        let path = options
+            .get("store.data.path")
+            .expect("invalid config, missing store.data.path");
+        let sec_path = options
+            .get("store.data.secondary.path")
+            .expect("invalid config, missing store.data.secondary.path");
+
+        let mut opts = Options::default();
+        opts.set_max_open_files(-1);
+        opts.set_paranoid_checks(false);
+        DB::open_as_secondary(&opts, path, sec_path)
     }
 
     fn get_db<'g>(&self, guard: &'g Guard) -> Shared<'g, Arc<DB>> {
@@ -76,10 +79,8 @@ impl RocksDB {
             guard.defer(|| drop(old_db_arc))
         }
     }
-}
 
-impl ExternalStorage for RocksDB {
-    fn get(&self, key: &[u8]) -> GraphResult<Option<StorageRes>> {
+    pub fn get(&self, key: &[u8]) -> GraphResult<Option<StorageRes>> {
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
@@ -99,7 +100,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn put(&self, key: &[u8], val: &[u8]) -> GraphResult<()> {
+    pub fn put(&self, key: &[u8], val: &[u8]) -> GraphResult<()> {
         if self.is_secondary {
             info!("Cannot put in secondary instance");
             return Ok(());
@@ -118,7 +119,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn delete(&self, key: &[u8]) -> GraphResult<()> {
+    pub fn delete(&self, key: &[u8]) -> GraphResult<()> {
         if self.is_secondary {
             info!("Cannot delete in secondary instance");
             return Ok(());
@@ -137,7 +138,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn scan_prefix(&self, prefix: &[u8]) -> GraphResult<StorageIter> {
+    pub fn scan_prefix(&self, prefix: &[u8]) -> GraphResult<StorageIter> {
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
@@ -149,7 +150,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn scan_from(&self, start: &[u8]) -> GraphResult<StorageIter> {
+    pub fn scan_from(&self, start: &[u8]) -> GraphResult<StorageIter> {
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
@@ -161,7 +162,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn scan_range(&self, start: &[u8], end: &[u8]) -> GraphResult<StorageIter> {
+    pub fn scan_range(&self, start: &[u8], end: &[u8]) -> GraphResult<StorageIter> {
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
@@ -173,7 +174,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
+    pub fn delete_range(&self, start: &[u8], end: &[u8]) -> GraphResult<()> {
         if self.is_secondary {
             info!("Cannot delete_range in secondary instance");
             return Ok(());
@@ -201,7 +202,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn load(&self, files: &[&str]) -> GraphResult<()> {
+    pub fn load(&self, files: &[&str]) -> GraphResult<()> {
         if self.is_secondary {
             info!("Cannot ingest in secondary instance");
             return Ok(());
@@ -224,7 +225,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<dyn ExternalStorageBackup>> {
+    pub fn open_backup_engine(&self, backup_path: &str) -> GraphResult<Box<RocksDBBackupEngine>> {
         let backup_opts = BackupEngineOptions::new(backup_path).map_err(|e| {
             let msg = format!(
                 "Gen BackupEngineOptions error for path {}, because {}",
@@ -257,7 +258,7 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item = KvPair> + Send>> {
+    pub fn new_scan(&self, prefix: &[u8]) -> GraphResult<Box<dyn Iterator<Item = KvPair> + Send>> {
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
@@ -269,18 +270,17 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn try_catch_up_with_primary(&self) -> GraphResult<()> {
+    pub fn try_catch_up_with_primary(&self) -> GraphResult<()> {
+        if !self.is_secondary {
+            return Ok(());
+        }
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
-            if self.is_secondary {
-                db.try_catch_up_with_primary().map_err(|e| {
-                    let msg = format!("try to catch up with primary failed because {:?}", e);
-                    gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-                })
-            } else {
-                return Ok(());
-            }
+            db.try_catch_up_with_primary().map_err(|e| {
+                let msg = format!("try to catch up with primary failed because {:?}", e);
+                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+            })
         } else {
             let msg = format!("rocksdb.get failed because the acquired db is `None`");
             let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
@@ -288,7 +288,12 @@ impl ExternalStorage for RocksDB {
         }
     }
 
-    fn reopen(&self) -> GraphResult<()> {
+    pub fn reopen(&self) -> GraphResult<()> {
+        let db = RocksDB::open_helper(&self.options).map_err(|e| {
+            let msg = format!("open rocksdb at {:?}, error: {:?}", self.options, e);
+            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
+        })?;
+        self.replace_db(db);
         Ok(())
     }
 }
@@ -313,9 +318,9 @@ impl Iterator for Scan {
     }
 }
 
-impl ExternalStorageBackup for RocksDBBackupEngine {
+impl RocksDBBackupEngine {
     /// Optimize this method after a new rust-rocksdb version.
-    fn create_new_backup(&mut self) -> GraphResult<BackupId> {
+    pub fn create_new_backup(&mut self) -> GraphResult<BackupId> {
         let before = self.get_backup_list();
         self.backup_engine
             .create_new_backup(&self.db)
@@ -335,11 +340,11 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
     /// Do nothing now.
     /// Implement this method after a new rust-rocksdb version.
     #[allow(unused_variables)]
-    fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()> {
+    pub fn delete_backup(&mut self, backup_id: BackupId) -> GraphResult<()> {
         Ok(())
     }
 
-    fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()> {
+    pub fn restore_from_backup(&mut self, restore_path: &str, backup_id: BackupId) -> GraphResult<()> {
         let mut restore_option = RestoreOptions::default();
         restore_option.set_keep_log_files(false);
         self.backup_engine
@@ -355,7 +360,7 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
         Ok(())
     }
 
-    fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()> {
+    pub fn verify_backup(&self, backup_id: BackupId) -> GraphResult<()> {
         self.backup_engine
             .verify_backup(backup_id as u32)
             .map_err(|e| {
@@ -366,7 +371,7 @@ impl ExternalStorageBackup for RocksDBBackupEngine {
         Ok(())
     }
 
-    fn get_backup_list(&self) -> Vec<BackupId> {
+    pub fn get_backup_list(&self) -> Vec<BackupId> {
         self.backup_engine
             .get_backup_info()
             .into_iter()

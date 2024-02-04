@@ -7,10 +7,10 @@ use crate::db::graph::bin::{
 use crate::db::graph::codec::get_codec_version;
 use crate::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use crate::db::graph::types::{EdgeInfo, EdgeKindInfo, VertexTypeInfo};
-use crate::db::storage::ExternalStorage;
+use crate::db::storage::rocksdb::RocksDB;
 
 pub struct VertexTypeScan {
-    storage: Arc<dyn ExternalStorage>,
+    storage: Arc<RocksDB>,
     si: SnapshotId,
     vertex_type_info: Arc<VertexTypeInfo>,
     with_prop: bool,
@@ -33,7 +33,7 @@ fn check_e(id: EdgeId, ts: SnapshotId, prev_id: Option<EdgeId>, data_ts: Snapsho
 
 impl VertexTypeScan {
     pub fn new(
-        storage: Arc<dyn ExternalStorage>, si: SnapshotId, vertex_type_info: Arc<VertexTypeInfo>,
+        storage: Arc<RocksDB>, si: SnapshotId, vertex_type_info: Arc<VertexTypeInfo>,
         with_prop: bool,
     ) -> Self {
         VertexTypeScan { storage, si, vertex_type_info, with_prop }
@@ -88,7 +88,7 @@ impl IntoIterator for VertexTypeScan {
 }
 
 pub struct EdgeTypeScan {
-    storage: Arc<dyn ExternalStorage>,
+    storage: Arc<RocksDB>,
     si: SnapshotId,
     edge_info: Arc<EdgeInfo>,
     vertex_id: Option<VertexId>,
@@ -98,7 +98,7 @@ pub struct EdgeTypeScan {
 
 impl EdgeTypeScan {
     pub fn new(
-        storage: Arc<dyn ExternalStorage>, si: SnapshotId, edge_info: Arc<EdgeInfo>,
+        storage: Arc<RocksDB>, si: SnapshotId, edge_info: Arc<EdgeInfo>,
         vertex_id: Option<VertexId>, direction: EdgeDirection, with_prop: bool,
     ) -> Self {
         EdgeTypeScan { storage, si, edge_info, vertex_id, direction, with_prop }
@@ -136,7 +136,7 @@ impl IntoIterator for EdgeTypeScan {
 }
 
 pub struct EdgeKindScan {
-    storage: Arc<dyn ExternalStorage>,
+    storage: Arc<RocksDB>,
     si: SnapshotId,
     edge_kind_info: Arc<EdgeKindInfo>,
     vertex_id: Option<VertexId>,
@@ -146,7 +146,7 @@ pub struct EdgeKindScan {
 
 impl EdgeKindScan {
     pub fn new(
-        storage: Arc<dyn ExternalStorage>, si: SnapshotId, edge_kind_info: Arc<EdgeKindInfo>,
+        storage: Arc<RocksDB>, si: SnapshotId, edge_kind_info: Arc<EdgeKindInfo>,
         vertex_id: Option<VertexId>, direction: EdgeDirection, with_prop: bool,
     ) -> Self {
         EdgeKindScan { storage, si, edge_kind_info, vertex_id, direction, with_prop }

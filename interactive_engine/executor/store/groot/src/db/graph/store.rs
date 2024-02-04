@@ -25,8 +25,8 @@ use crate::db::common::bytes::transform;
 use crate::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
 use crate::db::graph::table_manager::Table;
-use crate::db::storage::rocksdb::RocksDB;
-use crate::db::storage::{ExternalStorage, ExternalStorageBackup, RawBytes};
+use crate::db::storage::rocksdb::{RocksDB, RocksDBBackupEngine};
+use crate::db::storage::RawBytes;
 use crate::db::util::lock::GraphMutexLock;
 
 pub struct GraphStore {
@@ -34,7 +34,7 @@ pub struct GraphStore {
     meta: Meta,
     vertex_manager: VertexTypeManager,
     edge_manager: EdgeTypeManager,
-    storage: Arc<dyn ExternalStorage>,
+    storage: Arc<RocksDB>,
     data_root: String,
     // ensure all modification to graph is in ascending order of snapshot id
     si_guard: AtomicIsize,
@@ -42,7 +42,7 @@ pub struct GraphStore {
 }
 
 pub struct GraphBackupEngine {
-    engine: Box<dyn ExternalStorageBackup>,
+    engine: Box<RocksDBBackupEngine>,
 }
 
 impl GraphBackup for GraphBackupEngine {
@@ -642,21 +642,21 @@ impl MultiVersionGraph for GraphStore {
 }
 
 impl GraphStore {
-    pub fn open(config: &GraphConfig, path: &str) -> GraphResult<Self> {
+    pub fn open(config: &GraphConfig) -> GraphResult<Self> {
+        let path = config
+            .get_storage_option("store.data.path")
+            .expect("invalid config, missing store.data.path");
         info!("open graph store at {} with config {:?}", path, config);
         match config.get_storage_engine() {
             "rocksdb" => {
-                let res = RocksDB::open(config.get_storage_options(), path).and_then(|db| {
+                let res = RocksDB::open(config.get_storage_options()).and_then(|db| {
                     let storage = Arc::new(db);
                     Self::init(config, storage, path)
                 });
                 res_unwrap!(res, open, config, path)
             }
             "rocksdb_as_secondary" => {
-                let secondary_path = config
-                    .get_storage_option("store.data.secondary.path")
-                    .expect("invalid config, missing store.data.secondary.path");
-                let res = RocksDB::open_as_secondary(config.get_storage_options(), path, secondary_path)
+                let res = RocksDB::open_as_secondary(config.get_storage_options())
                     .and_then(|db| {
                         let storage = Arc::new(db);
                         Self::init(config, storage, path)
@@ -679,7 +679,7 @@ impl GraphStore {
         self.storage.reopen()
     }
 
-    fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>, path: &str) -> GraphResult<Self> {
+    fn init(config: &GraphConfig, storage: Arc<RocksDB>, path: &str) -> GraphResult<Self> {
         let meta = Meta::new(storage.clone());
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;
         let ret = GraphStore {
