@@ -21,9 +21,7 @@ data:
     rpc.max.bytes.mb={{ .Values.rpcMaxBytesMb }}
     store.node.count={{ .Values.store.replicaCount }}
     frontend.node.count={{ .Values.frontend.replicaCount }}
-    ingestor.node.count={{ .Values.ingestor.replicaCount }}
     coordinator.node.count={{ .Values.coordinator.replicaCount }}
-    ingestor.queue.count={{ .Values.ingestor.replicaCount }}
     partition.count={{ .Values.store.replicaCount | mul 16 }}
     discovery.mode={{ .Values.discoveryMode }}
 
@@ -32,11 +30,6 @@ data:
     frontend.server.id=INDEX
     frontend.server.num={{ .Values.frontend.replicaCount }}
     enable.hash.generate.eid={{ .Values.enableHashGenerateEid }}
-
-    ## Ingestor Config
-    ingestor.queue.buffer.max.count={{ .Values.ingestorQueueBufferMaxCount }}
-    ingestor.sender.buffer.max.count={{ .Values.ingestorSenderBufferMaxCount }}
-    ingestor.sender.operation.max.count={{ .Values.ingestorSenderOperationMaxCount }}
 
     ## Coordinator Config
     snapshot.increase.interval.ms={{ .Values.snapshotIncreaseIntervalMs }}
@@ -61,7 +54,6 @@ data:
     neo4j.bolt.server.disabled=true
 
     dns.name.prefix.frontend=FRONTEND
-    dns.name.prefix.ingestor=INGESTOR
     dns.name.prefix.coordinator=COORDINATOR
     dns.name.prefix.store=STORE
 
@@ -118,7 +110,6 @@ data:
               -e "s/INDEX/${ordinal}/g" \
               -e "s/KAFKA_SERVERS/${KAFKA_SERVERS}/g" \
               -e "s/FRONTEND/${DNS_NAME_PREFIX_FRONTEND}/g" \
-              -e "s/INGESTOR/${DNS_NAME_PREFIX_INGESTOR}/g" \
               -e "s/COORDINATOR/${DNS_NAME_PREFIX_COORDINATOR}/g" \
               -e "s/STORE/${DNS_NAME_PREFIX_STORE}/g" \
               -e "s/PEGASUS_HOSTS/${pegasus_hosts}/g" \

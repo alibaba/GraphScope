@@ -29,6 +29,13 @@ install_deps_script = os.path.join(scripts_dir, "install_deps_command.sh")
 make_script = os.path.join(scripts_dir, "make_command.sh")
 make_image_script = os.path.join(scripts_dir, "make_image_command.sh")
 test_script = os.path.join(scripts_dir, "test_command.sh")
+default_graphscope_repo_path = os.path.join(
+    os.path.dirname(os.path.realpath(__file__)),
+    "..",
+    "..",
+    "..",
+    "..",
+)
 
 
 def run_shell_cmd(cmd, workingdir):
@@ -45,6 +52,43 @@ def run_shell_cmd(cmd, workingdir):
 def cli():
     # nothing happens
     pass
+
+
+@cli.group()
+def flexbuild():
+    """Build a customized stack using specific components."""
+    pass
+
+
+@flexbuild.command()
+@click.option(
+    "--app",
+    type=click.Choice(["docker"]),
+    required=True,
+    help="Applicatin type of the built artifacts you want to build",
+)
+@click.option(
+    "--graphscope-repo",
+    required=False,
+    help="GraphScope code repo location.",
+)
+def interactive(app, graphscope_repo):
+    """Build Interactive for high throughput scenarios"""
+    if graphscope_repo is None:
+        graphscope_repo = default_graphscope_repo_path
+    interactive_build_dir = os.path.join(
+        graphscope_repo, "flex", "interactive", "docker"
+    )
+    if not os.path.exists(interactive_build_dir) or not os.path.isdir(
+        interactive_build_dir
+    ):
+        click.secho(
+            f"No such file or directory {interactive_build_dir}, try --graphscope-repo param.",
+            fg="red",
+        )
+        return
+    cmd = ["make", "interactive-runtime", "ENABLE_COORDINATOR=true"]
+    run_shell_cmd(cmd, os.path.join(graphscope_repo, interactive_build_dir))
 
 
 @click.command()

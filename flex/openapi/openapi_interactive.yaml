@@ -99,8 +99,8 @@ paths:
   /v1/graph/{graph_name}/dataloading:
     post:
       tags:
-        - dataloading
-      description: Create a dataloading job (Synchronous)
+        - job
+      description: Create a dataloading job
       operationId: create_dataloading_job
       parameters:
       - name: graph_name
@@ -120,7 +120,56 @@ paths:
           content:
             application/json:
               schema:
+                $ref: '#/components/schemas/JobResponse'
+  /v1/job/{job_id}:
+    get:
+      tags:
+        - job
+      operationId: get_job_by_id
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+    delete:
+      tags:
+        - job
+      operationId: delete_job_by_id
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/ApiResponse'
+  /v1/job:
+    get:
+      tags:
+        - job
+      operationId: list_jobs
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobStatus'
   /v1/graph/{graph_name}/procedure:
     post:
       tags:
@@ -299,22 +348,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceStatus'
-  /v1/node/status:
-    get:
-      tags:
-        - node
-      summary: Get node status
-      description: Get node status
-      operationId: get_node_status
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/NodeStatus'
 components:
   schemas:
     Graph:
@@ -602,20 +635,39 @@ components:
         hqps_port:
           type: integer
           format: int32
-    NodeStatus:
-      x-body-name: node_status
+    JobResponse:
       type: object
+      x-body-name: job_response
       properties:
-        node:
+        job_id:
           type: string
-        cpu_usage:
+    JobStatus:
+      type: object
+      x-body-name: job_status
+      properties:
+        job_id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          enum:
+            - RUNNING
+            - SUCCESS
+            - FAILED
+            - CANCELLED
+            - WAITING
+        start_time:
           type: integer
           format: int32
-        memory_usage:
+        end_time:
           type: integer
           format: int32
-        disk_usage:
-          type: integer
-          format: int32
+        log:
+          type: string
+          description: URL or log string
+        detail:
+          type: object
+          additionalProperties: true
     ApiResponse:
       type: string

@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import datetime
 import itertools
 import logging
 import socket
@@ -23,17 +24,14 @@ import threading
 from typing import List, Union
 
 import psutil
-from gs_flex_coordinator.core.config import CLUSTER_TYPE, INSTANCE_NAME, SOLUTION
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE, INSTANCE_NAME,
+                                             SOLUTION)
 from gs_flex_coordinator.core.interactive import init_hqps_client
-from gs_flex_coordinator.models import (
-    DeploymentInfo,
-    Graph,
-    ModelSchema,
-    NodeStatus,
-    Procedure,
-    ServiceStatus,
-    StartServiceRequest,
-)
+from gs_flex_coordinator.core.utils import encode_datetime
+from gs_flex_coordinator.models import (DeploymentInfo, Graph, JobStatus,
+                                        ModelSchema, NodeStatus, Procedure,
+                                        SchemaMapping, ServiceStatus,
+                                        StartServiceRequest)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -132,7 +130,23 @@ class ClientWrapper(object):
     def start_service(self, request: StartServiceRequest) -> str:
         return self._client.start_service(request)
 
-    def data_import(self, graph_name, schema_mapping) -> str:
+    def list_jobs(self) -> List[JobStatus]:
+        # transfer
+        rlt = []
+        for job_status_dict in self._client.list_jobs():
+            rlt.append(JobStatus.from_dict(job_status_dict))
+        return rlt
+
+    def get_job_by_id(self, job_id: str) -> JobStatus:
+        job_status_dict = self._client.get_job_by_id(job_id)
+        return JobStatus.from_dict(job_status_dict)
+
+    def delete_job_by_id(self, job_id: str) -> str:
+        return self._client.delete_job_by_id(job_id)
+
+    def create_dataloading_job(
+        self, graph_name: str, schema_mapping: SchemaMapping
+    ) -> str:
         # there are some tricks here, since property is a keyword of openapi
         # specification, so it will be converted into the _property field.
         schema_mapping_dict = schema_mapping.to_dict()
@@ -142,8 +156,8 @@ class ClientWrapper(object):
             for column_mapping in mapping["column_mappings"]:
                 if "_property" in column_mapping:
                     column_mapping["property"] = column_mapping.pop("_property")
-        print(schema_mapping_dict)
-        return self._client.data_import(graph_name, schema_mapping_dict)
+        job_id = self._client.create_dataloading_job(graph_name, schema_mapping_dict)
+        return job_id
 
 
 client_wrapper = ClientWrapper()

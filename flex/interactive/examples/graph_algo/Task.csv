@@ -1,0 +1,26 @@
+id|task
+0|PageRank
+1|Personalized PageRank
+2|Betweenness Centrality
+3|Closeness Centrality
+4|Louvain
+5|Label Propagation
+6|Connected Components
+7|Jaccard Similarity
+8|Cosine Similarity
+9|SimRank
+10|k-Core Decomposition
+11|k-Truss
+12|Maximal Clique
+13|BFS
+14|Single Source Shortest Path
+15|Minimum Spanning Tree
+16|Cycle Detection
+17|Maximum Flow
+18|Triangle Counting
+19|K-Clique
+20|Subgraph Matching
+21|Subgraph Mining
+22|Minimum Vertex Covering
+23|Maximum Matching
+24|Graph Coloring

@@ -20,22 +20,25 @@ import click
 import yaml
 
 from graphscope.gsctl.impl import connect_coordinator
+from graphscope.gsctl.impl import create_dataloading_job
 from graphscope.gsctl.impl import create_graph
 from graphscope.gsctl.impl import create_procedure
 from graphscope.gsctl.impl import delete_alert_receiver_by_id
 from graphscope.gsctl.impl import delete_alert_rule_by_name
 from graphscope.gsctl.impl import delete_graph_by_name
+from graphscope.gsctl.impl import delete_job_by_id
 from graphscope.gsctl.impl import delete_procedure_by_name
 from graphscope.gsctl.impl import disconnect_coordinator
 from graphscope.gsctl.impl import get_deployment_info
+from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import get_node_status
 from graphscope.gsctl.impl import get_schema_by_name
 from graphscope.gsctl.impl import get_service_status
-from graphscope.gsctl.impl import import_data_to_interactive_graph
 from graphscope.gsctl.impl import list_alert_messages
 from graphscope.gsctl.impl import list_alert_receivers
 from graphscope.gsctl.impl import list_alert_rules
 from graphscope.gsctl.impl import list_graphs
+from graphscope.gsctl.impl import list_jobs
 from graphscope.gsctl.impl import list_procedures
 from graphscope.gsctl.impl import register_receiver
 from graphscope.gsctl.impl import restart_service
@@ -101,27 +104,6 @@ def stop():
 def restart():
     """Restart database service on current graph"""
     pass
-
-
-@cli.command()
-@click.option(
-    "-f",
-    "--filename",
-    required=True,
-    help="Path of yaml file to use to import data",
-)
-def dataimport(filename):
-    """Import data to Interactive graph (deprecated)"""
-    if not is_valid_file_path(filename):
-        click.secho("Invalid file: {0}".format(filename), fg="blue")
-        return
-    try:
-        config = read_yaml_file(filename)
-        import_data_to_interactive_graph(config)
-    except Exception as e:
-        click.secho(f"Failed to import data: {str(e)}", fg="red")
-    else:
-        click.secho("Import data successfully.", fg="green")
 
 
 @get.command()
@@ -209,6 +191,81 @@ def graph(graph_name):  # noqa: F811
         click.secho(f"Failed to delete graph {graph_name}: {str(e)}", fg="red")
     else:
         click.secho(f"Delete graph {graph_name} successfully.", fg="green")
+
+
+@get.command()
+def job():
+    """Display jobs in database"""
+
+    def _construct_and_display_data(jobs):
+        if not jobs:
+            click.secho("no job found in database.", fg="blue")
+            return
+        head = ["JOBID", "TYPE", "STATUS", "START_TIME", "END_TIME"]
+        data = [head]
+        for j in jobs:
+            data.append(
+                [
+                    j.job_id,
+                    j.type,
+                    j.status,
+                    j.start_time,
+                    str(j.end_time),
+                ]
+            )
+        terminal_display(data)
+
+    try:
+        jobs = list_jobs()
+    except Exception as e:
+        click.secho(f"Failed to list jobs: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(jobs)
+
+
+@describe.command()
+@click.argument("job_id", required=True)
+def job(job_id):  # noqa: F811
+    """Show details of job"""
+    try:
+        job = get_job_by_id(job_id)
+    except Exception as e:
+        click.secho(f"Failed to get job: {str(e)}", fg="red")
+    else:
+        click.secho(yaml.dump(job.to_dict()))
+
+
+@create.command()
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to create a graph",
+)
+def job(filename):  # noqa: F811
+    """Create a dataloading job in database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        config = read_yaml_file(filename)
+        jobid = create_dataloading_job(config["graph"], config)
+    except Exception as e:
+        click.secho(f"Failed to create a job: {str(e)}", fg="red")
+    else:
+        click.secho(f"Create job {jobid} successfully.", fg="green")
+
+
+@delete.command()
+@click.argument("job_id", required=True)
+def job(job_id):  # noqa: F811
+    """Cancel a job by id in database"""
+    try:
+        delete_job_by_id(job_id)
+    except Exception as e:
+        click.secho(f"Failed to delete job {job_id}: {str(e)}", fg="red")
+    else:
+        click.secho(f"Delete job {job_id} successfully.", fg="green")
 
 
 @create.command()

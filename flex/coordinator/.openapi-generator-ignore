@@ -24,3 +24,4 @@
 
 gs_flex_coordinator/controllers/*
 setup.py
+requirements.txt

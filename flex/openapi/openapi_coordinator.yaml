@@ -287,11 +287,60 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GrootSchema'
-  /api/v1/interactive/graph/{graph_name}/dataloading:
+  /api/v1/job:
+    get:
+      tags:
+        - job
+      operationId: list_jobs
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobStatus'
+  /api/v1/job/{job_id}:
+    get:
+      tags:
+        - job
+      operationId: get_job_by_id
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+    delete:
+      tags:
+        - job
+      operationId: delete_job_by_id
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/graph/{graph_name}/dataloading:
     post:
       tags:
-        - legacy
-      operationId: data_import
+        - job
+      operationId: create_dataloading_job
       parameters:
       - name: graph_name
         in: path
@@ -1225,6 +1274,32 @@ components:
         property:
           type: string
           description: must align with the schema
+    JobStatus:
+      type: object
+      x-body-name: job_status
+      properties:
+        job_id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          enum:
+            - RUNNING
+            - SUCCESS
+            - FAILED
+            - CANCELLED
+            - WAITING
+        start_time:
+          type: string
+        end_time:
+          type: string
+        log:
+          type: string
+          description: URL or log string
+        detail:
+          type: object
+          additionalProperties: true
     GrootGraph:
       x-body-name: groot_graph
       type: object

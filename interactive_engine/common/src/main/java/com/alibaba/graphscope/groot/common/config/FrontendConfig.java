@@ -31,4 +31,7 @@ public class FrontendConfig {
 
     public static final Config<Boolean> ENABLE_HASH_GENERATE_EID =
             Config.boolConfig("enable.hash.generate.eid", false);
+
+    public static final Config<Integer> WRITE_QUEUE_BUFFER_MAX_COUNT =
+            Config.intConfig("write.queue.buffer.max.count", 1024000);
 }

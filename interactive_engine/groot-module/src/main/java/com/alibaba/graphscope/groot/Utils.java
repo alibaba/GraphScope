@@ -17,15 +17,22 @@ import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.DiscoveryConfig;
+import com.alibaba.graphscope.groot.operation.OperationBatch;
+import com.alibaba.graphscope.groot.operation.OperationBlob;
+import com.alibaba.graphscope.groot.operation.OperationType;
+
+import java.util.List;
 
 public class Utils {
+    public static final OperationBatch MARKER_BATCH =
+            OperationBatch.newBuilder()
+                    .addOperationBlob(OperationBlob.MARKER_OPERATION_BLOB)
+                    .build();
 
     public static String getHostTemplate(Configs configs, RoleType role) {
         switch (role) {
             case FRONTEND:
                 return DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
-            case INGESTOR:
-                return DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(configs);
             case COORDINATOR:
                 return DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
             case STORE:
@@ -53,9 +60,6 @@ public class Utils {
         switch (role) {
             case FRONTEND:
                 s = CommonConfig.FRONTEND_RPC_PORT.get(configs);
-                break;
-            case INGESTOR:
-                s = CommonConfig.INGESTOR_RPC_PORT.get(configs);
                 break;
             case COORDINATOR:
                 s = CommonConfig.COORDINATOR_RPC_PORT.get(configs);
@@ -85,5 +89,31 @@ public class Utils {
             }
             return Integer.parseInt(array[idx]);
         }
+    }
+
+    public static OperationBatch extractOperations(
+            OperationBatch input, List<OperationType> types) {
+        boolean hasOtherType = false;
+        for (int i = 0; i < input.getOperationCount(); ++i) {
+            OperationBlob blob = input.getOperationBlob(i);
+            OperationType opType = blob.getOperationType();
+            if (!types.contains(opType)) {
+                hasOtherType = true;
+                break;
+            }
+        }
+        if (!hasOtherType) {
+            return input;
+        }
+        OperationBatch.Builder batchBuilder = OperationBatch.newBuilder();
+        batchBuilder.setLatestSnapshotId(input.getLatestSnapshotId());
+        for (int i = 0; i < input.getOperationCount(); ++i) {
+            OperationBlob blob = input.getOperationBlob(i);
+            OperationType opType = blob.getOperationType();
+            if (types.contains(opType)) {
+                batchBuilder.addOperationBlob(blob);
+            }
+        }
+        return batchBuilder.build();
     }
 }

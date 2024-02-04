@@ -51,9 +51,6 @@ public class GrootGraph {
                 case FRONTEND:
                     node = new Frontend(conf);
                     break;
-                case INGESTOR:
-                    node = new Ingestor(conf);
-                    break;
                 case STORE:
                     node = new Store(conf);
                     break;

@@ -409,6 +409,33 @@ paths:
       tags:
       - graph
       x-openapi-router-controller: gs_flex_coordinator.controllers.graph_controller
+  /api/v1/graph/{graph_name}/dataloading:
+    post:
+      operationId: create_dataloading_job
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaMapping'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
   /api/v1/graph/{graph_name}/procedure:
     get:
       description: List stored procedures on a certain graph
@@ -737,33 +764,62 @@ paths:
       tags:
       - legacy
       x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
-  /api/v1/interactive/graph/{graph_name}/dataloading:
-    post:
-      operationId: data_import
+  /api/v1/job:
+    get:
+      operationId: list_jobs
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/JobStatus'
+                type: array
+          description: successful operation
+      tags:
+      - job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/job/{job_id}:
+    delete:
+      operationId: delete_job_by_id
       parameters:
       - explode: false
         in: path
-        name: graph_name
+        name: job_id
         required: true
         schema:
           type: string
         style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SchemaMapping'
-        required: true
       responses:
         "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+          description: Successful operation
+      tags:
+      - job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+    get:
+      operationId: get_job_by_id
+      parameters:
+      - explode: false
+        in: path
+        name: job_id
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
           description: successful operation
       tags:
-      - legacy
-      x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
+      - job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
   /api/v1/node/status:
     get:
       description: "Get node status (cpu/memory/disk, local only)"
@@ -1727,6 +1783,49 @@ components:
       title: ColumnMapping
       type: object
       x-body-name: column_mapping
+    JobStatus:
+      example:
+        start_time: start_time
+        log: log
+        job_id: job_id
+        end_time: end_time
+        detail:
+          key: ""
+        type: type
+        status: RUNNING
+      properties:
+        job_id:
+          title: job_id
+          type: string
+        type:
+          title: type
+          type: string
+        status:
+          enum:
+          - RUNNING
+          - SUCCESS
+          - FAILED
+          - CANCELLED
+          - WAITING
+          title: status
+          type: string
+        start_time:
+          title: start_time
+          type: string
+        end_time:
+          title: end_time
+          type: string
+        log:
+          description: URL or log string
+          title: log
+          type: string
+        detail:
+          additionalProperties: true
+          title: detail
+          type: object
+      title: JobStatus
+      type: object
+      x-body-name: job_status
     GrootGraph:
       example:
         creation_time: creation_time

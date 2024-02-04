@@ -1,6 +1,7 @@
 FROM ubuntu:20.04
 
-ARG CI=false
+ENV DEBIAN_FRONTEND=noninteractive
+
 # change bash as default
 SHELL ["/bin/bash", "-c"]
 

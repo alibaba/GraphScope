@@ -65,6 +65,7 @@ class Schema {
                       const std::vector<std::string>& prop_names,
                       EdgeStrategy oe = EdgeStrategy::kMultiple,
                       EdgeStrategy ie = EdgeStrategy::kMultiple,
+                      bool oe_mutable = true, bool ie_mutable = true,
                       bool sort_on_compaction = false);
 
   label_t vertex_label_num() const;
@@ -97,6 +98,9 @@ class Schema {
 
   bool exist(const std::string& src_label, const std::string& dst_label,
              const std::string& edge_label) const;
+
+  bool exist(label_type src_label, label_type dst_label,
+             label_type edge_label) const;
 
   const std::vector<PropertyType>& get_edge_properties(
       const std::string& src_label, const std::string& dst_label,
@@ -144,6 +148,14 @@ class Schema {
   EdgeStrategy get_incoming_edge_strategy(const std::string& src_label,
                                           const std::string& dst_label,
                                           const std::string& label) const;
+
+  bool outgoing_edge_mutable(const std::string& src_label,
+                             const std::string& dst_label,
+                             const std::string& label) const;
+
+  bool incoming_edge_mutable(const std::string& src_label,
+                             const std::string& dst_label,
+                             const std::string& label) const;
 
   bool get_sort_on_compaction(const std::string& src_label,
                               const std::string& dst_label,
@@ -201,6 +213,8 @@ class Schema {
   std::map<uint32_t, std::vector<std::string>> eprop_names_;
   std::map<uint32_t, EdgeStrategy> oe_strategy_;
   std::map<uint32_t, EdgeStrategy> ie_strategy_;
+  std::map<uint32_t, bool> oe_mutability_;
+  std::map<uint32_t, bool> ie_mutability_;
   std::map<uint32_t, bool> sort_on_compactions_;
   std::vector<size_t> max_vnum_;
   std::unordered_map<std::string, std::pair<std::string, uint8_t>>

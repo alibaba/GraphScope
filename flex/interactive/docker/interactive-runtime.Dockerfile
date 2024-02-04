@@ -1,8 +1,10 @@
 ARG ARCH=x86_64
 FROM registry.cn-hongkong.aliyuncs.com/graphscope/interactive-base:latest AS builder
 
-ARG CI=false
 ARG ARCH
+ARG ENABLE_COORDINATOR="false"
+
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # change bash as default
 SHELL ["/bin/bash", "-c"]
@@ -21,7 +23,7 @@ RUN curl -sf -L https://static.rust-lang.org/rustup.sh | \
   cargo --version
 
 # install flex
-RUN . ${HOME}/.cargo/env  && cd ${HOME} && git clone https://github.com/alibaba/GraphScope.git -b main --single-branch && cd GraphScope/flex && \
+RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
     git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF && make -j && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
@@ -29,8 +31,18 @@ RUN . ${HOME}/.cargo/env  && cd ${HOME} && git clone https://github.com/alibaba/
     ls ~/GraphScope/interactive_engine/executor/ir && \
     cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
 
+# build coordinator
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+        cd ${HOME}/GraphScope/flex/coordinator && \
+        python3 setup.py bdist_wheel && \
+        mkdir -p /opt/flex/wheel && cp dist/*.whl /opt/flex/wheel/; \
+    fi
+
 from ubuntu:20.04 as final_image
 ARG ARCH
+ARG ENABLE_COORDINATOR="false"
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get install -y sudo
 
@@ -41,6 +53,13 @@ RUN useradd -m graphscope -u 1001 && \
 # g++ + jre 500MB
 RUN apt-get update && apt-get -y install locales g++-9 cmake openjdk-11-jre-headless && \
     ln -sf /usr/bin/g++-9 /usr/bin/g++ && locale-gen en_US.UTF-8 && apt-get clean -y && sudo rm -rf /var/lib/apt/lists/* 
+
+# python3
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      apt-get update && apt-get -y install python3 python3-pip && \
+      apt-get clean -y && sudo rm -rf /var/lib/apt/lists/*; \
+    fi
+
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
@@ -54,7 +73,7 @@ COPY --from=builder /opt/flex /opt/flex
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
-COPY --from=builder ${HOME}/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
+COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
@@ -71,10 +90,9 @@ COPY --from=builder /usr/lib/$ARCH-linux-gnu/libcrypto*.so* /usr/lib/$ARCH-linux
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-rte*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libhwloc*.so* /usr/lib/$ARCH-linux-gnu/
 
-
 # libunwind for arm64 seems not installed here, and seems not needed for aarch64(tested)
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libunwind*.so* /usr/lib/$ARCH-linux-gnu/
-COPY --from=builder /usr/lib/$ARCH-linux-gnu/libarrow.so.600 /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libarrow.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-pal*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libltdl*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libevent*.so* /usr/lib/$ARCH-linux-gnu/
@@ -101,5 +119,15 @@ RUN sudo ln -sf /opt/flex/bin/* /usr/local/bin/ \
 
 RUN chmod +x /opt/flex/bin/*
 
-ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      pip3 install /opt/flex/wheel/*.whl; \
+    fi
 
+ENV LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/flex/lib/:/usr/lib/:/usr/local/lib/
+# flex solution
+ENV SOLUTION=INTERACTIVE
+
+# set home to graphscope user
+ENV HOME=/home/graphscope
+USER graphscope
+WORKDIR /home/graphscope

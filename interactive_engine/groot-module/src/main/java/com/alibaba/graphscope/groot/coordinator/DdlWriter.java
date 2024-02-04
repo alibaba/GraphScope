@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.rpc.RoleClients;

@@ -44,9 +44,7 @@ class GraphDBSession {
         logger_(logger),
         work_dir_(work_dir),
         thread_id_(thread_id),
-#ifdef MONITOR_SESSIONS
         eval_duration_(0),
-#endif
         query_num_(0) {
     for (auto& app : apps_) {
       app = nullptr;
@@ -87,9 +85,7 @@ class GraphDBSession {
 
   bool Compact();
 
-#ifdef MONITOR_SESSIONS
   double eval_duration() const;
-#endif
 
   const AppMetric& GetAppMetric(int idx) const;
 
@@ -108,9 +104,7 @@ class GraphDBSession {
   std::array<AppBase*, MAX_PLUGIN_NUM> apps_;
   std::array<AppMetric, MAX_PLUGIN_NUM> app_metrics_;
 
-#ifdef MONITOR_SESSIONS
   std::atomic<int64_t> eval_duration_;
-#endif
   std::atomic<int64_t> query_num_;
 };
 

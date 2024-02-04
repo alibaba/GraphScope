@@ -10,23 +10,6 @@ from gs_flex_coordinator.models.groot_schema import GrootSchema  # noqa: E501
 from gs_flex_coordinator.models.schema_mapping import SchemaMapping  # noqa: E501
 from gs_flex_coordinator import util
 
-@handle_api_exception()
-def data_import(graph_name, schema_mapping):  # noqa: E501
-    """data_import
-
-     # noqa: E501
-
-    :param graph_name:
-    :type graph_name: str
-    :param schema_mapping:
-    :type schema_mapping: dict | bytes
-
-    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
-    """
-    if connexion.request.is_json:
-        schema_mapping = SchemaMapping.from_dict(connexion.request.get_json())  # noqa: E501
-    return client_wrapper.data_import(graph_name, schema_mapping)
-
 
 @handle_api_exception()
 def get_groot_schema(graph_name):  # noqa: E501

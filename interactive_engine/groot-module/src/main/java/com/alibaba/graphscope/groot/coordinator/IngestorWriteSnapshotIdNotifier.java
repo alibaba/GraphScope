@@ -26,12 +26,12 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
             LoggerFactory.getLogger(IngestorWriteSnapshotIdNotifier.class);
 
     private final RoleClients<IngestorSnapshotClient> ingestorSnapshotClients;
-    private final int ingestorCount;
+    private final int frontendCount;
 
     public IngestorWriteSnapshotIdNotifier(
             Configs configs, RoleClients<IngestorSnapshotClient> ingestorSnapshotClients) {
         this.ingestorSnapshotClients = ingestorSnapshotClients;
-        this.ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
+        this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
     }
 
     @Override
@@ -51,7 +51,9 @@ public class IngestorWriteSnapshotIdNotifier implements WriteSnapshotIdNotifier 
                         logger.error("error in advanceIngestSnapshotId {}: {}", si, t.toString());
                     }
                 };
-        for (int i = 0; i < this.ingestorCount; i++) {
+        // TODO(siyuan): Send to frontend service
+        //        for (int i = 0; i < this.frontendCount; i++) {
+        for (int i = 0; i < 1; i++) {
             try {
                 IngestorSnapshotClient client = ingestorSnapshotClients.getClient(i);
                 client.advanceIngestSnapshotId(si, callback);

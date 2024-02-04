@@ -24,6 +24,8 @@ import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.store.*;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.NameResolver;
@@ -41,13 +43,14 @@ public class Store extends NodeBase {
     private RpcServer rpcServer;
     private AbstractService executorService;
 
+    private KafkaProcessor processor;
+
     public Store(Configs configs) {
         super(configs);
         configs = reConfig(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
         DiscoveryFactory discoveryFactory = new DiscoveryFactory(configs);
         this.discovery = discoveryFactory.makeDiscovery(localNodeProvider);
-
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
@@ -55,6 +58,8 @@ public class Store extends NodeBase {
         this.storeService = new StoreService(configs, this.metaService, metricsCollector);
         SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
+        LogService logService = LogServiceFactory.makeLogService(configs);
+
         this.writerAgent =
                 new WriterAgent(
                         configs,
@@ -83,6 +88,8 @@ public class Store extends NodeBase {
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
+
+        this.processor = new KafkaProcessor(configs, metaService, writerAgent, logService);
     }
 
     @Override
@@ -110,10 +117,12 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
+        this.processor.start();
     }
 
     @Override
     public void close() throws IOException {
+        this.processor.stop();
         this.executorService.stop();
         this.rpcServer.stop();
         this.backupAgent.stop();
