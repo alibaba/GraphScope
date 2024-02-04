@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['odps_5ffragment_5floader_2ecc_1421',['odps_fragment_loader.cc',['../odps__fragment__loader_8cc.html',1,'']]],
-  ['odps_5ffragment_5floader_2eh_1422',['odps_fragment_loader.h',['../odps__fragment__loader_8h.html',1,'']]]
+  ['nbr_2eh_1478',['nbr.h',['../nbr_8h.html',1,'']]]
 ];

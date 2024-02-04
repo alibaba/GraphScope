@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Release Notes: v0.25.0</h1>
+            <section class="post-meta">
+                
+                on ReleaseNotes
+                
+                <time class="post-date" datetime=" 2023-11-15">15 Nov 2023</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2023-11-15">15 Nov 2023</time>
+            
+                on ReleaseNotes
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Release Notes: v0.25.0</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/release_note_t.png" alt="release-note" />
+We are glad to announce a suite of upgrades in the latest GraphScope 0.25.0 release, bringing significant improvements to the platform. Starting with this version, our updates will be divided into two parts: one is the updates introduced under the original GraphScope framework (including the graph analytics engine GAE, graph interactive engine GIE, and graph learning engine GLE); the other is the latest product features built for the new GraphScope Flex architecture.</p>
+
+<p>In this release, under the original GraphScope framework, the graph interactive engine (GIE) allows users to express queries in natural language, which are then automatically translated into Cypher; at the same time, the performance of GIE has been improved for certain queries through the optimization of the persistent storage Groot. For graph learning tasks, we have integrated the latest <a href="https://github.com/alibaba/graphlearn-for-pytorch">GraphLearn-for-Pytorch (GLTorch) engine</a>, which supports GPU acceleration for graph sampling and feature extraction, thereby enhancing the training and inference performance of graph neural networks. Under the GraphScope Flex architecture, the graph query engine GraphScope Interactive, designed for high-concurrency scenarios, has also made a series of improvements in functionality and user-friendliness.</p>
+
+<p>We highlight the following improvements included in this release:</p>
+
+<p><strong>1. Integration of the Graph Interactive Query Engine GIE with LLMs</strong></p>
+
+<p>To express graph queries, users typically need to use the Cypher or Gremlin languages, which creates a certain usage barrier. With the rapid application of Large Language Models (LLMs) in various industries, we have also tried to leverage the powerful capabilities of LLMs to allow users to express queries in natural language, which are then automatically translated into Cypher and executed on GIE.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="n">graphscope.langchain_prompt.query</span> <span class="kn">import</span> <span class="n">query_to_cypher</span>
+<span class="n">question</span> <span class="o">=</span> <span class="sh">"</span><span class="s">Who is the son of Jia Baoyu?</span><span class="sh">"</span>
+<span class="n">cypher_sentence</span> <span class="o">=</span> <span class="nf">query_to_cypher</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">question</span><span class="p">,</span> <span class="n">endpoint</span><span class="o">=</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">api_key</span><span class="p">)</span>
+<span class="nf">print</span><span class="p">(</span><span class="n">cypher_sentence</span><span class="p">)</span>
+<span class="c1"># MATCH (p:Person)-[:son_of]-&gt;(q:Person)
+# WHERE p.name = 'Jia Baoyu'
+# RETURN q.name
+</span></code></pre></div></div>
+
+<p><strong>2. Integration with GraphLearn-for-Pytorch (GLTorch)</strong></p>
+
+<p>GLTorch is a PyTorch-based graph neural network framework optimized for scenarios with single-machine multi-GPUs. It uses GPUs to accelerate graph sampling and feature extraction operations in graph neural networks; in addition, its API is compatible with PyG, allowing users to run their graph neural network models originally written with PyG API on GraphScope with minimal code changes.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># load the ogbn_arxiv graph as an example.
+</span><span class="n">g</span> <span class="o">=</span> <span class="nf">load_ogbn_arxiv</span><span class="p">()</span>
+<span class="c1"># specify the learning engine.
+</span><span class="n">glt_graph</span> <span class="o">=</span> <span class="n">gs</span><span class="p">.</span><span class="nf">graphlearn_torch</span><span class="p">(</span>
+  <span class="n">g</span><span class="p">,</span>
+  <span class="n">edges</span><span class="o">=</span><span class="p">[(</span><span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">citation</span><span class="sh">"</span><span class="p">,</span> <span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">)],</span>
+  <span class="n">node_features</span><span class="o">=</span><span class="p">{</span><span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">:</span> <span class="p">[</span><span class="sa">f</span><span class="sh">"</span><span class="s">feat_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="sh">"</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nf">range</span><span class="p">(</span><span class="mi">128</span><span class="p">)]},</span>
+  <span class="n">node_labels</span><span class="o">=</span><span class="p">{</span><span class="sh">"</span><span class="s">paper</span><span class="sh">"</span><span class="p">:</span> <span class="sh">"</span><span class="s">label</span><span class="sh">"</span><span class="p">},</span>
+  <span class="n">edge_dir</span><span class="o">=</span><span class="sh">"</span><span class="s">out</span><span class="sh">"</span><span class="p">,</span>
+  <span class="n">random_node_split</span><span class="o">=</span><span class="p">{</span><span class="sh">"</span><span class="s">num_val</span><span class="sh">"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="sh">"</span><span class="s">num_test</span><span class="sh">"</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">},</span>
+<span class="p">)</span>
+</code></pre></div></div>
+
+<p><strong>3. Improvements to GraphScope Interactive</strong></p>
+
+<p>GraphScope Interactive is dedicated to providing users with outstanding query processing capabilities in high-concurrency scenarios. In this update, we have made the following improvements:</p>
+
+<ul>
+  <li>Added a cache mechanism to avoid repeated compilation of the same query during multiple executions;</li>
+  <li>Supported the use of string-type attributes as the primary key for vertices;</li>
+  <li>Added <a href="https://graphscope.io/docs/latest/flex/interactive_intro">user documentation</a> for GraphScope Interactive.</li>
+</ul>
+
+<p><strong>4. Performance Optimization of Persistent Storage Groot</strong></p>
+
+<ul>
+  <li>Optimized the performance of the <code class="language-plaintext highlighter-rouge">count()</code> operator for vertices/edges. The performance has been improved when executing queries like <code class="language-plaintext highlighter-rouge">g.V().count()</code> in GIE;</li>
+  <li>Added APIs related to disk usage in Groot, including used disk capacity and remaining available disk capacity.</li>
+</ul>
+
+<p>For more detailed improvements that have been made in this release, please refer to the complete <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.25.0">changelog</a>.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Release Notes: v0.25.0&amp;url=https://graphscope.io/releasenotes/2023/11/15/release-notes-0.25.0.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/releasenotes/2023/11/15/release-notes-0.25.0.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/releasenotes/2023/11/15/release-notes-0.25.0.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2024 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

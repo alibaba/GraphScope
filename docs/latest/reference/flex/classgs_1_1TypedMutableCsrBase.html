@@ -75,17 +75,18 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p><code>#include &lt;<a class="el" href="mutable__csr_8h_source.html">mutable_csr.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="csr__base_8h_source.html">csr_base.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for gs::TypedMutableCsrBase&lt; EDATA_T &gt;:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1TypedMutableCsrBase__inherit__graph.png" border="0" usemap="#gs_1_1TypedMutableCsrBase_3_01EDATA__T_01_4_inherit__map" alt="Inheritance graph"/></div>
 <map name="gs_1_1TypedMutableCsrBase_3_01EDATA__T_01_4_inherit__map" id="gs_1_1TypedMutableCsrBase_3_01EDATA__T_01_4_inherit__map">
-<area shape="rect" title=" " alt="" coords="233,80,423,121"/>
-<area shape="rect" href="classgs_1_1EmptyCsr.html" title=" " alt="" coords="5,177,200,203"/>
-<area shape="rect" href="classgs_1_1MutableCsr.html" title=" " alt="" coords="225,177,431,203"/>
-<area shape="rect" href="classgs_1_1SingleMutableCsr.html" title=" " alt="" coords="455,169,614,211"/>
-<area shape="rect" href="classgs_1_1MutableCsrBase.html" title=" " alt="" coords="253,5,403,32"/>
+<area shape="rect" title=" " alt="" coords="233,155,423,196"/>
+<area shape="rect" href="classgs_1_1EmptyCsr.html" title=" " alt="" coords="5,251,200,278"/>
+<area shape="rect" href="classgs_1_1MutableCsr.html" title=" " alt="" coords="225,251,431,278"/>
+<area shape="rect" href="classgs_1_1SingleMutableCsr.html" title=" " alt="" coords="455,244,614,285"/>
+<area shape="rect" href="classgs_1_1TypedCsrBase.html" title=" " alt="" coords="217,80,439,107"/>
+<area shape="rect" href="classgs_1_1CsrBase.html" title=" " alt="" coords="279,5,377,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <div class="dynheader">
@@ -93,8 +94,9 @@ Collaboration diagram for gs::TypedMutableCsrBase&lt; EDATA_T &gt;:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1TypedMutableCsrBase__coll__graph.png" border="0" usemap="#gs_1_1TypedMutableCsrBase_3_01EDATA__T_01_4_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1TypedMutableCsrBase_3_01EDATA__T_01_4_coll__map" id="gs_1_1TypedMutableCsrBase_3_01EDATA__T_01_4_coll__map">
-<area shape="rect" title=" " alt="" coords="5,80,195,121"/>
-<area shape="rect" href="classgs_1_1MutableCsrBase.html" title=" " alt="" coords="25,5,175,32"/>
+<area shape="rect" title=" " alt="" coords="22,155,211,196"/>
+<area shape="rect" href="classgs_1_1TypedCsrBase.html" title=" " alt="" coords="5,80,228,107"/>
+<area shape="rect" href="classgs_1_1CsrBase.html" title=" " alt="" coords="67,5,166,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -105,49 +107,44 @@ Public Types</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:ac14b79a2b5a154eb5e327079f2626bf3"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedMutableCsrBase.html#ac14b79a2b5a154eb5e327079f2626bf3">batch_put_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const EDATA_T &amp;data, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts=0)=0</td></tr>
-<tr class="separator:ac14b79a2b5a154eb5e327079f2626bf3"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a25c972f5a70d5a723760e6b3059fc27d"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedMutableCsrBase.html#a25c972f5a70d5a723760e6b3059fc27d">put_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const EDATA_T &amp;data, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
-<tr class="separator:a25c972f5a70d5a723760e6b3059fc27d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a719a74815163c4febd5de3c4fa362571"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1TypedMutableCsrBase.html#a744d729307835152b05d6c8928a3ff23">slice_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedMutableCsrBase.html#a719a74815163c4febd5de3c4fa362571">get_edges</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> i) const =0</td></tr>
-<tr class="separator:a719a74815163c4febd5de3c4fa362571"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="inherit_header pub_methods_classgs_1_1MutableCsrBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1MutableCsrBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1MutableCsrBase.html">gs::MutableCsrBase</a></td></tr>
-<tr class="memitem:a7c50e8d8debfec66f7008e7fd20ea41f inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a7c50e8d8debfec66f7008e7fd20ea41f">MutableCsrBase</a> ()</td></tr>
-<tr class="separator:a7c50e8d8debfec66f7008e7fd20ea41f inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a65f1ef3f8e98748098d383b6e296733a inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a65f1ef3f8e98748098d383b6e296733a">~MutableCsrBase</a> ()</td></tr>
-<tr class="separator:a65f1ef3f8e98748098d383b6e296733a inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abc483d0a3749df58287a3d3b9325dbf6 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#abc483d0a3749df58287a3d3b9325dbf6">batch_init</a> (const std::string &amp;name, const std::string &amp;work_dir, const std::vector&lt; int &gt; &amp;degree, double reserve_ratio=1.2)=0</td></tr>
-<tr class="separator:abc483d0a3749df58287a3d3b9325dbf6 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5019581ceb128f8ca29343f31bd7d364 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a5019581ceb128f8ca29343f31bd7d364">batch_sort_by_edge_data</a> (<a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts)</td></tr>
-<tr class="separator:a5019581ceb128f8ca29343f31bd7d364 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5451635193328d3d5b0426294bd7540b inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a5451635193328d3d5b0426294bd7540b">unsorted_since</a> () const</td></tr>
-<tr class="separator:a5451635193328d3d5b0426294bd7540b inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a11e88c18e5728f1e42c1ba70c0f6b53b inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a11e88c18e5728f1e42c1ba70c0f6b53b">open</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir)=0</td></tr>
-<tr class="separator:a11e88c18e5728f1e42c1ba70c0f6b53b inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3cb49f1845c231af14c25f1210a83592 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a3cb49f1845c231af14c25f1210a83592">open_in_memory</a> (const std::string &amp;prefix, size_t v_cap=0)=0</td></tr>
-<tr class="separator:a3cb49f1845c231af14c25f1210a83592 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6998b55994dac907b55eea64a712c41e inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a6998b55994dac907b55eea64a712c41e">open_with_hugepages</a> (const std::string &amp;prefix, size_t v_cap=0)</td></tr>
-<tr class="separator:a6998b55994dac907b55eea64a712c41e inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abd45d1256d54ab42f26411f111110606 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#abd45d1256d54ab42f26411f111110606">dump</a> (const std::string &amp;name, const std::string &amp;new_spanshot_dir)=0</td></tr>
-<tr class="separator:abd45d1256d54ab42f26411f111110606 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad914070b148b0b370847cfc3387880cd inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#ad914070b148b0b370847cfc3387880cd">warmup</a> (int thread_num) const =0</td></tr>
-<tr class="separator:ad914070b148b0b370847cfc3387880cd inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7f51d8d12d6fe5a23b20b5f232c84f90 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a7f51d8d12d6fe5a23b20b5f232c84f90">resize</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> vnum)=0</td></tr>
-<tr class="separator:a7f51d8d12d6fe5a23b20b5f232c84f90 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a33faa6204a05ae565811fa448f151e16 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a33faa6204a05ae565811fa448f151e16">size</a> () const =0</td></tr>
-<tr class="separator:a33faa6204a05ae565811fa448f151e16 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab75e8d3630e5d0cca24fb7952622a725 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#ab75e8d3630e5d0cca24fb7952622a725">put_generic_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;data, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
-<tr class="separator:ab75e8d3630e5d0cca24fb7952622a725 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a5074c7536118bfd9f95c0d6cb0021f55 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a5074c7536118bfd9f95c0d6cb0021f55">ingest_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, grape::OutArchive &amp;arc, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
-<tr class="separator:a5074c7536118bfd9f95c0d6cb0021f55 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e6f66b60c557af31bfbafc2359b1cfc inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a4e6f66b60c557af31bfbafc2359b1cfc">peek_ingest_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, grape::OutArchive &amp;arc, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
-<tr class="separator:a4e6f66b60c557af31bfbafc2359b1cfc inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab0a915ce4ad119cb712da23aa99120b2 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual std::shared_ptr&lt; <a class="el" href="classgs_1_1MutableCsrConstEdgeIterBase.html">MutableCsrConstEdgeIterBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#ab0a915ce4ad119cb712da23aa99120b2">edge_iter</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v) const =0</td></tr>
-<tr class="separator:ab0a915ce4ad119cb712da23aa99120b2 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4bd5fdac68a8fd2e4786958ef9916a16 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1MutableCsrConstEdgeIterBase.html">MutableCsrConstEdgeIterBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#a4bd5fdac68a8fd2e4786958ef9916a16">edge_iter_raw</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v) const =0</td></tr>
-<tr class="separator:a4bd5fdac68a8fd2e4786958ef9916a16 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab5a0fe6d1107f45e197a4284198da9c1 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memItemLeft" align="right" valign="top">virtual std::shared_ptr&lt; <a class="el" href="classgs_1_1MutableCsrEdgeIterBase.html">MutableCsrEdgeIterBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1MutableCsrBase.html#ab5a0fe6d1107f45e197a4284198da9c1">edge_iter_mut</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v)=0</td></tr>
-<tr class="separator:ab5a0fe6d1107f45e197a4284198da9c1 inherit pub_methods_classgs_1_1MutableCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6c786e5a970e6c38c9b288960904933e"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1TypedMutableCsrBase.html#a744d729307835152b05d6c8928a3ff23">slice_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedMutableCsrBase.html#a6c786e5a970e6c38c9b288960904933e">get_edges</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v) const =0</td></tr>
+<tr class="separator:a6c786e5a970e6c38c9b288960904933e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classgs_1_1TypedCsrBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1TypedCsrBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1TypedCsrBase.html">gs::TypedCsrBase&lt; EDATA_T &gt;</a></td></tr>
+<tr class="memitem:ab2a5b9694fe89cb330ad10214c5f290b inherit pub_methods_classgs_1_1TypedCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedCsrBase.html#ab2a5b9694fe89cb330ad10214c5f290b">batch_put_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const EDATA_T &amp;data, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts=0)=0</td></tr>
+<tr class="separator:ab2a5b9694fe89cb330ad10214c5f290b inherit pub_methods_classgs_1_1TypedCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2d61a9f5d8adc58aa796b21958afc966 inherit pub_methods_classgs_1_1TypedCsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1TypedCsrBase.html#a2d61a9f5d8adc58aa796b21958afc966">put_edge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const EDATA_T &amp;data, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
+<tr class="separator:a2d61a9f5d8adc58aa796b21958afc966 inherit pub_methods_classgs_1_1TypedCsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="inherit_header pub_methods_classgs_1_1CsrBase"><td colspan="2" onclick="javascript:toggleInherit('pub_methods_classgs_1_1CsrBase')"><img src="closed.png" alt="-"/>&#160;Public Member Functions inherited from <a class="el" href="classgs_1_1CsrBase.html">gs::CsrBase</a></td></tr>
+<tr class="memitem:a2d9f07e4d73cd4fde3ff72221cdf270c inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a2d9f07e4d73cd4fde3ff72221cdf270c">CsrBase</a> ()=default</td></tr>
+<tr class="separator:a2d9f07e4d73cd4fde3ff72221cdf270c inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9701b1d117a0e9b83120fcc02b45d4f1 inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a9701b1d117a0e9b83120fcc02b45d4f1">~CsrBase</a> ()=default</td></tr>
+<tr class="separator:a9701b1d117a0e9b83120fcc02b45d4f1 inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32236be55866ff995169df21fd1e03dd inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a32236be55866ff995169df21fd1e03dd">batch_init</a> (const std::string &amp;name, const std::string &amp;work_dir, const std::vector&lt; int &gt; &amp;degree, double reserve_ratio=1.2)=0</td></tr>
+<tr class="separator:a32236be55866ff995169df21fd1e03dd inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a18d4b01225f8adc216c061d6bb2ba3cf inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a18d4b01225f8adc216c061d6bb2ba3cf">batch_sort_by_edge_data</a> (<a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts)</td></tr>
+<tr class="separator:a18d4b01225f8adc216c061d6bb2ba3cf inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9341496941c4db70c85f40c57f1eb9cf inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a9341496941c4db70c85f40c57f1eb9cf">unsorted_since</a> () const</td></tr>
+<tr class="separator:a9341496941c4db70c85f40c57f1eb9cf inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a67863932e02b53770d9b8c65d6cd6c41 inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a67863932e02b53770d9b8c65d6cd6c41">open</a> (const std::string &amp;name, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir)=0</td></tr>
+<tr class="separator:a67863932e02b53770d9b8c65d6cd6c41 inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71bdd603c3d9984a1b372c6e152a4662 inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a71bdd603c3d9984a1b372c6e152a4662">open_in_memory</a> (const std::string &amp;prefix, size_t v_cap)=0</td></tr>
+<tr class="separator:a71bdd603c3d9984a1b372c6e152a4662 inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acd6a016bd36595e31d2f207890d03832 inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#acd6a016bd36595e31d2f207890d03832">open_with_hugepages</a> (const std::string &amp;prefix, size_t v_cap=0)</td></tr>
+<tr class="separator:acd6a016bd36595e31d2f207890d03832 inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac4d3188d4836475c9d11b518383395b0 inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#ac4d3188d4836475c9d11b518383395b0">dump</a> (const std::string &amp;name, const std::string &amp;new_spanshot_dir)=0</td></tr>
+<tr class="separator:ac4d3188d4836475c9d11b518383395b0 inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac1880120e61895ff831ee99af6c4ce7b inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#ac1880120e61895ff831ee99af6c4ce7b">warmup</a> (int thread_num) const =0</td></tr>
+<tr class="separator:ac1880120e61895ff831ee99af6c4ce7b inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aea7018ebc3298369e9979d45db280cda inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#aea7018ebc3298369e9979d45db280cda">resize</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> vnum)=0</td></tr>
+<tr class="separator:aea7018ebc3298369e9979d45db280cda inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a32684f28d74b0c441a68dd0149237187 inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a32684f28d74b0c441a68dd0149237187">size</a> () const =0</td></tr>
+<tr class="separator:a32684f28d74b0c441a68dd0149237187 inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2ff4136b73429ee93293709fe3fe23da inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual std::shared_ptr&lt; <a class="el" href="classgs_1_1CsrConstEdgeIterBase.html">CsrConstEdgeIterBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#a2ff4136b73429ee93293709fe3fe23da">edge_iter</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v) const =0</td></tr>
+<tr class="separator:a2ff4136b73429ee93293709fe3fe23da inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac7102b85d6d1a351ac5cde3b24142afa inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1CsrConstEdgeIterBase.html">CsrConstEdgeIterBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#ac7102b85d6d1a351ac5cde3b24142afa">edge_iter_raw</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v) const =0</td></tr>
+<tr class="separator:ac7102b85d6d1a351ac5cde3b24142afa inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af57886c90b459e08b4d5053eb501675b inherit pub_methods_classgs_1_1CsrBase"><td class="memItemLeft" align="right" valign="top">virtual std::shared_ptr&lt; <a class="el" href="classgs_1_1CsrEdgeIterBase.html">CsrEdgeIterBase</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1CsrBase.html#af57886c90b459e08b4d5053eb501675b">edge_iter_mut</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> v)=0</td></tr>
+<tr class="separator:af57886c90b459e08b4d5053eb501675b inherit pub_methods_classgs_1_1CsrBase"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Member Typedef Documentation</h2>
 <a id="a744d729307835152b05d6c8928a3ff23"></a>
@@ -167,60 +164,8 @@ template&lt;typename EDATA_T &gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="ac14b79a2b5a154eb5e327079f2626bf3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac14b79a2b5a154eb5e327079f2626bf3">&#9670;&nbsp;</a></span>batch_put_edge()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename EDATA_T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void <a class="el" href="classgs_1_1TypedMutableCsrBase.html">gs::TypedMutableCsrBase</a>&lt; EDATA_T &gt;::batch_put_edge </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
-          <td class="paramname"><em>src</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
-          <td class="paramname"><em>dst</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const EDATA_T &amp;&#160;</td>
-          <td class="paramname"><em>data</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td>
-          <td class="paramname"><em>ts</em> = <code>0</code>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Implemented in <a class="el" href="classgs_1_1EmptyCsr.html#ae22252c395b15c283b12c7d03a28c7f0">gs::EmptyCsr&lt; EDATA_T &gt;</a>, <a class="el" href="classgs_1_1SingleMutableCsr.html#aad3358c73f9c2242b0ebec9831667212">gs::SingleMutableCsr&lt; EDATA_T &gt;</a>, and <a class="el" href="classgs_1_1MutableCsr.html#a06c25544f8b9a378d0dcf3f2ddb5411e">gs::MutableCsr&lt; EDATA_T &gt;</a>.</p>
-
-</div>
-</div>
-<a id="a719a74815163c4febd5de3c4fa362571"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a719a74815163c4febd5de3c4fa362571">&#9670;&nbsp;</a></span>get_edges()</h2>
+<a id="a6c786e5a970e6c38c9b288960904933e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6c786e5a970e6c38c9b288960904933e">&#9670;&nbsp;</a></span>get_edges()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -234,7 +179,7 @@ template&lt;typename EDATA_T &gt; </div>
           <td class="memname">virtual <a class="el" href="classgs_1_1TypedMutableCsrBase.html#a744d729307835152b05d6c8928a3ff23">slice_t</a> <a class="el" href="classgs_1_1TypedMutableCsrBase.html">gs::TypedMutableCsrBase</a>&lt; EDATA_T &gt;::get_edges </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
-          <td class="paramname"><em>i</em></td><td>)</td>
+          <td class="paramname"><em>v</em></td><td>)</td>
           <td> const</td>
         </tr>
       </table>
@@ -245,70 +190,12 @@ template&lt;typename EDATA_T &gt; </div>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1EmptyCsr.html#a91326acb46dba40710d164a2b709d3fd">gs::EmptyCsr&lt; EDATA_T &gt;</a>, <a class="el" href="classgs_1_1SingleMutableCsr.html#ab889209fb8b21232c78a95aba79b1e2d">gs::SingleMutableCsr&lt; EDATA_T &gt;</a>, and <a class="el" href="classgs_1_1MutableCsr.html#a7d432f570fecd6ca0b7857928416f02b">gs::MutableCsr&lt; EDATA_T &gt;</a>.</p>
-
-</div>
-</div>
-<a id="a25c972f5a70d5a723760e6b3059fc27d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a25c972f5a70d5a723760e6b3059fc27d">&#9670;&nbsp;</a></span>put_edge()</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;typename EDATA_T &gt; </div>
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">virtual void <a class="el" href="classgs_1_1TypedMutableCsrBase.html">gs::TypedMutableCsrBase</a>&lt; EDATA_T &gt;::put_edge </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
-          <td class="paramname"><em>src</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
-          <td class="paramname"><em>dst</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const EDATA_T &amp;&#160;</td>
-          <td class="paramname"><em>data</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td>
-          <td class="paramname"><em>ts</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td>
-          <td class="paramname"><em>alloc</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Implemented in <a class="el" href="classgs_1_1MutableCsr.html#afb1e59075d87b2da5b3fee71432fb463">gs::MutableCsr&lt; EDATA_T &gt;</a>, <a class="el" href="classgs_1_1EmptyCsr.html#ab7058e694f085d91134a8c46642cd8b8">gs::EmptyCsr&lt; EDATA_T &gt;</a>, and <a class="el" href="classgs_1_1SingleMutableCsr.html#aa0cc8a31393eba0f1448061bd3253564">gs::SingleMutableCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1EmptyCsr_3_01std_1_1string__view_01_4.html#a9fb2021c09f15af426abc7ef6c358a10">gs::EmptyCsr&lt; std::string_view &gt;</a>, <a class="el" href="classgs_1_1EmptyCsr.html#ade20848f1705e7ec67f5fc65631b0dc0">gs::EmptyCsr&lt; EDATA_T &gt;</a>, <a class="el" href="classgs_1_1SingleMutableCsr.html#aa511daa8c977da15c7d43d915fb05443">gs::SingleMutableCsr&lt; EDATA_T &gt;</a>, <a class="el" href="classgs_1_1MutableCsr.html#a6aadd919433cdbe1f801b6b171533ae2">gs::MutableCsr&lt; EDATA_T &gt;</a>, <a class="el" href="classgs_1_1SingleMutableCsr_3_01std_1_1string__view_01_4.html#a261bc95d03879469a36d69db8d389230">gs::SingleMutableCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1MutableCsr_3_01std_1_1string__view_01_4.html#a8d4b0e097bfc769b5f36f58ea189e464">gs::MutableCsr&lt; std::string_view &gt;</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/<a class="el" href="mutable__csr_8h_source.html">mutable_csr.h</a></li>
+<li>/home/runner/work/GraphScope/GraphScope/flex/storages/rt_mutable_graph/csr/<a class="el" href="csr__base_8h_source.html">csr_base.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->

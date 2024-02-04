@@ -104,9 +104,9 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a2bbdc8b5c0738e9d11718ce7f6045f20"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8a1d99f950b499e9ca3a3d3745fbcf2f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#a8a1d99f950b499e9ca3a3d3745fbcf2f">~GraphDB</a> ()</td></tr>
 <tr class="separator:a8a1d99f950b499e9ca3a3d3745fbcf2f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae516d906982d7d9324d56e8c74144abc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#ae516d906982d7d9324d56e8c74144abc">Open</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;<a class="el" href="classgs_1_1GraphDB.html#a55bc84ab369117c341c7e5784db47449">schema</a>, const std::string &amp;data_dir, int32_t thread_num=1, bool warmup=false, bool memory_only=true, bool enable_auto_compaction=false, int port=-1)</td></tr>
-<tr class="memdesc:ae516d906982d7d9324d56e8c74144abc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load the graph from data directory.  <a href="classgs_1_1GraphDB.html#ae516d906982d7d9324d56e8c74144abc">More...</a><br /></td></tr>
-<tr class="separator:ae516d906982d7d9324d56e8c74144abc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0f1730a166e596fb47a675a8a2270800"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#a0f1730a166e596fb47a675a8a2270800">Open</a> (const <a class="el" href="classgs_1_1Schema.html">Schema</a> &amp;<a class="el" href="classgs_1_1GraphDB.html#a55bc84ab369117c341c7e5784db47449">schema</a>, const std::string &amp;data_dir, int32_t thread_num=1, bool warmup=false, bool memory_only=true, bool enable_auto_compaction=false)</td></tr>
+<tr class="memdesc:a0f1730a166e596fb47a675a8a2270800"><td class="mdescLeft">&#160;</td><td class="mdescRight">Load the graph from data directory.  <a href="classgs_1_1GraphDB.html#a0f1730a166e596fb47a675a8a2270800">More...</a><br /></td></tr>
+<tr class="separator:a0f1730a166e596fb47a675a8a2270800"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2220933c2e7a4791a21662019c4c84bc"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1Result.html">Result</a>&lt; bool &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#a2220933c2e7a4791a21662019c4c84bc">Open</a> (const <a class="el" href="structgs_1_1GraphDBConfig.html">GraphDBConfig</a> &amp;config)</td></tr>
 <tr class="separator:a2220933c2e7a4791a21662019c4c84bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a919386ddad7a9b38566e364ae38ce9f8"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#a919386ddad7a9b38566e364ae38ce9f8">Close</a> ()</td></tr>
@@ -186,6 +186,10 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a05270918a86823dd0a18b17cba13e25f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aedb7766a1257ca680ff358b7e78c38d5"><td class="memItemLeft" align="right" valign="top">std::array&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1AppFactoryBase.html">AppFactoryBase</a> &gt;, 256 &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#aedb7766a1257ca680ff358b7e78c38d5">app_factories_</a></td></tr>
 <tr class="separator:aedb7766a1257ca680ff358b7e78c38d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acb155fa5c5c071576b954fec47cc0610"><td class="memItemLeft" align="right" valign="top">std::thread&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#acb155fa5c5c071576b954fec47cc0610">monitor_thread_</a></td></tr>
+<tr class="separator:acb155fa5c5c071576b954fec47cc0610"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac482a3fe5ec916ebe0d91141c76c4668"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#ac482a3fe5ec916ebe0d91141c76c4668">monitor_thread_running_</a></td></tr>
+<tr class="separator:ac482a3fe5ec916ebe0d91141c76c4668"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab1e1974c8d619e563550973960e8d02d"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#ab1e1974c8d619e563550973960e8d02d">last_compaction_ts_</a></td></tr>
 <tr class="separator:ab1e1974c8d619e563550973960e8d02d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aea62a154a366a61853d9c08e2ddf9dd5"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDB.html#aea62a154a366a61853d9c08e2ddf9dd5">compact_thread_running_</a> = false</td></tr>
@@ -680,8 +684,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="ae516d906982d7d9324d56e8c74144abc"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae516d906982d7d9324d56e8c74144abc">&#9670;&nbsp;</a></span>Open() <span class="overload">[2/2]</span></h2>
+<a id="a0f1730a166e596fb47a675a8a2270800"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f1730a166e596fb47a675a8a2270800">&#9670;&nbsp;</a></span>Open() <span class="overload">[2/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -720,13 +724,7 @@ Friends</h2></td></tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>enable_auto_compaction</em> = <code>false</code>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>port</em> = <code>-1</code>&#160;</td>
+          <td class="paramname"><em>enable_auto_compaction</em> = <code>false</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -1065,6 +1063,50 @@ Friends</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> gs::GraphDB::last_compaction_ts_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="acb155fa5c5c071576b954fec47cc0610"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb155fa5c5c071576b954fec47cc0610">&#9670;&nbsp;</a></span>monitor_thread_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::thread gs::GraphDB::monitor_thread_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac482a3fe5ec916ebe0d91141c76c4668"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac482a3fe5ec916ebe0d91141c76c4668">&#9670;&nbsp;</a></span>monitor_thread_running_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::GraphDB::monitor_thread_running_</td>
         </tr>
       </table>
   </td>

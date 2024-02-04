@@ -109,8 +109,8 @@ Private Member Functions</h2></td></tr>
 <tr class="separator:a4ad228810ba2acec88a0d760a0ed9f6a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d78b50e156d3cd219d89150b92c81ec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ODPSReadClient.html#a9d78b50e156d3cd219d89150b92c81ec">getReadSessionStatus</a> (const std::string &amp;session_id, int *split_count, const TableIdentifier &amp;table_identifier)</td></tr>
 <tr class="separator:a9d78b50e156d3cd219d89150b92c81ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a6a7146dbb0553d05756d9adb5b264313"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ODPSReadClient.html#a6a7146dbb0553d05756d9adb5b264313">producerRoutine</a> (const std::string &amp;session_id, const TableIdentifier &amp;table_identifier, std::vector&lt; std::vector&lt; std::shared_ptr&lt; arrow::RecordBatch &gt;&gt;&gt; &amp;all_batches_, const std::vector&lt; int &gt; &amp;indices) const</td></tr>
-<tr class="separator:a6a7146dbb0553d05756d9adb5b264313"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad77b1cd3024a10d16a84af869c965868"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ODPSReadClient.html#ad77b1cd3024a10d16a84af869c965868">producerRoutine</a> (const std::string &amp;session_id, const TableIdentifier &amp;table_identifier, std::vector&lt; std::vector&lt; std::shared_ptr&lt; arrow::RecordBatch &gt;&gt;&gt; &amp;all_batches_, std::vector&lt; int &gt; &amp;&amp;indices) const</td></tr>
+<tr class="separator:ad77b1cd3024a10d16a84af869c965868"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:addfd7865686a41817c867dd89b0050cb"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1ODPSReadClient.html#addfd7865686a41817c867dd89b0050cb">readRows</a> (std::string session_id, const TableIdentifier &amp;table_identifier, std::vector&lt; std::shared_ptr&lt; arrow::RecordBatch &gt;&gt; &amp;res_batches, int split_index) const</td></tr>
 <tr class="separator:addfd7865686a41817c867dd89b0050cb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -381,8 +381,8 @@ Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a6a7146dbb0553d05756d9adb5b264313"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6a7146dbb0553d05756d9adb5b264313">&#9670;&nbsp;</a></span>producerRoutine()</h2>
+<a id="ad77b1cd3024a10d16a84af869c965868"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad77b1cd3024a10d16a84af869c965868">&#9670;&nbsp;</a></span>producerRoutine()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -411,7 +411,7 @@ Private Attributes</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const std::vector&lt; int &gt; &amp;&#160;</td>
+          <td class="paramtype">std::vector&lt; int &gt; &amp;&amp;&#160;</td>
           <td class="paramname"><em>indices</em>&#160;</td>
         </tr>
         <tr>

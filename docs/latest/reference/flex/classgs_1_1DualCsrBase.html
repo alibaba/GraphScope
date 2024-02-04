@@ -102,18 +102,24 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a4353cdbc6c9d727a3a9e0b51525119f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af2e4ee969cf3f0b03e3b7d2cfe042b39"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#af2e4ee969cf3f0b03e3b7d2cfe042b39">Dump</a> (const std::string &amp;oe_name, const std::string &amp;ie_name, const std::string &amp;edata_name, const std::string &amp;new_snapshot_dir)=0</td></tr>
 <tr class="separator:af2e4ee969cf3f0b03e3b7d2cfe042b39"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a16c0d703f1319a9353dd59ee53594cb6"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a16c0d703f1319a9353dd59ee53594cb6">PutEdge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;data, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
-<tr class="separator:a16c0d703f1319a9353dd59ee53594cb6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a096caafc71ad20a8682a30e8a9fb20c4"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a096caafc71ad20a8682a30e8a9fb20c4">SortByEdgeData</a> (<a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts)=0</td></tr>
-<tr class="separator:a096caafc71ad20a8682a30e8a9fb20c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2960dd8c8e12a19e6ee838d95bf610ec"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a2960dd8c8e12a19e6ee838d95bf610ec">IngestEdge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, grape::OutArchive &amp;oarc, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> timestamp, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
 <tr class="separator:a2960dd8c8e12a19e6ee838d95bf610ec"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a096caafc71ad20a8682a30e8a9fb20c4"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a096caafc71ad20a8682a30e8a9fb20c4">SortByEdgeData</a> (<a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> ts)=0</td></tr>
+<tr class="separator:a096caafc71ad20a8682a30e8a9fb20c4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa47fd3945847a884af54c5adc29eeeb7"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#aa47fd3945847a884af54c5adc29eeeb7">UpdateEdge</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst, const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;oarc, <a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a> timestamp, <a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;alloc)=0</td></tr>
 <tr class="separator:aa47fd3945847a884af54c5adc29eeeb7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac34136a946b0d86fa10677ee61c37086"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1MutableCsrBase.html">MutableCsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#ac34136a946b0d86fa10677ee61c37086">GetInCsr</a> ()=0</td></tr>
-<tr class="separator:ac34136a946b0d86fa10677ee61c37086"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a535ac97150f4fc2bc32575bc2058e367"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1MutableCsrBase.html">MutableCsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a535ac97150f4fc2bc32575bc2058e367">GetOutCsr</a> ()=0</td></tr>
-<tr class="separator:a535ac97150f4fc2bc32575bc2058e367"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a54eb284005c01fb681b403d1ddd6b9e7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a54eb284005c01fb681b403d1ddd6b9e7">Resize</a> (<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> src_vertex_num, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> dst_vertex_num)</td></tr>
+<tr class="separator:a54eb284005c01fb681b403d1ddd6b9e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a29d9dc883a7218111f93af89f2848398"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a29d9dc883a7218111f93af89f2848398">Warmup</a> (int thread_num)</td></tr>
+<tr class="separator:a29d9dc883a7218111f93af89f2848398"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a382041ce1ae26f8b80c72d9a3818a391"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a382041ce1ae26f8b80c72d9a3818a391">GetInCsr</a> ()=0</td></tr>
+<tr class="separator:a382041ce1ae26f8b80c72d9a3818a391"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab4cedafd31971728056f7c2c4637219e"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#ab4cedafd31971728056f7c2c4637219e">GetOutCsr</a> ()=0</td></tr>
+<tr class="separator:ab4cedafd31971728056f7c2c4637219e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4ba058618cca5b1398fd442febee6a13"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a4ba058618cca5b1398fd442febee6a13">GetInCsr</a> () const =0</td></tr>
+<tr class="separator:a4ba058618cca5b1398fd442febee6a13"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75937d3f5f5f70a44b564a7daa35863e"><td class="memItemLeft" align="right" valign="top">virtual const <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1DualCsrBase.html#a75937d3f5f5f70a44b564a7daa35863e">GetOutCsr</a> () const =0</td></tr>
+<tr class="separator:a75937d3f5f5f70a44b564a7daa35863e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab14bad1490f75288ee068e0c302aff0f"></a>
@@ -279,8 +285,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="ac34136a946b0d86fa10677ee61c37086"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac34136a946b0d86fa10677ee61c37086">&#9670;&nbsp;</a></span>GetInCsr()</h2>
+<a id="a4ba058618cca5b1398fd442febee6a13"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ba058618cca5b1398fd442febee6a13">&#9670;&nbsp;</a></span>GetInCsr() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -289,7 +295,34 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="classgs_1_1MutableCsrBase.html">MutableCsrBase</a>* gs::DualCsrBase::GetInCsr </td>
+          <td class="memname">virtual const <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a>* gs::DualCsrBase::GetInCsr </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a298e4059fa8b6f888b35c3f98f5b2267">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a0fe3cc96b3625e2e45e5e5357c7093a1">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a382041ce1ae26f8b80c72d9a3818a391"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a382041ce1ae26f8b80c72d9a3818a391">&#9670;&nbsp;</a></span>GetInCsr() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a>* gs::DualCsrBase::GetInCsr </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -302,12 +335,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a631204a46bf373a30c8e1b6f8d50f7b9">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a248e56d35ca27280f180985eec871611">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad0bddf3d9925bf9e2316a917b0173ae2">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a2e4a28b362919abfe0202f5c58082011">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
-<a id="a535ac97150f4fc2bc32575bc2058e367"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a535ac97150f4fc2bc32575bc2058e367">&#9670;&nbsp;</a></span>GetOutCsr()</h2>
+<a id="a75937d3f5f5f70a44b564a7daa35863e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75937d3f5f5f70a44b564a7daa35863e">&#9670;&nbsp;</a></span>GetOutCsr() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -316,7 +349,34 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="classgs_1_1MutableCsrBase.html">MutableCsrBase</a>* gs::DualCsrBase::GetOutCsr </td>
+          <td class="memname">virtual const <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a>* gs::DualCsrBase::GetOutCsr </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ae9d49e3ab47dca825374e5bd5414fd34">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a80b6af2d4fce2958f88baeaa97e81109">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="ab4cedafd31971728056f7c2c4637219e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab4cedafd31971728056f7c2c4637219e">&#9670;&nbsp;</a></span>GetOutCsr() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual <a class="el" href="classgs_1_1CsrBase.html">CsrBase</a>* gs::DualCsrBase::GetOutCsr </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -329,7 +389,7 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a0ca782f8d1a27a145da1affce0d75d5d">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#aa8f4ef40ef6118e39a53e88f07eccf43">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a45f6339fd8c0ae63311e9e40190c1ba7">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#ac5afae893a17311e038b386a319de0a5">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -569,8 +629,8 @@ Public Member Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a16c0d703f1319a9353dd59ee53594cb6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a16c0d703f1319a9353dd59ee53594cb6">&#9670;&nbsp;</a></span>PutEdge()</h2>
+<a id="a54eb284005c01fb681b403d1ddd6b9e7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a54eb284005c01fb681b403d1ddd6b9e7">&#9670;&nbsp;</a></span>Resize()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -579,34 +639,16 @@ Public Member Functions</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual void gs::DualCsrBase::PutEdge </td>
+          <td class="memname">void gs::DualCsrBase::Resize </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
-          <td class="paramname"><em>src</em>, </td>
+          <td class="paramname"><em>src_vertex_num</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype"><a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&#160;</td>
-          <td class="paramname"><em>dst</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">const <a class="el" href="structgs_1_1Any.html">Any</a> &amp;&#160;</td>
-          <td class="paramname"><em>data</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a623c7eb1bad3c06968c77306473d4df0">timestamp_t</a>&#160;</td>
-          <td class="paramname"><em>ts</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> &amp;&#160;</td>
-          <td class="paramname"><em>alloc</em>&#160;</td>
+          <td class="paramname"><em>dst_vertex_num</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -616,12 +658,10 @@ Public Member Functions</h2></td></tr>
       </table>
   </td>
   <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">pure virtual</span></span>  </td>
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
   </tr>
 </table>
 </div><div class="memdoc">
-
-<p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#a6e39d9e3a04c83ee8c93a8f904a1c91d">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#aec76b7331014d7a3b873abdc76483d6b">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
 
 </div>
 </div>
@@ -706,6 +746,32 @@ Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Implemented in <a class="el" href="classgs_1_1DualCsr_3_01std_1_1string__view_01_4.html#ad965a39b5d26bf6267e8bc7ab80418e0">gs::DualCsr&lt; std::string_view &gt;</a>, and <a class="el" href="classgs_1_1DualCsr.html#a3de7bbf92fc2ddf2abd23a1755fe6bfd">gs::DualCsr&lt; EDATA_T &gt;</a>.</p>
+
+</div>
+</div>
+<a id="a29d9dc883a7218111f93af89f2848398"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29d9dc883a7218111f93af89f2848398">&#9670;&nbsp;</a></span>Warmup()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::DualCsrBase::Warmup </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>thread_num</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
 
 </div>
 </div>

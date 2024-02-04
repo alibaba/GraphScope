@@ -134,6 +134,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:ac0e824d3027272b459067cfea1836073"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9d89e34e55de81e334048b07cda2ed0f"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a9d89e34e55de81e334048b07cda2ed0f">Compact</a> ()</td></tr>
 <tr class="separator:a9d89e34e55de81e334048b07cda2ed0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6aa23111eb678d8aa0dd02bebcfcff29"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a6aa23111eb678d8aa0dd02bebcfcff29">eval_duration</a> () const</td></tr>
+<tr class="separator:a6aa23111eb678d8aa0dd02bebcfcff29"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0d4e6af088a81edcbb5b19d872854df6"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structgs_1_1AppMetric.html">AppMetric</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a0d4e6af088a81edcbb5b19d872854df6">GetAppMetric</a> (int idx) const</td></tr>
 <tr class="separator:a0d4e6af088a81edcbb5b19d872854df6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2105047554184e5aac30acc26cd51e82"><td class="memItemLeft" align="right" valign="top">int64_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a2105047554184e5aac30acc26cd51e82">query_num</a> () const</td></tr>
@@ -166,6 +168,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a7d359bedf750181e6cae7a581d4e17c6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a987a2d9f630e55c3a8473e4f28005342"><td class="memItemLeft" align="right" valign="top">std::array&lt; <a class="el" href="structgs_1_1AppMetric.html">AppMetric</a>, <a class="el" href="classgs_1_1GraphDBSession.html#a782c0ee0f294f7babe55d6ebf5f192c1">MAX_PLUGIN_NUM</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a987a2d9f630e55c3a8473e4f28005342">app_metrics_</a></td></tr>
 <tr class="separator:a987a2d9f630e55c3a8473e4f28005342"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a71aee23752ef36e3d4d7cc173625e81c"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a71aee23752ef36e3d4d7cc173625e81c">eval_duration_</a></td></tr>
+<tr class="separator:a71aee23752ef36e3d4d7cc173625e81c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1d866056341d87e917d6ee05b8b6e501"><td class="memItemLeft" align="right" valign="top">std::atomic&lt; int64_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1GraphDBSession.html#a1d866056341d87e917d6ee05b8b6e501">query_num_</a></td></tr>
 <tr class="separator:a1d866056341d87e917d6ee05b8b6e501"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -297,6 +301,23 @@ Private Attributes</h2></td></tr>
           <td class="paramtype">const std::string &amp;&#160;</td>
           <td class="paramname"><em>input</em></td><td>)</td>
           <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a6aa23111eb678d8aa0dd02bebcfcff29"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6aa23111eb678d8aa0dd02bebcfcff29">&#9670;&nbsp;</a></span>eval_duration()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double gs::GraphDBSession::eval_duration </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -690,6 +711,28 @@ Private Attributes</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname"><a class="el" href="classgs_1_1GraphDB.html">GraphDB</a>&amp; gs::GraphDBSession::db_</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">private</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a71aee23752ef36e3d4d7cc173625e81c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a71aee23752ef36e3d4d7cc173625e81c">&#9670;&nbsp;</a></span>eval_duration_</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::atomic&lt;int64_t&gt; gs::GraphDBSession::eval_duration_</td>
         </tr>
       </table>
   </td>

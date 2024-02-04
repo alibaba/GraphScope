@@ -774,30 +774,26 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 <td><p>Number of Store Pod</p></td>
 <td><p>2</p></td>
 </tr>
-<tr class="row-even"><td><p>ingestor.replicaCount</p></td>
-<td><p>Number of Ingestor Pod</p></td>
-<td><p>2</p></td>
-</tr>
-<tr class="row-odd"><td><p>dataset.modern</p></td>
+<tr class="row-even"><td><p>dataset.modern</p></td>
 <td><p>Load <a class="reference external" href="https://tinkerpop.apache.org/docs/current/tutorials/getting-started/">modern graph</a> dataset at the start</p></td>
 <td><p>false</p></td>
 </tr>
-<tr class="row-even"><td><p>frontend.replicaCount</p></td>
+<tr class="row-odd"><td><p>frontend.replicaCount</p></td>
 <td><p>Number of Frontend</p></td>
 <td><p>1</p></td>
 </tr>
-<tr class="row-odd"><td><p>frontend.service.type</p></td>
+<tr class="row-even"><td><p>frontend.service.type</p></td>
 <td><p>Kubernetes Service type of frontend</p></td>
 <td><p>NodePort</p></td>
 </tr>
-<tr class="row-even"><td><p>frontend.query.per.second.limit</p></td>
+<tr class="row-odd"><td><p>frontend.query.per.second.limit</p></td>
 <td><p>the maximum qps can be handled by frontend service</p></td>
 <td><p>2147483647 (without limitation)</p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, one Ingestor Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.</p>
+<p>If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.</p>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">--set</span> <span class="pre">key=value[,key=value]</span></code> command to set the parameters for <code class="docutils literal notranslate"><span class="pre">helm</span> <span class="pre">install</span></code>, for example:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> </span>graphscope/graphscope-store<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--set<span class="w"> </span>auth.username<span class="o">=</span>admin,auth.password<span class="o">=</span><span class="m">123456</span>
@@ -1386,7 +1382,7 @@ make<span class="w"> </span>graphscope-store<span class="w"> </span><span class=
 <h4>Viewing logs<a class="headerlink" href="#viewing-logs" title="Permalink to this heading">#</a></h4>
 <p>You can view the logs of each Pod using the command
 <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">${POD_NAME}</span></code>.</p>
-<p>It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator and Ingestor as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,</p>
+<p>It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store-frontend-0
 kubectl<span class="w"> </span>logs<span class="w"> </span>demo-graphscope-store-store-0
 </pre></div>

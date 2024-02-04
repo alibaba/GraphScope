@@ -71,6 +71,20 @@ $(function() {
 <li>IdIndexerBase()
 : <a class="el" href="classgs_1_1IdIndexerBase.html#a41d3d5b649fc19ed6f794cb50c86b194">gs::IdIndexerBase&lt; INDEX_T &gt;</a>
 </li>
+<li>ImmutableCsrConstEdgeIter()
+: <a class="el" href="classgs_1_1ImmutableCsrConstEdgeIter.html#a7a0a41f7223826a7345f8fb93b325fbf">gs::ImmutableCsrConstEdgeIter&lt; EDATA_T &gt;</a>
+</li>
+<li>ImmutableNbr()
+: <a class="el" href="structgs_1_1ImmutableNbr.html#a972424306e459c45b2a02d3148591e74">gs::ImmutableNbr&lt; EDATA_T &gt;</a>
+, <a class="el" href="structgs_1_1ImmutableNbr_3_01grape_1_1EmptyType_01_4.html#ae1887182800a7a9b66b45ee782c71aee">gs::ImmutableNbr&lt; grape::EmptyType &gt;</a>
+</li>
+<li>ImmutableNbrSlice()
+: <a class="el" href="classgs_1_1ImmutableNbrSlice.html#af926b3ea35fa55ad1ace0ad6e82d1e62">gs::ImmutableNbrSlice&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1ImmutableNbrSlice_3_01std_1_1string__view_01_4.html#a94294cbe7909bf15ce3037825d4c291b">gs::ImmutableNbrSlice&lt; std::string_view &gt;</a>
+</li>
+<li>incoming_edge_mutable()
+: <a class="el" href="classgs_1_1Schema.html#a3583ed6e58edabb5ddebf0cf7da95646">gs::Schema</a>
+</li>
 <li>ingest()
 : <a class="el" href="classgs_1_1ColumnBase.html#a58889b5be1a462289718f7e0c19bb22a">gs::ColumnBase</a>
 , <a class="el" href="classgs_1_1StringMapColumn.html#a1ba0e823e9358ec5b054b2a33c873fa3">gs::StringMapColumn&lt; INDEX_T &gt;</a>
@@ -79,15 +93,6 @@ $(function() {
 , <a class="el" href="classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html#a1ab24990000f087c0e31de9e6c4b406a">gs::TypedColumn&lt; std::string_view &gt;</a>
 , <a class="el" href="classgs_1_1TypedEmptyColumn.html#a6fc554ed02021437b252c8f90b0f3f10">gs::TypedEmptyColumn&lt; T &gt;</a>
 , <a class="el" href="classgs_1_1TypedEmptyColumn_3_01std_1_1string__view_01_4.html#ab5e646f8399d400e88169abcae03d693">gs::TypedEmptyColumn&lt; std::string_view &gt;</a>
-</li>
-<li>ingest_edge()
-: <a class="el" href="classgs_1_1EmptyCsr.html#a75ded9745b35e6e777b7f1f54cb927e3">gs::EmptyCsr&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1EmptyCsr_3_01std_1_1string__view_01_4.html#a06d8657a8f7180c6777a739d68ee8b18">gs::EmptyCsr&lt; std::string_view &gt;</a>
-, <a class="el" href="classgs_1_1MutableCsr.html#a54992a36cefbe8a1e08b105df34921af">gs::MutableCsr&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1MutableCsr_3_01std_1_1string__view_01_4.html#a5967c6e7ef523d99e3d48f49efa7e1c9">gs::MutableCsr&lt; std::string_view &gt;</a>
-, <a class="el" href="classgs_1_1MutableCsrBase.html#a5074c7536118bfd9f95c0d6cb0021f55">gs::MutableCsrBase</a>
-, <a class="el" href="classgs_1_1SingleMutableCsr.html#ab1c2b8df6c9bdd459fb0e3995e9169ab">gs::SingleMutableCsr&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1SingleMutableCsr_3_01std_1_1string__view_01_4.html#a3c1279b179caf3caa0c20190616845a1">gs::SingleMutableCsr&lt; std::string_view &gt;</a>
 </li>
 <li>IngestEdge()
 : <a class="el" href="classgs_1_1DualCsr.html#a0dc7d49266a69312a216a65f7431c590">gs::DualCsr&lt; EDATA_T &gt;</a>
@@ -134,7 +139,7 @@ $(function() {
 </li>
 <li>insert()
 : <a class="el" href="classgs_1_1LFIndexer.html#ae1874eda63d7fb6f3fcbda59efb91fa3">gs::LFIndexer&lt; INDEX_T &gt;</a>
-, <a class="el" href="classgs_1_1Table.html#ad238826670a14cd2c0cc1f6183ed52f3">gs::Table</a>
+, <a class="el" href="classgs_1_1Table.html#a52c88009b5305fdc978862fcd910d69e">gs::Table</a>
 </li>
 <li>InsertTransaction()
 : <a class="el" href="classgs_1_1InsertTransaction.html#aa32718df89767dd384342bc05d8a9aea">gs::InsertTransaction</a>
@@ -146,11 +151,12 @@ $(function() {
 : <a class="el" href="structgs_1_1PropertyType.html#a0b2e984bed5dadf392cafd367d685026">gs::PropertyType</a>
 </li>
 <li>is_valid()
-: <a class="el" href="classgs_1_1MutableCsrConstEdgeIterBase.html#a808de52031c710008fe043791494df2b">gs::MutableCsrConstEdgeIterBase</a>
-, <a class="el" href="classgs_1_1MutableCsrEdgeIterBase.html#aee38b9d4acef59686ca81498be8e1a94">gs::MutableCsrEdgeIterBase</a>
-, <a class="el" href="classgs_1_1TypedMutableCsrConstEdgeIter.html#a896190b780a534bce9119ba98a010bad">gs::TypedMutableCsrConstEdgeIter&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1TypedMutableCsrEdgeIter.html#a97685e0759d5506014ceb48bf4fa8f0a">gs::TypedMutableCsrEdgeIter&lt; EDATA_T &gt;</a>
-, <a class="el" href="classgs_1_1TypedMutableCsrEdgeIter_3_01std_1_1string__view_01_4.html#ab31c15c633f07a95cb172678cf743abd">gs::TypedMutableCsrEdgeIter&lt; std::string_view &gt;</a>
+: <a class="el" href="classgs_1_1CsrConstEdgeIterBase.html#ae5c0c1491de1cd3bd53cfddc4b3bc50f">gs::CsrConstEdgeIterBase</a>
+, <a class="el" href="classgs_1_1CsrEdgeIterBase.html#ac634941ef88262b33e1d5a148e48629c">gs::CsrEdgeIterBase</a>
+, <a class="el" href="classgs_1_1ImmutableCsrConstEdgeIter.html#a282b2602a88bc987d1324409d7714285">gs::ImmutableCsrConstEdgeIter&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableCsrConstEdgeIter.html#a38a37fe7dc0c00daf56a8e8b06261755">gs::MutableCsrConstEdgeIter&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableCsrEdgeIter.html#ae21c928a5e79a4077a5b5fad80623bb4">gs::MutableCsrEdgeIter&lt; EDATA_T &gt;</a>
+, <a class="el" href="classgs_1_1MutableCsrEdgeIter_3_01std_1_1string__view_01_4.html#afdd9c63fde17e33a87230147b25304e8">gs::MutableCsrEdgeIter&lt; std::string_view &gt;</a>
 </li>
 <li>IsValid()
 : <a class="el" href="classgs_1_1ReadTransaction_1_1edge__iterator.html#a7971f7f18c0437457f8311e2e9c4df6f">gs::ReadTransaction::edge_iterator</a>
