@@ -823,6 +823,26 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         '404':
           description: Reveiver not found
+  /api/v1/file/uploading:
+    post:
+      tags:
+        - utils
+      operationId: upload_file
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              # a binary file of any type
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 components:
   schemas:
     ApiResponse:

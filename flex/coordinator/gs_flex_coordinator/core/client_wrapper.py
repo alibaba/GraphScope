@@ -159,5 +159,8 @@ class ClientWrapper(object):
         job_id = self._client.create_dataloading_job(graph_name, schema_mapping_dict)
         return job_id
 
+    def upload_file(self, body: bytes) -> str:
+        return "xxx"
+
 
 client_wrapper = ClientWrapper()

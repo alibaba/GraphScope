@@ -26,6 +26,7 @@ from graphscope.flex.rest.api.job_api import JobApi
 from graphscope.flex.rest.api.legacy_api import LegacyApi
 from graphscope.flex.rest.api.procedure_api import ProcedureApi
 from graphscope.flex.rest.api.service_api import ServiceApi
+from graphscope.flex.rest.api.utils_api import UtilsApi
 
 # import ApiClient
 from graphscope.flex.rest.api_response import ApiResponse

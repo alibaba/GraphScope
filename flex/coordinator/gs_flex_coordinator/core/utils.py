@@ -20,8 +20,10 @@ import datetime
 import functools
 import logging
 import random
+import requests
 import socket
 import string
+from typing import Union
 
 logger = logging.getLogger("graphscope")
 
@@ -82,3 +84,16 @@ def get_internal_ip() -> str:
     hostname = socket.gethostname()
     internal_ip = socket.gethostbyname(hostname)
     return internal_ip
+
+
+def get_public_ip() -> Union[str, None]:
+    try:
+        response = requests.get("https://api.ipify.org?format=json")
+        if response.status_code == 200:
+            data = response.json()
+            return data["ip"]
+        else:
+            return None
+    except requests.exceptions.RequestException as e:
+        logger.warn("Failed to get public ip: %s", str(e))
+        return None

@@ -352,6 +352,26 @@ paths:
       tags:
       - deployment
       x-openapi-router-controller: gs_flex_coordinator.controllers.deployment_controller
+  /api/v1/file/uploading:
+    post:
+      operationId: upload_file
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              format: binary
+              type: string
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - utils
+      x-openapi-router-controller: gs_flex_coordinator.controllers.utils_controller
   /api/v1/graph:
     get:
       description: List all graphs

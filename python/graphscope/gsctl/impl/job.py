@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+import itertools
+import os
 from typing import List
 
 import graphscope.flex.rest
@@ -45,6 +47,21 @@ def get_job_by_id(job_id: str) -> JobStatus:
 
 
 def create_dataloading_job(graph_name: str, job_config: dict) -> str:
+    # upload files
+    for mapping in itertools.chain(
+        job_config["vertex_mappings"], job_config["edge_mappings"]
+    ):
+        for index, location in enumerate(mapping["inputs"]):
+            # path begin with "@" represents the local file
+            if location.startswith("@"):
+                location = location[1:]
+                filename = os.path.basename(location)
+                with open(location, "rb") as f:
+                    content = f.read()
+                path_after_uploaded = upload_file(filename, content, location)
+                mapping["inputs"][index] = path_after_uploaded
+    print('!!!!!!!!: ', job_config)
+    # create job
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
@@ -62,3 +79,12 @@ def delete_job_by_id(job_id: str) -> str:
     ) as api_client:
         api_instance = graphscope.flex.rest.JobApi(api_client)
         return api_instance.delete_job_by_id(job_id)
+
+
+def upload_file(filename: str, content: bytes, location: str) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.UtilsApi(api_client)
+        return api_instance.upload_file(content)
