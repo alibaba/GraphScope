@@ -23,6 +23,7 @@ import com.alibaba.graphscope.groot.common.exception.BackupException;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.store.StoreBackupId;
@@ -449,9 +450,7 @@ public class BackupManager {
 
     private void restoreGraphMeta(int globalBackupId, String metaRestorePath) throws IOException {
         BackupInfo restoredBackupInfo = this.globalBackupIdToInfo.get(globalBackupId);
-        Configs.Builder builder = Configs.newBuilder();
-        builder.put("file.meta.store.path", metaRestorePath);
-        MetaStore restoredMetaStore = new FileMetaStore(builder.build());
+        MetaStore restoredMetaStore = new FileMetaStore(metaRestorePath);
 
         long restoredSnapshotId = restoredBackupInfo.getSnapshotId();
         restoredMetaStore.write(

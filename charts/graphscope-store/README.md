@@ -99,7 +99,6 @@ Here we give a list of most frequently used parameters.
 | store.replicaCount | Number of nodes | 2 |
 | frontend.replicaCount | Number of nodes | 1 |
 | frontend.service.type| Kubernetes Service type| NodePort |
-| ingestor.replicaCount | Number of nodes | 1 |
 | coordinator.replicaCount | Number of nodes | 1 |
 
 ### Kafka chart parameters

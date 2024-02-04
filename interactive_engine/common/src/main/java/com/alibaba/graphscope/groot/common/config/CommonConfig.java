@@ -33,8 +33,6 @@ public class CommonConfig {
             Config.stringConfig("frontend.rpc.port", "");
     public static final Config<String> COORDINATOR_RPC_PORT =
             Config.stringConfig("coordinator.rpc.port", "");
-    public static final Config<String> INGESTOR_RPC_PORT =
-            Config.stringConfig("ingestor.rpc.port", "");
     public static final Config<String> STORE_RPC_PORT = Config.stringConfig("store.rpc.port", "");
 
     public static final Config<Integer> RPC_THREAD_COUNT =
@@ -55,14 +53,8 @@ public class CommonConfig {
     public static final Config<Integer> FRONTEND_NODE_COUNT =
             Config.intConfig(String.format(NODE_COUNT_FORMAT, RoleType.FRONTEND.getName()), 1);
 
-    public static final Config<Integer> INGESTOR_NODE_COUNT =
-            Config.intConfig(String.format(NODE_COUNT_FORMAT, RoleType.INGESTOR.getName()), 2);
-
     public static final Config<Integer> COORDINATOR_NODE_COUNT =
             Config.intConfig(String.format(NODE_COUNT_FORMAT, RoleType.COORDINATOR.getName()), 1);
-
-    public static final Config<Integer> INGESTOR_QUEUE_COUNT =
-            Config.intConfig("ingestor.queue.count", 2);
 
     public static final Config<Integer> PARTITION_COUNT = Config.intConfig("partition.count", 1);
 

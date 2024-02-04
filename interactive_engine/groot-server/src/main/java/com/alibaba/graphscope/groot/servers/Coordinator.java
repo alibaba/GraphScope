@@ -18,11 +18,13 @@ import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.coordinator.*;
+import com.alibaba.graphscope.groot.coordinator.IngestorWriteClient;
 import com.alibaba.graphscope.groot.discovery.*;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
+import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
@@ -42,25 +44,26 @@ import java.io.IOException;
 public class Coordinator extends NodeBase {
 
     private CuratorFramework curator;
-    private NodeDiscovery discovery;
-    private SnapshotManager snapshotManager;
-    private MetaService metaService;
-    private SchemaManager schemaManager;
-    private SnapshotNotifier snapshotNotifier;
-    private RpcServer rpcServer;
-    private ChannelManager channelManager;
-    private LogRecycler logRecycler;
-    private GraphInitializer graphInitializer;
-    private IdAllocator idAllocator;
-    private BackupManager backupManager;
+    private final NodeDiscovery discovery;
+    private final SnapshotManager snapshotManager;
+    private final MetaService metaService;
+    private final SchemaManager schemaManager;
+    private final SnapshotNotifier snapshotNotifier;
+    private final RpcServer rpcServer;
+    private final ChannelManager channelManager;
+    private final LogRecycler logRecycler;
+    private final GraphInitializer graphInitializer;
+    private final IdAllocator idAllocator;
+    private final BackupManager backupManager;
 
-    private GarbageCollectManager garbageCollectManager;
+    private final GarbageCollectManager garbageCollectManager;
 
     public Coordinator(Configs configs) {
         super(configs);
         configs = reConfig(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
-        MetaStore metaStore = new FileMetaStore(configs);
+        MetaStore metaStore =
+                new FileMetaStore(CoordinatorConfig.FILE_META_STORE_PATH.get(configs));
         if (CommonConfig.DISCOVERY_MODE.get(configs).equalsIgnoreCase("file")) {
             this.discovery = new FileDiscovery(configs);
         } else {
@@ -76,7 +79,7 @@ public class Coordinator extends NodeBase {
                         this.channelManager, RoleType.FRONTEND, FrontendSnapshotClient::new);
         RoleClients<IngestorSnapshotClient> ingestorSnapshotClients =
                 new RoleClients<>(
-                        this.channelManager, RoleType.INGESTOR, IngestorSnapshotClient::new);
+                        this.channelManager, RoleType.FRONTEND, IngestorSnapshotClient::new);
         WriteSnapshotIdNotifier writeSnapshotIdNotifier =
                 new IngestorWriteSnapshotIdNotifier(configs, ingestorSnapshotClients);
 
@@ -85,7 +88,7 @@ public class Coordinator extends NodeBase {
                 new SnapshotManager(configs, metaStore, logService, writeSnapshotIdNotifier);
         DdlExecutors ddlExecutors = new DdlExecutors();
         RoleClients<IngestorWriteClient> ingestorWriteClients =
-                new RoleClients<>(this.channelManager, RoleType.INGESTOR, IngestorWriteClient::new);
+                new RoleClients<>(this.channelManager, RoleType.FRONTEND, IngestorWriteClient::new);
         DdlWriter ddlWriter = new DdlWriter(ingestorWriteClients);
         this.metaService = new DefaultMetaService(configs);
         RoleClients<StoreSchemaClient> storeSchemaClients =
@@ -104,8 +107,6 @@ public class Coordinator extends NodeBase {
                         this.snapshotManager,
                         this.schemaManager,
                         frontendSnapshotClients);
-        IngestProgressService ingestProgressService =
-                new IngestProgressService(this.snapshotManager);
         SnapshotCommitService snapshotCommitService =
                 new SnapshotCommitService(this.snapshotManager);
         SchemaService schemaService = new SchemaService(this.schemaManager);
@@ -135,7 +136,6 @@ public class Coordinator extends NodeBase {
                 new RpcServer(
                         configs,
                         localNodeProvider,
-                        ingestProgressService,
                         snapshotCommitService,
                         schemaService,
                         idAllocateService,

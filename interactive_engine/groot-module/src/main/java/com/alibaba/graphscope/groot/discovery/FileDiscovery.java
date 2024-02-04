@@ -38,7 +38,6 @@ public class FileDiscovery implements NodeDiscovery {
         // Store related nodes
         String storePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
         String frontendPrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
-        String ingestorPrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(configs);
         String coordinatorPrefix = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
 
         // Frontend nodes
@@ -46,12 +45,6 @@ public class FileDiscovery implements NodeDiscovery {
         Map<Integer, GrootNode> frontendNodes =
                 makeRoleNodes(frontendCount, frontendPrefix, FRONTEND);
         this.allNodes.put(FRONTEND, frontendNodes);
-
-        // Ingestor nodes
-        int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
-        Map<Integer, GrootNode> ingestorNodes =
-                makeRoleNodes(ingestorCount, ingestorPrefix, INGESTOR);
-        this.allNodes.put(INGESTOR, ingestorNodes);
 
         // Coordinator nodes
         int coordinatorCount = CommonConfig.COORDINATOR_NODE_COUNT.get(configs);

@@ -71,14 +71,13 @@ helm status demo
 | auth.username | Username. If empty, then there's no authentication | "" |
 | auth.password | Password | "" |
 | store.replicaCount | Number of Store Pod | 2 |
-| ingestor.replicaCount | Number of Ingestor Pod | 2 |
 | dataset.modern | Load [modern graph](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/) dataset at the start | false |
 | frontend.replicaCount | Number of Frontend | 1 |
 | frontend.service.type | Kubernetes Service type of frontend | NodePort |
 | frontend.query.per.second.limit | the maximum qps can be handled by frontend service | 2147483647 (without limitation) |
 
 
-If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, one Ingestor Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.
+If Groot is launched with the default configuration, then two Store Pods, one Frontend Pod, and one Coordinator Pod will be started. The number of Coordinator nodes is fixed to 1.
 
 Use the `--set key=value[,key=value]` command to set the parameters for `helm install`, for example:
 
@@ -662,7 +661,7 @@ Groot stores the graph data in `/var/lib/graphscope-store` directory in the Stor
 You can view the logs of each Pod using the command 
 `kubectl logs ${POD_NAME}`.
 
- It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator and Ingestor as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,
+ It is common to check the logs of Frontend and Store roles. When debugging, it is often necessary to check the logs of Coordinator as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. For example,
 
 ```bash
 kubectl logs demo-graphscope-store-frontend-0

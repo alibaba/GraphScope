@@ -37,12 +37,6 @@ public class SnapshotUpdateClient extends RpcClient {
         this.stub = CoordinatorSnapshotServiceGrpc.newBlockingStub(channel);
     }
 
-    public SnapshotUpdateClient(
-            CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub) {
-        super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
-    }
-
     public void updateSnapshot(int frontendId, long snapshotId) throws RuntimeException {
         UpdateMinQuerySnapshotIdRequest req =
                 UpdateMinQuerySnapshotIdRequest.newBuilder()

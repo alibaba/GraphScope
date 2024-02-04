@@ -57,8 +57,9 @@ public class KafkaLogReader implements LogReader {
         long earliest = getOffset(client, partition, OffsetSpec.earliest());
         latest = getOffset(client, partition, OffsetSpec.latest());
 
-        // Get offset from timestamp
-        if (offset == -1) {
+        if (offset == -1 && timestamp == -1) { // Seek to end
+            offset = latest;
+        } else if (offset == -1) { // Get offset from timestamp
             offset = getOffset(client, partition, OffsetSpec.forTimestamp(timestamp));
         }
         if (earliest > offset || offset > latest) {
@@ -66,6 +67,7 @@ public class KafkaLogReader implements LogReader {
                     "invalid offset " + offset + ", hint: [" + earliest + ", " + latest + ")");
         }
         consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
+
         consumer.assign(List.of(partition));
         consumer.seek(partition, offset);
         nextReadOffset = offset;
@@ -106,6 +108,29 @@ public class KafkaLogReader implements LogReader {
         nextReadOffset = record.offset() + 1;
         LogEntry v = record.value();
         return new ReadLogEntry(record.offset(), v);
+    }
+
+    @Override
+    public ConsumerRecord<LogEntry, LogEntry> readNextRecord() {
+        if (nextReadOffset == latest) {
+            return null;
+        }
+        while (iterator == null || !iterator.hasNext()) {
+            ConsumerRecords<LogEntry, LogEntry> consumerRecords =
+                    consumer.poll(Duration.ofMillis(100L));
+            if (consumerRecords == null || consumerRecords.isEmpty()) {
+                logger.info("polled nothing from Kafka. nextReadOffset is [{}]", nextReadOffset);
+                continue;
+            }
+            iterator = consumerRecords.iterator();
+        }
+        ConsumerRecord<LogEntry, LogEntry> record = iterator.next();
+        nextReadOffset = record.offset() + 1;
+        return record;
+    }
+
+    public ConsumerRecords<LogEntry, LogEntry> getLatestUpdates() {
+        return consumer.poll(Duration.ofMillis(1000L));
     }
 
     @Override

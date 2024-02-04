@@ -11,34 +11,31 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.ingestor;
+package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
+import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.proto.groot.*;
 
-import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-
-import java.util.List;
 
 public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBase {
 
-    private final IngestService ingestService;
+    private final KafkaAppender kafkaAppender;
 
-    public IngestorWriteService(IngestService ingestService) {
-        this.ingestService = ingestService;
+    public IngestorWriteService(KafkaAppender kafkaAppender) {
+        this.kafkaAppender = kafkaAppender;
     }
 
     @Override
     public void writeIngestor(
             WriteIngestorRequest request, StreamObserver<WriteIngestorResponse> responseObserver) {
         try {
-            int queueId = request.getQueueId();
             String requestId = request.getRequestId();
             OperationBatch operationBatch = OperationBatch.parseProto(request.getOperationBatch());
-            this.ingestService.ingestBatch(
+            this.kafkaAppender.ingestBatch(
                     requestId,
-                    queueId,
                     operationBatch,
                     new IngestCallback() {
                         @Override
@@ -59,19 +56,5 @@ public class IngestorWriteService extends IngestorWriteGrpc.IngestorWriteImplBas
         } catch (Exception e) {
             responseObserver.onError(e);
         }
-    }
-
-    @Override
-    public void replayWAL(
-            ReplayWALRequest request, StreamObserver<ReplayWALResponse> responseObserver) {
-        try {
-            List<Long> ids =
-                    ingestService.replayDMLRecordsFrom(request.getOffset(), request.getTimestamp());
-            responseObserver.onNext(ReplayWALResponse.newBuilder().addAllSnapshotId(ids).build());
-        } catch (Exception e) {
-            responseObserver.onError(
-                    Status.INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
-        }
-        responseObserver.onCompleted();
     }
 }
