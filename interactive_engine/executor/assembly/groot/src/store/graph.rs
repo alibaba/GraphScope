@@ -470,9 +470,18 @@ pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
     match graph_store_ptr.try_catch_up_with_primary() {
         Ok(_) => JnaResponse::new_success(),
         Err(e) => {
-            let msg = format!("Error during catch up primary {:?}", e);
-            error!("{}", msg);
-            JnaResponse::new_error(&msg)
+            error!("Error during catch up primary {:?}", e);
+            match graph_store_ptr.reopen() {
+                Ok(_) => {
+                    info!("Reopened store");
+                    JnaResponse::new_success()
+                },
+                Err(e) => {
+                    let msg = format!("Reopen failed: {:?}", e);
+                    error!("{}", msg);
+                    JnaResponse::new_error(&msg)
+                }
+            }
         }
     }
 }

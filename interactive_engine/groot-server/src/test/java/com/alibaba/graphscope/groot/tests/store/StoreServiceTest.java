@@ -45,11 +45,9 @@ public class StoreServiceTest {
                 spy(new StoreService(configs, mockMetaService, new MetricsCollector(configs)));
 
         GraphPartition mockGraphPartition = mock(GraphPartition.class);
-        when(mockGraphPartition.recover()).thenReturn(10L);
         doReturn(mockGraphPartition).when(spyStoreService).makeGraphPartition(any(), eq(0));
 
         spyStoreService.start();
-        assertEquals(spyStoreService.recover(), 10L);
 
         StoreDataBatch storeDataBatch =
                 StoreDataBatch.newBuilder()

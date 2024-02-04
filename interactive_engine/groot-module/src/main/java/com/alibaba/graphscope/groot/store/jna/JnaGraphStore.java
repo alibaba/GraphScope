@@ -93,11 +93,6 @@ public class JnaGraphStore implements GraphPartition {
     }
 
     @Override
-    public long recover() {
-        return 0L;
-    }
-
-    @Override
     public GraphDefPb getGraphDefBlob() throws IOException {
         try (JnaResponse jnaResponse = GraphLibrary.INSTANCE.getGraphDefBlob(this.pointer)) {
             if (!jnaResponse.success()) {
@@ -129,11 +124,28 @@ public class JnaGraphStore implements GraphPartition {
 
     @Override
     public void garbageCollect(long snapshotId) throws IOException {
+        ensurePointer();
         try (JnaResponse response =
                 GraphLibrary.INSTANCE.garbageCollectSnapshot(this.pointer, snapshotId)) {
             if (!response.success()) {
                 throw new IOException(response.getErrMsg());
             }
+        }
+    }
+
+    @Override
+    public void tryCatchUpWithPrimary() throws IOException {
+        ensurePointer();
+        try (JnaResponse response = GraphLibrary.INSTANCE.tryCatchUpWithPrimary(this.pointer)) {
+            if (!response.success()) {
+                throw new IOException(response.getErrMsg());
+            }
+        }
+    }
+
+    private void ensurePointer() throws IOException {
+        if (this.pointer == null) {
+            throw new IOException("JNA pointer is null");
         }
     }
 }

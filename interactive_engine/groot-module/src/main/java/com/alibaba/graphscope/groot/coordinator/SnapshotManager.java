@@ -18,6 +18,7 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
+import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.meta.MetaStore;
 import com.alibaba.graphscope.groot.wal.LogReader;
@@ -392,8 +393,11 @@ public class SnapshotManager {
                     for (QuerySnapshotListener listener : this.listeners) {
                         try {
                             listener.snapshotAdvanced(newSnapshotId, newDdlSnapshotId);
-                        } catch (Exception e) {
-                            logger.error("error occurred when notify normal listeners", e);
+                        } catch (ServiceNotReadyException e) {
+                            logger.error("Error occurred when notify listeners, Schema manager is recovering.");
+                        }
+                        catch (Exception e) {
+                            logger.error("Error occurred when notify listeners", e);
                         }
                     }
                 }

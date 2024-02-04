@@ -192,37 +192,6 @@ public class StoreService implements MetricsAgent {
         }
     }
 
-    /**
-     * recover data from disk
-     *
-     * @return snapshotId of recovered data.
-     */
-    public long recover() throws InterruptedException, IOException {
-        AtomicLong snapshotId = new AtomicLong(Long.MAX_VALUE);
-        CountDownLatch latch = new CountDownLatch(this.idToPartition.size());
-        for (GraphPartition partition : this.idToPartition.values()) {
-            this.writeExecutor.execute(
-                    () -> {
-                        try {
-                            long partitionSnapshotId = partition.recover();
-                            snapshotId.updateAndGet(x -> Math.min(x, partitionSnapshotId));
-                        } catch (Exception e) {
-                            logger.error("partition #[] recover failed");
-                            snapshotId.set(-1L);
-                        } finally {
-                            latch.countDown();
-                        }
-                    });
-        }
-        latch.await();
-        long recoveredSnapshotId = snapshotId.get();
-        if (recoveredSnapshotId == -1L) {
-            throw new IOException("recover data failed");
-        }
-        logger.info("store data recovered, snapshotId [" + recoveredSnapshotId + "]");
-        return recoveredSnapshotId;
-    }
-
     public boolean batchWrite(StoreDataBatch storeDataBatch)
             throws ExecutionException, InterruptedException {
         long snapshotId = storeDataBatch.getSnapshotId();
@@ -412,6 +381,12 @@ public class StoreService implements MetricsAgent {
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
             GraphPartition partition = entry.getValue();
             partition.garbageCollect(snapshotId);
+        }
+    }
+
+    public void tryCatchUpWithPrimary() throws IOException {
+        for (GraphPartition partition : this.idToPartition.values()) {
+            partition.tryCatchUpWithPrimary();
         }
     }
 
