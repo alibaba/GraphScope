@@ -1,16 +1,18 @@
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
 use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
 use crossbeam_epoch::{self as epoch, Atomic, Guard, Shared, Owned};
-use libc::THREAD_BACKGROUND_POLICY_DARWIN_BG;
+use libc::option;
 use rocksdb::{DBCompactionStyle, DBCompressionType, WriteBatch};
 
 use super::{StorageIter, StorageRes};
 use crate::db::api::*;
 use crate::db::storage::{KvPair, RawBytes};
+use crate::db::util::fs;
 
 pub struct RocksDB {
     db: Atomic<Arc<DB>>,
@@ -38,7 +40,7 @@ impl RocksDB {
     }
 
     pub fn open_as_secondary(options: &HashMap<String, String>) -> GraphResult<Self> {
-        let db = RocksDB::open_helper(options).map_err(|e| {
+        let db = RocksDB::open_helper(options, false).map_err(|e| {
             let msg = format!("open rocksdb at {:?}, error: {:?}", options, e);
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
         })?;
@@ -47,18 +49,21 @@ impl RocksDB {
         Ok(ret)
     }
 
-    pub fn open_helper(options: &HashMap<String, String>) -> Result<DB, ::rocksdb::Error> {
+    pub fn open_helper(options: &HashMap<String, String>, reopen: bool) -> Result<DB, ::rocksdb::Error> {
         let path = options
             .get("store.data.path")
             .expect("invalid config, missing store.data.path");
-        let sec_path = options
+        let mut sec_path = options
             .get("store.data.secondary.path")
-            .expect("invalid config, missing store.data.secondary.path");
-
-        let mut opts = Options::default();
-        opts.set_max_open_files(-1);
-        opts.set_paranoid_checks(false);
-        DB::open_as_secondary(&opts, path, sec_path)
+            .expect("invalid config, missing store.data.secondary.path").clone();
+        if reopen {
+            while Path::new(&sec_path).exists() {
+                sec_path = format!("{}_1", sec_path);
+            }
+        }
+        let opts = init_secondary_options(options);
+        info!("Opening secondary at {}, {}", path, sec_path);
+        DB::open_as_secondary(&opts, path, &sec_path)
     }
 
     fn get_db<'g>(&self, guard: &'g Guard) -> Shared<'g, Arc<DB>> {
@@ -78,6 +83,7 @@ impl RocksDB {
             // guard.defer_destroy(old_db_shared)
             guard.defer(|| drop(old_db_arc))
         }
+        info!("RocksDB replaced");
     }
 
     pub fn get(&self, key: &[u8]) -> GraphResult<Option<StorageRes>> {
@@ -289,10 +295,14 @@ impl RocksDB {
     }
 
     pub fn reopen(&self) -> GraphResult<()> {
-        let db = RocksDB::open_helper(&self.options).map_err(|e| {
+        if !self.is_secondary {
+            return Ok(());
+        }
+        let db = RocksDB::open_helper(&self.options, true).map_err(|e| {
             let msg = format!("open rocksdb at {:?}, error: {:?}", self.options, e);
             gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
         })?;
+        info!("RocksDB Reopened");
         self.replace_db(db);
         Ok(())
     }
@@ -380,60 +390,74 @@ impl RocksDBBackupEngine {
     }
 }
 
+fn init_secondary_options(options: &HashMap<String, String>) -> Options {
+    let mut opts = Options::default();
+    opts.set_max_open_files(-1);
+    if let Some(conf_str) = options.get("store.rocksdb.paranoid.checks") {
+        let check = conf_str.parse().unwrap();
+        opts.set_paranoid_checks(check);
+    }
+    opts
+}
+
 #[allow(unused_variables)]
 fn init_options(options: &HashMap<String, String>) -> Options {
-    let mut ret = Options::default();
-    ret.create_if_missing(true);
-    ret.set_max_background_jobs(6);
-    ret.set_write_buffer_size(256 << 20);
-    ret.set_max_open_files(-1);
-    ret.set_max_log_file_size(1024 << 10);
-    ret.set_keep_log_file_num(10);
+    let mut opts = Options::default();
+    opts.create_if_missing(true);
+    opts.set_max_background_jobs(6);
+    opts.set_write_buffer_size(256 << 20);
+    opts.set_max_open_files(-1);
+    opts.set_max_log_file_size(1024 << 10);
+    opts.set_keep_log_file_num(10);
     // https://github.com/facebook/rocksdb/wiki/Basic-Operations#non-sync-writes
-    ret.set_use_fsync(true);
+    opts.set_use_fsync(true);
 
     if let Some(conf_str) = options.get("store.rocksdb.compression.type") {
         match conf_str.as_str() {
-            "none" => ret.set_compression_type(DBCompressionType::None),
-            "snappy" => ret.set_compression_type(DBCompressionType::Snappy),
-            "zlib" => ret.set_compression_type(DBCompressionType::Zlib),
-            "bz2" => ret.set_compression_type(DBCompressionType::Bz2),
-            "lz4" => ret.set_compression_type(DBCompressionType::Lz4),
-            "lz4hc" => ret.set_compression_type(DBCompressionType::Lz4hc),
-            "zstd" => ret.set_compression_type(DBCompressionType::Zstd),
+            "none" => opts.set_compression_type(DBCompressionType::None),
+            "snappy" => opts.set_compression_type(DBCompressionType::Snappy),
+            "zlib" => opts.set_compression_type(DBCompressionType::Zlib),
+            "bz2" => opts.set_compression_type(DBCompressionType::Bz2),
+            "lz4" => opts.set_compression_type(DBCompressionType::Lz4),
+            "lz4hc" => opts.set_compression_type(DBCompressionType::Lz4hc),
+            "zstd" => opts.set_compression_type(DBCompressionType::Zstd),
             _ => panic!("invalid compression_type config"),
         }
     }
     if let Some(conf_str) = options.get("store.rocksdb.stats.dump.period.sec") {
-        ret.set_stats_dump_period_sec(conf_str.parse().unwrap());
+        opts.set_stats_dump_period_sec(conf_str.parse().unwrap());
     }
     if let Some(conf_str) = options.get("store.rocksdb.compaction.style") {
         match conf_str.as_str() {
-            "universal" => ret.set_compaction_style(DBCompactionStyle::Universal),
-            "level" => ret.set_compaction_style(DBCompactionStyle::Level),
+            "universal" => opts.set_compaction_style(DBCompactionStyle::Universal),
+            "level" => opts.set_compaction_style(DBCompactionStyle::Level),
             _ => panic!("invalid compaction_style config"),
         }
     }
     if let Some(conf_str) = options.get("store.rocksdb.write.buffer.mb") {
         let size_mb: usize = conf_str.parse().unwrap();
         let size_bytes = size_mb * 1024 * 1024;
-        ret.set_write_buffer_size(size_bytes);
+        opts.set_write_buffer_size(size_bytes);
     }
     if let Some(conf_str) = options.get("store.rocksdb.max.write.buffer.num") {
-        ret.set_max_write_buffer_number(conf_str.parse().unwrap());
+        opts.set_max_write_buffer_number(conf_str.parse().unwrap());
     }
     if let Some(conf_str) = options.get("store.rocksdb.level0.compaction.trigger") {
-        ret.set_level_zero_file_num_compaction_trigger(conf_str.parse().unwrap());
+        opts.set_level_zero_file_num_compaction_trigger(conf_str.parse().unwrap());
     }
     if let Some(conf_str) = options.get("store.rocksdb.max.level.base.mb") {
         let size_mb: u64 = conf_str.parse().unwrap();
-        ret.set_max_bytes_for_level_base(size_mb * 1024 * 1024);
+        opts.set_max_bytes_for_level_base(size_mb * 1024 * 1024);
     }
     if let Some(conf_str) = options.get("store.rocksdb.background.jobs") {
         let background_jobs = conf_str.parse().unwrap();
-        ret.set_max_background_jobs(background_jobs);
+        opts.set_max_background_jobs(background_jobs);
     }
-    ret
+    if let Some(conf_str) = options.get("store.rocksdb.paranoid.checks") {
+        let check = conf_str.parse().unwrap();
+        opts.set_paranoid_checks(check);
+    }
+    opts
 }
 
 pub struct RocksDBIter<'a> {
