@@ -85,7 +85,6 @@ jobs:
         wget https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0_1_amd64.deb
         sudo apt-get update && sudo apt-get install libncurses-dev libncurses5-dev
         sudo dpkg -i aocc-compiler-4.1.0_1_amd64.deb
-        sh /opt/AMD/aocc-compiler-4.1.0/setenv_AOCC.sh
     
     - name: Test AOCC compiler
       env:
@@ -94,6 +93,7 @@ jobs:
         OMPI_CC: clang
         OMPI_CXX: clang++
       run: |
+        sh /opt/AMD/aocc-compiler-4.1.0/setenv_AOCC.sh
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
         mkdir build && cd build
