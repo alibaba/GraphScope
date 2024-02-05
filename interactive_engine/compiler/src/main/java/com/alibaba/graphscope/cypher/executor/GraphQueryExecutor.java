@@ -16,7 +16,6 @@
 
 package com.alibaba.graphscope.cypher.executor;
 
-import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
@@ -24,6 +23,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gaia.proto.IrResult;
@@ -53,11 +53,10 @@ public class GraphQueryExecutor extends FabricExecutor {
             "CALL dbms.routing.getRoutingTable($routingContext, $databaseName)";
     private static String PING_STATEMENT = "CALL db.ping()";
     private final Configs graphConfig;
-    private final Antlr4Parser antlr4Parser;
     private final IrMetaQueryCallback metaQueryCallback;
     private final ExecutionClient client;
 
-    private final GraphPlanner graphPlanner;
+    private final QueryIdGenerator idGenerator;
     private final FabricConfig fabricConfig;
     private final QueryCache queryCache;
 
@@ -70,8 +69,7 @@ public class GraphQueryExecutor extends FabricExecutor {
             FabricStatementLifecycles statementLifecycles,
             Executor fabricWorkerExecutor,
             Configs graphConfig,
-            Antlr4Parser antlr4Parser,
-            GraphPlanner graphPlanner,
+            QueryIdGenerator idGenerator,
             IrMetaQueryCallback metaQueryCallback,
             ExecutionClient client,
             QueryCache queryCache) {
@@ -85,8 +83,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                 fabricWorkerExecutor);
         this.fabricConfig = config;
         this.graphConfig = graphConfig;
-        this.antlr4Parser = antlr4Parser;
-        this.graphPlanner = graphPlanner;
+        this.idGenerator = idGenerator;
         this.metaQueryCallback = metaQueryCallback;
         this.client = client;
         this.queryCache = queryCache;
@@ -117,18 +114,17 @@ public class GraphQueryExecutor extends FabricExecutor {
             Preconditions.checkArgument(
                     cacheValue != null,
                     "value should have been loaded automatically in query cache");
-            long jobId = graphPlanner.generateUniqueId();
+            long jobId = idGenerator.generateId();
+            String jobName = idGenerator.generateName(jobId);
             GraphPlanner.Summary planSummary =
                     new GraphPlanner.Summary(
-                            jobId,
-                            graphPlanner.generateUniqueName(jobId),
                             cacheValue.summary.getLogicalPlan(),
                             cacheValue.summary.getPhysicalPlan());
             logger.debug(
                     "cypher query \"{}\", job conf name \"{}\", calcite logical plan {}, hash id"
                             + " {}",
                     statement,
-                    planSummary.getName(),
+                    jobName,
                     planSummary.getLogicalPlan().explain(),
                     cacheKey.hashCode());
             if (planSummary.getLogicalPlan().isReturnEmpty()) {
@@ -137,7 +133,7 @@ public class GraphQueryExecutor extends FabricExecutor {
             logger.info(
                     "cypher query \"{}\", job conf name \"{}\", ir core logical plan {}",
                     statement,
-                    planSummary.getName(),
+                    jobName,
                     planSummary.getPhysicalPlan().explain());
             StatementResults.SubscribableExecution execution;
             if (cacheValue.result != null && cacheValue.result.isCompleted) {
@@ -158,8 +154,8 @@ public class GraphQueryExecutor extends FabricExecutor {
                                     throws Exception {
                                 ExecutionRequest request =
                                         new ExecutionRequest(
-                                                planSummary.getId(),
-                                                planSummary.getName(),
+                                                jobId,
+                                                jobName,
                                                 planSummary.getLogicalPlan(),
                                                 planSummary.getPhysicalPlan());
                                 QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();

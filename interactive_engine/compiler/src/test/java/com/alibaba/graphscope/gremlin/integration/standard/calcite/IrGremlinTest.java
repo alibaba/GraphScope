@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.gremlin.exception;
+package com.alibaba.graphscope.gremlin.integration.standard.calcite;
 
-import org.antlr.v4.runtime.tree.ParseTree;
+import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraphProvider;
+import com.alibaba.graphscope.gremlin.integration.graph.calcite.RemoteTestGraph;
+import com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinTestSuite;
 
-public class UnsupportedEvalException extends UnsupportedOperationException {
-    public UnsupportedEvalException(Class<? extends ParseTree> antlrCtx, String error) {
-        super(
-                String.format(
-                        "antlr context {%s} parsing is unsupported, error is {%s}",
-                        antlrCtx, error));
-    }
-}
+import org.apache.tinkerpop.gremlin.GraphProviderClass;
+import org.junit.runner.RunWith;
+
+@RunWith(IrGremlinTestSuite.class)
+@GraphProviderClass(provider = RemoteTestGraphProvider.class, graph = RemoteTestGraph.class)
+public class IrGremlinTest {}

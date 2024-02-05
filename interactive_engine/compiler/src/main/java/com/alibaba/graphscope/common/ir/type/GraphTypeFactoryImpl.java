@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.config.FrontendConfig;
 
 import org.apache.calcite.jdbc.JavaTypeFactoryImpl;
 import org.apache.calcite.rel.type.RelDataType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.charset.Charset;
 import java.util.List;
@@ -73,5 +74,16 @@ public class GraphTypeFactoryImpl extends JavaTypeFactoryImpl {
     public RelDataType createArbitraryMapType(
             List<RelDataType> keyTypes, List<RelDataType> valueTypes, boolean isNullable) {
         return new ArbitraryMapType(keyTypes, valueTypes, isNullable);
+    }
+
+    @Override
+    public @Nullable RelDataType leastRestrictive(List<RelDataType> types) {
+        if (types.stream().anyMatch(t -> t instanceof GraphLabelType)) {
+            for (RelDataType type : types) {
+                if (!(type instanceof GraphLabelType)) return null;
+            }
+            return types.get(0);
+        }
+        return super.leastRestrictive(types);
     }
 }
