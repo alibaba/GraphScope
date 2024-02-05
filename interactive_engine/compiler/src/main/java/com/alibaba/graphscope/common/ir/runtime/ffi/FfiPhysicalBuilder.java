@@ -19,11 +19,16 @@ package com.alibaba.graphscope.common.ir.runtime.ffi;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
 import com.alibaba.graphscope.common.ir.rel.GraphRelShuttleWrapper;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
@@ -115,6 +120,9 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer> {
                         LIB.appendGroupbyOperator(
                                 ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
             }
+        } else if (original instanceof GraphLogicalDedupBy) {
+            checkFfiResult(
+                    LIB.appendDedupOperator(ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
         } else if (original instanceof GraphLogicalSort) {
             if (((GraphLogicalSort) original).getCollation().getFieldCollations().isEmpty()) {
                 checkFfiResult(
