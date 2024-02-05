@@ -34,6 +34,8 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     protected final RexNode propertyKey;
     protected final GraphBuilder builder;
 
+    public static final int SIMPLE_PREDICATE_CHILD_COUNT = 1, CONNECTIVE_PREDICATE_CHILD_COUNT = 6;
+
     public ExpressionVisitor(GraphBuilder builder, RexNode propertyKey) {
         this.builder = Objects.requireNonNull(builder);
         this.propertyKey = Objects.requireNonNull(propertyKey);
@@ -42,10 +44,10 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate(GremlinGSParser.TraversalPredicateContext ctx) {
         switch (ctx.getChildCount()) {
-            case 1:
+            case SIMPLE_PREDICATE_CHILD_COUNT:
                 // handle simple predicate
                 return visitChildren(ctx);
-            case 6:
+            case CONNECTIVE_PREDICATE_CHILD_COUNT: // simple predicates are connected by and/or
                 final int childIndexOfParameterOperator = 2;
                 final int childIndexOfCaller = 0;
                 final int childIndexOfArgument = 4;
