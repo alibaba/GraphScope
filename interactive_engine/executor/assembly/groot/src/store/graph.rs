@@ -2,7 +2,7 @@
 
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
-use std::str;
+use std::{str, thread};
 use std::sync::{Arc, Once};
 use std::time::Duration;
 
@@ -27,6 +27,7 @@ pub type GraphHandle = *const c_void;
 pub type PartitionGraphHandle = *const c_void;
 pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
 use tikv_jemallocator::Jemalloc;
+use tokio::spawn;
 
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
@@ -132,33 +133,48 @@ pub extern "C" fn writeBatch(
     ptr: GraphHandle, snapshot_id: i64, data: *const u8, len: usize,
 ) -> Box<JnaResponse> {
     trace!("writeBatch");
-    unsafe {
-        let graph_store_ptr = &*(ptr as *const GraphStore);
-        let buf = ::std::slice::from_raw_parts(data, len);
-        let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
-            Ok(has_ddl) => {
-                let mut response = JnaResponse::new_success();
-                response.has_ddl(has_ddl);
-                response
+
+    let graph_store_ptr = unsafe {&*(ptr as *const GraphStore)};
+    let buf = unsafe {::std::slice::from_raw_parts(data, len)};
+    let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
+        Ok((has_ddl, reopen_secondary)) => {
+            if reopen_secondary {
+                thread::spawn(move || {
+                    match graph_store_ptr.reopen(90) {
+                        Ok(_) => {
+                            info!("Reopened store");
+                        },
+                        Err(e) => {
+                            let msg = format!();
+                            error!("Reopen failed: {:?}", e);
+                        }
+                    }
+                });
             }
-            Err(e) => {
-                let err_msg = format!("{:?}", e);
-                JnaResponse::new_error(&err_msg)
-            }
-        };
-        return ret;
-    }
+
+            let mut response = JnaResponse::new_success();
+            response.has_ddl(has_ddl);
+            response
+        }
+        Err(e) => {
+            let err_msg = format!("{:?}", e);
+            JnaResponse::new_error(&err_msg)
+        }
+    };
+    return ret;
+
 }
 
 fn do_write_batch<G: MultiVersionGraph>(
     graph: &G, snapshot_id: SnapshotId, buf: &[u8],
-) -> GraphResult<bool> {
+) -> GraphResult<(bool, bool)> {
     trace!("do_write_batch");
     let proto = parse_pb::<OperationBatchPb>(buf)?;
     let mut has_ddl = false;
+    let mut reopen_secondary = false;
     let operations = proto.get_operations();
     if operations.is_empty() {
-        return Ok(false);
+        return Ok((has_ddl, reopen_secondary));
     }
     for op in operations {
         match op.get_opType() {
@@ -211,11 +227,12 @@ fn do_write_batch<G: MultiVersionGraph>(
             OpTypePb::COMMIT_DATA_LOAD => {
                 if commit_data_load(graph, snapshot_id, op)? {
                     has_ddl = true;
+                    reopen_secondary = true;
                 }
             }
         };
     }
-    Ok(has_ddl)
+    Ok((has_ddl, reopen_secondary))
 }
 
 fn commit_data_load<G: MultiVersionGraph>(
@@ -439,6 +456,7 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
     graph.delete_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward())
 }
 
+#[no_mangle]
 pub extern "C" fn reopenSecondary(ptr: GraphHandle, wait_sec: i64) -> Box<JnaResponse> {
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
     match graph_store_ptr.reopen(wait_sec as u64) {

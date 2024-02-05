@@ -72,6 +72,7 @@ public class StoreService implements MetricsAgent {
     private ThreadPoolExecutor downloadExecutor;
     private final boolean enableGc;
     private volatile boolean shouldStop = true;
+    private final boolean isSecondary;
 
     private volatile long lastUpdateTime;
     private Map<Integer, AvgMetric> partitionToMetric;
@@ -83,6 +84,7 @@ public class StoreService implements MetricsAgent {
         this.enableGc = StoreConfig.STORE_GC_ENABLE.get(storeConfigs);
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(storeConfigs);
         this.metaService = metaService;
+        this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(storeConfigs);
         metricsCollector.register(this, () -> updateMetrics());
     }
 
@@ -363,8 +365,6 @@ public class StoreService implements MetricsAgent {
             // Ignore
         }
         logger.info("cleared directory {}", downloadPath);
-
-        reopenPartition2(90);
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
@@ -393,18 +393,27 @@ public class StoreService implements MetricsAgent {
     }
 
     public void tryCatchUpWithPrimary() throws IOException {
+        if (!isSecondary) {
+            return;
+        }
         for (GraphPartition partition : this.idToPartition.values()) {
             partition.tryCatchUpWithPrimary();
         }
     }
 
     public void reopenPartition(long wait_sec) throws IOException {
+        if (!isSecondary) {
+            return;
+        }
         for (GraphPartition partition : this.idToPartition.values()) {
             partition.reopenSecondary(wait_sec);
         }
     }
 
     public void reopenPartition2(long wait_sec) {
+        if (!isSecondary) {
+            return;
+        }
         for (GraphPartition partition : this.idToPartition.values()) {
             new Thread(() -> {
                 try {
