@@ -390,13 +390,13 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         if (bitset.get_bit(i)) {
           label = labels[0];
         } else {
           label = labels[1];
         }
         vertex->mutable_label()->set_id(label);
+        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         // set properties.
         auto columns = column_ptrs[label];
         for (size_t j = 0; j < columns.size(); ++j) {
@@ -981,12 +981,15 @@ class SinkOp {
     }
   }
 
-  template <typename VID_T, typename LabelT>
-  static void add_path_to_pb(const Path<VID_T, LabelT>& path,
+  static void add_path_to_pb(const Path<vid_t, label_id_t>& path,
                              results::GraphPath& mutable_path) {
-    auto& vertices = path.GetVertices();
-    for (size_t i = 0; i < vertices.size(); ++i) {
-      mutable_path.add_path()->mutable_vertex()->set_id(vertices[i]);
+    for (size_t i = 0; i <= path.length(); ++i) {
+      // path's length + 1 = number of nodes
+      vid_t vid;
+      label_id_t label;
+      std::tie(label, vid) = path.GetNode(i);
+      mutable_path.add_path()->mutable_vertex()->set_id(
+          encode_unique_vertex_id(label, vid));
     }
   }
 
