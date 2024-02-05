@@ -745,7 +745,6 @@ class SinkOp {
       const GRAPH_INTERFACE& graph, results::CollectiveResults& results_vec,
       const GeneralVertexSet<VID_T, LabelT, SET_T...>& vertex_set,
       const std::vector<size_t>& repeat_offsets, int32_t tag_id) {
-    VLOG(10) << "Sink for general vertex set";
     auto& schema = graph.schema();
     auto vertices_vec = vertex_set.GetVertices();
     auto labels_vec = vertex_set.GetLabels();
@@ -982,18 +981,15 @@ class SinkOp {
     }
   }
 
-  template <typename VID_T, typename LabelT>
-  static void add_path_to_pb(const Path<VID_T, LabelT>& path,
+  static void add_path_to_pb(const Path<vid_t, label_id_t>& path,
                              results::GraphPath& mutable_path) {
-    auto& vertices = path.GetVertices();
-    auto& labels = path.GetLabels();
-    if (vertices.size() != labels.size()) {
-      LOG(ERROR) << "vertices size: " << vertices.size()
-                 << ", labels size: " << labels.size();
-    }
-    for (size_t i = 0; i < vertices.size(); ++i) {
+    for (size_t i = 0; i <= path.length(); ++i) {
+      // path's length + 1 = number of nodes
+      vid_t vid;
+      label_id_t label;
+      std::tie(label, vid) = path.GetNode(i);
       mutable_path.add_path()->mutable_vertex()->set_id(
-          encode_unique_vertex_id(labels[i], vertices[i]));
+          encode_unique_vertex_id(label, vid));
     }
   }
 
