@@ -402,7 +402,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
 
         @Override
         public Traversal<Vertex, Map<Object, Object>> get_g_V_limit_100_group_test() {
-            return g.V().hasLabel("PERSON").limit(100).group().by("firstName").by(__.count());
+            return g.V().hasLabel("PERSON").limit(100).group().by("id").by(__.count());
         }
     }
 }
