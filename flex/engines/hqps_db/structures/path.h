@@ -59,6 +59,8 @@ struct Path {
 
   inline const std::vector<VID_T>& GetVertices() const { return vids_; }
 
+  inline const std::vector<label_id_t>& GetLabels() const { return label_ids_; }
+
   inline VID_T GetEnd() const {
     CHECK(vids_.size() > 0);
     return vids_.back();
