@@ -632,6 +632,7 @@ impl MultiVersionGraph for GraphStore {
             info.online_table(Table::new(si, table_id))?;
             info!("online vertex. labelId {}, tableId {}, si {}", target.label_id, table_id, si);
         }
+        self.reopen(90);
         Ok(true)
     }
 
@@ -677,8 +678,8 @@ impl GraphStore {
         self.storage.try_catch_up_with_primary()
     }
 
-    pub fn reopen(&self) -> GraphResult<()> {
-        self.storage.reopen()
+    pub fn reopen(&self, wait_sec: u64) -> GraphResult<()> {
+        self.storage.reopen(wait_sec)
     }
 
     fn init(config: &GraphConfig, storage: Arc<RocksDB>, path: &str) -> GraphResult<Self> {

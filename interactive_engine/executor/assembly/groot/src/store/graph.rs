@@ -4,6 +4,7 @@ use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
 use std::str;
 use std::sync::{Arc, Once};
+use std::time::Duration;
 
 use groot_store::db::api::multi_version_graph::MultiVersionGraph;
 use groot_store::db::api::PropertyMap;
@@ -438,12 +439,16 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
     graph.delete_edge(snapshot_id, edge_id, &edge_kind, edge_location_pb.get_forward())
 }
 
-pub extern "C" fn reopenSecondary(ptr: GraphHandle) -> Box<JnaResponse> {
+pub extern "C" fn reopenSecondary(ptr: GraphHandle, wait_sec: i64) -> Box<JnaResponse> {
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
-    match graph_store_ptr.reopen() {
-        Ok(_) => JnaResponse::new_success(),
+    match graph_store_ptr.reopen(wait_sec as u64) {
+        Ok(_) => {
+            info!("Reopened store");
+            JnaResponse::new_success()
+        },
         Err(e) => {
-            let msg = format!("Error during reopening {:?}", e);
+            let msg = format!("Reopen failed: {:?}", e);
+            error!("{}", msg);
             JnaResponse::new_error(&msg)
         }
     }
@@ -471,7 +476,7 @@ pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
         Ok(_) => JnaResponse::new_success(),
         Err(e) => {
             error!("Error during catch up primary {:?}", e);
-            match graph_store_ptr.reopen() {
+            match graph_store_ptr.reopen(10) {
                 Ok(_) => {
                     info!("Reopened store");
                     JnaResponse::new_success()

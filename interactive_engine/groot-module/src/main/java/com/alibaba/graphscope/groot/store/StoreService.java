@@ -397,6 +397,12 @@ public class StoreService implements MetricsAgent {
         }
     }
 
+    public void reopenPartition() throws IOException {
+        for (GraphPartition partition : this.idToPartition.values()) {
+            partition.reopenSecondary();
+        }
+    }
+
     private void updateMetrics() {
         long currentTime = System.nanoTime();
         long interval = currentTime - this.lastUpdateTime;

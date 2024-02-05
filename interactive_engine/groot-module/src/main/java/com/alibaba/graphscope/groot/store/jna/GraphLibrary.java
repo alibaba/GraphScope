@@ -53,4 +53,6 @@ public interface GraphLibrary extends Library {
     JnaResponse garbageCollectSnapshot(Pointer storePointer, long snapshotId);
 
     JnaResponse tryCatchUpWithPrimary(Pointer storePointer);
+
+    JnaResponse reopenSecondary(Pointer storePointer, long wait_sec);
 }

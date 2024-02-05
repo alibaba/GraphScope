@@ -143,6 +143,16 @@ public class JnaGraphStore implements GraphPartition {
         }
     }
 
+    @Override
+    public void reopenSecondary() throws IOException {
+        ensurePointer();
+        try (JnaResponse response = GraphLibrary.INSTANCE.reopenSecondary(this.pointer, 0)) {
+            if (!response.success()) {
+                throw new IOException(response.getErrMsg());
+            }
+        }
+    }
+
     private void ensurePointer() throws IOException {
         if (this.pointer == null) {
             throw new IOException("JNA pointer is null");

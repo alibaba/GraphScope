@@ -42,4 +42,5 @@ public interface GraphPartition extends Closeable {
 
     void tryCatchUpWithPrimary() throws IOException;
 
+    void reopenSecondary() throws IOException;
 }
