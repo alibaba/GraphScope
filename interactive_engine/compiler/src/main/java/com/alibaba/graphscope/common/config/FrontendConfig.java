@@ -51,4 +51,7 @@ public class FrontendConfig {
 
     public static final Config<Boolean> GRAPH_TYPE_INFERENCE_ENABLED =
             Config.boolConfig("graph.type.inference.enabled", true);
+
+    public static final Config<String> GREMLIN_SCRIPT_LANGUAGE_NAME =
+            Config.stringConfig("gremlin.script.language.name", "antlr_gremlin_traversal");
 }

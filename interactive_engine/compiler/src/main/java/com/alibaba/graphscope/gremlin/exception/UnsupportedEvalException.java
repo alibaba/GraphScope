@@ -22,7 +22,7 @@ public class UnsupportedEvalException extends UnsupportedOperationException {
     public UnsupportedEvalException(Class<? extends ParseTree> antlrCtx, String error) {
         super(
                 String.format(
-                        "antlr context {%s} parsing to traversal is unsupported, error is {%s}",
+                        "antlr context {%s} parsing is unsupported, error is {%s}",
                         antlrCtx, error));
     }
 }

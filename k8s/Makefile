@@ -10,7 +10,7 @@ endif
 ARCH := $(shell uname -m)
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.20.2
+VINEYARD_VERSION ?= v0.20.3
 # This is the version of builder base image in most cases, except for graphscope-dev
 BUILDER_VERSION ?= $(VINEYARD_VERSION)
 # This is the version of runtime base image
