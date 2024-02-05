@@ -363,7 +363,8 @@ public class StoreService implements MetricsAgent {
             // Ignore
         }
         logger.info("cleared directory {}", downloadPath);
-        // Files.createDirectories(downloadPath);
+
+        reopenPartition2(90);
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
@@ -397,9 +398,22 @@ public class StoreService implements MetricsAgent {
         }
     }
 
-    public void reopenPartition() throws IOException {
+    public void reopenPartition(long wait_sec) throws IOException {
         for (GraphPartition partition : this.idToPartition.values()) {
-            partition.reopenSecondary();
+            partition.reopenSecondary(wait_sec);
+        }
+    }
+
+    public void reopenPartition2(long wait_sec) {
+        for (GraphPartition partition : this.idToPartition.values()) {
+            new Thread(() -> {
+                try {
+                    partition.reopenSecondary(wait_sec);
+                } catch (IOException e) {
+                    logger.error("Reopen Secondary failed");
+                    throw new RuntimeException(e);
+                }
+            }).start();
         }
     }
 

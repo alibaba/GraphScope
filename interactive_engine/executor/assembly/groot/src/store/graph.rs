@@ -460,6 +460,7 @@ pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> 
     if snapshot_id % 3600 != 0 {
         return JnaResponse::new_success();
     }
+    info!("garbageCollectSnapshot si {}", snapshot_id);
     match graph_store_ptr.gc(snapshot_id) {
         Ok(_) => JnaResponse::new_success(),
         Err(e) => {

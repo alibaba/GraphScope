@@ -632,7 +632,6 @@ impl MultiVersionGraph for GraphStore {
             info.online_table(Table::new(si, table_id))?;
             info!("online vertex. labelId {}, tableId {}, si {}", target.label_id, table_id, si);
         }
-        self.reopen(90);
         Ok(true)
     }
 

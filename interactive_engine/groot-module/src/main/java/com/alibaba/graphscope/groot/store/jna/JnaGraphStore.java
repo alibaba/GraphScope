@@ -144,9 +144,9 @@ public class JnaGraphStore implements GraphPartition {
     }
 
     @Override
-    public void reopenSecondary() throws IOException {
+    public void reopenSecondary(long wait_sec) throws IOException {
         ensurePointer();
-        try (JnaResponse response = GraphLibrary.INSTANCE.reopenSecondary(this.pointer, 0)) {
+        try (JnaResponse response = GraphLibrary.INSTANCE.reopenSecondary(this.pointer, wait_sec)) {
             if (!response.success()) {
                 throw new IOException(response.getErrMsg());
             }
