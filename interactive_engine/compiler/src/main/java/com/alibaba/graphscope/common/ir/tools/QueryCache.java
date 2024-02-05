@@ -48,10 +48,7 @@ public class QueryCache {
                                                             key.logicalPlan);
                                             GraphPlanner.Summary summary =
                                                     new GraphPlanner.Summary(
-                                                            0,
-                                                            "query_cache_0",
-                                                            key.logicalPlan,
-                                                            physicalPlan);
+                                                            key.logicalPlan, physicalPlan);
                                             return new Value(summary, null);
                                         }));
     }

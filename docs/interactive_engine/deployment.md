@@ -194,3 +194,4 @@ We've listed useful configuration keys in the following:
 | pegasusBatchSize            | the maximum size of streaming records can be output for an operator   |              1024               |
 | pegasusOutputCapacity       | the maximum number of streaming records can be output for an operator |               16                |
 | frontendQueryPerSecondLimit | the maximum qps can be handled by frontend service                    | 2147483647 (without limitation) |
+| gremlinScriptLanguageName | the option allows you to choose different Gremlin compilations based on different IR layer, either Traversal-based ('antlr_gremlin_traversal') or Calcite-based ('antlr_gremlin_calcite') | antlr_gremlin_traversal |

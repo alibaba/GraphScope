@@ -22,10 +22,7 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
-import com.alibaba.graphscope.common.ir.rel.PushFilterVisitor;
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.AbstractLogicalMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
@@ -71,6 +68,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -736,7 +734,8 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.IS_NOT_NULL
                 || sqlKind == SqlKind.EXTRACT
                 || sqlKind == SqlKind.SEARCH
-                || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE;
+                || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE
+                || sqlKind == SqlKind.AS;
     }
 
     @Override
@@ -1102,11 +1101,55 @@ public class GraphBuilder extends RelBuilder {
                 nodeList.set(i, simplifier.simplifyPreservingType(nodeList.get(i)));
             }
         }
-        fieldNameList =
-                AliasInference.inferProject(
-                        nodeList,
-                        fieldNameList,
-                        AliasInference.getUniqueAliasList(input, isAppend));
+
+        PREPARE_PROJECT_ARGS:
+        {
+            // if project denotes the `select('a')` in gremlin, give a default alias to skip the
+            // real projection
+            if (projectOneTag(nodeList, fieldNameList, isAppend) != null) {
+                fieldNameList = ImmutableList.of(AliasInference.DEFAULT_NAME);
+                break PREPARE_PROJECT_ARGS;
+            } else if (input instanceof Project) {
+                // fuse the project with the previous node if meets the following requirements :
+                // 1. the input is project
+                // 2. the expressions in the current project all start from the tags in the input
+                // 3. the input denotes the `select('a')` in gremlin
+                AliasNameWithId inputOneTag =
+                        projectOneTag(
+                                ((Project) input).getProjects(),
+                                input.getRowType().getFieldNames(),
+                                ((GraphLogicalProject) input).isAppend());
+                if (inputOneTag != null) {
+                    AliasNameWithId defaultAlias =
+                            new AliasNameWithId(
+                                    AliasInference.DEFAULT_NAME, AliasInference.DEFAULT_ID);
+                    List<AliasNameWithId> inputTags = Lists.newArrayList(inputOneTag, defaultAlias);
+                    if (projectPropertyOfTags(nodeList, inputTags)) {
+                        inputTags.removeAll(Lists.newArrayList(defaultAlias));
+                        if (inputTags.size() == 1) {
+                            RexVariableAliasConverter converter =
+                                    new RexVariableAliasConverter(
+                                            true,
+                                            this,
+                                            inputTags.get(0).getAliasName(),
+                                            inputTags.get(0).getAliasId());
+                            nodeList =
+                                    nodeList.stream()
+                                            .map(k -> k.accept(converter))
+                                            .collect(Collectors.toList());
+                        }
+                        // remove the input project
+                        input = input.getInput(0);
+                    }
+                }
+            }
+            fieldNameList =
+                    AliasInference.inferProject(
+                            nodeList,
+                            fieldNameList,
+                            AliasInference.getUniqueAliasList(input, isAppend));
+        }
+
         RelNode project =
                 GraphLogicalProject.create(
                         (GraphOptCluster) getCluster(),
@@ -1117,6 +1160,50 @@ public class GraphBuilder extends RelBuilder {
                         isAppend);
         replaceTop(project);
         return this;
+    }
+
+    /**
+     * check if the {@code exprs} are actually the pattern of `select('a')` in gremlin, return the tag if it is.
+     * @param exprs
+     * @param aliases
+     * @return
+     */
+    private @Nullable AliasNameWithId projectOneTag(
+            List<RexNode> exprs, List<String> aliases, boolean isAppend) {
+        if (isAppend
+                && exprs.size() == 1
+                && exprs.get(0) instanceof RexGraphVariable
+                && ((RexGraphVariable) exprs.get(0)).getProperty() == null
+                && (aliases.isEmpty()
+                        || aliases.get(0) == null
+                        || aliases.get(0) == AliasInference.DEFAULT_NAME)) {
+            RexVariableAliasCollector<AliasNameWithId> collector =
+                    new RexVariableAliasCollector<>(
+                            true,
+                            (RexGraphVariable var) -> {
+                                String[] splits =
+                                        var.getName()
+                                                .split(Pattern.quote(AliasInference.DELIMITER));
+                                String aliasName =
+                                        splits.length > 0 ? splits[0] : AliasInference.DEFAULT_NAME;
+                                return new AliasNameWithId(aliasName, var.getAliasId());
+                            });
+            return exprs.get(0).accept(collector).get(0);
+        }
+        return null;
+    }
+
+    /**
+     * check if the {@code exprs} denotes the properties projection of the specified {@code tags}, return true if it is.
+     * @param exprs
+     * @param tags
+     * @return
+     */
+    private boolean projectPropertyOfTags(List<RexNode> exprs, List<AliasNameWithId> tags) {
+        List<Integer> tagIds = tags.stream().map(k -> k.getAliasId()).collect(Collectors.toList());
+        RexVariableAliasCollector<Integer> collector =
+                new RexVariableAliasCollector<>(true, (RexGraphVariable var) -> var.getAliasId());
+        return exprs.stream().allMatch(k -> tagIds.containsAll(k.accept(collector)));
     }
 
     /**
@@ -1410,6 +1497,47 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalSort.create(
                         input, GraphRelCollations.of(fieldCollations), offsetNode, fetchNode);
         replaceTop(sort);
+        // to remove the extra columns we have added
+        if (!registrar.getExtraAliases().isEmpty()) {
+            List<RexNode> originalExprs = new ArrayList<>();
+            List<String> originalAliases = new ArrayList<>();
+            for (RelDataTypeField field : originalFields) {
+                originalExprs.add(variable(field.getName()));
+                originalAliases.add(field.getName());
+            }
+            project(originalExprs, originalAliases, false);
+        }
+        return this;
+    }
+
+    public GraphBuilder dedupBy(Iterable<? extends RexNode> nodes) {
+        RelNode input = requireNonNull(peek(), "frame stack is empty");
+
+        List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
+
+        Registrar registrar = new Registrar(this, input, true);
+        List<RexNode> registerNodes = registrar.registerExpressions(ImmutableList.copyOf(nodes));
+
+        // expressions need to be projected in advance
+        if (!registrar.getExtraNodes().isEmpty()) {
+            project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
+            RexTmpVariableConverter converter = new RexTmpVariableConverter(true, this);
+            registerNodes =
+                    registerNodes.stream()
+                            .map(k -> k.accept(converter))
+                            .collect(Collectors.toList());
+            input = requireNonNull(peek(), "frame stack is empty");
+        }
+
+        // if dedup by keys is empty, use 'HEAD' variable by default
+        if (registerNodes.isEmpty()) {
+            registerNodes.add(variable((String) null));
+        }
+        RelNode dedupBy =
+                GraphLogicalDedupBy.create(
+                        (GraphOptCluster) this.getCluster(), input, registerNodes);
+        replaceTop(dedupBy);
+
         // to remove the extra columns we have added
         if (!registrar.getExtraAliases().isEmpty()) {
             List<RexNode> originalExprs = new ArrayList<>();

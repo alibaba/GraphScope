@@ -18,6 +18,8 @@ package com.alibaba.graphscope.common.ir.rel.type;
 
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 
+import java.util.Objects;
+
 public class AliasNameWithId {
     public static final AliasNameWithId DEFAULT =
             new AliasNameWithId(AliasInference.DEFAULT_NAME, AliasInference.DEFAULT_ID);
@@ -36,5 +38,18 @@ public class AliasNameWithId {
 
     public int getAliasId() {
         return aliasId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AliasNameWithId that = (AliasNameWithId) o;
+        return aliasId == that.aliasId && Objects.equals(aliasName, that.aliasName);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(aliasName, aliasId);
     }
 }
