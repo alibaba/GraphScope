@@ -79,10 +79,6 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Setup tmate session
-      if: true
-      uses: mxschmitt/action-tmate@v2
-
     - name: Download aocc compiler
       run: |
         cd ${GITHUB_WORKSPACE}/flex
@@ -97,7 +93,7 @@ jobs:
         OMPI_CC: clang
         OMPI_CXX: clang++
       run: |
-        sh /opt/AMD/aocc-compiler-4.1.0/setenv_AOCC.sh
+        . /opt/AMD/aocc-compiler-4.1.0/setenv_AOCC.sh
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
         mkdir build && cd build
