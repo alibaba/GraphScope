@@ -194,6 +194,26 @@ struct TypeConverter<bool> {
 };
 
 template <>
+struct TypeConverter<uint8_t> {
+  static PropertyType property_type() { return PropertyType::kUInt8; }
+  using ArrowType = arrow::UInt8Type;
+  using ArrowArrayType = arrow::UInt8Array;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::uint8();
+  }
+};
+
+template <>
+struct TypeConverter<uint16_t> {
+  static PropertyType property_type() { return PropertyType::kUInt16; }
+  using ArrowType = arrow::UInt16Type;
+  using ArrowArrayType = arrow::UInt16Array;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::uint16();
+  }
+};
+
+template <>
 struct TypeConverter<int32_t> {
   static PropertyType property_type() { return PropertyType::kInt32; }
   using ArrowType = arrow::Int32Type;
