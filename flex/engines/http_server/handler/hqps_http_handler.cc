@@ -165,7 +165,7 @@ seastar::future<> hqps_adhoc_query_handler::cancel_current_scope() {
           hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
   return hiactor::actor_engine()
       .cancel_scope_request(adhoc_builder, false)
-      .then([this, codegen_builder] {
+      .then([codegen_builder] {
         LOG(INFO) << "Cancel adhoc scope successfully!";
         return hiactor::actor_engine().cancel_scope_request(codegen_builder,
                                                             false);
@@ -334,7 +334,7 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
         LOG(INFO) << "Cancel ic scope";
         return adhoc_query_handler_->cancel_current_scope();
       })
-      .then([this] {
+      .then([] {
         LOG(INFO) << "Cancel adhoc scope";
         return seastar::make_ready_future<>();
       });

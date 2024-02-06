@@ -366,7 +366,7 @@ seastar::future<query_result> admin_actor::service_status(
     LOG(INFO) << "Query service has not been inited!";
     res["status"] = "Query service has not been inited!";
   }
-  return seastar::make_ready_future<query_result>(std::move(res.dump()));
+  return seastar::make_ready_future<query_result>(res.dump());
 }
 
 // get node status.
