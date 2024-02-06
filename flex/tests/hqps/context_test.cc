@@ -34,8 +34,6 @@
 struct VertexSetTest {};
 struct EdgeSetTest {};
 
-YAML::BadConversion::~BadConversion() {}
-
 struct TmpComparator {
   inline bool operator()(
       const std::tuple<int32_t, int64_t, double>& left,
