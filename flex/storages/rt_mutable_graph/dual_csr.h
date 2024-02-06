@@ -34,25 +34,21 @@ class DualCsrBase {
                          const std::string& work_dir,
                          const std::vector<int>& oe_degree,
                          const std::vector<int>& ie_degree) = 0;
-
   virtual void Open(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& snapshot_dir,
                     const std::string& work_dir) = 0;
-
   virtual void OpenInMemory(const std::string& oe_name,
                             const std::string& ie_name,
                             const std::string& edata_name,
                             const std::string& snapshot_dir,
                             size_t src_vertex_cap, size_t dst_vertex_cap) = 0;
-
   virtual void OpenWithHugepages(const std::string& oe_name,
                                  const std::string& ie_name,
                                  const std::string& edata_name,
                                  const std::string& snapshot_dir,
                                  size_t src_vertex_cap,
                                  size_t dst_vertex_cap) = 0;
-
   virtual void Dump(const std::string& oe_name, const std::string& ie_name,
                     const std::string& edata_name,
                     const std::string& new_snapshot_dir) = 0;
@@ -120,7 +116,6 @@ class DualCsr : public DualCsrBase {
       delete out_csr_;
     }
   }
-
   void BatchInit(const std::string& oe_name, const std::string& ie_name,
                  const std::string& edata_name, const std::string& work_dir,
                  const std::vector<int>& oe_degree,
