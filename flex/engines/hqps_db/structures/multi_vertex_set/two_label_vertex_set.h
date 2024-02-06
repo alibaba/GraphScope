@@ -644,6 +644,7 @@ class TwoLabelVertexSetImpl {
 
   static constexpr bool is_vertex_set = true;
   static constexpr bool is_general_set = false;
+  static constexpr bool is_row_vertex_set = false;
   static constexpr bool is_two_label_set = true;
   static constexpr size_t num_labels = 2;
   static constexpr size_t num_props = sizeof...(T);
@@ -943,6 +944,7 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
   static constexpr bool is_vertex_set = true;
   static constexpr bool is_general_set = false;
   static constexpr bool is_two_label_set = true;
+  static constexpr bool is_row_vertex_set = false;
   static constexpr size_t num_labels = 2;
   static constexpr size_t num_props = 0;
   static constexpr bool is_collection = false;
