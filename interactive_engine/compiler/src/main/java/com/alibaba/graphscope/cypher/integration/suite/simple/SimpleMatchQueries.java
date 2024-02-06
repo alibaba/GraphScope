@@ -180,4 +180,39 @@ public class SimpleMatchQueries {
                         "Record<{aId: 0, bId: 1454}>");
         return new QueryContext(query, expected);
     }
+
+    public static QueryContext get_simple_match_query_14_test() {
+        String query =
+                "Match (a)-[c*0..2]->(b) RETURN a.id AS aId, c, b.id AS bId ORDER BY aId"
+                        + " ASC, bId ASC LIMIT 5;";
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{aId: 0, c: path[], bId: 0}>",
+                        "Record<{aId: 0, c: path[], bId: 0}>",
+                        "Record<{aId: 0, c: path[], bId: 0}>",
+                        "Record<{aId: 0, c: path[], bId: 0}>",
+                        "Record<{aId: 0, c: path[], bId: 3}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_simple_match_query_15_test() {
+        String query =
+                "Match (a:PERSON)-[c:KNOWS*1..2]->(b:PERSON) RETURN a.id AS aId, c, b.id AS bId"
+                        + " ORDER BY aId ASC, bId ASC LIMIT 5;";
+
+        List<String> expected =
+                Arrays.asList(
+                        "Record<{aId: 94, c: path[], bId: 987}>",
+                        "Record<{aId: 94, c: path[], bId: 2199023256154}>",
+                        "Record<{aId: 94, c: path[], bId: 2199023256776}>",
+                        "Record<{aId: 94, c: path[], bId: 6597069767432}>",
+                        "Record<{aId: 94, c: path[], bId: 8796093022369}>");
+        return new QueryContext(query, expected);
+    }
+
+    public static QueryContext get_simple_match_query_16_test() {
+        String query = "Match (a)-[c*0..2]->(b) RETURN COUNT (DISTINCT c);";
+        List<String> expected = Arrays.asList("Record<{$f0: 1552803}>");
+        return new QueryContext(query, expected);
+    }
 }
