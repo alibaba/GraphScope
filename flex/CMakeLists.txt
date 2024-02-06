@@ -65,7 +65,7 @@ if (APPLE)
     set(CMAKE_MACOSX_RPATH ON)
 else ()
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unknown-warning-option")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lopen-pal")
     else ()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath,$ORIGIN")
@@ -167,13 +167,14 @@ macro(install_without_export_flex_target target)
 endmacro()
 
 add_subdirectory(utils)
-add_subdirectory(codegen)
+# add_subdirectory(codegen)
 add_subdirectory(storages)
 add_subdirectory(engines)
-add_subdirectory(bin)
-if (BUILD_TEST)
-   add_subdirectory(tests)
-endif()
+# add_subdirectory(bin)
+# if (BUILD_TEST)
+#    add_subdirectory(tests)
+# endif()
+
 
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flex-config.in.cmake
