@@ -128,6 +128,27 @@ public class SimpleMatchTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_simple_match_14_test() {
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_14_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_simple_match_15_test() {
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_15_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_simple_match_16_test() {
+        QueryContext testQuery = SimpleMatchQueries.get_simple_match_query_16_test();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     @AfterClass
     public static void afterClass() {
         if (session != null) {
