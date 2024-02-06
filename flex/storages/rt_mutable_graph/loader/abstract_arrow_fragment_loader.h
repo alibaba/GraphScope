@@ -103,7 +103,6 @@ struct _add_vertex {
                    << col->type()->ToString();
       }
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
-      // auto batch = std::max((int) row_num / 5, 1);
       std::unique_lock<std::mutex> lock(mtx);
       for (size_t i = 0; i < row_num; ++i) {
         if (!indexer.add(casted_array->Value(i), vid)) {
@@ -121,7 +120,7 @@ struct _add_vertex {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
-            LOG(ERROR) << "Duplicate vertex id: " << str_view << "..";
+            VLOG(2) << "Duplicate vertex id: " << str_view << "..";
             vids.emplace_back(std::numeric_limits<vid_t>::max());
           } else {
             vids.emplace_back(vid);
@@ -134,7 +133,7 @@ struct _add_vertex {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
-            LOG(ERROR) << "Duplicate vertex id: " << str_view << "..";
+            VLOG(2) << "Duplicate vertex id: " << str_view << "..";
             vids.emplace_back(std::numeric_limits<vid_t>::max());
           } else {
             vids.emplace_back(vid);
