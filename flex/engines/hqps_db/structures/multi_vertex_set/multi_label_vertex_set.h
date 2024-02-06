@@ -256,7 +256,6 @@ class MultiLabelVertexSet {
     std::vector<std::vector<offset_t>> indices_vec(N);
     std::array<std::vector<offset_t>, N> local_offsets;
 
-    size_t cur_cnt = 0;
     for (size_t i = 0; i < N; ++i) {
       local_offsets[i].emplace_back(0);
     }

@@ -139,7 +139,7 @@ void graph_db_http_handler::stop() {
 }
 
 seastar::future<> graph_db_http_handler::set_routes() {
-  return server_.set_routes([this](seastar::httpd::routes& r) {
+  return server_.set_routes([](seastar::httpd::routes& r) {
     r.add(seastar::httpd::operation_type::POST,
           seastar::httpd::url("/interactive/query"),
           new graph_db_ic_handler(ic_query_group_id, shard_query_concurrency));

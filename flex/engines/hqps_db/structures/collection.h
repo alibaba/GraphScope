@@ -652,6 +652,48 @@ class DistinctCountBuilder<tag_id, TwoLabelVertexSetImpl<VID_T, LabelT, T...>> {
   std::array<VID_T, 2> min_v, max_v, range_size;
 };
 
+// DistinctCountBuilder for PathSet
+template <int tag_id, typename PATH_SET_T>
+class DistinctCountBuilder<
+    tag_id, PATH_SET_T,
+    typename std::enable_if<PATH_SET_T::is_path_set>::type> {
+ public:
+  using path_set_t = PATH_SET_T;
+  using index_ele_t = typename path_set_t::index_ele_tuple_t;
+  DistinctCountBuilder(const path_set_t& path_set) {
+    paths_num_ = path_set.Size();
+  }
+
+  template <typename ELE_TUPLE_T, typename DATA_TUPLE>
+  void insert(size_t ind, const ELE_TUPLE_T& tuple, const DATA_TUPLE& data) {
+    auto& cur_ind_ele = gs::get_from_tuple<tag_id>(tuple);
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(grape::Bitset(paths_num_));
+    }
+    auto& cur_bitset = vec_[ind];
+    auto cur_ind = std::get<0>(cur_ind_ele);
+    if (cur_ind < paths_num_) {
+      cur_bitset.set_bit(cur_ind);
+    } else {
+      LOG(FATAL) << "Invalid path set index: " << cur_ind
+                 << ", path set num: " << paths_num_;
+    }
+  }
+
+  Collection<size_t> Build() {
+    std::vector<size_t> res;
+    res.reserve(vec_.size());
+    for (auto& bitset : vec_) {
+      res.emplace_back(bitset.count());
+    }
+    return Collection<size_t>(std::move(res));
+  }
+
+ private:
+  std::vector<grape::Bitset> vec_;
+  size_t paths_num_;
+};
+
 // DistinctCountBuilder for multiple sets together
 template <typename SET_TUPLE_T, int... TAG_IDs>
 class MultiColDistinctCountBuilder;

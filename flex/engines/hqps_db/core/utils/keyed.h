@@ -25,6 +25,7 @@
 #include "flex/engines/hqps_db/structures/multi_vertex_set/keyed_row_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
+#include "flex/engines/hqps_db/structures/path.h"
 
 namespace gs {
 
@@ -536,6 +537,34 @@ struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>, AggFunc::COUNT,
   }
 };
 
+template <typename GI, typename VID_T, typename LabelT, int tag_id>
+struct KeyedAggT<GI, CompressedPathSet<VID_T, LabelT>, AggFunc::COUNT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using aggregate_res_builder_t = CountBuilder<tag_id>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const CompressedPathSet<VID_T, LabelT>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return CountBuilder<tag_id>();
+  }
+};
+
+template <typename GI, typename VID_T, typename LabelT, int tag_id>
+struct KeyedAggT<GI, PathSet<VID_T, LabelT>, AggFunc::COUNT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using aggregate_res_builder_t = CountBuilder<tag_id>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const PathSet<VID_T, LabelT>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return CountBuilder<tag_id>();
+  }
+};
+
 // COUNT DISTINCT for EdgeSets.
 template <typename GI, typename VID_T, typename LabelT, int tag_id>
 struct KeyedAggT<GI, UnTypedEdgeSet<VID_T, LabelT, typename GI::sub_graph_t>,
@@ -580,6 +609,36 @@ struct KeyedAggT<GI, FlatEdgeSet<VID_T, LabelT, EDATA_T>,
 
   static aggregate_res_builder_t create_agg_builder(
       const FlatEdgeSet<VID_T, LabelT, EDATA_T>& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return aggregate_res_builder_t(set);
+  }
+};
+
+template <typename GI, typename VID_T, typename LabelT, int tag_id>
+struct KeyedAggT<GI, CompressedPathSet<VID_T, LabelT>, AggFunc::COUNT_DISTINCT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using path_set_t = CompressedPathSet<VID_T, LabelT>;
+  using aggregate_res_builder_t = DistinctCountBuilder<tag_id, path_set_t>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const path_set_t& set, const GI& graph,
+      std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
+    return aggregate_res_builder_t(set);
+  }
+};
+
+template <typename GI, typename VID_T, typename LabelT, int tag_id>
+struct KeyedAggT<GI, PathSet<VID_T, LabelT>, AggFunc::COUNT_DISTINCT,
+                 std::tuple<grape::EmptyType>,
+                 std::integer_sequence<int32_t, tag_id>> {
+  using agg_res_t = Collection<size_t>;
+  using path_set_t = PathSet<VID_T, LabelT>;
+  using aggregate_res_builder_t = DistinctCountBuilder<tag_id, path_set_t>;
+
+  static aggregate_res_builder_t create_agg_builder(
+      const path_set_t& set, const GI& graph,
       std::tuple<PropertySelector<grape::EmptyType>>& selectors) {
     return aggregate_res_builder_t(set);
   }

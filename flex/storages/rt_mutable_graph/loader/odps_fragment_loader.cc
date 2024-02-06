@@ -253,8 +253,7 @@ ODPSStreamRecordBatchSupplier::ODPSStreamRecordBatchSupplier(
     label_t label_id, const std::string& file_path,
     const ODPSReadClient& odps_table_reader, const std::string& session_id,
     int split_count, TableIdentifier table_identifier)
-    : label_id_(label_id),
-      file_path_(file_path),
+    : file_path_(file_path),
       odps_read_client_(odps_table_reader),
       session_id_(session_id),
       split_count_(split_count),
@@ -311,11 +310,9 @@ ODPSTableRecordBatchSupplier::ODPSTableRecordBatchSupplier(
     label_t label_id, const std::string& file_path,
     const ODPSReadClient& odps_table_reader, const std::string& session_id,
     int split_count, TableIdentifier table_identifier, int thread_num)
-    : label_id_(label_id),
-      file_path_(file_path),
+    : file_path_(file_path),
       odps_read_client_(odps_table_reader),
       session_id_(session_id),
-      split_count_(split_count),
       table_identifier_(table_identifier) {
   // Read the table.
   table_ = odps_read_client_.ReadTable(session_id, split_count,
