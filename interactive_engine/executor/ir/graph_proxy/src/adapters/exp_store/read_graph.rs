@@ -264,9 +264,16 @@ impl ReadGraph for ExpStore {
         if worker_idx % workers_num == 0 {
             let store_indexed_id = match primary_key {
                 OneOrMany::One(pkv) => encode_store_pk_prop_val(pkv[0].1.clone())?,
-                OneOrMany::Many(_pkvs) => Err(GraphProxyError::unsupported_error(
-                    "Experiment storage does not support multiple primary keys",
-                ))?,
+                OneOrMany::Many(pkvs) => {
+                    if pkvs.len() == 1 {
+                        encode_store_pk_prop_val(pkvs[0].1.clone())?
+                    } else {
+                        return Err(GraphProxyError::unsupported_error(&format!(
+                            "Experiment storage does not support multiple primary keys {:?}",
+                            pkvs
+                        )))?;
+                    }
+                }
             };
             let gid: DefaultId = LDBCVertexParser::to_global_id(store_indexed_id, label as StoreLabelId);
             if let Some(local_vertex) = self.store.get_vertex(gid) {

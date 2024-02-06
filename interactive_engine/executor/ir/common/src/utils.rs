@@ -442,7 +442,8 @@ impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
         // then the result will be: [[("name", "marko"), ("age", 29)], [("name", "josh"), ("age", 27)]].
         // Specifically, when the `IndexPredicate` contains a `within` condition, e.g.,
         // a IndexPredicate can be: name within ["marko", "josh"], which is a single AndCondition, but with "OR" semantics,
-        // then the result should be: [[("name", "marko")], [("name", "josh")]]
+        // then the result should be: [[("name", "marko")], [("name", "josh")]].
+        // But if the IndexPredicate mix up with "within" and other conditions, unexpected result will be returned.
         let mut primary_key_values = Vec::with_capacity(value.or_predicates.len());
         for and_predicates in value.or_predicates {
             // PkValue can be one-column or multi-columns, which is a set of and_conditions.
@@ -468,26 +469,27 @@ impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
                 if let pb::index_predicate::triplet::Value::Const(value) = value_pb {
                     if let Some(item) = value.item.as_ref() {
                         if cmp.eq(&common_pb::Logical::Within) {
-                            // specifically, if the cmp is within, the value must be an array
+                            // specifically, if the cmp is within, the value must be an array,
+                            // and it is "OR" semantics
                             match item {
                                 common_pb::value::Item::I32Array(array) => {
                                     for v in array.item.iter() {
-                                        primary_key_value.push((key.clone(), (*v).into()));
+                                        primary_key_values.push(vec![(key.clone(), (*v).into())]);
                                     }
                                 }
                                 common_pb::value::Item::I64Array(array) => {
                                     for v in array.item.iter() {
-                                        primary_key_value.push((key.clone(), (*v).into()));
+                                        primary_key_values.push(vec![(key.clone(), (*v).into())]);
                                     }
                                 }
                                 common_pb::value::Item::F64Array(array) => {
                                     for v in array.item.iter() {
-                                        primary_key_value.push((key.clone(), (*v).into()));
+                                        primary_key_values.push(vec![(key.clone(), (*v).into())]);
                                     }
                                 }
                                 common_pb::value::Item::StrArray(array) => {
                                     for v in array.item.iter() {
-                                        primary_key_value.push((key.clone(), (v.clone()).into()));
+                                        primary_key_values.push(vec![(key.clone(), (v.clone()).into())]);
                                     }
                                 }
                                 _ => Err(ParsePbError::ParseError(format!(
@@ -508,7 +510,9 @@ impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
                     )))?
                 }
             }
-            primary_key_values.push(primary_key_value);
+            if !primary_key_value.is_empty() {
+                primary_key_values.push(primary_key_value);
+            }
         }
         Ok(primary_key_values)
     }
