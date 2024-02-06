@@ -437,6 +437,12 @@ impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
     type Error = ParsePbError;
 
     fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
+        // transform the `IndexPredicate` to `Vec<Vec<(NameOrId, Object)>>`, e.g.,
+        // a IndexPredicate can be: name="marko" && age=29 || name="josh" && age=27, which is an OrCondition with two AndConditions,
+        // then the result will be: [[("name", "marko"), ("age", 29)], [("name", "josh"), ("age", 27)]].
+        // Specifically, when the `IndexPredicate` contains a `within` condition, e.g.,
+        // a IndexPredicate can be: name within ["marko", "josh"], which is a single AndCondition, but with "OR" semantics,
+        // then the result should be: [[("name", "marko")], [("name", "josh")]]
         let mut primary_key_values = Vec::with_capacity(value.or_predicates.len());
         for and_predicates in value.or_predicates {
             // PkValue can be one-column or multi-columns, which is a set of and_conditions.
