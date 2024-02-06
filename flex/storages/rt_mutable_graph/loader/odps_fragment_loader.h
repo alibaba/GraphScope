@@ -93,13 +93,15 @@ class ODPSTableRecordBatchSupplier : public IRecordBatchSupplier {
 class ODPSFragmentLoader : public AbstractArrowFragmentLoader {
  public:
   ODPSFragmentLoader(const std::string& work_dir, const Schema& schema,
-                     const LoadingConfig& loading_config, int32_t thread_num)
+                     const LoadingConfig& loading_config, int32_t thread_num,
+                     bool batch_init_in_memory)
       : AbstractArrowFragmentLoader(work_dir, schema, loading_config,
-                                    thread_num) {}
+                                    thread_num, batch_init_in_memory) {}
 
   static std::shared_ptr<IFragmentLoader> Make(
       const std::string& work_dir, const Schema& schema,
-      const LoadingConfig& loading_config, int32_t thread_num);
+      const LoadingConfig& loading_config, int32_t thread_num,
+      bool batch_init_in_memory);
 
   ~ODPSFragmentLoader() {}
 

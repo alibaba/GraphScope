@@ -187,8 +187,9 @@ struct _add_vertex {
 #endif
 };
 
-static void indexer_check_lambda(const LFIndexer<vid_t>& cur_indexer,
-                                 const std::shared_ptr<arrow::Array>& cur_col) {
+static inline void indexer_check_lambda(
+    const LFIndexer<vid_t>& cur_indexer,
+    const std::shared_ptr<arrow::Array>& cur_col) {
   if (cur_indexer.get_type() == PropertyType::kInt64) {
     CHECK(cur_col->type()->Equals(arrow::int64()));
   } else if (cur_indexer.get_type() == PropertyType::kString) {
@@ -334,10 +335,11 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
  public:
   AbstractArrowFragmentLoader(const std::string& work_dir, const Schema& schema,
                               const LoadingConfig& loading_config,
-                              int32_t thread_num)
+                              int32_t thread_num, bool batch_init_in_memory)
       : loading_config_(loading_config),
         schema_(schema),
         thread_num_(thread_num),
+        batch_init_in_memory_(batch_init_in_memory),
         basic_fragment_loader_(schema_, work_dir) {
     vertex_label_num_ = schema_.vertex_label_num();
     edge_label_num_ = schema_.edge_label_num();
@@ -834,7 +836,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     }
 
     basic_fragment_loader_.PutEdges(src_label_id, dst_label_id, e_label_id,
-                                    parsed_edges_vec, ie_deg, oe_deg);
+                                    parsed_edges_vec, ie_deg, oe_deg,
+                                    batch_init_in_memory_);
     string_columns.clear();
     size_t sum = 0;
     for (const auto& edges : parsed_edges_vec) {
@@ -848,6 +851,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   size_t vertex_label_num_, edge_label_num_;
   int32_t thread_num_;
   std::mutex* mtxs_;
+  bool batch_init_in_memory_;
 
   mutable BasicFragmentLoader basic_fragment_loader_;
 };

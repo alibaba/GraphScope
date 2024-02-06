@@ -137,7 +137,7 @@ class BasicFragmentLoader {
         oe_prefix(src_label_name, dst_label_name, edge_label_name),
         ie_prefix(src_label_name, dst_label_name, edge_label_name),
         edata_prefix(src_label_name, dst_label_name, edge_label_name),
-        tmp_dir(work_dir_), {}, {});
+        tmp_dir(work_dir_), {}, {}, false);
   }
 
   template <typename EDATA_T>
@@ -146,7 +146,7 @@ class BasicFragmentLoader {
       const std::vector<std::vector<std::tuple<vid_t, vid_t, EDATA_T>>>&
           edges_vec,
       const std::vector<int32_t>& ie_degree,
-      const std::vector<int32_t>& oe_degree) {
+      const std::vector<int32_t>& oe_degree, bool batch_init_in_memory) {
     size_t index = src_label_id * vertex_label_num_ * edge_label_num_ +
                    dst_label_id * edge_label_num_ + edge_label_id;
     auto& src_indexer = lf_indexers_[src_label_id];
@@ -176,7 +176,7 @@ class BasicFragmentLoader {
           oe_prefix(src_label_name, dst_label_name, edge_label_name),
           ie_prefix(src_label_name, dst_label_name, edge_label_name),
           edata_prefix(src_label_name, dst_label_name, edge_label_name),
-          tmp_dir(work_dir_), oe_degree, ie_degree);
+          tmp_dir(work_dir_), oe_degree, ie_degree, batch_init_in_memory);
       std::vector<std::thread> work_threads;
       for (size_t i = 0; i < edges_vec.size(); ++i) {
         work_threads.emplace_back(
@@ -230,7 +230,7 @@ class BasicFragmentLoader {
           oe_prefix(src_label_name, dst_label_name, edge_label_name),
           ie_prefix(src_label_name, dst_label_name, edge_label_name),
           edata_prefix(src_label_name, dst_label_name, edge_label_name),
-          tmp_dir(work_dir_), oe_degree, ie_degree);
+          tmp_dir(work_dir_), oe_degree, ie_degree, batch_init_in_memory);
       std::vector<std::thread> work_threads;
       for (size_t i = 0; i < edges_vec.size(); ++i) {
         work_threads.emplace_back(
