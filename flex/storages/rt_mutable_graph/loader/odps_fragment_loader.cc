@@ -116,9 +116,10 @@ ODPSTableRecordBatchSupplier::GetNextBatch() {
 
 std::shared_ptr<IFragmentLoader> ODPSFragmentLoader::Make(
     const std::string& work_dir, const Schema& schema,
-    const LoadingConfig& loading_config, int32_t thread_num) {
-  return std::shared_ptr<IFragmentLoader>(
-      new ODPSFragmentLoader(work_dir, schema, loading_config, thread_num));
+    const LoadingConfig& loading_config, int32_t thread_num,
+    bool batch_init_in_memory) {
+  return std::shared_ptr<IFragmentLoader>(new ODPSFragmentLoader(
+      work_dir, schema, loading_config, thread_num, batch_init_in_memory));
 }
 void ODPSFragmentLoader::init() { odps_read_client_.init(); }
 

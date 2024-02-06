@@ -33,7 +33,8 @@ int main(int argc, char** argv) {
                                       "parallelism of bulk loader")(
       "data-path,d", bpo::value<std::string>(), "data directory path")(
       "graph-config,g", bpo::value<std::string>(), "graph schema config file")(
-      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file");
+      "bulk-load,l", bpo::value<std::string>(), "bulk-load config file")(
+      "memory-batch-init,m", bpo::value<bool>(), "batch init in memory");
   google::InitGoogleLogging(argv[0]);
   FLAGS_logtostderr = true;
 
@@ -71,7 +72,10 @@ int main(int argc, char** argv) {
     return -1;
   }
   bulk_load_config_path = vm["bulk-load"].as<std::string>();
-
+  bool batch_init_in_memory = false;
+  if (vm.count("memory-batch-init")) {
+    batch_init_in_memory = vm["memory-batch-init"].as<bool>();
+  }
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
 
@@ -92,7 +96,8 @@ int main(int argc, char** argv) {
   }
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
-      data_dir_path.string(), schema, loading_config, parallelism);
+      data_dir_path.string(), schema, loading_config, parallelism,
+      batch_init_in_memory);
   loader->LoadFragment();
 
   t += grape::GetCurrentTime();

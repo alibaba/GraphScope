@@ -56,10 +56,10 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   using slice_t = ImmutableNbrSlice<EDATA_T>;
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree,
-                    double reserve_ratio) override {
+                    const std::vector<int>& degree, double reserve_ratio,
+                    bool batch_init_in_memory) override {
     size_t vnum = degree.size();
-    adj_lists_.open(work_dir + "/" + name + ".adj", true);
+    adj_lists_.open(work_dir + "/" + name + ".adj", !batch_init_in_memory);
     adj_lists_.resize(vnum);
 
     size_t edge_num = 0;
@@ -67,10 +67,10 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
       edge_num += d;
     }
 
-    nbr_list_.open(work_dir + "/" + name + ".nbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".nbr", !batch_init_in_memory);
     nbr_list_.resize(edge_num);
 
-    degree_list_.open(work_dir + "/" + name + ".deg", true);
+    degree_list_.open(work_dir + "/" + name + ".deg", !batch_init_in_memory);
     degree_list_.resize(vnum);
 
     nbr_t* ptr = nbr_list_.data();
@@ -290,10 +290,10 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree,
-                    double reserve_ratio) override {
+                    const std::vector<int>& degree, double reserve_ratio,
+                    bool batch_init_in_memory) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
@@ -456,10 +456,10 @@ class SingleImmutableCsr<std::string_view>
   ~SingleImmutableCsr() {}
 
   size_t batch_init(const std::string& name, const std::string& work_dir,
-                    const std::vector<int>& degree,
-                    double reserve_ratio) override {
+                    const std::vector<int>& degree, double reserve_ratio,
+                    bool batch_init_in_memory) override {
     size_t vnum = degree.size();
-    nbr_list_.open(work_dir + "/" + name + ".snbr", true);
+    nbr_list_.open(work_dir + "/" + name + ".snbr", !batch_init_in_memory);
     nbr_list_.resize(vnum);
     for (size_t k = 0; k != vnum; ++k) {
       nbr_list_[k].neighbor = std::numeric_limits<vid_t>::max();
