@@ -33,8 +33,7 @@ ODPSStreamRecordBatchSupplier::ODPSStreamRecordBatchSupplier(
     const ODPSReadClient& odps_table_reader, const std::string& session_id,
     int split_count, TableIdentifier table_identifier, int worker_id,
     int worker_num)
-    : label_id_(label_id),
-      file_path_(file_path),
+    : file_path_(file_path),
       odps_read_client_(odps_table_reader),
       session_id_(session_id),
       split_count_(split_count),

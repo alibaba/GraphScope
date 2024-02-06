@@ -22,7 +22,6 @@
 #include "flex/storages/rt_mutable_graph/loader/load_utils.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
-#include "flex/utils/mmap_vector.h"
 
 #include <arrow/api.h>
 #include <arrow/io/api.h>
@@ -208,7 +207,7 @@ template <typename PK_T, typename EDATA_T>
 static void append_src_or_dst(
     bool is_dst, size_t old_size, const std::shared_ptr<arrow::Array> col,
     const LFIndexer<vid_t>& indexer,
-    mmap_vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
+    std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
     std::vector<std::atomic<int32_t>>& ie_degree,
     std::vector<std::atomic<int32_t>>& oe_degree) {
   size_t cur_ind = old_size;
@@ -270,7 +269,7 @@ static void append_edges(
     const LFIndexer<vid_t>& dst_indexer,
     std::vector<std::shared_ptr<arrow::Array>>& edata_cols,
     const std::vector<PropertyType>& edge_props,
-    mmap_vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
+    std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
     std::vector<std::atomic<int32_t>>& ie_degree,
     std::vector<std::atomic<int32_t>>& oe_degree) {
   CHECK(src_col->length() == dst_col->length());
@@ -674,8 +673,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     check_edge_invariant(schema_, edge_column_mappings, src_col_ind,
                          dst_col_ind, src_label_id, dst_label_id, e_label_id);
 
-    std::vector<mmap_vector<std::tuple<vid_t, vid_t, EDATA_T>>>
-        parsed_edges_vec;
+    std::vector<std::vector<std::tuple<vid_t, vid_t, EDATA_T>>>
+        parsed_edges_vec(std::thread::hardware_concurrency());
     const auto& src_indexer = basic_fragment_loader_.GetLFIndexer(src_label_id);
     const auto& dst_indexer = basic_fragment_loader_.GetLFIndexer(dst_label_id);
     std::vector<std::atomic<int32_t>> ie_degree(dst_indexer.size()),
@@ -690,13 +689,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
              << " dst indexer size: " << dst_indexer.size();
     ConsumerQueue<std::shared_ptr<arrow::RecordBatch>> queue;
     std::vector<std::thread> work_threads;
-    const auto& work_dir = basic_fragment_loader_.work_dir();
-    for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
-      parsed_edges_vec.emplace_back(
-          runtime_dir(work_dir), src_label_name + "_" + dst_label_name + "_" +
-                                     edge_label_name + "_" + std::to_string(i) +
-                                     ".tmp");
-    }
+
     std::vector<std::vector<std::shared_ptr<arrow::Array>>> string_columns(
         std::thread::hardware_concurrency());
 
