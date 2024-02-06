@@ -19,11 +19,13 @@
 #include <tuple>
 #include <vector>
 
-#include "flex/engines/hqps_db/structures/collection.h"
 #include "grape/util.h"
 
 // Vertex set in with data in rows.
 namespace gs {
+
+template <typename T>
+class Collection;
 
 namespace internal {
 
