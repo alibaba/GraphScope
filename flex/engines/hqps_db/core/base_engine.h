@@ -659,7 +659,6 @@ class BaseEngine {
                                            real_y_ind0, real_y_ind1>(ctx_x,
                                                                      ctx_y);
 
-    double t0 = -grape::GetCurrentTime();
     std::unordered_map<ctx_x_ele_t, int, boost::hash<ctx_x_ele_t>> join_key_map;
     {
       for (auto iter : ctx_x) {
@@ -682,8 +681,6 @@ class BaseEngine {
       }
     }
     LOG(INFO) << "total entry size in map: " << join_key_map.size();
-
-    t0 += grape::GetCurrentTime();
 
     for (auto iter : ctx_x) {
       auto eles = iter.GetAllElement();
@@ -983,7 +980,6 @@ class BaseEngine {
     new_offsets.emplace_back(0);
 
     size_t ind_x = 0;
-    size_t ind_x_limit = head_x.Size();
     auto x_iter = head_x.begin();
     auto x_end = head_x.end();
     auto y_iter = head_y.begin();

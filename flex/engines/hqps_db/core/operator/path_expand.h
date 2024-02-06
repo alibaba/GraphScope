@@ -486,7 +486,6 @@ class PathExpand {
 
     double visit_array_time = 0.0;
     for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
-      double t0 = -grape::GetCurrentTime();
       std::vector<size_t> unused;
       std::tie(tmp_vec, unused) = graph.GetOtherVerticesV2(
           src_label, edge_expand_opt.other_label_, edge_expand_opt.edge_label_,

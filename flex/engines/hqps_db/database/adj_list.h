@@ -586,7 +586,6 @@ class AdjListArray<grape::EmptyType> {
         dynamic_cast<const typed_csr_base_t*>(csr);
     if (casted_csr) {
       for (auto v : vids) {
-        auto edges = casted_csr->get_edges(v);
         slices_.emplace_back(
             std::make_pair(casted_csr->get_edges(v), slice_t()));
       }
