@@ -247,6 +247,12 @@ class ImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
     return ret;
   }
 
+  void close() override {
+    adj_lists_.reset();
+    degree_list_.reset();
+    nbr_list_.reset();
+  }
+
  private:
   void load_meta(const std::string& prefix) {
     std::string meta_file_path = prefix + ".meta";
@@ -345,10 +351,16 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if (!nbr_list_.filename().empty() &&
+        std::filesystem::exists(nbr_list_.filename())) {
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
   }
 
   void warmup(int thread_num) const override {
@@ -427,6 +439,8 @@ class SingleImmutableCsr : public TypedImmutableCsrBase<EDATA_T> {
 
   const nbr_t& get_edge(vid_t i) const { return nbr_list_[i]; }
 
+  void close() override { nbr_list_.reset(); }
+
  private:
   mmap_array<nbr_t> nbr_list_;
 };
@@ -503,10 +517,16 @@ class SingleImmutableCsr<std::string_view>
 
   void dump(const std::string& name,
             const std::string& new_snapshot_dir) override {
-    assert(!nbr_list_.filename().empty() &&
-           std::filesystem::exists(nbr_list_.filename()));
-    std::filesystem::create_hard_link(nbr_list_.filename(),
-                                      new_snapshot_dir + "/" + name + ".snbr");
+    if (!nbr_list_.filename().empty() &&
+        std::filesystem::exists(nbr_list_.filename())) {
+      std::filesystem::create_hard_link(
+          nbr_list_.filename(), new_snapshot_dir + "/" + name + ".snbr");
+    } else {
+      FILE* fp = fopen((new_snapshot_dir + "/" + name + ".snbr").c_str(), "wb");
+      fwrite(nbr_list_.data(), sizeof(nbr_t), nbr_list_.size(), fp);
+      fflush(fp);
+      fclose(fp);
+    }
   }
 
   void warmup(int thread_num) const override {
@@ -590,6 +610,8 @@ class SingleImmutableCsr<std::string_view>
     nbr.data = column_.get_view(nbr_list_[i].data);
     return nbr;
   }
+
+  void close() override { nbr_list_.reset(); }
 
  private:
   StringColumn& column_;
