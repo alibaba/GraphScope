@@ -19,7 +19,6 @@
 #include "flex/storages/rt_mutable_graph/file_names.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/storages/rt_mutable_graph/schema.h"
-#include "flex/utils/mmap_vector.h"
 
 namespace gs {
 
@@ -144,7 +143,7 @@ class BasicFragmentLoader {
   template <typename EDATA_T>
   void PutEdges(
       label_t src_label_id, label_t dst_label_id, label_t edge_label_id,
-      const std::vector<mmap_vector<std::tuple<vid_t, vid_t, EDATA_T>>>&
+      const std::vector<std::vector<std::tuple<vid_t, vid_t, EDATA_T>>>&
           edges_vec,
       const std::vector<int32_t>& ie_degree,
       const std::vector<int32_t>& oe_degree) {
