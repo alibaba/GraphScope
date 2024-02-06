@@ -1182,7 +1182,6 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
     bitset_.swap(new_bitset);
     VLOG(10) << "after subset: " << vec_.size()
              << ",count: " << bitset_.count();
-    ;
   }
 
   void Repeat(std::vector<offset_t>& cur_offset,
