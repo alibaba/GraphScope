@@ -87,7 +87,6 @@ class CsrBase {
   virtual void warmup(int thread_num) const = 0;
 
   virtual void resize(vid_t vnum) = 0;
-
   virtual size_t size() const = 0;
 
   virtual void close() = 0;
