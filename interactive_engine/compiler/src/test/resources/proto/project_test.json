@@ -74,8 +74,6 @@
   }, {
     "opr": {
       "sink": {
-        "tags": [{
-        }],
         "sinkTarget": {
           "sinkDefault": {
           }
