@@ -31,6 +31,7 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -154,11 +155,23 @@ public class GraphPlanner {
             if (logicalPlan.isReturnEmpty()) {
                 return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getRegularQuery() != null) {
-                try (PhysicalBuilder physicalBuilder =
-                        new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
-                    return physicalBuilder.build();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                String physicalOpt = FrontendConfig.PHYSICAL_OPT_CONFIG.get(graphConfig);
+                if ("proto".equals(physicalOpt.toLowerCase())) {
+                    logger.info("physical type is proto");
+                    try (GraphRelProtoPhysicalBuilder physicalBuilder =
+                            new GraphRelProtoPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    logger.info("physical type is ffi");
+                    try (PhysicalBuilder physicalBuilder =
+                            new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             } else {
                 return new ProcedurePhysicalBuilder(logicalPlan).build();
