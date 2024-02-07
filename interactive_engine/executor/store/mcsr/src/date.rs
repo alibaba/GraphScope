@@ -103,8 +103,8 @@ pub fn parse_date(val: &str) -> GDBResult<Date> {
     if let Ok(timestamp) = val.parse::<i64>() {
         let datetime = DateTime::new(timestamp);
         let year = datetime.year();
-        let month = datetime.month();
-        let day = datetime.day();
+        let month = datetime.month() as u32;
+        let day = datetime.day() as u32;
         Ok(Date::new(year, month, day))
     } else {
         let year = val[0..4].parse::<i32>()?;
