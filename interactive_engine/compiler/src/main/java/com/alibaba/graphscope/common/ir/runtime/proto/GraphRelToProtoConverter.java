@@ -78,8 +78,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.Scan.Builder scanBuilder = GraphAlgebraPhysical.Scan.newBuilder();
-        GraphAlgebra.IndexPredicate indexPredicate = buildIndexPredicates(source);
-        if (indexPredicate != null) {
+        RexNode uniqueKeyFilters = source.getUniqueKeyFilters();
+        if (uniqueKeyFilters != null) {
+            GraphAlgebra.IndexPredicate indexPredicate = buildIndexPredicates(uniqueKeyFilters);
             scanBuilder.setIdxPredicate(indexPredicate);
         }
         scanBuilder.setParams(buildQueryParams(source));
@@ -541,18 +542,11 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return rangeBuilder.build();
     }
 
-    private GraphAlgebra.IndexPredicate buildIndexPredicates(GraphLogicalSource source) {
-        RexNode uniqueKeyFilters = source.getUniqueKeyFilters();
-        if (uniqueKeyFilters == null) return null;
-        // 'within' operator in index predicate is unsupported in ir core, here just
-        // expand it to
-        // 'or'
-        // i.e. '~id within [1, 2]' -> '~id == 1 or ~id == 2'
-        RexNode expandSearch = RexUtil.expandSearch(this.rexBuilder, null, uniqueKeyFilters);
-        List<RexNode> disjunctions = RelOptUtil.disjunctions(expandSearch);
-        // TODO: update index scan in proto, and then build it.
-        GraphAlgebra.IndexPredicate.Builder indexBuilder = GraphAlgebra.IndexPredicate.newBuilder();
-        return indexBuilder.build();
+    private GraphAlgebra.IndexPredicate buildIndexPredicates(RexNode uniqueKeyFilters) {
+        GraphAlgebra.IndexPredicate indexPredicate =
+                uniqueKeyFilters.accept(
+                        new RexToIndexPbConverter(true, this.isColumnId, this.rexBuilder));
+        return indexPredicate;
     }
 
     private GraphLabelType getGraphLabels(AbstractBindableTableScan tableScan) {
