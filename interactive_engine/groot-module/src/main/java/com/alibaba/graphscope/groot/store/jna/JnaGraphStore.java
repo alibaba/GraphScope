@@ -34,10 +34,10 @@ import java.nio.file.Paths;
 public class JnaGraphStore implements GraphPartition {
     private static final Logger logger = LoggerFactory.getLogger(JnaGraphStore.class);
 
-    private Pointer pointer;
-    private int partitionId;
-    private Path downloadPath;
-    private Path backupPath;
+    private final Pointer pointer;
+    private final int partitionId;
+    private final Path downloadPath;
+    private final Path backupPath;
 
     public JnaGraphStore(Configs configs, int partitionId) throws IOException {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);

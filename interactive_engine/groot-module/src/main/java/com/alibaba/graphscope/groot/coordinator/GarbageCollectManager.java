@@ -58,7 +58,7 @@ public class GarbageCollectManager {
                                 e.getMessage());
                     }
                 },
-                5000L,
+                interval,
                 interval,
                 TimeUnit.MILLISECONDS);
     }

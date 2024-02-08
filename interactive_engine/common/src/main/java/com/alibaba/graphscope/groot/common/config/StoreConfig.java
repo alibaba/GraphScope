@@ -38,6 +38,9 @@ public class StoreConfig {
     public static final Config<Long> STORE_GC_INTERVAL_MS =
             Config.longConfig("store.gc.interval.ms", 5000L);
 
+    public static final Config<Long> STORE_CATCHUP_INTERVAL_MS =
+            Config.longConfig("store.catchup.interval.ms", 30000L);
+
     // set by IS_SECONDARY_INSTANCE, used in graph.rs
     public static final Config<String> STORE_STORAGE_ENGINE =
             Config.stringConfig("store.storage.engine", "rocksdb");

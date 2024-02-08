@@ -27,7 +27,6 @@ pub type GraphHandle = *const c_void;
 pub type PartitionGraphHandle = *const c_void;
 pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
 use tikv_jemallocator::Jemalloc;
-use tokio::spawn;
 
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
@@ -145,7 +144,6 @@ pub extern "C" fn writeBatch(
                             info!("Reopened store");
                         },
                         Err(e) => {
-                            let msg = format!();
                             error!("Reopen failed: {:?}", e);
                         }
                     }
@@ -475,7 +473,7 @@ pub extern "C" fn reopenSecondary(ptr: GraphHandle, wait_sec: i64) -> Box<JnaRes
 #[no_mangle]
 pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
-    if snapshot_id % 3600 != 0 {
+    if snapshot_id % 60 != 0 {
         return JnaResponse::new_success();
     }
     info!("garbageCollectSnapshot si {}", snapshot_id);
@@ -495,7 +493,8 @@ pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
         Ok(_) => JnaResponse::new_success(),
         Err(e) => {
             error!("Error during catch up primary {:?}", e);
-            match graph_store_ptr.reopen(10) {
+            // sleep 2 min for the underlying storage catch latest changes.
+            match graph_store_ptr.reopen(120) {
                 Ok(_) => {
                     info!("Reopened store");
                     JnaResponse::new_success()

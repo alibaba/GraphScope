@@ -77,13 +77,12 @@ impl RocksDB {
         let new_db = Arc::new(db);
         let new_db_shared = Owned::new(new_db).into_shared(&guard);
         let old_db_shared = self.db.swap(new_db_shared, Ordering::Release, &guard);
-
         // Use Crossbeam's 'defer' mechanism to safely drop the old Arc
         unsafe {
             // Convert 'Shared' back to 'Arc' for deferred dropping
-            let old_db_arc = old_db_shared.into_owned();
-            // guard.defer_destroy(old_db_shared)
-            guard.defer(|| drop(old_db_arc))
+            // let old_db_arc = old_db_shared.into_owned();
+            guard.defer_destroy(old_db_shared)
+            // guard.defer(|| drop(old_db_arc))
         }
         info!("RocksDB replaced");
     }
@@ -191,17 +190,18 @@ impl RocksDB {
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
-            db.delete_file_in_range(start, end)
-                .map_err(|e| {
-                    let msg = format!("rocksdb.delete_files_in_range failed because {}", e.into_string());
-                    gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-                })?;
+            // db.delete_file_in_range(start, end)
+            //     .map_err(|e| {
+            //         let msg = format!("rocksdb.delete_files_in_range failed because {}", e.into_string());
+            //         gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
+            //     })?;
             batch.delete_range(start, end);
             db.write(batch).map_err(|e| {
                 let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
                 gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
             })?;
             db.compact_range(Option::Some(start), Option::Some(end));
+            info!("compacted rocksdb from {:?} to {:?}", start, end);
             Ok(())
         } else {
             let msg = format!("rocksdb.delete_range failed because the acquired db is `None`");
@@ -300,13 +300,21 @@ impl RocksDB {
         if !self.is_secondary {
             return Ok(());
         }
-        std::thread::sleep(Duration::from_secs(wait_sec));
-        let db = RocksDB::open_helper(&self.options, true).map_err(|e| {
-            let msg = format!("open rocksdb at {:?}, error: {:?}", self.options, e);
-            gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
-        })?;
-        info!("RocksDB Reopened");
-        self.replace_db(db);
+        loop {
+            std::thread::sleep(Duration::from_secs(wait_sec));
+            let db = RocksDB::open_helper(&self.options, true).map_err(|e| {
+                let msg = format!("open rocksdb at {:?}, error: {:?}", self.options, e);
+                gen_graph_err!(GraphErrorCode::ExternalStorageError, msg, open_as_secondary)
+            })?;
+            let ret = db.try_catch_up_with_primary();
+            if ret.is_err() {
+                error!("New secondary catch up failed: {:?}", ret);
+            } else {
+                info!("RocksDB secondary instance reopened");
+                self.replace_db(db);
+                break;
+            }
+        }
         Ok(())
     }
 }
@@ -397,10 +405,10 @@ fn init_secondary_options(options: &HashMap<String, String>) -> Options {
     let mut opts = Options::default();
     opts.set_max_open_files(-1);
     opts.set_max_write_buffer_number(4);
-    if let Some(conf_str) = options.get("store.rocksdb.paranoid.checks") {
-        let check = conf_str.parse().unwrap();
-        opts.set_paranoid_checks(check);
-    }
+    // if let Some(conf_str) = options.get("store.rocksdb.paranoid.checks") {
+    //     let check = conf_str.parse().unwrap();
+    //     opts.set_paranoid_checks(check);
+    // }
     opts
 }
 
