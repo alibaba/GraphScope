@@ -44,7 +44,7 @@ import java.util.Iterator;
 public interface ProjectedAdjList<VID_T, EDATA_T> extends FFIPointer {
 
     /**
-     * Get the the first Nbr.
+     * Get the first Nbr.
      *
      * @return first Nbr.
      */

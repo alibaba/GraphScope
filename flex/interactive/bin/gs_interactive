@@ -645,7 +645,7 @@ function enable_proc_usage(){
     gs_interactive procedure enable -g[--graph] <graph_name> -n[--name] <library names,separated by ','> 
                                  -c[--config] <stored_procedures.yaml>
                 Enable the stored procedure in the given graph, with the provided library.
-                stored_procedures.yaml contains the the stored procedure names at each line.
+                stored_procedures.yaml contains the stored procedure names at each line.
 EOF
 }
 
@@ -654,7 +654,7 @@ function disable_proc_usage(){
     gs_interactive procedure disable -g[--graph] <graph_name> -n[--name] <library names,separated by ','>
                                   -c[--config] <stored_procedures.yaml>
                 Disable the stored procedure in the given graph, with the provided library.
-                stored_procedures.yaml contains the the stored procedure names at each line.
+                stored_procedures.yaml contains the stored procedure names at each line.
 EOF
 }
 
