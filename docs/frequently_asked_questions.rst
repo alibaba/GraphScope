@@ -12,7 +12,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
     - CentOS 7+
     - Ubuntu 18.04+
-    - MacOS 10.15+
+    - macOS 10.15+
 
     For distributed deployment, a cluster managed by Kubernetes is required. GraphScope has been tested on
     Kubernetes **version >= v1.12.0+**.
@@ -80,7 +80,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
     - compile ``scipy`` failed: You can follow `this <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ to build scipy from source or try ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` to workaround this problem.
 
-      If you encounter errors like `ERROR: Dependency "OpenBLAS" not found, tried pkgconfig, framework and cmake` during installing scipy on MacOS, try:
+      If you encounter errors like `ERROR: Dependency "OpenBLAS" not found, tried pkgconfig, framework and cmake` during installing scipy on macOS, try:
 
       .. code:: bash
 
