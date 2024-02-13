@@ -1942,7 +1942,7 @@ class ResolveMPICmdPrefix(object):
                 else:
                     proc_num[host] = quotient
         else:
-            raise RuntimeError("The number of hosts less then num_workers")
+            raise RuntimeError("The number of hosts less than num_workers")
         return ",".join([f"{host}:{proc_num[host]}" for host in hosts])
 
     @staticmethod
