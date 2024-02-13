@@ -379,7 +379,7 @@ elseif (JAVA_PIE_APP)
         else()
             message(WARNING "Compiling with ENABLE_JAVA_SDK ON expects a minimum Clang-11 compiler, "
                             "current compiler is ${CMAKE_CXX_COMPILER}. The build process will continue, "
-                            "BUT llvm4jni-based accerleration will be unavailable for generated libs.")
+                            "BUT llvm4jni-based acceleration will be unavailable for generated libs.")
         endif()
     endif()
 
