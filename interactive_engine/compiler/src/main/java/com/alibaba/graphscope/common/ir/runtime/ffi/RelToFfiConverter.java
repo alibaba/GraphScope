@@ -545,7 +545,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (offset != null && !(offset instanceof RexLiteral)
                 || fetch != null && !(fetch instanceof RexLiteral)) {
             throw new IllegalArgumentException(
-                    "can not get INTEGER hops from types instead of RexLiteral");
+                    "cannot get INTEGER hops from types instead of RexLiteral");
         }
         int lower = (offset == null) ? 0 : ((Number) ((RexLiteral) offset).getValue()).intValue();
         int upper =

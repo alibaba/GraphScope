@@ -114,7 +114,7 @@ public class DoubleMessageStore extends AbstractMessageStore<Double> {
         FFIByteVectorInputStream inputStream = new FFIByteVectorInputStream(vector);
         int size = (int) vector.size();
         if (size <= 0) {
-            throw new IllegalStateException("The received vector can not be empty");
+            throw new IllegalStateException("The received vector cannot be empty");
         }
 
         Vertex<Long> vertex = tmpVertex[threadId];

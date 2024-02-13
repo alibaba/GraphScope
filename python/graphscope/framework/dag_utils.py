@@ -293,7 +293,7 @@ def dynamic_to_arrow(graph):
             oid_type = type(node)
         elif oid_type != type(node):
             raise RuntimeError(
-                "The vertex type is not consistent {} vs {}, can not convert it to arrow graph".format(
+                "The vertex type is not consistent {} vs {}, cannot convert it to arrow graph".format(
                     str(oid_type), str(type(node))
                 )
             )

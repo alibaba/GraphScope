@@ -228,11 +228,11 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
     // @.name -> as_var_property_only("name")
     // @a.name -> as_var("a", "name")
     default FfiVariable.ByValue getExpressionAsVar(String expr) {
-        // {@a.name} can not be represented as variable
+        // {@a.name} cannot be represented as variable
         if (expr.startsWith("{") && expr.endsWith("}")) {
             throw new OpArgIllegalException(
                     OpArgIllegalException.Cause.INVALID_TYPE,
-                    "can not convert expression of valueMap to variable");
+                    "cannot convert expression of valueMap to variable");
         }
         String[] splitExpr = expr.split("\\.");
         if (splitExpr.length == 0) {
@@ -250,7 +250,7 @@ public interface TraversalParentTransform extends Function<TraversalParent, List
         if (expr.startsWith("{") && expr.endsWith("}")) {
             throw new OpArgIllegalException(
                     OpArgIllegalException.Cause.INVALID_TYPE,
-                    "can not convert expression of valueMap to variable");
+                    "cannot convert expression of valueMap to variable");
         }
         String[] splitExpr = expr.split("\\.");
         if (splitExpr.length == 0) {

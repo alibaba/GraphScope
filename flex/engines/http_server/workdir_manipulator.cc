@@ -213,16 +213,16 @@ gs::Result<seastar::sstring> WorkDirManipulator::DeleteGraph(
   if (is_graph_running(graph_name)) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::IllegalOperation,
-                   "Can not remove a running " + graph_name),
+                   "Cannot remove a running " + graph_name),
         seastar::sstring("graph " + graph_name +
-                         " is running, can not be removed"));
+                         " is running, cannot be removed"));
   }
   if (is_graph_locked(graph_name)) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::IllegalOperation,
-                   "Can not remove graph " + graph_name +
+                   "Cannot remove graph " + graph_name +
                        ", since data loading ongoing"),
-        seastar::sstring("Can not remove graph " + graph_name +
+        seastar::sstring("Cannot remove graph " + graph_name +
                          ", since data loading ongoing"));
   }
   // remove the graph directory
@@ -257,13 +257,13 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
   if (is_graph_loaded(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::IllegalOperation,
-        "Graph is already loaded, can not be loaded twice: " + graph_name));
+        "Graph is already loaded, cannot be loaded twice: " + graph_name));
   }
   // check is graph locked
   if (is_graph_running(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
         gs::StatusCode::IllegalOperation,
-        "Graph is already running, can not be loaded: " + graph_name));
+        "Graph is already running, cannot be loaded: " + graph_name));
   }
   if (!try_lock_graph(graph_name)) {
     return gs::Result<seastar::sstring>(gs::Status(
@@ -982,7 +982,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::add_procedure_to_graph(
   auto proc_name = json["name"].get<std::string>();
   if (proc_name.empty()) {
     return seastar::make_exception_future<seastar::sstring>(
-        "Procedure name is empty, can not add to graph: " + graph_name);
+        "Procedure name is empty, cannot add to graph: " + graph_name);
   }
   // get graph schema file
   auto graph_schema_file = GetGraphSchemaPath(graph_name);
@@ -998,7 +998,7 @@ seastar::future<seastar::sstring> WorkDirManipulator::add_procedure_to_graph(
   // get plugin list
   if (!schema_node) {
     return seastar::make_exception_future<seastar::sstring>(
-        "Graph schema is empty, can not add procedure to graph: " + graph_name);
+        "Graph schema is empty, cannot add procedure to graph: " + graph_name);
   }
   if (!schema_node["stored_procedures"]) {
     schema_node["stored_procedures"] = YAML::Node(YAML::NodeType::Map);

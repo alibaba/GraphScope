@@ -137,7 +137,7 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
         } else if (logicalPlan.getProcedureCall() != null) {
             return original.resolve(INTERACTIVE_QUERY_PATH);
         } else {
-            throw new IllegalArgumentException("the request can not be sent to the remote service");
+            throw new IllegalArgumentException("the request cannot be sent to the remote service");
         }
     }
 

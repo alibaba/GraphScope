@@ -224,7 +224,7 @@ impl RecordSinkEncoder {
                 return NameOrId::Str(meta_name.clone());
             }
         }
-        // if we can not find mapped meta_name, we return meta_id directly.
+        // if we cannot find mapped meta_name, we return meta_id directly.
         NameOrId::Id(meta_id)
     }
 

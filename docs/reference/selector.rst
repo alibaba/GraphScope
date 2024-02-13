@@ -4,7 +4,7 @@
 Selector
 ========
 
-Selectors are strs, or key-value pairs that used for :ref:`Graph`, or :ref:`Context`. Selectors are intended to be used to specify a subset of data of objects, they can not only retrieve the results of algorithms, but also elements on
+Selectors are strs, or key-value pairs that used for :ref:`Graph`, or :ref:`Context`. Selectors are intended to be used to specify a subset of data of objects, they cannot only retrieve the results of algorithms, but also elements on
 the graph itself. The syntax of selectors slightly differ from each other For different kinds of graphs or contexts. Since we have 5 kinds of context, let's talk about them one by one.
 
 Selectors in different context

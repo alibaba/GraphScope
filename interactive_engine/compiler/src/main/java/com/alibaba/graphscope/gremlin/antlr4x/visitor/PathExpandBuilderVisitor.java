@@ -42,7 +42,7 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
             GremlinGSParser.TraversalMethod_outContext ctx) {
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         Preconditions.checkArgument(
-                labels != null && labels.length > 0, "arguments can not be empty in path expand");
+                labels != null && labels.length > 0, "arguments cannot be empty in path expand");
         String[] ranges = labels[0].split("\\.\\.");
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
@@ -66,7 +66,7 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
             GremlinGSParser.TraversalMethod_inContext ctx) {
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         Preconditions.checkArgument(
-                labels != null && labels.length > 0, "arguments can not be empty in path expand");
+                labels != null && labels.length > 0, "arguments cannot be empty in path expand");
         String[] ranges = labels[0].split("\\.\\.");
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);
@@ -90,7 +90,7 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
             GremlinGSParser.TraversalMethod_bothContext ctx) {
         String[] labels = GenericLiteralVisitor.getStringLiteralList(ctx.stringLiteralList());
         Preconditions.checkArgument(
-                labels != null && labels.length > 0, "arguments can not be empty in path expand");
+                labels != null && labels.length > 0, "arguments cannot be empty in path expand");
         String[] ranges = labels[0].split("\\.\\.");
         int lower = Integer.valueOf(ranges[0]);
         int upper = Integer.valueOf(ranges[1]);

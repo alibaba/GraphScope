@@ -138,7 +138,7 @@ public class DefaultMessageStore<OID_T extends WritableComparable, MSG_T extends
                 logger.debug("After swap {} vs {}", this.messages, otherStore.messages);
             }
         } else {
-            logger.error("Can not swap with a non-longDoubleMessageStore obj");
+            logger.error("Cannot swap with a non-longDoubleMessageStore obj");
         }
     }
 

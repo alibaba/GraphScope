@@ -144,7 +144,7 @@ namespace details {
       template<typename Ret, typename Arg>
       struct Map<Ret(Arg)> {
         static_assert(!IsResult<Ret>::value,
-                      "Can not map a callback returning a Result, use andThen instead");
+                      "Cannot map a callback returning a Result, use andThen instead");
 
         template<typename T, typename E, typename Func>
         static Result<Ret, E> map(const Result<T, E> &result, Func func) {
@@ -182,7 +182,7 @@ namespace details {
         template<typename T, typename E, typename Func>
         static Result<Ret, E> map(const Result<T, E> &result, Func func) {
           static_assert(std::is_same<T, void>::value,
-                        "Can not map a void callback on a non-void Result");
+                        "Cannot map a void callback on a non-void Result");
 
           if (result.isOk()) {
             auto ret = func();
@@ -199,7 +199,7 @@ namespace details {
         template<typename T, typename E, typename Func>
         static Result<void, E> map(const Result<T, E> &result, Func func) {
           static_assert(std::is_same<T, void>::value,
-                        "Can not map a void callback on a non-void Result");
+                        "Cannot map a void callback on a non-void Result");
 
           if (result.isOk()) {
             func();
@@ -234,7 +234,7 @@ namespace details {
       struct Map<Result<U, E>(void)> {
         template<typename T, typename Func>
         static Result<U, E> map(const Result<T, E> &result, Func func) {
-          static_assert(std::is_same<T, void>::value, "Can not call a void-callback on a non-void Result");
+          static_assert(std::is_same<T, void>::value, "Cannot call a void-callback on a non-void Result");
 
           if (result.isOk()) {
             auto res = func();
@@ -280,7 +280,7 @@ namespace details {
       template<typename Ret, typename Cls, typename Arg>
       struct Map<Ret (Cls::*)(Arg) const> {
         static_assert(!IsResult<Ret>::value,
-                      "Can not map a callback returning a Result, use orElse instead");
+                      "Cannot map a callback returning a Result, use orElse instead");
 
         template<typename T, typename E, typename Func>
         static Result<T, Ret> map(const Result<T, E> &result, Func func) {
@@ -351,7 +351,7 @@ namespace details {
 
         template<typename T, typename E, typename Func>
         static Result<T, E> then(const Result<T, E> &result, Func func) {
-          static_assert(std::is_same<T, void>::value, "Can not call a void-callback on a non-void Result");
+          static_assert(std::is_same<T, void>::value, "Cannot call a void-callback on a non-void Result");
 
           if (result.isOk()) {
             func();
@@ -434,7 +434,7 @@ namespace details {
         template<typename E, typename Func>
         static Result<T, F> orElse(const Result<T, E> &result, Func func) {
           static_assert(std::is_same<T, void>::value,
-                        "Can not call a void-callback on a non-void Result");
+                        "Cannot call a void-callback on a non-void Result");
 
           if (result.isErr()) {
             auto res = func();

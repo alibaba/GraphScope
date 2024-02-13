@@ -62,7 +62,7 @@ pub trait BasicSentence: AsBaseSentence {
     /// Get the end tag of the `BasicSentence`, which is optional
     fn get_end_tag(&self) -> Option<&NameOrId>;
     /// Get the join kind, for identifying if the basic sentence carries the
-    /// anti/semi join semantics, which can not be composited
+    /// anti/semi join semantics, which cannot be composited
     fn get_join_kind(&self) -> pb::join::JoinKind;
     /// Get the reverse sentence, which not only reverse the start and end tag (must present),
     /// and the direction of all edge/path expansions if possible.

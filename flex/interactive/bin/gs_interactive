@@ -1041,7 +1041,7 @@ function do_create(){
   # add some default settings and non-user-aware settings to schema file.
   amplify_graph_schema ${schema_file} ${amplify_schema_file}
   # check graph is running inside docker
-  check_graph_not_running ${graph_name} || (err "Can not create graph ${graph_name}, since a graph with same nameing running." && exit 1)
+  check_graph_not_running ${graph_name} || (err "Cannot create graph ${graph_name}, since a graph with same nameing running." && exit 1)
   # create the graph directory in the docker's workspace
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
@@ -1088,12 +1088,12 @@ function do_remove(){
   check_graph_name_valid "${graph_name}"
   # check if the graph is created
   if [ ! -d "${HOST_DB_HOME}/data/${graph_name}" ]; then
-    err "graph [${graph_name}] can not be removed, since it is not created."
+    err "graph [${graph_name}] cannot be removed, since it is not created."
     exit 1
   fi
   # check graph is running inside docker
   if ! check_graph_not_running ${graph_name}; then
-    err "Can not remove graph ${graph_name}, since a graph with same nameing running!"
+    err "Cannot remove graph ${graph_name}, since a graph with same nameing running!"
     exit 1;
   fi
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
@@ -1156,7 +1156,7 @@ function do_import(){
   fi
   check_graph_name_valid "${graph_name}"
   if [ ! -d "${HOST_DB_HOME}/data/${graph_name}" ]; then
-    err "graph [${graph_name}] can not be found, please create it first"
+    err "graph [${graph_name}] cannot be found, please create it first"
     exit 1
   fi
   info "Import data to graph [${graph_name}] from ${bulk_load_file}"
@@ -1166,7 +1166,7 @@ function do_import(){
   check_file_exists "${bulk_load_file}"
   info "bulk_load_file ${bulk_load_file} exists"
 
-  check_graph_not_running ${graph_name} || info "Can not import data to graph [${graph_name}], since it is already running."
+  check_graph_not_running ${graph_name} || info "Cannot import data to graph [${graph_name}], since it is already running."
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
   fi
@@ -1341,7 +1341,7 @@ function do_start(){
   fi
   check_graph_name_valid "${graph_name}"
   if [ ! -d "${HOST_DB_HOME}/data/${graph_name}" ]; then
-    err "graph [${graph_name}] can not be found, please create it and import data first."
+    err "graph [${graph_name}] cannot be found, please create it and import data first."
     exit 1
   fi
 
@@ -1651,7 +1651,7 @@ function do_compile() {
   check_graph_name_valid "${graph_name}"
   # check graph exists
   if [ ! -d "${HOST_DB_HOME}/data/${graph_name}" ]; then
-    err "graph [${graph_name}] can not be found, please create it first"
+    err "graph [${graph_name}] cannot be found, please create it first"
     exit 1
   fi
 
@@ -1792,13 +1792,13 @@ function do_enable(){
   fi
   check_graph_name_valid "${graph_name}"
   if [ ! -d "${HOST_DB_HOME}/data/${graph_name}" ]; then
-    err "graph [${graph_name}] can not be found, please create it first"
+    err "graph [${graph_name}] cannot be found, please create it first"
     exit 1
   fi
 
-  # --name and --config can not be set at the same time
+  # --name and --config cannot be set at the same time
   if [ ! -z "${stored_procedure_names}" ] && [ ! -z "${stored_procedure_names_yaml}" ]; then
-    err "--name and --config can not be set at the same time"
+    err "--name and --config cannot be set at the same time"
     enable_proc_usage
     exit 1
   fi
@@ -1877,9 +1877,9 @@ function do_disable(){
     esac
   done
 
-  # --name and --config can not be set at the same time
+  # --name and --config cannot be set at the same time
   if [ ! -z "${stored_procedure_names}" ] && [ ! -z "${stored_procedure_names_yaml}" ] && [ "${disable_all}" = true ]; then
-    err "--name, --config and --all can not be set at the same time"
+    err "--name, --config and --all cannot be set at the same time"
     disable_proc_usage
     exit 1
   fi
@@ -1901,7 +1901,7 @@ function do_disable(){
   fi
   check_graph_name_valid "${graph_name}"
   if [ ! -d "${HOST_DB_HOME}/data/${graph_name}" ]; then
-    err "graph [${graph_name}] can not be found, please create it first"
+    err "graph [${graph_name}] cannot be found, please create it first"
     exit 1
   fi
 
@@ -1976,7 +1976,7 @@ function do_show(){
   fi
   check_graph_name_valid "${graph_name}"
   if [ ! -d "${HOST_DB_HOME}/data/${graph_name}" ]; then
-    err "graph [${graph_name}] can not be found, please create it first"
+    err "graph [${graph_name}] cannot be found, please create it first"
     exit 1
   fi
   info "graph_name = ${graph_name}"

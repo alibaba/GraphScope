@@ -279,7 +279,7 @@ public class ArrowProjectedGenerator {
     private void addTemplate(String typeName, String... templates) {
         if (templates.length % 2 != 0) {
             throw new IllegalStateException(
-                    "Can not have odd number of template types " + String.join(",", templates));
+                    "Cannot have odd number of template types " + String.join(",", templates));
         }
         int num = templates.length;
         AnnotationSpec.Builder curBuilder = AnnotationSpec.builder(FFIGen.class);

@@ -72,7 +72,7 @@ class BitSetWithOffset(
   def union(other: BitSetWithOffset): Unit = {
     require(
       size == other.size && (startBit == other.startBit) && (endBit == other.endBit),
-      s"can not union between ${this.toString} and ${other.toString}"
+      s"cannot union between ${this.toString} and ${other.toString}"
     )
     bitset.union(other.bitset)
   }
@@ -80,7 +80,7 @@ class BitSetWithOffset(
   def &(other: BitSetWithOffset): BitSetWithOffset = {
     require(
       size == other.size && (startBit == other.startBit) && (endBit == other.endBit),
-      s"can not union between ${this.toString} and ${other.toString}"
+      s"cannot union between ${this.toString} and ${other.toString}"
     )
     new BitSetWithOffset(startBit, endBit, bitset & other.bitset)
   }
@@ -102,7 +102,7 @@ class BitSetWithOffset(
   def andNot(other: BitSetWithOffset): BitSetWithOffset = {
     require(
       size == other.size && (startBit == other.startBit) && (endBit == other.endBit),
-      s"can not union between ${this.toString} and ${other.toString}"
+      s"cannot union between ${this.toString} and ${other.toString}"
     )
     new BitSetWithOffset(startBit, endBit, bitset.andNot(other.bitset))
   }

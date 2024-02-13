@@ -591,7 +591,7 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
             throws IOException, ClassNotFoundException {
         if (length < oldArray.getLength()) {
             throw new IllegalStateException(
-                    "dst array length can not be smaller than off heap array "
+                    "dst array length cannot be smaller than off heap array "
                             + length
                             + ", "
                             + oldArray.getLength());
@@ -630,7 +630,7 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
             PrimitiveTypedArray<T> oldArray, Class<? extends T> clz, int length) {
         if (length < oldArray.getLength()) {
             throw new IllegalStateException(
-                    "dst array length can not be smaller than off heap array "
+                    "dst array length cannot be smaller than off heap array "
                             + length
                             + ", "
                             + oldArray.getLength());

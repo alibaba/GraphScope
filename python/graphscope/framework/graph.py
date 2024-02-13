@@ -154,7 +154,7 @@ class GraphInterface(metaclass=ABCMeta):
                 "networkx graph and graphscope graph not in the same session."
             )
         if hasattr(g, "_graph"):
-            raise TypeError("graph view can not convert to gs graph")
+            raise TypeError("graph view cannot convert to gs graph")
         return dag_utils.dynamic_to_arrow(g)
 
     def _from_vineyard(self, vineyard_object):

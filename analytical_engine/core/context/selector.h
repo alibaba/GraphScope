@@ -356,7 +356,7 @@ class LabeledSelector : public Selector {
     }
     if (label_id == -1) {
       RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                      "Can not found vertex label from selectors");
+                      "Cannot found vertex label from selectors");
     }
     return label_id;
   }

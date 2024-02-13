@@ -157,7 +157,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer> {
                             oprIdx));
         } else {
             throw new UnsupportedOperationException(
-                    "node type " + original.getClass() + " can not be appended to the ffi plan");
+                    "node type " + original.getClass() + " cannot be appended to the ffi plan");
         }
         this.planPointer.lastIdx = oprIdx.getValue();
     }

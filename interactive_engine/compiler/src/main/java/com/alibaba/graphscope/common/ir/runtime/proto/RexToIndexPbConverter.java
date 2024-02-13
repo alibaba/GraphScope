@@ -101,7 +101,7 @@ public class RexToIndexPbConverter extends RexVisitorImpl<GraphAlgebra.IndexPred
                 }
             default:
                 throw new IllegalArgumentException(
-                        "can not convert unique key filter pattern="
+                        "cannot convert unique key filter pattern="
                                 + rexCall
                                 + " to ir core index predicate");
         }

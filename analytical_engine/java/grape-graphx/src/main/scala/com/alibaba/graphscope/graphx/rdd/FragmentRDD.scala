@@ -145,7 +145,7 @@ class FragmentRDD[VD: ClassTag, ED: ClassTag](
   ): (GrapeVertexRDD[VD], GrapeEdgeRDD[ED]) = {
     require(
       userNumPartitions >= getNumPartitions,
-      s"can not construct ${userNumPartitions} partitions from ${getNumPartitions} frag"
+      s"cannot construct ${userNumPartitions} partitions from ${getNumPartitions} frag"
     )
     this.cache()
     val time0   = System.nanoTime()

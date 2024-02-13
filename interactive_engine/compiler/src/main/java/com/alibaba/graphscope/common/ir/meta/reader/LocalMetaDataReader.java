@@ -78,7 +78,7 @@ public class LocalMetaDataReader implements MetaDataReader {
                 InputStream enableInput = procedureInputMap.get(enableProcedure);
                 Preconditions.checkArgument(
                         enableInput != null,
-                        "can not find procedure with name=%s under directory=%s, candidates are %s",
+                        "cannot find procedure with name=%s under directory=%s, candidates are %s",
                         enableProcedure,
                         procedureDir,
                         procedureInputMap.keySet());

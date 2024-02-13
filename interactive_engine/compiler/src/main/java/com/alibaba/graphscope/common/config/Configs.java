@@ -103,7 +103,7 @@ public class Configs implements Context {
                 case JSON:
                 default:
                     throw new UnsupportedOperationException(
-                            "can not initiate Configs from the file " + file);
+                            "cannot initiate Configs from the file " + file);
             }
         }
     }

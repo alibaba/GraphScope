@@ -58,7 +58,7 @@ public class FakeFFIByteVectorInputStream extends InputStream implements DataInp
     }
 
     public void clear() {
-        throw new IllegalStateException("can not clear");
+        throw new IllegalStateException("cannot clear");
     }
 
     /**

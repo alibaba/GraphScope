@@ -307,7 +307,7 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
         if (properties_map.find(prop_name) == properties_map.end()) {
           RETURN_GS_ERROR(
               vineyard::ErrorCode::kInvalidValueError,
-              "Property " + prop_name + " can not found in context.");
+              "Property " + prop_name + " cannot found in context.");
         }
         auto column = properties_map.at(prop_name);
         if (comm_spec.fid() == 0) {
@@ -361,7 +361,7 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
 
       if (properties_map.find(prop_name) == properties_map.end()) {
         RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidValueError,
-                        "Property " + prop_name + " can not found in context.");
+                        "Property " + prop_name + " cannot found in context.");
       }
       auto column = properties_map.at(prop_name);
 
@@ -428,7 +428,7 @@ class VertexPropertyContextWrapper : public IVertexPropertyContextWrapper {
         if (properties_map.find(prop_name) == properties_map.end()) {
           RETURN_GS_ERROR(
               vineyard::ErrorCode::kInvalidValueError,
-              "Property " + prop_name + " can not found in context.");
+              "Property " + prop_name + " cannot found in context.");
         }
         auto column = properties_map.at(prop_name);
 

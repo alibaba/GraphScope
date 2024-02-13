@@ -285,7 +285,7 @@ class TestGraphTransformation(object):
         nx_g.add_node("str_node")  # add a str node
         with pytest.raises(
             RuntimeError,
-            match="The vertex type is not consistent <class 'int'> vs <class 'str'>, can not convert it to arrow graph",
+            match="The vertex type is not consistent <class 'int'> vs <class 'str'>, cannot convert it to arrow graph",
         ):
             gs_g = g(nx_g)  # mixing oid type, failed
 
@@ -297,7 +297,7 @@ class TestGraphTransformation(object):
         nx_g = self.NXGraph(dist=True)
         nx_g._graph = None  # graph view always has a _graph attribute
         nx_g._is_client_view = False
-        with pytest.raises(TypeError, match="graph view can not convert to gs graph"):
+        with pytest.raises(TypeError, match="graph view cannot convert to gs graph"):
             gs_g = g(nx_g)
 
     def test_error_on_mixing_node_nx_to_gs(self):
@@ -306,7 +306,7 @@ class TestGraphTransformation(object):
         nx_g.add_node("zakky", foo="node")
         with pytest.raises(
             RuntimeError,
-            match="The vertex type is not consistent <class 'int'> vs <class 'str'>, can not convert it to arrow graph",
+            match="The vertex type is not consistent <class 'int'> vs <class 'str'>, cannot convert it to arrow graph",
         ):
             gs_g = g(nx_g)
 

@@ -1060,7 +1060,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         RexGraphVariable curVar = builder.variable(tag);
         RelDataType dataType = curVar.getType();
         Preconditions.checkArgument(
-                dataType instanceof GraphSchemaType, "can not get property from type=", dataType);
+                dataType instanceof GraphSchemaType, "cannot get property from type=", dataType);
         return dataType.getFieldList().stream().map(k -> k.getName()).collect(Collectors.toList());
     }
 

@@ -53,7 +53,7 @@ If you want to build from parent project without building :code:`libgrape-jni.so
     cd GraphScope/analytical_engine/java/
     mvn clean install -Dmaven.antrun.skip=true
 
-You can turn on the jni library building by remove the mvn option `-Dmaven.antrun.skip=true`. But you can not expect a successful building if 
+You can turn on the jni library building by remove the mvn option `-Dmaven.antrun.skip=true`. But you cannot expect a successful building if 
 your develop environment doesn't satisfy the following requirements.
 
 - GraphScope-GAE installed

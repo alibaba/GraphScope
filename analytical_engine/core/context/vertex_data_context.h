@@ -126,7 +126,7 @@ context_data_to_arrow_array(
     const typename FRAG_T::vertex_range_t& vertices,
     const typename FRAG_T::template vertex_array_t<DATA_T>& data) {
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                  "Can not transform dynamic type");
+                  "Cannot transform dynamic type");
 }
 
 template <typename FRAG_T, typename COMPUTE_CONTEXT_T>

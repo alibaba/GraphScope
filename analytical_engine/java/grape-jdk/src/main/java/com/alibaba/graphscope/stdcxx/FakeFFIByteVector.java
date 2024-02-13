@@ -81,7 +81,7 @@ public class FakeFFIByteVector extends FFIPointerImpl implements StdVector<Byte>
     }
 
     public void clear() {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public long data() {
@@ -90,7 +90,7 @@ public class FakeFFIByteVector extends FFIPointerImpl implements StdVector<Byte>
 
     @CXXOperator("delete")
     public void delete() {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     @CXXOperator("[]")
@@ -151,15 +151,15 @@ public class FakeFFIByteVector extends FFIPointerImpl implements StdVector<Byte>
     }
 
     public void push_back(@CXXValue Byte arg0) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void reserve(long arg0) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void resize(long arg0) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     /**
@@ -179,49 +179,49 @@ public class FakeFFIByteVector extends FFIPointerImpl implements StdVector<Byte>
      * @param requiredSize additional spaced needed.
      */
     public void ensure(long offset, int requiredSize) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     @CXXOperator("[]")
     public void set(long arg0, @CXXReference Byte arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setRawByte(long arg0, byte arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setRawShort(long arg0, short arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setRawChar(long arg0, char arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setRawInt(long arg0, int arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setRawLong(long arg0, long arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setRawFloat(long arg0, float arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setRawDouble(long arg0, double arg1) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void finishSetting(long offset) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     @CXXOperator("[]")
     public static void nativeSet(long var0, long var2, byte var4) {
-        throw new IllegalStateException("can not apply to fake vector");
+        throw new IllegalStateException("cannot apply to fake vector");
     }
 
     public void setAddress(long arg0) {

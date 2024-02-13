@@ -1405,7 +1405,7 @@ class Session(object):
         """
         logger.info("client: adding lib %s", resource_name)
         if not os.path.isfile(resource_name):
-            raise RuntimeError("Resource {} can not be found".format(resource_name))
+            raise RuntimeError("Resource {} cannot be found".format(resource_name))
         # pack into a gar file
         garfile = InMemoryZip()
         resource_reader = open(resource_name, "rb")

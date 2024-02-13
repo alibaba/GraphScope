@@ -55,7 +55,7 @@ public abstract class Utils {
             Sarg sarg = literal.getValueAs(Sarg.class);
             if (!sarg.isPoints()) {
                 throw new UnsupportedOperationException(
-                        "can not convert continuous ranges to ir core array, sarg=" + sarg);
+                        "cannot convert continuous ranges to ir core array, sarg=" + sarg);
             }
             List<Comparable> values =
                     com.alibaba.graphscope.common.ir.tools.Utils.getValuesAsList(sarg);
@@ -85,7 +85,7 @@ public abstract class Utils {
                     return Common.Value.newBuilder().setF64Array(doubleArray).build();
                 default:
                     throw new UnsupportedOperationException(
-                            "can not convert sarg=" + sarg + " ir core array");
+                            "cannot convert sarg=" + sarg + " ir core array");
             }
         }
         switch (literal.getType().getSqlTypeName()) {
@@ -311,7 +311,7 @@ public abstract class Utils {
             case MULTISET:
             case ARRAY:
             case MAP:
-                logger.warn("multiset or array type can not be converted to any ir core data type");
+                logger.warn("multiset or array type cannot be converted to any ir core data type");
                 return DataType.IrDataType.newBuilder().build();
             default:
                 return DataType.IrDataType.newBuilder()
@@ -373,7 +373,7 @@ public abstract class Utils {
             GraphLabelType labelType) {
         Preconditions.checkArgument(
                 labelType.getLabelsEntry().size() == 1,
-                "can not convert label=" + labelType + " to proto 'GraphElementLabel'");
+                "cannot convert label=" + labelType + " to proto 'GraphElementLabel'");
         GraphLabelType.Entry entry = labelType.getSingleLabelEntry();
         DataType.GraphDataType.GraphElementLabel.Builder builder =
                 DataType.GraphDataType.GraphElementLabel.newBuilder().setLabel(entry.getLabelId());

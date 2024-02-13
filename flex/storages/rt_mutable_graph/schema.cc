@@ -623,7 +623,7 @@ static bool parse_vertex_schema(YAML::Node node, Schema& schema) {
   if (!get_scalar(node, "type_name", label_name)) {
     return false;
   }
-  // Can not add two vertex label with same name
+  // Cannot add two vertex label with same name
   if (schema.has_vertex_label(label_name)) {
     LOG(ERROR) << "Vertex label " << label_name << " already exists";
     return false;

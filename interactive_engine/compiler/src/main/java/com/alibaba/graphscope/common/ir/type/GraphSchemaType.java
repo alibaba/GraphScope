@@ -65,7 +65,7 @@ public class GraphSchemaType extends RelRecordType {
         this.scanOpt = scanOpt;
         Preconditions.checkArgument(
                 labelType.getLabelsEntry().size() == 1,
-                "can not use label=%s to init GraphSchemaType with single label",
+                "cannot use label=%s to init GraphSchemaType with single label",
                 labelType);
         this.labelType = labelType;
         this.fuzzySchemaTypes = ImmutableList.of();

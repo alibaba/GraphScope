@@ -121,7 +121,7 @@ class GetVOpBuilder {
         for (size_t i = 0; i < input_type.second.size(); ++i) {
           if (std::find(vertex_labels_.begin(), vertex_labels_.end(),
                         input_type.second[i]) == vertex_labels_.end()) {
-            VLOG(10) << "Can not find label " << input_type.second.size();
+            VLOG(10) << "Cannot find label " << input_type.second.size();
             filter_label = true;
             break;
           }
@@ -138,7 +138,7 @@ class GetVOpBuilder {
         for (size_t i = 0; i < input_type.second.size(); ++i) {
           if (std::find(vertex_labels_.begin(), vertex_labels_.end(),
                         input_type.second[i]) == vertex_labels_.end()) {
-            VLOG(10) << "Can not find label " << input_type.second.size();
+            VLOG(10) << "Cannot find label " << input_type.second.size();
             filter_label = true;
             break;
           }

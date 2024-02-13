@@ -76,7 +76,7 @@ object GrapeUtils extends Logging {
   ): Method = {
     val method = clz.getDeclaredMethod(name, paramClasses)
     method.setAccessible(true)
-    require(method != null, "can not find method: " + name)
+    require(method != null, "cannot find method: " + name)
     method
   }
 
@@ -158,7 +158,7 @@ object GrapeUtils extends Logging {
     newArray
   }
 
-  /** We can not copy all vertex data elements into arrow array builder, since array fragment only stores the inner
+  /** We cannot copy all vertex data elements into arrow array builder, since array fragment only stores the inner
     * vertex data.
     */
   def vertexDataStore2ArrowArrayBuilder[T: ClassTag](
@@ -170,7 +170,7 @@ object GrapeUtils extends Logging {
     fillPrimitiveArrowArrayBuilder(array, ivnum)
   }
 
-  /** We can not copy all vertex data elements into arrow array builder, since array fragment only stores the inner
+  /** We cannot copy all vertex data elements into arrow array builder, since array fragment only stores the inner
     * vertex data.
     */
   def vertexDataStore2ArrowStringArrayBuilder[T: ClassTag](

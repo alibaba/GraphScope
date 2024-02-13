@@ -288,7 +288,7 @@ typename std::enable_if<
     bl::result<std::shared_ptr<arrow::Array>>>::type
 vertex_data_to_arrow_array_impl(const FRAG_T& frag) {
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                  "Can not transform empty type to arrow array");
+                  "Cannot transform empty type to arrow array");
 }
 
 template <typename FUNC_T,
@@ -359,7 +359,7 @@ typename std::enable_if<
 build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
                         int64_t part_idx) {
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                  "Can not transform empty type to vineyard tensor builder");
+                  "Cannot transform empty type to vineyard tensor builder");
 }
 
 template <typename FUNC_T>
@@ -369,7 +369,7 @@ typename std::enable_if<
 build_vy_tensor_builder(vineyard::Client& client, size_t size, FUNC_T&& func,
                         int64_t part_idx) {
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                  "Can not transform dynamic type to vineyard tensor builder");
+                  "Cannot transform dynamic type to vineyard tensor builder");
 }
 
 template <typename FUNC_T>
@@ -399,7 +399,7 @@ typename std::enable_if<
 build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
                 int64_t part_idx) {
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                  "Can not transform empty type");
+                  "Cannot transform empty type");
 }
 
 template <typename FUNC_T>
@@ -409,7 +409,7 @@ typename std::enable_if<
 build_vy_tensor(vineyard::Client& client, size_t size, FUNC_T&& func,
                 int64_t part_idx) {
   RETURN_GS_ERROR(vineyard::ErrorCode::kUnsupportedOperationError,
-                  "Can not transform dynamic type");
+                  "Cannot transform dynamic type");
 }
 
 template <typename FRAG_T, typename DATA_T,

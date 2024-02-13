@@ -875,7 +875,7 @@ public class GraphBuilder extends RelBuilder {
             GraphLogicalSource source = (GraphLogicalSource) tableScan;
             Preconditions.checkArgument(
                     source.getUniqueKeyFilters() == null,
-                    "can not add unique key filters if original is not empty");
+                    "cannot add unique key filters if original is not empty");
             source.setUniqueKeyFilters(
                     RexUtil.composeDisjunction(this.getRexBuilder(), uniqueKeyFilters));
         }
@@ -1660,7 +1660,7 @@ public class GraphBuilder extends RelBuilder {
                         RelFieldCollation.Direction.DESCENDING);
             default:
                 throw new UnsupportedOperationException(
-                        "type " + node.getType() + " can not be converted to collation");
+                        "type " + node.getType() + " cannot be converted to collation");
         }
     }
 

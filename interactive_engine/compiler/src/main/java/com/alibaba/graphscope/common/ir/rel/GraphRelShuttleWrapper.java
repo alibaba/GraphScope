@@ -81,7 +81,7 @@ public class GraphRelShuttleWrapper extends RelShuttleImpl {
             return relShuttle.visit((GraphLogicalDedupBy) relNode);
         } else {
             throw new UnsupportedOperationException(
-                    "relNode " + relNode.getClass() + " can not be visited in shuttle");
+                    "relNode " + relNode.getClass() + " cannot be visited in shuttle");
         }
     }
 }
