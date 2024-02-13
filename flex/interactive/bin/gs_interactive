@@ -1403,7 +1403,7 @@ function do_start(){
   # regenerate graph.yaml from graph0.yaml and override graph.yaml with stored procedure enable and disable
   update_graph_yaml_with_procedure_enabling ${graph_name}
 
-  # the bulk_load_file shoud place inside ${DATABASE_WORKSPACE}. and should use relative path
+  # the bulk_load_file should place inside ${DATABASE_WORKSPACE}. and should use relative path
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
   fi

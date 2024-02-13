@@ -976,7 +976,7 @@ fn add_intersect_job_builder(
         // 2. vec![PathExpand, GetV] for path expand to intersect
         if subplan.len() != 2 {
             Err(IrError::InvalidPattern(format!(
-                "Subplan of Intersect should should beExpandE + GetV or PathExpand + GetV, while it is {:?}",
+                "Subplan of Intersect should beExpandE + GetV or PathExpand + GetV, while it is {:?}",
                 subplan
             )))?
         }

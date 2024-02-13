@@ -121,6 +121,6 @@ public class GroupCountStep<S, E> extends ReducingBarrierStep<S, Map<E, Long>>
     @Override
     public Map<E, Long> projectTraverser(final Traverser.Admin<S> traverser) {
         throw new UnsupportedOperationException(
-                "project traverser shoule be implemented in runtime but unnecessary in compiler");
+                "project traverser should be implemented in runtime but unnecessary in compiler");
     }
 }
