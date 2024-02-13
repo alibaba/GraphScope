@@ -278,7 +278,7 @@ seastar::future<query_result> admin_actor::update_procedure(
 }
 
 // Start service on a graph first means stop all current running actors, then
-// switch graph and and create new actors with a unused scope_id.
+// switch graph and create new actors with a unused scope_id.
 seastar::future<query_result> admin_actor::start_service(
     query_param&& query_param) {
   // parse query_param.content as json and get graph_name
