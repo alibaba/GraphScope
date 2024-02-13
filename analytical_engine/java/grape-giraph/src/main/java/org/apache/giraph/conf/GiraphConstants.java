@@ -1763,7 +1763,7 @@ public interface GiraphConstants {
             new IntConfOption(
                     "giraph.waitTaskDoneTimeoutMs",
                     MINUTES.toMillis(15),
-                    "Maximum timeout (in ms) for waiting for all all tasks to " + "complete");
+                    "Maximum timeout (in ms) for waiting for all tasks to " + "complete");
 
     /**
      * Whether to track job progress on client or not
