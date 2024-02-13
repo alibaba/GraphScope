@@ -238,7 +238,7 @@ Copyright (c) 2020 tsutsu3
 
 ===============================================================================
 
-Original Javascript version:
+Original JavaScript version:
 Copyright (c) 2015 Vitaly Puzrin.
 
 --------------------------------------------------------------------------------
