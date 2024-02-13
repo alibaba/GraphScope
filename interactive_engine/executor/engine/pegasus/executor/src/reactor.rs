@@ -276,7 +276,7 @@ impl PooledExecutorRuntime {
         // start first thread for executor
         if self.current_core >= self.max_core {
             return Err(InternalError::new(format!(
-                "The number of executos has has reached the maximum limit, current_core: {}, max_core: {}",
+                "The number of executors has has reached the maximum limit, current_core: {}, max_core: {}",
                 self.current_core, self.max_core
             )));
         }
@@ -389,13 +389,13 @@ impl PooledExecutorRuntime {
                     Ok(None)
                 } else {
                     Err(InternalError::new(format!(
-                        "re_active queue is empty before executos reach the maximum limit, current_core: {}, max_core: {}",
+                        "re_active queue is empty before executors reach the maximum limit, current_core: {}, max_core: {}",
                         self.current_core, self.max_core
                     )))
                 }
             } else {
                 Err(InternalError::new(format!(
-                    "in_flows queue is empty before executos reach the maximum limit, current_core: {}, max_core: {}",
+                    "in_flows queue is empty before executors reach the maximum limit, current_core: {}, max_core: {}",
                     self.current_core, self.max_core
                 )))
             }
