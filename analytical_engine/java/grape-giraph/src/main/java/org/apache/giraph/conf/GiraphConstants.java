@@ -802,13 +802,13 @@ public interface GiraphConstants {
                     "Which language computation is implemented in");
 
     /**
-     * Option of whether to create vertexes that were not existent before but received messages
+     * Option of whether to create vertexes that did not exist before but received messages
      */
     BooleanConfOption RESOLVER_CREATE_VERTEX_ON_MSGS =
             new BooleanConfOption(
                     "giraph.vertex.resolver.create.on.msgs",
                     true,
-                    "Option of whether to create vertexes that were not existent "
+                    "Option of whether to create vertexes that that did not exist "
                             + "before but received messages");
 
     /**
