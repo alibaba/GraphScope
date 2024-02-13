@@ -49,7 +49,7 @@ jobs:
     - name: Detect the tmate session
       run: |
         if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
-          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          echo 'WARNING!!!the self-hosted machine cannot run tmate session, please debug it manually'
           exit 1
         fi
 
@@ -110,7 +110,7 @@ jobs:
     - name: Detect the tmate session
       run: |
         if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
-          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          echo 'WARNING!!!the self-hosted machine cannot run tmate session, please debug it manually'
           exit 1
         fi
 
