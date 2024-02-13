@@ -484,7 +484,7 @@ impl LogicalPlan {
         self.meta.set_curr_node(new_curr_node);
         // Configure `NodeMeta` for current node
         let _ = self.meta.curr_node_meta_mut();
-        // By default, refer to the nodes that the the parent nodes refer to
+        // By default, refer to the nodes that the parent nodes refer to
         // Certain operators will modify the referred nodes during preprocessing, including
         // Scan, EdgeExpand, PathExpand, GetV, Apply and Project
         let ref_parent_nodes = self.meta.get_referred_nodes(&parent_ids);
