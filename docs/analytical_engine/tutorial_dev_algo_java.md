@@ -181,6 +181,6 @@ ctx=app(graph, "{param string}") # a=b,c=d
 
 After computation, you can obtain the results stored in context with the help of [`Context`](https://graphscope.io/docs/reference/context.html#context).
 
-## GraphScope JavaSDK with Github Template
+## GraphScope JavaSDK with GitHub Template
 
 If you don't bother creating new project to try `GRAPE-jdk`, we provide a template project [GraphScope-Java-template](https://github.com/zhanglei1949/GraphScope-Java-template). By click **Use this template**, you can create a new repository with same files and structure of the template repository. You can then try developing your own algorithms in this project.

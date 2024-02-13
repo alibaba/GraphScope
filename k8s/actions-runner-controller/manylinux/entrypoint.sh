@@ -41,7 +41,7 @@ else
   last_char=${GITHUB_URL:length-1:1}
 
   [[ $last_char != "/" ]] && GITHUB_URL="$GITHUB_URL/"; :
-  log "Github endpoint URL ${GITHUB_URL}"
+  log "GitHub endpoint URL ${GITHUB_URL}"
 fi
 
 if [ -z "${RUNNER_NAME}" ]; then
