@@ -327,7 +327,7 @@ class SyncEngine : public BaseEngine {
     // create new context node, update offsets.
     return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), alias_to_use);
-    // old context will be abondon here.
+    // old context will be abandoned here.
   }
 
   /// @brief //////// Edge Expand to Edge, with multiple dst vertex labels.
@@ -367,7 +367,7 @@ class SyncEngine : public BaseEngine {
     // create new context node, update offsets.
     return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), alias_to_use);
-    // old context will be abondon here.
+    // old context will be abandoned here.
   }
 
   template <AppendOpt opt, int alias_to_use, typename CTX_HEAD_T, int cur_alias,
@@ -390,7 +390,7 @@ class SyncEngine : public BaseEngine {
     // create new context node, update offsets.
     return ctx.template AddNode<opt>(std::move(pair.first),
                                      std::move(pair.second), alias_to_use);
-    // old context will be abondon here.
+    // old context will be abandoned here.
   }
 
   template <AppendOpt opt, int alias_to_use, typename CTX_HEAD_T, int cur_alias,
@@ -411,7 +411,7 @@ class SyncEngine : public BaseEngine {
     // create new context node, update offsets.
     return ctx.template AddNode<opt>(std::move(pair.first),
                                      std::move(pair.second), alias_to_use);
-    // old context will be abondon here.
+    // old context will be abandoned here.
   }
 
   //////////////////////////////////////Path Expand/////////////////////////
