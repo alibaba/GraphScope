@@ -87,7 +87,7 @@ public class FFITypeFactoryhelper {
     }
 
     /**
-     * The created typed array should be set address with baseTypedArray. One can not add more data
+     * The created typed array should be set address with baseTypedArray. One cannot add more data
      * to this object
      * @return
      */

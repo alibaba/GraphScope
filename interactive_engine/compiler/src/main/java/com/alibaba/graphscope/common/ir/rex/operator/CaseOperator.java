@@ -68,7 +68,7 @@ public class CaseOperator extends SqlOperator {
         }
 
         if (!foundNotNull) {
-            // according to the sql standard we can not have all of the THEN
+            // according to the sql standard we cannot have all of the THEN
             // statements and the ELSE returning null
             if (throwOnFailure && !callBinding.isTypeCoercionEnabled()) {
                 throw callBinding.newValidationError(RESOURCE.mustNotNullInElse());

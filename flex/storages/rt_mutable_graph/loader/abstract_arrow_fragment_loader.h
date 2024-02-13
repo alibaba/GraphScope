@@ -258,7 +258,7 @@ static void append_edges(
 }
 
 // A AbstractArrowFragmentLoader with can load fragment from arrow::table.
-// Can not be used directly, should be inherited.
+// Cannot be used directly, should be inherited.
 class AbstractArrowFragmentLoader : public IFragmentLoader {
  public:
   AbstractArrowFragmentLoader(const std::string& work_dir, const Schema& schema,

@@ -923,7 +923,7 @@ mod test {
             .unwrap()
             .is_none());
 
-        // The vertex PIDS[1] does no exist, can not update
+        // The vertex PIDS[1] does no exist, cannot update
         assert!(graphdb
             .add_or_update_vertex_properties(PIDS[1], prop.clone())
             .is_err());

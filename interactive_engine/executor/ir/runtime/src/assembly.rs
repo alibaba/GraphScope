@@ -680,7 +680,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     // do nothing, as it is a dummy node
                 }
                 OpKind::Sink(_) => {
-                    // this would be processed in assemble, and can not be reached when install.
+                    // this would be processed in assemble, and cannot be reached when install.
                     Err(FnGenError::unsupported_error("unreachable sink in install"))?
                 }
             }

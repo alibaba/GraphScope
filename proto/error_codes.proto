@@ -24,7 +24,7 @@ enum Code {
   // Timeout, used when an operation fail to return result in an specific time.
   TIMEOUT_ERROR = 1;
 
-  // Required resources can not be found.
+  // Required resources cannot be found.
   NOT_FOUND_ERROR = 2;
 
   // Connection error with client.

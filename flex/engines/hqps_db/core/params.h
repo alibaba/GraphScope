@@ -662,7 +662,7 @@ auto make_edge_expandv_opt(Direction dir, LabelT edge_label, LabelT other_label,
   return EdgeExpandOpt(dir, edge_label, other_label, std::move(func));
 }
 
-// Template can not have to variadic template parameters.
+// Template cannot have to variadic template parameters.
 // so we make filter_t as a tuple.
 template <typename LabelT, size_t num_labels, typename FILTER_T, typename... T>
 struct GetVOpt;
