@@ -80,7 +80,7 @@ A simple example:
     graph = sess.g()
     graph = graph.add_vertices('/home/ldbc_sample/person_0_0.csv')
 
-It will read data from the the location :file:`/home/ldbc_sample/person_0_0.csv`. Since we didn't give additional arguments, these vertices will be labeled ``_`` by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.
+It will read data from the location :file:`/home/ldbc_sample/person_0_0.csv`. Since we didn't give additional arguments, these vertices will be labeled ``_`` by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.
 
 Another commonly used parameter is label:
 
