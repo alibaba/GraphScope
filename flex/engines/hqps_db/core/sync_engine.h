@@ -886,7 +886,7 @@ class SyncEngine : public BaseEngine {
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
       std::tuple<GROUP_KEY...>&& group_key,
       std::tuple<AGG_FUNC...>&& agg_func) {
-    VLOG(10) << "[Group] with with group opt";
+    VLOG(10) << "[Group] with group opt";
     return GroupByOp<GRAPH_INTERFACE>::GroupByImpl(
         graph, std::move(ctx), std::move(group_key), std::move(agg_func));
   }
