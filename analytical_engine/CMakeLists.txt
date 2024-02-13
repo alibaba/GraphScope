@@ -352,7 +352,7 @@ if (${LIBUNWIND_FOUND})
     target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
 endif ()
 
-# An executable to work around for graphx pregel.
+# An executable workaround for graphx pregel.
 if (ENABLE_JAVA_SDK)
     add_executable(graphx_runner core/java/graphx_runner.cc core/java/javasdk.cc)
     target_include_directories(graphx_runner PRIVATE core utils apps)
