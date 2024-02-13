@@ -810,7 +810,7 @@ print(q1.all().result())
 Until now, we can use expansion steps, filter steps and auxiliary steps like `as(TAG)` to write complicated Gremlin sentences to traverse the graph. However, there are still two shortcomings:
 
 - If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times, which is very cost-ineffective.
-- The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it can not be solved by already introduced steps.
+- The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it cannot be solved by already introduced steps.
 
 Therefore, we would like to introduce path expansion to solve the two problems, which extends the expansion steps `out()`, `in()` and `both()` as the [syntactic sugar](./supported_gremlin_steps.md).
 

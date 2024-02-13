@@ -17,4 +17,4 @@ cypher-shell -a neo4j://{ip}:7687.
 
 ## Limitation
 
-Currently write operations are not supported in GraphScope Interactive, so you can not use `create` clause in cypher shell.
+Currently write operations are not supported in GraphScope Interactive, so you cannot use `create` clause in cypher shell.
