@@ -142,7 +142,7 @@ result = my_app(simple_graph, 10)  # pass 10 as param1 defined in 'MyAppContext.
 print(result.to_numpy('r'))
 ```
 
-## GraphScope C++ SDK with Github Template
+## GraphScope C++ SDK with GitHub Template
 
 To help you develop your algorithms more efficiently, we provide a [C++ template library](https://github.com/GraphScope/cpp-template) to help you get started with your algorithm development. It includes examples and best practices for implementing PIE algorithms in C++.
 
