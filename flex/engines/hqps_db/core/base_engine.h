@@ -877,7 +877,7 @@ class BaseEngine {
   static auto Intersect(CTX_X&& ctx_x, CTX_Y&& ctx_y) {
     using ctx_x_iter_t = typename CTX_X::iterator;
     using ctx_y_iter_t = typename CTX_Y::iterator;
-    // the prev column (the last column in prev_tuple shoud be the same.)
+    // the prev column (the last column in prev_tuple should be the same.)
     using ctx_x_all_ele_t = std::remove_reference_t<decltype(
         std::declval<ctx_x_iter_t>().GetAllElement())>;
     using ctx_y_all_ele_t = std::remove_reference_t<decltype(

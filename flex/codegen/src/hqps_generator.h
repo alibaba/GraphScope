@@ -538,7 +538,7 @@ class QueryGenerator {
 };
 
 // When building a join op, we need to consider the following cases:
-// 0. tag_id to tag_ind mapping, two plan shoud keep different mappings
+// 0. tag_id to tag_ind mapping, two plan should keep different mappings
 // const physical::PhysicalOpr::MetaData& meta_data
 template <typename LabelT>
 static std::array<std::string, 4> BuildJoinOp(
