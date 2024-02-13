@@ -225,7 +225,7 @@ class GrapeEdgePartition[VD: ClassTag, ED: ClassTag](
           //a new round start, we add new Edata to this edge
           newEdata.setWithOffset(prevEdgeInd.toInt, attrSum)
           log.info(
-            s"end of acculating edge ${curSrcId}, ${curDstId}, ${attrSum}"
+            s"end of accumulating edge ${curSrcId}, ${curDstId}, ${attrSum}"
           )
         }
         curSrcId = edge.srcId
