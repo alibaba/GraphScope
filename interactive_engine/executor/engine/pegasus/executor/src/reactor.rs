@@ -276,7 +276,7 @@ impl PooledExecutorRuntime {
         // start first thread for executor
         if self.current_core >= self.max_core {
             return Err(InternalError::new(format!(
-                "The number of executors has has reached the maximum limit, current_core: {}, max_core: {}",
+                "The number of executors has reached the maximum limit, current_core: {}, max_core: {}",
                 self.current_core, self.max_core
             )));
         }
