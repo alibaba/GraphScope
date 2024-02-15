@@ -73,9 +73,9 @@ CHECK_SCHEMA_TEMPLATE = """Task: Check the schema
 {query}
 Schema:
 {schema}
-Check the properities and relashions in the query, replace all the keywards that did not shown in the schema!!!
-Check the properities and relashions in the query, replace all the keywards that did not shown in the schema!!!
-Check the properities and relashions in the query, replace all the keywards that did not shown in the schema!!!
+Check the properities and relashions in the query, replace all the keywords that did not shown in the schema!!!
+Check the properities and relashions in the query, replace all the keywords that did not shown in the schema!!!
+Check the properities and relashions in the query, replace all the keywords that did not shown in the schema!!!
 if correct, return the origianl query!!!
 Note: Do not include any explanations or apologies in your responses.
 Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
