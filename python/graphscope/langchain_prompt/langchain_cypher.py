@@ -76,7 +76,7 @@ Schema:
 Check the properities and relashions in the query, replace all the keywords that did not shown in the schema!!!
 Check the properities and relashions in the query, replace all the keywords that did not shown in the schema!!!
 Check the properities and relashions in the query, replace all the keywords that did not shown in the schema!!!
-if correct, return the origianl query!!!
+if correct, return the original query!!!
 Note: Do not include any explanations or apologies in your responses.
 Do not respond to any questions that might ask anything else than for you to construct a Cypher statement.
 Do not include any text except the generated Cypher statement.
