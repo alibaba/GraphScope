@@ -351,10 +351,10 @@ impl Pattern {
             let end_tag_v_id = end_tag.map(|tag| tag as PatternId);
             // check the end tag label is already determined or not
             let end_tag_label = end_tag_v_id.and_then(|v_id| vertex_labels_map.get(&v_id).cloned());
-            // record previous pattern edge's destinated vertex's id
+            // record previous pattern edge's destination vertex's id
             // init as start vertex's id
             let mut pre_dst_vertex_id: PatternId = start_tag_v_id;
-            // record previous pattern edge's destinated vertex's label
+            // record previous pattern edge's destination vertex's label
             // init as start vertex's label
             let mut pre_dst_vertex_label = start_tag_label;
             // find the last edge expand's index if exists;
