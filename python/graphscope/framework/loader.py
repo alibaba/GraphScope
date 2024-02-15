@@ -163,7 +163,7 @@ class Loader(object):
         return self.__str__()
 
     def resolve(self, source):
-        """Dispatch resolver based on type of souce.
+        """Dispatch resolver based on type of source.
 
         Args:
             source: Different data sources
