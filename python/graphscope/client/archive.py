@@ -64,8 +64,8 @@ class OutArchive(object):
     def get_bytes(self):
         """Peek bytes"""
         size = self.get_size()
-        byt = self.get_block(size).tobytes()
-        return byt
+        byte_ = self.get_block(size).tobytes()
+        return byte_
 
     def get_string(self):
         """Peek a string.
