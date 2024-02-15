@@ -111,7 +111,7 @@ loading_config:
 vertex_mappings:
   - type_name: person  # must align with the schema
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     column_mappings:  
           - column:
               index: 0  
@@ -127,7 +127,7 @@ vertex_mappings:
             property: age
   - type_name: software
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     column_mappings:
       - column:
           index: 0      
@@ -147,7 +147,7 @@ edge_mappings:
       source_vertex: person
       destination_vertex: person
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     source_vertex_mappings:
       - column:
           index: 0
@@ -168,7 +168,7 @@ edge_mappings:
       source_vertex: person
       destination_vertex: software
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     source_vertex_mappings:
       - column:
           index: 0
