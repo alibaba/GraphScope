@@ -130,7 +130,7 @@ seastar::future<query_result> admin_actor::run_delete_graph(
 // load the graph.
 seastar::future<query_result> admin_actor::run_graph_loading(
     graph_management_param&& query_param) {
-  // query_param constains two parameter, first for graph name, second for graph
+  // query_param contains two parameter, first for graph name, second for graph
   // config
   auto content = query_param.content;
   auto& graph_name = content.first;
