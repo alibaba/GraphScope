@@ -287,7 +287,7 @@ public class FFITypeFactoryhelper {
     /**
      * Create the template msg instance.
      *
-     * @param clz element class instace.
+     * @param clz element class instance.
      * @param <T> element type
      * @return created instance.
      */
