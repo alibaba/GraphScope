@@ -1038,7 +1038,7 @@ function do_create(){
   fi
   check_file_exists "${schema_file}"
   amplify_schema_file="${HOST_DB_TMP_DIR}/graph0.yaml"
-  # add some default settings and non-user-awared settings to schema file.
+  # add some default settings and non-user-aware settings to schema file.
   amplify_graph_schema ${schema_file} ${amplify_schema_file}
   # check graph is running inside docker
   check_graph_not_running ${graph_name} || (err "Can not create graph ${graph_name}, since a graph with same nameing running." && exit 1)
