@@ -5,7 +5,7 @@ After constructing the graph object, we can query on the graph. Graph
 query refers to getting **meta information** and **data information**
 without complex calculation and sampling logic.
 
-# 1 Meta Query Meta infomation refers to the graph structure and
+# 1 Meta Query Meta information refers to the graph structure and
 statistical data, including graph topology, number of vertices,
 distribution of edges and vertices, maximum in-and-out degrees and etc.
 
