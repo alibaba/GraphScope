@@ -1143,13 +1143,13 @@ public interface GiraphConstants {
                     "giraph.maxResolveAddressAttempts", 5, "Max resolve address attempts");
 
     /**
-     * Millseconds to wait for an event before continuing
+     * Milliseconds to wait for an event before continuing
      */
     IntConfOption EVENT_WAIT_MSECS =
             new IntConfOption(
                     "giraph.eventWaitMsecs",
                     SECONDS.toMillis(30),
-                    "Millseconds to wait for an event before continuing");
+                    "Milliseconds to wait for an event before continuing");
 
     /**
      * Maximum milliseconds to wait before giving up trying to get the minimum number of workers
