@@ -524,7 +524,7 @@ def delete_edge(self, edge: EdgeRecordKey) -> int: pass
 # Delete a list of edges
 def delete_edges(self, edge_pks: list) -> int: pass
 
-# Make sure the snapshot is avaiable
+# Make sure the snapshot is available
 def remote_flush(self, snapshot_id: int): pass
 ```
 
