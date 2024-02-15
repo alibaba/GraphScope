@@ -65,7 +65,7 @@ def flexbuild():
     "--app",
     type=click.Choice(["docker"]),
     required=True,
-    help="Applicatin type of the built artifacts you want to build",
+    help="Application type of the built artifacts you want to build",
 )
 @click.option(
     "--graphscope-repo",
