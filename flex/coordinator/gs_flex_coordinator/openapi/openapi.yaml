@@ -153,7 +153,7 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
           description: Successful operation
         "404":
-          description: Reveiver not found
+          description: Receiver not found
       tags:
       - alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
@@ -180,7 +180,7 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
           description: Successful operation
         "404":
-          description: Reveiver not found
+          description: Receiver not found
       tags:
       - alert
       x-openapi-router-controller: gs_flex_coordinator.controllers.alert_controller
