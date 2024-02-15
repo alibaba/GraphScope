@@ -42,7 +42,7 @@ def katz_centrality(
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
-        alpha (float, optional): Auttenuation factor. Defaults to 0.1.
+        alpha (float, optional): Attenuation factor. Defaults to 0.1.
         beta (float, optional): Weight attributed to the immediate neighborhood. Defaults to 1.0.
         tolerance (float, optional): Error tolerance. Defaults to 1e-06.
         max_round (int, optional): Maximun number of rounds. Defaults to 100.
