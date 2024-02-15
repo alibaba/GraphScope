@@ -1,6 +1,6 @@
 # Overview
 The codes maintain the distributed graph storage for GAIA. We adopt the property graph model as
-advocated in modern graph databses such as [Neo4j](https://neo4j.com/) adn [Tinkerpop](https://tinkerpop.apache.org/). 
+advocated in modern graph databases such as [Neo4j](https://neo4j.com/) adn [Tinkerpop](https://tinkerpop.apache.org/). 
 We split the graph data into two parts, namely structure data and property data. The structure data contains
 vertices and edges and their labels. Each vertex is identified by a globally unique identity, while the edges are
 maintained in the associated vertices using the conventional adjacency list. We leverage the Rust graph library
