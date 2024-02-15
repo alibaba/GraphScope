@@ -85,7 +85,7 @@ def kcore_decomposition_2(graph):
 @project_to_simple
 @not_compatible_for("arrow_property", "dynamic_property")
 def kcore_searching(graph, k=5):
-    """Evaluate K-core Searchig on a graph with flash computation mode.
+    """Evaluate K-core Searching on a graph with flash computation mode.
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
