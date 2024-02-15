@@ -17,7 +17,7 @@ from graphscope.framework.app import load_app
 # turn on this line to enable log verbose
 # graphscope.set_option(show_log=True) 
 
-"""Or lauch session in k8s cluster"""
+"""Or launch session in k8s cluster"""
 sess = graphscope.session(cluster_type='hosts') 
 
 graph = load_p2p_network(sess)    

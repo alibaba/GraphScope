@@ -367,7 +367,7 @@ GraphScope图分析引擎上运行这些示例算法。
     from graphscope import JavaApp
     from graphscope.dataset import load_p2p_network
 
-    """Or lauch session in k8s cluster"""
+    """Or launch session in k8s cluster"""
     sess = graphscope.session(cluster_type='hosts') 
 
     graph = load_p2p_network(sess)    
@@ -518,7 +518,7 @@ GraphScope图分析引擎上运行这些示例算法。
     from graphscope import JavaApp
     from graphscope.dataset import load_p2p_network
     
-    """Or lauch session in k8s cluster"""
+    """Or launch session in k8s cluster"""
     sess = graphscope.session(cluster_type='hosts')
 
     graph = load_p2p_network(sess)
