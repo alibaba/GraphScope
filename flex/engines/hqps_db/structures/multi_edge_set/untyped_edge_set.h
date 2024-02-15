@@ -455,7 +455,7 @@ class UnTypedEdgeSet {
         res_label_triplets.emplace_back(cur_triplets_vec[j]);
       }
     }
-    std::vector<std::vector<std::string>> prop_names = get_prop_namees();
+    std::vector<std::vector<std::string>> prop_names = get_prop_names();
     CHECK(prop_names.size() == res_label_triplets.size());
     return FlatEdgeSet<vid_t, label_t, Any>(
         std::move(dst_eles), std::move(res_label_triplets), prop_names,
@@ -534,7 +534,7 @@ class UnTypedEdgeSet {
     return ret;
   }
 
-  std::vector<std::vector<std::string>> get_prop_namees() const {
+  std::vector<std::vector<std::string>> get_prop_names() const {
     std::vector<std::vector<std::string>> ret;
     for (auto iter : adj_lists_) {
       auto& sub_graphs = iter.second;
