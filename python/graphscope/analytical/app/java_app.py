@@ -312,7 +312,7 @@ class JavaAppDagNode(AppDAGNode):
         self._session = graph.session
         if not self._app_assets.is_compatible(self._graph):
             raise Exception(
-                "No compactiable app and graph: {} and {}".format(
+                "No compatible app and graph: {} and {}".format(
                     self._app_assets.java_app_type, self._graph.template_str
                 )
             )
