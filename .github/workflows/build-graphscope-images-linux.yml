@@ -95,7 +95,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
 
         # dataset image
-        # Note! dataset image are built mannually just use the latest one.
+        # Note! dataset image are built manually just use the latest one.
         sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
         sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
@@ -134,7 +134,7 @@ jobs:
         sudo docker push ${{ env.REGISTRY }}/graphscope/learning:${tag}
 
         # dataset image
-        # Note! dataset image are built mannually just use the latest one.
+        # Note! dataset image are built manually just use the latest one.
         sudo docker pull ${{ env.REGISTRY }}/graphscope/dataset:latest
         sudo docker tag ${{ env.REGISTRY }}/graphscope/dataset:latest ${{ env.REGISTRY }}/graphscope/dataset:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/dataset:${tag}
