@@ -103,7 +103,7 @@ mod test {
             params: Some(query_params(
                 vec![CREATED_LABEL.into()],
                 vec![],
-                str_to_expr_pb("@.lange=\"Java\"".to_string()).ok(),
+                str_to_expr_pb("@.lang=\"Java\"".to_string()).ok(),
             )),
             expand_opt: 0,
             alias: None,
