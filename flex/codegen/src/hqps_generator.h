@@ -333,7 +333,7 @@ class QueryGenerator {
               if (simple_get_v(get_v_op) &&
                   intermeidate_edge_op(real_edge_expand)) {
                 CHECK(dst_vertex_labels.size() > 0);
-                VLOG(10) << "When fuseing edge+get_v, get_v has labels: "
+                VLOG(10) << "When fusing edge+get_v, get_v has labels: "
                          << gs::to_string(dst_vertex_labels);
                 build_fused_edge_get_v<LabelT>(ctx_, ss, real_edge_expand,
                                                meta_datas[0], get_v_op,
