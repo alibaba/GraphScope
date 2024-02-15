@@ -77,7 +77,7 @@ class EdgeIter {
 };
 
 // A subGraph is a view of a simple graph, with one src label and one dst label.
-// Cound be empty.
+// Could be empty.
 template <typename LabelT, typename VID_T>
 class SubGraph {
  public:
