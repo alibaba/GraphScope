@@ -143,7 +143,7 @@ public interface ArrowFragment<OID_T> extends FFIPointer {
      *
      * @param labelId label for oid.
      * @param oid querying oid.
-     * @param vertex vertex hanlder
+     * @param vertex vertex handler
      * @return true if vertex with original id oid exists in this fragment.
      */
     @FFINameAlias("GetVertex")
