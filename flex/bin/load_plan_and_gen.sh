@@ -197,7 +197,7 @@ compile_hqps_so() {
 
   last_file_name=$(basename ${input_path})
 
-  # requiest last_file_name suffix is .pb
+  # request last_file_name suffix is .pb
   if [[ $last_file_name == *.pb ]]; then
     query_name="${last_file_name%.pb}"
   elif [[ $last_file_name == *.cc ]]; then
@@ -358,7 +358,7 @@ compile_pegasus_so() {
   last_file_name=$(basename ${input_path})
 
   info "last file name: ${last_file_name}"
-  # requiest last_file_name suffix is .pb
+  # request last_file_name suffix is .pb
   if [[ $last_file_name == *.pb ]]; then
     query_name="${last_file_name%.pb}"
     info "File has .pb suffix."
