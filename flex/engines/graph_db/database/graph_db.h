@@ -61,7 +61,7 @@ struct GraphDBConfig {
   /*
     0 - sync with disk;
     1 - mmap virtual memory;
-    2 - prefering hugepages;
+    2 - preferring hugepages;
     3 - force hugepages;
   */
   int memory_level;
