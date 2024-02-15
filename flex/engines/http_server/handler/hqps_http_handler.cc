@@ -119,7 +119,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
           });
 }
 
-// a handler for handl adhoc query.
+// a handler for handle adhoc query.
 
 hqps_adhoc_query_handler::hqps_adhoc_query_handler(
     uint32_t init_adhoc_group_id, uint32_t init_codegen_group_id,
