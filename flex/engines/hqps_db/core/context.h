@@ -873,7 +873,7 @@ class Context {
              << std::to_string(deduped_tag);
   }
 
-  // This dedup doesn't clear duplication in indivdual set.!!!!!
+  // This dedup doesn't clear duplication in individual set.!!!!!
   // start from alias_to_use, simplify all later csr.
   // no meaning to dedup with tag == 0;
   template <int raw_deduped_tag>
