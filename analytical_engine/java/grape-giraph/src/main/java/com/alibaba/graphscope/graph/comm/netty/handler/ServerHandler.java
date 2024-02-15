@@ -103,7 +103,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
                                 logger.info(
                                         "when server hanlder "
                                                 + Thread.currentThread().getId()
-                                                + " try to wait, find alread satisfied: "
+                                                + " try to wait, find already satisfied: "
                                                 + this.msgNo.get());
                             }
                         } catch (Exception e) {
