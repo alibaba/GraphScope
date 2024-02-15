@@ -321,7 +321,7 @@ impl<D: Data> InputHandle<D> {
                             let mut err = IOError::new(IOErrorKind::Internal);
                             err.set_io_cause(std::io::Error::new(
                                 std::io::ErrorKind::Other,
-                                "Source exhaust but data exhaust still flase",
+                                "Source exhaust but data exhaust still false",
                             ));
                             return Err(err);
                         }
