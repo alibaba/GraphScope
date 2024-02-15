@@ -205,10 +205,10 @@ def compile_graph():
                     )
                     graph_classes.append(graph_class)
 
-                    flattend_graph_class = flattened_frame_template.format(
+                    flattened_graph_class = flattened_frame_template.format(
                         oid, vid, vdata, edata
                     )
-                    graph_classes.append(flattend_graph_class)
+                    graph_classes.append(flattened_graph_class)
 
     for vdata in vdata_types:
         for edata in edata_types:
