@@ -179,7 +179,7 @@ static std::string value_pb_to_str(const common::Value& value) {
   }
 }
 
-bool constains_vertex_id(const std::vector<codegen::ParamConst>& params) {
+bool contains_vertex_id(const std::vector<codegen::ParamConst>& params) {
   for (auto& param : params) {
     if (param.type == codegen::DataType::kVertexId ||
         param.type == codegen::DataType::kEdgeId) {
@@ -518,7 +518,7 @@ class ExprBuilder {
 
   std::string get_func_call_typename_str() const {
     std::string typename_template = "";
-    if (constains_vertex_id(func_call_vars_)) {
+    if (contains_vertex_id(func_call_vars_)) {
       typename_template = "template <typename vertex_id_t>";
     }
     return typename_template;
