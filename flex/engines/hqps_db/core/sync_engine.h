@@ -34,7 +34,7 @@
 #include "flex/engines/hqps_db/core/operator/group_by.h"
 #include "flex/engines/hqps_db/core/operator/path_expand.h"
 #include "flex/engines/hqps_db/core/operator/scan.h"
-#include "flex/engines/hqps_db/core/operator/shorest_path.h"
+#include "flex/engines/hqps_db/core/operator/shortest_path.h"
 #include "flex/engines/hqps_db/core/operator/sink.h"
 #include "flex/engines/hqps_db/core/utils/props.h"
 
