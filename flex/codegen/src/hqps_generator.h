@@ -409,7 +409,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kGroupBy: {
         // auto& meta_data = meta_datas[0];
-        // meta_data is currenly not used in groupby.
+        // meta_data is currently not used in groupby.
         physical::PhysicalOpr::MetaData meta_data;
         auto& group_by_op = opr.group_by();
         if (group_by_op.mappings_size() > 0) {
