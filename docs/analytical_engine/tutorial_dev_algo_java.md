@@ -170,7 +170,7 @@ sess = graphscope.session(cluster_type='hosts')
 graph = load_p2p_network(sess)
 graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
 # you can also use your own graph, refer to graphscope load graph tutorial.
-# But remember project to singel property graph before running algorithms.
+# But remember project to single property graph before running algorithms.
 
 app=JavaApp(
     full_jar_path="{full/path/to/your/packed/jar}", # *-shaded.jar
