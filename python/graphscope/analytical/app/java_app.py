@@ -104,7 +104,7 @@ def _parse_user_app(java_app_class: str, java_jar_full_path: str):
         elif line.find("ParallelAppBase") != -1:
             _java_app_type = "parallel_simple"
         elif line.find("Error") != -1:
-            raise Exception("Error occured in verifying user app")
+            raise Exception("Error occurred in verifying user app")
         elif line.find("TypeParams") != -1:
             _frag_param_str = line.split(":")[-1].strip()
         elif line.find("ContextType") != -1:

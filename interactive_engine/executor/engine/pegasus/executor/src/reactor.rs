@@ -736,7 +736,7 @@ pub fn await_termination() {
             info!("waiting executor terminate...");
             let result = join.join().expect("Executor runtime error");
             if let Err(e) = result {
-                error!("Executor internal error occured: {}", e.reason)
+                error!("Executor internal error occurred: {}", e.reason)
             }
         }
         if *TRACE_SELECT_ENABLE {

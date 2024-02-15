@@ -28,7 +28,7 @@ impl InternalError {
 
 impl Debug for InternalError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Internal error occured {};", self.reason)
+        write!(f, "Internal error occurred {};", self.reason)
     }
 }
 
