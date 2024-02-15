@@ -408,7 +408,7 @@ class ExprBuilder {
     }
   }
 
-  // Add extract operator with var. Currently not support extract on a compicate
+  // Add extract operator with var. Currently not support extract on a complicated
   // expression.
   void AddExtractOpr(const common::Extract& extract_opr,
                      const common::ExprOpr& expr_opr) {
