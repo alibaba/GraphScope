@@ -228,7 +228,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
                         .getMessager()
                         .printMessage(
                                 Diagnostic.Kind.ERROR,
-                                "Duplicalte FFIMirror on "
+                                "Duplicate FFIMirror on "
                                         + foreignType
                                         + ", expected "
                                         + check
