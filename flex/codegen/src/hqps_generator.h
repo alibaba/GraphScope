@@ -678,7 +678,7 @@ static std::string BuildApplyOp(
     auto new_building_ctx = ctx.CreateSubTaskContext();
     auto sub_task_generator =
         QueryGenerator<LabelT>(new_building_ctx, sub_plan);
-    // QueryGenrator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
+    // QueryGenerator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
     // gen a lambda function.
     lambda_func_name = ctx.GetNextLambdaFuncName();
     std::stringstream inner_ss;
