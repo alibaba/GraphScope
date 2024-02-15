@@ -34,10 +34,10 @@ class AlertRule(BaseModel):
     name: Optional[StrictStr] = None
     severity: Optional[StrictStr] = None
     metric_type: Optional[StrictStr] = None
-    conditions_desription: Optional[StrictStr] = None
+    conditions_description: Optional[StrictStr] = None
     frequency: Optional[StrictInt] = Field(default=None, description="(mins)")
     enable: Optional[StrictBool] = None
-    __properties: ClassVar[List[str]] = ["name", "severity", "metric_type", "conditions_desription", "frequency", "enable"]
+    __properties: ClassVar[List[str]] = ["name", "severity", "metric_type", "conditions_description", "frequency", "enable"]
 
     @field_validator('severity')
     def severity_validate_enum(cls, value):
@@ -111,7 +111,7 @@ class AlertRule(BaseModel):
             "name": obj.get("name"),
             "severity": obj.get("severity"),
             "metric_type": obj.get("metric_type"),
-            "conditions_desription": obj.get("conditions_desription"),
+            "conditions_description": obj.get("conditions_description"),
             "frequency": obj.get("frequency"),
             "enable": obj.get("enable")
         })

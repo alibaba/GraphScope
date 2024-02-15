@@ -1094,7 +1094,7 @@ components:
           enum:
             - node
             - service
-        conditions_desription:
+        conditions_description:
           type: string
         frequency:
           type: integer

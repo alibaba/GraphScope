@@ -542,7 +542,7 @@ def alertrule():
                     r.name,
                     r.severity,
                     r.metric_type,
-                    r.conditions_desription,
+                    r.conditions_description,
                     "{0} Min".format(r.frequency),
                     str(r.enable),
                 ]

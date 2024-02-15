@@ -1430,7 +1430,7 @@ components:
     AlertRule:
       example:
         severity: warning
-        conditions_desription: conditions_desription
+        conditions_description: conditions_description
         enable: true
         name: name
         metric_type: node
@@ -1451,8 +1451,8 @@ components:
           - service
           title: metric_type
           type: string
-        conditions_desription:
-          title: conditions_desription
+        conditions_description:
+          title: conditions_description
           type: string
         frequency:
           description: (mins)
