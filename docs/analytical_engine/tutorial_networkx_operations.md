@@ -264,7 +264,7 @@ list(K.edges)
 Note that different from `subgraph`/`edge_subgraph` APIs in NetworkX which return a view, `graphscope.nx` returns a deepcopy of `subgraph`/`edge_subgraph`.
 
 ## Making Copies
-One can use `to_directed` to return a directed representaion of the graph.
+One can use `to_directed` to return a directed representation of the graph.
 
 ```python
 DG = G.to_directed()  # here would return a "deepcopy" directed representation of G.
