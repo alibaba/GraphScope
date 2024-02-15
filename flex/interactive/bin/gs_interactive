@@ -41,7 +41,7 @@ emph(){
 # source: https://github.com/mrbaseman/parse_yaml.git
 #
 ###############################################################################
-# Parses a YAML file and outputs variable assigments.  Can optionally accept a 
+# Parses a YAML file and outputs variable assignments.  Can optionally accept a 
 # variable name prefix and a variable name separator
 #
 # Usage:
