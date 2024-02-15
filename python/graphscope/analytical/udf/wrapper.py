@@ -82,7 +82,7 @@ def pyx_codegen(
     """Transfer python to cython code with :code:`grape.GRAPECompiler`.
 
     Args:
-      algo: class defination of algorithm.
+      algo: class definition of algorithm.
       defs: list of function to be transfer.
       program_model: ProgramModel, 'Pregel' or 'PIE'.
       pyx_header: LinesWrapper, list of pyx source code.
