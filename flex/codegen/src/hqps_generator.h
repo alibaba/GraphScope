@@ -123,7 +123,7 @@ bool simple_get_v(const physical::GetV& get_v_op) {
   return true;
 }
 
-bool intermeidate_edge_op(const physical::EdgeExpand& expand_op) {
+bool intermediate_edge_op(const physical::EdgeExpand& expand_op) {
   if (!expand_op.has_alias() || expand_op.alias().value() == -1) {
     return true;
   }
@@ -331,7 +331,7 @@ class QueryGenerator {
 
             if (FUSE_EDGE_GET_V) {
               if (simple_get_v(get_v_op) &&
-                  intermeidate_edge_op(real_edge_expand)) {
+                  intermediate_edge_op(real_edge_expand)) {
                 CHECK(dst_vertex_labels.size() > 0);
                 VLOG(10) << "When fusing edge+get_v, get_v has labels: "
                          << gs::to_string(dst_vertex_labels);
@@ -341,7 +341,7 @@ class QueryGenerator {
                 LOG(INFO) << "Fuse edge expand and get_v since get_v is simple";
                 i += 1;
                 break;
-              } else if (intermeidate_edge_op(real_edge_expand)) {
+              } else if (intermediate_edge_op(real_edge_expand)) {
                 LOG(INFO) << "try to fuse edge expand with complex get_v, take "
                              "take the get_v' vertex label";
               } else {
