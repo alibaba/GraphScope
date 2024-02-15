@@ -89,7 +89,7 @@ if [[ "${UNITTEST:-}" == '' ]]; then
 fi
 
 cd ${RUNNER_HOME}
-# past that point, it's all relative pathes from /runner
+# past that point, it's all relative paths from /runner
 
 config_args=()
 if [ "${RUNNER_FEATURE_FLAG_EPHEMERAL:-}" == "true" -a "${RUNNER_EPHEMERAL}" == "true" ]; then
