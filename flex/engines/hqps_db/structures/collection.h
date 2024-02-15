@@ -37,7 +37,7 @@ class EmptyCol {
 
 // After operator like group, we need to extract the property or the count to
 // separate column.
-// We use collection to implemention this abstraction.
+// We use collection to implement this abstraction.
 // Currently we may not use it like vertex_set/edge_set, i.e., no dedup, no
 // flat, not subset on collection.
 
