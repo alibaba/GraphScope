@@ -209,7 +209,7 @@ class JavaContextBase : public grape::ContextBase {
       {
         jobject json_object = createArgsObject(env, args_str);
         // 3.1 If we find a setClassLoaderMethod, then we invoke.(NOt
-        // neccessary) this is specially for giraph adaptors
+        // necessary) this is specially for giraph adaptors
         setContextClassLoader(env, context_class);
 
         // 4. Invoke java method
