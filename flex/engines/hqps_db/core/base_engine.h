@@ -160,7 +160,7 @@ class BaseEngine {
     copied_ctx.set_sub_task_start_tag(start_tag);
 
     auto inner_ctx = func(std::move(copied_ctx));
-    // We shall obtain the active indcies in res_ctx via csr offset
+    // We shall obtain the active indices in res_ctx via csr offset
     // arrays.
 
     std::vector<offset_t> tmp_vec = inner_ctx.ObtainOffsetFromTag(start_tag);
