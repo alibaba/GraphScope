@@ -279,7 +279,7 @@ class JavaContextBase : public grape::ContextBase {
     return std::string(user_class_path);
   }
   // user library name should be absolute
-  // serial path is used in graphx, to specify the path to serializaed class
+  // serial path is used in graphx, to specify the path to serialized class
   // objects of vd,ed.etc.
   std::string parseParamsAndSetupJVMEnv(const std::string& params,
                                         const std::string lib_path,
