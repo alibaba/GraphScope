@@ -477,7 +477,7 @@ public interface GiraphConstants {
      */
     IntConfOption MAX_CONN_TRY_ATTEMPTS =
             new IntConfOption(
-                    "giraph.maxConnTryAttempty",
+                    "giraph.maxConnTryAttempts",
                     20,
                     "Maximum bind attempts for client to connect to server");
 
