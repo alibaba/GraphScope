@@ -212,7 +212,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
     void initChannels(int channel_num);
 
     /**
-     * Retrive a message archive.
+     * Retrieve a message archive.
      *
      * @param buf place to store the archive.
      * @return true if got one.
