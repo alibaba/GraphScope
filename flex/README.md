@@ -33,7 +33,7 @@ Please refer to [scripts/install_deps.sh](https://github.com/alibaba/GraphScope/
 GraphScope Flex comes with a useful script `flexbuild` that allows you to build a customized stack using specific components. `flexbuild` has  some parameters and two of them are critical for building:
 
 - argument `COMPONENTS` specifies which "lego bricks" you want to select. The available components are illustrated in figure above or listed in the `--help` section.
-- flag `--app` specifies the applicatin type of the built artifacts you want to build. The available types are `db`, `olap`, `ldbcdriver`, `docker`(WIP).
+- flag `--app` specifies the application type of the built artifacts you want to build. The available types are `db`, `olap`, `ldbcdriver`, `docker`(WIP).
 
 By selecting and combining the components that best suit your requirements, you can use the `flexbuild` script to create a tailored deployment of GraphScope Flex for your specific use case.
 
