@@ -28,7 +28,7 @@ enum Code {
   NOT_FOUND_ERROR = 2;
 
   // Connection error with client.
-  // e.g. multiple client connnect to coordinator at the same time or
+  // e.g. multiple client connect to coordinator at the same time or
   // failed to launch engine locally.
   CONNECTION_ERROR = 3;
 
