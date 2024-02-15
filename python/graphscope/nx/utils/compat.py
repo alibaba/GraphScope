@@ -421,7 +421,7 @@ def with_module_map(  # noqa: C901
                         if k not in global_ctx:
                             global_ctx[k] = v
 
-                # run replacing module context again for accurance
+                # run replacing module context again for accuracy
                 global_ctx = replace_context(global_ctx, source_module, target_module)
                 fn = (
                     copy_property(meth, global_ctx)
