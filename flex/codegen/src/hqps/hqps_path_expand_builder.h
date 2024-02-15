@@ -370,7 +370,7 @@ class PathExpandOpBuilder {
 // path_expand_opt
 // op_code.
 // NOTE: we currenly only support path expand v, the in_tag can be fetch fromn
-// path_expand_pb itself, while the res_alilas shall be fetch from the later
+// path_expand_pb itself, while the res_alias shall be fetch from the later
 // get_v
 template <typename LabelT>
 static std::string BuildPathExpandVOp(
