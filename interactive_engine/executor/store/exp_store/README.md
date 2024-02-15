@@ -19,7 +19,7 @@ We currently provide a tool for parsing (and partitioning) the LDBC raw data gen
 [LDBC Datagen](https://github.com/ldbc/ldbc_snb_datagen) into our distributed storage. 
 LDBC vertices are uniquely identified by its vertex type (label) and id. We leverage this feature by mapping
 each vertex label to a label id, and then assign each vertex a globally unique id using the combination
-of its label id and ldbc id. Note that certain vertex may have two-level (parimary and secondary) label, for 
+of its label id and ldbc id. Note that certain vertex may have two-level (primary and secondary) label, for 
 example, a `Company` vertex also has a primary label of `Organization`. In this case, the primary 
 label will be used. Edge is not the first-class citizen in our design, and will be indexed
 according to its source (and target) vertex. Given the global id, partitioning is straightforward: 
