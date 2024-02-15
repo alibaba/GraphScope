@@ -7840,7 +7840,7 @@ SSLClient::verify_host_with_subject_alt_name(X509 *server_cert) const {
 
   if (alt_names) {
     auto dsn_matched = false;
-    auto ip_mached = false;
+    auto ip_matched = false;
 
     auto count = sk_GENERAL_NAME_num(alt_names);
 
@@ -7856,14 +7856,14 @@ SSLClient::verify_host_with_subject_alt_name(X509 *server_cert) const {
         case GEN_IPADD:
           if (!memcmp(&addr6, name, addr_len) ||
               !memcmp(&addr, name, addr_len)) {
-            ip_mached = true;
+            ip_matched = true;
           }
           break;
         }
       }
     }
 
-    if (dsn_matched || ip_mached) { ret = true; }
+    if (dsn_matched || ip_matched) { ret = true; }
   }
 
   GENERAL_NAMES_free((STACK_OF(GENERAL_NAME) *)alt_names);
