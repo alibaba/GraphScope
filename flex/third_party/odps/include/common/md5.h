@@ -105,9 +105,9 @@ class Md5Stream {
   void Get(uint8_t hash[16]);
 
  private:
-  /** @brief Initailize class members
+  /** @brief Initialize class members
    */
-  void Initailize();
+  void Initialize();
 
   bool mLittleEndian;     /// true if litte endian, false if big endian
   uint8_t mBuf[64];       /// hold remained input stream

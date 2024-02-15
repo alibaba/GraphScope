@@ -246,7 +246,7 @@ pub struct Pattern {
     max_tag_id: TagId,
 }
 
-/// Initialze a Pattern from just a single Pattern Vertex
+/// Initialize a Pattern from just a single Pattern Vertex
 impl From<PatternVertex> for Pattern {
     fn from(vertex: PatternVertex) -> Pattern {
         let vid = vertex.id;
