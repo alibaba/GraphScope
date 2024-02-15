@@ -29,7 +29,7 @@ from graphscope.proto import op_def_pb2
 class Dag(object):
     """Class represented as a GraphScope dataflow dag.
 
-    A :class:`Dag` is always belongs to a session and containes a set of
+    A :class:`Dag` is always belongs to a session and contains a set of
     :class:`Operation` object, which performs computations on tensors.
     """
 
