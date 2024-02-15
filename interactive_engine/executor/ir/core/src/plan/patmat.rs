@@ -86,7 +86,7 @@ pub struct BaseSentence {
     /// Use `pb::logical_plan::Operator` rather than `pb::Pattern::binder`,
     /// to facilitate building the logical plan that may translate a tag into an `As` operator.
     operators: Vec<pb::logical_plan::Operator>,
-    /// Is this a sentence with Anti(No)-semanatics
+    /// Is this a sentence with Anti(No)-semantics
     join_kind: pb::join::JoinKind,
     /// What kind of entities this sentence binds to
     end_as: BindingOpt,
