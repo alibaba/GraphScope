@@ -194,7 +194,7 @@ class PathExpandOpBuilder {
       // build edge_expand_opt
       auto& params = edge_expand_pb.params();
       auto expand_opt = edge_expand_pb.expand_opt();
-      CHECK(dst_vertex_labels_.size() > 0) << "no dst lables found";
+      CHECK(dst_vertex_labels_.size() > 0) << "no dst labels found";
 
       if (params.tables().size() < 1) {
         throw std::runtime_error("no edge labels found");
