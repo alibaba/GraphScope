@@ -185,8 +185,8 @@ impl<'a, G: IndexType, I: IndexType> LocalEdge<'a, G, I> {
         self
     }
 
-    /// An edge is uniquely indiced by its start/end vertex's global id, as well
-    /// as its internal id indiced from this start/end-vertex.
+    /// An edge is uniquely indexed by its start/end vertex's global id, as well
+    /// as its internal id indexed from this start/end-vertex.
     /// Whether this is a start/end vertex, is determined by `Self::from_start`
     pub fn get_edge_id(&self) -> EdgeId<G> {
         if self.from_start {
