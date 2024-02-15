@@ -191,7 +191,7 @@ The table below offers a detailed breakdown of each configuration item. In this 
 | -------- | -------- | -------- |-------- |
 | **loading_config**    | N/A     | Loading configurations     |  Yes   |
 | loading_config.data_source    | N/A     | Place that maintains the raw data     |  Yes   |
-| loading_config.data_source.location |	N/A | Path to the data source in the container, which must be mapped from the host machine while intializing the service |	Yes
+| loading_config.data_source.location |	N/A | Path to the data source in the container, which must be mapped from the host machine while initializing the service |	Yes
 | loading_config.scheme | file | The source of input data. Currently only `file` and `odps` are supported | No |
 | loading_config.format    | N/A     | The format of the raw data in CSV    |  Yes   |
 | loading_config.format.metadata    | N/A    | Mainly for configuring the options for reading CSV   |  Yes   |
