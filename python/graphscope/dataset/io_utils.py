@@ -169,7 +169,7 @@ def download_file(  # noqa: C901
     By default the file at the url `origin` is downloaded to the cache_dir
     `~/.graphscope, placed in the cache_subdir `datasets`, and given the
     filename `fname`. The final location of a file `example.txt` would
-    therefore be `~/.graphscope/datsets/example.txt`
+    therefore be `~/.graphscope/datasets/example.txt`
 
     File in tar, tar.gz, tar.bz, and zip formats can also be extracted.
     Passing a hash will verify the file after download. The command line
