@@ -66,7 +66,7 @@ struct LouvainNodeState {
   bool reset_total_edge_weight;
   bool is_from_louvain_vertex_reader = false;
   bool use_fake_edges = false;
-  bool is_alived_community = true;
+  bool is_alive_community = true;
 
   std::vector<std::pair<vid_t, edata_t>> fake_edges;
   std::vector<vid_t> nodes_in_community;
@@ -81,7 +81,7 @@ struct LouvainNodeState {
         reset_total_edge_weight(false),
         is_from_louvain_vertex_reader(false),
         use_fake_edges(false),
-        is_alived_community(true) {}
+        is_alive_community(true) {}
 
   ~LouvainNodeState() = default;
 };

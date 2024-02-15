@@ -253,7 +253,7 @@ class LouvainAppBase
     // communities node info to neighbors, so we active the node.
     if (ctx.compute_context().superstep() == phase_two_start_step) {
       ForEach(inner_vertices, [&ctx](int tid, vertex_t v) {
-        if (ctx.GetVertexState(v).is_alived_community) {
+        if (ctx.GetVertexState(v).is_alive_community) {
           ctx.compute_context().activate(v);
         }
       });
@@ -274,7 +274,7 @@ class LouvainAppBase
                 &cur_msgs[0] + static_cast<ptrdiff_t>(cur_msgs.size())),
             pregel_vertex, ctx.compute_context());
       } else if (ctx.compute_context().superstep() == compress_community_step) {
-        ctx.GetVertexState(v).is_alived_community = false;
+        ctx.GetVertexState(v).is_alive_community = false;
       }
     });
 
