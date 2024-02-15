@@ -855,7 +855,7 @@ function do_init(){
   # check running containers and exit
   check_running_containers_and_exit
   info "Ok, no running instance found, start init database..."
-  # if no containers running, procede to init
+  # if no containers running, proceed to init
 
 #  check args num 1, and get the first args as CONFIG_FILE
   if [ $# -eq 0 ]; then
