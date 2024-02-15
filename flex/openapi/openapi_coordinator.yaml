@@ -803,7 +803,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
         '404':
-          description: Reveiver not found
+          description: Receiver not found
     delete:
       tags:
         - alert
@@ -822,7 +822,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
         '404':
-          description: Reveiver not found
+          description: Receiver not found
 components:
   schemas:
     ApiResponse:
