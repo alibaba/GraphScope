@@ -20,7 +20,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  peagsus-build:
+  pegasus-build:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
