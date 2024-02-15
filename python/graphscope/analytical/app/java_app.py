@@ -304,7 +304,7 @@ class JavaApp(AppAssets):
 
 
 class JavaAppDagNode(AppDAGNode):
-    """retrict app assets to javaAppAssets"""
+    """restrict app assets to javaAppAssets"""
 
     def __init__(self, graph: Graph, app_assets: JavaApp):
         self._graph = graph
