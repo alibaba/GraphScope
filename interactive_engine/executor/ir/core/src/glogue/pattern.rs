@@ -588,7 +588,7 @@ fn build_logical_plan(
         // if expand num > 1, means it needs to add intersect operator, and reorganize nodes' children
         if edge_expands_num > 1 {
             // record the opr ids that are pre_node's children
-            let expand_chidren = get_expand_children(&expand_oprs_vec, child_offset);
+            let expand_children = get_expand_children(&expand_oprs_vec, child_offset);
             // record the opr ids that are intersect's parents
             let intersect_parents = get_intersect_parents(&expand_oprs_vec, child_offset);
             // the id of the intersect operator
@@ -597,7 +597,7 @@ fn build_logical_plan(
             let intersect_opr = exact_extend_step.generate_intersect_operator(intersect_parents.clone())?;
             append_opr(&mut match_plan, intersect_opr)?;
             // reset the children of the previous nodes before this exact extend step
-            set_node_children_at_index(&mut match_plan, expand_chidren, child_offset - 1)?;
+            set_node_children_at_index(&mut match_plan, expand_children, child_offset - 1)?;
             // reset all intersect's parents' children as the id of the intersect operator
             for parent_id in intersect_parents {
                 set_node_children_at_index(&mut match_plan, vec![intersect_id], parent_id as usize)?;
