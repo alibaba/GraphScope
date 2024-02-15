@@ -146,7 +146,7 @@ mod test {
 
     // g.V().outE().hasLabel("knows")
     #[test]
-    fn expand_oute_with_label_test() {
+    fn expand_out_e_with_label_test() {
         let query_param = query_params(vec![KNOWS_LABEL.into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
@@ -172,7 +172,7 @@ mod test {
 
     // g.V().outE('knows', 'created')
     #[test]
-    fn expand_oute_with_many_labels_test() {
+    fn expand_out_e_with_many_labels_test() {
         let query_param = query_params(vec![KNOWS_LABEL.into(), CREATED_LABEL.into()], vec![], None);
         let expand_opr_pb = pb::EdgeExpand {
             v_tag: None,
