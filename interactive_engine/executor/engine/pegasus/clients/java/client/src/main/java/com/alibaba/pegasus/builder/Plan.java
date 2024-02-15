@@ -162,7 +162,7 @@ public class Plan {
         this.plan.add(operatorDef);
     }
 
-    public void repeateUntil(int times, ByteString until, Plan subPlan) {
+    public void repeatedUntil(int times, ByteString until, Plan subPlan) {
         TaskPlan taskPlan = TaskPlan.newBuilder().addAllPlan(subPlan.getPlan()).build();
         Filter filterUntil = Filter.newBuilder().setResource(until).build();
         Iteration iteration =
@@ -175,7 +175,7 @@ public class Plan {
         this.plan.add(operatorDef);
     }
 
-    public void repeateUntil(int times, ByteString until, NestedFunc func) {
+    public void repeatedUntil(int times, ByteString until, NestedFunc func) {
         Plan repeatedPlan = new Plan();
         func.nestedFunc(repeatedPlan);
         TaskPlan taskPlan = TaskPlan.newBuilder().addAllPlan(repeatedPlan.getPlan()).build();

@@ -113,12 +113,12 @@ public class JobBuilder extends AbstractBuilder {
     }
 
     public JobBuilder repeatUntil(int times, ByteString until, JobBuilder subPlan) {
-        this.plan.repeateUntil(times, until, subPlan.plan);
+        this.plan.repeatedUntil(times, until, subPlan.plan);
         return this;
     }
 
     public JobBuilder repeatUntil(int times, ByteString until, NestedFunc func) {
-        this.plan.repeateUntil(times, until, func);
+        this.plan.repeatedUntil(times, until, func);
         return this;
     }
 
