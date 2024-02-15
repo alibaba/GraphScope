@@ -126,7 +126,7 @@ impl Partial {
 impl TryFrom<Partial> for Predicates {
     type Error = ParsePbError;
     fn try_from(partial: Partial) -> Result<Self, Self::Error> {
-        let partical_old = partial.clone();
+        let partial_old = partial.clone();
         let predicate = match partial {
             Partial::SingleItem { left, cmp, right } => {
                 if left.is_none() {
@@ -159,7 +159,7 @@ impl TryFrom<Partial> for Predicates {
             }
             Partial::Predicates(pred) => Some(pred),
         };
-        predicate.ok_or_else(|| ParsePbError::ParseError(format!("invalid predicate: {:?}", partical_old)))
+        predicate.ok_or_else(|| ParsePbError::ParseError(format!("invalid predicate: {:?}", partial_old)))
     }
 }
 
