@@ -320,7 +320,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kEdge: {  // edge expand
         physical::EdgeExpand real_edge_expand = opr.edge();
-        // try to use infomation from later operator
+        // try to use information from later operator
         std::vector<LabelT> dst_vertex_labels;
         if (i + 1 < size) {
           auto& get_v_op_opr = plan_.plan(i + 1).opr();
