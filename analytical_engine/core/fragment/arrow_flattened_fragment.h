@@ -313,7 +313,7 @@ class UnionAdjList {
 
     pointer_type operator->() noexcept { return &curr_nbr_; }
 
-    // The only the iterator's `operator++()` is exposed to the external
+    // Only the iterator's `operator++()` is exposed to the external
     // programs so we only need to check the validity here, and nothing
     // to do with the `operator++()` of NbrDefault.
     inline void move_to_next_valid_nbr() {
