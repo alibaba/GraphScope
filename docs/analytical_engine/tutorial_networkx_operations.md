@@ -1,4 +1,4 @@
-# Tutorial: Graph Operations with NetowrkX APIs
+# Tutorial: Graph Operations with NetworkX APIs
 [NetworkX](https://networkx.org/) is a Python package for the manipulation and functions for graph data on a single machine. However, it lacks the capability of handling large-scale graphs on a distributed environment. Fortunately, GraphScope is compatible with NetworkX APIs, and thus a program written with NetworkX can directly run on GraphScope with only some small changes. In this tutorial, we will first introduce how to manipulate graph data with NetworkX APIs.
 
 ## Creating an Empty Graph
