@@ -214,7 +214,7 @@ start_docker() {
 }
 
 ##########################
-# Launch kubenetes cluster with kind.
+# Launch kubernetes cluster with kind.
 # Globals:
 #   None
 # Arguments:
