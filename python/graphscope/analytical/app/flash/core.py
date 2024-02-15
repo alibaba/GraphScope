@@ -89,7 +89,7 @@ def kcore_searching(graph, k=5):
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
-        k (int, optional): k of k-core seraching. Defaults to 5.
+        k (int, optional): k of k-core searching. Defaults to 5.
 
     Returns:
         :class:`graphscope.framework.context.Context`:

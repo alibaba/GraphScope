@@ -74,7 +74,7 @@ public class GraphScopeClassLoader {
         logger.info(
                 "Class Loader "
                         + urlClassLoader
-                        + " serach path: "
+                        + " search path: "
                         + urlsToString(urlClassLoader.getURLs()));
         return urlClassLoader;
     }

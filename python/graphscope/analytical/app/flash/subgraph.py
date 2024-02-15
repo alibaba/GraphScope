@@ -315,7 +315,7 @@ def k_clique_counting(graph, k=5):
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
-        k (int, optional): k of k-clique seraching. Defaults to 5.
+        k (int, optional): k of k-clique searching. Defaults to 5.
 
     Returns:
         :class:`graphscope.framework.context.Context`:
@@ -344,7 +344,7 @@ def k_clique_counting_2(graph, k=5):
 
     Args:
         graph (:class:`graphscope.Graph`): A simple graph.
-        k (int, optional): k of k-clique seraching. Defaults to 5.
+        k (int, optional): k of k-clique searching. Defaults to 5.
 
     Returns:
         :class:`graphscope.framework.context.Context`:
