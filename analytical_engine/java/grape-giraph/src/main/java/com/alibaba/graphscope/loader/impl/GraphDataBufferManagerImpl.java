@@ -30,9 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class GraphDataBufferManangerImpl implements GraphDataBufferManager {
+public class GraphDataBufferManagerImpl implements GraphDataBufferManager {
 
-    private static Logger logger = LoggerFactory.getLogger(GraphDataBufferManangerImpl.class);
+    private static Logger logger = LoggerFactory.getLogger(GraphDataBufferManagerImpl.class);
     private int threadNum;
     private int workerId;
     private FFIByteVecVector vidBuffers;
@@ -59,7 +59,7 @@ public class GraphDataBufferManangerImpl implements GraphDataBufferManager {
     private FFIIntVector[] edgeDstIdOffsetArr;
     private FFIIntVector[] edgeDataOffsetsArr;
 
-    public GraphDataBufferManangerImpl(
+    public GraphDataBufferManagerImpl(
             int workerId,
             int threadNum,
             FFIByteVecVector vidBuffers,

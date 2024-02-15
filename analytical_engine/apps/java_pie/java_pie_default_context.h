@@ -103,7 +103,7 @@ class JavaPIEDefaultContext : public grape::ContextBase {
       fragment_object_ = CreateFFIPointer(env, java_frag_type_name_.c_str(),
                                           url_class_loader_object_,
                                           reinterpret_cast<jlong>(&fragment_));
-      mm_object_ = CreateFFIPointer(env, parallel_java_message_mananger_name_,
+      mm_object_ = CreateFFIPointer(env, parallel_java_message_manager_name_,
                                     url_class_loader_object_,
                                     reinterpret_cast<jlong>(&messages));
 
@@ -158,7 +158,7 @@ class JavaPIEDefaultContext : public grape::ContextBase {
   char* app_class_name_;
   char* context_class_name_;
   const fragment_t& fragment_;
-  static const char* default_java_message_mananger_name_ =
+  static const char* default_java_message_manager_name_ =
       "grape::DefaultMessageManager";
   std::string java_frag_type_name_;
   jobject app_object_;

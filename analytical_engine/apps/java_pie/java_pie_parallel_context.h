@@ -108,7 +108,7 @@ class JavaPIEParallelContext : public grape::ContextBase {
                                           reinterpret_cast<jlong>(&fragment_));
       CHECK_NOTNULL(fragment_object_);
 
-      mm_object_ = CreateFFIPointer(env, parallel_java_message_mananger_name_,
+      mm_object_ = CreateFFIPointer(env, parallel_java_message_manager_name_,
                                     url_class_loader_object_,
                                     reinterpret_cast<jlong>(&messages));
       CHECK_NOTNULL(mm_object_);
@@ -162,7 +162,7 @@ class JavaPIEParallelContext : public grape::ContextBase {
   }
 
   const fragment_t& fragment_;
-  static constexpr char* parallel_java_message_mananger_name_ =
+  static constexpr char* parallel_java_message_manager_name_ =
       "grape::ParallelMessageManager";
   char* app_class_name_;
   char* context_class_name_;
