@@ -1225,10 +1225,10 @@ function do_destroy() {
     exit 0
   fi
   # check if the GraphServer and SyncServer are running, if running, echo "Service is running, please stop it first" and exit
-  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interactive service stop"; then
     exit 1
   fi
-  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "interactive_server" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "interactive_server" "Service is running, please stop it first: ./bin/gs_interactive service stop"; then
     exit 1
   fi
 

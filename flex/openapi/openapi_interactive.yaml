@@ -20,7 +20,7 @@ externalDocs:
   url: http://graphscope.io
 tags:
   - name: graph
-    description: Everything about interative graph
+    description: Everything about interactive graph
     externalDocs:
       description: Find out more
       url: http://graphscope.io
