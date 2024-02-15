@@ -503,7 +503,7 @@ def insert_vertices(self, vertices: list) -> int: pass
 # Update one vertex to new properties
 def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict) -> int: pass
 
-# Delele one vertex
+# Delete one vertex
 def delete_vertex(self, vertex_pk: VertexRecordKey) -> int: pass
 
 # Delete a list of vertices
