@@ -78,7 +78,7 @@ class StdStreamWrapper(ObjectWrapper):
                 round_name = round_name.split("-")[-1].strip()
                 if len(round_name) == 1:
                     round_name = "0" + round_name
-            Monitor.analyticalPerformace.add_metric(
+            Monitor.analyticalPerformance.add_metric(
                 [Monitor.app_name, Monitor.graph_name, round_name], float(val)
             )
 
