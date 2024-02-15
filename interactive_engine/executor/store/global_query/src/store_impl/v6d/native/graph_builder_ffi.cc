@@ -260,7 +260,7 @@ int v6d_get_property_id(Schema schema, const char *name, PropertyId *out) {
     *out = ptr->GetPropertyId(name);
   }
 #ifndef NDEBUG
-  LOG(INFO) << "get propery id: " << name << " -> " << *out;
+  LOG(INFO) << "get property id: " << name << " -> " << *out;
 #endif
   return (*out == -1) ? -1 : 0;
 }
@@ -275,7 +275,7 @@ int v6d_get_property_type(Schema schema, LabelId label, PropertyId id,
         ptr->GetPropertyType(label, id));
   }
 #ifndef NDEBUG
-  LOG(INFO) << "get propery type: " << label << " + " << id << " -> " << *out;
+  LOG(INFO) << "get property type: " << label << " + " << id << " -> " << *out;
 #endif
   return (*out == INVALID) ? -1 : 0;
 }
@@ -284,7 +284,7 @@ int v6d_get_property_name(Schema schema, PropertyId id, const char **out) {
   auto ptr = static_cast<vineyard::htap::MGPropertyGraphSchema *>(schema);
   std::string name = ptr->GetPropertyName(id);
 #ifndef NDEBUG
-  LOG(INFO) << "get propery name: " << id << " -> " << name;
+  LOG(INFO) << "get property name: " << id << " -> " << name;
 #endif
   if (name.empty()) {
     *out = NULL;

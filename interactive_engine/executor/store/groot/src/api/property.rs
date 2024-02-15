@@ -911,7 +911,7 @@ impl Property {
     }
 }
 
-pub fn parse_proerty_as_string(data: Vec<u8>, data_type: &DataType) -> Option<String> {
+pub fn parse_property_as_string(data: Vec<u8>, data_type: &DataType) -> Option<String> {
     let mut rdr = Cursor::new(data);
     match *data_type {
         DataType::String | DataType::Date => {
@@ -973,36 +973,36 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_proerty_as_string() {
+    fn test_parse_property_as_string() {
         let p = Property::String("aaabbb".to_owned());
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::String).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::String).unwrap();
         assert_eq!(res, "\"aaabbb\"");
         let p = Property::Date("2000-01-01".to_owned());
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::String).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::String).unwrap();
         assert_eq!(res, "\"2000-01-01\"");
         let p = Property::Double(3.1415926);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Double).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Double).unwrap();
         assert_eq!(res, "3.1415926");
         let p = Property::Float(3.14);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Float).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Float).unwrap();
         assert_eq!(res, "3.14");
         let p = Property::Long(123456);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Long).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Long).unwrap();
         assert_eq!(res, "123456");
         let p = Property::Int(123456);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Int).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Int).unwrap();
         assert_eq!(res, "123456");
         let p = Property::Short(123);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Short).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Short).unwrap();
         assert_eq!(res, "123");
         let p = Property::Char('x' as u8);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Char).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Char).unwrap();
         assert_eq!(res, "'x'");
         let p = Property::Bool(false);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Bool).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Bool).unwrap();
         assert_eq!(res, "False");
         let p = Property::Bool(true);
-        let res = parse_proerty_as_string(p.to_bytes(), &DataType::Bool).unwrap();
+        let res = parse_property_as_string(p.to_bytes(), &DataType::Bool).unwrap();
         assert_eq!(res, "True");
     }
 

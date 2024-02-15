@@ -204,7 +204,7 @@ class TestGraphTransformation(object):
         self.assert_convert_success(gs_g, nx_g)
 
     def test_complete_nx_to_gs(self):
-        # multi-propery, node propery and edge propty both aligned
+        # multi-property, node property and edge property both aligned
         nodes = [
             (0, {"vp1": 1, "vp2": "v", "vp3": 3.14}),
             (1, {"vp1": 1, "vp2": "v", "vp3": 3.14}),
@@ -222,20 +222,20 @@ class TestGraphTransformation(object):
 
         # node property aligned, edge not aligned
         nx_g2 = nx_g.copy()
-        nx_g2.add_edge(0, 1, ep4="new propery")
+        nx_g2.add_edge(0, 1, ep4="new property")
         gs_g2 = g(nx_g2)
         self.assert_convert_success(gs_g2, nx_g2)
 
         # edge property aligned, node not aligned
         nx_g3 = nx_g.copy()
-        nx_g3.add_node(2, vp4="new propery")
+        nx_g3.add_node(2, vp4="new property")
         gs_g3 = g(nx_g3)
         self.assert_convert_success(gs_g3, nx_g3)
 
         # both not aligned
         nx_g4 = nx_g.copy()
-        nx_g4.add_edge(0, 1, ep4="new propery")
-        nx_g4.add_node(2, vp4="new propery")
+        nx_g4.add_edge(0, 1, ep4="new property")
+        nx_g4.add_node(2, vp4="new property")
         gs_g4 = g(nx_g4)
         self.assert_convert_success(gs_g4, nx_g4)
 

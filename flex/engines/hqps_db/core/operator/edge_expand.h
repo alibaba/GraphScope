@@ -332,7 +332,7 @@ class EdgeExpand {
     VLOG(10) << "edgeExpandV: from label: " << state.cur_vertex_set_.GetLabel()
              << ", other label: " << state.other_label_
              << ",edge label: " << state.edge_label_
-             << ",dire: " << state.direction_ << ", propert name: ";
+             << ",dire: " << state.direction_ << ", property name: ";
     auto selectors = state.edge_filter_.selectors_;
     auto adj_list_array =
         get_adj_list_array_with_filter(state, src_label, dst_label, selectors);
