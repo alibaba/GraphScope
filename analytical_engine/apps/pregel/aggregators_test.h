@@ -81,7 +81,7 @@ class AggregatorsTest
     context.register_aggregator(BOOL_OVERWRITE_AGGREGATOR,
                                 PregelAggregatorType::kBoolOverwriteAggregator);
 
-    context.register_aggregator(TEXT_APPEND_AGGREGAROR,
+    context.register_aggregator(TEXT_APPEND_AGGREGATOR,
                                 PregelAggregatorType::kTextAppendAggregator);
   }
 
@@ -107,7 +107,7 @@ class AggregatorsTest
       context.aggregate<bool>(BOOL_OVERWRITE_AGGREGATOR, true);
 
       std::string text = v.id() + ',';
-      context.aggregate<std::string>(TEXT_APPEND_AGGREGAROR, text);
+      context.aggregate<std::string>(TEXT_APPEND_AGGREGATOR, text);
 
     } else {
       if (v.id().compare("0") == 0) {
@@ -141,7 +141,7 @@ class AggregatorsTest
         std::vector<std::string> rlt;
         ::boost::split(
             rlt,
-            context.get_aggregated_value<std::string>(TEXT_APPEND_AGGREGAROR),
+            context.get_aggregated_value<std::string>(TEXT_APPEND_AGGREGATOR),
             ::boost::is_any_of(","));
         assert(rlt.size() == 81308);
       }
@@ -167,7 +167,7 @@ class AggregatorsTest
   const std::string BOOL_OR_AGGREGATOR = "bool_or_aggregator";
   const std::string BOOL_OVERWRITE_AGGREGATOR = "bool_overwrite_aggregator";
 
-  const std::string TEXT_APPEND_AGGREGAROR = "text_append_aggregator";
+  const std::string TEXT_APPEND_AGGREGATOR = "text_append_aggregator";
 };
 
 }  // namespace gs
