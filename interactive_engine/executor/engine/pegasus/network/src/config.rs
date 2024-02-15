@@ -23,7 +23,7 @@ use crate::{NetError, Server};
 
 pub const DEFAULT_HEARTBEAT_INTERVAL_SEC: usize = 5;
 pub const DEFAULT_SEND_BUFFER_SIZE: usize = 1440;
-pub const DEFAULT_WAIT_USER_DATA_MILLSEC: usize = 100;
+pub const DEFAULT_WAIT_USER_DATA_MILLISEC: usize = 100;
 pub const DEFAULT_SLAB_SIZE: usize = 1 << 16;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -56,7 +56,7 @@ impl Default for WriteParams {
             mode: BlockMode::Nonblocking,
             buffer: DEFAULT_SEND_BUFFER_SIZE,
             nodelay: false,
-            wait_data: DEFAULT_WAIT_USER_DATA_MILLSEC,
+            wait_data: DEFAULT_WAIT_USER_DATA_MILLISEC,
             heartbeat: DEFAULT_HEARTBEAT_INTERVAL_SEC,
         }
     }
