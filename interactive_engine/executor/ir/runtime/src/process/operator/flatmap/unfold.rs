@@ -86,7 +86,7 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
             EntryType::Path => {
                 let entry = input.get(self.tag).unwrap();
                 let path = entry.as_graph_path().ok_or_else(|| {
-                    FnExecError::unexpected_data_error("downcast path entry in UnfoldOperatro")
+                    FnExecError::unexpected_data_error("downcast path entry in UnfoldOperator")
                 })?;
                 let path_vec = if let Some(path) = path.get_path() {
                     path.clone()

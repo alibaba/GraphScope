@@ -2,7 +2,7 @@ use std::convert::{TryFrom, TryInto};
 
 use global_query::store_api::condition::Operand as StoreOperand;
 use global_query::store_api::{
-    condition::predicate::CmpOperator as StoreOprator,
+    condition::predicate::CmpOperator as StoreOperator,
     condition::predicate::PredCondition as StorePredCondition,
 };
 use global_query::store_api::{prelude::Property, Condition, ConditionBuilder, PropId};
@@ -120,33 +120,33 @@ impl TryFrom<&Predicate> for StorePredCondition {
     fn try_from(pred: &Predicate) -> GraphProxyResult<StorePredCondition> {
         let (left, right) = (pred.left.to_store_oprand()?, pred.right.to_store_oprand()?);
         let pred = match pred.cmp {
-            common_pb::Logical::Eq => StorePredCondition::new_predicate(left, StoreOprator::Equal, right),
+            common_pb::Logical::Eq => StorePredCondition::new_predicate(left, StoreOperator::Equal, right),
             common_pb::Logical::Ne => {
-                StorePredCondition::new_predicate(left, StoreOprator::NotEqual, right)
+                StorePredCondition::new_predicate(left, StoreOperator::NotEqual, right)
             }
             common_pb::Logical::Lt => {
-                StorePredCondition::new_predicate(left, StoreOprator::LessThan, right)
+                StorePredCondition::new_predicate(left, StoreOperator::LessThan, right)
             }
             common_pb::Logical::Le => {
-                StorePredCondition::new_predicate(left, StoreOprator::LessEqual, right)
+                StorePredCondition::new_predicate(left, StoreOperator::LessEqual, right)
             }
             common_pb::Logical::Gt => {
-                StorePredCondition::new_predicate(left, StoreOprator::GreaterThan, right)
+                StorePredCondition::new_predicate(left, StoreOperator::GreaterThan, right)
             }
             common_pb::Logical::Ge => {
-                StorePredCondition::new_predicate(left, StoreOprator::GreaterEqual, right)
+                StorePredCondition::new_predicate(left, StoreOperator::GreaterEqual, right)
             }
             common_pb::Logical::Within => {
-                StorePredCondition::new_predicate(left, StoreOprator::WithIn, right)
+                StorePredCondition::new_predicate(left, StoreOperator::WithIn, right)
             }
             common_pb::Logical::Without => {
-                StorePredCondition::new_predicate(left, StoreOprator::WithOut, right)
+                StorePredCondition::new_predicate(left, StoreOperator::WithOut, right)
             }
             common_pb::Logical::Startswith => {
-                StorePredCondition::new_predicate(left, StoreOprator::StartWith, right)
+                StorePredCondition::new_predicate(left, StoreOperator::StartWith, right)
             }
             common_pb::Logical::Endswith => {
-                StorePredCondition::new_predicate(left, StoreOprator::EndWith, right)
+                StorePredCondition::new_predicate(left, StoreOperator::EndWith, right)
             }
             _ => {
                 return Err(GraphProxyError::FilterPushDownError(format!(
@@ -276,7 +276,7 @@ mod test {
         let target = ConditionBuilder::new()
             .and(Condition::Pred(StorePredCondition::new_predicate(
                 StoreOperand::PropId(1),
-                StoreOprator::Equal,
+                StoreOperator::Equal,
                 StoreOperand::Const(StoreProperty::Int(10)),
             )))
             .build();
@@ -294,7 +294,7 @@ mod test {
         let target = ConditionBuilder::new()
             .and(Condition::Pred(StorePredCondition::new_predicate(
                 StoreOperand::PropId(1),
-                StoreOprator::StartWith,
+                StoreOperator::StartWith,
                 StoreOperand::Const(StoreProperty::String("hello world".to_owned())),
             )))
             .build();
@@ -336,12 +336,12 @@ mod test {
         let target = ConditionBuilder::new()
             .and(Condition::Pred(StorePredCondition::new_predicate(
                 StoreOperand::PropId(1),
-                StoreOprator::GreaterEqual,
+                StoreOperator::GreaterEqual,
                 StoreOperand::Const(StoreProperty::Int(10)),
             )))
             .and(Condition::Pred(StorePredCondition::new_predicate(
                 StoreOperand::PropId(1),
-                StoreOprator::LessEqual,
+                StoreOperator::LessEqual,
                 StoreOperand::Const(StoreProperty::Int(20)),
             )))
             .build();
@@ -370,12 +370,12 @@ mod test {
         let target = ConditionBuilder::new()
             .and(Condition::Pred(StorePredCondition::new_predicate(
                 StoreOperand::PropId(1),
-                StoreOprator::GreaterEqual,
+                StoreOperator::GreaterEqual,
                 StoreOperand::Const(StoreProperty::Int(10)),
             )))
             .or(Condition::Pred(StorePredCondition::new_predicate(
                 StoreOperand::PropId(1),
-                StoreOprator::LessEqual,
+                StoreOperator::LessEqual,
                 StoreOperand::Const(StoreProperty::Int(20)),
             )))
             .build();
