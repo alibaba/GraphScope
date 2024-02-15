@@ -25,15 +25,15 @@ inline std::string buildCanonicalizedResource(
   std::ostringstream builder;
   builder << resource_path;
 
-  char separater = '?';
+  char separator = '?';
   auto it = parameters.begin();
   for (; it != parameters.end(); ++it) {
-    builder << separater;
+    builder << separator;
     builder << it->first;
     if (it->second != "") {
       builder << "=" << it->second;
     }
-    separater = '&';
+    separator = '&';
   }
 
   return builder.str();

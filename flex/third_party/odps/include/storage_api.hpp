@@ -630,10 +630,10 @@ inline std::string Client::GetRoutedEndpoint(const std::string& project) {
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   auto res = http_client->Get((url_prefix + url_stream.str()).c_str(), headers);
@@ -681,10 +681,10 @@ inline void Client::CreateReadSession(const TableBatchScanReq& request,
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   auto res = http_client->Post(url_stream.str().c_str(), headers, body,
@@ -737,10 +737,10 @@ inline void Client::GetReadSession(const SessionReq& request,
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   auto res = http_client->Get(url_stream.str().c_str(), headers);
@@ -806,10 +806,10 @@ inline void Client::ReadRows(
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   std::string body;
@@ -878,10 +878,10 @@ inline void Client::CreateWriteSession(const TableBatchWriteReq& request,
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   auto res = http_client->Post(url_stream.str().c_str(), headers, body,
@@ -935,10 +935,10 @@ inline void Client::GetWriteSession(const SessionReq& request,
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   auto res = http_client->Get(url_stream.str().c_str(), headers);
@@ -1009,10 +1009,10 @@ inline void Client::WriteRows(
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   auto res = http_client->Post(
@@ -1076,10 +1076,10 @@ inline void Client::CommitWriteSession(
 
   Sign(configuration_, method, url_stream.str(), params, headers);
 
-  std::string separater = "?";
+  std::string separator = "?";
   for (auto it = params.begin(); it != params.end(); ++it) {
-    url_stream << separater << it->first << "=" << it->second;
-    separater = "&";
+    url_stream << separator << it->first << "=" << it->second;
+    separator = "&";
   }
 
   auto res = http_client->Post(url_stream.str().c_str(), headers, body,
