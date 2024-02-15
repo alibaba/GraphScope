@@ -540,7 +540,7 @@ correctness of the code and data.
    # res = [Nodes, Nodes, Nodes]
    print(res[1].ids)
 
-Worth noticing that when the query only contains Soure (``g.V()`` /
+Worth noticing that when the query only contains Source (``g.V()`` /
 ``g.E()``), ``emit()`` directly returns the data of list[0].
 
 # 3 Query execution ## 3.1 run ``run()`` interface is used to execute

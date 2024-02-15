@@ -39,7 +39,7 @@ Same applies to each edge data.
 ## Data Schema
 The schema contains the following metadata for the graph storage:
 * Mapping from vertex label to label id.
-* Mapping from edge label to a 3-tuple, which contains edge label id, ource vertex label id, and target vertex
+* Mapping from edge label to a 3-tuple, which contains edge label id, source vertex label id, and target vertex
   label id. 
 * The properties (name and datatype) of each type of vertex/edge.
 
