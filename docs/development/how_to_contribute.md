@@ -111,7 +111,7 @@ Follow [our code style guide](./code_style_guide.md) to attain the proper code f
 
 To submit your changes, you will need to open a pull request (PR) against the main repository. If you're new to GitHub, you can find instructions on how to do that in [GitHub's documentation](https://help.github.com/articles/creating-a-pull-request). GraphScope requires PR titles to follow a specific format (a.k.a., [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/)), depending on the type of change you're making. The format is as follows:
 
-**type(scope): brief desciption about the pr**
+**type(scope): brief description about the pr**
 
 Below are some examples of the valid PR titles:
 
