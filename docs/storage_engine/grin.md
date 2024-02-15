@@ -325,7 +325,7 @@ aggregation purpose to share a common central node for every one.
 - While in edgecut partition, the concept becomes inner & outer vertices. GRIN uses master & mirror vertices to represent inner & outer vertices respectively to unify these concepts.
 
 ### Local Complete
-- The concept of local complete is with repect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.
+- The concept of local complete is with respect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.
 - Take vertex and properties as example. GRIN considers the vertex is "property local complete" if it can get all the properties of the vertex locally in the partition.
 - There are concepts like "edge property local complete", "vertex neighbor local complete" and so on.
 - GRIN does **NOT** assume any local complete on master vertices. Since in some extremely cases, master vertices
