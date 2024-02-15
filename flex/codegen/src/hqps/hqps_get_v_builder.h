@@ -138,7 +138,7 @@ class GetVOpBuilder {
       expr_builder.set_return_type(common::DataType::BOOLEAN);
       std::vector<common::DataType> unused_expr_ret_type;
       if (!expr_builder.empty()) {
-        std::tie(expr_name_, expr_call_param_, tag_propertys_, expr_code_,
+        std::tie(expr_name_, expr_call_param_, tag_properties_, expr_code_,
                  unused_expr_ret_type) = expr_builder.Build();
         ctx_.AddExprCode(expr_code_);
       } else {
@@ -186,12 +186,12 @@ class GetVOpBuilder {
       }
       {
         std::stringstream ss;
-        if (tag_propertys_.size() > 0) {
+        if (tag_properties_.size() > 0) {
           ss << ", ";
         }
-        for (size_t i = 0; i < tag_propertys_.size(); ++i) {
-          ss << tag_propertys_[i].second;
-          if (i != tag_propertys_.size() - 1) {
+        for (size_t i = 0; i < tag_properties_.size(); ++i) {
+          ss << tag_properties_[i].second;
+          if (i != tag_properties_.size() - 1) {
             ss << ", ";
           }
         }
@@ -214,7 +214,7 @@ class GetVOpBuilder {
   int32_t in_tag_id_, out_tag_id_;
   std::vector<LabelT> vertex_labels_;
   std::vector<codegen::ParamConst> expr_call_param_;
-  std::vector<std::pair<int32_t, std::string>> tag_propertys_;
+  std::vector<std::pair<int32_t, std::string>> tag_properties_;
   std::string expr_name_, expr_code_;
 };
 
