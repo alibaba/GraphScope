@@ -1581,7 +1581,7 @@ The same as `group()` step, you can add either
 - Property name or
 - sub-traversal sentence which will generate a single value
 
-to the `by()` step as the order key. In addition, you can determine whether the order is `acsending` or `descending` in the second parameter of the `by()` step.
+to the `by()` step as the order key. In addition, you can determine whether the order is `ascending` or `descending` in the second parameter of the `by()` step.
 
 For example:
 
