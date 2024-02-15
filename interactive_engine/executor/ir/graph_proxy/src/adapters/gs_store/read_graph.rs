@@ -106,7 +106,7 @@ where
             let column_filter_pushdown = self.column_filter_pushdown;
             // props that will be returned by storage layer
             let prop_ids = if column_filter_pushdown {
-                // props that will be used in futher computations
+                // props that will be used in further computations
                 let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
                 if row_filter_exists_but_not_pushdown {
                     // need to call filter_limit!, so get columns in row_filter and params.columns
@@ -241,7 +241,7 @@ where
         let column_filter_pushdown = self.column_filter_pushdown;
         // also need props in filter, because `filter_limit!`
         let prop_ids = if column_filter_pushdown {
-            // props that will be used in futher computations
+            // props that will be used in further computations
             let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             extract_needed_columns(params.filter.as_ref(), cache_prop_ids.as_ref())?
         } else {
