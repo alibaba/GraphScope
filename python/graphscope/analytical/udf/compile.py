@@ -1215,7 +1215,7 @@ class GRAPECompiler(ast.NodeVisitor):
             ],
             star_arg=None,
             starstar_arg=None,
-            retult_expr=self.visit(node.body),
+            result_expr=self.visit(node.body),
         )
 
     def visit_Return(self, node):

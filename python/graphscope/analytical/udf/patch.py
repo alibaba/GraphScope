@@ -303,7 +303,7 @@ def patch_cython_codewriter(writer):  # noqa: C901
         self.startline("lambda ")
         self.comma_separated_list(node.args)
         self.put(" : ")
-        self.visit(node.retult_expr)
+        self.visit(node.result_expr)
 
     setattr(writer, "visit_LambdaNode", functools.partial(visit_LambdaNode, writer))
 
