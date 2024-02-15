@@ -68,7 +68,7 @@ class ScanOpBuilder {
   std::string Build() const {
     VLOG(10) << "[Scan Builder] Start build scan operator";
 
-    boost::format scan_fmter("%1%%2%%3%");
+    boost::format scan_formatter("%1%%2%%3%");
 
     VLOG(10) << "[Scan Builder] Start write head";
     std::string head_code = write_head();
@@ -117,24 +117,24 @@ class ScanOpBuilder {
       ctx_.SetOutput(1, output);
     }
 
-    scan_fmter % head_code % scan_body_code % end_code;
-    return scan_fmter.str();
+    scan_formatter % head_code % scan_body_code % end_code;
+    return scan_formatter.str();
   }
 
  private:
   std::string write_head() const {
-    boost::format head_fmter(
+    boost::format head_formatter(
         "let stream_%1% = stream_%2%.flat_map(move |_| {\n"
         "let mut result = vec![];\n");
-    head_fmter % operator_index_ % (operator_index_ - 1);
-    return head_fmter.str();
+    head_formatter % operator_index_ % (operator_index_ - 1);
+    return head_formatter.str();
   }
 
   std::string write_scan_body(
       int32_t index, const int32_t& label_id, const std::string& predicate_expr,
       const std::vector<std::string>& var_names,
       const std::vector<codegen::ParamConst>& properties) const {
-    boost::format scan_body_fmter(
+    boost::format scan_body_formatter(
         "let vertex_%1%_num = CSR.get_vertices_num(%2%);\n"
         "let vertex_%1%_local_num = vertex_%1%_num / workers as usize +1;\n"
         "let mut vertex_%1%_start = vertex_%1%_local_num * worker_id as "
@@ -155,15 +155,15 @@ class ScanOpBuilder {
     } else {
       predicate_code = scan_without_expression(label_id);
     }
-    scan_body_fmter % index % label_id % predicate_code;
-    return scan_body_fmter.str();
+    scan_body_formatter % index % label_id % predicate_code;
+    return scan_body_formatter.str();
   }
 
   std::string scan_with_expression(
       const int32_t& label_id, const std::string& predicate_expr,
       const std::vector<std::string>& var_names,
       const std::vector<codegen::ParamConst>& properties) const {
-    boost::format scan_vertex_fmter(
+    boost::format scan_vertex_formatter(
         "%1%"
         "if %2% {\n"
         "let vertex_global_id = CSR.get_global_id(i, %3%).unwrap() as u64;\n"
@@ -177,24 +177,24 @@ class ScanOpBuilder {
       std::string prop_column_name =
           get_vertex_prop_column_name(prop_name, label_id);
 
-      boost::format var_fmter("let %1% = %2%[i];\n");
-      var_fmter % var_name % prop_column_name;
-      vars_code += var_fmter.str();
+      boost::format var_formatter("let %1% = %2%[i];\n");
+      var_formatter % var_name % prop_column_name;
+      vars_code += var_formatter.str();
     }
-    scan_vertex_fmter % vars_code % predicate_expr % label_id;
-    return scan_vertex_fmter.str();
+    scan_vertex_formatter % vars_code % predicate_expr % label_id;
+    return scan_vertex_formatter.str();
   }
 
   std::string scan_without_expression(const int32_t& label_id) const {
-    boost::format scan_vertex_fmter(
+    boost::format scan_vertex_formatter(
         "let vertex_global_id = CSR.get_global_id(i, %1%).unwrap() as u64;\n"
         "result.push(vertex_global_id);\n");
-    scan_vertex_fmter % label_id;
-    return scan_vertex_fmter.str();
+    scan_vertex_formatter % label_id;
+    return scan_vertex_formatter.str();
   }
 
   std::string write_end() const {
-    boost::format end_fmter(
+    boost::format end_formatter(
         "Ok(result.into_iter()%1%)\n"
         "})?;\n");
 
@@ -203,8 +203,8 @@ class ScanOpBuilder {
       ctx_.SetAlias(res_alias_);
       map_code = ".map(|res| (res, res))";
     }
-    end_fmter % map_code;
-    return end_fmter.str();
+    end_formatter % map_code;
+    return end_formatter.str();
   }
 
   int32_t operator_index_;

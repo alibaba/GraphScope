@@ -162,44 +162,44 @@ class GetVOpBuilder {
             int32_t label_id = input_type.second[0];
             getv_body_code = filter_by_predicate(input_index, label_id);
           } else {
-            boost::format multi_labels_fmter(
+            boost::format multi_labels_formatter(
                 "let vertex_label = "
                 "LDBCVertexParser::<usize>::get_label_id(i%1% as usize);\n"
                 "%2%");
             std::string getv_code;
             for (auto i : input_type.second) {
-              boost::format getv_fmter(
+              boost::format getv_formatter(
                   "if vertex_label == %1% {\n"
                   "%2"
                   "}\n");
-              getv_fmter % i % filter_by_predicate(input_index, i);
-              getv_code += getv_fmter.str();
+              getv_formatter % i % filter_by_predicate(input_index, i);
+              getv_code += getv_formatter.str();
             }
-            multi_labels_fmter % input_index % getv_code;
-            getv_body_code = multi_labels_fmter.str();
+            multi_labels_formatter % input_index % getv_code;
+            getv_body_code = multi_labels_formatter.str();
           }
         } else {
           // return stream and do nothing
-          boost::format empty_fmter("let stream_%1% = stream%2%");
-          empty_fmter % operator_index_ % (operator_index_ - 1);
-          return empty_fmter.str();
+          boost::format empty_formatter("let stream_%1% = stream%2%");
+          empty_formatter % operator_index_ % (operator_index_ - 1);
+          return empty_formatter.str();
         }
       }
       break;
     }
     case GetVType::kEnd: {
-      boost::format get_id_fmter("i%1%%2%");
+      boost::format get_id_formatter("i%1%%2%");
       if (in_data_type.size() == 1) {
         if (in_data_type[0] == codegen::DataType::kInt64Array) {
-          get_id_fmter % input_index % ".last()";
+          get_id_formatter % input_index % ".last()";
         } else {
-          get_id_fmter % input_index % "";
+          get_id_formatter % input_index % "";
         }
       } else {
         LOG(FATAL) << "Unsupported type";
       }
       if (filter_label) {
-        boost::format filter_fmter(
+        boost::format filter_formatter(
             "vertex_id = %1%;\n"
             "let vertex_label =  "
             "LDBCVertexParser::<usize>::get_label_id(vertex_id as usize);\n"
@@ -209,30 +209,30 @@ class GetVOpBuilder {
             "}\n");
 
         std::string label_string = generate_label_string();
-        filter_fmter % get_id_fmter.str() % label_string;
-        getv_body_code = filter_fmter.str();
+        filter_formatter % get_id_formatter.str() % label_string;
+        getv_body_code = filter_formatter.str();
       } else {
-        boost::format no_filter_fmter(
+        boost::format no_filter_formatter(
             "vertex_id = %1%;\n"
             "result.push(vertex_id);\n");
-        no_filter_fmter % get_id_fmter.str();
-        getv_body_code = no_filter_fmter.str();
+        no_filter_formatter % get_id_formatter.str();
+        getv_body_code = no_filter_formatter.str();
       }
       break;
     }
     case GetVType::kStart: {
-      boost::format get_id_fmter("i%1%%2%");
+      boost::format get_id_formatter("i%1%%2%");
       if (in_data_type.size() == 1) {
         if (in_data_type[0] == codegen::DataType::kInt64Array) {
-          get_id_fmter % input_index % ".start()";
+          get_id_formatter % input_index % ".start()";
         } else {
-          get_id_fmter % input_index % "";
+          get_id_formatter % input_index % "";
         }
       } else {
         LOG(FATAL) << "Unsupported type";
       }
       if (filter_label) {
-        boost::format filter_fmter(
+        boost::format filter_formatter(
             "vertex_id = %1%;\n"
             "let vertex_label =  "
             "LDBCVertexParser::<usize>::get_label_id(vertex_id as usize);\n"
@@ -242,30 +242,30 @@ class GetVOpBuilder {
             "}\n");
 
         std::string label_string = generate_label_string();
-        filter_fmter % get_id_fmter.str() % label_string;
-        getv_body_code = filter_fmter.str();
+        filter_formatter % get_id_formatter.str() % label_string;
+        getv_body_code = filter_formatter.str();
       } else {
-        boost::format no_filter_fmter(
+        boost::format no_filter_formatter(
             "vertex_id = %1%;\n"
             "result.push(vertex_id);\n");
-        no_filter_fmter % get_id_fmter.str();
-        getv_body_code = no_filter_fmter.str();
+        no_filter_formatter % get_id_formatter.str();
+        getv_body_code = no_filter_formatter.str();
       }
       break;
     }
     case GetVType::kOther: {
-      boost::format get_id_fmter("i%1%%2%");
+      boost::format get_id_formatter("i%1%%2%");
       if (in_data_type.size() == 1) {
         if (in_data_type[0] == codegen::DataType::kInt64Array) {
           LOG(FATAL) << "Unsupported data type in kOther";
         } else {
-          get_id_fmter % input_index % "";
+          get_id_formatter % input_index % "";
         }
       } else {
         LOG(FATAL) << "Unsupported type";
       }
       if (filter_label) {
-        boost::format filter_fmter(
+        boost::format filter_formatter(
             "vertex_id = %1%;\n"
             "let vertex_label =  "
             "LDBCVertexParser::<usize>::get_label_id(vertex_id as usize);\n"
@@ -275,14 +275,14 @@ class GetVOpBuilder {
             "}\n");
 
         std::string label_string = generate_label_string();
-        filter_fmter % get_id_fmter.str() % label_string;
-        getv_body_code = filter_fmter.str();
+        filter_formatter % get_id_formatter.str() % label_string;
+        getv_body_code = filter_formatter.str();
       } else {
-        boost::format no_filter_fmter(
+        boost::format no_filter_formatter(
             "vertex_id = %1%;\n"
             "result.push(vertex_id);\n");
-        no_filter_fmter % get_id_fmter.str();
-        getv_body_code = no_filter_fmter.str();
+        no_filter_formatter % get_id_formatter.str();
+        getv_body_code = no_filter_formatter.str();
       }
       break;
     }
@@ -296,7 +296,7 @@ class GetVOpBuilder {
     ctx_.SetHeadType(input_type.first, input_type.second);
 
     int32_t input_size = ctx_.InputSize();
-    boost::format edge_expand_output_fmter(
+    boost::format edge_expand_output_formatter(
         "Ok(result.into_iter().map(move |res| %1%))\n"
         "})?;");
     ss << "Ok(result.into_iter().map(|res| (res";
@@ -311,21 +311,21 @@ class GetVOpBuilder {
 
     std::string output_params = generate_output_list(
         "i", input_size, "res", output_index, ctx_.ContainHead());
-    edge_expand_output_fmter % output_params;
+    edge_expand_output_formatter % output_params;
     ctx_.SetHead(true);
-    return getv_head_code + getv_body_code + edge_expand_output_fmter.str();
+    return getv_head_code + getv_body_code + edge_expand_output_formatter.str();
   }
 
  private:
   std::string write_head() const {
     int32_t input_size = ctx_.InputSize();
-    boost::format head_fmter(
+    boost::format head_formatter(
         "let stream_%1% = stream_%2%\n"
         ".flat_map(move |%3%|5 {\n"
         "let mut result = vec![];");
     std::string input_params = generate_arg_list("i", input_size);
-    head_fmter % operator_index_ % (operator_index_ - 1) % input_params;
-    return head_fmter.str();
+    head_formatter % operator_index_ % (operator_index_ - 1) % input_params;
+    return head_formatter.str();
   }
 
   std::string generate_label_string() const {
@@ -342,11 +342,11 @@ class GetVOpBuilder {
   std::string filter_by_predicate(int32_t index,
                                   const int32_t& label_id) const {
     if (predicate_expr_.empty()) {
-      boost::format no_predicate_fmter("result.push(i%1%);\n");
-      no_predicate_fmter % index;
-      return no_predicate_fmter.str();
+      boost::format no_predicate_formatter("result.push(i%1%);\n");
+      no_predicate_formatter % index;
+      return no_predicate_formatter.str();
     }
-    boost::format predicate_fmter(
+    boost::format predicate_formatter(
         "let vertex_id = CSR.get_internal_id(i%1% as usize);\n"
         "%2%"
         "if %3% {\n"
@@ -355,14 +355,14 @@ class GetVOpBuilder {
         "}\n");
     std::string vars_code;
     for (size_t i = 0; i < var_names_.size(); ++i) {
-      boost::format var_fmter("let %1% = %2%[vertex_id];\n");
+      boost::format var_formatter("let %1% = %2%[vertex_id];\n");
       std::string prop_name =
           get_vertex_prop_column_name(properties_[i].var_name, label_id);
-      var_fmter % var_names_[i] % prop_name;
-      vars_code += var_fmter.str();
+      var_formatter % var_names_[i] % prop_name;
+      vars_code += var_formatter.str();
     }
-    predicate_fmter % index % vars_code % predicate_expr_ % label_id;
-    return predicate_fmter.str();
+    predicate_formatter % index % vars_code % predicate_expr_ % label_id;
+    return predicate_formatter.str();
   }
 
   BuildingContext& ctx_;

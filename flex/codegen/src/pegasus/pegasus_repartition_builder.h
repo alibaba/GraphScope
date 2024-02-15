@@ -47,7 +47,7 @@ class PepartitionOpBuilder {
 
   // return make_project code and call project code.
   std::string Build() const {
-    boost::format repartition_fmter(
+    boost::format repartition_formatter(
         "let stream_%1% = stream_%2%.repartition(move |input| {\n"
         "Ok(get_partition(&input.%3%, workers as usize, "
         "pegasus::get_servers_len()))\n"
@@ -58,8 +58,8 @@ class PepartitionOpBuilder {
     } else {
       index = ctx_.GetAliasIndex(in_tag_);
     }
-    repartition_fmter % operator_index_ % (operator_index_ - 1) % index;
-    return repartition_fmter.str();
+    repartition_formatter % operator_index_ % (operator_index_ - 1) % index;
+    return repartition_formatter.str();
   }
 
  private:

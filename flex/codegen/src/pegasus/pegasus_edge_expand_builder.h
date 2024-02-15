@@ -156,17 +156,17 @@ class EdgeExpandOpBuilder {
     for (int32_t i = 0; i < edge_labels; i++) {
       auto edge_label = query_params_.tables(i).id();
       if (start_labels_set.size() > 1) {
-        boost::format multi_labels_fmter(
+        boost::format multi_labels_formatter(
             "let vertex_label = LDBCVertexParser::<usize>::get_label_id(i%1% "
             "as usize);\n"
             "%2%");
         std::string labels_expand_code;
         for (size_t j = 0; j < src_vertex_labels_.size(); ++j) {
-          boost::format with_label_fmter(
+          boost::format with_label_formatter(
               "if vertex_label == %1% {\n"
               "%2%"
               "}\n");
-          with_label_fmter % start_labels[j];
+          with_label_formatter % start_labels[j];
           std::string expand_code;
           if (direction_ ==
               physical::EdgeExpand_Direction::EdgeExpand_Direction_IN) {
@@ -187,11 +187,11 @@ class EdgeExpandOpBuilder {
                 src_vertex_labels_[j], edge_label, dst_vertex_labels_[j],
                 physical::EdgeExpand_Direction::EdgeExpand_Direction_OUT);
           }
-          with_label_fmter % expand_code;
-          labels_expand_code += with_label_fmter.str();
+          with_label_formatter % expand_code;
+          labels_expand_code += with_label_formatter.str();
         }
-        multi_labels_fmter % input_index % labels_expand_code;
-        expand_code_ss << multi_labels_fmter.str();
+        multi_labels_formatter % input_index % labels_expand_code;
+        expand_code_ss << multi_labels_formatter.str();
       } else {
         for (size_t j = 0; j < src_vertex_labels_.size(); ++j) {
           if (direction_ ==
@@ -217,16 +217,16 @@ class EdgeExpandOpBuilder {
       }
     }
     VLOG(10) << "Start write body";
-    boost::format edge_expand_body_fmter(
+    boost::format edge_expand_body_formatter(
         "let vertex_id = graph.get_internal_id(i%1% as usize);\n"
         "%2%");
-    edge_expand_body_fmter % input_index % expand_code_ss.str();
+    edge_expand_body_formatter % input_index % expand_code_ss.str();
 
     std::vector<codegen::DataType> output;
     output.push_back(codegen::DataType::kInt64);
     auto outputs = ctx_.GetOutput();
 
-    boost::format edge_expand_output_fmter(
+    boost::format edge_expand_output_formatter(
         "Ok(result.into_iter().map(move |res| %1%))\n"
         "})?;\n");
 
@@ -241,28 +241,28 @@ class EdgeExpandOpBuilder {
 
     std::string output_params = generate_output_list(
         "i", input_size, "res", alias_index, ctx_.ContainHead());
-    edge_expand_output_fmter % output_params;
+    edge_expand_output_formatter % output_params;
 
-    return head_code + edge_expand_body_fmter.str() +
-           edge_expand_output_fmter.str();
+    return head_code + edge_expand_body_formatter.str() +
+           edge_expand_output_formatter.str();
   }
 
  private:
   std::string write_head() const {
     int32_t input_size = ctx_.InputSize();
-    boost::format head_fmter(
+    boost::format head_formatter(
         "let stream_%1% = stream_%2%.flat_map(move |%3%| {\n"
         "let mut result = vec![];\n");
     std::string input_params = generate_arg_list("i", input_size);
-    head_fmter % operator_index_ % (operator_index_ - 1) % input_params;
-    return head_fmter.str();
+    head_formatter % operator_index_ % (operator_index_ - 1) % input_params;
+    return head_formatter.str();
   }
 
   std::string write_edge_expand(
       LabelT src_label, int32_t edge_label, LabelT dst_label,
       physical::EdgeExpand::Direction direction) const {
     std::string predicate_code;
-    boost::format edge_expand_fmter(
+    boost::format edge_expand_formatter(
         "if let Some(edges) = %1%.get_adj_list(vertex_id) {\n"
         "for e in edges{\n"
         "%2%"  // predicate & get global_id
@@ -282,32 +282,32 @@ class EdgeExpandOpBuilder {
     }
     std::string edge_traverse_code;
     if (query_params_.has_predicate()) {
-      boost::format predicate_fmter(
+      boost::format predicate_formatter(
           "%1%"
           "if %2% {\n"
           "result.push(graph.get_global_id(e.neighbor, %3%).unwrap() as u64);\n"
           "}\n");
       std::stringstream vars_stream;
       for (size_t i = 0; i < var_names_.size(); i++) {
-        boost::format var_fmter("let %1% = %2%[e.neighbor];\n");
-        var_fmter % var_names_[i] %
+        boost::format var_formatter("let %1% = %2%[e.neighbor];\n");
+        var_formatter % var_names_[i] %
             get_edge_prop_column_name(properties_[i].var_name, src_label,
                                       edge_label, dst_label, direction);
-        vars_stream << var_fmter.str();
+        vars_stream << var_formatter.str();
       }
-      predicate_fmter % vars_stream.str() % predicate_expr_ % adj_label;
-      edge_traverse_code = predicate_fmter.str();
+      predicate_formatter % vars_stream.str() % predicate_expr_ % adj_label;
+      edge_traverse_code = predicate_formatter.str();
     } else {
-      boost::format no_predicate_fmter(
+      boost::format no_predicate_formatter(
           "result.push(graph.get_global_id(e.neighbor, %1%).unwrap() as "
           "u64);\n");
-      no_predicate_fmter % adj_label;
-      edge_traverse_code = no_predicate_fmter.str();
+      no_predicate_formatter % adj_label;
+      edge_traverse_code = no_predicate_formatter.str();
     }
 
-    edge_expand_fmter % subgraph_name % edge_traverse_code;
+    edge_expand_formatter % subgraph_name % edge_traverse_code;
 
-    return edge_expand_fmter.str();
+    return edge_expand_formatter.str();
   }
 
   BuildingContext& ctx_;

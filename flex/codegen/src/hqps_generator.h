@@ -198,12 +198,12 @@ class QueryGenerator {
     std::string decoding_params_code, decoded_params_str;
     std::tie(decoding_params_code, decoded_params_str) =
         decode_params_from_decoder(ctx_.GetParameterVars());
-    boost::format formater(QUERY_TEMPLATE_STR);
-    formater % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
+    boost::format formatter(QUERY_TEMPLATE_STR);
+    formatter % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
         ctx_.GetGraphInterface() % ctx_.GetQueryRet() % ctx_.GraphVar() %
         dynamic_vars_str % query_code % decoding_params_code %
         decoded_params_str;
-    return formater.str();
+    return formatter.str();
   }
 
   // Generate a subtask for a subplan

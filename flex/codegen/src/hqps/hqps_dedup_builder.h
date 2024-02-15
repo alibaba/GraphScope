@@ -65,9 +65,9 @@ class DedupOpBuilder {
       }
       dedup_tag_ids_str = ss.str();
     }
-    boost::format formater(DEDUP_OP_TEMPLATE_STR);
-    formater % next_ctx_name % dedup_tag_ids_str % prev_ctx_name;
-    return formater.str();
+    boost::format formatter(DEDUP_OP_TEMPLATE_STR);
+    formatter % next_ctx_name % dedup_tag_ids_str % prev_ctx_name;
+    return formatter.str();
   }
 
  private:

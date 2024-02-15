@@ -47,7 +47,7 @@ class UnionOpBuilder {
     VLOG(10) << "Start build union";
     int32_t sub_plan_size = sub_plans_.size();
 
-    boost::format union_fmter(
+    boost::format union_formatter(
         "let stream_%1% = {\n"
         "%2%"  // stream copied
         "%3%"  // sub_plan_code
@@ -67,33 +67,33 @@ class UnionOpBuilder {
     }
     std::string merge_code = write_merge_code();
 
-    union_fmter % operator_index_ % copied_code % plan_ss.str() % merge_code;
-    return union_fmter.str();
+    union_formatter % operator_index_ % copied_code % plan_ss.str() % merge_code;
+    return union_formatter.str();
   }
 
  private:
   std::string write_copied_code() {
-    boost::format copied_code_fmter(
+    boost::format copied_code_formatter(
         "let stream_%1%_0 = stream_%2%;\n"
         "%3%"  // code for copied
     );
     std::stringstream copied_ss;
     for (size_t i = 0; i + 1 < sub_plans_.size(); i++) {
-      boost::format copied_fmter(
+      boost::format copied_formatter(
           "let (mut stream_%1%_%2%, mut stream_%1%_%3%) = "
           "stream_%1%_%2%.copied();\n");
-      copied_fmter % operator_index_ % i % (i + 1);
-      copied_ss << copied_fmter.str();
+      copied_formatter % operator_index_ % i % (i + 1);
+      copied_ss << copied_formatter.str();
     }
-    copied_code_fmter % operator_index_ % (operator_index_ - 1) %
+    copied_code_formatter % operator_index_ % (operator_index_ - 1) %
         copied_ss.str();
-    return copied_code_fmter.str();
+    return copied_code_formatter.str();
   }
 
   std::string generate_sub_plan(BuildingContext& sub_plan_context,
                                 physical::PhysicalPlan& sub_plan,
                                 int32_t index) {
-    boost::format union_fmter(
+    boost::format union_formatter(
         "stream_%1%_%2% = {\n"
         "let stream_0 = stream_%1%_%2%;\n"
         "%3%"
@@ -188,22 +188,22 @@ class UnionOpBuilder {
         LOG(FATAL) << "Not supproted in union.";
       }
     }
-    union_fmter % operator_index_ % index % sub_plan_code_ss.str();
-    return union_fmter.str();
+    union_formatter % operator_index_ % index % sub_plan_code_ss.str();
+    return union_formatter.str();
   }
 
   std::string write_merge_code() {
-    boost::format merge_code_fmter(
+    boost::format merge_code_formatter(
         "let result_stream = stream_%1%_0%2%;\n"
         "result_stream");
     std::stringstream merge_ss;
     for (size_t i = 1; i < sub_plans_.size(); i++) {
-      boost::format merge_fmter(".merge(stream_%1%_%2%)?");
-      merge_fmter % operator_index_ % i;
-      merge_ss << merge_fmter.str();
+      boost::format merge_formatter(".merge(stream_%1%_%2%)?");
+      merge_formatter % operator_index_ % i;
+      merge_ss << merge_formatter.str();
     }
-    merge_code_fmter % operator_index_ % merge_ss.str();
-    return merge_code_fmter.str();
+    merge_code_formatter % operator_index_ % merge_ss.str();
+    return merge_code_formatter.str();
   }
 
   BuildingContext ctx_;

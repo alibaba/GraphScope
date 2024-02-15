@@ -62,7 +62,7 @@ class OrderByOpBuilder {
     std::string order_body_code;
     VLOG(10) << "Ordering pair size is " << ordering_pair_.size();
     for (size_t i = 0; i < ordering_pair_.size(); ++i) {
-      boost::format cmp_fmter("x.%1%.%2%(&y.%1%)%3%");
+      boost::format cmp_formatter("x.%1%.%2%(&y.%1%)%3%");
 
       int32_t input_tag = ordering_pair_[i].key().tag().id();
       auto data_type = ordering_pair_[i].key().node_type().data_type();
@@ -92,11 +92,11 @@ class OrderByOpBuilder {
                                            OrderBy_OrderingPair_Order_DESC) {
         reverse_str = ".reverse()";
       }
-      cmp_fmter % tag_index % cmp_type % reverse_str;
+      cmp_formatter % tag_index % cmp_type % reverse_str;
       if (i > 0) {
-        order_body_code = order_body_code + ".then(" + cmp_fmter.str() + ")\n";
+        order_body_code = order_body_code + ".then(" + cmp_formatter.str() + ")\n";
       } else {
-        order_body_code += cmp_fmter.str();
+        order_body_code += cmp_formatter.str();
       }
     }
     order_by_fmt % head_code % order_body_code;
@@ -105,7 +105,7 @@ class OrderByOpBuilder {
 
  private:
   std::string write_head() const {
-    boost::format head_fmter("let stream_%1% = stream_%2%.%3%(%4% |x, y| {\n");
+    boost::format head_formatter("let stream_%1% = stream_%2%.%3%(%4% |x, y| {\n");
     std::string operator_name;
     std::string limit_code;
     if (limit_ < 0) {
@@ -114,9 +114,9 @@ class OrderByOpBuilder {
       operator_name = "sort_limit_by";
       limit_code = std::to_string(limit_) + ", ";
     }
-    head_fmter % operator_index_ % (operator_index_ - 1) % operator_name %
+    head_formatter % operator_index_ % (operator_index_ - 1) % operator_name %
         limit_code;
-    return head_fmter.str();
+    return head_formatter.str();
   }
 
   BuildingContext& ctx_;

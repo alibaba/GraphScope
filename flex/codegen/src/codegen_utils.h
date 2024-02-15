@@ -40,15 +40,15 @@ std::vector<T> remove_duplicate(const std::vector<T>& labels) {
 
 std::string get_vertex_prop_column_name(std::string prop_name,
                                         int32_t label_id) {
-  boost::format column_name_fmter("property_%1%_%2%");
-  column_name_fmter % prop_name % label_id;
-  return column_name_fmter.str();
+  boost::format column_name_formatter("property_%1%_%2%");
+  column_name_formatter % prop_name % label_id;
+  return column_name_formatter.str();
 }
 
 std::string get_edge_prop_column_name(
     std::string prop_name, int32_t src_label, int32_t edge_label,
     int32_t dst_label, physical::EdgeExpand::Direction direction) {
-  boost::format column_name_fmter("property_%1%_%2%_%3%_%4%_%5%");
+  boost::format column_name_formatter("property_%1%_%2%_%3%_%4%_%5%");
   std::string edge_direction;
   if (direction == physical::EdgeExpand_Direction::EdgeExpand_Direction_OUT) {
     edge_direction = "out";
@@ -58,15 +58,15 @@ std::string get_edge_prop_column_name(
   } else {
     LOG(FATAL) << "Unexpect direction";
   }
-  column_name_fmter % prop_name % src_label % edge_label % dst_label %
+  column_name_formatter % prop_name % src_label % edge_label % dst_label %
       edge_direction;
-  return column_name_fmter.str();
+  return column_name_formatter.str();
 }
 
 std::string get_subgraph_name(int32_t src_label, int32_t edge_label,
                               int32_t dst_label,
                               physical::EdgeExpand::Direction direction) {
-  boost::format subgraph_name_fmter("subgraph_%1%_%2%_%3%_%4%");
+  boost::format subgraph_name_formatter("subgraph_%1%_%2%_%3%_%4%");
   std::string edge_direction;
   if (direction == physical::EdgeExpand_Direction::EdgeExpand_Direction_OUT) {
     edge_direction = "out";
@@ -76,8 +76,8 @@ std::string get_subgraph_name(int32_t src_label, int32_t edge_label,
   } else {
     LOG(FATAL) << "Unexpect direction";
   }
-  subgraph_name_fmter % src_label % edge_label % dst_label % edge_direction;
-  return subgraph_name_fmter.str();
+  subgraph_name_formatter % src_label % edge_label % dst_label % edge_direction;
+  return subgraph_name_formatter.str();
 }
 
 std::string generate_arg_list(std::string arg_name, int32_t size) {

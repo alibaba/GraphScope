@@ -157,20 +157,20 @@ class GroupByOpBuilder {
  private:
   std::string write_key_by_operator() const {
     // codegen for key_by
-    boost::format key_by_head_fmter(
+    boost::format key_by_head_formatter(
         "let stream_%1% = stream_%2%.key_by(|%3%| {\n");
     auto input_size = ctx_.InputSize();
     std::string key_by_input = generate_arg_list("i", input_size);
-    key_by_head_fmter % operator_index_ % (operator_index_ - 1) % key_by_input;
+    key_by_head_formatter % operator_index_ % (operator_index_ - 1) % key_by_input;
 
     VLOG(10) << "[GroupBy Builder] Key input size is " << key_input_tag_.size();
     std::string key_by_key_code;
     for (size_t i = 0; i < key_input_tag_.size(); ++i) {
       auto in_tag = key_input_tag_[i];
       auto input_index = ctx_.GetAliasIndex(in_tag);
-      boost::format key_fmter("let key%1% = i%2%;\n");
-      key_fmter % i % input_index;
-      key_by_key_code += key_fmter.str();
+      boost::format key_formatter("let key%1% = i%2%;\n");
+      key_formatter % i % input_index;
+      key_by_key_code += key_formatter.str();
     }
     VLOG(10) << "[GroupBy Builder] Finished write key";
 
@@ -180,24 +180,24 @@ class GroupByOpBuilder {
       CHECK(group_input_vars_[i].size() == 1);
       auto in_tag = group_input_vars_[i][0].tag().id();
       auto input_index = ctx_.GetAliasIndex(in_tag);
-      boost::format value_fmter("let value%1% = i%2%;\n");
-      value_fmter % i % input_index;
-      key_by_value_code += value_fmter.str();
+      boost::format value_formatter("let value%1% = i%2%;\n");
+      value_formatter % i % input_index;
+      key_by_value_code += value_formatter.str();
     }
     VLOG(10) << "[GroupBy Builder] Finished write value";
 
-    boost::format key_by_end_fmter("Ok((%1%, %2%))\n})?\n");
+    boost::format key_by_end_formatter("Ok((%1%, %2%))\n})?\n");
     std::string key_list = generate_arg_list("key", key_input_tag_.size());
     std::string value_list =
         generate_arg_list("value", group_input_vars_.size());
-    key_by_end_fmter % key_list % value_list;
+    key_by_end_formatter % key_list % value_list;
 
-    return key_by_head_fmter.str() + key_by_key_code + key_by_value_code +
-           key_by_end_fmter.str();
+    return key_by_head_formatter.str() + key_by_key_code + key_by_value_code +
+           key_by_end_formatter.str();
   }
 
   std::string write_fold_by_operator() const {
-    boost::format fold_by_head_fmter(".fold_by_key(%1%, || |%2%, %3%|{\n");
+    boost::format fold_by_head_formatter(".fold_by_key(%1%, || |%2%, %3%|{\n");
     std::stringstream fold_by_init_ss;
     if (agg_func_list_.size() > 1) {
       fold_by_init_ss << "(";
@@ -237,7 +237,7 @@ class GroupByOpBuilder {
     std::string agg_params =
         generate_arg_list("mut agg", agg_func_list_.size());
     std::string input_params = generate_arg_list("i", agg_func_list_.size());
-    fold_by_head_fmter % fold_by_init % agg_params % input_params;
+    fold_by_head_formatter % fold_by_init % agg_params % input_params;
 
     std::stringstream agg_func_ss;
     for (size_t i = 0; i < agg_func_list_.size(); ++i) {
@@ -245,44 +245,44 @@ class GroupByOpBuilder {
       case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_SUM:
       case physical::GroupBy::AggFunc::Aggregate::
           GroupBy_AggFunc_Aggregate_AVG: {
-        boost::format sum_fmter("agg%1% += i%1%;\n");
-        sum_fmter % i;
-        agg_func_ss << sum_fmter.str();
+        boost::format sum_formatter("agg%1% += i%1%;\n");
+        sum_formatter % i;
+        agg_func_ss << sum_formatter.str();
         break;
       }
       case physical::GroupBy::AggFunc::Aggregate::
           GroupBy_AggFunc_Aggregate_MAX: {
-        boost::format max_fmter("agg%1% = max(agg%1%, i%1%);\n");
-        max_fmter % i;
-        agg_func_ss << max_fmter.str();
+        boost::format max_formatter("agg%1% = max(agg%1%, i%1%);\n");
+        max_formatter % i;
+        agg_func_ss << max_formatter.str();
         break;
       }
       case physical::GroupBy::AggFunc::Aggregate::
           GroupBy_AggFunc_Aggregate_MIN: {
-        boost::format min_fmter("agg%1% = max(agg%1%, i%1%);\n");
-        min_fmter % i;
-        agg_func_ss << min_fmter.str();
+        boost::format min_formatter("agg%1% = max(agg%1%, i%1%);\n");
+        min_formatter % i;
+        agg_func_ss << min_formatter.str();
         break;
       }
       case physical::GroupBy::AggFunc::Aggregate::
           GroupBy_AggFunc_Aggregate_COUNT: {
-        boost::format count_fmter("agg%1% += 1;\n");
-        count_fmter % i;
-        agg_func_ss << count_fmter.str();
+        boost::format count_formatter("agg%1% += 1;\n");
+        count_formatter % i;
+        agg_func_ss << count_formatter.str();
         break;
       }
       case physical::GroupBy::AggFunc::Aggregate::
           GroupBy_AggFunc_Aggregate_COUNT_DISTINCT: {
-        boost::format count_distinct_fmter("agg%1%.insert(i%1%);\n");
-        count_distinct_fmter % i;
-        agg_func_ss << count_distinct_fmter.str();
+        boost::format count_distinct_formatter("agg%1%.insert(i%1%);\n");
+        count_distinct_formatter % i;
+        agg_func_ss << count_distinct_formatter.str();
         break;
       }
       case physical::GroupBy::AggFunc::Aggregate::
           GroupBy_AggFunc_Aggregate_TO_LIST: {
-        boost::format to_list_fmter("agg%1%.append(i%1%);\n");
-        to_list_fmter % i;
-        agg_func_ss << to_list_fmter.str();
+        boost::format to_list_formatter("agg%1%.append(i%1%);\n");
+        to_list_formatter % i;
+        agg_func_ss << to_list_formatter.str();
         break;
       }
       default:
@@ -291,16 +291,16 @@ class GroupByOpBuilder {
     }
     std::string agg_func_code = agg_func_ss.str();
 
-    boost::format fold_by_end_fmter("Ok(%1%)\n})?\n");
+    boost::format fold_by_end_formatter("Ok(%1%)\n})?\n");
     std::string fold_by_output =
         generate_arg_list("agg", agg_func_list_.size());
-    fold_by_end_fmter % fold_by_output;
+    fold_by_end_formatter % fold_by_output;
 
-    return fold_by_head_fmter.str() + agg_func_code + fold_by_end_fmter.str();
+    return fold_by_head_formatter.str() + agg_func_code + fold_by_end_formatter.str();
   }
 
   std::string write_unfold_operator() const {
-    boost::format unfold_fmter(
+    boost::format unfold_formatter(
         ".unfold(|group_map|{\n"
         "Ok(group_map.into_iter().map(|(key, value)| (%1%%2%)))\n"
         "})?;ß\n");
@@ -323,8 +323,8 @@ class GroupByOpBuilder {
         }
       }
     }
-    unfold_fmter % key_outputs % value_outputs;
-    return unfold_fmter.str();
+    unfold_formatter % key_outputs % value_outputs;
+    return unfold_formatter.str();
   }
 
   BuildingContext& ctx_;

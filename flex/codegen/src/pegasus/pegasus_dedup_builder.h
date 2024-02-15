@@ -49,12 +49,12 @@ class DedupOpBuilder {
     auto input_size = ctx_.InputSize();
 
     // write key_by head
-    boost::format key_by_head_fmter(
+    boost::format key_by_head_formatter(
         "let stream_%1% = stream_%2%.key_by|%3%| {\n");
     std::string key_by_input = generate_arg_list("i", input_size);
-    key_by_head_fmter % operator_index_ % (operator_index_ - 1) % key_by_input;
+    key_by_head_formatter % operator_index_ % (operator_index_ - 1) % key_by_input;
 
-    boost::format key_by_output_fmter("Ok((%1%, %2%))\n})?\n");
+    boost::format key_by_output_formatter("Ok((%1%, %2%))\n})?\n");
     std::stringstream key_ss;
     key_ss << "(";
     std::unordered_set<int32_t> key_sets;
@@ -89,18 +89,18 @@ class DedupOpBuilder {
     value_ss << ")";
     std::string value_code = value_ss.str();
 
-    key_by_output_fmter % key_code % value_code;
+    key_by_output_formatter % key_code % value_code;
     std::string key_by_code =
-        key_by_head_fmter.str() + key_by_output_fmter.str();
+        key_by_head_formatter.str() + key_by_output_formatter.str();
 
-    boost::format dedup_fmter(
+    boost::format dedup_formatter(
         ".dedup()?\n"
         ".map(|%1%| Ok(%2%))?;\n");
     std::string params = key_code + ", " + value_code;
     std::string outputs = generate_arg_list("i", input_size);
-    dedup_fmter % params % outputs;
+    dedup_formatter % params % outputs;
 
-    return key_by_code + dedup_fmter.str();
+    return key_by_code + dedup_formatter.str();
   }
 
  private:

@@ -64,7 +64,7 @@ class JoinOpBuilder {
     // codegen for stream copy
     ss << "let (mut left_stream, mut right_stream) = stream.copied();\n";
 
-    boost::format join_code_fmter(
+    boost::format join_code_formatter(
         "let stream_%1% = {\n"
         "let (mut left_stream, mut right_stream) = stream_%2%.copied();\n"
         "left_stream = {\n"
@@ -78,33 +78,33 @@ class JoinOpBuilder {
         "%5%"
         "};\n"  // code for copied
     );
-    join_code_fmter % operator_index_ % (operator_index_ - 1);
+    join_code_formatter % operator_index_ % (operator_index_ - 1);
     // codegen for left & right plan
     auto left_context = ctx_.CreateSubTaskContext("left_");
     auto right_context = ctx_.CreateSubTaskContext("right_");
 
-    join_code_fmter % write_sub_plan(left_context, left_plan_);
+    join_code_formatter % write_sub_plan(left_context, left_plan_);
 
-    join_code_fmter % write_sub_plan(right_context, right_plan_);
+    join_code_formatter % write_sub_plan(right_context, right_plan_);
     switch (join_kind_) {
     case physical::Join::JoinKind::Join_JoinKind_INNER: {
-      join_code_fmter % "left_stream.inner_join(right_stream)?\n";
+      join_code_formatter % "left_stream.inner_join(right_stream)?\n";
       break;
     }
     case physical::Join::JoinKind::Join_JoinKind_LEFT_OUTER: {
-      join_code_fmter % "left_stream.left_outer_join(right_stream)?\n";
+      join_code_formatter % "left_stream.left_outer_join(right_stream)?\n";
       break;
     }
     case physical::Join::JoinKind::Join_JoinKind_RIGHT_OUTER: {
-      join_code_fmter % "left_stream.right_outer_join(right_stream)?\n";
+      join_code_formatter % "left_stream.right_outer_join(right_stream)?\n";
       break;
     }
     case physical::Join::JoinKind::Join_JoinKind_SEMI: {
-      join_code_fmter % "left_stream.semi_join(right_stream)?\n";
+      join_code_formatter % "left_stream.semi_join(right_stream)?\n";
       break;
     }
     case physical::Join::JoinKind::Join_JoinKind_ANTI: {
-      join_code_fmter % "left_stream.anti_join(right_stream)?\n";
+      join_code_formatter % "left_stream.anti_join(right_stream)?\n";
       break;
     }
     default:
@@ -115,7 +115,7 @@ class JoinOpBuilder {
 
     // codegen for final join value combination
 
-    return join_code_fmter.str();
+    return join_code_formatter.str();
   }
 
  private:

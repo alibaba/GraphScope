@@ -46,9 +46,9 @@ class LimitOpBuilder {
   std::string Build() {
     VLOG(10) << "Start build limit";
 
-    boost::format limit_fmter("let stream_%1% = stream_%2%.limit(%3%)?;");
-    limit_fmter % operator_index_ % (operator_index_ - 1) % limit_;
-    return limit_fmter.str();
+    boost::format limit_formatter("let stream_%1% = stream_%2%.limit(%3%)?;");
+    limit_formatter % operator_index_ % (operator_index_ - 1) % limit_;
+    return limit_formatter.str();
   }
 
  private:

@@ -41,9 +41,9 @@ class SinkOpBuilder {
   }
 
   std::string Build() {
-    boost::format sink_fmter("stream_%1%.sink_into(output)\n");
-    sink_fmter % (operator_index_ - 1);
-    return sink_fmter.str();
+    boost::format sink_formatter("stream_%1%.sink_into(output)\n");
+    sink_formatter % (operator_index_ - 1);
+    return sink_formatter.str();
   }
 
  private:

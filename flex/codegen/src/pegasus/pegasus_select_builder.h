@@ -46,11 +46,11 @@ class SelectOpBuilder {
     VLOG(10) << "Start build select";
 
     int32_t input_size = ctx_.InputSize();
-    boost::format select_head_fmter(
+    boost::format select_head_formatter(
         "let stream_%1% = stream_%2%\n"
         ".filter_map(move |%3%| {\n");
     std::string input_params = generate_arg_list("i", input_size);
-    select_head_fmter % operator_index_ % (operator_index_ - 1) % input_params;
+    select_head_formatter % operator_index_ % (operator_index_ - 1) % input_params;
 
     auto expr_builder = ExprBuilder(ctx_);
     expr_builder.AddAllExprOpr(expr_.operators());
@@ -81,24 +81,24 @@ class SelectOpBuilder {
       VLOG(10) << "Property is " << properties[i].var_name << ", var name is "
                << var_names[i];
 
-      boost::format itself_fmter("let %1% = i%2%;\n");
-      boost::format property_fmter(
+      boost::format itself_formatter("let %1% = i%2%;\n");
+      boost::format property_formatter(
           "let vertex_id = CSR.get_internal_id(i%1% as usize);\n"
           "%2%");
       if (properties[i].var_name == "none") {
-        itself_fmter % var_names[i] % input_index;
-        vars_code += itself_fmter.str();
+        itself_formatter % var_names[i] % input_index;
+        vars_code += itself_formatter.str();
       } else {
         CHECK(input_type.first == 0);
         if (input_type.second.size() == 1) {
-          boost::format property_fmter("let %1% = %2%[vertex_id];\n");
+          boost::format property_formatter("let %1% = %2%[vertex_id];\n");
           int32_t label_id = input_type.second[0];
           std::string property_name =
               get_vertex_prop_column_name(properties[i].var_name, label_id);
-          property_fmter % var_names[i] % property_name;
-          vars_code += property_fmter.str();
+          property_formatter % var_names[i] % property_name;
+          vars_code += property_formatter.str();
         } else {
-          boost::format properties_fmter(
+          boost::format properties_formatter(
               "let vertex_label = LDBCVertexParser::<usize>::get_label_id(i%1% "
               "as usize);\n"
               "let %2% = \n"
@@ -109,27 +109,27 @@ class SelectOpBuilder {
 
           std::string condition_code;
           for (size_t j = 0; j < input_type.second.size(); j++) {
-            boost::format condition_fmter(
+            boost::format condition_formatter(
                 "if vertex_label == %1% {\n"
                 "%2%[vertex_id]\n"
                 "}\n");
             std::string property_name =
                 get_vertex_prop_column_name(properties[i].var_name, j);
             int32_t label_id = input_type.second[j];
-            condition_fmter % label_id % property_name;
+            condition_formatter % label_id % property_name;
             if (j > 0) {
               condition_code += "else";
             }
-            condition_code += condition_fmter.str();
+            condition_code += condition_formatter.str();
           }
 
-          properties_fmter % input_index % var_names[i] % condition_code;
-          vars_code += properties_fmter.str();
+          properties_formatter % input_index % var_names[i] % condition_code;
+          vars_code += properties_formatter.str();
         }
       }
     }
 
-    boost::format select_result_fmter(
+    boost::format select_result_formatter(
         "%1%\n"
         "if %2% {\n"
         "Ok(Some(%3%))\n"
@@ -137,9 +137,9 @@ class SelectOpBuilder {
         "Ok(None)\n"
         "}\n"
         "})?;\n");
-    select_result_fmter % vars_code % predicate_expr % input_params;
+    select_result_formatter % vars_code % predicate_expr % input_params;
 
-    return select_head_fmter.str() + select_result_fmter.str();
+    return select_head_formatter.str() + select_result_formatter.str();
   }
 
  private:

@@ -30,8 +30,8 @@ static constexpr const char* CREATE_PROCEDURE_PAYLOAD_TEMPLATE =
     "\"type\": \"cypher\"}";
 
 std::string generate_start_service_payload(const std::string& graph_name) {
-  boost::format formater("{\"graph_name\": \"%1%\"}");
-  return (formater % graph_name).str();
+  boost::format formatter("{\"graph_name\": \"%1%\"}");
+  return (formatter % graph_name).str();
 }
 
 std::string get_file_name_from_path(const std::string& file_path) {
@@ -50,14 +50,14 @@ std::string generate_call_procedure_payload(const std::string& graph_name,
 
 std::string generate_update_procedure_payload(const std::string& procedure_name,
                                               bool enabled) {
-  boost::format formater("{\"enable\": %1%, \"name\": \"%2%\"}");
-  return (formater % (enabled ? "true" : "false") % procedure_name).str();
+  boost::format formatter("{\"enable\": %1%, \"name\": \"%2%\"}");
+  return (formatter % (enabled ? "true" : "false") % procedure_name).str();
 }
 
 std::string generate_create_procedure_payload(const std::string& graph_name,
                                               const std::string& procedure_path,
                                               bool enabled) {
-  boost::format formater(CREATE_PROCEDURE_PAYLOAD_TEMPLATE);
+  boost::format formatter(CREATE_PROCEDURE_PAYLOAD_TEMPLATE);
   // read from procedure_path and result into a one-line string
   std::ifstream ifs(procedure_path);
   std::string query((std::istreambuf_iterator<char>(ifs)),
@@ -66,7 +66,7 @@ std::string generate_create_procedure_payload(const std::string& graph_name,
   std::replace(query.begin(), query.end(), '\n', ' ');
   // get file name
   auto file_name = get_file_name_from_path(procedure_path);
-  return (formater % graph_name % (enabled ? "true" : "false") % file_name %
+  return (formatter % graph_name % (enabled ? "true" : "false") % file_name %
           query)
       .str();
 }
@@ -103,9 +103,9 @@ void run_builtin_graph_test(
     for (auto& pair : queries) {
       auto query_name = pair.first;
       auto query_str = pair.second;
-      boost::format formater(CREATE_PROCEDURE_PAYLOAD_TEMPLATE);
-      formater % graph_name % "true" % query_name % query_str;
-      std::string create_proc_payload0 = formater.str();
+      boost::format formatter(CREATE_PROCEDURE_PAYLOAD_TEMPLATE);
+      formatter % graph_name % "true" % query_name % query_str;
+      std::string create_proc_payload0 = formatter.str();
       auto res = admin_client.Post("/v1/graph/" + graph_name + "/procedure",
                                    create_proc_payload0, "text/plain");
       CHECK(res->status == 200) << "create procedure failed: " << res->body

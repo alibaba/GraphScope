@@ -205,11 +205,11 @@ class ProjectOpBuilder {
 
  private:
   std::string write_head() const {
-    boost::format head_fmter("let stream_%1% = stream_%2%.map(move |%3%| {\n");
+    boost::format head_formatter("let stream_%1% = stream_%2%.map(move |%3%| {\n");
     int32_t input_size = ctx_.InputSize();
     std::string input_params = generate_arg_list("i", input_size);
-    head_fmter % operator_index_ % (operator_index_ - 1) % input_params;
-    return head_fmter.str();
+    head_formatter % operator_index_ % (operator_index_ - 1) % input_params;
+    return head_formatter.str();
   }
 
   std::string project_map_to_code(int32_t index) const {
@@ -247,23 +247,23 @@ class ProjectOpBuilder {
       VLOG(10) << "Property is " << properties[i].var_name << ", var name is "
                << var_names[i];
 
-      boost::format itself_fmter("let %1% = i%2%;\n");
+      boost::format itself_formatter("let %1% = i%2%;\n");
       if (properties[i].var_name == "none") {
-        itself_fmter % var_names[i] % input_index;
-        vars_code += itself_fmter.str();
+        itself_formatter % var_names[i] % input_index;
+        vars_code += itself_formatter.str();
       } else {
         CHECK(input_type.first == 0);
         if (input_type.second.size() == 1) {
-          boost::format property_fmter(
+          boost::format property_formatter(
               "let vertex_id = CSR.get_internal_id(i%1% as usize);\n"
               "let %1% = %2%[vertex_id];");
           int32_t label_id = input_type.second[0];
           std::string property_name =
               get_vertex_prop_column_name(properties[i].var_name, label_id);
-          property_fmter % var_names[i] % property_name;
-          vars_code += property_fmter.str();
+          property_formatter % var_names[i] % property_name;
+          vars_code += property_formatter.str();
         } else {
-          boost::format properties_fmter(
+          boost::format properties_formatter(
               "let vertex_id = CSR.get_internal_id(i%1% as usize);\n"
               "let vertex_label = LDBCVertexParser::<usize>::get_label_id(i%1% "
               "as usize);\n"
@@ -275,39 +275,39 @@ class ProjectOpBuilder {
 
           std::string condition_code;
           for (size_t j = 0; j < input_type.second.size(); j++) {
-            boost::format condition_fmter(
+            boost::format condition_formatter(
                 "if vertex_label == %1% {\n"
                 "%2%[vertex_id]\n"
                 "}\n");
             std::string property_name = get_vertex_prop_column_name(
                 properties[i].var_name, input_type.second[j]);
             int32_t label_id = input_type.second[j];
-            condition_fmter % label_id % property_name;
+            condition_formatter % label_id % property_name;
             if (j > 0) {
               condition_code += "else ";
             }
-            condition_code += condition_fmter.str();
+            condition_code += condition_formatter.str();
           }
 
-          properties_fmter % input_index % var_names[i] % condition_code;
-          vars_code += properties_fmter.str();
+          properties_formatter % input_index % var_names[i] % condition_code;
+          vars_code += properties_formatter.str();
         }
       }
     }
 
-    boost::format map_fmter(
+    boost::format map_formatter(
         "%1%\n"
         "let output%2% = %3%;\n");
-    map_fmter % vars_code % index % expression;
+    map_formatter % vars_code % index % expression;
     VLOG(10) << "Finished build mapping";
-    return map_fmter.str();
+    return map_formatter.str();
   }
 
   std::string write_end() const {
-    boost::format end_fmter("Ok(%1%)\n})?;\n");
+    boost::format end_formatter("Ok(%1%)\n})?;\n");
     std::string output_params = generate_arg_list("output", mappings_.size());
-    end_fmter % output_params;
-    return end_fmter.str();
+    end_formatter % output_params;
+    return end_formatter.str();
   }
 
   BuildingContext& ctx_;

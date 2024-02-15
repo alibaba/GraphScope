@@ -46,7 +46,7 @@ class UnfoldOpBuilder {
   std::string Build() {
     auto input_size = ctx_.InputSize();
 
-    boost::format unfold_fmter(
+    boost::format unfold_formatter(
         "let stream_%1% = stream_%2%\n"
         ".flat_map(|%3%| {\n"
         "Ok(i%4%.into_iter().map(|res| Ok(%5%)))\n"
@@ -66,9 +66,9 @@ class UnfoldOpBuilder {
     std::string output_params = generate_output_list(
         "i", input_size, "res", output_index, ctx_.ContainHead());
 
-    unfold_fmter % operator_index_ % (operator_index_ - 1) % input_params %
+    unfold_formatter % operator_index_ % (operator_index_ - 1) % input_params %
         input_index % output_params;
-    return unfold_fmter.str();
+    return unfold_formatter.str();
   }
 
  private:
