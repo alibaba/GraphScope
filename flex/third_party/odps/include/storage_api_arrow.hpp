@@ -422,7 +422,7 @@ inline void Reader::ReadRowsThread(const ReadRowsReq request,
       throw std::bad_alloc();
     }
     auto buffer = std::move(result).ValueOrDie();
-    // we should guarantee the memory is valid during reocrd_batch processing
+    // we should guarantee the memory is valid during record_batch processing
     // and so copy the memory here
     memcpy(buffer->mutable_data(), data, len);
     auto status = decoder->Consume(std::move(buffer));
