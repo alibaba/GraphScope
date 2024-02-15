@@ -169,7 +169,7 @@ class PathExpand {
   }
 
   // Path expand to vertices with columns.
-  // PathExpand to vertices with vertex properties also retreived
+  // PathExpand to vertices with vertex properties also retrieved
   template <typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
             typename EDGE_FILTER_T, typename... T,
             typename std::enable_if<(sizeof...(T) > 0)>::type* = nullptr,
