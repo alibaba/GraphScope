@@ -245,7 +245,7 @@ static common::DataType eval_expr_return_type(const common::Expression& expr) {
   return tmp_stack.top().node_type().data_type();
 }
 
-// Simlutate the calculation of expression, return the result data type.
+// Simulate the calculation of expression, return the result data type.
 // convert to prefix expression
 
 /*Build a expression struct from expression*/
