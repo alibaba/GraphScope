@@ -76,7 +76,7 @@ You can include grape-jdk as a dependency in your maven project
 Online JavaDoc is available at [GraphScope Docs](https://graphscope.io/docs/reference/gae_java/index.html).
 
 You can also generate the documentation with in three different ways.
-- use Intellij IDEA plugin: [Intellij IDEA-javadoc](https://www.jetbrains.com/help/idea/working-with-code-documentation.html) 
+- use IntelliJ IDEA plugin: [IntelliJ IDEA-javadoc](https://www.jetbrains.com/help/idea/working-with-code-documentation.html) 
 - Use Eclipse plugin: [Eclipse-javadoc](https://www.tutorialspoint.com/How-to-write-generate-and-use-Javadoc-in-Eclipse). 
 - Generate javaDoc from cmd.
 ```bash
