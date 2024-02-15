@@ -456,7 +456,7 @@ The **SOURCE** or **STEP** of the ``*E()`` series corresponds to the
 strategy returns **SparseNodes**). For instruction on how to get the
 value of ``Nodes``/``Edges``/``SparseNodes``/``SparseEdges`` object,
 please refer to `API <graph_query_cn.md#FPU74>`__. Before **SINK**,
-Query describs multiple operations. These operations may have
+Query describes multiple operations. These operations may have
 ``alias()``. -For Query without ``alias()``, the results of all
 operations will be returned, arranged in a list object according to the
 order in the Query. Each element in this returned list is either
