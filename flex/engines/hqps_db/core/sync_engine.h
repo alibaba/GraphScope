@@ -807,7 +807,7 @@ class SyncEngine : public BaseEngine {
 
   //////////////////////////////////////Select/Filter/////////////////////////
   // Select with head node. The type doesn't change
-  // select can possiblely applied on multiple tags
+  // select can possibly applied on multiple tags
   // (!CTX_HEAD_T::is_row_vertex_set) && (!CTX_HEAD_T::is_two_label_set) &&
   template <
       int... in_col_id, typename CTX_HEAD_T, int cur_alias, int base_tag,
@@ -873,7 +873,7 @@ class SyncEngine : public BaseEngine {
   }
 
   //////////////////////////////////////Group/////////////////////////
-  // We currently support group with one key, and possiblely multiple values.
+  // We currently support group with one key, and possibly multiple values.
   // create a brand new context type.
   // group count is included in this implementation.
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
