@@ -173,13 +173,13 @@ class Writer {
   /**
    *  @brief Finish the write stream.
    *
-   *  @param commmit_message Returned by the server, user should bring this
+   *  @param commit_message Returned by the server, user should bring this
    * message to do the final batch commit. Note: After invoking Finish(), the
    * following invoke of Write() will fail.
    *
    *  @return Success or not.
    */
-  bool Finish(std::string& commmit_message);
+  bool Finish(std::string& commit_message);
 
   /**
    *  @brief Write one record batch.
