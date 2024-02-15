@@ -59,7 +59,7 @@ Do not include any text except the generated Cypher statement.
 You must use the relation or property shown in the schema!!! do not use other keys!!!
 You must use the relation or property shown in the schema!!! do not use other keys!!!
 You must use the relation or property shown in the schema!!! do not use other keys!!!
-你必须使用Sechema中出现的关键词！！！
+你必须使用Schema中出现的关键词！！！
 
 The question is:
 {question}
