@@ -1427,7 +1427,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
                                                   std::move(new_datas));
   }
 
-  // Removed_indices is not repest to current set's indices.
+  // Removed_indices is not with respect to current set's indices.
   // It refer to the indices_range's index.
   // removed = [1]
   // indices_range = [0, 3, 5, 8]
