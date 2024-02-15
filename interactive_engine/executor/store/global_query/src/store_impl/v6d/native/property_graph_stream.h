@@ -356,7 +356,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
   std::map<LabelId, std::unique_ptr<arrow::RecordBatchBuilder>>
       vertex_builders_;
-  // vertex label id to its primary key column (assuming only signle column key) ordinal mapping
+  // vertex label id to its primary key column (assuming only single column key) ordinal mapping
   // -1 means no primary key column
   static constexpr size_t kNoPrimaryKeyColumn = static_cast<size_t>(-1);
   std::map<LabelId, size_t> vertex_primary_key_column_;

@@ -304,14 +304,14 @@ mod tests {
     }
 
     #[test]
-    fn test_sinlge_source_multi_match_join_logical() {
+    fn test_single_source_multi_match_join_logical() {
         let plan = single_source_multi_match_join_logical_plan();
         // dummy, scan1, expand1, getv1, scan2, expand2, getv2, join1, sink
         assert_eq!(plan.len(), 9);
     }
 
     #[test]
-    fn test_sinlge_source_multi_match_join_physical() {
+    fn test_single_source_multi_match_join_physical() {
         let plan = single_source_multi_match_join_logical_plan();
 
         let mut plan_meta = plan.get_plan_meta();
