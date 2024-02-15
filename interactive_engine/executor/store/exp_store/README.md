@@ -8,7 +8,7 @@ maintained in the associated vertices using the conventional adjacency list. We 
 
 The property data are maintained in a variety of ways, as can be found in `src/table.rs`, namely:
 * `PropertyTable`: The default option of in-memory hash table.
-* `SingleValueTable`: An optimized in-memory table that maintains one single value. Altough vertices
+* `SingleValueTable`: An optimized in-memory table that maintains one single value. Although vertices
 usually contain multiple properties, it is very common for the edges to only contain on single property in practice.
   In addition, edges are often in a much larger order (10X~100X largers) than vertices. We thus implement `SingleValueTable`
   as an optimization to ease the edges' storage burden.
