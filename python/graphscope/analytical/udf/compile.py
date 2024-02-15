@@ -42,7 +42,7 @@ it is, except:
     Cpp code.
 
 2. for invokation on methods inside :code:`graphscope.analytical.udf.core`, we generate
-   proper special :code:`cdef` defintions, or proper Cpp invokations,
+   proper special :code:`cdef` definitions, or proper Cpp invokations,
    just like :code:`cython.declare`, for example,
 
     .. code:: python
