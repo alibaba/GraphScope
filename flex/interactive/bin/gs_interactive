@@ -1041,7 +1041,7 @@ function do_create(){
   # add some default settings and non-user-aware settings to schema file.
   amplify_graph_schema ${schema_file} ${amplify_schema_file}
   # check graph is running inside docker
-  check_graph_not_running ${graph_name} || (err "Cannot create graph ${graph_name}, since a graph with same nameing running." && exit 1)
+  check_graph_not_running ${graph_name} || (err "Cannot create graph ${graph_name}, since a graph with same naming running." && exit 1)
   # create the graph directory in the docker's workspace
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
@@ -1093,7 +1093,7 @@ function do_remove(){
   fi
   # check graph is running inside docker
   if ! check_graph_not_running ${graph_name}; then
-    err "Cannot remove graph ${graph_name}, since a graph with same nameing running!"
+    err "Cannot remove graph ${graph_name}, since a graph with same naming running!"
     exit 1;
   fi
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
