@@ -1057,7 +1057,7 @@ public interface GiraphConstants {
     /**
      * ZooKeeper comma-separated list (if not set, will start up ZooKeeper locally). Consider that
      * after locally-starting zookeeper, this parameter will updated the configuration with the
-     * corrent configuration value.
+     * current configuration value.
      */
     StrConfOption ZOOKEEPER_LIST =
             new StrConfOption(
@@ -1066,7 +1066,7 @@ public interface GiraphConstants {
                     "ZooKeeper comma-separated list (if not set, will start up "
                             + "ZooKeeper locally). Consider that after locally-starting "
                             + "zookeeper, this parameter will updated the configuration with "
-                            + "the corrent configuration value.");
+                            + "the current configuration value.");
 
     /**
      * Zookeeper List will always hold a value during the computation while this option provides
