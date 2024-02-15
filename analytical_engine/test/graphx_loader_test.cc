@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
           return 0;
         });
   }
-  LOG(INFO) << "Got pritive arrow fragment id: " << arrow_frag_id;
+  LOG(INFO) << "Got primitive arrow fragment id: " << arrow_frag_id;
   {
     std::vector<int64_t> oids, src_oids, dst_oids;
     std::vector<char> vdata_buffer, edata_buffer;
