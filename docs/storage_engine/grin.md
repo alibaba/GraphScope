@@ -71,7 +71,7 @@ The example demonstrates how to synchronize property values of vertices associat
                     GRIN_VERTEX u = grin_get_neighbor_from_adjacent_list(g, adj_list, k);  // get the dst vertex u
                     const void* value = grin_get_value_from_vertex_property_table(g, dst_vpt, u, dst_vp);  // get the property value of "features" of u
 
-                    GRIN_VERTEX_REF uref = grin_get_vertex_ref_for_vertex(g, u);  // get the reference of u that can be recoginized by other partitions
+                    GRIN_VERTEX_REF uref = grin_get_vertex_ref_for_vertex(g, u);  // get the reference of u that can be recognized by other partitions
                     GRIN_PARTITION u_master_partition = grin_get_master_partition_from_vertex_ref(g, uref);  // get the master partition for u
 
                     send_value(u_master_partition, uref, dst_vp_dt, value);  // the value must be casted to the correct type based on dst_vp_dt before sending
@@ -300,7 +300,7 @@ be recognized in partitions other than the current partition where the instance 
 
         /* run.cc in machine 1 */
         {
-            auto vref = grin_get_vertex_ref_for_vertex(g, v);  // get v's vertex ref which can be recgonized in machine 2
+            auto vref = grin_get_vertex_ref_for_vertex(g, v);  // get v's vertex ref which can be recognized in machine 2
 
             const char* msg = grin_serialize_vertex_ref(g, vref);  // serialize into a message
 
