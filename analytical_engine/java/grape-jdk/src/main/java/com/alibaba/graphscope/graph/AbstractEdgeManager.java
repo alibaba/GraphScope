@@ -207,7 +207,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             numOfEdges = new long[(int) innerVerticesNum];
             nbrPositions = new int[(int) innerVerticesNum];
             // marks the mapping between lid to start pos of nbr, i.e. offset.
-            // the reason why we don't resuse oeBegin Offset is that eid may not sequential.
+            // the reason why we don't reuse oeBegin Offset is that eid may not sequential.
             //            edatas = (BIZ_EDATA_T[]) Array.newInstance(bizEdataClass,
             // (int)totalNumOfEdges);
             //            edatas = (BIZ_EDATA_T[]) new Object[(int) totalNumOfEdges];
