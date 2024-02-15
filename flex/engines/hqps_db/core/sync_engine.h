@@ -318,7 +318,7 @@ class SyncEngine : public BaseEngine {
       size_t limit = INT_MAX) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
-    // Modifiy offsets.
+    // Modify offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandE<T...>(
         graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
@@ -358,7 +358,7 @@ class SyncEngine : public BaseEngine {
       size_t limit = INT_MAX) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
-    // Modifiy offsets.
+    // Modify offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandE<T...>(
         graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
@@ -380,7 +380,7 @@ class SyncEngine : public BaseEngine {
           edge_expand_opt) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
-    // Modifiy offsets.
+    // Modify offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::EdgeExpandV(
         graph, select_node, edge_expand_opt.direction_,
@@ -402,7 +402,7 @@ class SyncEngine : public BaseEngine {
       EdgeExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
-    // Modifiy offsets.
+    // Modify offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::EdgeExpandV(
         graph, select_node, edge_expand_opt.direction_,
