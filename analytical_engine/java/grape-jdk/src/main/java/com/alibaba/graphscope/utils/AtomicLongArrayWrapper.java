@@ -101,7 +101,7 @@ public class AtomicLongArrayWrapper {
     }
 
     /**
-     * Atomicl update the array, compare values using unsigned comparasion.
+     * Atomically update the array, compare values using unsigned comparasion.
      *
      * @param vertex querying vertex.
      * @param newValue new value.
@@ -116,7 +116,7 @@ public class AtomicLongArrayWrapper {
     }
 
     /**
-     * Atomicl update the array, compare values using unsigned comparasion.
+     * Atomically update the array, compare values using unsigned comparasion.
      *
      * @param vertexId querying vertex id.
      * @param newValue new value.
