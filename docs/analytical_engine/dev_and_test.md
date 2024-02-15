@@ -27,7 +27,7 @@ Since the analytical engine inherits from GRAPE, it requires libgrape-lite as a 
 Please note that the core functionalities of libgrape-lite, such as graph structures, graph partitioners, workers, 
 communication between workers, and applications, are heavily reused in the analytical engine of GraphScope.
 
-If you want to fully understand the analytical engine, it is highly recommaned that you start from libgrape-lite.
+If you want to fully understand the analytical engine, it is highly recommended that you start from libgrape-lite.
 
 The code located in the `analytical_engine` directory functions like extensions to libgrape-lite, thereby making it full-fledged with the following enhancements:
 
