@@ -120,7 +120,7 @@ additional interfaces as follows.
 
    @property
    def indices(self):
-   """ two dimentional arra: the location of each neighbor """
+   """ two dimentional array: the location of each neighbor """
 
    def __next__(self):
    """ iterator: iterate over the neighbors of each vertex """

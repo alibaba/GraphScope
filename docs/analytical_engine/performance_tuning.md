@@ -60,7 +60,7 @@ its property graphs. Basically, the `ArrowFragment` has the following members:
 
         By default, the type of `offset` is `size_t`.
 
-        The size of `indices` aray is `num_vertices + 1`, which is a 0-based offset array.
+        The size of `indices` array is `num_vertices + 1`, which is a 0-based offset array.
 
     - outgoing edges: a CSR matrix, same as the incoming edges, but for outgoing edges
       of current partition.
@@ -81,7 +81,7 @@ its property graphs. Basically, the `ArrowFragment` has the following members:
 
         By default, the type of `offset` is `size_t`.
 
-        The size of `indices` aray is `num_vertices + 1`, which is a 0-based offset array.
+        The size of `indices` array is `num_vertices + 1`, which is a 0-based offset array.
 
 - Properties: the second part of the property graph is the properties: each vertex
   label and each edge label has a table for its properties:
