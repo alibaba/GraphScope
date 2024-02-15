@@ -1709,7 +1709,7 @@ VERETX_MAP_CLASS_MAP = {
 
 def _codegen_graph_info(attr):
     # These getter functions are intended for lazy evaluation,
-    # cause they are not always avaiable in all types of graphs
+    # cause they are not always available in all types of graphs
     def oid_type():
         if types_pb2.OID_TYPE in attr:
             return attr[types_pb2.OID_TYPE].s.decode("utf-8", errors="ignore")

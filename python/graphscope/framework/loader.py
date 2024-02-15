@@ -43,7 +43,7 @@ logger = logging.getLogger("graphscope")
 
 class CSVOptions(object):
     """Options to read from CSV files.
-    Avaiable options are:
+    Available options are:
         - column delimiters
         - include a subset of columns
         - types of each columns

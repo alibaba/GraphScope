@@ -136,7 +136,7 @@ class ExceptionBase : public std::exception {
   virtual std::string GetMessage() const;
 
   /**
-   * With a) detailed throw location (file + lineno) (if availabe), b) Exception
+   * With a) detailed throw location (file + lineno) (if available), b) Exception
    * class name, and c) content of GetMessage() (if not empty)
    */
   /* override */ const char* what() const throw();

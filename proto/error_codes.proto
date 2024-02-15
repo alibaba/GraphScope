@@ -44,7 +44,7 @@ enum Code {
   // Error raised when running UDF application
   UDF_INTERNAL_ERROR = 7;
 
-  // Resources temporary unavaiable.
+  // Resources temporary unavailable.
   UNAVAILABLE_ERROR = 8;
 
   // Arguments of operations is invalid / in a wrong format.

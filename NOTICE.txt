@@ -11,20 +11,20 @@ Revision ID: fb79c621172acbe43f32f4eae6268edabc3aea3b
 Package Title: @antv/graphin-graphscope (1.0.4)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 --------------------------------------------------------------------------------
 Package Title: black (23.3.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2018 Łukasz Langa
 
 --------------------------------------------------------------------------------
 Package Title: breathe (4.30.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 Copyright (c) 2009, Michael Jones
 All rights reserved.
 
@@ -32,14 +32,14 @@ All rights reserved.
 Package Title: css-loader (3.6.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright JS Foundation and other contributors
 
 --------------------------------------------------------------------------------
 Package Title: Cython (3.0a6)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 
 --------------------------------------------------------------------------------
 Package Title: docutils (0.16)
@@ -53,42 +53,42 @@ Package Title: docutils (0.16)
 Package Title: eslint (6.8.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright JS Foundation and other contributors, https://js.foundation
 
 --------------------------------------------------------------------------------
 Package Title: eslint-config-prettier (6.15.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2017, 2018, 2019 Simon Lydell and contributors
 
 --------------------------------------------------------------------------------
 Package Title: eslint-plugin-prettier (3.4.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright © 2017 Andres Suarez and Teddy Katz
 
 --------------------------------------------------------------------------------
 Package Title: etcd-distro (3.5.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 Copyright 2017 The etcd Authors
 
 --------------------------------------------------------------------------------
 Package Title: expect.js (0.3.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2011 Guillermo Rauch &lt;guillermo@learnboost.com&gt;
 
 --------------------------------------------------------------------------------
 Package Title: flake8 (4.0.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 == Flake8 License (MIT) ==
 Copyright (C) 2011-2013 Tarek Ziade <tarek@ziade.org>Copyright (C) 2012-2016 Ian Cordasco <graffatcolmingov@gmail.com>
@@ -97,7 +97,7 @@ Copyright (C) 2011-2013 Tarek Ziade <tarek@ziade.org>Copyright (C) 2012-2016 Ian
 Package Title: fs-extra (7.0.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 (The MIT License)
 Copyright (c) 2011-2017 JP Richardson
@@ -106,32 +106,32 @@ Copyright (c) 2011-2017 JP Richardson
 Package Title: furo (2023.5.20)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2020 Pradyun Gedam <mail@pradyunsg.me>
 
 --------------------------------------------------------------------------------
 Package Title: gremlinpython (3.6.3rc1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 
 --------------------------------------------------------------------------------
 Package Title: grpcio (1.49.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Multi-license: Apache-2.0 OR BSD-3-Clause OR MPL-2.0
+which is available under license(s): Multi-license: Apache-2.0 OR BSD-3-Clause OR MPL-2.0
 
 --------------------------------------------------------------------------------
 Package Title: grpcio-tools (1.49.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 Copyright 2015 gRPC authors
 --------------------------------------------------------------------------------
 Package Title: husky (4.3.8)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 MIT License
 Copyright (c) 2017 - present
@@ -140,7 +140,7 @@ Copyright (c) 2017 - present
 Package Title: ipywidgets (7.0.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 
 This project is licensed under the terms of the Modified BSD License
 (also known as New or Revised or 3-Clause BSD), as follows:
@@ -153,14 +153,14 @@ All rights reserved.
 Package Title: isort (5.10.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2013 Timothy Edmund Crosley
 
 --------------------------------------------------------------------------------
 Package Title: jupyterlab (2.0.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 Copyright (c) 2015 Project Jupyter Contributors . All rights reserved.
 
 --------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ All rights reserved.
 Package Title: karma (6.4.2)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 Copyright (C) 2011-2021 Google, Inc.
 
@@ -183,35 +183,35 @@ Copyright (C) 2011-2021 Google, Inc.
 Package Title: karma-chrome-launcher (2.2.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (C) 2011-2013 Google, Inc.
 
 --------------------------------------------------------------------------------
 Package Title: karma-firefox-launcher (1.3.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (C) 2011-2013 Google, Inc.
 
 --------------------------------------------------------------------------------
 Package Title: karma-ie-launcher (1.0.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (C) 2011-2013 Google, Inc.
 
 --------------------------------------------------------------------------------
 Package Title: karma-mocha (1.3.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (C) 2011-2013 Google, Inc.
 
 --------------------------------------------------------------------------------
 Package Title: karma-mocha-reporter (2.2.5)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Multi-license: MIT 
+which is available under license(s): Multi-license: MIT 
 Copyright (C) 2013-2016 Litixsoft GmbH <info@litixsoft.de>
 Licensed under the MIT license.
 
@@ -219,20 +219,20 @@ Licensed under the MIT license.
 Package Title: karma-typescript (5.5.4)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (C) 2016-2021 Erik Barke, Monounity.
 
 --------------------------------------------------------------------------------
 Package Title: kubernetes (24.2.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 
 --------------------------------------------------------------------------------
 Package Title: linkify-it-py (2.0.2)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 MIT License
 Copyright (c) 2020 tsutsu3
 
@@ -245,42 +245,42 @@ Copyright (c) 2015 Vitaly Puzrin.
 Package Title: lint-staged (10.5.4)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2016 Andrey Okonetchnikov
 
 --------------------------------------------------------------------------------
 Package Title: matplotlib-base (3.7.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): 
+which is available under license(s): 
 Apache-2.0, APAFML, BitstreamVera, CC0-1.0, GPL-1.0-or-later, MatPlotLib, OFL-1.1, Python-2.0, Qhull, PIL
 
 --------------------------------------------------------------------------------
 Package Title: mkdirp (0.5.6)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright 2010 James Halliday (mail@substack.net)
 
 --------------------------------------------------------------------------------
 Package Title: mocha (5.2.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2011-2018 JS Foundation and contributors, https://js.foundation
 
 --------------------------------------------------------------------------------
 Package Title: msgpack (1.0.5)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 Copyright (C) 2008-2011 INADA Naoki <songofacandy@gmail.com>
 
 --------------------------------------------------------------------------------
 Package Title: myst-parser (0.13.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 MIT License
 Copyright (c) 2020 ExecutableBookProject
@@ -289,7 +289,7 @@ Copyright (c) 2020 ExecutableBookProject
 Package Title: nest-asyncio (1.5.6)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-2-Clause
+which is available under license(s): BSD-2-Clause
 Copyright (c) 2018-2020, Ewald de Wit
 All rights reserved.
 
@@ -297,14 +297,14 @@ All rights reserved.
 Package Title: networkx (2.8.4)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 Copyright (c) 2004-2022, NetworkX Developers . All rights reserved.
 
 --------------------------------------------------------------------------------
 Package Title: numpy ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 Copyright (c) 2005-2022, NumPy Developers.
 All rights reserved.
 
@@ -312,7 +312,7 @@ All rights reserved.
 Package Title: packaging ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): 
+which is available under license(s): 
 Apache-2.0 
 Copyright (c) Donald Stufft and individual contributors.
 All rights reserved.
@@ -321,7 +321,7 @@ All rights reserved.
 Package Title: pandas (1.5.3)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 Copyright (c) 2008-2011 AQR Capital Management, LLC, Lambda Foundry, Inc. and PyData Development Team. 
 All rights reserved.
 
@@ -329,7 +329,7 @@ All rights reserved.
 Package Title: @phosphor/application (1.7.3)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): * BSD-3-Clause *
+which is available under license(s): * BSD-3-Clause *
 Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
@@ -337,7 +337,7 @@ All rights reserved.
 Package Title: @phosphor/widgets (1.9.3)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Multi-license: BSD-2-Clause OR BSD-3-Clause, BSD-3-Clause
+which is available under license(s): Multi-license: BSD-2-Clause OR BSD-3-Clause, BSD-3-Clause
 Copyright (c) 2014-2017, PhosphorJS Contributors
 All rights reserved.
 
@@ -345,7 +345,7 @@ All rights reserved.
 Package Title: prettier (2.8.8)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 Copyright © James Long and contributors
 
 -----------------------------------------
@@ -2168,52 +2168,52 @@ Copyright (c) Ika <ikatyang@gmail.com> (https://github.com/ikatyang)
 Package Title: prometheus-client (0.14.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 
 --------------------------------------------------------------------------------
 Package Title: psutil ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 --------------------------------------------------------------------------------
 Package Title: pyarrow (10.0.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 Copyright 2011 Kitware, Inc
 
 --------------------------------------------------------------------------------
 Package Title: Pygments (2.4.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): * Apache-2.0 *
+which is available under license(s): * Apache-2.0 *
 Copyright 2006-2017 by the Pygments team, see AUTHORS.
 
 --------------------------------------------------------------------------------
 Package Title: pylint ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): GPL-2.0-only
+which is available under license(s): GPL-2.0-only
 
 --------------------------------------------------------------------------------
 Package Title: pysimdjson (5.0.2)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Multi-license: Apache-2.0 OR MIT
+which is available under license(s): Multi-license: Apache-2.0 OR MIT
 Copyright (c) 2019 Tyler Kennedy
 
 --------------------------------------------------------------------------------
 Package Title: pytest ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2004 Holger Krekel and others
 
 --------------------------------------------------------------------------------
 Package Title: pytest-cov ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 Copyright (c) 2010 Meme Dough
 
@@ -2221,77 +2221,77 @@ Copyright (c) 2010 Meme Dough
 Package Title: pytest-timeout ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (C) 2012, 2014 Floris Bruynooghe
 
 --------------------------------------------------------------------------------
 Package Title: PyYAML ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2017-2021 Ingy döt NetCopyright (c) 2006-2016 Kirill Simonov
 
 --------------------------------------------------------------------------------
 Package Title: react (16.14.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) Facebook, Inc. and its affiliates.
 
 --------------------------------------------------------------------------------
 Package Title: react-dom (16.14.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) Facebook, Inc. and its affiliates.
 
 --------------------------------------------------------------------------------
 Package Title: rich (13.3.5)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2020 Will McGugan
 
 --------------------------------------------------------------------------------
 Package Title: rimraf (2.7.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): ISC
+which is available under license(s): ISC
 Copyright (c) Isaac Z. Schlueter and Contributors
 
 --------------------------------------------------------------------------------
 Package Title: setuptools (65.7.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright Jason R. Coombs
 
 --------------------------------------------------------------------------------
 Package Title: source-map-loader (0.2.4)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright JS Foundation and other contributors
 
 --------------------------------------------------------------------------------
 Package Title: spectate (1.0.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2021 Ryan S. Morshead
 
 --------------------------------------------------------------------------------
 Package Title: spectate (0.4.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2016 Ryan S. Morshead
 
 --------------------------------------------------------------------------------
 Package Title: sphinx (4.1.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2007-2021 by the Sphinx team (see AUTHORS file).
 All rights reserved.
 
@@ -2329,7 +2329,7 @@ Copyright (c) 2007-2021 by the Sphinx team (see AUTHORS file).
 Package Title: sphinx-copybutton (0.5.2)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 MIT License
 Copyright (c) 2018 Chris Holdgraf
@@ -2338,13 +2338,13 @@ Copyright (c) 2018 Chris Holdgraf
 Package Title: sphinxemoji (0.2.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-2-Clause
+which is available under license(s): BSD-2-Clause
 
 --------------------------------------------------------------------------------
 Package Title: sphinxext-opengraph (0.8.2)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 Copyright (c) 2020 FIRST
 All rights reserved.
 
@@ -2352,7 +2352,7 @@ All rights reserved.
 Package Title: sphinx-panels (0.6.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 MIT License
 Copyright (c) 2020 Executable Books
@@ -2361,14 +2361,14 @@ Copyright (c) 2020 Executable Books
 Package Title: style-loader (1.3.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright JS Foundation and other contributors
 
 --------------------------------------------------------------------------------
 Package Title: tomli (2.0.1)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 MIT License
 Copyright (c) 2021 Taneli Hukkinen
@@ -2377,7 +2377,7 @@ Copyright (c) 2021 Taneli Hukkinen
 Package Title: tqdm ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Multi-license: MIT OR MPL-2.0
+which is available under license(s): Multi-license: MIT OR MPL-2.0
 
 `tqdm` is a product of collaborative work.
 Unless otherwise stated, all authors (see commit logs) retain copyright
@@ -2389,7 +2389,7 @@ Copyright (c) 2013 noamraph
 Package Title: traitlets (5.9.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause
+which is available under license(s): BSD-3-Clause
 
 - Copyright (c) 2001-, IPython Development Team
 
@@ -2399,20 +2399,20 @@ All rights reserved.
 Package Title: ts-loader (5.4.5)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2015 TypeStrong
 
 --------------------------------------------------------------------------------
 Package Title: typescript (3.9.10)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache-2.0
+which is available under license(s): Apache-2.0
 
 --------------------------------------------------------------------------------
 Package Title: @typescript-eslint/eslint-plugin (2.34.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 
 MIT License
 Copyright (c) 2019 TypeScript ESLint and other contributors
@@ -2421,7 +2421,7 @@ Copyright (c) 2019 TypeScript ESLint and other contributors
 Package Title: @typescript-eslint/parser (2.34.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-2-Clause
+which is available under license(s): BSD-2-Clause
 
 TypeScript ESLint ParserCopyright JS Foundation and other contributors, https://js.foundation
 
@@ -2429,49 +2429,49 @@ TypeScript ESLint ParserCopyright JS Foundation and other contributors, https://
 Package Title: @types/expect.js (0.3.29)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) <year> <copyright holders>
 
 --------------------------------------------------------------------------------
 Package Title: @types/mocha (5.2.7)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) Microsoft Corporation. All rights reserved.
 
 --------------------------------------------------------------------------------
 Package Title: @types/node (10.17.60)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) Microsoft Corporation.
 
 --------------------------------------------------------------------------------
 Package Title: @types/react (16.14.41)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) Microsoft Corporation.
 
 --------------------------------------------------------------------------------
 Package Title: @types/react-dom (16.9.19)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) Microsoft Corporation.
 
 --------------------------------------------------------------------------------
 Package Title: @types/webpack-env (1.18.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) Microsoft Corporation.
 
 --------------------------------------------------------------------------------
 Package Title: ujson (5.7.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): BSD-3-Clause, TCL
+which is available under license(s): BSD-3-Clause, TCL
 Developed by ESN, an Electronic Arts Inc. studio.Copyright (c) 2014, Electronic Arts Inc.
 All rights reserved.
 
@@ -2479,33 +2479,33 @@ All rights reserved.
 Package Title: vineyard (0.14.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache 2.0
+which is available under license(s): Apache 2.0
 
 --------------------------------------------------------------------------------
 Package Title: vineyard-io (0.14.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): Apache 2.0
+which is available under license(s): Apache 2.0
 
 --------------------------------------------------------------------------------
 Package Title: webpack (4.46.0)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright JS Foundation and other contributors
 
 --------------------------------------------------------------------------------
 Package Title: webpack-cli (3.3.12)
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright JS Foundation and other contributors
 
 --------------------------------------------------------------------------------
 Package Title: wheel ()
 --------------------------------------------------------------------------------
 
-which is avaliable under license(s): MIT
+which is available under license(s): MIT
 Copyright (c) 2012 Daniel Holth <dholth@fastmail.fm> and contributors
 
 --------------------------------------------------------------------------------
