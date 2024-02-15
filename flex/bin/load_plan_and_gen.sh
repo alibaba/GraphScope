@@ -141,7 +141,7 @@ cypher_to_plan() {
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"
   cmd="${cmd} -Djna.library.path=${IR_CORE_LIB_DIR}"
   cmd="${cmd} com.alibaba.graphscope.common.ir.tools.GraphPlanner ${ir_compiler_properties} ${real_input_path} ${real_output_path} ${real_output_yaml} '${extra_config}'"
-  info "running physical plan genration with ${cmd}"
+  info "running physical plan generation with ${cmd}"
   eval ${cmd}
 
   info "---------------------------"
