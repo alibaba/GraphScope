@@ -139,7 +139,7 @@ def _type_param_consistent(graph_actual_type_param, java_app_type_param):
 class JavaApp(AppAssets):
     """A class represents a java app assert node in a DAG that holds the jar file.
 
-    It holds neccessary resouces to run a java app, including java class path, the gar
+    It holds necessary resouces to run a java app, including java class path, the gar
     file which consists jar and configuration yaml, and the specified java class.
     On creating a JavaApp, graphscope will try to load the specified java class, and parse
     the Base class for your app, and the base class for your Context Class. This operation
