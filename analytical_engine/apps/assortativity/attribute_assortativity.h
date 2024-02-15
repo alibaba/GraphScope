@@ -167,7 +167,7 @@ class AttributeAssortativity
 
   /**
    * @brief merge attribute mixing map of all workers in worker 0 and the result
-   * is saved in the contxt of worker 0.
+   * is saved in the context of worker 0.
    *
    * @param ctx
    * @param messages
