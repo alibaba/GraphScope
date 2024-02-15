@@ -545,7 +545,7 @@ class DistinctCountBuilder<
   size_t edges_num_;
 };
 
-// count the distinct number of recieved elements.
+// count the distinct number of received elements.
 template <int tag_id, typename LabelT, typename VID_T, typename... T>
 class DistinctCountBuilder<tag_id, RowVertexSetImpl<LabelT, VID_T, T...>> {
  public:
