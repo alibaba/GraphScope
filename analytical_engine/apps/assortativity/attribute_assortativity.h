@@ -90,7 +90,7 @@ class AttributeAssortativity
         std::vector<size_t> shape{1};
         ctx.set_shape(shape);
         ctx.assign(ctx.attribute_assortativity);
-        VLOG(0) << "attribute assortatity: " << ctx.attribute_assortativity
+        VLOG(0) << "attribute assortativity: " << ctx.attribute_assortativity
                 << std::endl;
       }
     }
