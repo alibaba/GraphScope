@@ -132,7 +132,7 @@ Coordinator Exporter is a web exporter for exporting coordinator metrics to prom
    ```
    - Succeed QPS
    ```promql
-   # 5m means it's a statistic result in 5 miniutes.
+   # 5m means it's a statistic result in 5 minutes.
    # you may change it to 10m, 30s, 10s or other time range to get a different statistic result.  
    sum(rate(gie_request_count{success="true"}[5m])) 
    ```
