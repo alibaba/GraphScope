@@ -361,7 +361,7 @@ class TestGraphTransformation(object):
         # test HAS_NODE and HAS_EDGE
         assert 0 not in G
         assert 933 in G
-        assert ("person", 933) not in G  # deault node must be non-tuple format
+        assert ("person", 933) not in G  # default node must be non-tuple format
         assert ("random", 933) not in G
         assert G.has_edge(933, 4398046511628)
         assert G.has_edge(("comment", 618475290625), ("post", 618475290624))

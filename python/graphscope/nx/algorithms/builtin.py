@@ -414,7 +414,7 @@ def all_pairs_shortest_path_length(G, weight=None):
     ----------
     G : networkx graph
 
-    weight : string (defualt=None)
+    weight : string (default=None)
        edge weights will be accessed via the edge attribute with this
        key (that is, the weight of the edge joining `u` to `v` will be
        ``G.edges[u, v][weight]``). If is None, every edge is assume to be one.
