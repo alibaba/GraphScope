@@ -2,7 +2,7 @@
 #
 # A script to install dependencies of GraphScope.
 # TODO: check dependencies revise
-# TODO: install depedencies faster
+# TODO: install dependencies faster
 
 set -e
 set -o pipefail
@@ -64,7 +64,7 @@ cat <<END
     --verbose            Print the debug logging information
     --k8s                Install the dependencies for running GraphScope on k8s locally
     --dev                Install the dependencies for build GraphScope on local
-    --grape-jdk          Install the dependecies for GraphScope grape jdk on local
+    --grape-jdk          Install the dependencies for GraphScope grape jdk on local
     --cn                 Use tsinghua mirror for brew when install dependencies on macOS
 END
 }
