@@ -115,7 +115,7 @@ weight FLOAT
 The label format is used to express the situation where the vertices or
 edges are labeled. The label has only one column, which is of type int.
 When the data format has labels, it is necessary to display and specify
-**LABELD** to inform the system, in the API description.
+**LABELED** to inform the system, in the API description.
 
 The schema of the vertex data label format:
 

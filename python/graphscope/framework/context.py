@@ -509,7 +509,7 @@ class VertexPropertyContextDAGNode(BaseContextDAGNode):
 
 
 class LabeledVertexPropertyContextDAGNode(BaseContextDAGNode):
-    """The labeld kind of context with properties.
+    """The labeled kind of context with properties.
     This context has several vertex labels and edge labels, And each label has several properties.
     Selection are performed on labels first, then on properties.
 
