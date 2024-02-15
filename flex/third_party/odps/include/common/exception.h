@@ -3,7 +3,7 @@
  */
 
 /**
- * Guildelines for exception handling
+ * Guidelines for exception handling
  * 1. How to throw
  *    APSARA_THROW(the_exception_to_show, description_string)
  *    e.g. APSARA_THROW(ParameterInvalidException, "Cannot be empty string");
