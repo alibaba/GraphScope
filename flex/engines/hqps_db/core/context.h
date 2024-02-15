@@ -302,7 +302,7 @@ class ContextIter<base_tag, std::tuple<SET_T, PREV_SETS...>> {
  * @brief A data structure holding all the data we have in query.
  *
  * @tparam HEAD_T The current head node.
- * @tparam base_tag The base tag based on which the tag id increases. Defaultly
+ * @tparam base_tag The base tag based on which the tag id increases. Default
  * 0, set to non-zero for grouped sets.
  * @tparam cur_alias To which col_id it is aliased.
  * @tparam ALIAS_COL The saved obj in query up till now.
