@@ -6,7 +6,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 1. What are the minimum resources and system requirements required to run GraphScope?
 
     To use GraphScope Python interface, **Python >= 3.7** and **pip >= 19.0** is required.
-    GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  **4 cores CPU** and **8G memory**.
+    GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the minimum requirement is  **4 cores CPU** and **8G memory**.
 
     GraphScope is tested and supported on the following systems:
 
