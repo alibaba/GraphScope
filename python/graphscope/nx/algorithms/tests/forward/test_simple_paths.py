@@ -21,7 +21,7 @@ def test_shortest_simple_paths():
     )
 
 @pytest.mark.usefixtures("graphscope_session")
-@pytest.mark.skipif(nxa.__version__ < "2.5", reason="netowrkx2.4 does not support weight function.")
+@pytest.mark.skipif(nxa.__version__ < "2.5", reason="networkx2.4 does not support weight function.")
 def test_shortest_simple_paths_directed_with_weight_function():
     def cost(u, v, x):
         return 1
