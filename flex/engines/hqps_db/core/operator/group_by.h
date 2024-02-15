@@ -220,7 +220,7 @@ struct Rearrange {
       typename UnWrapTuple<head_t, new_head_tag, base_tag, prev_t>::context_t;
 };
 
-// only two nodees
+// only two nodes
 // template <int new_head_tag, int base_tag, typename First, typename Node>
 // struct Rearrange<new_head_tag, base_tag, First, Node> {
 //   using context_t = Context<Node, new_head_tag, base_tag, First>;
