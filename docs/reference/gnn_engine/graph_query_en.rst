@@ -43,7 +43,7 @@ the heterogeneous graph shown in the following image.
 #2 Data Query
 
 **GL** has two basic data types: ``Nodes`` and ``Edges``. Graph
-raversal, query, and sampling operations all return a batch of vertices
+traversal, query, and sampling operations all return a batch of vertices
 or edges. In particular, non-aligned sampling returns the sparse form of
 two basic data types, namely ``SparseNodes`` and ``SparseEdges``. The
 interface of ``Nodes`` is shown as follows.
@@ -184,7 +184,7 @@ In GSL，we can use ``V()`` to replace ``get_nodes()``
    g = Graph(...)
    u_nodes = g.V("user", feed=np.array([10001, 10002, 10003])).emit()
 
-## 2.2 Edges Query We can get edges from graph travesal, sampling or
+## 2.2 Edges Query We can get edges from graph traversal, sampling or
 specifying src_id and dst_id. Once we get the edges, we can query their
 attributes, weights or labels. edges query by specifying src_id, dst_id:
 
