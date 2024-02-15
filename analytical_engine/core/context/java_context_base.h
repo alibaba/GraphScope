@@ -140,7 +140,7 @@ class JavaContextBase : public grape::ContextBase {
  protected:
   virtual const char* evalDescriptor() = 0;
 
-  // Set frag_group_id to zero inidicate not available.
+  // Set frag_group_id to zero indicates not available.
   void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path,
             int local_num = 1) {
