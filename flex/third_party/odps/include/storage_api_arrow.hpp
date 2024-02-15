@@ -50,7 +50,7 @@ class ArrowClient {
    *  @brief Read one split of the read session.
    *
    *  @param request Read rows request parameters.
-   *  @param cache_size Number of not readed record baches cached in the memory.
+   *  @param cache_size Number of not read record baches cached in the memory.
    *
    *  @return Record batch reader.
    */
