@@ -181,7 +181,7 @@ class QueryGenerator {
       : ctx_(ctx), plan_(plan) {}
 
   std::string GenerateQuery() {
-    // During generate query body, we will track the parameteres
+    // During generate query body, we will track the parameters
     // And also generate the expression for needed
     std::string query_code = build_query_code();
     std::string expr_code;
