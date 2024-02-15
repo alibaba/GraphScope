@@ -850,11 +850,11 @@ public interface GiraphConstants {
             new StrConfOption("giraph.edge.output.subdir", "", "EdgeOutputFormat sub-directory");
 
     /**
-     * GiraphTextOuputFormat Separator
+     * GiraphTextOutputFormat Separator
      */
     StrConfOption GIRAPH_TEXT_OUTPUT_FORMAT_SEPARATOR =
             new StrConfOption(
-                    "giraph.textoutputformat.separator", "\t", "GiraphTextOuputFormat Separator");
+                    "giraph.textoutputformat.separator", "\t", "GiraphTextOutputFormat Separator");
     /**
      * Reverse values in the output
      */
@@ -876,7 +876,7 @@ public interface GiraphConstants {
                             + "end of application, saveVertex will be called right after each "
                             + "vertex.compute() is called."
                             + "NOTE: This feature doesn't work well with checkpointing - if you "
-                            + "restart from a checkpoint you won't have any ouptut from previous "
+                            + "restart from a checkpoint you won't have any output from previous "
                             + "supresteps.");
     /**
      * Vertex output format thread-safe - if your VertexOutputFormat allows several vertexWriters to
