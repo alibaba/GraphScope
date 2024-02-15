@@ -41,8 +41,8 @@ it is, except:
     it will make Cython understand what we really want and generate proper
     Cpp code.
 
-2. for invokation on methods inside :code:`graphscope.analytical.udf.core`, we generate
-   proper special :code:`cdef` definitions, or proper Cpp invokations,
+2. for invocation on methods inside :code:`graphscope.analytical.udf.core`, we generate
+   proper special :code:`cdef` definitions, or proper Cpp invocations,
    just like :code:`cython.declare`, for example,
 
     .. code:: python
