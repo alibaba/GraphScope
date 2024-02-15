@@ -105,7 +105,7 @@ class CaseWhenBuilder : public ExprBuilder {
     func_call_template_typename_str = get_func_call_typename_str();
 
     func_call_params_str = get_func_call_params_str();
-    // the func_call impl is overrided
+    // the func_call impl is overridden
     func_call_impl_str = get_func_call_impl_str();
     private_filed_str = get_private_filed_str();
 
