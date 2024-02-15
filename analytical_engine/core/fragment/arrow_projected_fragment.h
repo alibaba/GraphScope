@@ -1237,7 +1237,7 @@ class ArrowProjectedFragment
 
   inline size_t GetOutEdgeNum() const { return oenum_; }
 
-  /* Get outging edges num from this frag*/
+  /* Get outgoing edges num from this frag*/
   inline size_t GetOutgoingEdgeNum() const {
     return static_cast<size_t>(oe_offsets_end_->Value(ivnum_ - 1) -
                                oe_offsets_begin_->Value(0));
