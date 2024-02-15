@@ -431,7 +431,7 @@ class Graph(_GraphBase):
 
     @property
     def key(self):
-        """Key of the coresponding engine graph."""
+        """Key of the corresponding engine graph."""
         if hasattr(self, "_graph") and self._is_client_view:
             return (
                 self._graph.key
