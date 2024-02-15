@@ -526,7 +526,7 @@ GraphScope图分析引擎上运行这些示例算法。
 
     app=JavaApp(
         full_jar_path="{full/path/to/your/packed/jar}", 
-        java_app_class="{fullly/qualified/class/name/of/your/app}", 
+        java_app_class="{fully/qualified/class/name/of/your/app}", 
     )
     ctx=app(graph, "${param string}")
 

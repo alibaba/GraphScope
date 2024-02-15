@@ -174,7 +174,7 @@ graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
 
 app=JavaApp(
     full_jar_path="{full/path/to/your/packed/jar}", # *-shaded.jar
-    java_app_class="{fullly/qualified/class/name/of/your/app}", # com.a.b.c
+    java_app_class="{fully/qualified/class/name/of/your/app}", # com.a.b.c
 )
 ctx=app(graph, "{param string}") # a=b,c=d
 ```
