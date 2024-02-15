@@ -179,7 +179,7 @@ def handle_grpc_error_with_retry(fn, retry=True):
 
 
 def handle_grpc_error(fn_or_retry):
-    """Decorator to handle grpc error, and accepts an optional arugment to control
+    """Decorator to handle grpc error, and accepts an optional argument to control
     whether the function should be retried for certain errors.
 
     This decorator can be used as
