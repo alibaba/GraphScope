@@ -200,7 +200,7 @@ attributes, weights or labels. edges query by specifying src_id, dst_id:
      Edges object
    '''
 
-We use the following example to show the inferface and usage
+We use the following example to show the interface and usage
 ``get_edges()``
 
 Table2: swing edges
