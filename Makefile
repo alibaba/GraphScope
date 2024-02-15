@@ -47,7 +47,7 @@ PIP_ARGS 			= --timeout=1000 --no-cache-dir
 ## Common
 .PHONY: all graphscope install clean
 
-# coordinator relys on client, which relys on learning
+# coordinator relies on client, which relies on learning
 all: coordinator analytical interactive
 graphscope: all
 
