@@ -21,7 +21,7 @@ readonly OUTPUT_ENV_FILE="${HOME}/.graphscope_env"
 IS_IN_WSL=false && [[ ! -z "${IS_WSL}" || ! -z "${WSL_DISTRO_NAME}" ]] && IS_IN_WSL=true
 readonly IS_IN_WSL
 DEPS_PREFIX="/usr/local"
-BASIC_PACKGES_TO_INSTALL=
+BASIC_PACKAGES_TO_INSTALL=
 PLATFORM=
 OS_VERSION=
 VERBOSE=false
