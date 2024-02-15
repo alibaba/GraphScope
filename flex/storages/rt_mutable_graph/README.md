@@ -9,10 +9,10 @@
 `rt_mutable_graph` adopts property graph model:
 
 - Vertices are the entities in the graph, representing objects or concepts.
-    - Each vertex has a label that describes the type of entity it represents, and a set of properties that describe its characteristcs.
+    - Each vertex has a label that describes the type of entity it represents, and a set of properties that describe its characteristics.
     - Vertices of each type share same property schema.
 - Edges are the relationships between vertices, representing the associations or interactions between entities.
-    - Each edge has a label that describes the type of interaction, and a set of properties that describe its characteristcs.
+    - Each edge has a label that describes the type of interaction, and a set of properties that describe its characteristics.
     - Edges with same label-triplet(source vertex label, edge label, destination vertex label) share property schema.
 
 In `rt_mutable_graph`, schema is defined [here](./schema.h). To initialize an `MutablePropertyFragment`, an `Schema` object should be provided. There are 2 ways to setup the `Schema` object:
