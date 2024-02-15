@@ -91,7 +91,7 @@ The procedure almost the same as above, except that you need to replace the subm
 ```python
 import graphscope
 
-"""Or lauch session in k8s cluster"""
+"""Or launch session in k8s cluster"""
 sess = graphscope.session(cluster_type='hosts') 
 
 # path to local jar file, will be distributed over cluster
