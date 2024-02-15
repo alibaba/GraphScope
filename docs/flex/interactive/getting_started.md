@@ -6,7 +6,7 @@ Welcome to GraphScope Interactive! This guide will walk you through the process 
 
 Make sure `GraphScope Interactive` is installed before proceeding on. If not, please follow [installation](./installation) to install the latest release.
 
-- **Administrative tool**: GraphScope Interactive offers an administrative tool of `bin/gs interactive` to help manage the Interactive service. For an in-depth guide on how to use this tool, please visit the page of [adminstrative tool](./tools/admin_tool). 
+- **Administrative tool**: GraphScope Interactive offers an administrative tool of `bin/gs interactive` to help manage the Interactive service. For an in-depth guide on how to use this tool, please visit the page of [administrative tool](./tools/admin_tool). 
 
 - **Graph Data**: By default, GraphScope Interactive uses Tinkerpop's [modern graph](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/) to get you started. However, if you wish to configure your own graph and load your data, you can refer to the page of [using custom graph_data](./custom_graph) for detailed steps.
   
