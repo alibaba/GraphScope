@@ -537,7 +537,7 @@ public interface GiraphConstants {
                     "which type of out message cache to use");
 
     StrConfOption EDGE_MANAGER =
-            new StrConfOption("girpah.edgeManager", "default", "default or lazy");
+            new StrConfOption("giraph.edgeManager", "default", "default or lazy");
 
     ClassConfOption<ComputationFactory> COMPUTATION_FACTORY_CLASS =
             ClassConfOption.create(
