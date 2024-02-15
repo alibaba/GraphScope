@@ -37,7 +37,7 @@ namespace gs {
  *
  * Currently we only support path expand with only one edge label and only one
  *dst label.
- * The input vertex set must be of one labe.
+ * The input vertex set must be of one label.
  **/
 
 template <typename GRAPH_INTERFACE>

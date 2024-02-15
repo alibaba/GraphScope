@@ -108,7 +108,7 @@ class ScanOpBuilder {
       // labels.
       std::vector<int32_t> expr_label_ids;
       if (try_to_get_label_ids_from_expr(predicate, expr_label_ids)) {
-        // join expr_label_ids with table_lable_ids;
+        // join expr_label_ids with table_label_ids;
         VLOG(10) << "Found label ids in expr: "
                  << gs::to_string(expr_label_ids);
         intersection(labels_ids_, expr_label_ids);

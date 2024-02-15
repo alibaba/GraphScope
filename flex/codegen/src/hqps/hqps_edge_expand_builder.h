@@ -499,8 +499,8 @@ class EdgeExpandOpBuilder {
       CHECK(graph_data_type.size() > 0);
 
       CHECK(direction_ != internal::Direction::kNotSet);
-      for (auto ele_labe_type : graph_data_type) {
-        auto& triplet = ele_labe_type.label();
+      for (auto ele_label_type : graph_data_type) {
+        auto& triplet = ele_label_type.label();
         auto& dst_label = triplet.dst_label();
         edge_labels_.emplace_back(triplet.label());
         if (direction_ == internal::Direction::kOut) {
