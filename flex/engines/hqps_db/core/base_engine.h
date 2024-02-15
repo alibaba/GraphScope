@@ -486,9 +486,9 @@ class BaseEngine {
           ctx_y) {
     auto ctx_x_builder_tuple = ctx_x.CreateSetBuilder();
     auto ctx_y_builder_tuple = ctx_y.CreateSetBuilder();
-    auto concated_builder_tuple = BuilderConcatenate<real_x_ind, real_y_ind>(
+    auto concatenated_builder_tuple = BuilderConcatenate<real_x_ind, real_y_ind>(
         ctx_x_builder_tuple, ctx_y_builder_tuple);
-    return std::make_pair(concated_builder_tuple,
+    return std::make_pair(concatenated_builder_tuple,
                           std::get<real_x_ind>(ctx_x_builder_tuple));
   }
 
