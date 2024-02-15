@@ -136,7 +136,7 @@ class TestAlertController(BaseTestCase):
 
         
         """
-        alert_rule = {"severity":"warning","conditions_desription":"conditions_desription","enable":True,"name":"name","metric_type":"node","frequency":0}
+        alert_rule = {"severity":"warning","conditions_description":"conditions_description","enable":True,"name":"name","metric_type":"node","frequency":0}
         headers = { 
             'Accept': 'application/json',
             'Content-Type': 'application/json',
