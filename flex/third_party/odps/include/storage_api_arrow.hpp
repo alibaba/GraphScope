@@ -149,7 +149,7 @@ class Reader {
   friend class ArrowClient;
   friend class internal::ArrowStreamListener;
 
-  // the data are asyn read from the server and cached in the record_batches_
+  // the data are async read from the server and cached in the record_batches_
   BlockingQueue<std::shared_ptr<arrow::RecordBatch>> record_batches_;
   ReadRowsResp resp_;
 
