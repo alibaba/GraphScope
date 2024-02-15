@@ -952,7 +952,7 @@ struct AliasTagProp {
       : tag_prop_{std::move(prop_names)} {}
 };
 
-// Alias the property of multiple tags' multiple propty.
+// Alias the property of multiple tags' multiple property.
 
 // For the grouping key, use which property, and alias to what.
 template <int _tag_id, int... Is>
