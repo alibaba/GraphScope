@@ -14,7 +14,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
     - Ubuntu 18.04+
     - MacOS 10.15+
 
-    For distributed depolyment, a cluster managed by Kubernetes is required. GraphScope has been tested on
+    For distributed deployment, a cluster managed by Kubernetes is required. GraphScope has been tested on
     Kubernetes **version >= v1.12.0+**.
 
 
