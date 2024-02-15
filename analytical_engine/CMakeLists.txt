@@ -502,7 +502,7 @@ if(ENABLE_JAVA_SDK)
     set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/grape-graphx/target/grape-graphx-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GIRAPH_JAR "${GAE_JAVA_DIR}/grape-giraph/target/grape-giraph-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
-    # condiationally set grape-jni's name according to platform
+    # conditionally set grape-jni's name according to platform
     if (APPLE)
         set(GAE_JAVA_JNI_LIB "${GAE_JAVA_DIR}/grape-runtime/target/native/libgrape-jni.dylib")
     else ()
