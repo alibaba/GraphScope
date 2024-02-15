@@ -728,7 +728,7 @@ void v6d_get_process_partition_list(GraphHandle graph, PartitionId** partition_i
   /*
   for (int idx = 0; idx < *partition_id_size; ++idx) {
 #ifndef NDEBUG
-    LOG(INFO) << "emplace parititon id: " << impl->local_fragments[idx];
+    LOG(INFO) << "emplace partition id: " << impl->local_fragments[idx];
 #endif
     (*partition_ids)[idx] = impl->local_fragments[idx];
   }

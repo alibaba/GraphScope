@@ -258,7 +258,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 .map(move |cnt| fold_map.exec(cnt))?
                                 .into_stream()?;
                         } else {
-                            // TODO: optimize this by fold_partiton + fold
+                            // TODO: optimize this by fold_partition + fold
                             let fold_accum = fold.gen_fold_accum()?;
                             stream = stream
                                 .fold(fold_accum, || {
