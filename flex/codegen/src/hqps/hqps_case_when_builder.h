@@ -54,7 +54,7 @@ class CaseWhenBuilder : public ExprBuilder {
           when_expr) {
     VLOG(10) << "Got when then exprs of size: " << when_expr.size();
 
-    // Basiclly, each when_then is a if then.
+    // Basically, each when_then is a if then.
     for (auto& when_then_expr : when_expr) {
       auto& when_val = when_then_expr.when_expression();
       auto& the_result_expr = when_then_expr.then_result_expression();
