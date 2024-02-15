@@ -147,7 +147,7 @@ The **scope** is optional. However, if it assigned, it must be one of the follow
 - analytical
 - learning
 
-In addtion to the conventional commit specification, we also require the PRs with feature update, (i.e., titled with feat:) should update the corresponding documentations. The repo depolyed a CI check to ensure this.
+In addition to the conventional commit specification, we also require the PRs with feature update, (i.e., titled with feat:) should update the corresponding documentations. The repo depolyed a CI check to ensure this.
 
 ### Discussing and Keeping Your Pull Request Updated
 
