@@ -226,7 +226,7 @@ public class FFITypeFactoryhelper {
     }
 
     /**
-     * get the ffiVectorFactor which can produce std::vector, here foreignType can be netsted
+     * get the ffiVectorFactor which can produce std::vector, here foreignType can be nested
      *
      * @param foreignTypeName foreign name (cpp name, full-qualified)
      * @return Factory instance.
