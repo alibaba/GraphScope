@@ -27,7 +27,7 @@ namespace gs {
 
 // There can be multiple labels.
 // for each label, we have multiple properties.
-// deuplicate the property name and types if two edge label are same, only
+// duplicate the property name and types if two edge label are same, only
 // differs on src-dst pair
 static std::pair<std::vector<std::vector<std::string>>,
                  std::vector<std::vector<std::string>>>
