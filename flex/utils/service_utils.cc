@@ -59,7 +59,7 @@ std::string find_codegen_bin() {
     // usr/local/
 
     LOG(INFO) << "infer flex_home as installed, flex_home: " << flex_home_str;
-    // check codege_bin_path exists
+    // check codegen_bin path exists
     codegen_bin = flex_home_str + "/bin/" + CODEGEN_BIN;
     // if flex_home exists, return flex_home
     if (std::filesystem::exists(codegen_bin)) {
