@@ -896,8 +896,8 @@ plt.show()
 ```
 
 :::{figure-md}
-<img src="../../images/estimated_japan_brower_market_share.png"
-     alt="estimated_japan_brower_market_share"
+<img src="../../images/estimated_japan_browser_market_share.png"
+     alt="estimated_japan_browser_market_share"
      width="50%">
 
 Figure 20. Estimated Japan Browser Market Share
