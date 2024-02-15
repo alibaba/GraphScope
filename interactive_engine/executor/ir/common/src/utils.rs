@@ -688,7 +688,7 @@ impl From<Object> for common_pb::Value {
                     // convert to days since from 1970-01-01
                     item: (date
                         .and_hms_opt(0, 0, 0)
-                        .unwrap() // can savely unwrap since it is valid hour/min/sec
+                        .unwrap() // can safely unwrap since it is valid hour/min/sec
                         .timestamp()
                         / 86400) as i32,
                 }),
