@@ -274,7 +274,7 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
 
 ### Label
 - GRIN does **NOT** distinguish label on vertices and edges, that means a vertex and an edge may have a same label.
-- However the storage can tell GRIN whether labels are enabled in vertices or edges seperatedly with macros of `WITH_VERTEX_LABEL` and `WITH_EDGE_LABEL` respectively.
+- However the storage can tell GRIN whether labels are enabled in vertices or edges separatedly with macros of `WITH_VERTEX_LABEL` and `WITH_EDGE_LABEL` respectively.
 
 ### Order
 - GRIN provides sorted vertex list assumptions. 
