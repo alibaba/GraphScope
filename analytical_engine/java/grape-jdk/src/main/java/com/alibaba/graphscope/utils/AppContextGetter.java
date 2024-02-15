@@ -126,7 +126,7 @@ public class AppContextGetter {
      * For parallel property app ,the index of context type in template is 1.
      *
      * @param appClass user-defined app class object.
-     * @return the corrsponding class name.
+     * @return the corresponding class name.
      */
     public static String getParallelPropertyContextName(
             Class<? extends ParallelPropertyAppBase> appClass) {

@@ -1587,7 +1587,7 @@ function do_log(){
 }
 
 # the compiled dynamic libs will be placed at data/${graph_name}/plugins/
-# after compilation, the user need to write the cooresponding yaml, telling the compiler about 
+# after compilation, the user need to write the corresponding yaml, telling the compiler about 
 # the input and output of the stored procedure
 function do_compile() {
   ensure_container_running
