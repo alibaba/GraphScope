@@ -618,7 +618,7 @@ class SyncEngine : public BaseEngine {
 
   //////////////////////////////////////Project/////////////////////////
   // Project current relations to new columns, append or not.
-  // TODO: add type infere back:
+  // TODO: add type inference back:
   //      typename RES_T = typename ProjectResT<
   // is_append, Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
   // PROJECT_OPT>::result_t
