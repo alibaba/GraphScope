@@ -523,7 +523,7 @@ mod test {
 
     // g.V().outE('knows').bothV()
     #[test]
-    fn expand_oute_bothv_test() {
+    fn expand_oute_both_v_test() {
         let expand_opr = pb::EdgeExpand {
             v_tag: None,
             direction: 0,
@@ -539,7 +539,7 @@ mod test {
             alias: None,
         };
 
-        let conf = JobConf::new("expand_oute_bothv_test");
+        let conf = JobConf::new("expand_oute_both_v_test");
         let mut result = pegasus::run(conf, || {
             let expand = expand_opr.clone();
             let getv = getv_opr.clone();
