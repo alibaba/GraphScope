@@ -484,7 +484,7 @@ pub struct GraphLoader<
     /// How many processors all together
     peers: usize,
     /// Detailed performance metrics
-    perf_metrics: PerfMetrices,
+    perf_metrics: PerfMetrics,
     /// Phantomize the generic types
     ph1: PhantomData<G>,
     ph2: PhantomData<I>,
@@ -726,7 +726,7 @@ impl<G: FromStr + Send + Sync + IndexType, I: Send + Sync + IndexType> GraphLoad
             timer: Instant::now(),
             work_id,
             peers,
-            perf_metrics: PerfMetrices::default(),
+            perf_metrics: PerfMetrics::default(),
             ph1: PhantomData,
             ph2: PhantomData,
         }
@@ -793,14 +793,14 @@ fn get_graph_files(
 
 /// Record the performance metrics
 #[derive(Copy, Clone, Default)]
-struct PerfMetrices {
+struct PerfMetrics {
     vertex_parse_time_s: f64,
     edge_parse_time_s: f64,
     vertex_to_db_time_s: f64,
     edge_to_db_time_s: f64,
 }
 
-impl Debug for PerfMetrices {
+impl Debug for PerfMetrics {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         f.debug_struct("PerfMetrics")
             .field("vertex_parsing_time(s): ", &self.vertex_parse_time_s)
