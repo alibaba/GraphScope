@@ -320,7 +320,7 @@ be recognized in partitions other than the current partition where the instance 
 
 ### Master and Mirror
 - Master & mirror vertices are the concept borrowed from vertexcut partition strategy. When a vertex is recognized in
-serveral partitions, GRIN refers one of them as the master vertex while others as mirrors. This is primarily for data
+several partitions, GRIN refers one of them as the master vertex while others as mirrors. This is primarily for data
 aggregation purpose to share a common central node for every one.
 - While in edgecut partition, the concept becomes inner & outer vertices. GRIN uses master & mirror vertices to represent inner & outer vertices respectively to unify these concepts.
 
