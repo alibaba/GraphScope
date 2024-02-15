@@ -58,7 +58,7 @@ bin/gs_interactive service status
 You should be able to see the current status of the service, the graph that is running and the port (by default: 7687) for accepting Cypher queries.   
 
 
-### Destory the Service
+### Destroy the Service
 Execute the command below to terminate the service. Please be aware that this action will erase all the data you've generated and is irreversible. Please proceed with caution.
 
 ```bash
