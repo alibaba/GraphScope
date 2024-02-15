@@ -1044,7 +1044,7 @@ class Graph(GraphInterface):
 
     @property
     def session_id(self):
-        """Get the currrent session_id.
+        """Get the current session_id.
 
         Returns:
             str: Return session id that the graph belongs to.
