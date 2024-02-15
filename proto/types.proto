@@ -268,7 +268,7 @@ enum ParamKey {
   JVM_OPTS = 503; // opts str to start a jvm
 }
 
-// For simulating networkx modifing functionalities
+// For simulating networkx modifying functionalities
 enum ModifyType {
   NX_ADD_NODES = 0;
   NX_ADD_EDGES = 1;
