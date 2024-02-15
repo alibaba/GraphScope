@@ -198,8 +198,8 @@ file(GLOB_RECURSE FILES_NEED_LINT
         "storages/*.cc"
         "test/*.h"
         "test/*.cc"
-        "third_pary/*.h"
-        "third_pary/*.cc" EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
+        "third_party/*.h"
+        "third_party/*.cc" EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
 list(FILTER FILES_NEED_LINT EXCLUDE REGEX ".*\.act.h$|.*\.actg.h$|.*\.autogen.h$|.*\.autogen.cc$")
 # gsa_clformat
 add_custom_target(flex_clformat
