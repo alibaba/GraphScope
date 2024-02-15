@@ -363,7 +363,7 @@ static std::pair<std::string, std::string> BuildOneLabelEdgeExpandOpt(
           gs::direction_pb_to_str(direction) % edge_label_id_str %
           dst_label_ids_str;
     } else {
-      VLOG(10) << "Buliding EdgeExpandV without predicate";
+      VLOG(10) << "Building EdgeExpandV without predicate";
       formater = boost::format(EDGE_EXPAND_V_OPT_NO_FILTER_TEMPLATE_STR);
       formater % opt_var_name % gs::direction_pb_to_str(direction) %
           edge_label_id_str % dst_label_ids_str;

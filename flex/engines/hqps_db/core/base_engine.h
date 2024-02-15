@@ -521,7 +521,7 @@ class BaseEngine {
   // InnerJoin
   // for example, join (a,b,c) with (b,c,d) we got (a,b,c,d);
   // prob: the mapping of tag_id to tag_inds may change.
-  // prob: builing new columns.
+  // prob: building new columns.
   template <int alias_x, int alias_y, JoinKind join_kind, typename CTX_X,
             typename CTX_Y,
             typename std::enable_if<join_kind == JoinKind::InnerJoin>::type* =
