@@ -123,11 +123,11 @@ inline void apsara::Base64Decoding(std::istream& is, std::ostream& os,
       } else if (bTmp < 0) {
         APSARA_THROW(
             BadBase64Exception,
-            "\n\nInvaild input!\nInput must be a multiple of four!!\n");
+            "\n\nInvalid input!\nInput must be a multiple of four!!\n");
       } else {
         APSARA_THROW(
             BadBase64Exception,
-            "\n\nInvaild input!\nPlease input the character in the string "
+            "\n\nInvalid input!\nPlease input the character in the string "
             "below:"
             "\nABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
             "=\n");
@@ -142,7 +142,7 @@ inline void apsara::Base64Decoding(std::istream& is, std::ostream& os,
       if (index == 0 || index == 1) {
         APSARA_THROW(
             BadBase64Exception,
-            "\n\nInvaild input!\nInput must be a multiple of four!!\n= must be "
+            "\n\nInvalid input!\nInput must be a multiple of four!!\n= must be "
             "the third or fourth place in the last four characters!\n");
       } else if (index == 2) {
         bTmpNext = is.get();
@@ -151,12 +151,12 @@ inline void apsara::Base64Decoding(std::istream& is, std::ostream& os,
             os.put(out[0]);
           } else {
             APSARA_THROW(BadBase64Exception,
-                         "\n\nInvaild input!\nPlease do not append any "
+                         "\n\nInvalid input!\nPlease do not append any "
                          "character after == !\n");
           }
         } else {
           APSARA_THROW(BadBase64Exception,
-                       "\n\nInvaild input!\nPlease do not append any character "
+                       "\n\nInvalid input!\nPlease do not append any character "
                        "after = except = !\n");
         }
       } else {
@@ -166,7 +166,7 @@ inline void apsara::Base64Decoding(std::istream& is, std::ostream& os,
         } else {
           APSARA_THROW(
               BadBase64Exception,
-              "\n\nInvaild input!\nInput must be a multiple of four!!\nPlease "
+              "\n\nInvalid input!\nInput must be a multiple of four!!\nPlease "
               "do not append any character after the first = !\n");
         }
       }
