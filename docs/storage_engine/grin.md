@@ -310,7 +310,7 @@ be recognized in partitions other than the current partition where the instance 
 
         /* run.cc in machine 2 */
         {
-            // recieve the message from machine 1...
+            // receive the message from machine 1...
 
             auto vref = grin_deserialize_to_vertex_ref(g, msg);  // deserialize back to vertex ref
 
