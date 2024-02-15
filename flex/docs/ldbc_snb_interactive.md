@@ -16,7 +16,7 @@ To support LDBC SNB interactive benchmark, we build the SUT as follows (marked i
 - Queries: all interactive queries specifeid in the SNB benchmark as stored procedures written in C++.
 - Engine: the high QPS engine [Hiactor](https://github.com/alibaba/hiactor) from the GraphScope Interactive Engine (GIE) for query execution.
 - Graph store: an internal proprietary single-machine transactional graph store.
-* Other unused componets such as query language front ends (Gremlin, Cypher), the compiler, query optimization, code generator and data-parallel executor Pegasus in GIE are excluded from the SUT.
+* Other unused components such as query language front ends (Gremlin, Cypher), the compiler, query optimization, code generator and data-parallel executor Pegasus in GIE are excluded from the SUT.
 
 ## 2. Storage
 
