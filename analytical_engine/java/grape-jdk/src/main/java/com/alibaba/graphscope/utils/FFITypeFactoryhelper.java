@@ -342,12 +342,12 @@ public class FFITypeFactoryhelper {
      * @return created FFIVector
      */
     public static <T> FFIVector newComplicateFFIVector(Class<T> clz, Class<?>... types) {
-        String[] foriegnNames = new String[types.length];
+        String[] foreignNames = new String[types.length];
         for (int i = 0; i < types.length; ++i) {
-            foriegnNames[i] = FFITypeFactory.getFFITypeName(types[i], true);
+            foreignNames[i] = FFITypeFactory.getFFITypeName(types[i], true);
         }
         String nestedForeignName =
-                makeParameterize(FFITypeFactory.getFFITypeName(clz, true), foriegnNames);
+                makeParameterize(FFITypeFactory.getFFITypeName(clz, true), foreignNames);
         return getFFIVectorFactory(nestedForeignName).create();
     }
 
