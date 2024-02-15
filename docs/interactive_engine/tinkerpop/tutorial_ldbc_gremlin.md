@@ -336,8 +336,8 @@ The most basic unit in Graph Traversal is Expansion, which means starting from a
 Here is a local subgraph extracted from the LDBC Graph, which is formed by a center person vertex (id=216172782113784483) and all of its adjacent edges and vertices. Then we will use this subgraph to explain all of the expansion steps.
 
 :::{figure-md}
-<img src="../../images/loacal_graph_example.png"
-     alt="loacal_graph_example"
+<img src="../../images/local_graph_example.png"
+     alt="local_graph_example"
      width="33%">
 
 Figure 5. A local graph around a given person vertex.
