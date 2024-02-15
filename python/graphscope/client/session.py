@@ -1034,7 +1034,7 @@ class Session(object):
         namespace = self._config.kubernetes_launcher.namespace
         self._ensure_vineyard_deployment_exists(vineyard_deployment_name, namespace)
         self._ensure_pvc_exists(pvc_name, namespace)
-        # The next function will create a kubernetes job for backuping
+        # The next function will create a kubernetes job for backing up
         # the specific graphIDs to the specific path of the specific pvc
         vineyard.deploy.vineyardctl.deploy.backup_job(
             backup_name="vineyard-backup-" + random_string(6),
