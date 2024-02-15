@@ -20,7 +20,7 @@ It collects GIE metrics from a metric log `/var/log/graphscope/<?>/frontend/metr
    ```bash
    $ cd GraphScope/k8s/prometheus
    
-   # default linstening on 0.0.0.0:9969
+   # default listening on 0.0.0.0:9969
    $ python3 monitor.py
    
    # or specify the host and port
