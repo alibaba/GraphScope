@@ -48,7 +48,7 @@ impl JobAssembly<Vec<u8>> for DynLibraryAssembly {
                 };
                 unsafe { func(&job.input, worker) }
             } else {
-                Err(format!("libarry with name {} not found;", resource))?
+                Err(format!("library with name {} not found;", resource))?
             }
         } else {
             Err("illegal library name;")?
