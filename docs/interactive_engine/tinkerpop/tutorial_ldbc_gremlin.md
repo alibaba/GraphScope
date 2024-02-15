@@ -1888,7 +1888,7 @@ Assume `Forum's creationDate > '2012-01-01'`, we can write in GIE as
 
 ```python
 q1 = g.execute('g.V().hasLabel("place").as("country").in("isPartOf").in("isLocatedIn")\
-           .in("hasMember").as("forum").dedup("counry","forum")\
+           .in("hasMember").as("forum").dedup("country","forum")\
            .select("forum").by(out("hasMember").as("person").out("isLocatedIn")\
            .out("isPartOf").where(eq("country")).select("person").dedup().count())\
            .as("personCount").select("country", "forum", "personCount")')
