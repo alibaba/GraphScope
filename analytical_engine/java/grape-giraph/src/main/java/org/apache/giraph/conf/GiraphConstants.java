@@ -808,7 +808,7 @@ public interface GiraphConstants {
             new BooleanConfOption(
                     "giraph.vertex.resolver.create.on.msgs",
                     true,
-                    "Option of whether to create vertexes that that did not exist "
+                    "Option of whether to create vertexes that did not exist "
                             + "before but received messages");
 
     /**
