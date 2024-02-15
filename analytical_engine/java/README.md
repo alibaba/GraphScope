@@ -29,7 +29,7 @@ enables Java programmers to write and run graph algorithms with these benefits.
 
 - **grape-demo** Provides example apps and [FFIMirrors](#user-defined-data-structure).
 - **grape-jdk** Provides the PIE SDK with graph computing interfaces.
-- **grape-runtime** Contains the essential files for JNI code-gen and the glue code invoked by the analytcial engine (building with `ENABLE_JAVA_SDK`). 
+- **grape-runtime** Contains the essential files for JNI code-gen and the glue code invoked by the analytical engine (building with `ENABLE_JAVA_SDK`). 
 - **grape-giraph** Integrating grape with Apache Giraph.
 - **grape-graphx** Integrating grape with Spark GraphX.
 - **grape-rdd-reader** Providing RDD reader for spark RDD.
