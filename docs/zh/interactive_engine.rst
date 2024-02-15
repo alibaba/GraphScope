@@ -279,7 +279,7 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 .. code:: java
 
     //constant
-    g.V().out().contant(1)
+    g.V().out().constant(1)
     g.V().out().constant("aaa")
     
     //id
