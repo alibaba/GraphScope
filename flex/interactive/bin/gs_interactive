@@ -1711,15 +1711,15 @@ function do_compile() {
   fi
 
   container_output_dir="${DATABASE_WORKSPACE}/data/${graph_name}/plugins"
-  cotainer_input_path="${HOST_DB_TMP_DIR}/${file_name}"
+  container_input_path="${HOST_DB_TMP_DIR}/${file_name}"
   # docker cp file to container
-  cmd="docker cp ${real_file_path} ${GIE_DB_CONTAINER_NAME}:${cotainer_input_path}"
+  cmd="docker cp ${real_file_path} ${GIE_DB_CONTAINER_NAME}:${container_input_path}"
   eval ${cmd} || exit 1
 
   cmd="docker exec ${GIE_DB_CONTAINER_NAME} bash -c '"
   cmd=${cmd}" ${DOCKER_DB_GEN_BIN}"
   cmd=${cmd}" --engine_type=hqps"
-  cmd=${cmd}" --input=${cotainer_input_path}"
+  cmd=${cmd}" --input=${container_input_path}"
   cmd=${cmd}" --work_dir=/tmp/codegen/"
   cmd=${cmd}" --ir_conf=${docker_engine_config}"
   cmd=${cmd}" --graph_schema_path=${docker_graph_schema}"
