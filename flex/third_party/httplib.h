@@ -5819,7 +5819,7 @@ Server::process_request(Stream &strm, bool close_connection,
     }
   }
 
-  // Rounting
+  // Routing
   bool routed = false;
 #ifdef CPPHTTPLIB_NO_EXCEPTIONS
   routed = routing(req, res, strm);
