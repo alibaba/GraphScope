@@ -24,7 +24,7 @@ The GraphScope Flex stack (as shown in the figure), consists of multiple compone
 ### Dependencies
 
 Please use `script/install_deps.sh` to install dependencies.
-Alternatively, you can mannully install a subset of dependencies required by your selected components.
+Alternatively, you can manually install a subset of dependencies required by your selected components.
 
 Please refer to [scripts/install_deps.sh](https://github.com/alibaba/GraphScope/blob/main/flex/scripts/install_dependencies.sh) for the full list of dependencies.
 
