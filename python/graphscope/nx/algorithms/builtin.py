@@ -920,7 +920,7 @@ def all_simple_paths(G, source, target_nodes, cutoff=None):
     """
 
     paths = get_all_simple_paths(G, source, target_nodes, cutoff)
-    # delte path tail padding
+    # delete path tail padding
     for path in paths:
         for i in range(len(path) - 1, -1, -1):
             if path[i] == -1:
