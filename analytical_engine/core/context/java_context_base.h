@@ -342,7 +342,7 @@ class JavaContextBase : public grape::ContextBase {
     // vineyard_id(frag_group_id)
     // pt.put("vineyard_id", frag_group_id);
 
-    // JVM runtime opt should consists of java.libaray.path and
+    // JVM runtime opt should consists of java.libarray.path and
     // java.class.path maybe this should be set by the backend not user.
     std::string grape_jvm_opt = generate_jvm_opts();
     if (!grape_jvm_opt.empty()) {
