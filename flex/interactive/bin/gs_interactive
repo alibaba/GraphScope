@@ -902,7 +902,7 @@ function do_init(){
   # put docker_workspace into env
   echo "export DATABASE_WORKSPACE=${DATABASE_WORKSPACE}" >> ${HOST_DB_ENV_FILE}
   echo "export DATABASE_DATA_DIR_NAME=${DATABASE_DATA_DIR_NAME}" >> ${HOST_DB_ENV_FILE}
-  info "Found databse version: ${DATABASE_VERSION}"
+  info "Found database version: ${DATABASE_VERSION}"
 
   #2. Found mounting volumes from yaml file
   mount_cmd=""
@@ -1407,7 +1407,7 @@ function do_start(){
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
   fi
-  info "In start datebase, received graph_name = ${graph_name}, engine_config_file = ${engine_config_file}"
+  info "In start database, received graph_name = ${graph_name}, engine_config_file = ${engine_config_file}"
   docker_server_log_path="${DATABASE_WORKSPACE}/logs/server.log"
   graph_schema_file="${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
   csr_data_dir="${DATABASE_WORKSPACE}/data/${graph_name}/indices"
