@@ -389,7 +389,7 @@ that function is repeated ``times`` times.
 
 .. code:: python
 
-   def repeat(self, func, times, parmas_list=None):
+   def repeat(self, func, times, params_list=None):
    """
    Args:
      func(function): The function body to be expanded; the first parameter is the object to be executed.
