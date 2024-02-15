@@ -1799,7 +1799,7 @@ class Graph(_GraphBase):
 
         Notes
         -----
-        Unlike NetowrkX return a view, here return a independent deep copy subgraph.
+        Unlike NetworkX return a view, here return a independent deep copy subgraph.
 
         Examples
         --------
