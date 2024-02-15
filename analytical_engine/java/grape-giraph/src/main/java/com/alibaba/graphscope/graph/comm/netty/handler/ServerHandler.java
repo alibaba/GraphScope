@@ -45,7 +45,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
     private AtomicInteger msgNo;
 
     public ServerHandler(AggregatorManager aggregatorManager, AtomicInteger msgNo) {
-        logger.info("Creating server hanlder in thread: " + Thread.currentThread().getName());
+        logger.info("Creating server handler in thread: " + Thread.currentThread().getName());
         this.aggregatorManager = (AggregatorManagerNettyImpl) aggregatorManager;
         this.allocator = new PooledByteBufAllocator();
         this.buffer = allocator.buffer();
@@ -101,7 +101,7 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object> {
                                 this.msgNo.wait();
                             } else {
                                 logger.info(
-                                        "when server hanlder "
+                                        "when server handler "
                                                 + Thread.currentThread().getId()
                                                 + " try to wait, find already satisfied: "
                                                 + this.msgNo.get());
