@@ -324,7 +324,7 @@ class AdjList<T> {
   // copy constructor
   AdjList(const AdjList<T>& adj_list)
       : slice0_(adj_list.slice0_), slice1_(adj_list.slice1_) {}
-  // with sinle slice provided.
+  // with single slice provided.
   AdjList(const slice_t& slice0) : slice0_(slice0), slice1_() {}
   AdjList(const slice_t& slice0, const slice_t& slice1)
       : slice0_(slice0), slice1_(slice1) {}
