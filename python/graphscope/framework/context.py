@@ -317,7 +317,7 @@ class VertexDataContextDAGNode(BaseContextDAGNode):
                 If there is any, means origin data on the graph
 
     - The syntax of selector of results is:
-        - `r`: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank.
+        - `r`: Get querying results of algorithms. e.g. Rankings of vertices after doing PageRank.
     """
 
     @property
