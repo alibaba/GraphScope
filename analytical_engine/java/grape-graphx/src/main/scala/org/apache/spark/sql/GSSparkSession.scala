@@ -751,7 +751,7 @@ object GSSparkSession extends Logging {
       */
     def master(master: String): Builder = config("spark.master", master)
 
-    /** GraphScope related param, setting vineyard memroy size.
+    /** GraphScope related param, setting vineyard memory size.
       */
     def vineyardMemory(memoryStr: String): Builder =
       config("spark.gs.vineyard.memory", memoryStr)
