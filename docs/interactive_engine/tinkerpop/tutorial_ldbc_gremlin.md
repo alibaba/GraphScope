@@ -190,7 +190,7 @@ print(q1.all().result())
 In addition, you may further require the extracted properties satisfying some conditions. For example, if you want to extract persons whose first name is 'Joseph', you can write the following codes:
 
 ```python
-# Retrieve person vertices whose first name is 'Joeseph'
+# Retrieve person vertices whose first name is 'Joseph'
 q1 = g.execute('g.V().hasLabel("person").has("firstName", "Joseph")')
 print(q1.all().result())
 ```
