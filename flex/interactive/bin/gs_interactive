@@ -638,7 +638,7 @@ function compile_usage(){
 EOF
 }
 
-## .enable and .disable file contols the stored procedure enable/disable
+## .enable and .disable file controls the stored procedure enable/disable
 
 function enable_proc_usage(){
   cat << EOF
