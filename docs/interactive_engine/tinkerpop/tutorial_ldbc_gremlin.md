@@ -1346,7 +1346,7 @@ The output should be like:
 
 `value(PROPERTY)` step can only map an entity(vertex or edge) to one of its property's value. What if we want to extract many properties's value at the same time?
 
-`valueMap(PROPERTY1, PROPERTI2, ...)` step provides such ability. For example, the following code extracts `person` vertices' `firstName` and `lastName` together by `valueMap(...)` step.
+`valueMap(PROPERTY1, PROPERTY2, ...)` step provides such ability. For example, the following code extracts `person` vertices' `firstName` and `lastName` together by `valueMap(...)` step.
 
 ```python
 # Extract person vertices' firstName and lastName
