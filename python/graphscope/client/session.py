@@ -463,7 +463,7 @@ class Session(object):
                 a GraphScope session.
         """
 
-        # supress the grpc warnings, see also grpc/grpc#29103
+        # suppress the grpc warnings, see also grpc/grpc#29103
         os.environ["GRPC_ENABLE_FORK_SUPPORT"] = "false"
         self._accessable_params = (
             "addr",
