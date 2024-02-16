@@ -473,7 +473,7 @@ public interface GiraphConstants {
                     20,
                     "Maximum bind attempts for different IPC ports");
     /**
-     * Maximum connections trys for client to connect to server
+     * Maximum connections tries for client to connect to server
      */
     IntConfOption MAX_CONN_TRY_ATTEMPTS =
             new IntConfOption(
