@@ -266,9 +266,9 @@ class FileOverwriteException : public StorageExceptionBase {
 };
 
 // when append/delete a file that being appended
-class PangunNotEnoughChunkserverExcepion : public StorageExceptionBase {
+class PangunNotEnoughChunkserverException : public StorageExceptionBase {
  public:
-  APSARA_DEFINE_EXCEPTION(PangunNotEnoughChunkserverExcepion,
+  APSARA_DEFINE_EXCEPTION(PangunNotEnoughChunkserverException,
                           StorageExceptionBase);
 };
 
