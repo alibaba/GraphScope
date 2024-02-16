@@ -40,7 +40,7 @@ def is_valid_file_path(path) -> bool:
 
 
 def terminal_display(data):
-    """Display tablular data in terminal.
+    """Display tabular data in terminal.
 
     Args:
         data: two dimensional list of string type.
