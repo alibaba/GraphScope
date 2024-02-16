@@ -335,7 +335,7 @@ def average_shortest_path_length(G, weight=None, method=None):
     if method is not None:
         return nxa.average_shortest_path_length(G, weight, method)
     n = len(G)
-    # For the specail case of the null graph. raise an exception, since
+    # For the special case of the null graph. raise an exception, since
     # there are no paths in the null graph.
     if n == 0:
         msg = (
