@@ -346,8 +346,8 @@ public class AggregatorManagerImpl
                         wrapper.currentValue.write(outputStream);
 
                         // Send what received to all worker
-                        for (int dstWroker = 1; dstWroker < workerNum; ++dstWroker) {
-                            communicator.sendTo(dstWroker, outputStream.getVector());
+                        for (int dstWorker = 1; dstWorker < workerNum; ++dstWorker) {
+                            communicator.sendTo(dstWorker, outputStream.getVector());
                         }
                     } else {
                         logger.info(

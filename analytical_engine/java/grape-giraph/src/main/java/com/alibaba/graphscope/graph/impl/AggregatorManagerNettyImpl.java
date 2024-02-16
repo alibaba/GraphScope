@@ -482,8 +482,8 @@ public class AggregatorManagerNettyImpl
             }
             outputStream.finishSetting();
             // Send what received to all worker
-            for (int dstWroker = 1; dstWroker < fnum; ++dstWroker) {
-                communicator.sendTo(dstWroker, outputStream.getVector());
+            for (int dstWorker = 1; dstWorker < fnum; ++dstWorker) {
+                communicator.sendTo(dstWorker, outputStream.getVector());
             }
             logger.info("master finish sending");
             // Receive slaves' ips.
