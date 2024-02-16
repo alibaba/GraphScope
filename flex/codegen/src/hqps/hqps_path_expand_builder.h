@@ -292,7 +292,7 @@ class PathExpandOpBuilder {
   }
 
   PathExpandOpBuilder& condition(const common::Expression& condition_pb) {
-    LOG(WARNING) << "Skiped for path expand with condition";
+    LOG(WARNING) << "Skipped for path expand with condition";
     return *this;
   }
 
