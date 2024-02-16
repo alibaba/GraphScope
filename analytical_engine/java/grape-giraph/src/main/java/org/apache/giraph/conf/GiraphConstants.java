@@ -1069,14 +1069,14 @@ public interface GiraphConstants {
                             + "the current configuration value.");
 
     /**
-     * Zookeeper List will always hold a value during the computation while this option provides
+     * ZooKeeper List will always hold a value during the computation while this option provides
      * information regarding whether the zookeeper was internally started or externally provided.
      */
     BooleanConfOption ZOOKEEPER_IS_EXTERNAL =
             new BooleanConfOption(
                     "giraph.zkIsExternal",
                     true,
-                    "Zookeeper List will always hold a value during "
+                    "ZooKeeper List will always hold a value during "
                             + "the computation while this option provides "
                             + "information regarding whether the zookeeper was "
                             + "internally started or externally provided.");
@@ -1164,7 +1164,7 @@ public interface GiraphConstants {
 
     /**
      * Maximum milliseconds to wait before giving up waiting for the workers to write the counters
-     * to the Zookeeper after a superstep
+     * to the ZooKeeper after a superstep
      */
     IntConfOption MAX_COUNTER_WAIT_MSECS =
             new IntConfOption(
@@ -1591,7 +1591,7 @@ public interface GiraphConstants {
      */
     int ZOOKEEPER_SNAP_RETAIN_COUNT = 3;
     /**
-     * Zookeeper purge interval in hours
+     * ZooKeeper purge interval in hours
      */
     int ZOOKEEPER_PURGE_INTERVAL = 1;
     /**
@@ -1731,19 +1731,19 @@ public interface GiraphConstants {
      * This counter group will contain one counter whose name is the ZooKeeper server:port which
      * this job is using
      */
-    String ZOOKEEPER_SERVER_PORT_COUNTER_GROUP = "Zookeeper server:port";
+    String ZOOKEEPER_SERVER_PORT_COUNTER_GROUP = "ZooKeeper server:port";
 
     /**
      * This counter group will contain one counter whose name is the ZooKeeper node path which
      * should be created to trigger computation halt
      */
-    String ZOOKEEPER_HALT_NODE_COUNTER_GROUP = "Zookeeper halt node";
+    String ZOOKEEPER_HALT_NODE_COUNTER_GROUP = "ZooKeeper halt node";
 
     /**
      * This counter group will contain one counter whose name is the ZooKeeper node path which
      * contains all data about this job
      */
-    String ZOOKEEPER_BASE_PATH_COUNTER_GROUP = "Zookeeper base path";
+    String ZOOKEEPER_BASE_PATH_COUNTER_GROUP = "ZooKeeper base path";
 
     /**
      * Which class to use to write instructions on how to halt the application
@@ -1886,7 +1886,7 @@ public interface GiraphConstants {
      */
     LongConfOption WAIT_ZOOKEEPER_TIMEOUT_MSEC =
             new LongConfOption(
-                    "giraph.waitZookeeperTimeoutMsec",
+                    "giraph.waitZooKeeperTimeoutMsec",
                     MINUTES.toMillis(15),
                     "How long should we stay in waitForever loops in various "
                             + "places that require network connection");
