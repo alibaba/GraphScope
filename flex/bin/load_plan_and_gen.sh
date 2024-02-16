@@ -133,7 +133,7 @@ cypher_to_plan() {
     err "Compiler jar = ${COMPILER_JAR} not exists."
     exit 1
   fi
-  # add extrac_key_value_config
+  # add extra_key_value_config
   extra_config="name:${procedure_name}"
   extra_config="${extra_config},description:${procedure_description}"
 
