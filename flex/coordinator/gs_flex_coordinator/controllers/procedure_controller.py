@@ -73,7 +73,7 @@ def list_procedures_by_graph(graph_name):  # noqa: E501
 def update_procedure(graph_name, procedure_name, procedure=None):  # noqa: E501
     """update_procedure
 
-    Update srored procedure on a certain graph # noqa: E501
+    Update stored procedure on a certain graph # noqa: E501
 
     :param graph_name:
     :type graph_name: str
