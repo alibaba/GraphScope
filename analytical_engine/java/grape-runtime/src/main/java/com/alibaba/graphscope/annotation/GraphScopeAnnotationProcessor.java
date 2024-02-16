@@ -366,7 +366,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             generator.generate();
 
         } else {
-            logger.error("Unrecoginizable");
+            logger.error("Unrecognizable");
         }
         classBuilder.addAnnotation(ffiGenBatchBuilder.build());
     }

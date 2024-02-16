@@ -220,7 +220,7 @@ class JavaApp(AppAssets):
         num_type_params = 0
         if len(split) != 2:
             raise Exception(
-                "Unrecoginizable graph template str: {}".format(graph.template_str)
+                "Unrecognizable graph template str: {}".format(graph.template_str)
             )
         if split[0] == "vineyard::ArrowFragment":
             if self.java_app_type.find("property") == -1:
