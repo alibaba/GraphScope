@@ -143,7 +143,7 @@ def handle_grpc_error_with_retry(fn, retry=True):
     This function will retry max times with specific GRPC status.
     See detail in `GRPC_MAX_RETRIES_BY_CODE`.
 
-    Refer and specical thanks to:
+    Refer and special thanks to:
 
         https://github.com/googleapis/google-cloud-python/issues/2583
     """
