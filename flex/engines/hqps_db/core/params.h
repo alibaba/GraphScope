@@ -966,7 +966,7 @@ struct ProjectSelf {
   static constexpr int res_alias = _res_alias;
 };
 
-// evalutate expression on previous context.
+// evaluate expression on previous context.
 template <int _res_alias, typename RES_T, typename EXPR>
 struct ProjectExpr {
   static constexpr int res_alias = _res_alias;
