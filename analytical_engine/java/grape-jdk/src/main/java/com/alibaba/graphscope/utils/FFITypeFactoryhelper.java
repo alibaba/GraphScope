@@ -276,12 +276,12 @@ public class FFITypeFactoryhelper {
      */
     public static PrimitiveMessage<Double> newDoublePrimitiveMsg() {
         String templateStr = GS_PRIMITIVE_MESSAGE + "<double>";
-        return getPrimitivemessageFactory(templateStr).create();
+        return getPrimitiveMessageFactory(templateStr).create();
     }
 
     public static PrimitiveMessage<Long> newLongPrimitiveMsg() {
         String templateStr = GS_PRIMITIVE_MESSAGE + "<int64_t>";
-        return getPrimitivemessageFactory(templateStr).create();
+        return getPrimitiveMessageFactory(templateStr).create();
     }
 
     /**
@@ -300,10 +300,10 @@ public class FFITypeFactoryhelper {
         } else {
             templateStr += FFITypeFactory.getFFITypeName(clz, true);
         }
-        return getPrimitivemessageFactory(templateStr).create();
+        return getPrimitiveMessageFactory(templateStr).create();
     }
 
-    public static PrimitiveMessage.Factory getPrimitivemessageFactory(String templateStr) {
+    public static PrimitiveMessage.Factory getPrimitiveMessageFactory(String templateStr) {
         if (!primitiveMsgFactoryMap.containsKey(templateStr)) {
             synchronized (primitiveMsgFactoryMap) {
                 if (!primitiveMsgFactoryMap.containsKey(templateStr)) {
