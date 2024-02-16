@@ -111,7 +111,7 @@ impl Edge for LocalEntity {
     }
 }
 
-fn prepare_entites() -> impl Iterator<Item = LocalEntity> {
+fn prepare_entities() -> impl Iterator<Item = LocalEntity> {
     let mut v = vec![];
     let props = vec![
         (1, Property::Int(10)),
@@ -154,11 +154,11 @@ fn prepare_entites() -> impl Iterator<Item = LocalEntity> {
 
 #[test]
 fn test_condition_has_prop_operation() {
-    let entites = prepare_entites().collect::<Vec<LocalEntity>>();
+    let entities = prepare_entities().collect::<Vec<LocalEntity>>();
     let predicate = PredCondition::new_has_prop(1);
     assert_eq!(
         4,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -167,7 +167,7 @@ fn test_condition_has_prop_operation() {
     );
     assert_eq!(
         4,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -178,7 +178,7 @@ fn test_condition_has_prop_operation() {
     let predicate = PredCondition::new_has_prop(4);
     assert_eq!(
         0,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -187,7 +187,7 @@ fn test_condition_has_prop_operation() {
     );
     assert_eq!(
         0,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -198,13 +198,13 @@ fn test_condition_has_prop_operation() {
 
 #[test]
 fn test_condition_within_operation() {
-    let entites = prepare_entites().collect::<Vec<LocalEntity>>();
+    let entities = prepare_entities().collect::<Vec<LocalEntity>>();
     let predicate = PredCondition::new_predicate(
         Operand::PropId(1),
         CmpOperator::WithIn,
         Operand::Const(Property::ListInt(vec![20, 30, 40])),
     );
-    let e1 = entites
+    let e1 = entities
         .clone()
         .into_iter()
         .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -213,7 +213,7 @@ fn test_condition_within_operation() {
     assert_eq!(e1[0].get_id(), 2);
     assert_eq!(e1[1].get_id(), 3);
     assert_eq!(e1[2].get_id(), 4);
-    let e1 = entites
+    let e1 = entities
         .clone()
         .into_iter()
         .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -229,7 +229,7 @@ fn test_condition_within_operation() {
     );
     assert_eq!(
         1,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -238,7 +238,7 @@ fn test_condition_within_operation() {
     );
     assert_eq!(
         1,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -253,7 +253,7 @@ fn test_condition_within_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -262,7 +262,7 @@ fn test_condition_within_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -273,13 +273,13 @@ fn test_condition_within_operation() {
 
 #[test]
 fn test_condition_without_operation() {
-    let entites = prepare_entites().collect::<Vec<LocalEntity>>();
+    let entities = prepare_entities().collect::<Vec<LocalEntity>>();
     let predicate = PredCondition::new_predicate(
         Operand::PropId(1),
         CmpOperator::WithOut,
         Operand::Const(Property::ListInt(vec![40, 50, 60])),
     );
-    let e1 = entites
+    let e1 = entities
         .clone()
         .into_iter()
         .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -288,7 +288,7 @@ fn test_condition_without_operation() {
     assert_eq!(e1[0].get_id(), 1);
     assert_eq!(e1[1].get_id(), 2);
     assert_eq!(e1[2].get_id(), 3);
-    let e1 = entites
+    let e1 = entities
         .clone()
         .into_iter()
         .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -307,7 +307,7 @@ fn test_condition_without_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -316,7 +316,7 @@ fn test_condition_without_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -331,7 +331,7 @@ fn test_condition_without_operation() {
     );
     assert_eq!(
         0,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -340,7 +340,7 @@ fn test_condition_without_operation() {
     );
     assert_eq!(
         0,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -351,13 +351,13 @@ fn test_condition_without_operation() {
 
 #[test]
 fn test_condition_start_end_with_operation() {
-    let entites = prepare_entites().collect::<Vec<LocalEntity>>();
+    let entities = prepare_entities().collect::<Vec<LocalEntity>>();
     let predicate = PredCondition::new_predicate(
         Operand::PropId(2),
         CmpOperator::StartWith,
         Operand::Const(Property::String("Astr".to_owned())),
     );
-    let e1 = entites
+    let e1 = entities
         .clone()
         .into_iter()
         .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -365,7 +365,7 @@ fn test_condition_start_end_with_operation() {
     assert_eq!(1, e1.len());
     assert_eq!(e1[0].get_id(), 1);
 
-    let e1 = entites
+    let e1 = entities
         .clone()
         .into_iter()
         .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -380,7 +380,7 @@ fn test_condition_start_end_with_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -389,7 +389,7 @@ fn test_condition_start_end_with_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -400,7 +400,7 @@ fn test_condition_start_end_with_operation() {
 
 #[test]
 fn test_condition_cmp_operation() {
-    let entites = prepare_entites().collect::<Vec<LocalEntity>>();
+    let entities = prepare_entities().collect::<Vec<LocalEntity>>();
     let predicate = PredCondition::new_predicate(
         Operand::PropId(1),
         CmpOperator::Equal,
@@ -408,7 +408,7 @@ fn test_condition_cmp_operation() {
     );
     assert_eq!(
         1,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -417,7 +417,7 @@ fn test_condition_cmp_operation() {
     );
     assert_eq!(
         1,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -432,7 +432,7 @@ fn test_condition_cmp_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -441,7 +441,7 @@ fn test_condition_cmp_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -456,7 +456,7 @@ fn test_condition_cmp_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_vertex(v).unwrap_or(false))
@@ -465,7 +465,7 @@ fn test_condition_cmp_operation() {
     );
     assert_eq!(
         2,
-        entites
+        entities
             .clone()
             .into_iter()
             .filter(|v| predicate.filter_edge(v).unwrap_or(false))
@@ -538,7 +538,7 @@ fn test_condition_filter_vertex() {
         .expect("build failed");
 
     println!("condition is {:?}", condition);
-    let vertices = prepare_entites()
+    let vertices = prepare_entities()
         .filter(|v| condition.filter_vertex(v).unwrap_or(false))
         .collect::<Vec<LocalEntity>>();
     assert_eq!(2, vertices.len());
@@ -584,7 +584,7 @@ fn test_condition_filter_edge() {
         .expect("build failed");
 
     println!("condition is {:?}", condition);
-    let vertices = prepare_entites()
+    let vertices = prepare_entities()
         .filter(|v| condition.filter_edge(v).unwrap_or(false))
         .collect::<Vec<LocalEntity>>();
     assert_eq!(2, vertices.len());
