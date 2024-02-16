@@ -404,7 +404,7 @@ class CountBuilder {
     }
     using cur_ele_tuple = typename gs::tuple_element<tag, ELE_TUPLE>::type;
     auto& cur_ele = gs::get_from_tuple<tag>(tuple);
-    // currently we support vertex ele tupe and edge tuple.
+    // currently we support vertex ele tuple and edge tuple.
     if constexpr (std::tuple_size<cur_ele_tuple>::value == 2) {
       auto& ele = std::get<1>(cur_ele);
       using vid_t = typename std::tuple_element<1, cur_ele_tuple>::type;
