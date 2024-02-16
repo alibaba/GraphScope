@@ -81,7 +81,7 @@ def init_builtin_alert_rules(message_collector: AlertMessageCollector):
         name="HighDiskUtilization",
         severity="warning",
         metric_type="node",
-        conditions_description="disk_utilication>80",
+        conditions_description="disk_utilization>80",
         frequency=1,
         message_collector=message_collector,
         threshold=80,
