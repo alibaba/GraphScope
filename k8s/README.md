@@ -69,7 +69,7 @@ When pulling, Docker would automatically selects the image that matches the arch
 
 Incase you want to build a multi-platform on your own, here are steps to help you getting started.
 
-#### Setup the cross-platform enumator on x84_64 architecture
+#### Setup the cross-platform emulator on x84_64 architecture
 
 Use [qemu](https://github.com/multiarch/qemu-user-static)
 
@@ -79,7 +79,7 @@ docker buildx create --name builder --driver docker-container --bootstrap
 docker buildx use builder
 ```
 
-#### Setup the cross-platform enumator on Apple M1
+#### Setup the cross-platform emulator on Apple M1
 
 Just use [docker-desktop](https://www.docker.com/products/docker-desktop/)
 
