@@ -118,9 +118,9 @@ std::pair<vineyard::ObjectID, int> splitAndGet(grape::CommSpec& comm_spec,
   {
     for (auto str : split) {
       if (str.find(my_host_name) != std::string::npos) {
-        auto trimed =
+        auto trimmed =
             str.substr(str.find(my_host_name) + my_host_name.size() + 1);
-        pid_vineyard_id.push_back(trimed);
+        pid_vineyard_id.push_back(trimmed);
       }
     }
   }
