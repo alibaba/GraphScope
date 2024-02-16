@@ -21,7 +21,7 @@ CodegenProxy& CodegenProxy::get() {
 }
 
 StoredProcedureLibMeta::StoredProcedureLibMeta()
-    : status(CodegenStatus::UNINITALIZED), res_lib_path("") {}
+    : status(CodegenStatus::UNINITIALIZED), res_lib_path("") {}
 
 StoredProcedureLibMeta::StoredProcedureLibMeta(CodegenStatus status)
     : status(status), res_lib_path("") {}
