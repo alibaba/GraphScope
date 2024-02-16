@@ -7062,7 +7062,7 @@ inline void ClientImpl::stop() {
     return;
   }
 
-  // Otherwise, sitll holding the mutex, we can shut everything down ourselves
+  // Otherwise, still holding the mutex, we can shut everything down ourselves
   shutdown_ssl(socket_, true);
   shutdown_socket(socket_);
   close_socket(socket_);
