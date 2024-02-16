@@ -78,7 +78,7 @@ class ScanOpBuilder {
   ScanOpBuilder& scanOpt(const physical::Scan::ScanOpt& opt) {
     if (opt != physical::Scan::ScanOpt::Scan_ScanOpt_VERTEX) {
       throw std::runtime_error(
-          std::string("Currently only suppor from vertex"));
+          std::string("Currently only support from vertex"));
     }
     scan_opt_ = opt;
     return *this;

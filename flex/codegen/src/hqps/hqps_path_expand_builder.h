@@ -180,7 +180,7 @@ class PathExpandOpBuilder {
         }
       }
       VLOG(10) << "get vertex labels:" << gs::to_string(dst_vertex_labels_);
-      CHECK(!get_v_pb.params().has_predicate()) << "currently don't suppport "
+      CHECK(!get_v_pb.params().has_predicate()) << "currently don't support "
                                                    "getv with condition";
       // std::tie(get_v_expr_call_code, get_v_opt, getv_opt_) =
       // BuildGetVOpt(ctx_, get_v_pb);
