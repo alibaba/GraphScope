@@ -223,7 +223,7 @@ class BaseEngine {
         boost::hash<ctx_y_ele_t>>
         y_ele_to_ind;
     {
-      // fillin ele_to_ind
+      // fill in ele_to_ind
       for (auto iter : ctx_y) {
         auto ele = iter.GetAllElement();
         auto index_ele = iter.GetAllIndexElement();
@@ -355,7 +355,7 @@ class BaseEngine {
               << ", ctx y:" << ctx_y.GetHead().Size();
     {
       auto t0 = -grape::GetCurrentTime();
-      // fillin ele_to_ind
+      // fill in ele_to_ind
       for (auto iter : ctx_y) {
         auto ele = iter.GetAllElement();
         auto index_ele = iter.GetAllIndexElement();
@@ -367,7 +367,7 @@ class BaseEngine {
             remove_ith_jth_element<real_y_ind0, real_y_ind1>(data)));
       }
       t0 += grape::GetCurrentTime();
-      LOG(INFO) << "fillin ele_to_ind takes " << t0 << "s";
+      LOG(INFO) << "fill in ele_to_ind takes " << t0 << "s";
     }
 
     {
