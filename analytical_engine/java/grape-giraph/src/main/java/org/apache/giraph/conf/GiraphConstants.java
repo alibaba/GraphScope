@@ -877,7 +877,7 @@ public interface GiraphConstants {
                             + "vertex.compute() is called."
                             + "NOTE: This feature doesn't work well with checkpointing - if you "
                             + "restart from a checkpoint you won't have any output from previous "
-                            + "supresteps.");
+                            + "supersteps.");
     /**
      * Vertex output format thread-safe - if your VertexOutputFormat allows several vertexWriters to
      * be created and written to in parallel, you should set this to true.
