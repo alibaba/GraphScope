@@ -189,7 +189,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     logger.info("Running app\t\t\t\t={}".format(args.app))
-    logger.info("Jar apth\t\t\t\t={}".format(args.jar_path))
+    logger.info("Jar path\t\t\t\t={}".format(args.jar_path))
     logger.info("Test data dir\t\t\t\t={}".format(args.test_dir))
     logger.info("Arguments to java context\t\t={}".format(args.arguments))
     logger.info("Directed: \t\t\t\t={}".format(args.directed))
