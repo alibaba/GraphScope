@@ -122,7 +122,7 @@ impl KeyedResourceMap {
     }
 
     pub fn get_resource<T: Any>(&self, key: &str) -> Option<ArcRef<T>> {
-        let locked = self.index.read().expect("lock read poisioned");
+        let locked = self.index.read().expect("lock read poisoned");
         if let Some(offset) = locked.get(key) {
             let v = unsafe { &*self.values.get() };
             if *offset >= v.len() {
@@ -139,7 +139,7 @@ impl KeyedResourceMap {
     }
 
     pub fn remove_resource(&self, key: &str) {
-        let mut locked = self.index.write().expect("lock read poisioned");
+        let mut locked = self.index.write().expect("lock read poisoned");
         if let Some(offset) = locked.remove(key) {
             let v = unsafe { &mut *self.values.get() };
             if offset < v.len() {
