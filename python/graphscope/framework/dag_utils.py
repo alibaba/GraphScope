@@ -736,7 +736,7 @@ def create_subgraph(graph, nodes=None, edges=None):
 
 
 def create_unload_op(session_id, op_type, inputs):
-    """Uility method to create a unload `Operation` based on op type and op."""
+    """Utility method to create a unload `Operation` based on op type and op."""
     op = Operation(
         session_id,
         op_type,
