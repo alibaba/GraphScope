@@ -46,7 +46,7 @@ succ() {
 }
 
 ##########################
-# Output useage information.
+# Output usage information.
 # Globals:
 #   None
 # Arguments:

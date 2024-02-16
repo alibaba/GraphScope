@@ -124,7 +124,7 @@ run_pregel() {
 }
 
 ##########################
-# Output useage information.
+# Output usage information.
 # Globals:
 #   None
 # Arguments:
