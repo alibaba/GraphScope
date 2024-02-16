@@ -42,7 +42,7 @@ public class LongLongInputFormat extends FileInputFormat<LongWritable, LongLong>
     private Logger logger = LoggerFactory.getLogger(LongLongInputFormat.class.getName());
     private CompressionCodecFactory compressionCodecs = null;
 
-    protected boolean isSplitable(FileSystem fs, Path file) {
+    protected boolean isSplittable(FileSystem fs, Path file) {
         CompressionCodec codec = this.compressionCodecs.getCodec(file);
         return null == codec ? true : codec instanceof SplittableCompressionCodec;
     }
