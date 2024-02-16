@@ -1139,7 +1139,7 @@ class RowVertexSetImpl {
                          repeat_array);
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names) {
