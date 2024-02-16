@@ -81,7 +81,7 @@ public class Utils {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        outputStream.writeLong(0, outputStream.bytesWriten() - 8);
+        outputStream.writeLong(0, outputStream.bytesWritten() - 8);
         outputStream.finishSetting();
 
         // Distribute to others;
@@ -105,7 +105,7 @@ public class Utils {
             e.printStackTrace();
             return null;
         }
-        outputStream.writeLong(0, outputStream.bytesWriten() - 8);
+        outputStream.writeLong(0, outputStream.bytesWritten() - 8);
         outputStream.finishSetting();
         info(workerId, "now send to coordinator: " + selfIp);
         communicator.sendTo(0, outputStream.getVector());

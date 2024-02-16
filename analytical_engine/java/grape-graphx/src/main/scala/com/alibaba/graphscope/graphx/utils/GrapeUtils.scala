@@ -348,9 +348,9 @@ object GrapeUtils extends Logging {
       objectOutputStream.writeObject(array(i))
       ffiOffset.set(
         i,
-        ffiByteVectorOutput.bytesWriten().toInt - prevBytesWritten
+        ffiByteVectorOutput.bytesWritten().toInt - prevBytesWritten
       )
-      prevBytesWritten = ffiByteVectorOutput.bytesWriten().toInt
+      prevBytesWritten = ffiByteVectorOutput.bytesWritten().toInt
       i += 1
     }
     log.info(
@@ -359,9 +359,9 @@ object GrapeUtils extends Logging {
     //require(size == (nullCount + activeVertices.cardinality()))
     objectOutputStream.flush()
     ffiByteVectorOutput.finishSetting()
-    val writenBytes = ffiByteVectorOutput.bytesWriten()
+    val writtenBytes = ffiByteVectorOutput.bytesWritten()
     log.info(
-      s"write data array ${limit} of type ${GrapeUtils.getRuntimeClass[T].getName}, writen bytes ${writenBytes}"
+      s"write data array ${limit} of type ${GrapeUtils.getRuntimeClass[T].getName}, written bytes ${writtenBytes}"
     )
     (ffiByteVectorOutput.getVector, ffiOffset)
   }
@@ -432,9 +432,9 @@ object GrapeUtils extends Logging {
         ffiByteVectorOutput.writeDouble(dd.b)
         ffiOffset.set(
           i,
-          ffiByteVectorOutput.bytesWriten().toInt - prevBytesWritten
+          ffiByteVectorOutput.bytesWritten().toInt - prevBytesWritten
         )
-        prevBytesWritten = ffiByteVectorOutput.bytesWriten().toInt
+        prevBytesWritten = ffiByteVectorOutput.bytesWritten().toInt
         i += 1
       }
     } else {
@@ -446,18 +446,18 @@ object GrapeUtils extends Logging {
         objectOutputStream.writeObject(array(i))
         ffiOffset.set(
           i,
-          ffiByteVectorOutput.bytesWriten().toInt - prevBytesWritten
+          ffiByteVectorOutput.bytesWritten().toInt - prevBytesWritten
         )
-        prevBytesWritten = ffiByteVectorOutput.bytesWriten().toInt
+        prevBytesWritten = ffiByteVectorOutput.bytesWritten().toInt
         i += 1
       }
       objectOutputStream.flush()
     }
 
     ffiByteVectorOutput.finishSetting()
-    val writenBytes = ffiByteVectorOutput.bytesWriten()
+    val writtenBytes = ffiByteVectorOutput.bytesWritten()
     log.info(
-      s"write data array ${limit} of type ${GrapeUtils.getRuntimeClass[T].getName}, writen bytes ${writenBytes}"
+      s"write data array ${limit} of type ${GrapeUtils.getRuntimeClass[T].getName}, written bytes ${writtenBytes}"
     )
     (ffiByteVectorOutput.getVector, ffiOffset)
   }
@@ -486,9 +486,9 @@ object GrapeUtils extends Logging {
         ffiByteVectorOutput.writeDouble(dd.b)
         ffiOffset.set(
           i,
-          ffiByteVectorOutput.bytesWriten().toInt - prevBytesWritten
+          ffiByteVectorOutput.bytesWritten().toInt - prevBytesWritten
         )
-        prevBytesWritten = ffiByteVectorOutput.bytesWriten().toInt
+        prevBytesWritten = ffiByteVectorOutput.bytesWritten().toInt
         i += 1
       }
     } else {
@@ -500,18 +500,18 @@ object GrapeUtils extends Logging {
         objectOutputStream.writeObject(array.get(i))
         ffiOffset.set(
           i,
-          ffiByteVectorOutput.bytesWriten().toInt - prevBytesWritten
+          ffiByteVectorOutput.bytesWritten().toInt - prevBytesWritten
         )
-        prevBytesWritten = ffiByteVectorOutput.bytesWriten().toInt
+        prevBytesWritten = ffiByteVectorOutput.bytesWritten().toInt
         i += 1
       }
       objectOutputStream.flush()
     }
 
     ffiByteVectorOutput.finishSetting()
-    val writenBytes = ffiByteVectorOutput.bytesWriten()
+    val writtenBytes = ffiByteVectorOutput.bytesWritten()
     log.info(
-      s"write data array ${limit} of type ${GrapeUtils.getRuntimeClass[T].getName}, writen bytes ${writenBytes}"
+      s"write data array ${limit} of type ${GrapeUtils.getRuntimeClass[T].getName}, written bytes ${writtenBytes}"
     )
     (ffiByteVectorOutput.getVector, ffiOffset)
   }

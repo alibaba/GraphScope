@@ -172,7 +172,7 @@ public class GiraphComputationAdaptorContext<OID_T, VID_T, VDATA_T, EDATA_T>
                 if (conf.getGrapeVdataClass().equals(String.class)) {
                     for (long lid = 0; lid < innerVerticesNum; ++lid) {
                         vertexDataManager.getVertexData(lid).write(outputStream);
-                        long cur = outputStream.bytesWriten();
+                        long cur = outputStream.bytesWritten();
                         offsets[(int) lid] = cur - previous;
                         maxOffset = Math.max(offsets[(int) lid], maxOffset);
                         previous = cur;
