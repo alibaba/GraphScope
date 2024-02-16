@@ -49,7 +49,7 @@ __all__ = [
 class _ReprableString(str):
     """A special class that prevents `repr()` adding extra `""` to `str`.
 
-    It is used to optimize the user experiences to preseve `\n` when printing exceptions.
+    It is used to optimize the user experiences to preserve `\n` when printing exceptions.
     """
 
     def __repr__(self) -> str:
