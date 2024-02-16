@@ -95,7 +95,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::CreateGraph(
            << GetGraphSchemaPath(graph_name);
 
   return gs::Result<seastar::sstring>(
-      seastar::sstring("successfuly created graph "));
+      seastar::sstring("successfully created graph "));
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
