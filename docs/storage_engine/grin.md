@@ -279,7 +279,7 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
 ### Order
 - GRIN provides sorted vertex list assumptions. 
 - GRIN also assumes that if a vertex list sorted, then there is complete ordering for the vertices from the list.
-- Sorted vertex list faciliates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.
+- Sorted vertex list facilitates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.
 
 ### Reference
 - GRIN introduces the reference concept in partitioned graph. It stands for the reference of an instance that can
