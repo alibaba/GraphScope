@@ -110,13 +110,13 @@ boost::property_tree::ptree flags2Ptree() {
 
 std::pair<vineyard::ObjectID, int> splitAndGet(grape::CommSpec& comm_spec,
                                                const std::string& ids) {
-  std::vector<std::string> splited;
-  boost::split(splited, ids, boost::is_any_of(","));
-  CHECK_EQ(splited.size(), comm_spec.worker_num());
+  std::vector<std::string> split;
+  boost::split(split, ids, boost::is_any_of(","));
+  CHECK_EQ(split.size(), comm_spec.worker_num());
   auto my_host_name = getHostName();
   std::vector<std::string> pid_vineyard_id;
   {
-    for (auto str : splited) {
+    for (auto str : split) {
       if (str.find(my_host_name) != std::string::npos) {
         auto trimed =
             str.substr(str.find(my_host_name) + my_host_name.size() + 1);
