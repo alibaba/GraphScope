@@ -117,7 +117,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
   if (!schema_str_res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
-                   "Failt to read schema file: " + schema_file +
+                   "Failed to read schema file: " + schema_file +
                        ", error: " + schema_str_res.status().error_message()));
   } else {
     return gs::Result<seastar::sstring>(schema_str_res.value());
