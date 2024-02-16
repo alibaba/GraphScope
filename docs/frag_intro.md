@@ -22,7 +22,7 @@ GraphScope 的节点（vertex）存在以下编码方式：
 
 按照执行流程编号，描述了载图的主要逻辑：
 ### 1.1 初始化partitioner
-   分为HashPartitioner和SegmentedPartitoned, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。
+   分为HashPartitioner和SegmentedPartitioned, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。
 ### 1.2 构建原始arrow table
 
 每个进程读取一部分点、边文件，得到多个vertex arrow table(vtable)和edge arrow table(etable)，其中vtable按照顶点标签(vertex label)分组，etable先按照边标签(edge label)分组，同一个边标签下面又按照src和dst的顶点标签分组
