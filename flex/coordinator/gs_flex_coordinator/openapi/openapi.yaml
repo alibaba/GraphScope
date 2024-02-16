@@ -517,7 +517,7 @@ paths:
       - procedure
       x-openapi-router-controller: gs_flex_coordinator.controllers.procedure_controller
     put:
-      description: Update srored procedure on a certain graph
+      description: Update stored procedure on a certain graph
       operationId: update_procedure
       parameters:
       - explode: false

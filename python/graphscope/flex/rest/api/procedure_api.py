@@ -1125,7 +1125,7 @@ class ProcedureApi:
     ) -> str:
         """update_procedure
 
-        Update srored procedure on a certain graph
+        Update stored procedure on a certain graph
 
         :param graph_name: (required)
         :type graph_name: str
@@ -1200,7 +1200,7 @@ class ProcedureApi:
     ) -> ApiResponse[str]:
         """update_procedure
 
-        Update srored procedure on a certain graph
+        Update stored procedure on a certain graph
 
         :param graph_name: (required)
         :type graph_name: str
@@ -1275,7 +1275,7 @@ class ProcedureApi:
     ) -> RESTResponseType:
         """update_procedure
 
-        Update srored procedure on a certain graph
+        Update stored procedure on a certain graph
 
         :param graph_name: (required)
         :type graph_name: str
