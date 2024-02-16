@@ -62,7 +62,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
 8. Why `No such file or directory` error when loading graph?
 
-    This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the ``engnine`` Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.
+    This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the ``engine`` Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.
 
     Specifically, if your cluster is deployed with `kind <https://kind.sigs.k8s.io>`_, you may need to setup `extra-mounts <https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts>`_ to mount your local directory to kind nodes.
 
