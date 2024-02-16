@@ -303,7 +303,7 @@ class CaptureKeyboardInterrupt(object):
 
     Examples:
         >>> with CaptureKeyboardInterrupt(callback):
-        >>>     do_somethings()
+        >>>     do_something()
     """
 
     def __init__(self, callback=None):
