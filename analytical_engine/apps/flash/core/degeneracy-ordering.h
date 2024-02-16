@@ -89,9 +89,9 @@ class DegeneracyFlash : public FlashAppBase<FRAG_T, DEGENERACY_TYPE> {
     A = All;
     for (int len = VSize(A), i = 0; len > 0; len = VSize(A), ++i) {
       LOG(INFO) << "Ranking Round " << i << ": size=" << len << std::endl;
-      DefineFV(filterd) { return v.d <= dg; };
+      DefineFV(filtered) { return v.d <= dg; };
       DefineMapV(localr) { v.rank = i; };
-      A = VertexMap(A, filterd, localr);
+      A = VertexMap(A, filtered, localr);
 
       DefineFV(cond) { return v.rank == -1; };
       DefineMapE(update) { d.tmp++; };
