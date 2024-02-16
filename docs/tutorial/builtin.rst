@@ -48,7 +48,7 @@ on that:
 
 The data type of edge data is :code:`int64_t`. You will notice a delay when running
 :code:`sess.run(r1)` but not when running :code:`sess.run(r2)`. When the first time
-a bound application is used, a C++ compilation process will be triggerred behind the
+a bound application is used, a C++ compilation process will be triggered behind the
 screen. The next time the same bound application is applied, the compilation result
 will be resulted.
 
