@@ -247,7 +247,7 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
        return GCN(graph,
                   config['class_num'],
                   config['features_num'],
-                  config['batch_szie'],
+                  config['batch_size'],
                   ...)
      trainer = gle.LocalTFTrainer(model_fn, epoch=200)
      trainer.train()
