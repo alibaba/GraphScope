@@ -361,12 +361,12 @@ pub trait GlobalStoreUpdate<G: Copy, I> {
         &mut self, global_src_id: G, global_dst_id: G, label_id: LabelId, properties: Row,
     ) -> GDBResult<Option<Row>>;
 
-    /// Add (none-corner) vertexs in batches, where each item contains the following elements:
+    /// Add (none-corner) vertices in batches, where each item contains the following elements:
     /// * vertex's global id with type `G`
     /// * vertex's label id
     /// * vertex's property if any (corner vertex does not have any property)
     ///
-    /// Return the number of vertexs that were successfully added. If there is any error while
+    /// Return the number of vertices that were successfully added. If there is any error while
     /// attempting to add certain vertex, `PropertyError` will be thrown.
     fn add_vertex_batches<Iter: Iterator<Item = (G, Label, Row)>>(
         &mut self, iter: Iter,

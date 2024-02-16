@@ -519,7 +519,7 @@ class PathExpand {
     }
     LOG(INFO) << "visit array time: " << visit_array_time
               << ", gid size: " << gids.size();
-    // select vetices that are in range.
+    // select vertices that are in range.
     offsets.emplace_back(0);
     offsets.emplace_back(gids.size());
 
@@ -583,7 +583,7 @@ class PathExpand {
       visit_array_time += t0;
     }
     LOG(INFO) << "visit array time: " << visit_array_time;
-    // select vetices that are in range.
+    // select vertices that are in range.
     std::vector<vertex_id_t> flat_gids;
     std::vector<offset_t> flat_offsets;
     std::vector<Dist> dists;
