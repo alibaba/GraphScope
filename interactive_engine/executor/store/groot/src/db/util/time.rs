@@ -81,7 +81,7 @@ impl Timer {
         t.as_secs() as f64 * 1000.0 + t.subsec_nanos() as f64 / 1000000.0
     }
 
-    pub fn elasped_secs(&self) -> f64 {
+    pub fn elapsed_secs(&self) -> f64 {
         let t = self.timer.elapsed();
         t.as_secs() as f64 + t.subsec_nanos() as f64 / 1000000000.0
     }

@@ -99,7 +99,7 @@ fn main() {
         std::thread::sleep(Duration::from_secs(3));
         let total_write = total_count.load(Ordering::Relaxed);
         let write_count = total_write - tmp_count;
-        let total_time = timer.elasped_secs();
+        let total_time = timer.elapsed_secs();
         let t = total_time - tmp_time;
         println!("{:.0}\t{:.2}\t{:.0}", total_time, write_count as f64 / t, total_write);
         tmp_count = total_write;
