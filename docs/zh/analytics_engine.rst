@@ -403,7 +403,7 @@ GraphScope图分析引擎上运行这些示例算法。
     </dependency>
 
 用户在开发自己算法的过程中，可能会用到其他的第三方jar包。为了解决依赖jar包的版本问题，用户需要使用确保自己生成的jar包包含所有依赖的jar包。
-例如，用户可以使用maven插件 `maven-shade-pluging`.
+例如，用户可以使用maven插件 `maven-shade-plugin`.
 
 .. code:: xml
 
