@@ -38,7 +38,7 @@ public class VertexSet {
     private Bitset bs;
     private static Bitset.Factory factory = FFITypeFactory.getFactory("grape::Bitset");
     private long left;
-    // right is exclusived
+    // right is exclusive
     private long right;
 
     public VertexSet(int start, int end) {
