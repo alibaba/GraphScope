@@ -189,7 +189,7 @@ def replace_module_context(  # noqa: C901
         decorators = [decorators]
 
     # get the caller's module, and since this function might be called by import_as_grape_nx
-    # in this module, we go up and findout the real caller.
+    # in this module, we go up and find out the real caller.
     for loc in inspect.stack()[1:]:
         mod = inspect.getmodule(loc[0])
         if mod.__name__ != __name__:
