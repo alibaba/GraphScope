@@ -141,4 +141,4 @@ GNN model on your local machine. Next, you may want to learn more about the foll
 Next, you may want to learn more about the following topics:
 
 - [Design of the learning engine of GraphScope and its technical details.](learning_engine/design_of_gle)
-- [A set of examples with advanced usage, including deploying GLE in a K8s cluster.](learning_engine/guide_and_exmaples)
+- [A set of examples with advanced usage, including deploying GLE in a K8s cluster.](learning_engine/guide_and_examples)
