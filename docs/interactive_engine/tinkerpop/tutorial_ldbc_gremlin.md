@@ -143,7 +143,7 @@ print(q1.all().result())
 The output should be like:
 
 ```bash
-# All person veritces
+# All person vertices
 [v[216172782113783808], ......, v[216172782113784710]]
 ```
 
@@ -1320,7 +1320,7 @@ The output is `[0]`
 The `constant()` step is meant to map any object to a fixed object value. For example:
 
 ```python
-# Map all the vertinces to 1
+# Map all the vertices to 1
 q1 = g.execute('g.V().constant(1)')
 # Map all the vertices to "marko"
 q2 = g.execute('g.V().constant("marko")')

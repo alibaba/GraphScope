@@ -628,7 +628,7 @@ struct EdgeExpandOptMultiLabel {
 
   Direction direction_;
   LabelT edge_label_;
-  // edge filter func can be apply to every label vertcies
+  // edge filter func can be apply to every label vertices
   std::array<EDGE_FILTER_FUNC, num_labels> edge_filter_;
   std::array<LabelT, num_labels>
       other_labels_;  // There might be multiple dst labels.
