@@ -305,7 +305,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         reason = "unsupported")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest",
-//        method = "g_V_whereXinXkknowsX_outXcreatedX_count_is_0XX_name",
+//        method = "g_V_whereXinXknowsX_outXcreatedX_count_is_0XX_name",
 //        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphTest",
@@ -1561,7 +1561,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         reason = "sub query is unsupported yet")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest",
-        method = "g_V_whereXinXkknowsX_outXcreatedX_count_is_0XX_name",
+        method = "g_V_whereXinXknowsX_outXcreatedX_count_is_0XX_name",
         reason = "sub query is unsupported yet")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.OrderTest",

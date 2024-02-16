@@ -284,7 +284,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
         reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest",
-        method = "g_V_whereXinXkknowsX_outXcreatedX_count_is_0XX_name",
+        method = "g_V_whereXinXknowsX_outXcreatedX_count_is_0XX_name",
         reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphTest",
