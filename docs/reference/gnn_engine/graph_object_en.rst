@@ -181,16 +181,16 @@ the Graph object and the local Server.
    g.init(task_index, task_count)
 
 Server Mode is suitable for the situation where the graph scale is not
-super large. For example, when combined with Tensorflow for distributed
+super large. For example, when combined with TensorFlow for distributed
 training, each GL server needs to be in the same process as the
 TensorFlow worker, which eliminates communication overhead between the
-Tensorflow worker and the GL server. Since the distributed scale is not
+TensorFlow worker and the GL server. Since the distributed scale is not
 very large (the number of workers is not very large), the
 interconnection between Servers will not cause network burden. In
 addition, the atypical worker-ps mode also needs to be deployed in
 Server Mode for scenarios where models are trained in parallel.
 
-In combination with Tensorflow, the code is as follows:
+In combination with TensorFlow, the code is as follows:
 
 .. code:: python
 
