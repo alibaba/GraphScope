@@ -835,7 +835,7 @@ function update_graph_yaml_with_procedure_enabling(){
   
   # copy graph0.yaml to container
   docker cp "${HOST_DB_TMP_DIR}/graph0.yaml" "${GIE_DB_CONTAINER_NAME}:${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
-  info "Finish update graph yaml with procedure enabling, add stored proc.edures of size ${#ENABLED_ARRAY[@]}."
+  info "Finish update graph yaml with procedure enabling, add stored procedures of size ${#ENABLED_ARRAY[@]}."
 }
 
 
