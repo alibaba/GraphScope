@@ -1434,7 +1434,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   // Then we should remove eles in [3,5)
   // indices became
   // [0, 3, 6],
-  // num _elemenst 8 -> 6
+  // num _elements 8 -> 6
   // return the new offset range
   std::vector<offset_t> SubSetWithRemovedIndices(
       std::vector<size_t>& removed_indices,
