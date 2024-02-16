@@ -87,9 +87,9 @@ function test_interactive {
 			# Store Unit test
 			cd "${GS_SOURCE_DIR}"/interactive_engine/executor/store/exp_store && cargo test
 			# IR integration test
-			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_ci.sh
+			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_experimental_ci.sh
 			# IR integration pattern test
-			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_exprimental_pattern_ci.sh
+			cd "${GS_SOURCE_DIR}"/interactive_engine/compiler && ./ir_experimental_pattern_ci.sh
 		elif [[ ${storage_type} = "vineyard" ]]; then
 			info "Testing interactive on local with vineyard storage"
 			# start vineyard service
