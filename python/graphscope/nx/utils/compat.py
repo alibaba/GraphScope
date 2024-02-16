@@ -137,7 +137,7 @@ def load_the_module(module_or_name):
 
 
 def apply_networkx_patches(module):
-    # there'a some name conflicts in networkx and we need to be careful
+    # there are some name conflicts in networkx and we need to be careful
     # e.g.,
     #
     #     networkx.algorithms.approximation.connectivity
