@@ -215,14 +215,14 @@ class JavaApp(AppAssets):
 
     # Override is_compatible to make sure type params of graph consists with java app.
     def is_compatible(self, graph):
-        splited = graph.template_str.split("<")
+        split = graph.template_str.split("<")
         java_app_type_params = self.frag_param_str.split(",")
         num_type_params = 0
-        if len(splited) != 2:
+        if len(split) != 2:
             raise Exception(
                 "Unrecoginizable graph template str: {}".format(graph.template_str)
             )
-        if splited[0] == "vineyard::ArrowFragment":
+        if split[0] == "vineyard::ArrowFragment":
             if self.java_app_type.find("property") == -1:
                 logger.error("Expected property app")
                 return False
@@ -230,7 +230,7 @@ class JavaApp(AppAssets):
                 logger.error("Expected one type params.")
                 return False
             num_type_params = 1
-        if splited[1] == "gs::ArrowProjectedFragment":
+        if split[1] == "gs::ArrowProjectedFragment":
             if self.java_app_type.find("simple") == -1:
                 logger.error("Expected simple app")
                 return False
@@ -238,7 +238,7 @@ class JavaApp(AppAssets):
                 logger.error("Expected 4 type params")
                 return False
             num_type_params = 4
-        graph_actual_type_params = splited[1][:-1].split(",")
+        graph_actual_type_params = split[1][:-1].split(",")
         for i in range(0, num_type_params):
             graph_actual_type_param = graph_actual_type_params[i]
             java_app_type_param = java_app_type_params[i]

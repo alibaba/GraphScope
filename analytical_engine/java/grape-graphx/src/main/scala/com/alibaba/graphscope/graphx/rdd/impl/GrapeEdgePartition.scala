@@ -985,7 +985,7 @@ object GrapeEdgePartition extends Logging {
 
             log.info(
               s"Totally ${size} ele in queue, registered partition num ${pidQueue
-                .size()}, first ${numLargestSplit} frags are splited into ${maxTimes}, others are splited into ${maxTimes - 1} times"
+                .size()}, first ${numLargestSplit} frags are split into ${maxTimes}, others are split into ${maxTimes - 1} times"
             )
             for (i <- 0 until size) {
               val tuple      = tupleQueue.poll()

@@ -66,7 +66,7 @@ class GRPCUtils(object):
         Note that this method will modify `large_attr` attribute of op in dag_def.
 
         Returns:
-            Sequence[Sequence[bytes]]: splited chunks.
+            Sequence[Sequence[bytes]]: split chunks.
         """
         chunks_list = []
         for op in dag_def.op:

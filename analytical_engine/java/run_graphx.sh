@@ -62,9 +62,9 @@ distribute_serial_file(){
   for host in "${array[@]}";
   do
       echo ${host}
-      splited=($(echo "$host" | tr ':' '\n'))
-      echo "scp to host "${splited[0]}
-      scp ${SERIAL_PATH} ${splited[0]}:${SERIAL_PATH}
+      split=($(echo "$host" | tr ':' '\n'))
+      echo "scp to host "${split[0]}
+      scp ${SERIAL_PATH} ${split[0]}:${SERIAL_PATH}
   done
 }
 

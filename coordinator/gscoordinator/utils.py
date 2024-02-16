@@ -282,9 +282,9 @@ def get_graph_sha256(attr):
 def check_java_app_graph_consistency(
     app_class, cpp_graph_type, java_class_template_str
 ):
-    splited = cpp_graph_type.split("<")
+    split = cpp_graph_type.split("<")
     java_app_type_params = java_class_template_str[:-1].split("<")[-1].split(",")
-    if splited[0] == "vineyard::ArrowFragment":
+    if split[0] == "vineyard::ArrowFragment":
         if app_class.find("Property") == -1:
             raise RuntimeError(
                 "Expected property app, inconsistent app and graph {}, {}".format(
@@ -294,7 +294,7 @@ def check_java_app_graph_consistency(
         if len(java_app_type_params) != 1:
             raise RuntimeError("Expected 4 type params in java app")
 
-    if splited[0] == "gs::ArrowProjectedFragment":
+    if split[0] == "gs::ArrowProjectedFragment":
         if app_class.find("Projected") == -1:
             raise RuntimeError(
                 "Expected Projected app, inconsistent app and graph {}, {}".format(
@@ -304,7 +304,7 @@ def check_java_app_graph_consistency(
         if len(java_app_type_params) != 4:
             raise RuntimeError("Expected 4 type params in java app")
 
-    graph_actual_type_params = splited[1][:-1].split(",")
+    graph_actual_type_params = split[1][:-1].split(",")
     for i in range(0, len(java_app_type_params)):
         graph_actual_type_param = graph_actual_type_params[i]
         java_app_type_param = java_app_type_params[i]

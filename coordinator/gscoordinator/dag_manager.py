@@ -146,10 +146,10 @@ def split_op_result(op_result: op_def_pb2.OpResult):
     """
     if op_result.meta.has_large_result:
         result = op_result.result
-        splited_result = [
+        split_result = [
             result[i : i + CHUNK_SIZE] for i in range(0, len(result), CHUNK_SIZE)
         ]
         # clear result
         op_result.result = b""
-        return splited_result
+        return split_result
     return []

@@ -208,10 +208,10 @@ public class GraphScopeClassLoader {
             logger.error("Empty class Path!");
             return new URL[] {};
         }
-        String[] splited = classPath.split(":");
-        logger.debug("Splited class path: " + String.join(",", splited));
+        String[] split = classPath.split(":");
+        logger.debug("Split class path: " + String.join(",", split));
         List<URL> res =
-                Arrays.stream(splited)
+                Arrays.stream(split)
                         .map(File::new)
                         .map(
                                 file -> {
@@ -227,8 +227,8 @@ public class GraphScopeClassLoader {
                 "Extracted URL: "
                         + String.join(
                                 ":", res.stream().map(URL::toString).collect(Collectors.toList())));
-        URL[] ret = new URL[splited.length];
-        for (int i = 0; i < splited.length; ++i) {
+        URL[] ret = new URL[split.length];
+        for (int i = 0; i < split.length; ++i) {
             ret[i] = res.get(i);
         }
         return ret;

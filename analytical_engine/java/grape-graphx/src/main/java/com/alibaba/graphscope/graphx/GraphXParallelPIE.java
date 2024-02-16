@@ -656,12 +656,12 @@ public class GraphXParallelPIE<VD, ED, MSG_T> {
     }
 
     private void fillFid2WorkerId(String str) {
-        String[] splited = str.split(";");
-        if (splited.length != fid2WorkerId.length) {
+        String[] split = str.split(";");
+        if (split.length != fid2WorkerId.length) {
             throw new IllegalStateException(
-                    "length neq " + splited.length + "," + fid2WorkerId.length);
+                    "length neq " + split.length + "," + fid2WorkerId.length);
         }
-        for (String tuple : splited) {
+        for (String tuple : split) {
             String[] tmp = tuple.split(":");
             if (tmp.length != 2) {
                 throw new IllegalStateException("length neq 2" + tmp.length);

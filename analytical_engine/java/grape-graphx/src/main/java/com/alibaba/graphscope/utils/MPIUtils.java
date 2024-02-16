@@ -237,14 +237,14 @@ public class MPIUtils {
     private static String generateHostNameAndSlotsFromIDs(String[] ids) {
         HashMap<String, Integer> map = new HashMap<>();
         for (String str : ids) {
-            String[] splited = str.split(":");
-            if (splited.length != 3) {
+            String[] split = str.split(":");
+            if (split.length != 3) {
                 throw new IllegalStateException("Unexpected input " + Arrays.toString(ids));
             }
-            if (map.containsKey(splited[0])) {
-                map.put(splited[0], map.get(splited[0]) + 1);
+            if (map.containsKey(split[0])) {
+                map.put(split[0], map.get(split[0]) + 1);
             } else {
-                map.put(splited[0], 1);
+                map.put(split[0], 1);
             }
         }
         StringBuilder sb = new StringBuilder();
