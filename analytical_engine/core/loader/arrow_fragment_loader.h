@@ -280,7 +280,7 @@ class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
                                         std::move(raw_v_e_tables));
   }
 
-  bl::result<vineyard::ObjectID> AddDataToExistedELable(
+  bl::result<vineyard::ObjectID> AddDataToExistedELabel(
       vineyard::ObjectID frag_id, label_id_t label_id) {
     BOOST_LEAF_CHECK(initPartitioner());
     BOOST_LEAF_AUTO(raw_v_e_tables, LoadVertexEdgeTables());
@@ -343,7 +343,7 @@ class ArrowFragmentLoader : public vineyard::ArrowFragmentLoader<OID_T, VID_T> {
                         AddDataToExistedVLable(frag_id, target_label_id));
     } else if (extend_type == 2) {
       BOOST_LEAF_ASSIGN(new_frag_id,
-                        AddDataToExistedELable(frag_id, target_label_id));
+                        AddDataToExistedELabel(frag_id, target_label_id));
     }
     return vineyard::ConstructFragmentGroup(client_, new_frag_id, comm_spec_);
   }
