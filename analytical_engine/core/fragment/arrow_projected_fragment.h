@@ -1137,25 +1137,25 @@ class ArrowProjectedFragment
             << "The edge splitter cannot be built on compacted fragment.";
         return;
       }
-      ie_spliters_ptr_.clear();
-      oe_spliters_ptr_.clear();
+      ie_splitters_ptr_.clear();
+      oe_splitters_ptr_.clear();
       if (directed_) {
-        initEdgeSpliters(comm_spec, ie_, ie_offsets_begin_, ie_offsets_end_,
-                         ie_spliters_);
-        initEdgeSpliters(comm_spec, oe_, oe_offsets_begin_, oe_offsets_end_,
-                         oe_spliters_);
-        for (auto& vec : ie_spliters_) {
-          ie_spliters_ptr_.push_back(vec.data());
+        initEdgeSplitters(comm_spec, ie_, ie_offsets_begin_, ie_offsets_end_,
+                         ie_splitters_);
+        initEdgeSplitters(comm_spec, oe_, oe_offsets_begin_, oe_offsets_end_,
+                         oe_splitters_);
+        for (auto& vec : ie_splitters_) {
+          ie_splitters_ptr_.push_back(vec.data());
         }
-        for (auto& vec : oe_spliters_) {
-          oe_spliters_ptr_.push_back(vec.data());
+        for (auto& vec : oe_splitters_) {
+          oe_splitters_ptr_.push_back(vec.data());
         }
       } else {
-        initEdgeSpliters(comm_spec, oe_, oe_offsets_begin_, oe_offsets_end_,
-                         oe_spliters_);
-        for (auto& vec : oe_spliters_) {
-          ie_spliters_ptr_.push_back(vec.data());
-          oe_spliters_ptr_.push_back(vec.data());
+        initEdgeSplitters(comm_spec, oe_, oe_offsets_begin_, oe_offsets_end_,
+                         oe_splitters_);
+        for (auto& vec : oe_splitters_) {
+          ie_splitters_ptr_.push_back(vec.data());
+          oe_splitters_ptr_.push_back(vec.data());
         }
       }
     }
@@ -1397,7 +1397,7 @@ class ArrowProjectedFragment
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return adj_list_t(&ie_ptr_[ie_offsets_begin_ptr_[offset]],
                       &ie_ptr_[offset < static_cast<int64_t>(ivnum_)
-                                   ? ie_spliters_ptr_[0][offset]
+                                   ? ie_splitters_ptr_[0][offset]
                                    : ie_offsets_end_ptr_[offset]],
                       edge_data_array_accessor_);
   }
@@ -1408,7 +1408,7 @@ class ArrowProjectedFragment
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return adj_list_t(&oe_ptr_[oe_offsets_begin_ptr_[offset]],
                       &oe_ptr_[offset < static_cast<int64_t>(ivnum_)
-                                   ? oe_spliters_ptr_[0][offset]
+                                   ? oe_splitters_ptr_[0][offset]
                                    : oe_offsets_end_ptr_[offset]],
                       edge_data_array_accessor_);
   }
@@ -1418,7 +1418,7 @@ class ArrowProjectedFragment
   GetIncomingOuterVertexAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
-               ? adj_list_t(&ie_ptr_[ie_spliters_ptr_[0][offset]],
+               ? adj_list_t(&ie_ptr_[ie_splitters_ptr_[0][offset]],
                             &ie_ptr_[ie_offsets_end_ptr_[offset]],
                             edge_data_array_accessor_)
                : adj_list_t();
@@ -1429,7 +1429,7 @@ class ArrowProjectedFragment
   GetOutgoingOuterVertexAdjList(const vertex_t& v) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
-               ? adj_list_t(&oe_ptr_[oe_spliters_ptr_[0][offset]],
+               ? adj_list_t(&oe_ptr_[oe_splitters_ptr_[0][offset]],
                             &oe_ptr_[oe_offsets_end_ptr_[offset]],
                             edge_data_array_accessor_)
                : adj_list_t();
@@ -1440,8 +1440,8 @@ class ArrowProjectedFragment
   GetIncomingAdjList(const vertex_t& v, fid_t src_fid) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
-               ? adj_list_t(&ie_ptr_[ie_spliters_ptr_[src_fid][offset]],
-                            &ie_ptr_[ie_spliters_ptr_[src_fid + 1][offset]],
+               ? adj_list_t(&ie_ptr_[ie_splitters_ptr_[src_fid][offset]],
+                            &ie_ptr_[ie_splitters_ptr_[src_fid + 1][offset]],
                             edge_data_array_accessor_)
                : (src_fid == fid_ ? GetIncomingAdjList(v) : adj_list_t());
   }
@@ -1451,8 +1451,8 @@ class ArrowProjectedFragment
   GetOutgoingAdjList(const vertex_t& v, fid_t dst_fid) const {
     int64_t offset = vid_parser_.GetOffset(v.GetValue());
     return offset < static_cast<int64_t>(ivnum_)
-               ? adj_list_t(&oe_ptr_[oe_spliters_ptr_[dst_fid][offset]],
-                            &oe_ptr_[oe_spliters_ptr_[dst_fid + 1][offset]],
+               ? adj_list_t(&oe_ptr_[oe_splitters_ptr_[dst_fid][offset]],
+                            &oe_ptr_[oe_splitters_ptr_[dst_fid + 1][offset]],
                             edge_data_array_accessor_)
                : (dst_fid == fid_ ? GetOutgoingAdjList(v) : adj_list_t());
   }
@@ -1842,17 +1842,17 @@ class ArrowProjectedFragment
     }
   }
 
-  void initEdgeSpliters(
+  void initEdgeSplitters(
       const grape::CommSpec& comm_spec,
       const std::shared_ptr<arrow::FixedSizeBinaryArray>& edge_list,
       const std::shared_ptr<arrow::Int64Array>& offsets_begin,
       const std::shared_ptr<arrow::Int64Array>& offsets_end,
-      std::vector<std::vector<int64_t>>& spliters) {
-    if (!spliters.empty()) {
+      std::vector<std::vector<int64_t>>& splitters) {
+    if (!splitters.empty()) {
       return;
     }
-    spliters.resize(fnum_ + 1);
-    for (auto& vec : spliters) {
+    splitters.resize(fnum_ + 1);
+    for (auto& vec : splitters) {
       vec.resize(ivnum_);
     }
 
@@ -1863,7 +1863,7 @@ class ArrowProjectedFragment
     vineyard::parallel_for(
         static_cast<vid_t>(0), ivnum_,
         [this, &offsets_begin, &offsets_end, &edge_list,
-         &spliters](const vid_t i) {
+         &splitters](const vid_t i) {
           std::vector<int> frag_count(fnum_, 0);
           int64_t begin = offsets_begin->Value(i);
           int64_t end = offsets_end->Value(i);
@@ -1876,13 +1876,13 @@ class ArrowProjectedFragment
           }
           begin += frag_count[fid_];
           frag_count[fid_] = 0;
-          spliters[0][i] = begin;
+          splitters[0][i] = begin;
           for (fid_t j = 0; j < fnum_; ++j) {
             begin += frag_count[j];
-            spliters[j + 1][i] = begin;
+            splitters[j + 1][i] = begin;
           }
           if (begin != end) {
-            LOG(ERROR) << "Unexpected edge spliters for ith vertex " << i
+            LOG(ERROR) << "Unexpected edge splitters for ith vertex " << i
                        << ", begin: " << begin << " vs. end: " << end;
           }
         },
@@ -2038,8 +2038,8 @@ class ArrowProjectedFragment
   std::vector<fid_t> idst_, odst_, iodst_;
   std::vector<fid_t*> idoffset_, odoffset_, iodoffset_;
 
-  std::vector<std::vector<int64_t>> ie_spliters_, oe_spliters_;
-  std::vector<const int64_t*> ie_spliters_ptr_, oe_spliters_ptr_;
+  std::vector<std::vector<int64_t>> ie_splitters_, oe_splitters_;
+  std::vector<const int64_t*> ie_splitters_ptr_, oe_splitters_ptr_;
 
   std::vector<vid_t> outer_vertex_offsets_;
   std::vector<std::vector<vertex_t>> mirrors_of_frag_;
