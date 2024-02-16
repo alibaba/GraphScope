@@ -625,7 +625,7 @@ pub struct CompoSentence {
     tags: BTreeSet<NameOrId>,
 }
 
-/// Preprocess a plan such that it does not contain two root nodes. More speciically,
+/// Preprocess a plan such that it does not contain two root nodes. More specifically,
 /// we will add a common `As(None)` operator as the parent of the two original roots
 /// in the plan, which becomes the new and only root node of the plan
 fn preprocess_plan(plan: &mut pb::LogicalPlan) -> IrResult<()> {
