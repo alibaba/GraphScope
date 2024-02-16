@@ -454,7 +454,7 @@ class JavaContextBase : public grape::ContextBase {
       context_object_ =
           LoadAndCreate(env, url_class_loader_object_,
                         graphx_context_name.c_str(), serial_path.c_str());
-      VLOG(1) << "Succcessfully loaded graphx context: " << context_object_;
+      VLOG(1) << "Successfully loaded graphx context: " << context_object_;
     } else {
       std::string _context_class_name_str = getCtxClassNameFromAppObject(env);
       VLOG(1) << "Context class name: " << _context_class_name_str;
