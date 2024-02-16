@@ -260,7 +260,7 @@ impl From<PatternVertex> for Pattern {
     }
 }
 
-/// Initialize a Pattern from a vertor of Pattern Edges
+/// Initialize a Pattern from a vector of Pattern Edges
 impl From<Vec<PatternEdge>> for Pattern {
     fn from(edges: Vec<PatternEdge>) -> Pattern {
         let mut new_pattern = Pattern::default();
