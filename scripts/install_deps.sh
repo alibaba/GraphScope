@@ -119,7 +119,7 @@ get_os_version() {
   readonly OS_VERSION
 }
 
-# Functions to install dependencies of k8s evironment.
+# Functions to install dependencies of k8s environment.
 check_os_compatibility_k8s() {
   if [[ "${IS_IN_WSL}" == true && -z "${WSL_INTEROP}" ]]; then
     err "The platform is WSL1. GraphScope not support to run on WSL1, please use WSL2."
