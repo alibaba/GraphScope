@@ -85,9 +85,9 @@ pub extern "C" fn updatePeerView(engine_handle: EngineHandle, peer_view_string_r
     let peer_view = peer_view_string
         .split(",")
         .map(|item| {
-            let mut fields = item.split("#");
-            let id = fields.next().unwrap().parse::<u64>().unwrap();
-            let addr_str = fields.next().unwrap();
+            let mut item_fields = item.split("#");
+            let id = item_fields.next().unwrap().parse::<u64>().unwrap();
+            let addr_str = item_fields.next().unwrap();
             let mut addr_fields = addr_str.split(":");
             let hostname = addr_fields.next().unwrap();
             let port = addr_fields.next().unwrap().parse::<u16>().unwrap();
