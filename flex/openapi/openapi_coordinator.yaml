@@ -424,7 +424,7 @@ paths:
     put:
       tags:
         - procedure
-      description:  Update srored procedure on a certain graph
+      description:  Update stored procedure on a certain graph
       operationId: update_procedure
       parameters:
       - name: graph_name
