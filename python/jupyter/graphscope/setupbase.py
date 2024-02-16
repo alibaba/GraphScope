@@ -453,7 +453,7 @@ def _wrap_command(cmds, cls, strict=True):
     cmds: list(str)
         The names of the other commands to run prior to the command.
     strict: boolean, optional
-        Wether to raise errors when a pre-command fails.
+        Whether to raise errors when a pre-command fails.
     """
 
     class WrappedCommand(cls):
