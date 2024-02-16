@@ -1101,7 +1101,7 @@ protected:
 
   void copy_settings(const ClientImpl &rhs);
 
-  // Socket endoint information
+  // Socket endpoint information
   const std::string host_;
   const int port_;
   const std::string host_and_port_;
