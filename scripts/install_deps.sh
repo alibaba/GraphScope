@@ -201,7 +201,7 @@ install_dependencies_k8s() {
 #   0 if start successfully, non-zero on error.
 ##########################
 start_docker() {
-  log "Starting doker daemon."
+  log "Starting docker daemon."
   # start docker daemon if docker not running.
   if ! sudo docker info >/dev/null 2>&1; then
     if [[ "${IS_IN_WSL}" = false ]]; then
