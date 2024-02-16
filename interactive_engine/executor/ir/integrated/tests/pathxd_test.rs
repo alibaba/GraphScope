@@ -186,7 +186,7 @@ mod test {
             vec![4, 1, 2],
             vec![4, 1, 4],
         ];
-        let exptected_result_path_lengths = vec![1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
+        let expected_result_path_lengths = vec![1, 1, 1, 1, 2, 2, 2, 2, 2, 2];
         while let Some(result) = results.next() {
             match result {
                 Ok(res) => {
@@ -212,7 +212,7 @@ mod test {
         result_collection.sort();
         result_length_collection.sort();
         assert_eq!(result_collection, expected_result_paths);
-        assert_eq!(result_length_collection, exptected_result_path_lengths);
+        assert_eq!(result_length_collection, expected_result_path_lengths);
     }
 
     #[test]
