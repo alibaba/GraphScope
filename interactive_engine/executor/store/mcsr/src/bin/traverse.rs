@@ -50,7 +50,7 @@ fn output_vertices(graph: &CsrDB, output_dir: &String, files: &mut HashMap<Label
             .graph_schema
             .get_vertex_label_id(n.as_str())
         {
-            println!("outputing vertex-{}, size {}", n, graph.get_vertices_num(v_label));
+            println!("outputting vertex-{}, size {}", n, graph.get_vertices_num(v_label));
             let header = graph
                 .graph_schema
                 .get_vertex_header(v_label)
