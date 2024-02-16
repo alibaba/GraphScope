@@ -1701,7 +1701,7 @@ GRAPH_HEADER_MAP = {
     ),
 }
 
-VERETX_MAP_CLASS_MAP = {
+VERTEX_MAP_CLASS_MAP = {
     graph_def_pb2.GLOBAL_VERTEX_MAP: "vineyard::ArrowVertexMap<{},{}>",
     graph_def_pb2.LOCAL_VERTEX_MAP: "vineyard::ArrowLocalVertexMap<{},{}>",
 }
@@ -1736,7 +1736,7 @@ def _codegen_graph_info(attr):
                 return "vineyard::arrow_string_view"
             return t
 
-        return VERETX_MAP_CLASS_MAP[vm_type_enum].format(
+        return VERTEX_MAP_CLASS_MAP[vm_type_enum].format(
             internal_type(oid_type()), vid_type()
         )
 

@@ -434,11 +434,11 @@ pub fn build_ldbc_pattern_case1() -> Pattern {
 pub fn build_ldbc_pattern_from_pb_case0() -> IrPatternResult<Pattern> {
     set_ldbc_graph_schema();
     // define pb pattern message
-    let vertx_opr = pb::Select { predicate: Some(str_to_expr_pb("@.~label==1".to_string()).unwrap()) };
+    let vertex_opr = pb::Select { predicate: Some(str_to_expr_pb("@.~label==1".to_string()).unwrap()) };
     let pattern = pb::Pattern {
         sentences: vec![pb::pattern::Sentence {
             start: Some(TAG_A.into()),
-            binders: vec![pb::pattern::Binder { item: Some(pb::pattern::binder::Item::Select(vertx_opr)) }],
+            binders: vec![pb::pattern::Binder { item: Some(pb::pattern::binder::Item::Select(vertex_opr)) }],
             end: Some(TAG_A.into()),
             join_kind: 0,
         }],
