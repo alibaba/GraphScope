@@ -33,9 +33,9 @@ the heterogeneous graph shown in the following image.
    topo.print_all()
 
    """
-   egde_type:buy, src_type:user, dst_type:item
-   egde_type:click, src_type:user, dst_type:item
-   egde_type:swing, src_type:item, dst_type:item
+   edge_type:buy, src_type:user, dst_type:item
+   edge_type:click, src_type:user, dst_type:item
+   edge_type:swing, src_type:item, dst_type:item
    """
 
 ## 1.2 In-and-Out Degree Distribution Coming soon…
