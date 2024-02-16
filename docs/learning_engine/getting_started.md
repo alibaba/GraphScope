@@ -37,7 +37,7 @@ Only `v2.11.0` supported under the linux aarch64 platform:
 ```
 
 ```bash
-# Install the fixed 'v2.11.0' verion of tensorflow under the linux aarch64 platform
+# Install the fixed 'v2.11.0' version of tensorflow under the linux aarch64 platform
 python3 -m pip install tensorflow==2.11.0
 ```
 
