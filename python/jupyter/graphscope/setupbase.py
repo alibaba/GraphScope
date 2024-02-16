@@ -508,7 +508,7 @@ def _get_data_files(data_specs, existing, top=HERE):
     data_specs: list of tuples
         See [create_cmdclass] for description.
     existing: list of tuples
-        The existing distrubution data_files metadata.
+        The existing distribution data_files metadata.
 
     Returns
     -------
