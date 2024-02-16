@@ -112,7 +112,7 @@ additional interfaces as follows.
 
    @property
    def offsets(self):
-   """ one dimentional int array: the number of neighbors of each vertex """
+   """ one dimensional int array: the number of neighbors of each vertex """
 
    @property
    def dense_shape(self):
@@ -120,7 +120,7 @@ additional interfaces as follows.
 
    @property
    def indices(self):
-   """ two dimentional array: the location of each neighbor """
+   """ two dimensional array: the location of each neighbor """
 
    def __next__(self):
    """ iterator: iterate over the neighbors of each vertex """
@@ -134,7 +134,7 @@ interfaces as follows.
 
    @property
    def offsets(self):
-   """ one dimential int array: the number of neighbors of each vertex """
+   """ one dimensional int array: the number of neighbors of each vertex """
 
    @property
    def dense_shape(self):
@@ -142,7 +142,7 @@ interfaces as follows.
 
    @property
    def indices(self):
-   """ two dimentional array: the location of each neighbor """
+   """ two dimensional array: the location of each neighbor """
 
    def __next__(self):
    """ iterator: iterate the neighbors of each vertex """
