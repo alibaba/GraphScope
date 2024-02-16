@@ -158,7 +158,7 @@ jobs:
         sudo apt update
         sudo apt install -y doxygen graphviz
 
-        # generate a taged version
+        # generate a tagged version
         cd ${GITHUB_WORKSPACE}
         make graphscope-docs
 
