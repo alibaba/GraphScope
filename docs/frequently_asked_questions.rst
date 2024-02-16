@@ -18,7 +18,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
     Kubernetes **version >= v1.12.0+**.
 
 
-2. Is Kubernetes an enssential to use GraphScope?
+2. Is Kubernetes an essential to use GraphScope?
 
     No. GraphScope supports run in standalone mode on a single machine. GraphScope pre-compiled package is distributed as a python package and can be easily installed with `pip`: `pip3 install graphscope`.
 
