@@ -783,7 +783,7 @@ bl::result<void> GrapeInstance::outputContext(const rpc::GSParams& params) {
 
   if (!range.first.empty() && !range.second.empty()) {
     LOG(WARNING)
-        << "Specifing vertex range for output is not supported and ignored";
+        << "Specifying vertex range for output is not supported and ignored";
   }
 
   BOOST_LEAF_AUTO(location, params.Get<std::string>(rpc::FD));
