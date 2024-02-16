@@ -188,7 +188,7 @@ class Writer {
    *
    *  @return Whether there is error when writing the data.
    *          Note: As the record batch is first cached in the memory and sent
-   * to server later, return true doesn't mean the data has been transfered to
+   * to server later, return true doesn't mean the data has been transferred to
    * the server.
    */
   bool Write(std::shared_ptr<arrow::RecordBatch> record_batch);
