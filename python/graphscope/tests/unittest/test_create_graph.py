@@ -543,7 +543,7 @@ def test_Load_complex_graph_variants(
         ["score", "score_id"],
         src_label="student",
         dst_label="lesson",
-        src_field="studnet_id",
+        src_field="student_id",
         dst_field="subject",
     )
     graph = graph.add_edges(
@@ -552,7 +552,7 @@ def test_Load_complex_graph_variants(
         ["member_size"],
         src_label="student",
         dst_label="student",
-        src_field="leader_studnet_id",
+        src_field="leader_student_id",
         dst_field="member_student_id",
     )
     assert graph.schema is not None
