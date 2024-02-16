@@ -49,7 +49,7 @@ mvn clean install
 This will only install `grape-jdk` for you, if you are only interested in writing 
 graph algorithms in java, that's enough for you :D.
 
-To build the whole project, make sure there is one usable c++ compiler in your envirment
+To build the whole project, make sure there is one usable c++ compiler in your environment
 and both [`GraphScope-Analytical engine`](https://github.com/alibaba/GraphScope/tree/main/analytical_engine) 
 and [`Vineyard`](https://github.com/v6d-io/v6d) is installed.
 
