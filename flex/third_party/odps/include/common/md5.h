@@ -282,7 +282,7 @@ inline void MD5::update(const byte* input, size_t length) {
 }
 
 /* MD5 finalization. Ends an MD5 message-_digest operation, writing the
-the message _digest and zeroizing the context.
+the message _digest and zeroing the context.
 */
 inline void MD5::final() {
   byte bits[8];
