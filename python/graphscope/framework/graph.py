@@ -1052,7 +1052,7 @@ class Graph(GraphInterface):
         return self._session.session_id
 
     def detach(self):
-        """Detaching a graph makes it being left in vineyard even when the varaible for
+        """Detaching a graph makes it being left in vineyard even when the variable for
         this :class:`Graph` object leaves the lexical scope.
 
         The graph can be accessed using the graph's :code:`ObjectID` or its name later.
