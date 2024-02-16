@@ -911,7 +911,7 @@ struct AnyConverter<double> {
   }
 };
 
-// specilization for float
+// specialization for float
 template <>
 struct AnyConverter<float> {
   static PropertyType type() { return PropertyType::kFloat; }
