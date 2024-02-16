@@ -356,7 +356,7 @@ static std::pair<std::string, std::string> BuildOneLabelEdgeExpandOpt(
     }
   } else {
     if (params.has_predicate()) {
-      VLOG(10) << "Building EdgeExpanV with predicate";
+      VLOG(10) << "Building EdgeExpandV with predicate";
       formater = boost::format(EDGE_EXPAND_V_OPT_FILTER_TEMPLATE_STR);
       formater % expr_var_name % expr_func_name % func_construct_params_str %
           property_selectors_str % opt_var_name %
