@@ -4,7 +4,7 @@ Graph Sampling Language（GSL)
 # 1. Introduction There has been a well-developed programming paradigm
 since Graph Neural Network (GNN) was introduced. Developing a GNN model
 contains two parts: graph data processing and neural network training.
-There are matured Deep Learning framework such as Tensorflow and Pytorch
+There are matured Deep Learning framework such as TensorFlow and Pytorch
 for neural network training. Therefore, how to express and implement
 graph data processing easily and efficiently, and how to work with the
 DL frameworks are the focuses of Graphlearn. In reality, sampling is
