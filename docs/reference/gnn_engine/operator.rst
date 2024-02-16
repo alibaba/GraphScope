@@ -121,7 +121,7 @@ Compile
    make clean
    make test
 
-Usually, writting a C++ test is the fast way to check errors. After
+Usually, writing a C++ test is the fast way to check errors. After
 that, you can make the python package and install it.
 
 ::
