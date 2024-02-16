@@ -8,5 +8,5 @@ The following tutorials will introduce how to leverage the above features in Gra
 
 
 - [Querying graph via GraphScope JavaSDK](https://graphscope.io/docs/latest/java_tutorial_0_pie.html)
-- [Graphscope integration with Apache Giraph](https://graphscope.io/docs/latest/java_tutorial_1_giraph.html)
+- [GraphScope integration with Apache Giraph](https://graphscope.io/docs/latest/java_tutorial_1_giraph.html)
 - [GraphScope integration with Apache GraphX](https://graphscope.io/docs/latest/java_tutorial_2_graphx.html)
