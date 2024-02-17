@@ -101,6 +101,8 @@ jobs:
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/graph_algo
         cp ${GITHUB_WORKSPACE}/flex/tests/interactive/graph_algo_test.yaml ${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml
         cp ${GITHUB_WORKSPACE}/flex/interactive/examples/graph_algo/import.yaml ${INTERACTIVE_WORKSPACE}/data/graph_algo/import.yaml
+        mkdir -p ${INTERACTIVE_WORKSPACE}/data/modern_graph
+        cp ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
 
         # load graph
         cd ${GITHUB_WORKSPACE}/flex/build
@@ -110,6 +112,8 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/movies/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/movies/indices/
         export FLEX_DATA_DIR=../interactive/examples/graph_algo
         GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/graph_algo/graph.yaml -l ${INTERACTIVE_WORKSPACE}/data/graph_algo/import.yaml -d ${INTERACTIVE_WORKSPACE}/data/graph_algo/indices/
+        export FLEX_DATA_DIR=../interactive/examples/modern_graph
+        GLOG_v=10 ./bin/bulk_loader -g ${INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml -l ../interactive/examples/modern_graph/bulk_load.yaml -d ${INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
 
     - name: Test HQPS admin http service
       env: 
@@ -146,7 +150,7 @@ jobs:
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
-          eval ${cmd}
+          eval ${cmd} || exit 1
         done
 
         for i in 1 2 3 4 5 6 7 8 9 10 11 12;
@@ -155,7 +159,7 @@ jobs:
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
-          eval ${cmd}
+          eval ${cmd} || exit 1
         done
 
         # test movie graph, 8,9,10 are not supported now
@@ -167,7 +171,7 @@ jobs:
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml"
           echo $cmd
-          eval ${cmd}
+          eval ${cmd} || exit 1
         done
 
     - name: Test cypher procedure generation
@@ -191,7 +195,7 @@ jobs:
         export ENGINE_TYPE=hiactor
         # change the default_graph config in ./engine_config_test.yaml to ldbc
         sed -i 's/default_graph: movies/default_graph: ldbc/g' ./engine_config_test.yaml
-        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} ldbc \
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc \
               ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
 
     - name: Run End-to-End cypher adhoc movie query test
@@ -204,7 +208,7 @@ jobs:
         export ENGINE_TYPE=hiactor
         # change the default_graph config in ./engine_config_test.yaml to movies
         sed -i 's/default_graph: ldbc/default_graph: movies/g' ./engine_config_test.yaml
-        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} movies \
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} movies \
           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
 
     - name: Run End-to-End cypher adhoc graph_algo query test
@@ -217,7 +221,18 @@ jobs:
         export ENGINE_TYPE=hiactor
         # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/engine_config.yaml to graph_algo
         sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./engine_config_test.yaml
-        bash hqps_cypher_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
           ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml
+
+    - name: Run Gremlin test on modern graph
+      env:
+        GS_TEST_DIR: ${{ github.workspace }}/gstest
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
+        export ENGINE_TYPE=hiactor
+        sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ./engine_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} modern_graph \
+          ${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml gremlin
 
 

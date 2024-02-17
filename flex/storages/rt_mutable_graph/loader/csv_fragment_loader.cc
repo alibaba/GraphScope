@@ -14,7 +14,6 @@
  */
 
 #include "flex/storages/rt_mutable_graph/loader/csv_fragment_loader.h"
-#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
 namespace gs {
 
@@ -401,8 +400,7 @@ void CSVFragmentLoader::fillVertexReaderMeta(
     }
   }
 
-  VLOG(10) << "Include columns: " << included_col_names.size()
-           << gs::to_string(included_col_names);
+  VLOG(10) << "Include columns: " << included_col_names.size();
   // if empty, then means need all columns
   convert_options.include_columns = included_col_names;
 

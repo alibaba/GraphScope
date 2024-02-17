@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.gremlin.integration.suite.standard;
 
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
+import static org.junit.Assume.assumeFalse;
 
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
@@ -363,6 +364,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_E_has_weight_0_5_f_label() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         final Traversal<Edge, String> traversal = get_g_E_has_weight_0_5_f_label();
         printTraversalForm(traversal);
         Assert.assertEquals("knows", traversal.next());
@@ -773,6 +775,21 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertFalse(traversal.hasNext());
     }
 
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_E_hasLabelXknowsX() {
+        // Hqps engine doesn't support scan from edge index scan.
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        final Traversal<Edge, Edge> traversal = get_g_E_hasLabelXknowsX();
+        printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            counter++;
+            Assert.assertEquals("knows", traversal.next().label());
+        }
+        Assert.assertEquals(2, counter);
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         // g.V().out().union(out(), in(), in()).count()
@@ -1059,6 +1076,11 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Edge> get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(
                 final Object v1Id) {
             return g.V(v1Id).outE().as("here").inV().has("name", "vadas").select("here");
+        }
+
+        @Override
+        public Traversal<Edge, Edge> get_g_E_hasLabelXknowsX() {
+            return g.E().hasLabel("knows");
         }
     }
 }

@@ -344,7 +344,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.Project.newBuilder();
         projectBuilder.setIsAppend(project.isAppend());
         List<RelDataTypeField> fields = project.getRowType().getFieldList();
-
         for (int i = 0; i < project.getProjects().size(); ++i) {
             OuterExpression.Expression expression =
                     project.getProjects()

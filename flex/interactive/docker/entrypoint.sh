@@ -15,6 +15,10 @@
 # This is the entrypoint script for the interactive container
 set -e
 
+err() {
+  echo -e "${RED}[$(date +'%Y-%m-%d %H:%M:%S')] -ERROR- $* ${NC}" >&2
+}
+
 DEFAULT_GRAPH_NAME=gs_interactive_default_graph
 BULK_LOADER_BINARY_PATH=/opt/flex/bin/bulk_loader
 INTERACTIVE_SERVER_BIN=/opt/flex/bin/interactive_server
