@@ -1313,6 +1313,7 @@ components:
       x-body-name: procedure
     DeploymentInfo:
       example:
+        solution: INTERACTIVE
         name: name
         cluster_type: HOSTS
         version: version
@@ -1328,6 +1329,12 @@ components:
           type: string
         version:
           title: version
+          type: string
+        solution:
+          enum:
+          - INTERACTIVE
+          - GRAPHSCOPE_INSIGHT
+          title: solution
           type: string
       title: DeploymentInfo
       type: object

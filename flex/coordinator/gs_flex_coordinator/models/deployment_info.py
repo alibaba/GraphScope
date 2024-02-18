@@ -12,7 +12,7 @@ class DeploymentInfo(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, name=None, cluster_type=None, version=None):  # noqa: E501
+    def __init__(self, name=None, cluster_type=None, version=None, solution=None):  # noqa: E501
         """DeploymentInfo - a model defined in OpenAPI
 
         :param name: The name of this DeploymentInfo.  # noqa: E501
@@ -21,22 +21,27 @@ class DeploymentInfo(Model):
         :type cluster_type: str
         :param version: The version of this DeploymentInfo.  # noqa: E501
         :type version: str
+        :param solution: The solution of this DeploymentInfo.  # noqa: E501
+        :type solution: str
         """
         self.openapi_types = {
             'name': str,
             'cluster_type': str,
-            'version': str
+            'version': str,
+            'solution': str
         }
 
         self.attribute_map = {
             'name': 'name',
             'cluster_type': 'cluster_type',
-            'version': 'version'
+            'version': 'version',
+            'solution': 'solution'
         }
 
         self._name = name
         self._cluster_type = cluster_type
         self._version = version
+        self._solution = solution
 
     @classmethod
     def from_dict(cls, dikt) -> 'DeploymentInfo':
@@ -117,3 +122,30 @@ class DeploymentInfo(Model):
         """
 
         self._version = version
+
+    @property
+    def solution(self) -> str:
+        """Gets the solution of this DeploymentInfo.
+
+
+        :return: The solution of this DeploymentInfo.
+        :rtype: str
+        """
+        return self._solution
+
+    @solution.setter
+    def solution(self, solution: str):
+        """Sets the solution of this DeploymentInfo.
+
+
+        :param solution: The solution of this DeploymentInfo.
+        :type solution: str
+        """
+        allowed_values = ["INTERACTIVE", "GRAPHSCOPE_INSIGHT"]  # noqa: E501
+        if solution not in allowed_values:
+            raise ValueError(
+                "Invalid value for `solution` ({0}), must be one of {1}"
+                .format(solution, allowed_values)
+            )
+
+        self._solution = solution

@@ -1025,6 +1025,11 @@ components:
             - KUBERNETES
         version:
           type: string
+        solution:
+          type: string
+          enum:
+            - INTERACTIVE
+            - GRAPHSCOPE_INSIGHT
     DeploymentStatus:
       x-body-name: deployment_status
       type: object
