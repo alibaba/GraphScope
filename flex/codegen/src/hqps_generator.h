@@ -181,7 +181,7 @@ class QueryGenerator {
       : ctx_(ctx), plan_(plan) {}
 
   std::string GenerateQuery() {
-    // During generate query body, we will track the parameteres
+    // During generate query body, we will track the parameters
     // And also generate the expression for needed
     std::string query_code = build_query_code();
     std::string expr_code;
@@ -320,7 +320,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kEdge: {  // edge expand
         physical::EdgeExpand real_edge_expand = opr.edge();
-        // try to use infomation from later operator
+        // try to use information from later operator
         std::vector<LabelT> dst_vertex_labels;
         if (i + 1 < size) {
           auto& get_v_op_opr = plan_.plan(i + 1).opr();
@@ -409,7 +409,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kGroupBy: {
         // auto& meta_data = meta_datas[0];
-        // meta_data is currenly not used in groupby.
+        // meta_data is currently not used in groupby.
         physical::PhysicalOpr::MetaData meta_data;
         auto& group_by_op = opr.group_by();
         if (group_by_op.mappings_size() > 0) {
@@ -538,7 +538,7 @@ class QueryGenerator {
 };
 
 // When building a join op, we need to consider the following cases:
-// 0. tag_id to tag_ind mapping, two plan shoud keep different mappings
+// 0. tag_id to tag_ind mapping, two plan should keep different mappings
 // const physical::PhysicalOpr::MetaData& meta_data
 template <typename LabelT>
 static std::array<std::string, 4> BuildJoinOp(
@@ -678,7 +678,7 @@ static std::string BuildApplyOp(
     auto new_building_ctx = ctx.CreateSubTaskContext();
     auto sub_task_generator =
         QueryGenerator<LabelT>(new_building_ctx, sub_plan);
-    // QueryGenrator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
+    // QueryGenerator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
     // gen a lambda function.
     lambda_func_name = ctx.GetNextLambdaFuncName();
     std::stringstream inner_ss;

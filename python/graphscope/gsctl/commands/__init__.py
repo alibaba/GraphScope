@@ -29,7 +29,7 @@ def get_command_collection(context: Context):
     # default commands
     commands = click.CommandCollection(sources=[common, dev])
 
-    # treat gsctl as an utility script, providing hepler functions or utilities
+    # treat gsctl as an utility script, providing helper functions or utilities
     # e.g. initialize and manage cluster, install the dependencies required to
     # build graphscope locally.
     if context is None:

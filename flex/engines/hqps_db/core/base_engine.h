@@ -160,7 +160,7 @@ class BaseEngine {
     copied_ctx.set_sub_task_start_tag(start_tag);
 
     auto inner_ctx = func(std::move(copied_ctx));
-    // We shall obtain the active indcies in res_ctx via csr offset
+    // We shall obtain the active indices in res_ctx via csr offset
     // arrays.
 
     std::vector<offset_t> tmp_vec = inner_ctx.ObtainOffsetFromTag(start_tag);
@@ -521,7 +521,7 @@ class BaseEngine {
   // InnerJoin
   // for example, join (a,b,c) with (b,c,d) we got (a,b,c,d);
   // prob: the mapping of tag_id to tag_inds may change.
-  // prob: builing new columns.
+  // prob: building new columns.
   template <int alias_x, int alias_y, JoinKind join_kind, typename CTX_X,
             typename CTX_Y,
             typename std::enable_if<join_kind == JoinKind::InnerJoin>::type* =
@@ -877,7 +877,7 @@ class BaseEngine {
   static auto Intersect(CTX_X&& ctx_x, CTX_Y&& ctx_y) {
     using ctx_x_iter_t = typename CTX_X::iterator;
     using ctx_y_iter_t = typename CTX_Y::iterator;
-    // the prev column (the last column in prev_tuple shoud be the same.)
+    // the prev column (the last column in prev_tuple should be the same.)
     using ctx_x_all_ele_t = std::remove_reference_t<decltype(
         std::declval<ctx_x_iter_t>().GetAllElement())>;
     using ctx_y_all_ele_t = std::remove_reference_t<decltype(

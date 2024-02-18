@@ -80,7 +80,7 @@ double ProcessMatrix(std::vector<std::vector<T>>& degree_mixing_matrix,
 }
 
 /**
- * @brief deterimine if type T can convert to type U in compile-time.
+ * @brief determine if type T can convert to type U in compile-time.
  *
  * @tparam T
  * @tparam U

@@ -216,7 +216,7 @@ public enum TraversalParentTransformFactory implements TraversalParentTransform 
         }
     },
     // order().by("name"), order().by(values("name")) -> [OrderOp("@.name")]
-    // order().by(valueMap("name")) -> can not convert to FfiVariable with valueMap
+    // order().by(valueMap("name")) -> cannot convert to FfiVariable with valueMap
     // order().by(select("a").by("name")), order().by(select("a").by(values("name"))) ->
     // OrderOp("@a.name")
     // order().by(out().count) -> [ApplyOp(out().count()).as("order_1_apply"),

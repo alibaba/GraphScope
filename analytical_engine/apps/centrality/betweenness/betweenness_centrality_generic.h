@@ -69,7 +69,7 @@ class BetweennessCentralityGeneric
                 // unweighted graph, use bfs.
                 this->bfs(frag, v, ctx);
               } else {
-                // weighted graph, use dijstra.
+                // weighted graph, use dijkstra.
                 this->dijkstra(frag, v, ctx);
               }
             });

@@ -26,7 +26,7 @@ pub type ExprResult<T> = Result<T, ExprError>;
 pub enum ExprError {
     /// The left brace may not be closed by a right brace
     UnmatchedLRBraces,
-    /// The left bracket may not be closed by a right braket
+    /// The left bracket may not be closed by a right bracket
     UnmatchedLRBrackets,
     /// An escape sequence within a string literal is illegal.
     IllegalEscapeSequence(String),

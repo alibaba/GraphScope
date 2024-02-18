@@ -319,7 +319,7 @@ class BuildingContext {
 
   // for input tag_id,
   // return -1 if tag_id == -1
-  // return new asigned tag_ind if it doesn't appears before;
+  // return new assigned tag_ind if it doesn't appears before;
   // return the found tag_ind if it appears before;
   int32_t CreateOrGetTagInd(int tag_id) {
     return tag_ind_mapping_.CreateOrGetTagInd(tag_id);

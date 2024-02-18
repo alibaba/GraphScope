@@ -368,7 +368,7 @@ impl ReadGraph for ExpStore {
 
     fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
         if params.filter.is_some() {
-            // the filter can not be pushed down to exp_store,
+            // the filter cannot be pushed down to exp_store,
             // so we need to scan all vertices with filter and then count
             Ok(self.scan_vertex(params)?.count() as u64)
         } else {

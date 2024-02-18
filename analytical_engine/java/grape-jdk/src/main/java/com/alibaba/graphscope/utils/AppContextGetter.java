@@ -97,7 +97,7 @@ public class AppContextGetter {
      */
     public static String getDefaultContextName(Class<? extends DefaultAppBase> appClass) {
         // There is a special case: GiraphComputation, which is a driver, since ctx type is
-        // not specified at compile time, so it is not possible to retrive in a normal way.
+        // not specified at compile time, so it is not possible to retrieve in a normal way.
         if (appClass.getName().equals("com.alibaba.graphscope.app.GiraphComputationAdaptor")) {
             return "com.alibaba.graphscope.context.GiraphComputationAdaptorContext";
         }
@@ -126,7 +126,7 @@ public class AppContextGetter {
      * For parallel property app ,the index of context type in template is 1.
      *
      * @param appClass user-defined app class object.
-     * @return the corrsponding class name.
+     * @return the corresponding class name.
      */
     public static String getParallelPropertyContextName(
             Class<? extends ParallelPropertyAppBase> appClass) {
