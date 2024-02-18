@@ -12,7 +12,7 @@ jemalloc = ["jemallocator"]
 [dependencies]
 abomonation = "0.7.3"
 abomonation_derive = "0.5"
-ahash = "0.8"
+ahash = ">=0.8.0,<=0.8.7"
 bincode = "1.0.1"
 clap = "2.32.0"
 csv = "1.1"
