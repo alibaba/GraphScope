@@ -137,6 +137,55 @@ struct _add_vertex {
 };
 
 template <typename PK_T, typename EDATA_T>
+void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
+             const LFIndexer<vid_t>& indexer,
+             std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
+             std::vector<int32_t>& degree) {
+  if constexpr (std::is_same_v<PK_T, std::string_view>) {
+    if (col->type()->Equals(arrow::utf8())) {
+      auto casted = std::static_pointer_cast<arrow::StringArray>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto str = casted->GetView(j);
+        std::string_view str_view(str.data(), str.size());
+        auto vid = indexer.get_index(Any::From(str_view));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+        degree[vid]++;
+      }
+    } else {
+      // must be large utf8
+      auto casted = std::static_pointer_cast<arrow::LargeStringArray>(col);
+      for (auto j = 0; j < casted->length(); ++j) {
+        auto str = casted->GetView(j);
+        std::string_view str_view(str.data(), str.size());
+        auto vid = indexer.get_index(Any::From(str_view));
+        if (is_dst) {
+          std::get<1>(parsed_edges[cur_ind++]) = vid;
+        } else {
+          std::get<0>(parsed_edges[cur_ind++]) = vid;
+        }
+        degree[vid]++;
+      }
+    }
+  } else {
+    using arrow_array_type = typename gs::TypeConverter<PK_T>::ArrowArrayType;
+    auto casted = std::static_pointer_cast<arrow_array_type>(col);
+    for (auto j = 0; j < casted->length(); ++j) {
+      auto vid = indexer.get_index(Any::From(casted->Value(j)));
+      if (is_dst) {
+        std::get<1>(parsed_edges[cur_ind++]) = vid;
+      } else {
+        std::get<0>(parsed_edges[cur_ind++]) = vid;
+      }
+      degree[vid]++;
+    }
+  }
+}
+
+template <typename SRC_PK_T, typename DST_PK_T, typename EDATA_T>
 static void append_edges(
     std::shared_ptr<arrow::Array> src_col,
     std::shared_ptr<arrow::Array> dst_col, const LFIndexer<vid_t>& src_indexer,
@@ -168,54 +217,6 @@ static void append_edges(
   parsed_edges.resize(old_size + src_col->length());
   VLOG(10) << "resize parsed_edges from" << old_size << " to "
            << parsed_edges.size();
-
-  auto _append = [&](bool is_dst) {
-    size_t cur_ind = old_size;
-    const auto& col = is_dst ? dst_col : src_col;
-    const auto& indexer = is_dst ? dst_indexer : src_indexer;
-    if constexpr (std::is_same_v<PK_T, std::string_view>) {
-      if (col->type()->Equals(arrow::utf8())) {
-        auto casted = std::static_pointer_cast<arrow::StringArray>(col);
-        for (auto j = 0; j < casted->length(); ++j) {
-          auto str = casted->GetView(j);
-          std::string_view str_view(str.data(), str.size());
-          auto vid = indexer.get_index(Any::From(str_view));
-          if (is_dst) {
-            std::get<1>(parsed_edges[cur_ind++]) = vid;
-          } else {
-            std::get<0>(parsed_edges[cur_ind++]) = vid;
-          }
-          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
-        }
-      } else {
-        // must be large utf8
-        auto casted = std::static_pointer_cast<arrow::LargeStringArray>(col);
-        for (auto j = 0; j < casted->length(); ++j) {
-          auto str = casted->GetView(j);
-          std::string_view str_view(str.data(), str.size());
-          auto vid = indexer.get_index(Any::From(str_view));
-          if (is_dst) {
-            std::get<1>(parsed_edges[cur_ind++]) = vid;
-          } else {
-            std::get<0>(parsed_edges[cur_ind++]) = vid;
-          }
-          is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
-        }
-      }
-    } else {
-      using arrow_array_type = typename gs::TypeConverter<PK_T>::ArrowArrayType;
-      auto casted = std::static_pointer_cast<arrow_array_type>(col);
-      for (auto j = 0; j < casted->length(); ++j) {
-        auto vid = indexer.get_index(Any::From(casted->Value(j)));
-        if (is_dst) {
-          std::get<1>(parsed_edges[cur_ind++]) = vid;
-        } else {
-          std::get<0>(parsed_edges[cur_ind++]) = vid;
-        }
-        is_dst ? ie_degree[vid]++ : oe_degree[vid]++;
-      }
-    }
-  };
 
   // if EDATA_T is grape::EmptyType, no need to read columns
   auto edata_col_thread = std::thread([&]() {
@@ -250,8 +251,15 @@ static void append_edges(
       VLOG(10) << "Finish inserting:  " << src_col->length() << " edges";
     }
   });
-  auto src_col_thread = std::thread([&]() { _append(false); });
-  auto dst_col_thread = std::thread([&]() { _append(true); });
+  size_t cur_ind = old_size;
+  auto src_col_thread = std::thread([&]() {
+    _append<SRC_PK_T, EDATA_T>(false, cur_ind, src_col, src_indexer,
+                               parsed_edges, oe_degree);
+  });
+  auto dst_col_thread = std::thread([&]() {
+    _append<DST_PK_T, EDATA_T>(true, cur_ind, dst_col, dst_indexer,
+                               parsed_edges, ie_degree);
+  });
   src_col_thread.join();
   dst_col_thread.join();
   edata_col_thread.join();
@@ -374,6 +382,39 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     basic_fragment_loader_.FinishAddingVertex<KEY_T>(v_label_id, indexer);
   }
 
+  template <typename SRC_PK_T, typename EDATA_T>
+  void _append_edges(
+      std::shared_ptr<arrow::Array> src_col,
+      std::shared_ptr<arrow::Array> dst_col,
+      const LFIndexer<vid_t>& src_indexer, const LFIndexer<vid_t>& dst_indexer,
+      std::vector<std::shared_ptr<arrow::Array>>& property_cols,
+      const PropertyType& edge_property,
+      std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
+      std::vector<int32_t>& ie_degree, std::vector<int32_t>& oe_degree) {
+    auto dst_col_type = dst_col->type();
+    if (dst_col_type->Equals(arrow::int64())) {
+      append_edges<SRC_PK_T, int64_t, EDATA_T>(
+          src_col, dst_col, src_indexer, dst_indexer, property_cols,
+          edge_property, parsed_edges, ie_degree, oe_degree);
+    } else if (dst_col_type->Equals(arrow::uint64())) {
+      append_edges<SRC_PK_T, uint64_t, EDATA_T>(
+          src_col, dst_col, src_indexer, dst_indexer, property_cols,
+          edge_property, parsed_edges, ie_degree, oe_degree);
+    } else if (dst_col_type->Equals(arrow::int32())) {
+      append_edges<SRC_PK_T, int32_t, EDATA_T>(
+          src_col, dst_col, src_indexer, dst_indexer, property_cols,
+          edge_property, parsed_edges, ie_degree, oe_degree);
+    } else if (dst_col_type->Equals(arrow::uint32())) {
+      append_edges<SRC_PK_T, uint32_t, EDATA_T>(
+          src_col, dst_col, src_indexer, dst_indexer, property_cols,
+          edge_property, parsed_edges, ie_degree, oe_degree);
+    } else {
+      // must be string
+      append_edges<SRC_PK_T, std::string_view, EDATA_T>(
+          src_col, dst_col, src_indexer, dst_indexer, property_cols,
+          edge_property, parsed_edges, ie_degree, oe_degree);
+    }
+  }
   template <typename EDATA_T>
   void addEdgesRecordBatchImpl(
       label_t src_label_id, label_t dst_label_id, label_t e_label_id,
@@ -444,9 +485,6 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
             << "unsupported src_col type: " << src_col_type->ToString();
         CHECK(check_primary_key_type(dst_col_type))
             << "unsupported dst_col type: " << dst_col_type->ToString();
-        CHECK(src_col_type->Equals(dst_col_type))
-            << "src_col type: " << src_col_type->ToString()
-            << " neq dst_col type: " << dst_col_type->ToString();
 
         std::vector<std::shared_ptr<arrow::Array>> property_cols;
         for (size_t i = 2; i < columns.size(); ++i) {
@@ -463,24 +501,24 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         // add edges to vector
         CHECK(src_col->length() == dst_col->length());
         if (src_col_type->Equals(arrow::int64())) {
-          append_edges<int64_t, EDATA_T>(
+          _append_edges<int64_t, EDATA_T>(
               src_col, dst_col, src_indexer, dst_indexer, property_cols,
               edge_property, parsed_edges, ie_degree, oe_degree);
         } else if (src_col_type->Equals(arrow::uint64())) {
-          append_edges<uint64_t, EDATA_T>(
+          _append_edges<uint64_t, EDATA_T>(
               src_col, dst_col, src_indexer, dst_indexer, property_cols,
               edge_property, parsed_edges, ie_degree, oe_degree);
         } else if (src_col_type->Equals(arrow::int32())) {
-          append_edges<int32_t, EDATA_T>(
+          _append_edges<int32_t, EDATA_T>(
               src_col, dst_col, src_indexer, dst_indexer, property_cols,
               edge_property, parsed_edges, ie_degree, oe_degree);
         } else if (src_col_type->Equals(arrow::uint32())) {
-          append_edges<uint32_t, EDATA_T>(
+          _append_edges<uint32_t, EDATA_T>(
               src_col, dst_col, src_indexer, dst_indexer, property_cols,
               edge_property, parsed_edges, ie_degree, oe_degree);
         } else {
           // must be string
-          append_edges<std::string_view, EDATA_T>(
+          _append_edges<std::string_view, EDATA_T>(
               src_col, dst_col, src_indexer, dst_indexer, property_cols,
               edge_property, parsed_edges, ie_degree, oe_degree);
         }
