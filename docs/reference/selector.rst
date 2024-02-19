@@ -4,7 +4,7 @@
 Selector
 ========
 
-Selectors are strs, or key-value pairs that used for :ref:`Graph`, or :ref:`Context`. Selectors are intended to be used to specify a subset of data of objects, they can not only retrieve the results of algorithms, but also elements on
+Selectors are strs, or key-value pairs that used for :ref:`Graph`, or :ref:`Context`. Selectors are intended to be used to specify a subset of data of objects, they cannot only retrieve the results of algorithms, but also elements on
 the graph itself. The syntax of selectors slightly differ from each other For different kinds of graphs or contexts. Since we have 5 kinds of context, let's talk about them one by one.
 
 Selectors in different context
@@ -41,7 +41,7 @@ Let's see what selectors of :class:`VertexDataContext` looks like:
         - `e.data`: Get the edge data on the edges (If there is any, means origin data on the graph)
 
     - The syntax of selector of results is:
-        - `r`: Get quering results of algorithms. e.g. Rankings of vertices after doing PageRank. 
+        - `r`: Get querying results of algorithms. e.g. Rankings of vertices after doing PageRank. 
 
 
 LabeledVertexDataContext

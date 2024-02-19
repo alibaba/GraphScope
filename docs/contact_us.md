@@ -2,5 +2,5 @@
 
 ## Slack
 
-## Discussion on Github
+## Discussion on GitHub
 ...
