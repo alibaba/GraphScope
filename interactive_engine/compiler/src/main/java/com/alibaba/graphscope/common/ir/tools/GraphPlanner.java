@@ -24,6 +24,7 @@ import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
+import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
@@ -196,6 +197,7 @@ public class GraphPlanner {
                             .getRules()
                             .forEach(
                                     k -> {
+                                        // logical rules
                                         if (k.equals(
                                                 FilterJoinRule.FilterIntoJoinRule.class
                                                         .getSimpleName())) {
@@ -214,6 +216,17 @@ public class GraphPlanner {
                                             ruleConfigs.add(
                                                     DegreeFusionRule.ExpandGetVDegreeFusionRule
                                                             .Config.DEFAULT);
+                                        }
+                                        // physical rules
+                                        else if (k.equals(
+                                                ExpandGetVFusionRule.class.getSimpleName())) {
+                                            ruleConfigs.add(
+                                                    ExpandGetVFusionRule.BasicExpandGetVFusionRule
+                                                            .Config.DEFAULT);
+                                            ruleConfigs.add(
+                                                    ExpandGetVFusionRule
+                                                            .PathBaseExpandGetVFusionRule.Config
+                                                            .DEFAULT);
                                         }
                                     });
                     HepProgramBuilder hepBuilder = HepProgram.builder();
