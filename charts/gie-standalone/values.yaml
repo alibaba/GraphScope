@@ -119,7 +119,7 @@ executor:
   ##
   podAntiAffinityPreset: soft
 
-  ## Affinity for Graphscope store pods assignment
+  ## Affinity for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
@@ -302,7 +302,7 @@ frontend:
   ##
   podAntiAffinityPreset: soft
 
-  ## Affinity for Graphscope store pods assignment
+  ## Affinity for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##

@@ -64,7 +64,7 @@ class AllPairsShortestPathLength
                 // unweighted graph, use bfs.
                 this->bfs(frag, v, ctx);
               } else {
-                // weighted graph, use dijstra.
+                // weighted graph, use dijkstra.
                 this->dijkstraLength(frag, v, ctx);
               }
             });

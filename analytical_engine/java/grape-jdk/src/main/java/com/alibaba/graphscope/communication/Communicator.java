@@ -39,7 +39,7 @@ public class Communicator {
     }
 
     /**
-     * This function is set private, not intended to be invokede by user. It is meat to only be
+     * This function is set private, not intended to be invoked by user. It is meat to only be
      * called by jni, and let the exceptions accepted by cpp, so they can be obviously displayed.
      *
      * @param appAddr the address of the c++ app instance.

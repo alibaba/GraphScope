@@ -325,7 +325,7 @@ class MultiLabelVertexSet {
     return std::move(*this);
   }
 
-  // Filter vertex sets with expresion and labels.
+  // Filter vertex sets with expression and labels.
   template <typename LabelT, typename EXPRESSION, size_t num_labels,
             typename ELE_TUPLE,
             typename RES_SET_T = MultiLabelVertexSet<VERTEX_SET_T, N>,

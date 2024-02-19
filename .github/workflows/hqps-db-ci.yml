@@ -142,7 +142,7 @@ jobs:
 
         for i in 1 2 3 4 5 6 7 8 9 10 11 12;
         do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codgen/"
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/ic${i}_adhoc.cypher -w=/tmp/codegen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
@@ -151,7 +151,7 @@ jobs:
 
         for i in 1 2 3 4 5 6 7 8 9 10 11 12;
         do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codgen/"
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../resources/queries/ic/adhoc/simple_match_${i}.cypher -w=/tmp/codegen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml"
           echo $cmd
@@ -163,7 +163,7 @@ jobs:
         sed -i 's/default_graph: ldbc/default_graph: movies/g' ../tests/hqps/engine_config_test.yaml
         for i in 1 2 3 4 5 6 7 11 12 13 14 15;
         do
-          cmd="./load_plan_and_gen.sh -e=hqps -i=../tests/hqps/queries/movie/query${i}.cypher -w=/tmp/codgen/"
+          cmd="./load_plan_and_gen.sh -e=hqps -i=../tests/hqps/queries/movie/query${i}.cypher -w=/tmp/codegen/"
           cmd=${cmd}" -o=/tmp/plugin --ir_conf=../tests/hqps/engine_config_test.yaml "
           cmd=${cmd}" --graph_schema_path=${INTERACTIVE_WORKSPACE}/data/movies/graph.yaml"
           echo $cmd

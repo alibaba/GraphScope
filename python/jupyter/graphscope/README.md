@@ -104,7 +104,7 @@ npm run build
 
 ### How to see your changes
 
-#### Typescript:
+#### TypeScript:
 
 To continuously monitor the project for changes and automatically trigger a rebuild, start Jupyter in watch mode:
 

@@ -37,7 +37,7 @@ class EmptyCol {
 
 // After operator like group, we need to extract the property or the count to
 // separate column.
-// We use collection to implemention this abstraction.
+// We use collection to implement this abstraction.
 // Currently we may not use it like vertex_set/edge_set, i.e., no dedup, no
 // flat, not subset on collection.
 
@@ -404,7 +404,7 @@ class CountBuilder {
     }
     using cur_ele_tuple = typename gs::tuple_element<tag, ELE_TUPLE>::type;
     auto& cur_ele = gs::get_from_tuple<tag>(tuple);
-    // currenly we support vertex ele tupe and edge tuple.
+    // currently we support vertex ele tuple and edge tuple.
     if constexpr (std::tuple_size<cur_ele_tuple>::value == 2) {
       auto& ele = std::get<1>(cur_ele);
       using vid_t = typename std::tuple_element<1, cur_ele_tuple>::type;
@@ -545,7 +545,7 @@ class DistinctCountBuilder<
   size_t edges_num_;
 };
 
-// count the distinct number of recieved elements.
+// count the distinct number of received elements.
 template <int tag_id, typename LabelT, typename VID_T, typename... T>
 class DistinctCountBuilder<tag_id, RowVertexSetImpl<LabelT, VID_T, T...>> {
  public:

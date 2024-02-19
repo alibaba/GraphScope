@@ -14,11 +14,11 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 Alternatively, you can also manually install all dependencies on your local machine.
 Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
-After the environment is prepared, clone the repository and enter the `analatical_engine` directory of the repository.
+After the environment is prepared, clone the repository and enter the `analytical_engine` directory of the repository.
 
 ```bash
 git clone https://github.com/alibaba/GraphScope.git
-cd analatical_engine
+cd analytical_engine
 ```
 
 ## Understanding the Codebase
@@ -27,7 +27,7 @@ Since the analytical engine inherits from GRAPE, it requires libgrape-lite as a 
 Please note that the core functionalities of libgrape-lite, such as graph structures, graph partitioners, workers, 
 communication between workers, and applications, are heavily reused in the analytical engine of GraphScope.
 
-If you want to fully understand the analytcial engine, it is highly recommaned that you start from libgrape-lite.
+If you want to fully understand the analytical engine, it is highly recommended that you start from libgrape-lite.
 
 The code located in the `analytical_engine` directory functions like extensions to libgrape-lite, thereby making it full-fledged with the following enhancements:
 

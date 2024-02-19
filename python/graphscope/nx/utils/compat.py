@@ -137,7 +137,7 @@ def load_the_module(module_or_name):
 
 
 def apply_networkx_patches(module):
-    # there'a some name conflicts in networkx and we need to be careful
+    # there are some name conflicts in networkx and we need to be careful
     # e.g.,
     #
     #     networkx.algorithms.approximation.connectivity
@@ -189,7 +189,7 @@ def replace_module_context(  # noqa: C901
         decorators = [decorators]
 
     # get the caller's module, and since this function might be called by import_as_grape_nx
-    # in this module, we go up and findout the real caller.
+    # in this module, we go up and find out the real caller.
     for loc in inspect.stack()[1:]:
         mod = inspect.getmodule(loc[0])
         if mod.__name__ != __name__:
@@ -421,7 +421,7 @@ def with_module_map(  # noqa: C901
                         if k not in global_ctx:
                             global_ctx[k] = v
 
-                # run replacing module context again for accurance
+                # run replacing module context again for accuracy
                 global_ctx = replace_context(global_ctx, source_module, target_module)
                 fn = (
                     copy_property(meth, global_ctx)
