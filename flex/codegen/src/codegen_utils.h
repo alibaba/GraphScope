@@ -29,7 +29,7 @@ limitations under the License.
 
 namespace gs {
 
-// remote deuplicate from vector
+// remote duplicate from vector
 template <typename T>
 std::vector<T> remove_duplicate(const std::vector<T>& labels) {
   std::vector<T> res;

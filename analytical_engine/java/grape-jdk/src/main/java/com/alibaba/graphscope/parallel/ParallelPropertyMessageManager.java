@@ -41,7 +41,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 /**
- * As PropertyParalleMessager.h has not much difference from ParallelMessageManager.
+ * As PropertyParallelMessager.h has not much difference from ParallelMessageManager.
  */
 @FFITypeAlias(GS_PARALLEL_PROPERTY_MESSAGE_MANAGER)
 @CXXHead({

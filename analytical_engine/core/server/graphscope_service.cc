@@ -121,7 +121,7 @@ Status GraphScopeService::HeartBeat(ServerContext* context,
 
     if (!success) {
       op_result->set_error_msg(error_msgs);
-      // break dag exection flow
+      // break dag execution flow
       stream->Write(response_head);
       return Status(StatusCode::INTERNAL, error_msgs);
     }

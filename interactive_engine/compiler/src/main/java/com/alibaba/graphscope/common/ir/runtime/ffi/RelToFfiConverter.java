@@ -18,10 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime.ffi;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttle;
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
@@ -411,6 +408,27 @@ public class RelToFfiConverter implements GraphRelShuttle {
                                             ptrGroup, new FfiPbPointer.ByValue(k.toByteArray())));
                         });
         return new PhysicalNode(aggregate, ptrGroup);
+    }
+
+    @Override
+    public PhysicalNode visit(GraphLogicalDedupBy dedupBy) {
+        Preconditions.checkArgument(
+                !dedupBy.getDedupByKeys().isEmpty(), "dedup by keys should not be empty");
+        Pointer ptrDedup = LIB.initDedupOperator();
+        for (RexNode key : dedupBy.getDedupByKeys()) {
+            Preconditions.checkArgument(
+                    key instanceof RexGraphVariable,
+                    "each dedup by key should be type %s, but is %s",
+                    RexGraphVariable.class,
+                    key.getClass());
+            OuterExpression.Variable var =
+                    key.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
+                            .getOperators(0)
+                            .getVar();
+            checkFfiResult(
+                    LIB.addDedupKeyPb(ptrDedup, new FfiPbPointer.ByValue(var.toByteArray())));
+        }
+        return new PhysicalNode(dedupBy, ptrDedup);
     }
 
     @Override

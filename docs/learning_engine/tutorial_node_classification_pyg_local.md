@@ -165,6 +165,6 @@ for epoch in range(0, epochs):
         test_acc = test(model, test_loader, dataset_name)
         print(f"-- Test Accuracy: {test_acc:.4f}")
 
-print("-- Shutdowning ...")
+print("-- Shutting down ...")
 glt.distributed.shutdown_client()
 ```

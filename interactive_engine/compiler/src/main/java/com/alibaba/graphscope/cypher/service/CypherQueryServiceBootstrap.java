@@ -20,11 +20,10 @@ import static org.neo4j.scheduler.Group.CYPHER_CACHE;
 import static org.neo4j.scheduler.Group.FABRIC_WORKER;
 import static org.neo4j.scheduler.JobMonitoringParams.systemJob;
 
-import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.cypher.executor.GraphQueryExecutor;
 import com.alibaba.graphscope.gremlin.Utils;
@@ -161,8 +160,7 @@ public class CypherQueryServiceBootstrap extends FabricServicesBootstrap.Communi
         Executor fabricWorkerExecutor = jobScheduler.executor(FABRIC_WORKER);
         // gie config
         var graphConfig = (Configs) resolve(Configs.class);
-        var antlr4Parser = (Antlr4Parser) resolve(Antlr4Parser.class);
-        var graphPlanner = (GraphPlanner) resolve(GraphPlanner.class);
+        var idGenerator = (QueryIdGenerator) resolve(QueryIdGenerator.class);
         var metaQueryCallback = (IrMetaQueryCallback) resolve(IrMetaQueryCallback.class);
         var executionClient = (ExecutionClient) resolve(ExecutionClient.class);
         var queryCache = (QueryCache) resolve(QueryCache.class);
@@ -176,8 +174,7 @@ public class CypherQueryServiceBootstrap extends FabricServicesBootstrap.Communi
                         statementLifecycles,
                         fabricWorkerExecutor,
                         graphConfig,
-                        antlr4Parser,
-                        graphPlanner,
+                        idGenerator,
                         metaQueryCallback,
                         executionClient,
                         queryCache);

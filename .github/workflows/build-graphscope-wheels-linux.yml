@@ -57,7 +57,7 @@ jobs:
         tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
         tar -zcf graphscope.tar.gz coordinator/dist/
 
-        # move wheels into one floder to upload to PyPI
+        # move wheels into one folder to upload to PyPI
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
         mv ${GITHUB_WORKSPACE}/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
         mv ${GITHUB_WORKSPACE}/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
@@ -139,7 +139,7 @@ jobs:
         tar -zcf client.tar.gz python/dist/wheelhouse/*.whl
         tar -zcf graphscope.tar.gz coordinator/dist/
 
-        # move wheels into one floder to upload to PyPI
+        # move wheels into one folder to upload to PyPI
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
         mv ${GITHUB_WORKSPACE}/python/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/
         mv ${GITHUB_WORKSPACE}/coordinator/dist/wheelhouse/*.whl ${GITHUB_WORKSPACE}/upload_pypi/

@@ -1,4 +1,4 @@
-# The file cmake/FindArrow.cmake is referered from project
+# The file cmake/FindArrow.cmake is referred from project
 # https://github.com/apache/arrow
 #
 #   https://github.com/apache/arrow/blob/master/cpp/cmake_modules/FindArrow.cmake

@@ -171,7 +171,7 @@ sess = graphscope.session(
 
 #### Provide a `kubeconfig` file other than default
 
-If you want to deploy on a pre-existing cluster with a `kubeconfig` file located in a non-default location,
+If you want to deploy on a preexisting cluster with a `kubeconfig` file located in a non-default location,
 they can manually specify the path to the `kubeconfig` file as follows:
 
 ```python

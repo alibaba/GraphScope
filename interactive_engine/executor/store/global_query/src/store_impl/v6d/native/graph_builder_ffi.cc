@@ -244,7 +244,7 @@ void v6d_destroy(GraphBuilder builder) {
   LOG(INFO) << "destory: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
-  // delete the shared_ptr object on heap, it will then delete the holded
+  // delete the shared_ptr object on heap, it will then delete the held
   // object.
   delete stream;
 }

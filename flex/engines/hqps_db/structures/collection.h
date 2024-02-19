@@ -37,7 +37,7 @@ class EmptyCol {
 
 // After operator like group, we need to extract the property or the count to
 // separate column.
-// We use collection to implemention this abstraction.
+// We use collection to implement this abstraction.
 // Currently we may not use it like vertex_set/edge_set, i.e., no dedup, no
 // flat, not subset on collection.
 
@@ -404,7 +404,7 @@ class CountBuilder {
     }
     using cur_ele_tuple = typename gs::tuple_element<tag, ELE_TUPLE>::type;
     auto& cur_ele = gs::get_from_tuple<tag>(tuple);
-    // currenly we support vertex ele tupe and edge tuple.
+    // currently we support vertex ele tuple and edge tuple.
     if constexpr (std::tuple_size<cur_ele_tuple>::value == 2) {
       auto& ele = std::get<1>(cur_ele);
       using vid_t = typename std::tuple_element<1, cur_ele_tuple>::type;
@@ -545,7 +545,7 @@ class DistinctCountBuilder<
   size_t edges_num_;
 };
 
-// count the distinct number of recieved elements.
+// count the distinct number of received elements.
 template <int tag_id, typename LabelT, typename VID_T, typename... T>
 class DistinctCountBuilder<tag_id, RowVertexSetImpl<LabelT, VID_T, T...>> {
  public:
@@ -650,6 +650,48 @@ class DistinctCountBuilder<tag_id, TwoLabelVertexSetImpl<VID_T, LabelT, T...>> {
  private:
   std::array<std::vector<grape::Bitset>, 2> vec_;
   std::array<VID_T, 2> min_v, max_v, range_size;
+};
+
+// DistinctCountBuilder for PathSet
+template <int tag_id, typename PATH_SET_T>
+class DistinctCountBuilder<
+    tag_id, PATH_SET_T,
+    typename std::enable_if<PATH_SET_T::is_path_set>::type> {
+ public:
+  using path_set_t = PATH_SET_T;
+  using index_ele_t = typename path_set_t::index_ele_tuple_t;
+  DistinctCountBuilder(const path_set_t& path_set) {
+    paths_num_ = path_set.Size();
+  }
+
+  template <typename ELE_TUPLE_T, typename DATA_TUPLE>
+  void insert(size_t ind, const ELE_TUPLE_T& tuple, const DATA_TUPLE& data) {
+    auto& cur_ind_ele = gs::get_from_tuple<tag_id>(tuple);
+    while (vec_.size() <= ind) {
+      vec_.emplace_back(grape::Bitset(paths_num_));
+    }
+    auto& cur_bitset = vec_[ind];
+    auto cur_ind = std::get<0>(cur_ind_ele);
+    if (cur_ind < paths_num_) {
+      cur_bitset.set_bit(cur_ind);
+    } else {
+      LOG(FATAL) << "Invalid path set index: " << cur_ind
+                 << ", path set num: " << paths_num_;
+    }
+  }
+
+  Collection<size_t> Build() {
+    std::vector<size_t> res;
+    res.reserve(vec_.size());
+    for (auto& bitset : vec_) {
+      res.emplace_back(bitset.count());
+    }
+    return Collection<size_t>(std::move(res));
+  }
+
+ private:
+  std::vector<grape::Bitset> vec_;
+  size_t paths_num_;
 };
 
 // DistinctCountBuilder for multiple sets together

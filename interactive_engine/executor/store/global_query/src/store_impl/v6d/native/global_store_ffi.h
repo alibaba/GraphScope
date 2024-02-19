@@ -230,7 +230,7 @@ void v6d_free_properties_iterator(PropertiesIterator iter);
 
 // ----------------- property api -------------------- //
 
-// 获取属性值，这里需要在c++里判断类型是否正确，比如：对stirng属性调用get_property_as_int就应该报错，返回-1表示错误，返回0表示正确。
+// 获取属性值，这里需要在c++里判断类型是否正确，比如：对string属性调用get_property_as_int就应该报错，返回-1表示错误，返回0表示正确。
 // 如果类型是正确的，则把值填进out指针
 int v6d_get_property_as_bool(struct Property* property, bool* out);
 int v6d_get_property_as_char(struct Property* property, char* out);

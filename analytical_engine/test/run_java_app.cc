@@ -477,7 +477,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
     std::string selector_string;
     std::string selectors_string;
     if (run_property == 0) {
-      // labeled_vetex_data
+      // labeled_vertex_data
       selector_string = "r:label0";
       {
         std::vector<std::pair<std::string, std::string>> selector_list;
@@ -521,7 +521,7 @@ void Run(vineyard::Client& client, const grape::CommSpec& comm_spec,
       std::string selector_string;
       std::string selectors_string;
       if (run_property == 0) {
-        // vetex_data
+        // vertex_data
         selector_string = "r";
         {
           std::vector<std::pair<std::string, std::string>> selector_list;

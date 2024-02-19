@@ -32,7 +32,7 @@ import java.util.List;
 
 /**
  * Class which add typespec to ffiGenBatch for arrowProjectedFragment. In annotation invoker, we
- * alread generated some classes, try to avoid regeneration.
+ * already generated some classes, try to avoid regeneration.
  * TODO(zhanglei): generate according to message strategy, if provided.
  */
 public class ArrowProjectedGenerator {

@@ -16,7 +16,8 @@ pandas<=2.0.3
 protobuf>=4
 psutil
 pyarrow>=10
-pysimdjson;python_version<"3.11"
+pysimdjson<6;python_version<"3.11"
+pysimdjson>=6;python_version>="3.11"
 ujson;python_version>="3.11"
 PyYAML
 rich
