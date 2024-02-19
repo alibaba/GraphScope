@@ -1,4 +1,4 @@
-name: Build GraphScope Wheels on MacOS
+name: Build GraphScope Wheels on macOS
 
 # on: [push, pull_request]
 on:
