@@ -672,7 +672,7 @@ struct ColumnAccessorImpl;
 template <std::size_t i>
 struct ColumnAccessorImpl<i> {};
 
-// Recurvise
+// Recursive
 template <std::size_t i, typename FIRST, typename... OTHER>
 struct ColumnAccessorImpl<i, FIRST, OTHER...>
     : public SingleColumn<i, FIRST>,

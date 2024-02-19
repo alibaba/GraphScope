@@ -100,7 +100,7 @@ static auto get_single_prop_getter_from_selector(
   return graph.template GetSinglePropGetter<PropT>(label, prop_name);
 }
 
-// get prop getter from multiplet named property
+// get prop getter from multiple named property
 template <typename GRAPH_INTERFACE, typename LabelT, typename... NamedPropT>
 static auto get_prop_getters_from_named_property(
     const GRAPH_INTERFACE& graph, const LabelT& label,

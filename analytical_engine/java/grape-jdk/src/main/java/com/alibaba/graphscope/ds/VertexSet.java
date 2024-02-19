@@ -38,7 +38,7 @@ public class VertexSet {
     private Bitset bs;
     private static Bitset.Factory factory = FFITypeFactory.getFactory("grape::Bitset");
     private long left;
-    // right is exclusived
+    // right is exclusive
     private long right;
 
     public VertexSet(int start, int end) {
@@ -101,7 +101,7 @@ public class VertexSet {
     /**
      * This function is not thread safe, even you are assigning threads with segmented partition.
      * Because java {@code Bitset} init the {@code wordinUse = 0} and adaptively increases it,
-     * {@code ensureCapcity} is to be invoked, causing problem. So we access the highest bit in
+     * {@code ensureCapacity} is to be invoked, causing problem. So we access the highest bit in
      * initializing.
      *
      * @param vertex input vertex.

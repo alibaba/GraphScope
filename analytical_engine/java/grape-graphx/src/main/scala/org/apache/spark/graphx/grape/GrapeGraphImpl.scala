@@ -35,7 +35,7 @@ object GrapeGraphBackend extends Enumeration {
 }
 
 /** Creating a graph abstraction by combining vertex RDD and edge RDD together. Before doing this construction:
-  *   - Both vertex RDD and edge RDD are available for map,fliter operators.
+  *   - Both vertex RDD and edge RDD are available for map,filter operators.
   *   - Both vertex RDD and edge RDD stores data in partitions When construct this graph, we will
   *   - copy data out to shared-memory
   *   - create mpi processes to load into fragment.

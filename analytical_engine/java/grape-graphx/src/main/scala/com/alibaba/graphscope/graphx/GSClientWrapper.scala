@@ -166,7 +166,7 @@ class GSClientWrapper(
 object GSClientWrapper {
   val RES_PATTERN = "res_str";
   //A safe word which we append to the execution of python code, its appearance in
-  // output stream, indicating command has been successfully executoed.
+  // output stream, indicating command has been successfully executed.
   val SAFE_WORD                   = "Spark-GraphScope-OK"
   val graphNameCounter            = new AtomicInteger(0)
   val VINEYARD_DEFAULT_SHARED_MEM = "10Gi"

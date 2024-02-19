@@ -140,7 +140,7 @@ pub struct LargeGraphDB<
     pub(crate) topology: T,
     /// The schema of the vertex/edge property table
     pub(crate) graph_schema: Arc<LDBCGraphSchema>,
-    /// Table from internal vertexs' indices to their properties
+    /// Table from internal vertices' indices to their properties
     pub(crate) vertex_prop_table: N,
     /// Table from internal edges' indices to their properties
     pub(crate) edge_prop_table: E,
@@ -605,7 +605,7 @@ pub struct MutableGraphDB<
     pub(crate) partition: usize,
     /// The graph structure, the label will be encoded as `LabelId`
     pub(crate) topology: T,
-    /// Table from internal vertexs' indices to their properties
+    /// Table from internal vertices' indices to their properties
     pub(crate) vertex_prop_table: N,
     /// Table from internal edges' indices to their properties
     pub(crate) edge_prop_table: E,
@@ -923,7 +923,7 @@ mod test {
             .unwrap()
             .is_none());
 
-        // The vertex PIDS[1] does no exist, can not update
+        // The vertex PIDS[1] does no exist, cannot update
         assert!(graphdb
             .add_or_update_vertex_properties(PIDS[1], prop.clone())
             .is_err());

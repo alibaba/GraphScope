@@ -258,7 +258,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 .map(move |cnt| fold_map.exec(cnt))?
                                 .into_stream()?;
                         } else {
-                            // TODO: optimize this by fold_partiton + fold
+                            // TODO: optimize this by fold_partition + fold
                             let fold_accum = fold.gen_fold_accum()?;
                             stream = stream
                                 .fold(fold_accum, || {
@@ -680,7 +680,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     // do nothing, as it is a dummy node
                 }
                 OpKind::Sink(_) => {
-                    // this would be processed in assemble, and can not be reached when install.
+                    // this would be processed in assemble, and cannot be reached when install.
                     Err(FnGenError::unsupported_error("unreachable sink in install"))?
                 }
             }

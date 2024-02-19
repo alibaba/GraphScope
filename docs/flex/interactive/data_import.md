@@ -111,7 +111,7 @@ loading_config:
 vertex_mappings:
   - type_name: person  # must align with the schema
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     column_mappings:  
           - column:
               index: 0  
@@ -127,7 +127,7 @@ vertex_mappings:
             property: age
   - type_name: software
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     column_mappings:
       - column:
           index: 0      
@@ -147,7 +147,7 @@ edge_mappings:
       source_vertex: person
       destination_vertex: person
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     source_vertex_mappings:
       - column:
           index: 0
@@ -168,7 +168,7 @@ edge_mappings:
       source_vertex: person
       destination_vertex: software
     inputs:
-      - your_proj_name/table_name/partition_col_name=paritition_name
+      - your_proj_name/table_name/partition_col_name=partition_name
     source_vertex_mappings:
       - column:
           index: 0
@@ -191,7 +191,7 @@ The table below offers a detailed breakdown of each configuration item. In this 
 | -------- | -------- | -------- |-------- |
 | **loading_config**    | N/A     | Loading configurations     |  Yes   |
 | loading_config.data_source    | N/A     | Place that maintains the raw data     |  Yes   |
-| loading_config.data_source.location |	N/A | Path to the data source in the container, which must be mapped from the host machine while intializing the service |	Yes
+| loading_config.data_source.location |	N/A | Path to the data source in the container, which must be mapped from the host machine while initializing the service |	Yes
 | loading_config.scheme | file | The source of input data. Currently only `file` and `odps` are supported | No |
 | loading_config.format    | N/A     | The format of the raw data in CSV    |  Yes   |
 | loading_config.format.metadata    | N/A    | Mainly for configuring the options for reading CSV   |  Yes   |

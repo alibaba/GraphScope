@@ -131,12 +131,12 @@ object Pregel extends Logging {
     )
 
     /** The Pregel contains the following steps.
-      * 0) persist vertex data to the memory mapped address. So, that the update data can be readed
+      * 0) persist vertex data to the memory mapped address. So, that the update data can be read
       *    by later launched mpi processes.
       * 1) Launch mpi processes to run pie query, which get the fragment ids from graph.fragIds.
       * 2) at the end of query, we get the result graph.Then how to pass the result graph from mpi
       *    process to graphx executor?
-      *    - We Assume common graph computing will not repartition the graph,vertices,and edgs.
+      *    - We Assume common graph computing will not repartition the graph,vertices,and edges.
       *    - We assume no graphx-related communication is not explicitly invoked.
       *    - The computation result is set to vertex data.
       *

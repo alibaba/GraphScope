@@ -6,19 +6,19 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 1. What are the minimum resources and system requirements required to run GraphScope?
 
     To use GraphScope Python interface, **Python >= 3.7** and **pip >= 19.0** is required.
-    GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the mininum requirement is  **4 cores CPU** and **8G memory**.
+    GraphScope engine can be deployed in standalone mode or distributed mode. For standalone deployment, the minimum requirement is  **4 cores CPU** and **8G memory**.
 
     GraphScope is tested and supported on the following systems:
 
     - CentOS 7+
     - Ubuntu 18.04+
-    - MacOS 10.15+
+    - macOS 10.15+
 
-    For distributed depolyment, a cluster managed by Kubernetes is required. GraphScope has been tested on
+    For distributed deployment, a cluster managed by Kubernetes is required. GraphScope has been tested on
     Kubernetes **version >= v1.12.0+**.
 
 
-2. Is Kubernetes an enssential to use GraphScope?
+2. Is Kubernetes an essential to use GraphScope?
 
     No. GraphScope supports run in standalone mode on a single machine. GraphScope pre-compiled package is distributed as a python package and can be easily installed with `pip`: `pip3 install graphscope`.
 
@@ -62,7 +62,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
 8. Why `No such file or directory` error when loading graph?
 
-    This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the ``engnine`` Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.
+    This mostly occurs when you are deploying GraphScope in a Kubernetes cluster, the file must be visible to the ``engine`` Pod of GraphScope. You may need to mount a volume to the Pods or use cloud storage providers.
 
     Specifically, if your cluster is deployed with `kind <https://kind.sigs.k8s.io>`_, you may need to setup `extra-mounts <https://kind.sigs.k8s.io/docs/user/configuration/#extra-mounts>`_ to mount your local directory to kind nodes.
 
@@ -80,7 +80,7 @@ If you don't find an answer to your question here, feel free to file an `Issues`
 
     - compile ``scipy`` failed: You can follow `this <https://stackoverflow.com/questions/65745683/how-to-install-scipy-on-apple-silicon-arm-m1>`_ to build scipy from source or try ``pip3 install --pre -i https://pypi.anaconda.org/scipy-wheels-nightly/simple scipy`` to workaround this problem.
 
-      If you encounter errors like `ERROR: Dependency "OpenBLAS" not found, tried pkgconfig, framework and cmake` during installing scipy on MacOS, try:
+      If you encounter errors like `ERROR: Dependency "OpenBLAS" not found, tried pkgconfig, framework and cmake` during installing scipy on macOS, try:
 
       .. code:: bash
 

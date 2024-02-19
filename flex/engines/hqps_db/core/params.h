@@ -628,7 +628,7 @@ struct EdgeExpandOptMultiLabel {
 
   Direction direction_;
   LabelT edge_label_;
-  // edge filter func can be apply to every label vertcies
+  // edge filter func can be apply to every label vertices
   std::array<EDGE_FILTER_FUNC, num_labels> edge_filter_;
   std::array<LabelT, num_labels>
       other_labels_;  // There might be multiple dst labels.
@@ -662,7 +662,7 @@ auto make_edge_expandv_opt(Direction dir, LabelT edge_label, LabelT other_label,
   return EdgeExpandOpt(dir, edge_label, other_label, std::move(func));
 }
 
-// Template can not have to variadic template parameters.
+// Template cannot have to variadic template parameters.
 // so we make filter_t as a tuple.
 template <typename LabelT, size_t num_labels, typename FILTER_T, typename... T>
 struct GetVOpt;
@@ -952,7 +952,7 @@ struct AliasTagProp {
       : tag_prop_{std::move(prop_names)} {}
 };
 
-// Alias the property of multiple tags' multiple propty.
+// Alias the property of multiple tags' multiple property.
 
 // For the grouping key, use which property, and alias to what.
 template <int _tag_id, int... Is>
@@ -966,7 +966,7 @@ struct ProjectSelf {
   static constexpr int res_alias = _res_alias;
 };
 
-// evalutate expression on previous context.
+// evaluate expression on previous context.
 template <int _res_alias, typename RES_T, typename EXPR>
 struct ProjectExpr {
   static constexpr int res_alias = _res_alias;

@@ -22,7 +22,7 @@ python3 gsctl.py install-deps dev
 
 ### Dev on docker container
 
-We provided a docker image `graphscope-dev` with all tools and dependices included.
+We provided a docker image `graphscope-dev` with all tools and dependencies included.
 
 ```bash
 # Use a mirror in HK aliyun to speed up the download if in need.

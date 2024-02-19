@@ -33,7 +33,7 @@ limitations under the License.
 namespace gs {
 
 /**
- * @brief This is a driver app for Java property prallel app. The driven java
+ * @brief This is a driver app for Java property parallel app. The driven java
  * app should be inherited from ParallelPropertyAppBase.
  *
  * @tparam FRAG_T Should be vineyard::ArrowFragment<...>

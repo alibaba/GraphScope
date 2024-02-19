@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * {@link AbstractGraphProvider} is privided by gremlin to adapt to its test framework
+ * {@link AbstractGraphProvider} is provided by gremlin to adapt to its test framework
  * {@link RemoteTestGraph} will be constructed by this provider
  */
 public class RemoteTestGraphProvider extends AbstractGraphProvider {
