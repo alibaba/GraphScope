@@ -127,14 +127,43 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.PathExpand.Builder pathExpandBuilder =
                 GraphAlgebraPhysical.PathExpand.newBuilder();
-        GraphAlgebraPhysical.EdgeExpand.Builder expand =
-                buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
-        GraphAlgebraPhysical.GetV.Builder getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
         GraphAlgebraPhysical.PathExpand.ExpandBase.Builder expandBaseBuilder =
                 GraphAlgebraPhysical.PathExpand.ExpandBase.newBuilder();
-        // TODO: fuse expand and getv
-        expandBaseBuilder.setEdgeExpand(expand);
-        expandBaseBuilder.setGetV(getV);
+        RelNode fused = pxd.getFused();
+        if (fused != null) {
+            // the case that expand base is fused
+            if (fused instanceof GraphPhysicalGetV) {
+                // fused into expand + auxilia
+                GraphPhysicalGetV fusedGetV = (GraphPhysicalGetV) fused;
+                GraphAlgebraPhysical.GetV.Builder auxilia = buildAuxilia(fusedGetV);
+                expandBaseBuilder.setGetV(auxilia);
+                if (fusedGetV.getInput() instanceof GraphPhysicalExpand) {
+                    GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fusedGetV.getInput();
+                    GraphAlgebraPhysical.EdgeExpand.Builder expand =
+                            buildEdgeExpandVertex(fusedExpand);
+                    expandBaseBuilder.setEdgeExpand(expand);
+                } else {
+                    throw new UnsupportedOperationException(
+                            "unsupported fused plan in path expand base: "
+                                    + fusedGetV.getInput().getClass().getName());
+                }
+            } else if (fused instanceof GraphPhysicalExpand) {
+                // fused into expand
+                GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fused;
+                GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpandVertex(fusedExpand);
+                expandBaseBuilder.setEdgeExpand(expand);
+            } else {
+                throw new UnsupportedOperationException(
+                        "unsupported fused plan in path expand base");
+            }
+        } else {
+            // the case that expand base is not fused
+            GraphAlgebraPhysical.EdgeExpand.Builder expand =
+                    buildEdgeExpand((GraphLogicalExpand) pxd.getExpand());
+            GraphAlgebraPhysical.GetV.Builder getV = buildGetV((GraphLogicalGetV) pxd.getGetV());
+            expandBaseBuilder.setEdgeExpand(expand);
+            expandBaseBuilder.setGetV(getV);
+        }
         pathExpandBuilder.setBase(expandBaseBuilder);
         pathExpandBuilder.setPathOpt(Utils.protoPathOpt(pxd.getPathOpt()));
         pathExpandBuilder.setResultOpt(Utils.protoPathResultOpt(pxd.getResultOpt()));

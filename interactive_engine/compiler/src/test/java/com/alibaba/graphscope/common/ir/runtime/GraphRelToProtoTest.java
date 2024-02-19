@@ -53,6 +53,35 @@ public class GraphRelToProtoTest {
     }
 
     @Test
+    public void scan_filter_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode scan =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "age"),
+                                        builder.literal(10)))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                scan.explain().trim());
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/scan_filter_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
     public void edge_expand_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode expand =
@@ -121,20 +150,21 @@ public class GraphRelToProtoTest {
     public void path_expand_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
-        GetVConfig getVConfig =
-                new GetVConfig(GraphOpt.GetV.END, new LabelConfig(false).addLabel("person"));
         PathExpandConfig pxdConfig =
                 pxdBuilder
                         .expand(
                                 new ExpandConfig(
                                         GraphOpt.Expand.OUT,
                                         new LabelConfig(false).addLabel("knows")))
-                        .getV(getVConfig)
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person")))
                         .range(1, 3)
                         .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
                         .resultOpt(GraphOpt.PathExpandResult.ALL_V)
                         .build();
-        RelNode aggregate =
+        RelNode pxd =
                 builder.source(
                                 new SourceConfig(
                                         GraphOpt.Source.VERTEX,
@@ -151,10 +181,10 @@ public class GraphRelToProtoTest {
                         + " alias=[DEFAULT])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[x], opt=[VERTEX])",
-                aggregate.explain().trim());
+                pxd.explain().trim());
         try (PhysicalBuilder protoBuilder =
                 new GraphRelProtoPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(pxd))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/path_expand_test.json"),
@@ -514,6 +544,109 @@ public class GraphRelToProtoTest {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
                     FileUtils.readJsonFromResource("proto/edge_expand_vertex_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    // g.V().hasLabel("person").outE("knows").has("weight", 0.5).inV().has("age", 10)
+    @Test
+    public void expand_vertex_with_filters_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "weight"),
+                                        builder.literal(0.5)))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "a"))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "age"),
+                                        builder.literal(10)))
+                        .build();
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[a], fusedFilter=[[=(DEFAULT.weight, 5E-1)]], opt=[OUT],"
+                        + " physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                after.explain().trim());
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource(
+                            "proto/edge_expand_vertex_with_filters_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
+    public void path_expand_fused_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
+        PathExpandConfig pxdConfig =
+                pxdBuilder
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person")))
+                        .range(1, 3)
+                        .pathOpt(GraphOpt.PathExpandPath.SIMPLE)
+                        .resultOpt(GraphOpt.PathExpandResult.ALL_V)
+                        .build();
+        RelNode pxd =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .pathExpand(pxdConfig)
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
+                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[END])\n"
+                        + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
+                        + " alias=[DEFAULT])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[x], opt=[VERTEX])",
+                pxd.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.PathBaseExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(pxd);
+        RelNode after = planner.findBestExp();
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(after))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/path_fused_expand_test.json"),
                     plan.explain().trim());
         }
     }
