@@ -134,19 +134,57 @@ struct _add_vertex {
       }
     }
   }
+
+  void operator()(const std::shared_ptr<arrow::Array>& col,
+                  PTIndexerBuilder<KEY_T, vid_t>& indexer) {
+    size_t row_num = col->length();
+    if constexpr (!std::is_same<std::string_view, KEY_T>::value) {
+      // for non-string value
+      auto expected_type = gs::TypeConverter<KEY_T>::ArrowTypeValue();
+      using arrow_array_t = typename gs::TypeConverter<KEY_T>::ArrowArrayType;
+      if (!col->type()->Equals(expected_type)) {
+        LOG(FATAL) << "Inconsistent data type, expect "
+                   << expected_type->ToString() << ", but got "
+                   << col->type()->ToString();
+      }
+      auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
+      for (size_t i = 0; i < row_num; ++i) {
+        indexer.add_vertex(casted_array->Value(i));
+      }
+    } else {
+      if (col->type()->Equals(arrow::utf8())) {
+        auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
+        for (size_t i = 0; i < row_num; ++i) {
+          auto str = casted_array->GetView(i);
+          std::string_view str_view(str.data(), str.size());
+          indexer.add_vertex(str_view);
+        }
+      } else if (col->type()->Equals(arrow::large_utf8())) {
+        auto casted_array =
+            std::static_pointer_cast<arrow::LargeStringArray>(col);
+        for (size_t i = 0; i < row_num; ++i) {
+          auto str = casted_array->GetView(i);
+          std::string_view str_view(str.data(), str.size());
+          indexer.add_vertex(str_view);
+        }
+      } else {
+        LOG(FATAL) << "Not support type: " << col->type()->ToString();
+      }
+    }
+  }
 };
 
 template <typename PK_T, typename EDATA_T>
 static void append_edges(
     std::shared_ptr<arrow::Array> src_col,
-    std::shared_ptr<arrow::Array> dst_col, const LFIndexer<vid_t>& src_indexer,
-    const LFIndexer<vid_t>& dst_indexer,
+    std::shared_ptr<arrow::Array> dst_col, const IndexerType& src_indexer,
+    const IndexerType& dst_indexer,
     std::vector<std::shared_ptr<arrow::Array>>& edata_cols,
     const PropertyType& edge_prop,
     std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
     std::vector<int32_t>& ie_degree, std::vector<int32_t>& oe_degree) {
   CHECK(src_col->length() == dst_col->length());
-  auto indexer_check_lambda = [](const LFIndexer<vid_t>& cur_indexer,
+  auto indexer_check_lambda = [](const IndexerType& cur_indexer,
                                  const std::shared_ptr<arrow::Array>& cur_col) {
     if (cur_indexer.get_type() == PropertyType::kInt64) {
       CHECK(cur_col->type()->Equals(arrow::int64()));
@@ -317,6 +355,7 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     VLOG(10) << "Insert rows: " << row_num;
   }
 
+#ifndef USE_PTHASH
   template <typename KEY_T>
   void addVertexRecordBatchImpl(
       label_t v_label_id, const std::vector<std::string>& v_files,
@@ -373,6 +412,125 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     }
     basic_fragment_loader_.FinishAddingVertex<KEY_T>(v_label_id, indexer);
   }
+#else
+  template <typename KEY_T>
+  void addVertexRecordBatchImpl(
+      label_t v_label_id, const std::vector<std::string>& v_files,
+      std::function<std::shared_ptr<IRecordBatchSupplier>(
+          label_t, const std::string&, const LoadingConfig&)>
+          supplier_creator) {
+    std::string v_label_name = schema_.get_vertex_label_name(v_label_id);
+    VLOG(10) << "Parsing vertex file:" << v_files.size() << " for label "
+             << v_label_name;
+    auto primary_key = schema_.get_vertex_primary_key(v_label_id)[0];
+    auto primary_key_name = std::get<1>(primary_key);
+    size_t primary_key_ind = std::get<2>(primary_key);
+    PTIndexerBuilder<KEY_T, vid_t> indexer_builder;
+    std::vector<std::shared_ptr<arrow::RecordBatch>> batchs;
+    for (auto& v_file : v_files) {
+      VLOG(10) << "Parsing vertex file:" << v_file << " for label "
+               << v_label_name;
+      auto record_batch_supplier =
+          supplier_creator(v_label_id, v_file, loading_config_);
+
+      bool first_batch = true;
+      while (true) {
+        auto batch = record_batch_supplier->GetNextBatch();
+        if (!batch) {
+          break;
+        }
+        batchs.emplace_back(batch);
+        if (first_batch) {
+          auto header = batch->schema()->field_names();
+          auto schema_column_names =
+              schema_.get_vertex_property_names(v_label_id);
+          CHECK(schema_column_names.size() + 1 == header.size())
+              << "File header of size: " << header.size()
+              << " does not match schema column size: "
+              << schema_column_names.size() + 1;
+          first_batch = false;
+        }
+        auto columns = batch->columns();
+        CHECK(primary_key_ind < columns.size());
+        auto primary_key_column = columns[primary_key_ind];
+        _add_vertex<KEY_T>()(primary_key_column, indexer_builder);
+
+        // addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
+        //                       other_columns_array);
+      }
+      VLOG(10) << "Finish parsing vertex file:" << v_file << " for label "
+               << v_label_name;
+    }
+    basic_fragment_loader_.FinishAddingVertex(v_label_id, indexer_builder);
+    // indexer_builder.finish(basic_fragment_loader_.GetLFIndexer(v_label_id));
+    const auto& indexer = basic_fragment_loader_.GetLFIndexer(v_label_id);
+
+    std::vector<std::thread> work_threads;
+    std::atomic<size_t> cur_batch_id(0);
+    for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
+      work_threads.emplace_back([&]() {
+        while (true) {
+          auto id = cur_batch_id.fetch_add(1);
+          if (id >= batchs.size()) {
+            break;
+          }
+          auto batch = batchs[id];
+          auto columns = batch->columns();
+          auto other_columns_array = columns;
+          auto primary_key_column = columns[primary_key_ind];
+          size_t row_num = primary_key_column->length();
+          std::vector<vid_t> vids;
+          if constexpr (!std::is_same<std::string_view, KEY_T>::value) {
+            using arrow_array_t =
+                typename gs::TypeConverter<KEY_T>::ArrowArrayType;
+            auto casted_array =
+                std::static_pointer_cast<arrow_array_t>(primary_key_column);
+            for (size_t i = 0; i < row_num; ++i) {
+              vids.emplace_back(indexer.get_index(casted_array->Value(i)));
+            }
+          } else {
+            if (primary_key_column->type()->Equals(arrow::utf8())) {
+              auto casted_array = std::static_pointer_cast<arrow::StringArray>(
+                  primary_key_column);
+              for (size_t i = 0; i < row_num; ++i) {
+                auto str = casted_array->GetView(i);
+                std::string_view str_view(str.data(), str.size());
+                vids.emplace_back(indexer.get_index(str_view));
+              }
+            } else if (primary_key_column->type()->Equals(
+                           arrow::large_utf8())) {
+              auto casted_array =
+                  std::static_pointer_cast<arrow::LargeStringArray>(
+                      primary_key_column);
+              for (size_t i = 0; i < row_num; ++i) {
+                auto str = casted_array->GetView(i);
+                std::string_view str_view(str.data(), str.size());
+                vids.emplace_back(indexer.get_index(str_view));
+              }
+            }
+          }
+          other_columns_array.erase(other_columns_array.begin() +
+                                    primary_key_ind);
+
+          for (size_t j = 0; j < other_columns_array.size(); ++j) {
+            auto array = other_columns_array[j];
+            auto chunked_array = std::make_shared<arrow::ChunkedArray>(array);
+            set_vertex_properties(
+                basic_fragment_loader_.GetVertexTable(v_label_id)
+                    .column_ptrs()[j],
+                chunked_array, vids);
+          }
+        }
+      });
+    }
+    for (auto& t : work_threads) {
+      t.join();
+    }
+
+    VLOG(10) << "Finish parsing vertex file:" << v_files.size() << " for label "
+             << v_label_name;
+  }
+#endif
 
   template <typename EDATA_T>
   void addEdgesRecordBatchImpl(

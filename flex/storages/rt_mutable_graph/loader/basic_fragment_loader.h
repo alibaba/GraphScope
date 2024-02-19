@@ -65,9 +65,20 @@ class BasicFragmentLoader {
     auto primary_keys = schema_.get_vertex_primary_key(v_label);
     auto type = std::get<0>(primary_keys[0]);
 
-    build_lf_indexer<KEY_T, vid_t>(indexer, filename, lf_indexers_[v_label],
-                                   snapshot_dir(work_dir_, 0),
-                                   tmp_dir(work_dir_), type);
+    build_lf_indexer<KEY_T, vid_t>(
+        indexer, LFIndexer<vid_t>::prefix() + "_" + filename,
+        lf_indexers_[v_label], snapshot_dir(work_dir_, 0), tmp_dir(work_dir_),
+        type);
+  }
+
+  template <typename KEY_T>
+  void FinishAddingVertex(label_t v_label,
+                          PTIndexerBuilder<KEY_T, vid_t>& indexer_builder) {
+    CHECK(v_label < vertex_label_num_);
+    std::string filename =
+        vertex_map_prefix(schema_.get_vertex_label_name(v_label));
+    indexer_builder.finish(PTIndexer<vid_t>::prefix() + "_" + filename,
+                           snapshot_dir(work_dir_, 0), lf_indexers_[v_label]);
   }
 
   template <typename EDATA_T>
@@ -178,14 +189,15 @@ class BasicFragmentLoader {
   }
 
   // get lf_indexer
-  const LFIndexer<vid_t>& GetLFIndexer(label_t v_label) const;
+  const IndexerType& GetLFIndexer(label_t v_label) const;
+  IndexerType& GetLFIndexer(label_t v_label);
 
  private:
   void init_vertex_data();
   const Schema& schema_;
   std::string work_dir_;
   size_t vertex_label_num_, edge_label_num_;
-  std::vector<LFIndexer<vid_t>> lf_indexers_;
+  std::vector<IndexerType> lf_indexers_;
   std::vector<CsrBase*> ie_, oe_;
   std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;

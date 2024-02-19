@@ -579,10 +579,7 @@ class ConcatColumn : public ColumnBase {
     LOG(FATAL) << "not implemented";
   }
 
-  void close() {
-    basic_column_.close();
-    extra_column_.close();
-  }
+  void close() { LOG(FATAL) << "not implemented"; }
 
   EDATA_T get_view(size_t index) const {
     return index < basic_size_ ? basic_column_.get(index)
@@ -600,12 +597,12 @@ class ConcatColumn : public ColumnBase {
   void copy_to_tmp(const std::string& cur_path, const std::string& tmp_path) {
     LOG(FATAL) << "not implemented";
   }
-  void resize(size_t size) { extra_column_.resize(size - basic_size_); }
+  void resize(size_t size) { LOG(FATAL) << "not implemented"; }
 
   PropertyType type() const { return AnyConverter<EDATA_T>::type(); }
 
   void set_any(size_t index, const Any& value) {
-    extra_column_.set_any(index - basic_size_, value);
+    LOG(FATAL) << "not implemented";
   }
 
   Any get(size_t index) const {
@@ -617,7 +614,7 @@ class ConcatColumn : public ColumnBase {
   }
 
   void ingest(uint32_t index, grape::OutArchive& arc) {
-    extra_column_.ingest(index - basic_size_, arc);
+    LOG(FATAL) << "not implemented";
   }
 
   StorageStrategy storage_strategy() const {
@@ -625,8 +622,8 @@ class ConcatColumn : public ColumnBase {
   }
 
  private:
-  TypedColumn<EDATA_T>& basic_column_;
-  TypedColumn<EDATA_T>& extra_column_;
+  const TypedColumn<EDATA_T>& basic_column_;
+  const TypedColumn<EDATA_T>& extra_column_;
   size_t basic_size_;
 };
 

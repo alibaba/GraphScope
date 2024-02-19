@@ -65,12 +65,13 @@ class PTIndexer {
 
   PTIndexer(PTIndexer&& rhs)
       : keys_(rhs.keys_),
-        base_size_(rhs.base_size_),
         base_map_(rhs.base_map_),
+        base_size_(rhs.base_size_),
         extra_indexer_(std::move(rhs.extra_indexer_)) {
     rhs.keys_ = nullptr;
   }
 
+  void warmup(int) const {}
   static std::string prefix() { return "pthash"; }
 
   void reserve(size_t capacity) {
@@ -80,6 +81,7 @@ class PTIndexer {
   }
 
   size_t size() const { return base_size_ + extra_indexer_.size(); }
+  size_t capacity() const { return base_size_ + extra_indexer_.capacity(); }
   PropertyType get_type() const { return keys_->type(); }
 
   INDEX_T get_index(const Any& key) const {
@@ -124,7 +126,7 @@ class PTIndexer {
   void dump_meta(const std::string& filename) {
     grape::InArchive arc;
     arc << get_type() << base_size_;
-    std::string meta_file_path = filename + ".meta";
+    std::string meta_file_path = filename;
     FILE* fout = fopen(meta_file_path.c_str(), "wb");
     fwrite(arc.GetBuffer(), arc.GetSize(), 1, fout);
     fflush(fout);
@@ -132,9 +134,10 @@ class PTIndexer {
   }
 
   void dump(const std::string& name, const std::string& snapshot_dir) {
+    dump_meta(snapshot_dir + "/" + name + ".meta");
     keys_->resize(base_size_);
     keys_->dump(snapshot_dir + "/" + name + ".base_map.keys");
-    base_map_.Save(name + ".base_map");
+    base_map_.Save(snapshot_dir + "/" + name + ".base_map");
     extra_indexer_.dump(name + ".extra_indexer", snapshot_dir);
   }
 
@@ -165,7 +168,7 @@ class PTIndexer {
   }
 
   void load_meta(const std::string& filename) {
-    std::string meta_file_path = filename + ".meta";
+    std::string meta_file_path = filename;
     size_t meta_file_size = std::filesystem::file_size(meta_file_path);
     std::vector<char> buf(meta_file_size);
     FILE* fin = fopen(meta_file_path.c_str(), "r");
@@ -204,28 +207,34 @@ class PTIndexer {
     extra_indexer_.reserve(base_size_ / 2);
   }
   const ColumnBase& get_keys() const {
+    if (concat_keys_ != nullptr) {
+      delete concat_keys_;
+    }
     if (keys_->type() == PropertyType::kInt64) {
-      return ConcatColumn<int64_t>(
-          dynamic_cast<TypedColumn<int64_t>&>(*keys_),
-          dynamic_cast<TypedColumn<int64_t>&>(extra_indexer_.get_keys()));
+      concat_keys_ = new ConcatColumn<int64_t>(
+          dynamic_cast<const TypedColumn<int64_t>&>(*keys_),
+          dynamic_cast<const TypedColumn<int64_t>&>(extra_indexer_.get_keys()));
     } else if (keys_->type() == PropertyType::kUInt64) {
-      return ConcatColumn<uint64_t>(
-          dynamic_cast<TypedColumn<uint64_t>&>(*keys_),
-          dynamic_cast<TypedColumn<uint64_t>&>(extra_indexer_.get_keys()));
+      concat_keys_ = new ConcatColumn<uint64_t>(
+          dynamic_cast<const TypedColumn<uint64_t>&>(*keys_),
+          dynamic_cast<const TypedColumn<uint64_t>&>(
+              extra_indexer_.get_keys()));
     } else if (keys_->type() == PropertyType::kInt32) {
-      return ConcatColumn<int32_t>(
-          dynamic_cast<TypedColumn<int32_t>&>(*keys_),
-          dynamic_cast<TypedColumn<int32_t>&>(extra_indexer_.get_keys()));
+      concat_keys_ = new ConcatColumn<int32_t>(
+          dynamic_cast<const TypedColumn<int32_t>&>(*keys_),
+          dynamic_cast<const TypedColumn<int32_t>&>(extra_indexer_.get_keys()));
     } else if (keys_->type() == PropertyType::kUInt32) {
-      return ConcatColumn<uint32_t>(
-          dynamic_cast<TypedColumn<uint32_t>&>(*keys_),
-          dynamic_cast<TypedColumn<uint32_t>&>(extra_indexer_.get_keys()));
+      concat_keys_ = new ConcatColumn<uint32_t>(
+          dynamic_cast<const TypedColumn<uint32_t>&>(*keys_),
+          dynamic_cast<const TypedColumn<uint32_t>&>(
+              extra_indexer_.get_keys()));
     } else {
-      return ConcatColumn<std::string_view>(
-          dynamic_cast<TypedColumn<std::string_view>&>(*keys_),
-          dynamic_cast<TypedColumn<std::string_view>&>(
+      concat_keys_ = new ConcatColumn<std::string_view>(
+          dynamic_cast<const TypedColumn<std::string_view>&>(*keys_),
+          dynamic_cast<const TypedColumn<std::string_view>&>(
               extra_indexer_.get_keys()));
     }
+    return *concat_keys_;
   }
 
  private:
@@ -235,8 +244,8 @@ class PTIndexer {
   ColumnBase* keys_;
   SinglePHFView<murmurhash2_64> base_map_;
   size_t base_size_;
-
   LFIndexer<INDEX_T> extra_indexer_;
+  mutable ColumnBase* concat_keys_;
 };
 
 class mem_buffer_saver {
@@ -287,7 +296,8 @@ class PTIndexerBuilder {
 
   void add_vertex(const KEY_T& key) { keys_.push_back(key); }
 
-  void finish(PTIndexer<INDEX_T>& output) {
+  void finish(const std::string& filename, const std::string& work_dir,
+              PTIndexer<INDEX_T>& output) {
     double t = -grape::GetCurrentTime();
     pthash::build_configuration config;
     config.c = 7.0;
@@ -315,7 +325,7 @@ class PTIndexerBuilder {
       std::atomic<size_t> offset(0);
       size_t total = keys_.size();
       const size_t chunk = 4096;
-      for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
+      for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i) {
         threads.emplace_back([&]() {
           while (true) {
             size_t begin = offset.fetch_add(chunk);
@@ -345,6 +355,9 @@ class PTIndexerBuilder {
 
     output.base_size_ = keys_.size();
     output.base_map_.Init(saver.buffer());
+    output.extra_indexer_.init(output.keys_->type());
+    output.dump(filename, work_dir);
+    output.open_in_memory(work_dir + "/" + filename);
 
     // output.extra_indexer_.set_keys(keys_column->slice(output.base_size_));
     t += grape::GetCurrentTime();
