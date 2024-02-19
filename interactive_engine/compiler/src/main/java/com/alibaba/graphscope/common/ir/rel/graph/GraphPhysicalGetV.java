@@ -20,8 +20,10 @@ import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
@@ -31,13 +33,14 @@ import org.apache.calcite.rel.hint.RelHint;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 public class GraphPhysicalGetV extends SingleRel {
     private final GraphOpt.PhysicalGetVOpt physicalOpt;
     private final GraphLogicalGetV fusedGetV;
 
     protected GraphPhysicalGetV(
-            GraphOptCluster cluster,
+            RelOptCluster cluster,
             List<RelHint> hints,
             RelNode input,
             GraphLogicalGetV fusedGetV,
@@ -48,13 +51,30 @@ public class GraphPhysicalGetV extends SingleRel {
     }
 
     public static GraphPhysicalGetV create(
-            RelNode input, GraphLogicalGetV innerGetV, GraphOpt.PhysicalGetVOpt physicalOpt) {
-        return new GraphPhysicalGetV(
-                (GraphOptCluster) innerGetV.getCluster(),
-                innerGetV.getHints(),
-                input,
-                innerGetV,
-                physicalOpt);
+            RelOptCluster cluster,
+            List<RelHint> hints,
+            RelNode input,
+            GraphLogicalGetV innerGetV,
+            String aliasName,
+            GraphOpt.PhysicalGetVOpt physicalOpt) {
+        // build a new getV if a new aliasName is given, to make sure the derived row type is
+        // correct (which is derived by getV)
+        GraphLogicalGetV newGetV;
+        if (innerGetV.getAliasName().equals(aliasName)) {
+            newGetV = innerGetV;
+        } else {
+            newGetV =
+                    GraphLogicalGetV.create(
+                            (GraphOptCluster) innerGetV.getCluster(),
+                            innerGetV.getHints(),
+                            input,
+                            innerGetV.getOpt(),
+                            innerGetV.getTableConfig(),
+                            aliasName,
+                            innerGetV.getStartAlias());
+            newGetV.setFilters(innerGetV.getFilters());
+        }
+        return new GraphPhysicalGetV(cluster, hints, input, newGetV, physicalOpt);
     }
 
     public GraphOpt.PhysicalGetVOpt getPhysicalOpt() {
@@ -78,8 +98,13 @@ public class GraphPhysicalGetV extends SingleRel {
     }
 
     @Override
+    public List<RelNode> getInputs() {
+        return this.input == null ? ImmutableList.of() : ImmutableList.of(this.input);
+    }
+
+    @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw)
+        return pw.itemIf("input", input, !Objects.isNull(input))
                 .item("tableConfig", fusedGetV.tableConfig)
                 .item("alias", AliasInference.SIMPLE_NAME(fusedGetV.getAliasName()))
                 .itemIf(
@@ -98,7 +123,7 @@ public class GraphPhysicalGetV extends SingleRel {
     public GraphPhysicalGetV copy(RelTraitSet traitSet, List<RelNode> inputs) {
         GraphPhysicalGetV copy =
                 new GraphPhysicalGetV(
-                        (GraphOptCluster) getCluster(),
+                        getCluster(),
                         fusedGetV.getHints(),
                         inputs.get(0),
                         fusedGetV,

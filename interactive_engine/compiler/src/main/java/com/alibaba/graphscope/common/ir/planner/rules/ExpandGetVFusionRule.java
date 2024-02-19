@@ -49,21 +49,27 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
     }
 
     protected RelNode transform(GraphLogicalGetV getV, GraphLogicalExpand expand, RelNode input) {
+        GraphPhysicalExpand physicalExpand =
+                GraphPhysicalExpand.create(
+                        expand.getCluster(),
+                        expand.getHints(),
+                        input,
+                        expand,
+                        getV,
+                        GraphOpt.PhysicalExpandOpt.VERTEX);
         if (ObjectUtils.isEmpty(getV.getFilters())) {
-            // convert to GraphPhysicalExpand(ExpandV)
-            // here, ExpandV with alias of getV's alias
-            return GraphPhysicalExpand.create(
-                    input, expand, getV, getV.getAliasName(), GraphOpt.PhysicalExpandOpt.VERTEX);
+            return physicalExpand;
         } else {
-            // convert to GraphPhysicalExpand(ExpandV) + GraphPhysicalGetV(VertexFilter)
-            // here, GraphPhysicalExpand with alias of null, followed by GraphPhysicalGetV with
-            // alias of getV's alias,
-            // in order to avoid alias conflict
-            GraphPhysicalExpand physicalExpand =
-                    GraphPhysicalExpand.create(
-                            input, expand, getV, null, GraphOpt.PhysicalExpandOpt.VERTEX);
+            // If with filters, then create a GraphPhysicalGetV to do the filtering.
+            // We set alias of getV to null to avoid alias conflict (with expand's alias)
             GraphPhysicalGetV physicalGetV =
-                    GraphPhysicalGetV.create(physicalExpand, getV, GraphOpt.PhysicalGetVOpt.ITSELF);
+                    GraphPhysicalGetV.create(
+                            getV.getCluster(),
+                            getV.getHints(),
+                            physicalExpand,
+                            getV,
+                            null,
+                            GraphOpt.PhysicalGetVOpt.ITSELF);
             return physicalGetV;
         }
     }
