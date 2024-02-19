@@ -15,11 +15,15 @@ option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 
+option(USE_PTHASH "Whether to use pthash" OFF)
+
 #print options
 message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")
 message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
+
+message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 # ------------------------------------------------------------------------------
 # cmake configs
