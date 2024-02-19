@@ -18,14 +18,11 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictBool, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.procedure_params_inner import ProcedureParamsInner
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class Procedure(BaseModel):
     """
@@ -48,7 +45,7 @@ class Procedure(BaseModel):
         if value is None:
             return value
 
-        if value not in ('cpp', 'cypher'):
+        if value not in set(['cpp', 'cypher']):
             raise ValueError("must be one of enum values ('cpp', 'cypher')")
         return value
 
@@ -69,7 +66,7 @@ class Procedure(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of Procedure from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -83,10 +80,12 @@ class Procedure(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of each item in params (list)
@@ -106,7 +105,7 @@ class Procedure(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of Procedure from a dict"""
         if obj is None:
             return None
@@ -122,8 +121,8 @@ class Procedure(BaseModel):
             "query": obj.get("query"),
             "enable": obj.get("enable"),
             "runnable": obj.get("runnable"),
-            "params": [ProcedureParamsInner.from_dict(_item) for _item in obj.get("params")] if obj.get("params") is not None else None,
-            "returns": [ProcedureParamsInner.from_dict(_item) for _item in obj.get("returns")] if obj.get("returns") is not None else None
+            "params": [ProcedureParamsInner.from_dict(_item) for _item in obj["params"]] if obj.get("params") is not None else None,
+            "returns": [ProcedureParamsInner.from_dict(_item) for _item in obj["returns"]] if obj.get("returns") is not None else None
         })
         return _obj
 

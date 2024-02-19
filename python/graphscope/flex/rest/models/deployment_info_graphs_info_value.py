@@ -18,42 +18,20 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
 from typing import Optional, Set
 from typing_extensions import Self
 
-class AlertRule(BaseModel):
+class DeploymentInfoGraphsInfoValue(BaseModel):
     """
-    AlertRule
+    DeploymentInfoGraphsInfoValue
     """ # noqa: E501
     name: Optional[StrictStr] = None
-    severity: Optional[StrictStr] = None
-    metric_type: Optional[StrictStr] = None
-    conditions_desription: Optional[StrictStr] = None
-    frequency: Optional[StrictInt] = Field(default=None, description="(mins)")
-    enable: Optional[StrictBool] = None
-    __properties: ClassVar[List[str]] = ["name", "severity", "metric_type", "conditions_desription", "frequency", "enable"]
-
-    @field_validator('severity')
-    def severity_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in set(['warning', 'emergency']):
-            raise ValueError("must be one of enum values ('warning', 'emergency')")
-        return value
-
-    @field_validator('metric_type')
-    def metric_type_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in set(['node', 'service']):
-            raise ValueError("must be one of enum values ('node', 'service')")
-        return value
+    creation_time: Optional[StrictStr] = None
+    update_time: Optional[StrictStr] = None
+    last_dataloading_time: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["name", "creation_time", "update_time", "last_dataloading_time"]
 
     model_config = {
         "populate_by_name": True,
@@ -73,7 +51,7 @@ class AlertRule(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of AlertRule from a JSON string"""
+        """Create an instance of DeploymentInfoGraphsInfoValue from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -98,7 +76,7 @@ class AlertRule(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of AlertRule from a dict"""
+        """Create an instance of DeploymentInfoGraphsInfoValue from a dict"""
         if obj is None:
             return None
 
@@ -107,11 +85,9 @@ class AlertRule(BaseModel):
 
         _obj = cls.model_validate({
             "name": obj.get("name"),
-            "severity": obj.get("severity"),
-            "metric_type": obj.get("metric_type"),
-            "conditions_desription": obj.get("conditions_desription"),
-            "frequency": obj.get("frequency"),
-            "enable": obj.get("enable")
+            "creation_time": obj.get("creation_time"),
+            "update_time": obj.get("update_time"),
+            "last_dataloading_time": obj.get("last_dataloading_time")
         })
         return _obj
 
