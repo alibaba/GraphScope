@@ -432,4 +432,84 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                     });
         }
     }
+
+    @Override
+    public void reopenSecondary(ReopenSecondaryRequest request, StreamObserver<ReopenSecondaryResponse> responseObserver) {
+        logger.info("Reopen secondary");
+        int storeCount = this.metaService.getStoreCount();
+        AtomicInteger counter = new AtomicInteger(storeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (int i = 0; i < storeCount; i++) {
+            this.storeIngestor.reopenSecondary(
+                    i,
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                finish(null);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error("failed reopen secondary", t);
+                            finish(t);
+                        }
+
+                        private void finish(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            logger.info("reopen secondary finished. Error [" + t + "]");
+                            if (t != null) {
+                                responseObserver.onError(t);
+                            } else {
+                                ReopenSecondaryResponse res = ReopenSecondaryResponse.newBuilder().setSuccess(true).build();
+                                responseObserver.onNext(res);
+                                responseObserver.onCompleted();
+                            }
+                        }
+                    });
+        }
+    }
+
+    @Override
+    public void compactDB(CompactDBRequest request, StreamObserver<CompactDBResponse> responseObserver) {
+        logger.info("Compact DB");
+        int storeCount = this.metaService.getStoreCount();
+        AtomicInteger counter = new AtomicInteger(storeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (int i = 0; i < storeCount; i++) {
+            this.storeIngestor.compactDB(
+                    i,
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                finish(null);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error("failed compact", t);
+                            finish(t);
+                        }
+
+                        private void finish(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            logger.info("compact finished. Error [" + t + "]");
+                            if (t != null) {
+                                responseObserver.onError(t);
+                            } else {
+                                CompactDBResponse res = CompactDBResponse.newBuilder().setSuccess(true).build();
+                                responseObserver.onNext(res);
+                                responseObserver.onCompleted();
+                            }
+                        }
+                    });
+        }
+    }
 }

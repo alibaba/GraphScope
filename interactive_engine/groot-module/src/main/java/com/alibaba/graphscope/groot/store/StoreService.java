@@ -69,6 +69,8 @@ public class StoreService implements MetricsAgent {
     private ExecutorService writeExecutor;
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
+    private ExecutorService compactExecutor;
+
     private ThreadPoolExecutor downloadExecutor;
     private final boolean enableGc;
     private volatile boolean shouldStop = true;
@@ -120,6 +122,15 @@ public class StoreService implements MetricsAgent {
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
+        this.compactExecutor =
+                new ThreadPoolExecutor(
+                        1,
+                        1,
+                        0L,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(1),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "store-compact", logger));
         this.garbageCollectExecutor =
                 new ThreadPoolExecutor(
                         1,
@@ -392,6 +403,24 @@ public class StoreService implements MetricsAgent {
         }
     }
 
+    public void compactDB(CompletionCallback<Void> callback) {
+        this.compactExecutor.execute(
+                () -> {
+                    logger.info("compact DB");
+                    try {
+                        for (GraphPartition partition : this.idToPartition.values()) {
+                            partition.compact();
+                            logger.info("Compaction {} partition finished", partition.getId());
+                        }
+                        logger.info("compact DB finished");
+                        callback.onCompleted(null);
+                    } catch (Exception e) {
+                        logger.error("compact DB failed", e);
+                        callback.onError(e);
+                    }
+                });
+    }
+
     public void tryCatchUpWithPrimary() throws IOException {
         if (!isSecondary) {
             return;
@@ -401,28 +430,19 @@ public class StoreService implements MetricsAgent {
         }
     }
 
-    public void reopenPartition(long wait_sec) throws IOException {
+    public void reopenPartition(long wait_sec, CompletionCallback<Void> callback) {
         if (!isSecondary) {
+            callback.onCompleted(null);
             return;
         }
-        for (GraphPartition partition : this.idToPartition.values()) {
-            partition.reopenSecondary(wait_sec);
-        }
-    }
-
-    public void reopenPartition2(long wait_sec) {
-        if (!isSecondary) {
-            return;
-        }
-        for (GraphPartition partition : this.idToPartition.values()) {
-            new Thread(() -> {
-                try {
-                    partition.reopenSecondary(wait_sec);
-                } catch (IOException e) {
-                    logger.error("Reopen Secondary failed");
-                    throw new RuntimeException(e);
-                }
-            }).start();
+        try {
+            for (GraphPartition partition : this.idToPartition.values()) {
+                partition.reopenSecondary(wait_sec);
+            }
+            callback.onCompleted(null);
+        } catch (Exception e) {
+            logger.error("reopen secondary failed", e);
+            callback.onError(e);
         }
     }
 

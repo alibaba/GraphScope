@@ -137,19 +137,6 @@ pub extern "C" fn writeBatch(
     let buf = unsafe {::std::slice::from_raw_parts(data, len)};
     let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
         Ok((has_ddl, reopen_secondary)) => {
-            if reopen_secondary {
-                thread::spawn(move || {
-                    match graph_store_ptr.reopen(90) {
-                        Ok(_) => {
-                            info!("Reopened store");
-                        },
-                        Err(e) => {
-                            error!("Reopen failed: {:?}", e);
-                        }
-                    }
-                });
-            }
-
             let mut response = JnaResponse::new_success();
             response.has_ddl(has_ddl);
             response
@@ -505,6 +492,18 @@ pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
                     JnaResponse::new_error(&msg)
                 }
             }
+        }
+    }
+}
+
+#[no_mangle]
+pub extern "C" fn compact(ptr: GraphHandle) -> Box<JnaResponse> {
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    match graph_store_ptr.compact() {
+        Ok(_) => JnaResponse::new_success(),
+        Err(e) => {
+            let msg = format!("{:?}", e);
+            JnaResponse::new_error(&msg)
         }
     }
 }

@@ -9,7 +9,7 @@ use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOpti
 use crossbeam_epoch::{self as epoch, Atomic, Guard, Shared, Owned};
 use grpcio_sys::grpc_serving_status_update;
 use libc::option;
-use rocksdb::{DBCompactionStyle, DBCompressionType, WriteBatch};
+use rocksdb::{CompactOptions, DBCompactionStyle, DBCompressionType, WriteBatch};
 
 use super::{StorageIter, StorageRes};
 use crate::db::api::*;
@@ -190,21 +190,42 @@ impl RocksDB {
         let guard = epoch::pin();
         let db_shared = self.get_db(&guard);
         if let Some(db) = unsafe { db_shared.as_ref() } {
-            // db.delete_file_in_range(start, end)
-            //     .map_err(|e| {
-            //         let msg = format!("rocksdb.delete_files_in_range failed because {}", e.into_string());
-            //         gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
-            //     })?;
+            // db.delete_file_in_range(start, end);
             batch.delete_range(start, end);
             db.write(batch).map_err(|e| {
                 let msg = format!("rocksdb.delete_range failed because {}", e.into_string());
                 gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
             })?;
-            db.compact_range(Option::Some(start), Option::Some(end));
-            info!("compacted rocksdb from {:?} to {:?}", start, end);
+            let mut val = false;
+            if let Some(conf_str) = self.options.get("store.rocksdb.disable.auto.compactions") {
+                val = conf_str.parse::<bool>().unwrap();
+            }
+            if !val {
+                db.compact_range(Option::Some(start), Option::Some(end))
+            }
             Ok(())
         } else {
             let msg = format!("rocksdb.delete_range failed because the acquired db is `None`");
+            let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
+            Err(err)
+        }
+    }
+
+    pub fn compact(&self) -> GraphResult<()> {
+        if self.is_secondary {
+            info!("Cannot compact in secondary instance");
+            return Ok(());
+        }
+        let guard = epoch::pin();
+        let db_shared = self.get_db(&guard);
+
+        if let Some(db) = unsafe { db_shared.as_ref() } {
+            let mut opts = CompactOptions::default();
+            db.compact_range(None::<&[u8]>, None::<&[u8]>);
+            info!("compacted rocksdb");
+            Ok(())
+        } else {
+            let msg = format!("rocksdb.compact failed because the acquired db is `None`");
             let err = gen_graph_err!(GraphErrorCode::ExternalStorageError, msg);
             Err(err)
         }
@@ -405,10 +426,14 @@ fn init_secondary_options(options: &HashMap<String, String>) -> Options {
     let mut opts = Options::default();
     opts.set_max_open_files(-1);
     opts.set_max_write_buffer_number(4);
-    // if let Some(conf_str) = options.get("store.rocksdb.paranoid.checks") {
-    //     let check = conf_str.parse().unwrap();
-    //     opts.set_paranoid_checks(check);
-    // }
+
+    if let Some(conf_str) = options.get("store.rocksdb.wal.dir") {
+        opts.set_wal_dir(Path::new(conf_str));
+    }
+
+    // opts.set_use_direct_reads(true);
+    // opts.set_use_direct_io_for_flush_and_compaction(true);
+
     opts
 }
 
@@ -419,34 +444,23 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     opts.set_max_background_jobs(6);
     opts.set_write_buffer_size(256 << 20);
     opts.set_max_open_files(-1);
-    opts.set_max_log_file_size(1024 << 10);
+    // opts.set_max_log_file_size(1024 << 10);
     opts.set_keep_log_file_num(10);
     // https://github.com/facebook/rocksdb/wiki/Basic-Operations#non-sync-writes
     opts.set_use_fsync(true);
     opts.set_max_write_buffer_number(4);
 
-    if let Some(conf_str) = options.get("store.rocksdb.compression.type") {
-        match conf_str.as_str() {
-            "none" => opts.set_compression_type(DBCompressionType::None),
-            "snappy" => opts.set_compression_type(DBCompressionType::Snappy),
-            "zlib" => opts.set_compression_type(DBCompressionType::Zlib),
-            "bz2" => opts.set_compression_type(DBCompressionType::Bz2),
-            "lz4" => opts.set_compression_type(DBCompressionType::Lz4),
-            "lz4hc" => opts.set_compression_type(DBCompressionType::Lz4hc),
-            "zstd" => opts.set_compression_type(DBCompressionType::Zstd),
-            _ => panic!("invalid compression_type config"),
-        }
+    opts.set_bytes_per_sync(1048576);
+
+    if let Some(conf_str) = options.get("store.rocksdb.disable.auto.compactions") {
+        let val = conf_str.parse().unwrap();
+        opts.set_disable_auto_compactions(val);
     }
-    if let Some(conf_str) = options.get("store.rocksdb.stats.dump.period.sec") {
-        opts.set_stats_dump_period_sec(conf_str.parse().unwrap());
+
+    if let Some(conf_str) = options.get("store.rocksdb.wal.dir") {
+        opts.set_wal_dir(Path::new(conf_str));
     }
-    if let Some(conf_str) = options.get("store.rocksdb.compaction.style") {
-        match conf_str.as_str() {
-            "universal" => opts.set_compaction_style(DBCompactionStyle::Universal),
-            "level" => opts.set_compaction_style(DBCompactionStyle::Level),
-            _ => panic!("invalid compaction_style config"),
-        }
-    }
+
     if let Some(conf_str) = options.get("store.rocksdb.write.buffer.mb") {
         let size_mb: usize = conf_str.parse().unwrap();
         let size_bytes = size_mb * 1024 * 1024;

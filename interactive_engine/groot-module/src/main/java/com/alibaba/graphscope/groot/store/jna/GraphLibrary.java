@@ -55,4 +55,6 @@ public interface GraphLibrary extends Library {
     JnaResponse tryCatchUpWithPrimary(Pointer storePointer);
 
     JnaResponse reopenSecondary(Pointer storePointer, long wait_sec);
+
+    JnaResponse compact(Pointer storePointer);
 }

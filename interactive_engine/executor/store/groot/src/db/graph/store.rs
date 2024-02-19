@@ -677,6 +677,8 @@ impl GraphStore {
         self.storage.try_catch_up_with_primary()
     }
 
+    pub fn compact(&self) -> GraphResult<()> { self.storage.compact() }
+
     pub fn reopen(&self, wait_sec: u64) -> GraphResult<()> {
         self.storage.reopen(wait_sec)
     }

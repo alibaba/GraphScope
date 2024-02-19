@@ -153,6 +153,16 @@ public class JnaGraphStore implements GraphPartition {
         }
     }
 
+    @Override
+    public void compact() throws IOException {
+        ensurePointer();
+        try (JnaResponse response = GraphLibrary.INSTANCE.compact(this.pointer)) {
+            if (!response.success()) {
+                throw new IOException(response.getErrMsg());
+            }
+        }
+    }
+
     private void ensurePointer() throws IOException {
         if (this.pointer == null) {
             throw new IOException("JNA pointer is null");

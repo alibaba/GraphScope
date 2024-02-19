@@ -39,7 +39,7 @@ fn main() {
     builder.add_storage_option("store.rocksdb.level0.compaction.trigger", level_zero_compaction_trigger);
     builder.add_storage_option("store.rocksdb.max.level.base.mb", max_level_base_mb);
     let config = builder.build();
-    let store = Arc::new(GraphStore::open(&config, &path).unwrap());
+    let store = Arc::new(GraphStore::open(&config).unwrap());
     println!("store opened.");
     let mut type_def_builer = TypeDefBuilder::new();
     type_def_builer.version(1);
