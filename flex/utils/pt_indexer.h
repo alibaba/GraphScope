@@ -56,10 +56,13 @@ class PTIndexerBuilder;
 template <typename INDEX_T>
 class PTIndexer {
  public:
-  PTIndexer() : keys_(NULL), base_size_(0) {}
+  PTIndexer() : keys_(nullptr), base_size_(0), concat_keys_(nullptr) {}
   ~PTIndexer() {
     if (keys_ != nullptr) {
       delete keys_;
+    }
+    if (concat_keys_ != nullptr) {
+      delete concat_keys_;
     }
   }
 
@@ -69,6 +72,7 @@ class PTIndexer {
         base_size_(rhs.base_size_),
         extra_indexer_(std::move(rhs.extra_indexer_)) {
     rhs.keys_ = nullptr;
+    rhs.concat_keys_ = nullptr;
   }
 
   void warmup(int) const {}
