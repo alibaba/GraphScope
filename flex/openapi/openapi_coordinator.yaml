@@ -1030,6 +1030,19 @@ components:
           enum:
             - INTERACTIVE
             - GRAPHSCOPE_INSIGHT
+        graphs_info:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              name:
+                type: string
+              creation_time:
+                type: string
+              update_time:
+                type: string
+              last_dataloading_time:
+                type: string
     DeploymentStatus:
       x-body-name: deployment_status
       type: object

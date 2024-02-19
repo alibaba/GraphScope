@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import datetime
 import logging
 import os
 import tempfile
@@ -79,3 +80,7 @@ CLUSTER_TYPE = os.environ.get("CLUSTER_TYPE", "HOSTS")
 
 # interactive configuration
 HQPS_ADMIN_SERVICE_PORT = os.environ.get("HIACTOR_ADMIN_SERVICE_PORT", 7777)
+
+
+# coordinator starting time
+COORDINATOR_STARTING_TIME = datetime.datetime.now()

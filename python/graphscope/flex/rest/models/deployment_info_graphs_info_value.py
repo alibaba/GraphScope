@@ -18,42 +18,20 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, StrictStr, field_validator
+from pydantic import BaseModel, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from graphscope.flex.rest.models.deployment_info_graphs_info_value import DeploymentInfoGraphsInfoValue
 from typing import Optional, Set
 from typing_extensions import Self
 
-class DeploymentInfo(BaseModel):
+class DeploymentInfoGraphsInfoValue(BaseModel):
     """
-    DeploymentInfo
+    DeploymentInfoGraphsInfoValue
     """ # noqa: E501
     name: Optional[StrictStr] = None
-    cluster_type: Optional[StrictStr] = None
-    version: Optional[StrictStr] = None
-    solution: Optional[StrictStr] = None
-    graphs_info: Optional[Dict[str, DeploymentInfoGraphsInfoValue]] = None
-    __properties: ClassVar[List[str]] = ["name", "cluster_type", "version", "solution", "graphs_info"]
-
-    @field_validator('cluster_type')
-    def cluster_type_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in set(['HOSTS', 'KUBERNETES']):
-            raise ValueError("must be one of enum values ('HOSTS', 'KUBERNETES')")
-        return value
-
-    @field_validator('solution')
-    def solution_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in set(['INTERACTIVE', 'GRAPHSCOPE_INSIGHT']):
-            raise ValueError("must be one of enum values ('INTERACTIVE', 'GRAPHSCOPE_INSIGHT')")
-        return value
+    creation_time: Optional[StrictStr] = None
+    update_time: Optional[StrictStr] = None
+    last_dataloading_time: Optional[StrictStr] = None
+    __properties: ClassVar[List[str]] = ["name", "creation_time", "update_time", "last_dataloading_time"]
 
     model_config = {
         "populate_by_name": True,
@@ -73,7 +51,7 @@ class DeploymentInfo(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of DeploymentInfo from a JSON string"""
+        """Create an instance of DeploymentInfoGraphsInfoValue from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -94,18 +72,11 @@ class DeploymentInfo(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each value in graphs_info (dict)
-        _field_dict = {}
-        if self.graphs_info:
-            for _key in self.graphs_info:
-                if self.graphs_info[_key]:
-                    _field_dict[_key] = self.graphs_info[_key].to_dict()
-            _dict['graphs_info'] = _field_dict
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of DeploymentInfo from a dict"""
+        """Create an instance of DeploymentInfoGraphsInfoValue from a dict"""
         if obj is None:
             return None
 
@@ -114,15 +85,9 @@ class DeploymentInfo(BaseModel):
 
         _obj = cls.model_validate({
             "name": obj.get("name"),
-            "cluster_type": obj.get("cluster_type"),
-            "version": obj.get("version"),
-            "solution": obj.get("solution"),
-            "graphs_info": dict(
-                (_k, DeploymentInfoGraphsInfoValue.from_dict(_v))
-                for _k, _v in obj["graphs_info"].items()
-            )
-            if obj.get("graphs_info") is not None
-            else None
+            "creation_time": obj.get("creation_time"),
+            "update_time": obj.get("update_time"),
+            "last_dataloading_time": obj.get("last_dataloading_time")
         })
         return _obj
 

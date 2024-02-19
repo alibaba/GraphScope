@@ -19,19 +19,40 @@
 import datetime
 import itertools
 import logging
+import os
+import pickle
 import socket
 import threading
 from typing import List, Union
 
 import psutil
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE, INSTANCE_NAME,
-                                             SOLUTION)
+
+from gs_flex_coordinator.core.config import (
+    CLUSTER_TYPE,
+    COORDINATOR_STARTING_TIME,
+    INSTANCE_NAME,
+    SOLUTION,
+    WORKSPACE,
+)
 from gs_flex_coordinator.core.interactive import init_hqps_client
-from gs_flex_coordinator.core.utils import encode_datetime
-from gs_flex_coordinator.models import (DeploymentInfo, Graph, JobStatus,
-                                        ModelSchema, NodeStatus, Procedure,
-                                        SchemaMapping, ServiceStatus,
-                                        StartServiceRequest)
+from gs_flex_coordinator.core.scheduler import schedule
+from gs_flex_coordinator.core.utils import (
+    GraphInfo,
+    decode_datetimestr,
+    encode_datetime,
+    get_current_time,
+)
+from gs_flex_coordinator.models import (
+    DeploymentInfo,
+    Graph,
+    JobStatus,
+    ModelSchema,
+    NodeStatus,
+    Procedure,
+    SchemaMapping,
+    ServiceStatus,
+    StartServiceRequest,
+)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -45,6 +66,34 @@ class ClientWrapper(object):
         self._lock = threading.RLock()
         # initialize specific client
         self._client = self._initialize_client()
+        # graphs info
+        self._graphs_info = {}
+        # pickle path
+        self._pickle_path = os.path.join(WORKSPACE, "graphs_info.pickle")
+        # recover
+        self._try_to_recover_from_disk()
+
+    def _try_to_recover_from_disk(self):
+        try:
+            if os.path.exists(self._pickle_path):
+                logger.info("Recover graphs info from file %s", self._pickle_path)
+                with open(self._pickle_path, "rb") as f:
+                    self._graphs_info = pickle.load(f)
+        except Exception as e:
+            logger.warn("Failed to recover graphs info: %s", str(e))
+        # set default graph info
+        for g in self.list_graphs():
+            if g.name not in self._graphs_info:
+                self._graphs_info[g.name] = GraphInfo(
+                    name=g.name, creation_time=COORDINATOR_STARTING_TIME
+                )
+
+    def _pickle_graphs_info_impl(self):
+        try:
+            with open(self._pickle_path, "wb") as f:
+                pickle.dump(self._graphs_info, f)
+        except Exception as e:
+            logger.warn("Failed to dump graphs info: %s", str(e))
 
     def _initialize_client(self):
         service_initializer = {"INTERACTIVE": init_hqps_client}
@@ -73,10 +122,18 @@ class ClientWrapper(object):
         graph_dict = graph.to_dict()
         if "_schema" in graph_dict:
             graph_dict["schema"] = graph_dict.pop("_schema")
-        return self._client.create_graph(graph_dict)
+        rlt = self._client.create_graph(graph_dict)
+        self._graphs_info[graph.name] = GraphInfo(
+            name=graph.name, creation_time=get_current_time()
+        )
+        self._pickle_graphs_info_impl()
+        return rlt
 
     def delete_graph_by_name(self, graph_name: str) -> str:
-        return self._client.delete_graph_by_name(graph_name)
+        rlt = self._client.delete_graph_by_name(graph_name)
+        del self._graphs_info[graph_name]
+        self._pickle_graphs_info_impl()
+        return rlt
 
     def create_procedure(self, graph_name: str, procedure: Procedure) -> str:
         procedure_dict = procedure.to_dict()
@@ -111,10 +168,25 @@ class ClientWrapper(object):
         return rlt
 
     def get_deployment_info(self) -> DeploymentInfo:
+        # update graphs info
+        for job in self.list_jobs():
+            if (
+                job.detail["graph_name"] in self._graphs_info
+                and job.end_time is not None
+            ):
+                self._graphs_info[job.detail["graph_name"]].last_dataloading_time = (
+                    decode_datetimestr(job.end_time)
+                )
+        self._pickle_graphs_info_impl()
+        graphs_info = {}
+        for name, info in self._graphs_info.items():
+            graphs_info[name] = info.to_dict()
         info = {
             "name": INSTANCE_NAME,
             "cluster_type": CLUSTER_TYPE,
             "version": __version__,
+            "solution": SOLUTION,
+            "graphs_info": graphs_info,
         }
         return DeploymentInfo.from_dict(info)
 

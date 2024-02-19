@@ -1313,6 +1313,12 @@ components:
       x-body-name: procedure
     DeploymentInfo:
       example:
+        graphs_info:
+          key:
+            creation_time: creation_time
+            update_time: update_time
+            last_dataloading_time: last_dataloading_time
+            name: name
         solution: INTERACTIVE
         name: name
         cluster_type: HOSTS
@@ -1336,6 +1342,11 @@ components:
           - GRAPHSCOPE_INSIGHT
           title: solution
           type: string
+        graphs_info:
+          additionalProperties:
+            $ref: '#/components/schemas/DeploymentInfo_graphs_info_value'
+          title: graphs_info
+          type: object
       title: DeploymentInfo
       type: object
       x-body-name: deployment_info
@@ -2193,6 +2204,27 @@ components:
           title: type
           type: string
       title: Procedure_params_inner
+      type: object
+    DeploymentInfo_graphs_info_value:
+      example:
+        creation_time: creation_time
+        update_time: update_time
+        last_dataloading_time: last_dataloading_time
+        name: name
+      properties:
+        name:
+          title: name
+          type: string
+        creation_time:
+          title: creation_time
+          type: string
+        update_time:
+          title: update_time
+          type: string
+        last_dataloading_time:
+          title: last_dataloading_time
+          type: string
+      title: DeploymentInfo_graphs_info_value
       type: object
     ServiceStatus_sdk_endpoints:
       example:

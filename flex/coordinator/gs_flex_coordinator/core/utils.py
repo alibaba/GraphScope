@@ -20,10 +20,11 @@ import datetime
 import functools
 import logging
 import random
-import requests
 import socket
 import string
 from typing import Union
+
+import requests
 
 logger = logging.getLogger("graphscope")
 
@@ -74,6 +75,10 @@ def random_string(nlen):
     return "".join([random.choice(string.ascii_lowercase) for _ in range(nlen)])
 
 
+def get_current_time() -> datetime.datetime:
+    return datetime.datetime.now()
+
+
 def str_to_bool(s):
     if isinstance(s, bool):
         return s
@@ -97,3 +102,50 @@ def get_public_ip() -> Union[str, None]:
     except requests.exceptions.RequestException as e:
         logger.warn("Failed to get public ip: %s", str(e))
         return None
+
+
+class GraphInfo(object):
+    def __init__(
+        self, name, creation_time, update_time=None, last_dataloading_time=None
+    ):
+        self._name = name
+        self._creation_time = creation_time
+        self._update_time = update_time
+        if self._update_time is None:
+            self._update_time = self._creation_time
+        self._last_dataloading_time = last_dataloading_time
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def creation_time(self):
+        return self._creation_time
+
+    @property
+    def update_time(self):
+        return self._update_time
+
+    @property
+    def last_dataloading_time(self):
+        return self._last_dataloading_time
+
+    @update_time.setter
+    def update_time(self, new_time):
+        self._update_time = new_time
+
+    @last_dataloading_time.setter
+    def last_dataloading_time(self, new_time):
+        if self._last_dataloading_time is None:
+            self._last_dataloading_time = new_time
+        elif new_time > self._last_dataloading_time:
+            self._last_dataloading_time = new_time
+
+    def to_dict(self):
+        return {
+            "name": self._name,
+            "creation_time": encode_datetime(self._creation_time),
+            "update_time": encode_datetime(self._update_time),
+            "last_dataloading_time": encode_datetime(self._last_dataloading_time),
+        }
