@@ -97,7 +97,7 @@ impl<K: Debug, V: Debug> Debug for Pair<K, V> {
 /// `KeyBy` is used to transform any input data into a key-value pair.
 pub trait KeyBy<D: Data> {
     /// Given a user-defined function `selection`, this function is actually a map function that
-    /// transform each input data into a [`Pair`].  Addtionally, the output data must be repartitioned
+    /// transform each input data into a [`Pair`].  Additionally, the output data must be repartitioned
     /// via the key part of [`Pair`], such that all data with the same key will be guaranteed to
     /// arrive at the same worker.
     ///

@@ -207,7 +207,7 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send the a vertex's data to other fragment througn outgoing edges.
+     * Send the a vertex's data to other fragment through outgoing edges.
      *
      * @param frag     ImmutableEdgeCutFragment.
      * @param vertex   querying vertex.
@@ -222,7 +222,7 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send the a vertex's data to other fragment throughn outgoing edges.
+     * Send the a vertex's data to other fragment through outgoing edges.
      *
      * @param frag     ArrowProjectedFragment.
      * @param vertex   querying vertex.
@@ -237,7 +237,7 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send the a vertex's data to other fragment throughn incoming edges.
+     * Send the a vertex's data to other fragment through incoming edges.
      *
      * @param frag     ImmutableEdgecutFragment.
      * @param vertex   querying vertex.
@@ -252,7 +252,7 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send the a vertex's data to other fragment throughn incoming edges.
+     * Send the a vertex's data to other fragment through incoming edges.
      *
      * @param frag     ArrowProjectedFragment.
      * @param vertex   querying vertex.
@@ -267,7 +267,7 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send the a vertex's data to other fragment throughn incoming and outgoing edges.
+     * Send the a vertex's data to other fragment through incoming and outgoing edges.
      *
      * @param frag     ImmutableEdgeCutFragment.
      * @param vertex   querying vertex.
@@ -282,7 +282,7 @@ public interface DefaultMessageManager extends MessageManagerBase {
             @CXXReference MSG_T msg);
 
     /**
-     * Send the a vertex's data to other fragment throughn incoming and outgoing edges.
+     * Send the a vertex's data to other fragment through incoming and outgoing edges.
      *
      * @param frag     ArrowProjectedFragment.
      * @param vertex   querying vertex.

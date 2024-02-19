@@ -70,7 +70,7 @@ public interface GiraphEdgeManager<OID_T extends WritableComparable, EDATA_T ext
      * call. Thus, keeping a reference to an edge value almost always leads to undesired behavior.
      *
      * @param targetVertexId Target vertex id
-     * @return EDATA_Tdge value (or null if missing)
+     * @return EDATA_T edge value (or null if missing)
      */
     EDATA_T getEdgeValue(long lid, OID_T targetVertexId);
 
@@ -79,7 +79,7 @@ public interface GiraphEdgeManager<OID_T extends WritableComparable, EDATA_T ext
      * with strict graphs.
      *
      * @param targetVertexId Target vertex id
-     * @param edgeValue      EDATA_Tdge value
+     * @param edgeValue      EDATA_T edge value
      */
     void setEdgeValue(OID_T targetVertexId, EDATA_T edgeValue);
 

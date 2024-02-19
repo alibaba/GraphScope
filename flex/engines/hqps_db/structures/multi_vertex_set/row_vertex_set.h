@@ -1139,7 +1139,7 @@ class RowVertexSetImpl {
                          repeat_array);
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names) {
@@ -1427,14 +1427,14 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
                                                   std::move(new_datas));
   }
 
-  // Removed_indices is not repest to current set's indices.
+  // Removed_indices is not with respect to current set's indices.
   // It refer to the indices_range's index.
   // removed = [1]
   // indices_range = [0, 3, 5, 8]
   // Then we should remove eles in [3,5)
   // indices became
   // [0, 3, 6],
-  // num _elemenst 8 -> 6
+  // num _elements 8 -> 6
   // return the new offset range
   std::vector<offset_t> SubSetWithRemovedIndices(
       std::vector<size_t>& removed_indices,

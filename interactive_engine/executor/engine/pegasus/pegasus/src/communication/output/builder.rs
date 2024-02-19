@@ -30,7 +30,7 @@ use crate::Data;
 #[derive(Copy, Clone, Debug)]
 pub struct OutputMeta {
     pub port: Port,
-    /// This is the the scope level of operator with this output port belongs to.
+    /// This is the scope level of operator with this output port belongs to.
     pub scope_level: u32,
     pub batch_size: usize,
     pub batch_capacity: u32,
