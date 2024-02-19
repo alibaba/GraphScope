@@ -38,6 +38,7 @@ import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.RelOptUtil;
@@ -55,6 +56,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.annotation.Nullable;
 
 public class GraphRelToProtoConverter extends GraphShuttle {
     private static final Logger logger = LoggerFactory.getLogger(GraphRelToProtoConverter.class);
@@ -110,14 +113,59 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     @Override
     public RelNode visit(GraphLogicalGetV getV) {
         visitChildren(getV);
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.GetV.Builder getVertex = buildGetV(getV);
-        oprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(getVertex));
-        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
-        physicalBuilder.addPlan(oprBuilder.build());
-        return getV;
+        // convert getV:
+        // if there is no filter, build getV(adj)
+        // otherwise, build getV(adj) + auxilia(filter)
+        if (ObjectUtils.isEmpty(getV.getFilters())) {
+            GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+            GraphAlgebraPhysical.GetV.Builder getVertex = buildGetV(getV);
+            oprBuilder.setOpr(
+                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(getVertex));
+            oprBuilder.addAllMetaData(Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
+            physicalBuilder.addPlan(oprBuilder.build());
+            return getV;
+        } else {
+            // build getV(adj) + auxilia(filter) if there is a filter in getV
+            GraphAlgebraPhysical.PhysicalOpr.Builder adjOprBuilder =
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+            GraphAlgebraPhysical.GetV.Builder adjVertexBuilder =
+                    GraphAlgebraPhysical.GetV.newBuilder();
+            adjVertexBuilder.setOpt(
+                    Utils.protoPhysicalGetVOpt(PhysicalGetVOpt.valueOf(getV.getOpt().name())));
+            // 1. build adjV without filter
+            GraphAlgebra.QueryParams.Builder adjParamsBuilder = defaultQueryParams();
+            addQueryTables(adjParamsBuilder, getGraphLabels(getV).getLabelsEntry());
+            adjVertexBuilder.setParams(adjParamsBuilder);
+            if (getV.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+                adjVertexBuilder.setTag(Utils.asAliasId(getV.getStartAlias().getAliasId()));
+            }
+            if (getV.getAliasId() != AliasInference.DEFAULT_ID) {
+                adjVertexBuilder.setAlias(Utils.asAliasId(getV.getAliasId()));
+            }
+            adjOprBuilder.setOpr(
+                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                            .setVertex(adjVertexBuilder));
+            adjOprBuilder.addAllMetaData(Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
+            physicalBuilder.addPlan(adjOprBuilder.build());
+
+            // 2. build auxilia(filter)
+            GraphAlgebraPhysical.PhysicalOpr.Builder auxiliaOprBuilder =
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+            GraphAlgebraPhysical.GetV.Builder auxiliaBuilder =
+                    GraphAlgebraPhysical.GetV.newBuilder();
+            auxiliaBuilder.setOpt(Utils.protoPhysicalGetVOpt(PhysicalGetVOpt.ITSELF));
+            GraphAlgebra.QueryParams.Builder auxiliaParamsBuilder = defaultQueryParams();
+            addQueryFilters(auxiliaParamsBuilder, getV.getFilters());
+            auxiliaBuilder.setParams(auxiliaParamsBuilder);
+            auxiliaOprBuilder.setOpr(
+                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                            .setVertex(auxiliaBuilder));
+            auxiliaOprBuilder.addAllMetaData(
+                    Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
+            physicalBuilder.addPlan(auxiliaOprBuilder.build());
+            return getV;
+        }
     }
 
     @Override
@@ -588,27 +636,39 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return schemaType.getLabelType();
     }
 
-    private GraphAlgebra.QueryParams buildQueryParams(AbstractBindableTableScan tableScan) {
-        Set<Integer> uniqueLabelIds =
-                getGraphLabels(tableScan).getLabelsEntry().stream()
-                        .map(k -> k.getLabelId())
-                        .collect(Collectors.toSet());
+    private GraphAlgebra.QueryParams.Builder defaultQueryParams() {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
+        // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
+        paramsBuilder.setSampleRatio(1.0);
+        return paramsBuilder;
+    }
+
+    private void addQueryTables(
+            GraphAlgebra.QueryParams.Builder paramsBuilder, List<GraphLabelType.Entry> labels) {
+        Set<Integer> uniqueLabelIds =
+                labels.stream().map(k -> k.getLabelId()).collect(Collectors.toSet());
         uniqueLabelIds.forEach(
                 k -> {
                     paramsBuilder.addTables(Utils.asNameOrId(k));
                 });
-        if (ObjectUtils.isNotEmpty(tableScan.getFilters())) {
+    }
+
+    private void addQueryFilters(
+            GraphAlgebra.QueryParams.Builder paramsBuilder,
+            @Nullable ImmutableList<RexNode> filters) {
+        if (ObjectUtils.isNotEmpty(filters)) {
             OuterExpression.Expression expression =
-                    tableScan
-                            .getFilters()
-                            .get(0)
+                    filters.get(0)
                             .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             paramsBuilder.setPredicate(expression);
         }
-        // TODO: currently no sample rate fused into tableScan, so directly set as 1.0 for tmp.
-        paramsBuilder.setSampleRatio(1.0);
-        return paramsBuilder.build();
+    }
+
+    private GraphAlgebra.QueryParams.Builder buildQueryParams(AbstractBindableTableScan tableScan) {
+        GraphAlgebra.QueryParams.Builder paramsBuilder = defaultQueryParams();
+        addQueryTables(paramsBuilder, getGraphLabels(tableScan).getLabelsEntry());
+        addQueryFilters(paramsBuilder, tableScan.getFilters());
+        return paramsBuilder;
     }
 
     @Override

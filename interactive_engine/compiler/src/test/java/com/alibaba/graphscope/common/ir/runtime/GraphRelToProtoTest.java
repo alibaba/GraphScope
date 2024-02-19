@@ -147,6 +147,47 @@ public class GraphRelToProtoTest {
     }
 
     @Test
+    public void get_v_with_filter_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode getV =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        new LabelConfig(false).addLabel("person")))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "age"),
+                                        builder.literal(10)))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[x], opt=[VERTEX])",
+                getV.explain().trim());
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(getV))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/getv_with_filter_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
     public void path_expand_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(builder);
