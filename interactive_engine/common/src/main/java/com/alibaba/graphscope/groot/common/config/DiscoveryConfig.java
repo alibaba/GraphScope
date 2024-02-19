@@ -24,10 +24,6 @@ public class DiscoveryConfig {
             Config.stringConfig(
                     String.format(DNS_NAME_PREFIX_FORMAT, RoleType.FRONTEND.getName()), "");
 
-    public static final Config<String> DNS_NAME_PREFIX_INGESTOR =
-            Config.stringConfig(
-                    String.format(DNS_NAME_PREFIX_FORMAT, RoleType.INGESTOR.getName()), "");
-
     public static final Config<String> DNS_NAME_PREFIX_COORDINATOR =
             Config.stringConfig(
                     String.format(DNS_NAME_PREFIX_FORMAT, RoleType.COORDINATOR.getName()), "");

@@ -3,7 +3,7 @@ Graph Traversal
 
 # 1. Introduction The semantics of graph traversal in GNN is different
 from classic graph computation. Training by batch is the characteristics
-of mainstream deep learning alogrithms. Thus, to meet this requirement,
+of mainstream deep learning algorithms. Thus, to meet this requirement,
 graph data must be able to access by batches. We denote this data access
 pattern as graph traversal. In a GNN algorithm, the data source is the
 graph and the training samples are comprised of vertices and edges.

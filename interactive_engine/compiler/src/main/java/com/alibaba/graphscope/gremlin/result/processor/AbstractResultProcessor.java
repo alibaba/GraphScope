@@ -16,8 +16,10 @@
 
 package com.alibaba.graphscope.gremlin.result.processor;
 
+import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
+import com.alibaba.graphscope.gremlin.result.GroupResultParser;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 
@@ -45,6 +47,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
     protected final Context writeResult;
     protected final ResultParser resultParser;
     protected final QueryStatusCallback statusCallback;
+    protected final QueryTimeoutConfig timeoutConfig;
 
     protected final List<Object> resultCollectors;
     protected final int resultCollectorsBatchSize;
@@ -53,15 +56,19 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
     protected boolean isContextWritable;
 
     protected AbstractResultProcessor(
-            Context writeResult, ResultParser resultParser, QueryStatusCallback statusCallback) {
+            Context writeResult,
+            ResultParser resultParser,
+            QueryStatusCallback statusCallback,
+            QueryTimeoutConfig timeoutConfig) {
         this.writeResult = writeResult;
         this.resultParser = resultParser;
         this.statusCallback = statusCallback;
+        this.timeoutConfig = timeoutConfig;
 
         RequestMessage msg = writeResult.getRequestMessage();
         Settings settings = writeResult.getSettings();
         // init batch size from resultIterationBatchSize in conf/gremlin-server.yaml,
-        // or args in RequestMessage which is originate from gremlin client
+        // or args in RequestMessage which is originated from gremlin client
         this.resultCollectorsBatchSize =
                 (Integer)
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
@@ -76,7 +83,8 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             if (isContextWritable) {
                 // send back a page of results if batch size is met and then reset the
                 // resultCollectors
-                if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
+                if (this.resultCollectors.size() >= this.resultCollectorsBatchSize
+                        && !(resultParser instanceof GroupResultParser)) {
                     aggregateResults();
                     writeResultList(
                             writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);
@@ -108,14 +116,22 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     @Override
     public synchronized void error(Status status) {
-        statusCallback.getQueryLogger().error("error return from grpc, msg: {}", status);
         if (isContextWritable) {
             isContextWritable = false;
-            statusCallback.onEnd(false, status.getDescription());
+            String msg = status.getDescription();
+            switch (status.getCode()) {
+                case DEADLINE_EXCEEDED:
+                    msg +=
+                            ", exceeds the timeout limit "
+                                    + timeoutConfig.getEngineTimeoutMS()
+                                    + " ms, please increase the config by setting"
+                                    + " 'query.execution.timeout.ms'";
+                    break;
+                default:
+            }
+            statusCallback.onEnd(false, msg);
             writeResultList(
-                    writeResult,
-                    Collections.singletonList(status.toString()),
-                    ResponseStatusCode.SERVER_ERROR);
+                    writeResult, Collections.singletonList(msg), ResponseStatusCode.SERVER_ERROR);
         }
     }
 

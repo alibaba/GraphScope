@@ -22,11 +22,89 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-flex:
+  test-build-flex:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, ubuntu-22.04]
+        platform: [x86_64]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Install dependencies
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        bash ./scripts/install_dependencies.sh 4
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v2
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build # only test default build
+        cmake .. -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_DOC=OFF && sudo make -j 4
+
+  # test the different combination of cmake options: -DBUILD_HQPS=ON/OFF -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
+  test-cmake-options:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+    strategy:
+      matrix:
+        BUILD_HQPS: [ON, OFF]
+        BUILD_TEST: [ON, OFF]
+        BUILD_ODPS_FRAGMENT_LOADER: [ON, OFF]
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. -DBUILD_HQPS=${{ matrix.BUILD_HQPS }} -DBUILD_TEST=${{ matrix.BUILD_TEST }} \
+                 -DBUILD_ODPS_FRAGMENT_LOADER=${{ matrix.BUILD_ODPS_FRAGMENT_LOADER }}
+        sudo make -j4
+
+  test-AOCC-compilation:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download aocc compiler
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        wget https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0_1_amd64.deb
+        sudo apt-get update && sudo apt-get install libncurses-dev libncurses5-dev
+        sudo dpkg -i aocc-compiler-4.1.0_1_amd64.deb
+    
+    - name: Test AOCC compiler
+      env:
+        CC: clang
+        CXX: clang++
+        OMPI_CC: clang
+        OMPI_CXX: clang++
+      run: |
+        . /opt/AMD/aocc-compiler-4.1.0/setenv_AOCC.sh
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. -DBUILD_DOC=OFF -DCMAKE_BUILD_TYPE=DEBUG
+        sudo make -j4
+
+  test-flex:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.8
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
     steps:
     - uses: actions/checkout@v3
 
@@ -44,9 +122,8 @@ jobs:
       env:
         HOME: /home/graphscope/
       run: |
-        cd ${GITHUB_WORKSPACE}/
-        git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
 

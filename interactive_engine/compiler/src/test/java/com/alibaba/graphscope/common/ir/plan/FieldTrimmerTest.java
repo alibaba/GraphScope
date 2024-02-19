@@ -72,10 +72,14 @@ public class FieldTrimmerTest {
 
         Assert.assertEquals(
                 "RecordType(CHAR(1) name, INTEGER age)\n"
-                        + "RecordType(Graph_Schema_Type(CHAR(1) name, INTEGER age) x,"
-                        + " Graph_Schema_Type() y)\n"
-                        + "RecordType(Graph_Schema_Type(CHAR(1) name, INTEGER age) x,"
-                        + " Graph_Schema_Type() y)\n",
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[CHAR(1) name, INTEGER age]) x,"
+                    + " Graph_Schema_Type(labels=[EdgeLabel(knows, person, person)], properties=[])"
+                    + " y)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[CHAR(1) name, INTEGER age]) x,"
+                    + " Graph_Schema_Type(labels=[EdgeLabel(knows, person, person)], properties=[])"
+                    + " y)\n",
                 rowTypeString(after));
     }
 
@@ -142,11 +146,15 @@ public class FieldTrimmerTest {
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
         Assert.assertEquals(
-                "RecordType(Graph_Schema_Type() p)\n"
-                        + "RecordType(Graph_Schema_Type(CHAR(1) name) p, INTEGER age)\n"
-                        + "RecordType(Graph_Schema_Type(CHAR(1) name) p, INTEGER age)\n"
-                        + "RecordType(Graph_Schema_Type(CHAR(1) name, INTEGER age) x,"
-                        + " Graph_Schema_Type() y, Graph_Schema_Type() v)\n",
+                "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)], properties=[]) p)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[CHAR(1) name]) p, INTEGER age)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[CHAR(1) name]) p, INTEGER age)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[CHAR(1) name, INTEGER age]) x,"
+                    + " Graph_Schema_Type(labels=[EdgeLabel(knows, person, person)], properties=[])"
+                    + " y, Graph_Schema_Type(labels=[VertexLabel(person)], properties=[]) v)\n",
                 rowTypeString(after));
         // for property trimming
 
@@ -215,12 +223,18 @@ public class FieldTrimmerTest {
                     + "], matchOpt=[INNER])",
                 after.explain().trim());
         Assert.assertEquals(
-                "RecordType(Graph_Schema_Type() x, BIGINT cnt)\n"
-                        + "RecordType(Graph_Schema_Type() x, BIGINT cnt)\n"
-                        + "RecordType(Graph_Schema_Type(INTEGER age) x, Graph_Schema_Type() y,"
-                        + " Graph_Schema_Type() friend)\n"
-                        + "RecordType(Graph_Schema_Type(INTEGER age) x, Graph_Schema_Type() y,"
-                        + " Graph_Schema_Type() friend)\n",
+                "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)], properties=[]) x,"
+                    + " BIGINT cnt)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)], properties=[]) x,"
+                    + " BIGINT cnt)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[INTEGER age]) x, Graph_Schema_Type(labels=[EdgeLabel(knows,"
+                    + " person, person)], properties=[]) y,"
+                    + " Graph_Schema_Type(labels=[VertexLabel(person)], properties=[]) friend)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[INTEGER age]) x, Graph_Schema_Type(labels=[EdgeLabel(knows,"
+                    + " person, person)], properties=[]) y,"
+                    + " Graph_Schema_Type(labels=[VertexLabel(person)], properties=[]) friend)\n",
                 rowTypeString(after));
     }
 
@@ -268,9 +282,13 @@ public class FieldTrimmerTest {
 
         Assert.assertEquals(
                 "RecordType(BIGINT id)\n"
-                    + "RecordType(Graph_Schema_Type(BIGINT id) x, CHAR(1) name)\n"
-                    + "RecordType(Graph_Schema_Type(BIGINT id) x, CHAR(1) name)\n"
-                    + "RecordType(Graph_Schema_Type(BIGINT id, CHAR(1) name) x, Graph_Schema_Type()"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[BIGINT id]) x, CHAR(1) name)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[BIGINT id]) x, CHAR(1) name)\n"
+                    + "RecordType(Graph_Schema_Type(labels=[VertexLabel(person)],"
+                    + " properties=[BIGINT id, CHAR(1) name]) x,"
+                    + " Graph_Schema_Type(labels=[EdgeLabel(knows, person, person)], properties=[])"
                     + " y)\n",
                 rowTypeString(after));
     }

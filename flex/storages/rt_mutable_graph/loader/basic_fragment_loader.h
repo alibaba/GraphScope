@@ -90,7 +90,12 @@ class BasicFragmentLoader {
       dual_csr_list_[index] = new DualCsr<std::string_view>(
           oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
     } else {
-      dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+      bool oe_mutable = schema_.outgoing_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      bool ie_mutable = schema_.incoming_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy,
+                                                   oe_mutable, ie_mutable);
     }
     ie_[index] = dual_csr_list_[index]->GetInCsr();
     oe_[index] = dual_csr_list_[index]->GetOutCsr();
@@ -120,7 +125,6 @@ class BasicFragmentLoader {
         src_label_name, dst_label_name, edge_label_name);
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
-
     if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
@@ -142,7 +146,13 @@ class BasicFragmentLoader {
       }
 
     } else {
-      auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+      bool oe_mutable = schema_.outgoing_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      bool ie_mutable = schema_.incoming_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+
+      auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy, oe_mutable,
+                                           ie_mutable);
 
       dual_csr_list_[index] = dual_csr;
       ie_[index] = dual_csr_list_[index]->GetInCsr();
@@ -176,7 +186,7 @@ class BasicFragmentLoader {
   std::string work_dir_;
   size_t vertex_label_num_, edge_label_num_;
   std::vector<LFIndexer<vid_t>> lf_indexers_;
-  std::vector<MutableCsrBase*> ie_, oe_;
+  std::vector<CsrBase*> ie_, oe_;
   std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
 };

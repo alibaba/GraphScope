@@ -15,7 +15,7 @@ dyn_type = { path = "../../common/dyn_type" }
 ir_common = {path = "../common"}
 pegasus = { path = "../../engine/pegasus/pegasus" }
 pegasus_common = { path = "../../engine/pegasus/common" }
-ahash = "0.8"
+ahash = ">=0.8.0,<=0.8.7"
 rand = "0.8.5"
 chrono = "0.4"
 regex = "1.10"

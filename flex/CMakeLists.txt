@@ -13,8 +13,32 @@ project (
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
-option(USE_MMAPALLOC "Whether to use mmap allocator" OFF)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
+
+#print options
+message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
+message(STATUS "Build test: ${BUILD_TEST}")
+message(STATUS "Build doc: ${BUILD_DOC}")
+message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
+
+# ------------------------------------------------------------------------------
+# cmake configs
+# ------------------------------------------------------------------------------
+
+include(CheckLibraryExists)
+include(GNUInstallDirs)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+# reference: https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling#always-full-rpath
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+if (BUILD_HQPS)
+    message("Build HighQPS Engine")
+    add_definitions(-DBUILD_HQPS)
+endif ()
 
 execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
 string(STRIP ${LINUX_KERNEL_VERSION} LINUX_KERNEL_VERSION)
@@ -27,10 +51,13 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 set(DEFAULT_BUILD_TYPE "Release")
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -fPIC")
-set(CMAKE_CXX_FLAGS_DEBUG "-g3 -O0")
-
+if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${DEFAULT_BUILD_TYPE}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${DEFAULT_BUILD_TYPE}" CACHE
+      STRING "Choose the type of build." FORCE)
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+               "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif ()
 
 add_compile_definitions(FLEX_VERSION="${FLEX_VERSION}")
 
@@ -38,11 +65,15 @@ if (APPLE)
     set(CMAKE_MACOSX_RPATH ON)
 else ()
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -lopen-pal")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lopen-pal")
     else ()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -Wl,-rpath,$ORIGIN")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath,$ORIGIN")
     endif ()
 endif ()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -std=c++17 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
@@ -74,7 +105,7 @@ endif ()
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
-             context program_options regex thread)
+             context program_options regex thread date_time)
 
 #find arrow----------------------------------------------------------------------
 include("cmake/FindArrow.cmake")
@@ -117,6 +148,23 @@ if (BUILD_ODPS_FRAGMENT_LOADER)
     include_directories(SYSTEM ${CMAKE_SOURCE_DIR}/third_party/odps/include)
 endif()
 
+macro(install_flex_target target)
+    install(TARGETS ${target}
+            EXPORT flex-targets
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+    )
+endmacro()
+
+macro(install_without_export_flex_target target)
+    install(TARGETS ${target}
+            RUNTIME DESTINATION bin
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+    )
+endmacro()
+
 add_subdirectory(utils)
 add_subdirectory(codegen)
 add_subdirectory(storages)
@@ -126,10 +174,21 @@ if (BUILD_TEST)
    add_subdirectory(tests)
 endif()
 
-if (USE_MMAPALLOC)
-    add_definitions(-DUSE_MMAPALLOC)
-    message("mmap allocator")
-endif()
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flex-config.in.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/flex-config.cmake @ONLY)
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/flex-config-version.in.cmake
+               ${CMAKE_CURRENT_BINARY_DIR}/flex-config-version.cmake @ONLY)
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/flex-config.cmake"
+              "${CMAKE_CURRENT_BINARY_DIR}/flex-config-version.cmake"
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flex)
+
+install(EXPORT flex-targets
+        FILE flex-targets.cmake
+	NAMESPACE flex::
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/flex)
 
 file(GLOB_RECURSE FILES_NEED_LINT
         "engines/*.cc"

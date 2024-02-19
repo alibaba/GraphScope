@@ -17,13 +17,13 @@
 #define GRAPHSCOPE_DATABASE_GRAPH_DB_SESSION_H_
 
 #include "flex/engines/graph_db/app/app_base.h"
+#include "flex/engines/graph_db/database/compact_transaction.h"
 #include "flex/engines/graph_db/database/insert_transaction.h"
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
 #include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
-#include "flex/proto_generated_gie/stored_procedure.pb.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/column.h"
 #include "flex/utils/result.h"
@@ -33,18 +33,19 @@ namespace gs {
 class GraphDB;
 class WalWriter;
 
-void put_argment(gs::Encoder& encoder, const query::Argument& argment);
-
 class GraphDBSession {
  public:
   static constexpr int32_t MAX_RETRY = 3;
+  static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
   GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
                  const std::string& work_dir, int thread_id)
       : db_(db),
         alloc_(alloc),
         logger_(logger),
         work_dir_(work_dir),
-        thread_id_(thread_id) {
+        thread_id_(thread_id),
+        eval_duration_(0),
+        query_num_(0) {
     for (auto& app : apps_) {
       app = nullptr;
     }
@@ -61,6 +62,8 @@ class GraphDBSession {
 
   UpdateTransaction GetUpdateTransaction();
 
+  CompactTransaction GetCompactTransaction();
+
   bool BatchUpdate(UpdateBatch& batch);
 
   const MutablePropertyFragment& graph() const;
@@ -76,16 +79,19 @@ class GraphDBSession {
 
   Result<std::vector<char>> Eval(const std::string& input);
 
-  // Evaluate a temporary stored procedure. close the handle of the dynamic lib
-  // immediately.
-  Result<std::vector<char>> EvalAdhoc(const std::string& input_lib_path);
-
-  // Evaluate a stored procedure with input parameters given.
-  Result<std::vector<char>> EvalHqpsProcedure(const query::Query& query_pb);
-
   void GetAppInfo(Encoder& result);
 
   int SessionId() const;
+
+  bool Compact();
+
+  double eval_duration() const;
+
+  const AppMetric& GetAppMetric(int idx) const;
+
+  int64_t query_num() const;
+
+  AppBase* GetApp(int idx);
 
  private:
   GraphDB& db_;
@@ -94,8 +100,12 @@ class GraphDBSession {
   std::string work_dir_;
   int thread_id_;
 
-  std::array<AppWrapper, 256> app_wrappers_;
-  std::array<AppBase*, 256> apps_;
+  std::array<AppWrapper, MAX_PLUGIN_NUM> app_wrappers_;
+  std::array<AppBase*, MAX_PLUGIN_NUM> apps_;
+  std::array<AppMetric, MAX_PLUGIN_NUM> app_metrics_;
+
+  std::atomic<int64_t> eval_duration_;
+  std::atomic<int64_t> query_num_;
 };
 
 }  // namespace gs

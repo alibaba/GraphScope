@@ -13,6 +13,9 @@
  */
 package com.alibaba.graphscope.groot.discovery;
 
+import static com.alibaba.graphscope.groot.common.RoleType.*;
+
+import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
 
@@ -28,75 +31,37 @@ public class FileDiscovery implements NodeDiscovery {
     private final Map<RoleType, Map<Integer, GrootNode>> allNodes = new HashMap<>();
     private boolean started = false;
 
+    Configs configs;
+
     public FileDiscovery(Configs configs) {
+        this.configs = configs;
         // Store related nodes
-        int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
-        String storeNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
-        int port = CommonConfig.RPC_PORT.get(configs);
-        Map<Integer, GrootNode> storeNodes =
-                makeRoleNodes(storeCount, storeNamePrefix, RoleType.STORE.getName(), port);
-        this.allNodes.put(RoleType.STORE, storeNodes);
-
-        int graphPort = StoreConfig.EXECUTOR_GRAPH_PORT.get(configs);
-        Map<Integer, GrootNode> graphNodes =
-                makeRoleNodes(
-                        storeCount, storeNamePrefix, RoleType.EXECUTOR_GRAPH.getName(), graphPort);
-        this.allNodes.put(RoleType.EXECUTOR_GRAPH, graphNodes);
-
-        int queryPort = StoreConfig.EXECUTOR_QUERY_PORT.get(configs);
-        Map<Integer, GrootNode> queryNodes =
-                makeRoleNodes(
-                        storeCount, storeNamePrefix, RoleType.EXECUTOR_QUERY.getName(), queryPort);
-        this.allNodes.put(RoleType.EXECUTOR_QUERY, queryNodes);
-
-        int enginePort = StoreConfig.EXECUTOR_ENGINE_PORT.get(configs);
-        Map<Integer, GrootNode> engineNodes =
-                makeRoleNodes(
-                        storeCount,
-                        storeNamePrefix,
-                        RoleType.EXECUTOR_ENGINE.getName(),
-                        enginePort);
-        this.allNodes.put(RoleType.EXECUTOR_ENGINE, engineNodes);
-
-        int gaiaRpcPort = GaiaConfig.GAIA_RPC_PORT.get(configs);
-        Map<Integer, GrootNode> gaiaRpcNodes =
-                makeRoleNodes(
-                        storeCount, storeNamePrefix, RoleType.GAIA_RPC.getName(), gaiaRpcPort);
-        this.allNodes.put(RoleType.GAIA_RPC, gaiaRpcNodes);
-
-        int gaiaEnginePort = GaiaConfig.GAIA_ENGINE_PORT.get(configs);
-        Map<Integer, GrootNode> gaiaEngineNodes =
-                makeRoleNodes(
-                        storeCount,
-                        storeNamePrefix,
-                        RoleType.GAIA_ENGINE.getName(),
-                        gaiaEnginePort);
-        this.allNodes.put(RoleType.GAIA_ENGINE, gaiaEngineNodes);
+        String storePrefix = DiscoveryConfig.DNS_NAME_PREFIX_STORE.get(configs);
+        String frontendPrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
+        String coordinatorPrefix = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
 
         // Frontend nodes
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
-        String frontendNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_FRONTEND.get(configs);
         Map<Integer, GrootNode> frontendNodes =
-                makeRoleNodes(frontendCount, frontendNamePrefix, RoleType.FRONTEND.getName(), port);
-        this.allNodes.put(RoleType.FRONTEND, frontendNodes);
-
-        // Ingestor nodes
-        int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
-        String ingestorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_INGESTOR.get(configs);
-        Map<Integer, GrootNode> ingestorNodes =
-                makeRoleNodes(ingestorCount, ingestorNamePrefix, RoleType.INGESTOR.getName(), port);
-        this.allNodes.put(RoleType.INGESTOR, ingestorNodes);
+                makeRoleNodes(frontendCount, frontendPrefix, FRONTEND);
+        this.allNodes.put(FRONTEND, frontendNodes);
 
         // Coordinator nodes
         int coordinatorCount = CommonConfig.COORDINATOR_NODE_COUNT.get(configs);
-        String coordinatorNamePrefix = DiscoveryConfig.DNS_NAME_PREFIX_COORDINATOR.get(configs);
         Map<Integer, GrootNode> coordinatorNodes =
-                makeRoleNodes(
-                        coordinatorCount,
-                        coordinatorNamePrefix,
-                        RoleType.COORDINATOR.getName(),
-                        port);
-        this.allNodes.put(RoleType.COORDINATOR, coordinatorNodes);
+                makeRoleNodes(coordinatorCount, coordinatorPrefix, COORDINATOR);
+        this.allNodes.put(COORDINATOR, coordinatorNodes);
+
+        int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
+        Map<Integer, GrootNode> storeNodes = makeRoleNodes(storeCount, storePrefix, STORE);
+        this.allNodes.put(STORE, storeNodes);
+
+        Map<Integer, GrootNode> gaiaRpcNodes = makeRoleNodes(storeCount, storePrefix, GAIA_RPC);
+        this.allNodes.put(GAIA_RPC, gaiaRpcNodes);
+
+        Map<Integer, GrootNode> gaiaEngineNodes =
+                makeRoleNodes(storeCount, storePrefix, GAIA_ENGINE);
+        this.allNodes.put(GAIA_ENGINE, gaiaEngineNodes);
     }
 
     @Override
@@ -106,12 +71,12 @@ public class FileDiscovery implements NodeDiscovery {
         }
     }
 
-    private Map<Integer, GrootNode> makeRoleNodes(
-            int nodeCount, String namePrefix, String role, int port) {
+    private Map<Integer, GrootNode> makeRoleNodes(int nodeCount, String namePrefix, RoleType role) {
         Map<Integer, GrootNode> nodes = new HashMap<>();
         for (int i = 0; i < nodeCount; i++) {
+            int port = Utils.getPort(configs, role, i);
             String host = namePrefix.replace("{}", String.valueOf(i));
-            nodes.put(i, new GrootNode(role, i, host, port));
+            nodes.put(i, new GrootNode(role.getName(), i, host, port));
         }
         return nodes;
     }
@@ -126,13 +91,13 @@ public class FileDiscovery implements NodeDiscovery {
         for (Map.Entry<RoleType, Map<Integer, GrootNode>> e : allNodes.entrySet()) {
             RoleType role = e.getKey();
             Map<Integer, GrootNode> nodes = e.getValue();
-            if (!nodes.isEmpty()) {
-                try {
-                    listener.nodesJoin(role, nodes);
-                } catch (Exception ex) {
-                    logger.error(
-                            "listener [" + listener + "] failed on nodesJoin [" + nodes + "]", ex);
-                }
+            if (nodes.isEmpty()) {
+                continue;
+            }
+            try {
+                listener.nodesJoin(role, nodes);
+            } catch (Exception ex) {
+                logger.error("listener {} failed on nodesJoin {}", listener, nodes, ex);
             }
         }
     }

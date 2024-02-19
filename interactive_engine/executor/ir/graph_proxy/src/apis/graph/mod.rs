@@ -65,7 +65,7 @@ impl From<pb::edge_expand::Direction> for Direction {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct QueryParams {
     pub labels: Vec<LabelId>,
     pub limit: Option<usize>,

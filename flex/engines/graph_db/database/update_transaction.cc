@@ -39,7 +39,7 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
 
   vertex_label_num_ = graph_.schema().vertex_label_num();
   edge_label_num_ = graph_.schema().edge_label_num();
-  for (auto idx = 0; idx < vertex_label_num_; ++idx) {
+  for (label_t idx = 0; idx < vertex_label_num_; ++idx) {
     if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
       added_vertices_.emplace_back(
           std::make_shared<IdIndexer<int64_t, vid_t>>());
@@ -153,8 +153,8 @@ bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
   return true;
 }
 
-static size_t get_offset(
-    const std::shared_ptr<MutableCsrConstEdgeIterBase>& base, vid_t target) {
+static size_t get_offset(const std::shared_ptr<CsrConstEdgeIterBase>& base,
+                         vid_t target) {
   size_t offset = 0;
   while (base != nullptr && base->is_valid()) {
     if (base->get_neighbor() == target) {
@@ -245,8 +245,7 @@ bool UpdateTransaction::vertex_iterator::SetField(int col_id,
 UpdateTransaction::edge_iterator::edge_iterator(
     bool dir, label_t label, vid_t v, label_t neighbor_label,
     label_t edge_label, const vid_t* aeb, const vid_t* aee,
-    std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter,
-    UpdateTransaction* txn)
+    std::shared_ptr<CsrConstEdgeIterBase> init_iter, UpdateTransaction* txn)
     : dir_(dir),
       label_(label),
       v_(v),
@@ -515,7 +514,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
   size_t vertex_label_num = graph.schema().vertex_label_num();
   size_t edge_label_num = graph.schema().edge_label_num();
 
-  for (auto idx = 0; idx < vertex_label_num; ++idx) {
+  for (label_t idx = 0; idx < vertex_label_num; ++idx) {
     if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
       added_vertices.emplace_back(
           std::make_shared<IdIndexer<int64_t, vid_t>>());
@@ -605,7 +604,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       CHECK(graph.get_lid(label, v, v_lid));
       CHECK(graph.get_lid(neighbor_label, nbr, nbr_lid));
 
-      std::shared_ptr<MutableCsrEdgeIterBase> edge_iter(nullptr);
+      std::shared_ptr<CsrEdgeIterBase> edge_iter(nullptr);
       if (dir == 0) {
         edge_iter = graph.get_incoming_edges_mut(label, v_lid, neighbor_label,
                                                  edge_label);
@@ -715,10 +714,12 @@ void UpdateTransaction::batch_commit(UpdateBatch& batch) {
   }
   auto& arc = batch.GetArc();
   auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
-  header->length = arc.GetSize() - sizeof(WalHeader);
-  header->type = 1;
-  header->timestamp = timestamp_;
-  logger_.append(arc.GetBuffer(), arc.GetSize());
+  if (arc.GetSize() != sizeof(WalHeader)) {
+    header->length = arc.GetSize() - sizeof(WalHeader);
+    header->type = 1;
+    header->timestamp = timestamp_;
+    logger_.append(arc.GetBuffer(), arc.GetSize());
+  }
 
   release();
 }
@@ -776,7 +777,7 @@ void UpdateTransaction::applyEdgesUpdates() {
             continue;
           }
 
-          std::shared_ptr<MutableCsrEdgeIterBase> edge_iter =
+          std::shared_ptr<CsrEdgeIterBase> edge_iter =
               graph_.get_outgoing_edges_mut(src_label, pair.first, dst_label,
                                             edge_label);
           for (auto& edge : updates) {
@@ -805,7 +806,7 @@ void UpdateTransaction::applyEdgesUpdates() {
           }
           std::sort(add_list.begin(), add_list.end());
           auto& edge_data = updated_edge_data_[oe_csr_index].at(v);
-          for (auto idx = 0; idx < add_list.size(); ++idx) {
+          for (size_t idx = 0; idx < add_list.size(); ++idx) {
             if (idx && add_list[idx] == add_list[idx - 1])
               continue;
             auto u = add_list[idx];
@@ -831,7 +832,7 @@ void UpdateTransaction::applyEdgesUpdates() {
           if (updates.empty()) {
             continue;
           }
-          std::shared_ptr<MutableCsrEdgeIterBase> edge_iter =
+          std::shared_ptr<CsrEdgeIterBase> edge_iter =
               graph_.get_incoming_edges_mut(dst_label, pair.first, src_label,
                                             edge_label);
           for (auto& edge : updates) {

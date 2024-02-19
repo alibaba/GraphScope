@@ -33,6 +33,7 @@ pub enum ErrorKind {
     Interrupted,
     IOError,
     IllegalScopeInput,
+    Canceled,
     Others,
 }
 
@@ -43,6 +44,7 @@ impl Debug for ErrorKind {
             ErrorKind::Interrupted => write!(f, "Interrupted, retry later"),
             ErrorKind::IOError => write!(f, "IOError"),
             ErrorKind::IllegalScopeInput => write!(f, "IllegalScopeInput"),
+            ErrorKind::Canceled => write!(f, "Job is canceled"),
             ErrorKind::Others => write!(f, "Unknown"),
         }
     }
@@ -185,6 +187,7 @@ macro_rules! throw_user_error {
 // TODO: Make build error enumerate.;
 pub enum BuildJobError {
     Unsupported(String),
+    InternalError(String),
     ServerError(Box<dyn std::error::Error + Send>),
     UserError(Box<dyn std::error::Error + Send>),
 }
@@ -193,6 +196,7 @@ impl Debug for BuildJobError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BuildJobError::Unsupported(msg) => write!(f, "unsupported combination: {}", msg),
+            BuildJobError::InternalError(msg) => write!(f, "internal error: {}", msg),
             BuildJobError::UserError(e) => write!(f, "user defined error: {}", e),
             BuildJobError::ServerError(e) => write!(f, "server error: {}", e),
         }
@@ -300,6 +304,7 @@ pub enum StartupError {
     ReadConfigError(std::io::Error),
     ParseConfigError(toml::de::Error),
     CannotFindServers,
+    InternalError(String),
     Network(NetError),
     AlreadyStarted(u64),
 }
@@ -312,6 +317,7 @@ impl Display for StartupError {
             }
             StartupError::ParseConfigError(e) => write!(f, "parse configuration failure : {}", e),
             StartupError::CannotFindServers => write!(f, "can't detect other servers;"),
+            StartupError::InternalError(e) => write!(f, "pegasus startup internal error : {}", e),
             StartupError::Network(e) => {
                 write!(f, "startup failure, caused by network error: {:?}", e)
             }

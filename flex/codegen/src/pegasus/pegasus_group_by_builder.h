@@ -52,7 +52,7 @@ class GroupByOpBuilder {
     std::string agg_fun_var_name, agg_fun_code;
     agg_func_list_.emplace_back(agg_func.aggregate());
     std::vector<common::Variable> var_tags;
-    for (auto i = 0; i < agg_func.vars_size(); i++) {
+    for (int32_t i = 0; i < agg_func.vars_size(); i++) {
       var_tags.emplace_back(agg_func.vars(i));
     }
     group_input_vars_.emplace_back(var_tags);
@@ -85,7 +85,7 @@ class GroupByOpBuilder {
              << meta_datas_.size();
     ctx_.SetHead(false);
     ctx_.ResetAlias();
-    for (auto i = 0; i < key_output_tag_.size(); ++i) {
+    for (size_t i = 0; i < key_output_tag_.size(); ++i) {
       int32_t key_output = key_output_tag_[i];
       ctx_.SetAlias(key_output);
       int32_t key_index = ctx_.GetAliasIndex(key_output);
@@ -118,7 +118,7 @@ class GroupByOpBuilder {
       ctx_.SetOutput(key_index, output_type);
     }
 
-    for (auto i = 0; i < group_output_tag_.size(); ++i) {
+    for (size_t i = 0; i < group_output_tag_.size(); ++i) {
       int32_t key_output = group_output_tag_[i];
       ctx_.SetAlias(key_output);
       int32_t key_index = ctx_.GetAliasIndex(key_output);
@@ -165,7 +165,7 @@ class GroupByOpBuilder {
 
     VLOG(10) << "[GroupBy Builder] Key input size is " << key_input_tag_.size();
     std::string key_by_key_code;
-    for (auto i = 0; i < key_input_tag_.size(); ++i) {
+    for (size_t i = 0; i < key_input_tag_.size(); ++i) {
       auto in_tag = key_input_tag_[i];
       auto input_index = ctx_.GetAliasIndex(in_tag);
       boost::format key_fmter("let key%1% = i%2%;\n");
@@ -175,7 +175,7 @@ class GroupByOpBuilder {
     VLOG(10) << "[GroupBy Builder] Finished write key";
 
     std::string key_by_value_code;
-    for (auto i = 0; i < group_input_vars_.size(); ++i) {
+    for (size_t i = 0; i < group_input_vars_.size(); ++i) {
       // Only support value with one column
       CHECK(group_input_vars_[i].size() == 1);
       auto in_tag = group_input_vars_[i][0].tag().id();
@@ -202,7 +202,7 @@ class GroupByOpBuilder {
     if (agg_func_list_.size() > 1) {
       fold_by_init_ss << "(";
     }
-    for (auto i = 0; i < agg_func_list_.size(); ++i) {
+    for (size_t i = 0; i < agg_func_list_.size(); ++i) {
       switch (agg_func_list_[i]) {
       case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_SUM:
       case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_AVG:
@@ -240,7 +240,7 @@ class GroupByOpBuilder {
     fold_by_head_fmter % fold_by_init % agg_params % input_params;
 
     std::stringstream agg_func_ss;
-    for (auto i = 0; i < agg_func_list_.size(); ++i) {
+    for (size_t i = 0; i < agg_func_list_.size(); ++i) {
       switch (agg_func_list_[i]) {
       case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_SUM:
       case physical::GroupBy::AggFunc::Aggregate::
@@ -308,7 +308,7 @@ class GroupByOpBuilder {
     if (key_output_tag_.size() == 1) {
       key_outputs = "key, ";
     } else {
-      for (auto i = 0; i < key_output_tag_.size(); i++) {
+      for (size_t i = 0; i < key_output_tag_.size(); i++) {
         key_outputs = key_outputs + "key." + std::to_string(i) + ", ";
       }
     }
@@ -316,7 +316,7 @@ class GroupByOpBuilder {
     if (group_output_tag_.size() == 1) {
       value_outputs = "value";
     } else {
-      for (auto i = 0; i < group_output_tag_.size(); i++) {
+      for (size_t i = 0; i < group_output_tag_.size(); i++) {
         value_outputs = value_outputs + "value." + std::to_string(i);
         if (i != group_output_tag_.size() - 1) {
           value_outputs += ", ";
@@ -348,12 +348,12 @@ static std::string BuildGroupByOp(
 
   CHECK(group_by_pb.functions_size() >= 1);
   auto& functions = group_by_pb.functions();
-  for (auto i = 0; i < key_aliases.size(); ++i) {
+  for (int32_t i = 0; i < key_aliases.size(); ++i) {
     auto& key_alias = key_aliases[i];
     builder.AddKeyAlias(key_alias);
   }
 
-  for (auto i = 0; i < functions.size(); ++i) {
+  for (int32_t i = 0; i < functions.size(); ++i) {
     auto& func = functions[i];
     builder.AddAggFunc(func);
   }

@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "graphscope-interactive.configmapName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: configmap
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+data:
+  engine_config.yaml: |-
+    directories:
+      workspace: {{ .Values.workspace }}
+      subdirs:
+        data: data
+        logs: logs
+        conf: conf
+    log_level: {{ .Values.engine.logLevel  }}
+    default_graph: {{ .Values.defaultGraph }}
+    compute_engine:
+      type: hiactor
+      workers:
+        - ENGINE_SERVICE_HOST:10000
+      thread_num_per_worker: {{ .Values.engine.threadNumPerWorker }}
+    compiler:
+      planner:
+        is_on: true
+        opt: RBO
+        rules:
+          - FilterIntoJoinRule
+          - FilterMatchRule
+          - NotMatchToAntiJoinRule
+      endpoint:
+        default_listen_address: ENGINE_SERVICE_HOST
+        bolt_connector:
+          disabled: false
+          port: {{ .Values.frontend.service.cypherPort }}
+        gremlin_connector:
+          disabled: true
+          port: {{ .Values.frontend.service.gremlinPort  }}
+      query_timeout: {{ .Values.frontend.service.queryTimeout  }}
+    http_service:
+      default_listen_address: ENGINE_SERVICE_HOST
+      admin_port: {{ .Values.engine.service.adminPort  }}
+      query_port: {{ .Values.engine.service.queryPort  }}
+  setup.sh: |-
+    #!/bin/bash
+    sudo sed -e "s/ENGINE_SERVICE_HOST/${ENGINE_SERVICE_HOST}/g" ${ENGINE_CONFIG_PATH} > ${REAL_ENGINE_CONFIG_PATH}
+    echo "Finish set ENGINE_SERVICE_HOST to ${ENGINE_SERVICE_HOST}"

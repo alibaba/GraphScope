@@ -18,7 +18,7 @@
 //!
 //! We instruct how to use these apis as follows.
 //!
-//! First of all, call `cbindgen` to generate the header of apis for C-binded caller, as:
+//! First of all, call `cbindgen` to generate the header of apis for C-bound caller, as:
 //! `cbindgen --crate ir_core --output /path/to/c-caller/ir_core.h`
 //!
 //! Secondly, build the dynamic ir_core library, as: `cargo build --release`,
@@ -1495,24 +1495,14 @@ mod groupby {
     /// Add the aggregate function for each group.
     /// The aggregation function is represented as a pb pointer.
     #[no_mangle]
-    pub extern "C" fn add_groupby_agg_fn_pb(
-        ptr_groupby: *const c_void, agg_val: FfiPbPointer, agg_opt: FfiAggOpt, alias: FfiAlias,
-    ) -> FfiResult {
+    pub extern "C" fn add_groupby_agg_fn_pb(ptr_groupby: *const c_void, agg_fn: FfiPbPointer) -> FfiResult {
         let mut result = FfiResult::success();
         let mut group = unsafe { Box::from_raw(ptr_groupby as *mut pb::GroupBy) };
-        let val_pb = ptr_to_pb::<common_pb::Variable>(agg_val);
-        let aggregate = unsafe { std::mem::transmute::<FfiAggOpt, i32>(agg_opt) };
-        let alias_pb = alias.try_into();
-        if val_pb.is_ok() && alias_pb.is_ok() {
-            group.functions.push(pb::group_by::AggFunc {
-                vars: vec![val_pb.unwrap()],
-                aggregate,
-                alias: alias_pb.unwrap(),
-            });
-        } else if val_pb.is_err() {
-            result = val_pb.err().unwrap();
+        let agg_fn_pb = ptr_to_pb::<pb::group_by::AggFunc>(agg_fn);
+        if agg_fn_pb.is_ok() {
+            group.functions.push(agg_fn_pb.unwrap());
         } else {
-            result = alias_pb.err().unwrap();
+            result = agg_fn_pb.err().unwrap();
         }
         std::mem::forget(group);
 

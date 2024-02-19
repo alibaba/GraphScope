@@ -37,6 +37,9 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
             .unwrap();
         for id in list {
             let properties = data::gen_vertex_properties(si, label, id, type_def);
+            if id == 100001 {
+                println!("si: {:?}, vertex {:?}, {:?}", si, id, properties);
+            }
             self.graph
                 .insert_overwrite_vertex(si, id, label, &properties)?;
             self.vertex_data
@@ -213,16 +216,16 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
             let ans = self.vertex_data.get(si, *id, label).unwrap();
             let v = self
                 .graph
-                .get_vertex(si, *id, Some(label), None)
+                .get_vertex(si, *id, Some(label), Some(&vec![]))
                 .unwrap()
                 .unwrap();
-            check_vertex(&v, &ans);
+            check_vertex(si, &v, &ans);
             let v = self
                 .graph
-                .get_vertex(si, *id, None, None)
+                .get_vertex(si, *id, None, Some(&vec![]))
                 .unwrap()
                 .unwrap();
-            check_vertex(&v, &ans);
+            check_vertex(si, &v, &ans);
         }
     }
 
@@ -260,13 +263,13 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
         let mut ans = self.vertex_data.scan(si, label);
         let mut iter = self
             .graph
-            .scan_vertex(si, label, None, None)
+            .scan_vertex(si, label, None, Some(&vec![]))
             .unwrap();
         while let Some(v) = iter.next() {
             let v = v.unwrap();
             assert!(ids.remove(&v.get_vertex_id()));
             let ans_v = ans.remove(&v.get_vertex_id()).unwrap();
-            check_vertex(&v, &ans_v);
+            check_vertex(si, &v, &ans_v);
         }
         assert!(ids.is_empty());
         assert!(ans.is_empty(), "some id in helper is not found in data");
@@ -291,16 +294,20 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
                 .expect(format!("{:?} not found in helper", id).as_str());
             let e = self
                 .graph
-                .get_edge(si, *id, Some(edge_kind), None)
+                .get_edge(si, *id, Some(edge_kind), Some(&vec![]))
                 .unwrap()
                 .unwrap();
             check_edge(&e, &ans);
-            let e = self
+            let res = self
                 .graph
-                .get_edge(si, *id, None, None)
-                .unwrap()
-                .unwrap();
-            check_edge(&e, &ans);
+                .get_edge(si, *id, None, Some(&vec![]));
+            // .unwrap()
+            // .unwrap();
+            if let Ok(Some(e)) = &res {
+                check_edge(e, &ans);
+            } else {
+                panic!("si {:?}, get edge {:?}, return {:?}", si, id, res)
+            }
         }
     }
 
@@ -343,7 +350,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
         let ans = self.edge_data.scan(si, label);
         let iter = self
             .graph
-            .scan_edge(si, label, None, None)
+            .scan_edge(si, label, None, Some(&vec![]))
             .unwrap();
         check_edge_iter(iter, ans, ids);
     }
@@ -351,7 +358,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     pub fn check_query_edges_empty(&self, si: SnapshotId, label: Option<LabelId>) {
         assert!(self
             .graph
-            .scan_edge(si, label, None, None)
+            .scan_edge(si, label, None, Some(&vec![]))
             .unwrap()
             .next()
             .is_none());
@@ -363,7 +370,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
         let ans = self.edge_data.get_out_edges(si, src_id, label);
         let iter = self
             .graph
-            .get_out_edges(si, src_id, label, None, None)
+            .get_out_edges(si, src_id, label, None, Some(&vec![]))
             .unwrap();
         check_edge_iter(iter, ans, ids);
     }
@@ -371,7 +378,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     pub fn check_get_out_edges_empty(&self, si: SnapshotId, src_id: VertexId, label: Option<LabelId>) {
         assert!(self
             .graph
-            .get_out_edges(si, src_id, label, None, None)
+            .get_out_edges(si, src_id, label, None, Some(&vec![]))
             .unwrap()
             .next()
             .is_none());
@@ -383,7 +390,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
         let ans = self.edge_data.get_in_edges(si, dst_id, label);
         let iter = self
             .graph
-            .get_in_edges(si, dst_id, label, None, None)
+            .get_in_edges(si, dst_id, label, None, Some(&vec![]))
             .unwrap();
         check_edge_iter(iter, ans, ids);
     }
@@ -391,7 +398,7 @@ impl<'a, G: MultiVersionGraph> GraphTestHelper<'a, G> {
     pub fn check_get_in_edges_empty(&self, si: SnapshotId, dst_id: VertexId, label: Option<LabelId>) {
         assert!(self
             .graph
-            .get_in_edges(si, dst_id, label, None, None)
+            .get_in_edges(si, dst_id, label, None, Some(&vec![]))
             .unwrap()
             .next()
             .is_none());
@@ -760,11 +767,20 @@ impl<'a> VertexDataRef<'a> {
     }
 }
 
-fn check_vertex<V: RocksVertex>(v: &V, ans: &VertexDataRef) {
+fn check_vertex<V: RocksVertex>(si: SnapshotId, v: &V, ans: &VertexDataRef) {
     assert_eq!(v.get_label_id(), ans.label);
     for (prop_id, ans_val) in ans.properties {
-        let val = v.get_property(*prop_id).unwrap();
-        assert_eq!(*val.get_property_value(), PropertyValue::from(ans_val.as_ref()));
+        if let Some(val) = v.get_property(*prop_id) {
+            assert_eq!(*val.get_property_value(), PropertyValue::from(ans_val.as_ref()));
+        } else {
+            panic!(
+                "si: {:?}, vertex {:?}, property {:?} not found, expected: {:?}",
+                si,
+                v.get_vertex_id(),
+                prop_id,
+                PropertyValue::from(ans_val.as_ref())
+            );
+        }
     }
     let mut set = HashSet::new();
     let mut iter = v.get_property_iterator();

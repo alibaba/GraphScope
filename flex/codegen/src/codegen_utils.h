@@ -29,7 +29,7 @@ limitations under the License.
 
 namespace gs {
 
-// remote deuplicate from vector
+// remote duplicate from vector
 template <typename T>
 std::vector<T> remove_duplicate(const std::vector<T>& labels) {
   std::vector<T> res;
@@ -85,7 +85,7 @@ std::string generate_arg_list(std::string arg_name, int32_t size) {
   if (size > 1) {
     arg_ss << "(";
   }
-  for (auto i = 0; i < size; i++) {
+  for (int32_t i = 0; i < size; i++) {
     arg_ss << arg_name << i;
     if (i < size - 1) {
       arg_ss << ", ";
@@ -103,7 +103,7 @@ std::string generate_output_list(std::string input_name, int32_t input_size,
   std::stringstream result_ss;
   result_ss << "(" << result_name;
   if (contain_head) {
-    for (auto i = 1; i < input_size; i++) {
+    for (int32_t i = 1; i < input_size; i++) {
       if (i == alias_index) {
         result_ss << ", " << result_name;
       } else {
@@ -114,7 +114,7 @@ std::string generate_output_list(std::string input_name, int32_t input_size,
       result_ss << ", " << result_name;
     }
   } else {
-    for (auto i = 0; i < input_size; i++) {
+    for (int32_t i = 0; i < input_size; i++) {
       if (i == alias_index) {
         result_ss << ", " << result_name;
       } else {
@@ -154,7 +154,7 @@ template <typename T>
 void intersection(std::vector<T>& v1, const std::vector<T>& v2) {
   std::vector<T> res;
   for (auto num : v1) {
-    for (int i = 0; i < v2.size(); i++) {
+    for (size_t i = 0; i < v2.size(); i++) {
       if (num == v2[i]) {
         res.push_back(num);
         break;
@@ -164,8 +164,7 @@ void intersection(std::vector<T>& v1, const std::vector<T>& v2) {
   res.swap(v1);
 }
 
-static std::vector<std::string> add_quotes(
-    const std::vector<std::string>& strs) {
+std::vector<std::string> add_quotes(const std::vector<std::string>& strs) {
   std::vector<std::string> res;
   for (auto& str : strs) {
     res.emplace_back("\"" + str + "\"");
@@ -173,11 +172,10 @@ static std::vector<std::string> add_quotes(
   return res;
 }
 
-static std::string with_quote(std::string res) { return "\"" + res + "\""; }
+std::string with_quote(std::string res) { return "\"" + res + "\""; }
 
-static std::string make_named_property(
-    const std::vector<std::string>& prop_names,
-    const std::vector<std::string>& prop_types) {
+std::string make_named_property(const std::vector<std::string>& prop_names,
+                                const std::vector<std::string>& prop_types) {
   std::stringstream ss;
   auto quoted_prop_names = add_quotes(prop_names);
   std::string prop_names_str = gs::to_string(quoted_prop_names);
@@ -190,19 +188,27 @@ static std::string make_named_property(
   return ss.str();
 }
 
-static std::string make_inner_id_property(int tag_id, std::string prop_type) {
+std::string make_inner_id_property(int tag_id, std::string prop_type) {
   std::stringstream ss;
   ss << INNER_ID_PROPERTY_NAME << "<" << tag_id << ">{}";
   return ss.str();
 }
 
-static codegen::ParamConst variable_to_param_const(const common::Variable& var,
-                                                   BuildingContext& ctx) {
+codegen::ParamConst variable_to_param_const(const common::Variable& var,
+                                            BuildingContext& ctx) {
   codegen::ParamConst param_const;
   if (var.has_property()) {
-    param_const.var_name = var.property().key().name();
-    param_const.type =
-        common_data_type_pb_2_data_type(var.node_type().data_type());
+    auto& var_property = var.property();
+    if (var_property.has_label()) {
+      param_const.var_name = "label";
+      param_const.type = codegen::DataType::kLabelId;
+    } else if (var_property.has_key()) {
+      param_const.var_name = var.property().key().name();
+      param_const.type =
+          common_data_type_pb_2_data_type(var.node_type().data_type());
+    } else {
+      LOG(FATAL) << "Unexpected property type";
+    }
   } else if (var.has_tag()) {
     // check is vertex or is edge from node_type
     if (var.has_node_type()) {
@@ -234,7 +240,7 @@ static codegen::ParamConst variable_to_param_const(const common::Variable& var,
   return param_const;
 }
 
-static std::string interval_to_str(const common::Extract::Interval& interval) {
+std::string interval_to_str(const common::Extract::Interval& interval) {
   switch (interval) {
   case common::Extract::Interval::Extract_Interval_YEAR:
     return "Interval::YEAR";

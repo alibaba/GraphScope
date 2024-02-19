@@ -49,10 +49,10 @@ jobs:
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
         # docker tag: 0.15.0 -> 0.15.0a20220808
         # x86_64
-        arch=$(uname -m)
+        # arch=$(uname -m)
         time=$(date "+%Y%m%d")
         version=$(cat ${GITHUB_WORKSPACE}/VERSION)
-        tag="${version}a${time}"-${arch}
+        tag="${version}a${time}"
         sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${tag}
         sudo docker push ${{ env.GSS_IMAGE }}:${tag}
 
@@ -69,12 +69,13 @@ jobs:
       run: |
         echo "${docker_password}" | sudo docker login --username="${docker_username}" ${{ env.DOCKER_URL }} --password-stdin
         # x86_64
-        arch=$(uname -m)
-        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch}
-        sudo docker push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch}
+        # arch=$(uname -m)
+        sudo docker tag graphscope/graphscope-store:${SHORT_SHA} ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
+        sudo docker push ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}
 
   build-gss-image-aarch64:
-    if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    # if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
+    if: false
     runs-on: [self-hosted, Linux, ARM64]
     steps:
     - uses: actions/checkout@v3
@@ -147,7 +148,8 @@ jobs:
         sudo docker rmi -f ${{ env.GSS_IMAGE }}:${{ steps.tag.outputs.TAG }}-${arch} || true
 
   push-gss-image-manifest:
-    if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+    # if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope' }}
+    if: false
     runs-on: ubuntu-20.04
 
     needs: [build-gss-image-x86-64, build-gss-image-aarch64]
@@ -199,6 +201,11 @@ jobs:
                   -k "${oss_accesskey_secret}" \
                   -e ${{ env.OSS_ENDPOINT }} \
                   cp -r oss://graphscope/charts ./charts
+
+        # ossutil64 will downloads contents to folder ./charts/charts
+        pushd charts/
+        mv charts/*.tgz charts/*.yaml ./
+        popd
 
     - name: Package Charts
       run: |

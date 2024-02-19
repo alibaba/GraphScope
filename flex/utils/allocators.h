@@ -27,32 +27,24 @@
 namespace gs {
 
 class ArenaAllocator {
-  static constexpr size_t batch_size = 4096;
+  static constexpr size_t batch_size = 16 * 1024 * 1024;
 
  public:
-  ArenaAllocator() : cur_buffer_(nullptr), cur_loc_(0), cur_size_(0) {}
+  ArenaAllocator(MemoryStrategy strategy, const std::string& prefix)
+      : strategy_(strategy),
+        prefix_(prefix),
+        cur_loc_(0),
+        cur_size_(0),
+        allocated_memory_(0),
+	allocated_batches_(0)
+  {
+    if (strategy_ != MemoryStrategy::kSyncToFile) {
+      prefix_.clear();
+    }
+  }
   ~ArenaAllocator() {
-    if (cur_buffer_ != nullptr) {
-      free(cur_buffer_);
-    }
-    for (auto ptr : buffers_) {
-      if (ptr != nullptr) {
-        free(ptr);
-      }
-    }
-    for (auto& t : typed_allocations_) {
-      void* data = std::get<0>(t);
-      size_t span = std::get<1>(t);
-      size_t num = std::get<2>(t);
-      auto& func = std::get<3>(t);
-
-      char* ptr = static_cast<char*>(data);
-      for (size_t i = 0; i < num; ++i) {
-        func(ptr);
-        ptr += span;
-      }
-
-      free(data);
+    for (auto ptr : mmap_buffers_) {
+      delete ptr;
     }
   }
 
@@ -60,113 +52,67 @@ class ArenaAllocator {
     if (cur_size_ - cur_loc_ >= cap) {
       return;
     }
-    buffers_.push_back(cur_buffer_);
     cap = (cap + batch_size - 1) ^ (batch_size - 1);
-    cur_buffer_ = malloc(cap);
+    cur_buffer_ = allocate_batch(cap);
     cur_loc_ = 0;
     cur_size_ = cap;
   }
 
   void* allocate(size_t size) {
-    reserve(size);
-    void* ret = (char*) cur_buffer_ + cur_loc_;
-    cur_loc_ += size;
-    return ret;
-  }
-
-  void* allocate_typed(size_t span, size_t num,
-                       const std::function<void(void*)>& dtor) {
-    void* data = malloc(span * num);
-    typed_allocations_.emplace_back(data, span, num, dtor);
-    return data;
-  }
-
- private:
-  std::vector<void*> buffers_;
-  void* cur_buffer_;
-  size_t cur_loc_;
-  size_t cur_size_;
-
-  std::vector<std::tuple<void*, size_t, size_t, std::function<void(void*)>>>
-      typed_allocations_;
-};
-
-class MMapAllocator {
-  static constexpr size_t batch_size = 128 * 1024 * 1024;
-
- public:
-  MMapAllocator(const std::string& prefix)
-      : prefix_(prefix), cur_loc_(0), cur_size_(0) {}
-  ~MMapAllocator() {
-    for (auto ptr : buffers_) {
-      if (ptr != nullptr) {
-        delete ptr;
-      }
-    }
-  }
-
-  void reserve(size_t cap) {
-    if (cur_size_ - cur_loc_ >= cap) {
-      return;
-    }
-    size_t old = cap;
-    mmap_array<char>* buf = new mmap_array<char>();
-    buf->open(prefix_ + std::to_string(buffers_.size()), false);
-    cap = (cap + batch_size - 1) ^ (batch_size - 1);
-    buf->resize(cap);
-    buffers_.push_back(buf);
-    cur_buffer_ = static_cast<void*>(buf->data());
-    cur_loc_ = 0;
-    cur_size_ = cap;
-  }
-
-  void* allocate_large(size_t size) {
-    mmap_array<char>* buf = new mmap_array<char>();
-    buf->open(prefix_ + std::to_string(buffers_.size()), false);
-    buf->resize(size);
-    buffers_.push_back(buf);
-    return static_cast<void*>(buf->data());
-  }
-
-  void allocate_new_batch() {
-    mmap_array<char>* buf = new mmap_array<char>();
-    buf->open(prefix_ + std::to_string(buffers_.size()), false);
-    buf->resize(batch_size);
-    buffers_.push_back(buf);
-    cur_buffer_ = static_cast<void*>(buf->data());
-    cur_loc_ = 0;
-    cur_size_ = batch_size;
-  }
-
-  void* allocate(size_t size) {
+    allocated_memory_ += size;
     if (cur_size_ - cur_loc_ >= size) {
       void* ret = (char*) cur_buffer_ + cur_loc_;
       cur_loc_ += size;
       return ret;
     } else if (size >= batch_size / 2) {
-      return allocate_large(size);
+      return allocate_batch(size);
     } else {
-      allocate_new_batch();
-      void* ret = (char*) cur_buffer_ + cur_loc_;
-      cur_loc_ += size;
+      cur_buffer_ = allocate_batch(batch_size);
+      void* ret = cur_buffer_;
+      cur_loc_ = size;
+      cur_size_ = batch_size;
       return ret;
     }
   }
 
+  size_t allocated_memory() const { return allocated_memory_; }
+
  private:
+  void* allocate_batch(size_t size) {
+    allocated_batches_ += size;
+    if (prefix_.empty()) {
+      mmap_array<char>* buf = new mmap_array<char>();
+      if (strategy_ == MemoryStrategy::kHugepagePrefered) {
+        buf->open_with_hugepages("", size);
+      } else {
+        buf->open("", false);
+      }
+      buf->resize(size);
+      mmap_buffers_.push_back(buf);
+      return static_cast<void*>(buf->data());
+    } else {
+      mmap_array<char>* buf = new mmap_array<char>();
+      buf->open(prefix_ + std::to_string(mmap_buffers_.size()), true);
+      buf->resize(size);
+      mmap_buffers_.push_back(buf);
+      return static_cast<void*>(buf->data());
+    }
+  }
+
+  MemoryStrategy strategy_;
   std::string prefix_;
-  std::vector<mmap_array<char>*> buffers_;
+  std::vector<mmap_array<char>*> mmap_buffers_;
 
   void* cur_buffer_;
   size_t cur_loc_;
   size_t cur_size_;
+
+  size_t allocated_memory_;
+  size_t allocated_batches_;
 };
 
-#ifdef USE_MMAPALLOC
-using Allocator = MMapAllocator;
-#else
 using Allocator = ArenaAllocator;
-#endif
+
 }  // namespace gs
 
 #endif  // GRAPHSCOPE_UTILS_ALLOCATORS_H_

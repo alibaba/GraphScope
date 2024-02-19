@@ -115,7 +115,7 @@ weight FLOAT
 The label format is used to express the situation where the vertices or
 edges are labeled. The label has only one column, which is of type int.
 When the data format has labels, it is necessary to display and specify
-**LABELD** to inform the system, in the API description.
+**LABELED** to inform the system, in the API description.
 
 The schema of the vertex data label format:
 
@@ -324,7 +324,7 @@ memory overhead.
    gl.Decoder(attr_type={your_attr_types}, attr_delimiter={you_delimiter})
 
    # schema = (src_id int64, dst_id int64, weight float, attributes string)
-   ag.Decoder(weightd=True, attr_type={your_attr_types}, attr_delimiter={you_delimiter})
+   ag.Decoder(weighted=True, attr_type={your_attr_types}, attr_delimiter={you_delimiter})
 
    # schema = (src_id int64, dst_id int64, weight float, label int32)
    gl.Decoder(weighted=True, labeled=True)
@@ -354,7 +354,7 @@ memory overhead.
    gl.Decoder(attr_type={your_attr_types}, attr_delimiter={you_delimiter})
 
    # schema = (src_id int64, dst_id int64, weight float, attributes string)
-   gl.Decoder(weightd=True, attr_type={your_attr_types}, attr_delimiter={you_delimiter})
+   gl.Decoder(weighted=True, attr_type={your_attr_types}, attr_delimiter={you_delimiter})
 
    # schema = (src_id int64, dst_id int64, weight float, label int32)
    gl.Decoder(weighted=True, labeled=True)

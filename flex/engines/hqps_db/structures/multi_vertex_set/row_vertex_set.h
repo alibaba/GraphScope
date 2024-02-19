@@ -19,11 +19,13 @@
 #include <tuple>
 #include <vector>
 
-#include "flex/engines/hqps_db/structures/collection.h"
 #include "grape/util.h"
 
 // Vertex set in with data in rows.
 namespace gs {
+
+template <typename T>
+class Collection;
 
 namespace internal {
 
@@ -45,8 +47,8 @@ void fillBuiltinPropsImpl(
       VLOG(10) << "Found builin property " << prop_name;
       CHECK(repeat_array.size() == datas.size());
       size_t ind = 0;
-      for (auto i = 0; i < repeat_array.size(); ++i) {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+      for (size_t i = 0; i < repeat_array.size(); ++i) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           std::get<Proj_Is>(tuples[ind]) = std::get<0>(datas[i]);
           ind += 1;
         }
@@ -338,7 +340,7 @@ RowSetSubSetImpl(const std::vector<lid_t>& old_vids,
   std::vector<lid_t> new_vids(indices.size(), 0);
   std::vector<data_tuple_t> new_datas;
   new_datas.reserve(indices.size());
-  for (auto i = 0; i < indices.size(); ++i) {
+  for (size_t i = 0; i < indices.size(); ++i) {
     new_vids[i] = old_vids[indices[i]];
     new_datas.emplace_back(old_datas[indices[i]]);
   }
@@ -350,7 +352,7 @@ static std::vector<lid_t> RowSetSubSetImpl(const std::vector<lid_t>& old_vids,
                                            std::vector<offset_t>& indices) {
   VLOG(10) << "RowSetSubSetImple";
   std::vector<lid_t> new_vids(indices.size(), 0);
-  for (auto i = 0; i < indices.size(); ++i) {
+  for (size_t i = 0; i < indices.size(); ++i) {
     new_vids[i] = old_vids[indices[i]];
   }
   return new_vids;
@@ -368,7 +370,7 @@ std::vector<offset_t> RowSetDedupImpl(
   // TODO: replace with bitset.
   std::unordered_map<lid_t, size_t> v2lid;
   size_t cnt = 0;
-  for (auto i = 0; i < ori_lids.size(); ++i) {
+  for (size_t i = 0; i < ori_lids.size(); ++i) {
     offsets.emplace_back(cnt);
     auto ret = v2lid.insert({ori_lids[i], i});
     if (ret.second == true) {
@@ -394,7 +396,7 @@ std::vector<offset_t> RowSetDedupImpl(const std::vector<lid_t>& ori_lids,
   // TODO: replace with bitset.
   std::unordered_map<lid_t, size_t> v2lid;
   size_t cnt = 0;
-  for (auto i = 0; i < ori_lids.size(); ++i) {
+  for (size_t i = 0; i < ori_lids.size(); ++i) {
     offsets.emplace_back(cnt);
     auto ret = v2lid.insert({ori_lids[i], i});
     if (ret.second == true) {
@@ -446,7 +448,7 @@ RES_T row_project_vertices_impl(const std::vector<lid_t>& lids,
     VLOG(10) << "take all labels";
     label_ind = 0;  // whatever greater than -1.
   } else {
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       if (cur_label == labels[i])
         label_ind = i;
     }
@@ -455,13 +457,13 @@ RES_T row_project_vertices_impl(const std::vector<lid_t>& lids,
     VLOG(10) << "No label found in query params";
     // for current set, we don't need.
     auto size = lids.size();
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       offsets.emplace_back(cnt);
     }
   } else {
     // VLOG(10) << "Found label in query params";
     auto& cur_prop_getter = prop_getters[0];
-    for (auto i = 0; i < lids.size(); ++i) {
+    for (size_t i = 0; i < lids.size(); ++i) {
       offsets.emplace_back(cnt);
       auto cur_lid = lids[i];
       auto prop = cur_prop_getter.get_view(cur_lid);
@@ -497,7 +499,7 @@ RES_T row_project_vertices_impl(
     label_ind = 0;  // whatever greater than -1.
   } else {
     // FIXME: no repeated labels.
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       if (cur_label == labels[i])
         label_ind = i;
     }
@@ -506,13 +508,13 @@ RES_T row_project_vertices_impl(
     VLOG(10) << "No label found in query params";
     // for current set, we don't need.
     auto size = lids.size();
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       offsets.emplace_back(cnt);
     }
   } else {
     VLOG(10) << "Found label in query params";
     auto& cur_prop_getter = prop_getters[0];
-    for (auto i = 0; i < lids.size(); ++i) {
+    for (size_t i = 0; i < lids.size(); ++i) {
       offsets.emplace_back(cnt);
       auto cur_lid = lids[i];
       auto prop = cur_prop_getter.get_view(cur_lid);
@@ -542,7 +544,7 @@ RES_T select_labels(const std::vector<lid_t>& lids, LabelT cur_label,
     label_ind = 0;
   } else {
     // FIXME: no repeated labels.
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       if (cur_label == labels[i])
         label_ind = i;
     }
@@ -551,11 +553,11 @@ RES_T select_labels(const std::vector<lid_t>& lids, LabelT cur_label,
     VLOG(10) << "No label found in query params";
     // for current set, we don't need.
     auto size = lids.size();
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       offsets.emplace_back(cnt);
     }
   } else {
-    for (auto i = 0; i < lids.size(); ++i) {
+    for (size_t i = 0; i < lids.size(); ++i) {
       offsets.emplace_back(i);
     }
     offsets.emplace_back(lids.size());
@@ -581,7 +583,7 @@ RES_T select_labels(const std::vector<lid_t>& lids,
   if constexpr (num_labels == 0) {
     label_ind = 0;
   } else {
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       if (cur_label == labels[i])
         label_ind = i;
     }
@@ -590,11 +592,11 @@ RES_T select_labels(const std::vector<lid_t>& lids,
     VLOG(10) << "No label found in query params";
     // for current set, we don't need.
     auto size = lids.size();
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       offsets.emplace_back(cnt);
     }
   } else {
-    for (auto i = 0; i < lids.size(); ++i) {
+    for (size_t i = 0; i < lids.size(); ++i) {
       offsets.emplace_back(i);
     }
     offsets.emplace_back(lids.size());
@@ -630,8 +632,8 @@ auto row_project_with_repeat_array_impl(
       std::tuple<typename gs::tuple_element<Is, std::tuple<lid_t>>::type...>>;
 
   res_t res_vec;
-  for (auto i = 0; i < repeat_array.size(); ++i) {
-    for (auto j = 0; j < repeat_array[i]; ++j) {
+  for (size_t i = 0; i < repeat_array.size(); ++i) {
+    for (size_t j = 0; j < repeat_array[i]; ++j) {
       auto tuple = std::make_tuple(old_lids[i]);
       res_vec.emplace_back(std::make_tuple(gs::get_from_tuple<Is>(tuple)...));
     }
@@ -648,8 +650,8 @@ auto row_project_with_repeat_array_impl(
       typename gs::tuple_element<Is, std::tuple<T..., lid_t>>::type...>>;
 
   res_t res_vec;
-  for (auto i = 0; i < repeat_array.size(); ++i) {
-    for (auto j = 0; j < repeat_array[i]; ++j) {
+  for (size_t i = 0; i < repeat_array.size(); ++i) {
+    for (size_t j = 0; j < repeat_array[i]; ++j) {
       auto tuple = std::tuple_cat(old_datas[i], std::make_tuple(old_lids[i]));
       res_vec.emplace_back(std::make_tuple(gs::get_from_tuple<Is>(tuple)...));
     }
@@ -788,14 +790,14 @@ subSetWithRemovedIndicesImpl(std::vector<offset_t>& removed_indices,
   // TODO: we can know the size exactly.
   res_vids.reserve(old_vids.size());
   size_t removed_ind = 0;
-  for (auto ind = 0; ind < indices_range.size() - 1; ++ind) {
+  for (size_t ind = 0; ind < indices_range.size() - 1; ++ind) {
     if (removed_ind >= removed_indices.size() ||
         ind < removed_indices[removed_ind]) {
       res_indices_range.emplace_back(res_ind_left);
       int left = indices_range[ind];
       int right = indices_range[ind + 1];
       res_ind_left += (right - left);
-      for (auto j = left; j < right; ++j) {
+      for (int j = left; j < right; ++j) {
         res_vids.emplace_back(old_vids[j]);
       }
     } else if (ind == removed_indices[removed_ind]) {
@@ -825,14 +827,14 @@ subSetWithRemovedIndicesImpl(std::vector<offset_t>& removed_indices,
   // res_vids.reserve(old_vids.size());
   // old_data.reserve()
   size_t removed_ind = 0;
-  for (auto ind = 0; ind < indices_range.size() - 1; ++ind) {
+  for (size_t ind = 0; ind < indices_range.size() - 1; ++ind) {
     if (removed_ind >= removed_indices.size() ||
         ind < removed_indices[removed_ind]) {
       res_indices_range.emplace_back(res_ind_left);
       int left = indices_range[ind];
       int right = indices_range[ind + 1];
       res_ind_left += (right - left);
-      for (auto j = left; j < right; ++j) {
+      for (size_t j = left; j < right; ++j) {
         res_vids.emplace_back(old_vids[j]);
         res_datas.emplace_back(old_data[j]);
       }
@@ -927,9 +929,9 @@ class RowVertexSetImpl {
     std::vector<lid_t> res_vec;
     std::vector<data_tuple_t> res_datas;
     res_vec.reserve(repeat_vec.back());
-    for (auto i = 0; i + 1 < cur_offset.size(); ++i) {
+    for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
       auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
-      for (auto j = 0; j < times_to_repeat; ++j) {
+      for (size_t j = 0; j < times_to_repeat; ++j) {
         for (auto k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
           res_vec.emplace_back(vids_[k]);
           res_datas.emplace_back(data_tuples_[k]);
@@ -954,7 +956,7 @@ class RowVertexSetImpl {
     std::vector<LabelKey> res;
     // fill res with v_label_
     res.reserve(vids_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       res.emplace_back(v_label_);
     }
     return res;
@@ -974,7 +976,7 @@ class RowVertexSetImpl {
   std::vector<size_t> GenerateKeys() const {
     std::vector<size_t> res;
     res.reserve(vids_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       res.emplace_back(i);
     }
     return res;
@@ -1075,8 +1077,8 @@ class RowVertexSetImpl {
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> vids;
     std::vector<data_tuple_t> data_tuples;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         // VLOG(10) << "Project: " << vids_[i];
         vids.push_back(vids_[i]);
         data_tuples.push_back(data_tuples_[i]);
@@ -1137,7 +1139,7 @@ class RowVertexSetImpl {
                          repeat_array);
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names) {
@@ -1153,7 +1155,7 @@ class RowVertexSetImpl {
     CHECK(new_datas.size() == new_datas.size());
     std::vector<std::tuple<T..., Ts...>> new_data_tuples;
     new_data_tuples.reserve(vids_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       new_data_tuples.emplace_back(
           std::tuple_cat(std::move(data_tuples_[i]), std::move(new_datas[i])));
     }
@@ -1174,8 +1176,8 @@ class RowVertexSetImpl {
 
  private:
   std::vector<lid_t> vids_;
-  std::vector<data_tuple_t> data_tuples_;
   LabelT v_label_;
+  std::vector<data_tuple_t> data_tuples_;
   std::array<std::string, sizeof...(T)> prop_names_;
 };
 
@@ -1232,10 +1234,10 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
     CHECK(cur_offset.size() == repeat_vec.size());
     std::vector<lid_t> res_vec;
     res_vec.reserve(repeat_vec.back());
-    for (auto i = 0; i + 1 < cur_offset.size(); ++i) {
+    for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
       auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
-      for (auto j = 0; j < times_to_repeat; ++j) {
-        for (auto k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
+      for (size_t j = 0; j < times_to_repeat; ++j) {
+        for (size_t k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
           res_vec.emplace_back(vids_[k]);
           // VLOG(10) << "j: "<<j<<":k"<<k <<",val:"<< vids_[k];
         }
@@ -1258,7 +1260,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
     std::vector<LabelKey> res;
     // fill res with v_label_
     res.reserve(vids_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       res.emplace_back(v_label_);
     }
     return res;
@@ -1271,7 +1273,7 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   std::vector<size_t> GenerateKeys() const {
     std::vector<size_t> res;
     res.reserve(vids_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       res.emplace_back(i);
     }
     return res;
@@ -1300,9 +1302,6 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   // Filter current vertices with expression.
   template <typename EXPR>
   std::pair<self_type_t, std::vector<offset_t>> Filter(EXPR&& expr) {
-    // Expression contains the property name, we extract vertex store here.
-    static constexpr size_t num_args = EXPR::num_args;
-
     size_t cur = 0;
     std::vector<offset_t> offset;
     std::vector<lid_t> res_lids;
@@ -1359,8 +1358,8 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   self_type_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> vids;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         // VLOG(10) << "Project: " << vids_[i];
         vids.push_back(vids_[i]);
       }
@@ -1428,14 +1427,14 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
                                                   std::move(new_datas));
   }
 
-  // Removed_indices is not repest to current set's indices.
+  // Removed_indices is not with respect to current set's indices.
   // It refer to the indices_range's index.
   // removed = [1]
   // indices_range = [0, 3, 5, 8]
   // Then we should remove eles in [3,5)
   // indices became
   // [0, 3, 6],
-  // num _elemenst 8 -> 6
+  // num _elements 8 -> 6
   // return the new offset range
   std::vector<offset_t> SubSetWithRemovedIndices(
       std::vector<size_t>& removed_indices,

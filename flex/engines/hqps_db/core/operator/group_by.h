@@ -28,7 +28,7 @@ limitations under the License.
 
 namespace gs {
 
-// For each aggreator, return the type of applying aggregate on the desired col.
+// For each aggregator, return the type of applying aggregate on the desired col.
 // with possible aggregate func.
 
 template <typename CTX_T, typename GROUP_KEY>
@@ -62,19 +62,37 @@ struct GroupKeyResT<CTX_T, GroupKey<col_id, T>> {
   using result_t = typename KeyedT<set_t, PropertySelector<T>>::keyed_set_t;
 };
 
-template <typename CTX_T, typename AGG_T>
+template <typename CTX_T, typename AGG_T, typename Enable = void>
 struct GroupValueResT;
 
+// The SET_T could b a single set or a tuple of sets.
 template <typename SET_T, AggFunc agg_func, typename SELECTOR_TUPLE>
 struct GroupValueResTImpl;
 
-template <typename CTX_T, AggFunc agg_func, typename... SELECTOR, int Is>
-struct GroupValueResT<CTX_T, AggregateProp<agg_func, std::tuple<SELECTOR...>,
-                                           std::integer_sequence<int, Is>>> {
+// Specialize for single set
+template <typename CTX_T, AggFunc agg_func, typename... SELECTOR, int... Is>
+struct GroupValueResT<CTX_T,
+                      AggregateProp<agg_func, std::tuple<SELECTOR...>,
+                                    std::integer_sequence<int, Is...>>,
+                      typename std::enable_if<(sizeof...(Is) == 1)>::type> {
   using old_set_t = std::remove_const_t<std::remove_reference_t<decltype(
-      std::declval<CTX_T>().template GetNode<Is>())>>;
+      std::declval<CTX_T>().template GetNode<FirstElement<Is...>::value>())>>;
   using result_t =
       typename GroupValueResTImpl<old_set_t, agg_func,
+                                  std::tuple<SELECTOR...>>::result_t;
+};
+
+// Specialize for multiple sets
+template <typename CTX_T, AggFunc agg_func, typename... SELECTOR, int... Is>
+struct GroupValueResT<CTX_T,
+                      AggregateProp<agg_func, std::tuple<SELECTOR...>,
+                                    std::integer_sequence<int, Is...>>,
+                      typename std::enable_if<(sizeof...(Is) > 1)>::type> {
+  using old_set_tuple_t =
+      std::tuple<std::remove_const_t<std::remove_reference_t<decltype(
+          std::declval<CTX_T>().template GetNode<Is>())>>...>;
+  using result_t =
+      typename GroupValueResTImpl<old_set_tuple_t, agg_func,
                                   std::tuple<SELECTOR...>>::result_t;
 };
 
@@ -89,6 +107,18 @@ struct GroupValueResTImpl<SET_T, AggFunc::COUNT,
 template <typename SET_T>
 struct GroupValueResTImpl<SET_T, AggFunc::COUNT_DISTINCT,
                           std::tuple<PropertySelector<grape::EmptyType>>> {
+  using result_t = Collection<size_t>;
+};
+
+// PropSelectorTuple doesn't effect the result type.
+template <typename SET_TUPLE_T, typename PropSelectorTuple>
+struct GroupValueResTImpl<SET_TUPLE_T, AggFunc::COUNT_DISTINCT,
+                          PropSelectorTuple> {
+  using result_t = Collection<size_t>;
+};
+
+template <typename SET_TUPLE_T, typename PropSelectorTuple>
+struct GroupValueResTImpl<SET_TUPLE_T, AggFunc::COUNT, PropSelectorTuple> {
   using result_t = Collection<size_t>;
 };
 
@@ -190,7 +220,7 @@ struct Rearrange {
       typename UnWrapTuple<head_t, new_head_tag, base_tag, prev_t>::context_t;
 };
 
-// only two nodees
+// only two nodes
 // template <int new_head_tag, int base_tag, typename First, typename Node>
 // struct Rearrange<new_head_tag, base_tag, First, Node> {
 //   using context_t = Context<Node, new_head_tag, base_tag, First>;
@@ -264,16 +294,11 @@ class GroupByOp {
     VLOG(10) << "new result_t, base tag: " << RES_T::base_tag_id;
     // Currently we only support to to_count;
     using agg_tuple_t = std::tuple<FOLD_OPT...>;
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
+
     static constexpr size_t agg_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     // the result context must be one-to-one mapping.
 
-    // if (ctx.get_sub_task_start_tag() == INVALID_TAG) {
-    //   LOG(FATAL) << "Not implemented now";
-    // }
-
-    // int start_tag = ctx.get_sub_task_start_tag();
     int start_tag = 0;
     VLOG(10) << "start tag: " << start_tag;
     auto& agg_tuple = group_opt;
@@ -297,22 +322,11 @@ class GroupByOp {
         builder.insert(0, empty_tuple, empty_tuple);
       }
     } else {
-      size_t cnt = 0;
       for (auto iter : ctx) {
         auto ele_tuple = iter.GetAllIndexElement();
         auto data_tuple = iter.GetAllData();
         size_t start_tag_ind = 0;
 
-        if constexpr (sizeof...(CTX_PREV) == 1 &&
-                      std::is_same_v<
-                          std::tuple_element_t<0, std::tuple<CTX_PREV...>>,
-                          grape::EmptyType>) {
-          // if there is no previous context, we will use the first element as
-          // start_tag.
-          start_tag_ind = 0;
-        } else {
-          auto start_tag_ind = iter.GetTagOffset(start_tag);
-        }
         // indicate at which index the start_tag element is in.
         insert_to_value_set_builder(value_set_builder_tuple, ele_tuple,
                                     data_tuple, start_tag_ind);
@@ -355,7 +369,6 @@ class GroupByOp {
     // Currently we only support to to_count;
     using agg_tuple_t = std::tuple<AGG_T...>;
     using key_alias_t = typename GROUP_KEY::selector_t;
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr int keyed_tag_id = GROUP_KEY::col_id;
     // the result context must be one-to-one mapping.
@@ -365,7 +378,6 @@ class GroupByOp {
         std::remove_reference_t<decltype(old_key_set)>>;
     using keyed_set_builder_t =
         typename KeyedT<old_key_set_t, key_alias_t>::keyed_builder_t;
-    auto keyed_set_size = old_key_set.Size();
 
     // create a keyed set from the old key set.
     keyed_set_builder_t keyed_set_builder =
@@ -388,7 +400,6 @@ class GroupByOp {
         auto data_tuple = iter.GetAllData();
 
         auto key_ele = gs::get_from_tuple<GROUP_KEY::col_id>(ele_tuple);
-        auto data_ele = gs::get_from_tuple<GROUP_KEY::col_id>(data_tuple);
         size_t ind = insert_to_keyed_set_with_prop_getter(keyed_set_builder,
                                                           prop_getter, key_ele);
 
@@ -443,7 +454,6 @@ class GroupByOp {
     using agg_tuple_t = std::tuple<AGG...>;
     using alias_tuple_t = std::tuple<KEY_ALIAS...>;
 
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>;
     static constexpr size_t grouped_value_num = std::tuple_size_v<agg_tuple_t>;
     static constexpr size_t group_key_num = std::tuple_size_v<alias_tuple_t>;
 
@@ -571,7 +581,7 @@ class GroupByOp {
 
   template <typename... SET_T, typename HEAD_T, AggFunc _agg_func, typename T,
             int tag_id>
-  static auto create_keyed_value_set_builder(
+  static auto create_keyed_value_set_builder_single_tag(
       const GRAPH_INTERFACE& graph, const std::tuple<SET_T...>& tuple,
       const HEAD_T& head,
       AggregateProp<_agg_func, std::tuple<PropertySelector<T>>,
@@ -588,6 +598,43 @@ class GroupByOp {
       return KeyedAggT<GRAPH_INTERFACE, HEAD_T, _agg_func, std::tuple<T>,
                        std::integer_sequence<int32_t, tag_id>>::
           create_agg_builder(head, graph, agg.selectors_);
+    }
+  }
+
+  // For aggregate on multiple tags, we currently only support count distinct
+  // and count.
+  template <typename... SET_T, typename HEAD_T, AggFunc _agg_func,
+            typename PROP_TUPLE_T, int... tag_id>
+  static auto create_keyed_value_set_builder_multi_tag(
+      const GRAPH_INTERFACE& graph, const std::tuple<SET_T...>& tuple,
+      const HEAD_T& head,
+      AggregateProp<_agg_func, PROP_TUPLE_T,
+                    std::integer_sequence<int32_t, tag_id...>>& agg) {
+    // create const ref tuple from tuple and head using std::cref
+    // construct a const ref tuple from tuple
+    auto const_ref_tuple = make_tuple_of_const_refs(tuple);
+
+    auto old_set = std::tuple_cat(const_ref_tuple, std::tie(head));
+    // get the tuple from old_set, with tag_ids
+    auto old_set_tuple = std::tuple{gs::get_from_tuple<tag_id>(old_set)...};
+
+    return KeyedAggMultiColT<GRAPH_INTERFACE, decltype(old_set_tuple),
+                             _agg_func, PROP_TUPLE_T,
+                             std::integer_sequence<int32_t, tag_id...>>::
+        create_agg_builder(old_set_tuple, graph, agg.selectors_);
+  }
+
+  template <typename... SET_T, typename HEAD_T, AggFunc _agg_func,
+            typename PROP_SELECTOR_TUPLE, int... tag_ids>
+  static auto create_keyed_value_set_builder(
+      const GRAPH_INTERFACE& graph, const std::tuple<SET_T...>& tuple,
+      const HEAD_T& head,
+      AggregateProp<_agg_func, PROP_SELECTOR_TUPLE,
+                    std::integer_sequence<int32_t, tag_ids...>>& agg) {
+    if constexpr (sizeof...(tag_ids) == 1) {
+      return create_keyed_value_set_builder_single_tag(graph, tuple, head, agg);
+    } else {
+      return create_keyed_value_set_builder_multi_tag(graph, tuple, head, agg);
     }
   }
 

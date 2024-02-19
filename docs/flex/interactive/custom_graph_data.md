@@ -17,10 +17,10 @@ bin/gs_interactive destroy
 
 To create a new graph, you will need the original data of the graph. We currently support files in CSV format. Fortunately, we have prepared it for you, and you can find it in the directory `{INTERACTIVE_HOME}/examples/movies/`. 
 
-To begin, ensure you've adjusted the settings in the `{INTERACTIVE_HOME}/conf/interactive.yaml` file. By utilizing Docker's volume mount feature, you can map an external folder containing the the CSV files of `movies` to the internal directory at `/home/graphscope/movies`. It's crucial that the internal data path starts with `/home/graphscope` and concludes with `movies`, reflecting the name of your graph. If you're looking to import custom data, you can do volume mapping in a similar way.
+To begin, ensure you've adjusted the settings in the `{INTERACTIVE_HOME}/conf/interactive.yaml` file. By utilizing Docker's volume mount feature, you can map an external folder containing the CSV files of `movies` to the internal directory at `/home/graphscope/movies`. It's crucial that the internal data path starts with `/home/graphscope` and concludes with `movies`, reflecting the name of your graph. If you're looking to import custom data, you can do volume mapping in a similar way.
 
 ```yaml
-version: v0.0.2
+version: v0.0.3
 volume:
   # replace INTERACTIVE_HOME with actual path.
   - {INTERACTIVE_HOME}/examples/movies:/home/graphscope/movies 
@@ -137,7 +137,7 @@ The `import.yaml` file maps raw data fields to the schema of the "modern" graph 
 graph: movies
 loading_config:
   data_source:
-    scheme: file  # file, oss, s3, hdfs; only file is supported now
+    scheme: file  # only file and odps is supported now
     location: /home/graphscope/movies/
   import_option: init # append, overwrite, only init is supported now
   format:
@@ -207,3 +207,8 @@ Note: Stopping a prior service is necessary to start a new service with an alter
 
 
 Now you can move to [Stored Procedure](./stored_procedures) to explore querying via stored procedures.
+
+
+## Try other graphs
+
+In addition to `movies` graph, we have also prepared the `graph_algo` graph. You can find the raw CSV files, graph.yaml, and import.yaml in the `./examples/graph_algo/` directory. You can import the `graph_algo` graph just like importing the `movies` graph. There are also some sample cypher queries, you can find them at [GraphScope/flex/interactive/examples/graph_algo](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/graph_algo).

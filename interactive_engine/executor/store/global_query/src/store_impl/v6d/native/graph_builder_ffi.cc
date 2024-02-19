@@ -244,7 +244,7 @@ void v6d_destroy(GraphBuilder builder) {
   LOG(INFO) << "destory: builder = " << builder;
   auto stream =
       static_cast<std::shared_ptr<vineyard::htap::PropertyGraphOutStream> *>(builder);
-  // delete the shared_ptr object on heap, it will then delete the holded
+  // delete the shared_ptr object on heap, it will then delete the held
   // object.
   delete stream;
 }
@@ -328,7 +328,7 @@ void v6d_free_string(char *s) {
 Schema v6d_create_schema_builder() { return new vineyard::htap::MGPropertyGraphSchema(); }
 
 VertexTypeBuilder v6d_build_vertex_type(Schema schema, LabelId label,
-                                    const char *name) {
+                                        const char *name) {
 #ifndef NDEBUG
   LOG(INFO) << "add vertex type: " << label << " -> " << name;
 #endif
@@ -337,7 +337,7 @@ VertexTypeBuilder v6d_build_vertex_type(Schema schema, LabelId label,
 }
 
 EdgeTypeBuilder v6d_build_edge_type(Schema schema, LabelId label,
-                                const char *name) {
+                                    const char *name) {
 #ifndef NDEBUG
   LOG(INFO) << "add edge type: " << label << " -> " << name;
 #endif
@@ -355,7 +355,7 @@ static bool v6d_entry_has_property(vineyard::Entry *entry, std::string const &na
 }
 
 int v6d_build_vertex_property(VertexTypeBuilder vertex, PropertyId id,
-                           const char *name, ::PropertyType prop_type) {
+                              const char *name, ::PropertyType prop_type) {
 #ifndef NDEBUG
   LOG(INFO) << "add vertex property: " << id << " -> " << name << ": "
             << prop_type;

@@ -63,6 +63,34 @@ void Table::open(const std::string& name, const std::string& snapshot_dir,
   buildColumnPtrs();
 }
 
+void Table::open_in_memory(const std::string& name,
+                           const std::string& snapshot_dir,
+                           const std::vector<std::string>& col_name,
+                           const std::vector<PropertyType>& property_types,
+                           const std::vector<StorageStrategy>& strategies_) {
+  initColumns(col_name, property_types, strategies_);
+  for (size_t i = 0; i < columns_.size(); ++i) {
+    columns_[i]->open_in_memory(snapshot_dir + "/" + name + ".col_" +
+                                std::to_string(i));
+  }
+  touched_ = true;
+  buildColumnPtrs();
+}
+
+void Table::open_with_hugepages(
+    const std::string& name, const std::string& snapshot_dir,
+    const std::vector<std::string>& col_name,
+    const std::vector<PropertyType>& property_types,
+    const std::vector<StorageStrategy>& strategies_, bool force) {
+  initColumns(col_name, property_types, strategies_);
+  for (size_t i = 0; i < columns_.size(); ++i) {
+    columns_[i]->open_with_hugepages(snapshot_dir + "/" + name + ".col_" +
+                                     std::to_string(i), force);
+  }
+  touched_ = true;
+  buildColumnPtrs();
+}
+
 void Table::touch(const std::string& name, const std::string& work_dir) {
   if (touched_) {
     LOG(ERROR) << "Table " << name << " has been touched before";
@@ -80,7 +108,7 @@ void Table::copy_to_tmp(const std::string& name,
                         const std::string& work_dir) {
   int i = 0;
   for (auto& col : columns_) {
-       col->copy_to_tmp(snapshot_dir + "/" + name + ".col_" + std::to_string(i),
+    col->copy_to_tmp(snapshot_dir + "/" + name + ".col_" + std::to_string(i),
                      work_dir + "/" + name + ".col_" + std::to_string(i));
     ++i;
   }
@@ -212,8 +240,7 @@ void Table::insert(size_t index, const std::vector<Any>& values,
                    const std::vector<int32_t>& col_ind_mapping) {
   assert(values.size() == columns_.size() + 1);
   CHECK_EQ(values.size(), columns_.size() + 1);
-  size_t col_num = columns_.size();
-  for (auto i = 0; i < values.size(); ++i) {
+  for (size_t i = 0; i < values.size(); ++i) {
     if (col_ind_mapping[i] != -1) {
       columns_[col_ind_mapping[i]]->set_any(index, values[i]);
     }

@@ -74,7 +74,7 @@ impl<D: Data> Notifiable for FeedbackOperator<D> {
     }
 
     fn on_cancel(&mut self, n: Cancel, inputs: &[Box<dyn InputProxy>]) -> Result<(), JobExecError> {
-        inputs[0].cancel_scope(n.tag());
+        inputs[0].cancel_scope(n.tag())?;
         Ok(())
     }
 }

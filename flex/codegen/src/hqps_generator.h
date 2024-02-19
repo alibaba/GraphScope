@@ -71,7 +71,9 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "    // dump results to string\n"
     "    std::string res_str = res.SerializeAsString();\n"
     "    // encode results to encoder\n"
-    "    encoder.put_string(res_str);\n"
+    "    if (!res_str.empty()){\n"
+    "      encoder.put_string_view(res_str);\n"
+    "    }\n"
     "    return true;\n"
     "  }\n"
     "  //private members\n"
@@ -179,7 +181,7 @@ class QueryGenerator {
       : ctx_(ctx), plan_(plan) {}
 
   std::string GenerateQuery() {
-    // During generate query body, we will track the parameteres
+    // During generate query body, we will track the parameters
     // And also generate the expression for needed
     std::string query_code = build_query_code();
     std::string expr_code;
@@ -221,18 +223,22 @@ class QueryGenerator {
       sort(param_vars.begin(), param_vars.end(),
            [](const auto& a, const auto& b) { return a.id < b.id; });
       CHECK(param_vars[0].id == 0);
-      for (auto i = 0; i < param_vars.size(); ++i) {
+      for (size_t i = 0; i < param_vars.size(); ++i) {
         if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
           // found duplicate
           CHECK(param_vars[i] == param_vars[i - 1]);
           continue;
         } else {
-          ss << ", " << data_type_2_string(param_vars[i].type) << " "
-             << param_vars[i].var_name;
+          ss << data_type_2_string(param_vars[i].type) << " "
+             << param_vars[i].var_name << ",";
         }
       }
     }
-    return ss.str();
+    auto str = ss.str();
+    if (str.size() > 0) {
+      str.pop_back();  // remove the last comma
+    }
+    return str;
   }
 
   // implement the function that overrides the base class.
@@ -246,7 +252,7 @@ class QueryGenerator {
       CHECK(param_vars[0].id == 0);  // encoding start from 0
     }
 
-    for (auto i = 0; i < param_vars.size(); ++i) {
+    for (size_t i = 0; i < param_vars.size(); ++i) {
       if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
         CHECK(param_vars[i] == param_vars[i - 1]);
         continue;
@@ -265,10 +271,7 @@ class QueryGenerator {
     std::string param_vars_decoding, param_vars_concat_str;
     {
       std::stringstream ss;
-      if (param_names.size() > 0) {
-        ss << ",";
-      }
-      for (auto i = 0; i < param_names.size(); ++i) {
+      for (size_t i = 0; i < param_names.size(); ++i) {
         ss << param_names[i];
         if (i != param_names.size() - 1) {
           ss << ", ";
@@ -278,7 +281,7 @@ class QueryGenerator {
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < param_decoding_codes.size(); ++i) {
+      for (size_t i = 0; i < param_decoding_codes.size(); ++i) {
         ss << param_decoding_codes[i] << std::endl;
       }
       param_vars_decoding = ss.str();
@@ -291,7 +294,7 @@ class QueryGenerator {
     auto size = plan_.plan_size();
 
     LOG(INFO) << "Found " << size << " operators in the plan";
-    for (auto i = 0; i < size; ++i) {
+    for (int32_t i = 0; i < size; ++i) {
       auto op = plan_.plan(i);
       auto& meta_datas = op.meta_data();
       // CHECK(meta_datas.size() == 1) << "meta data size: " <<
@@ -317,7 +320,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kEdge: {  // edge expand
         physical::EdgeExpand real_edge_expand = opr.edge();
-        // try to use infomation from later operator
+        // try to use information from later operator
         std::vector<LabelT> dst_vertex_labels;
         if (i + 1 < size) {
           auto& get_v_op_opr = plan_.plan(i + 1).opr();
@@ -406,7 +409,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kGroupBy: {
         // auto& meta_data = meta_datas[0];
-        // meta_data is currenly not used in groupby.
+        // meta_data is currently not used in groupby.
         physical::PhysicalOpr::MetaData meta_data;
         auto& group_by_op = opr.group_by();
         if (group_by_op.mappings_size() > 0) {
@@ -535,7 +538,7 @@ class QueryGenerator {
 };
 
 // When building a join op, we need to consider the following cases:
-// 0. tag_id to tag_ind mapping, two plan shoud keep different mappings
+// 0. tag_id to tag_ind mapping, two plan should keep different mappings
 // const physical::PhysicalOpr::MetaData& meta_data
 template <typename LabelT>
 static std::array<std::string, 4> BuildJoinOp(
@@ -546,7 +549,7 @@ static std::array<std::string, 4> BuildJoinOp(
   auto& left_keys = join_op_pb.left_keys();
   auto& right_keys = join_op_pb.right_keys();
   std::vector<int32_t> join_keys;  // the left_keys and
-  for (auto i = 0; i < left_keys.size(); ++i) {
+  for (int i = 0; i < left_keys.size(); ++i) {
     CHECK(left_keys[i].tag().id() == right_keys[i].tag().id());
     join_keys.push_back(left_keys[i].tag().id());
   }
@@ -675,7 +678,7 @@ static std::string BuildApplyOp(
     auto new_building_ctx = ctx.CreateSubTaskContext();
     auto sub_task_generator =
         QueryGenerator<LabelT>(new_building_ctx, sub_plan);
-    // QueryGenrator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
+    // QueryGenerator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
     // gen a lambda function.
     lambda_func_name = ctx.GetNextLambdaFuncName();
     std::stringstream inner_ss;

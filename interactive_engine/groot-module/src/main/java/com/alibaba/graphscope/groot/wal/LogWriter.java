@@ -29,5 +29,7 @@ public interface LogWriter extends AutoCloseable {
      */
     long append(LogEntry logEntry) throws IOException;
 
+    long append(int partition, LogEntry logEntry) throws IOException;
+
     void close() throws IOException;
 }

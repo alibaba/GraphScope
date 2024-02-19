@@ -62,9 +62,19 @@ static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
   }
   int real_tag_ind = ctx.GetTagInd(tag_id);
   if (var.has_property()) {
-    std::string prop_name = var.property().key().name();
-    std::string prop_type = data_type_2_string(
-        common_data_type_pb_2_data_type(var.node_type().data_type()));
+    auto var_property = var.property();
+    std::string prop_name, prop_type;
+    if (var_property.has_label()) {
+      prop_name = "label";
+      prop_type = data_type_2_string(codegen::DataType::kLabelId);
+    } else if (var_property.has_key()) {
+      prop_name = var.property().key().name();
+      prop_type = data_type_2_string(
+          common_data_type_pb_2_data_type(var.node_type().data_type()));
+    } else {
+      LOG(FATAL) << "Unexpected property type: " << var.DebugString();
+    }
+
     boost::format formater(PROPERTY_SELECTOR);
     formater % prop_type % prop_name;
 
@@ -204,7 +214,7 @@ static common::DataType eval_expr_return_type(const common::Expression& expr) {
         operator_stack.pop();
       }
     } else if (item_case == common::ExprOpr::kLogical ||
-               common::ExprOpr::kArith) {
+               item_case == common::ExprOpr::kArith) {
       operator_stack.push(opr);
     } else if (item_case == common::ExprOpr::kConst ||
                item_case == common::ExprOpr::kVar ||
@@ -235,7 +245,7 @@ static common::DataType eval_expr_return_type(const common::Expression& expr) {
   return tmp_stack.top().node_type().data_type();
 }
 
-// Simlutate the calculation of expression, return the result data type.
+// Simulate the calculation of expression, return the result data type.
 // convert to prefix expression
 
 /*Build a expression struct from expression*/
@@ -265,30 +275,9 @@ class ExprBuilder {
     // If we meet label keys just ignore.
     auto size = expr_ops.size();
     VLOG(10) << "Adding expr of size: " << size;
-    for (auto i = 0; i < size;) {
+    for (int32_t i = 0; i < size;) {
       auto expr = expr_ops[i];
-      if (expr.has_var() && expr.var().property().has_label()) {
-        VLOG(10) << "Found label in expr, skip this check";
-        int j = i;
-        for (; j < size; ++j) {
-          if (expr_ops[j].item_case() == common::ExprOpr::kBrace &&
-              expr_ops[j].brace() ==
-                  common::ExprOpr::Brace::ExprOpr_Brace_RIGHT_BRACE) {
-            VLOG(10) << "Found right brace at ind: " << j
-                     << ", started at: " << i;
-            AddExprOpr(std::string("true"));
-            AddExprOpr(expr_ops[j]);
-            i = j + 1;
-            break;
-          }
-        }
-        if (j == size) {
-          LOG(WARNING) << "no right brace found" << j << "size: " << size;
-          // just add true, since the current expresion has no other expr_ops
-          AddExprOpr(std::string("true"));
-          i = j;
-        }
-      } else if (expr.has_extract()) {
+      if (expr.has_extract()) {
         // special case for extract
         auto extract = expr.extract();
         if (i + 1 >= size) {
@@ -385,7 +374,7 @@ class ExprBuilder {
       auto vars = opr.vars();
       std::stringstream ss;
       ss << "std::tuple{";
-      for (auto i = 0; i < vars.keys_size(); ++i) {
+      for (int32_t i = 0; i < (int32_t) vars.keys_size(); ++i) {
         auto cur_var = vars.keys(i);
         auto param_const = variable_to_param_const(cur_var, ctx_);
         make_var_name_unique(param_const);
@@ -419,7 +408,7 @@ class ExprBuilder {
     }
   }
 
-  // Add extract operator with var. Currently not support extract on a compicate
+  // Add extract operator with var. Currently not support extract on a complicated
   // expression.
   void AddExtractOpr(const common::Extract& extract_opr,
                      const common::ExprOpr& expr_opr) {
@@ -469,7 +458,7 @@ class ExprBuilder {
                      std::vector<common::DataType>>
   Build() const {
     // Insert param vars to context.
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ctx_.AddParameterVar(construct_params_[i]);
     }
 
@@ -502,10 +491,10 @@ class ExprBuilder {
   // return the concatenated string of constructor's input params
   std::string get_constructor_params_str() const {
     std::stringstream ss;
-    for (int i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name;
-      if (i != construct_params_.size() - 1) {
+      if (i + 1 != construct_params_.size()) {
         ss << ",";
       }
     }
@@ -517,7 +506,7 @@ class ExprBuilder {
     if (!construct_params_.empty()) {
       ss << ":";
     }
-    for (int i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << construct_params_[i].var_name << "_"
          << "(" << construct_params_[i].var_name << ")";
       if (i != construct_params_.size() - 1) {
@@ -537,7 +526,7 @@ class ExprBuilder {
 
   std::string get_func_call_params_str() const {
     std::stringstream ss;
-    for (int i = 0; i < func_call_vars_.size(); ++i) {
+    for (size_t i = 0; i < func_call_vars_.size(); ++i) {
       ss << data_type_2_string(func_call_vars_[i].type) << " "
          << func_call_vars_[i].var_name;
       if (i != func_call_vars_.size() - 1) {
@@ -550,7 +539,7 @@ class ExprBuilder {
   virtual std::string get_func_call_impl_str() const {
     std::stringstream ss;
     ss << "return ";
-    for (auto i = 0; i < expr_nodes_.size(); ++i) {
+    for (size_t i = 0; i < expr_nodes_.size(); ++i) {
       ss << expr_nodes_[i] << " ";
     }
     ss << ";";
@@ -559,7 +548,7 @@ class ExprBuilder {
 
   std::string get_private_filed_str() const {
     std::stringstream ss;
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name << "_;" << std::endl;
     }

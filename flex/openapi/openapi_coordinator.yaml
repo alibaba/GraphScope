@@ -1,0 +1,1383 @@
+openapi: 3.0.3
+info:
+  title: GraphScope FLEX HTTP SERVICE API
+  description: |-
+    This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about
+    specification at [doc](https://swagger.io/specification/v3/).
+    
+    Some useful links:
+    - [GraphScope Repository](https://github.com/alibaba/GraphScope)
+    - [The Source API definition for GraphScope Interactive](https://github.com/GraphScope/portal/tree/main/httpservice)
+  contact:
+    name: GraphScope
+    email: graphscope@alibaba-inc.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.9.1
+externalDocs:
+  description: Find out More about GraphScope
+  url: http://graphscope.io
+paths:
+  /api/v1/connection:
+    post:
+      tags:
+        - connection
+      description: Connect to coordinator service
+      operationId: connect
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Connection'
+        required: true
+      responses:
+        '200':
+          description: Connect coordinator service successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionStatus'
+    delete:
+      tags:
+        - connection
+      description: Close the connection with coordinator
+      operationId: close
+      responses:
+        '200':
+          description: Close connection successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/graph:
+    post:
+      tags:
+        - graph
+      description: Create a new graph
+      operationId: create_graph
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Graph'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    get:
+      tags:
+        - graph
+      description: List all graphs
+      operationId: list_graphs
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Graph'
+  /api/v1/graph/{graph_name}:
+    delete:
+      tags:
+        - graph
+      description: Delete a graph by name
+      operationId: delete_graph
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/graph/{graph_name}/schema:
+    get:
+      tags:
+        - graph
+      description: Get graph schema by name
+      operationId: get_schema
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schema'
+  /api/v1/graph/{graph_name}/schema/vertex_type:
+    post:
+      tags:
+        - graph
+      description: Create a vertex type
+      operationId: create_vertex_type
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VertexType'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/graph/{graph_name}/schema/vertex_type/{type_name}:
+    delete:
+      tags:
+        - graph
+      description: Delete a vertex type by name
+      operationId: delete_vertex_type
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/graph/{graph_name}/schema/edge_type:
+    post:
+      tags:
+        - graph
+      description: Create a edge type
+      operationId: create_edge_type
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EdgeType'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/graph/{graph_name}/schema/edge_edge/{type_name}:
+    delete:
+      tags:
+        - graph
+      description: Delete a edge type by name
+      operationId: delete_edge_type
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: type_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: source_vertex_type
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: destination_vertex_type
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/groot/graph:
+    get:
+      tags:
+        - legacy
+      description: list groot graph
+      operationId: list_groot_graph
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GrootGraph'
+  /api/v1/groot/graph/{graph_name}/schema:
+    post:
+      tags:
+        - legacy
+      description: Import schema to groot graph
+      operationId: import_schema
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrootSchema'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    get:
+      tags:
+        - legacy
+      description: Get graph schema by name
+      operationId: get_groot_schema
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GrootSchema'
+  /api/v1/job:
+    get:
+      tags:
+        - job
+      operationId: list_jobs
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobStatus'
+  /api/v1/job/{job_id}:
+    get:
+      tags:
+        - job
+      operationId: get_job_by_id
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobStatus'
+    delete:
+      tags:
+        - job
+      operationId: delete_job_by_id
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/graph/{graph_name}/dataloading:
+    post:
+      tags:
+        - job
+      operationId: create_dataloading_job
+      parameters:
+      - name: graph_name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaMapping'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/procedure:
+    get:
+      tags:
+        - procedure
+      description: List all the stored procedures
+      operationId: list_procedures
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Procedure'
+  /api/v1/graph/{graph_name}/procedure:
+    post:
+      tags:
+        - procedure
+      description: Create a new stored procedure on a certain graph
+      operationId: create_procedure
+      parameters:
+      - name: graph_name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Procedure'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    get:
+      tags:
+        - procedure
+      description: List stored procedures on a certain graph
+      operationId: list_procedures_by_graph
+      parameters:
+      - name: graph_name
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Procedure'
+  /api/v1/graph/{graph_name}/procedure/{procedure_name}:
+    put:
+      tags:
+        - procedure
+      description:  Update srored procedure on a certain graph
+      operationId: update_procedure
+      parameters:
+      - name: graph_name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: procedure_name
+        in : path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Procedure'
+      responses:
+        '200':
+           description: Successful operation
+           content:
+             application/json:
+               schema:
+                  $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags:
+        - procedure
+      description: Delete a stored procedure on a certain graph
+      operationId: delete_procedure
+      parameters:
+        - name: graph_name
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: procedure_name
+          in : path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/deployment/info:
+    get:
+      tags:
+        - deployment
+      description: Get deployment's meta info
+      operationId: get_deployment_info
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentInfo'
+  /api/v1/deployment/status:
+    get:
+      tags:
+        - deployment
+      description: Get deployment's status (k8s only)
+      operationId: get_deployment_status
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeploymentStatus'
+  /api/v1/deployment/log:
+    get:
+      tags:
+        - deployment
+      operationId: fetch_log
+      parameters:
+        - name: component
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: pod_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: container_name
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: since_seconds
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DeploymentStatus'
+  /api/v1/node/status:
+    get:
+      tags:
+        - deployment
+      description: Get node status (cpu/memory/disk, local only)
+      operationId: get_node_status
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NodeStatus'
+  /api/v1/service/start:
+    post:
+      tags:
+        - service
+      description: Start service
+      operationId: start_service
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                graph_name:
+                  type: string
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/service/stop:
+    post:
+      tags:
+        - service
+      description: Stop current service
+      operationId: stop_service
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/service/restart:
+    post:
+      tags:
+        - service
+      description: Restart current service
+      operationId: restart_service
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/service/status:
+    get:
+      tags:
+        - service
+      description: Get service status
+      operationId: get_service_status
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceStatus'
+  /api/v1/alert/message:
+    get:
+      tags:
+        - alert
+      operationId: list_alert_messages
+      parameters:
+        - name: type
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - solved
+              - unsolved
+              - dealing
+        - name: severity
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - warning
+              - emergency
+        - name: start_time
+          in: query
+          required: false
+          description: format with "2023-02-21-11-56-30"
+          schema:
+            type: string
+        - name: end_time
+          in: query
+          required: false
+          description: format with "2023-02-21-11-56-30"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertMessage'
+    put:
+      tags:
+        - alert
+      operationId: update_alert_messages
+      description: Update alert messages in batch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/AlertMessage'
+                batch_status:
+                  type: string
+                  description: Override the status of each message
+                  enum:
+                    - solved
+                    - unsolved
+                    - dealing
+                batch_delete:
+                  type: boolean
+                  description: True will delete all the messages in request body
+                  default: false
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Alert message not found
+  /api/v1/alert/rule:
+    get:
+      tags:
+        - alert
+      operationId: list_alert_rules
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertRule'
+  /api/v1/alert/rule/{rule_name}:
+    put:
+      tags:
+        - alert
+      operationId: update_alert_rule_by_name
+      parameters:
+        - name: rule_name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertRule'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags:
+        - alert
+      operationId: delete_alert_rule_by_name
+      parameters:
+        - name: rule_name
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+  /api/v1/alert/receiver:
+    post:
+      tags:
+        - alert
+      operationId: register_receiver
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertReceiver'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    get:
+      tags:
+        - alert
+      operationId: list_receivers
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertReceiver'
+  /api/v1/alert/receiver/{receiver_id}:
+    put:
+      tags:
+        - alert
+      operationId: update_receiver_by_id
+      parameters:
+        - name: receiver_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlertReceiver'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Reveiver not found
+    delete:
+      tags:
+        - alert
+      operationId: delete_receiver_by_id
+      parameters:
+        - name: receiver_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Reveiver not found
+components:
+  schemas:
+    ApiResponse:
+      type: string
+    Connection:
+      x-body-name: connection
+      type: object
+      properties:
+        coordinator_endpoint:
+          type: string
+    ConnectionStatus:
+        x-body-name: connection_status
+        type: object
+        properties:
+          status:
+            type: string
+            enum:
+              - CONNECTED
+          solution:
+            type: string
+            enum:
+              - INTERACTIVE
+              - GRAPHSCOPE_INSIGHT
+    Graph:
+      x-body-name: graph
+      type: object
+      properties:
+        name:
+          type: string
+        store_type:
+          type: string
+          enum:
+            - mutable_csr
+        stored_procedures:
+          type: object
+          properties:
+            directory:
+              type: string
+              enum:
+                - plugins
+        schema:
+          $ref: '#/components/schemas/Schema'
+    Schema:
+      x-body-name: schema
+      type: object
+      properties:
+        vertex_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/VertexType'
+        edge_types:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeType'
+    VertexType:
+      x-body-name: vertex_type
+      type: object
+      properties:
+        type_id:
+          type: integer
+          format: int32
+        type_name:
+          type: string
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+        primary_keys:
+          type: array
+          items:
+            type: string
+    EdgeType:
+      x-body-name: edge_type
+      type: object
+      properties:
+        type_id:
+          type: integer
+          format: int32
+        type_name:
+          type: string
+        vertex_type_pair_relations:
+          type: array
+          items:
+            type: object
+            properties:
+              source_vertex:
+                type: string
+              destination_vertex:
+                type: string
+              relation:
+                type: string
+                enum:
+                  - MANY_TO_MANY
+                  - ONE_TO_MANY
+                  - MANY_TO_ONE
+                  - ONE_TO_ONE
+              x_csr_params:
+                type: object
+                description: Used for storage optimization
+                properties:
+                  edge_storage_strategy:
+                    type: string
+                    enum:
+                      - ONLY_IN
+                      - ONLY_OUT
+                      - BOTH_OUT_IN
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/Property'
+    Property:
+      x-body-name: property
+      type: object
+      properties:
+        property_id:
+          type: integer
+          format: int32
+        property_name:
+          type: string
+        property_type:
+          type: object
+          properties:
+            primitive_type:
+              type: string
+              enum:
+                - DT_DOUBLE
+                - DT_STRING
+                - DT_SIGNED_INT32
+                - DT_SIGNED_INT64
+                - DT_DATE32
+    Procedure:
+      x-body-name: procedure
+      type: object
+      properties:
+        name:
+          type: string
+        bound_graph:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum:
+           - cpp
+           - cypher
+        query:
+          type: string
+        enable:
+          type: boolean
+        runnable:
+          type: boolean
+        params:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+        returns:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+    DeploymentInfo:
+      x-body-name: deployment_info
+      type: object
+      properties:
+        name:
+          type: string
+        cluster_type:
+          type: string
+          enum:
+            - HOSTS
+            - KUBERNETES
+        version:
+          type: string
+    DeploymentStatus:
+      x-body-name: deployment_status
+      type: object
+      description: K8s only
+      properties:
+        name:
+          type: string
+        container:
+          type: array
+          items:
+            type: string
+        image:
+          type: array
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            type: string
+        node:
+          type: string
+        status:
+          type: string
+        restart_count:
+          type: integer
+          format: int32
+        cpu_value:
+          type: integer
+          format: int32
+          description: cpu value in millicore
+        memory_value:
+          type: integer
+          format: int32
+          description: memory value in megabytes
+        timestamp:
+          type: string
+        creation_time:
+          type: string
+    NodeStatus:
+      x-body-name: node_status
+      type: object
+      properties:
+        node:
+          type: string
+        cpu_usage:
+          type: number
+          format: double
+        memory_usage:
+          type: number
+          format: double
+        disk_usage:
+          type: number
+          format: double
+    ServiceStatus:
+      x-body-name: service_status
+      type: object
+      properties:
+        status:
+          type: string
+        graph_name:
+          description: which graph is serving now
+          type: string
+        sdk_endpoints:
+          type: object
+          properties:
+            cypher:
+              type: string
+            gremlin:
+              type: string
+            hqps:
+              type: string
+            grpc:
+              type: string
+    AlertRule:
+      type: object
+      x-body-name: alert_rule
+      properties:
+        name:
+          type: string
+        severity:
+          type: string
+          enum:
+            - warning
+            - emergency
+        metric_type:
+          type: string
+          enum:
+            - node
+            - service
+        conditions_desription:
+          type: string
+        frequency:
+          type: integer
+          description: (mins)
+        enable:
+          type: boolean
+    AlertMessage:
+      type: object
+      x-body-name: alert_message
+      properties:
+        message_id:
+          type: string
+          description: Generated in server side
+        alert_name:
+          type: string
+        severity:
+          type: string
+          enum:
+            - warning
+            - emergency
+        metric_type:
+          type: string
+          enum:
+            - node
+            - service
+        target:
+          type: array
+          items:
+            type: string
+        trigger_time:
+          type: string
+        status:
+          type: string
+          enum:
+            - unsolved
+            - solved
+            - dealing
+        message:
+          type: string
+    AlertReceiver:
+      type: object
+      x-body-name: alert_receiver
+      properties:
+        type:
+          type: string
+          enum:
+            - webhook
+        receiver_id:
+          type: string
+          description: Generated in server side
+        webhook_url:
+          type: string
+        at_user_ids:
+          type: array
+          items:
+            type: string
+        is_at_all:
+          type: boolean
+        enable:
+          type: boolean
+        message:
+          type: string
+          description: error message generated in server side
+    SchemaMapping:
+      x-body-name: schema_mapping
+      type: object
+      properties:
+        graph:
+          type: string
+        loading_config:
+          type: object
+          properties:
+            data_source:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                  - file
+            import_option:
+              type: string
+              enum:
+                - init
+                - overwrite
+            format:
+              type: object
+              properties:
+                type:
+                  type: string
+                metadata:
+                  type: object
+                  additionalProperties: true
+        vertex_mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/VertexMapping'
+        edge_mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/EdgeMapping'
+    VertexMapping:
+      x-body-name: vertex_mapping
+      type: object
+      properties:
+        type_name:
+          type: string
+        inputs:
+          type: array
+          items:
+            type: string
+        column_mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+    EdgeMapping:
+      x-body-name: edge_mapping
+      type: object
+      properties:
+        type_triplet:
+          type: object
+          description: source label -> [edge label] -> destination label
+          properties:
+            edge:
+              type: string
+            source_vertex:
+              type: string
+            destination_vertex:
+              type: string
+        inputs:
+          type: array
+          items:
+            type: string
+        source_vertex_mappings:
+          type: array
+          items:
+            type: object
+            description: Mapping column index to the primary key of source vertex
+            properties:
+              column:
+                type: object
+                properties:
+                  index:
+                    type: integer
+                    format: int32
+                  name:
+                    type: string
+        destination_vertex_mappings:
+          type: array
+          items:
+            type: object
+            description: Mapping column index to the primary key of destination vertex
+            properties:
+              column:
+                type: object
+                properties:
+                  index:
+                    type: integer
+                    format: int32
+                  name:
+                    type: string
+        column_mappings:
+          type: array
+          items:
+            $ref: '#/components/schemas/ColumnMapping'
+    ColumnMapping:
+      x-body-name: column_mapping
+      type: object
+      properties:
+        column:
+          type: object
+          properties:
+            index:
+              type: integer
+              format: int32
+            name:
+              type: string
+        property:
+          type: string
+          description: must align with the schema
+    JobStatus:
+      type: object
+      x-body-name: job_status
+      properties:
+        job_id:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+          enum:
+            - RUNNING
+            - SUCCESS
+            - FAILED
+            - CANCELLED
+            - WAITING
+        start_time:
+          type: string
+        end_time:
+          type: string
+        log:
+          type: string
+          description: URL or log string
+        detail:
+          type: object
+          additionalProperties: true
+    GrootGraph:
+      x-body-name: groot_graph
+      type: object
+      properties:
+        name:
+          type: string
+        directed:
+          type: boolean
+        creation_time:
+          type: string
+        schema:
+          $ref: '#/components/schemas/GrootSchema'
+        gremlin_interface:
+          type: object
+          properties:
+            gremlin_endpoint:
+              type: string
+            grpc_endpoint:
+              type: string
+            username:
+              type: string
+            password:
+              type: string
+    GrootSchema:
+      x-body-name: groot_schema
+      type: object
+      properties:
+        vertices:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrootVertexType'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrootEdgeType'
+    GrootVertexType:
+      x-body-name: groot_vertex_type
+      type: object
+      properties:
+        label:
+          type: string
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrootProperty'
+    GrootEdgeType:
+      x-body-name: groot_edge_type
+      type: object
+      properties:
+        label:
+          type: string
+        relations:
+          type: array
+          items:
+            type: object
+            properties:
+              src_label:
+                type: string
+              dst_label:
+                type: string
+        properties:
+          type: array
+          items:
+            $ref: '#/components/schemas/GrootProperty'
+    GrootProperty:
+      x-body-name: groot_property
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - STRING
+            - LONG
+            - DOUBLE
+        is_primary_key:
+          type: boolean

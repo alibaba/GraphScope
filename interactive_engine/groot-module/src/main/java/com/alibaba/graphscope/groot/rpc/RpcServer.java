@@ -15,6 +15,7 @@ package com.alibaba.graphscope.groot.rpc;
 
 import static com.alibaba.graphscope.groot.common.util.RpcUtils.createGrpcExecutor;
 
+import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.discovery.GrootNode;
@@ -40,7 +41,7 @@ public class RpcServer {
     public RpcServer(
             Configs conf, LocalNodeProvider localNodeProvider, BindableService... services) {
         this(
-                CommonConfig.RPC_PORT.get(conf),
+                Utils.getPort(conf),
                 CommonConfig.RPC_THREAD_COUNT.get(conf),
                 CommonConfig.RPC_MAX_BYTES_MB.get(conf) * 1024 * 1024,
                 localNodeProvider,

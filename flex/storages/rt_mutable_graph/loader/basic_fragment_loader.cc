@@ -79,6 +79,10 @@ void BasicFragmentLoader::LoadFragment() {
                        dst_label * edge_label_num_ + edge_label;
         if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
           if (dual_csr_list_[index] != NULL) {
+            if (schema_.get_sort_on_compaction(src_label_name, dst_label_name,
+                                               edge_label_name)) {
+              dual_csr_list_[index]->SortByEdgeData(1);
+            }
             dual_csr_list_[index]->Dump(
                 oe_prefix(src_label_name, dst_label_name, edge_label_name),
                 ie_prefix(src_label_name, dst_label_name, edge_label_name),
@@ -91,6 +95,8 @@ void BasicFragmentLoader::LoadFragment() {
   }
 
   set_snapshot_version(work_dir_, 0);
+
+  clear_tmp(work_dir_);
 }
 
 void BasicFragmentLoader::AddVertexBatch(
@@ -98,15 +104,15 @@ void BasicFragmentLoader::AddVertexBatch(
     const std::vector<std::vector<Any>>& props) {
   auto& table = vertex_data_[v_label];
   CHECK(props.size() == table.col_num());
-  for (auto i = 0; i < props.size(); ++i) {
+  for (size_t i = 0; i < props.size(); ++i) {
     CHECK(props[i].size() == vids.size())
         << "vids size: " << vids.size() << ", props size: " << props.size()
         << ", props[i] size: " << props[i].size();
   }
   auto dst_columns = table.column_ptrs();
-  for (auto j = 0; j < props.size(); ++j) {
+  for (size_t j = 0; j < props.size(); ++j) {
     auto& cur_vec = props[j];
-    for (auto i = 0; i < vids.size(); ++i) {
+    for (size_t i = 0; i < vids.size(); ++i) {
       auto index = vids[i];
       dst_columns[j]->set_any(index, cur_vec[i]);
     }

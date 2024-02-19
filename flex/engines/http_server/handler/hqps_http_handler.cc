@@ -15,7 +15,6 @@
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/service/hqps_service.h"
-
 #include "flex/engines/http_server/types.h"
 
 namespace server {
@@ -86,9 +85,18 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
     std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+  req->content.append(gs::Schema::HQPS_PROCEDURE_PLUGIN_ID_STR, 1);
 
   return executor_refs_[dst_executor]
-      .run_hqps_procedure_query(query_param{std::move(req->content)})
+      .run_graph_db_query(query_param{std::move(req->content)})
+      .then([](auto&& output) {
+        if (output.content.size() < 4) {
+          LOG(ERROR) << "Invalid output size: " << output.content.size();
+          return seastar::make_ready_future<query_param>(std::move(output));
+        }
+        return seastar::make_ready_future<query_param>(
+            std::move(output.content.substr(4)));
+      })
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
             if (__builtin_expect(fut.failed(), false)) {
@@ -111,7 +119,7 @@ seastar::future<std::unique_ptr<seastar::httpd::reply>> hqps_ic_handler::handle(
           });
 }
 
-// a handler for handl adhoc query.
+// a handler to handle adhoc query.
 
 hqps_adhoc_query_handler::hqps_adhoc_query_handler(
     uint32_t init_adhoc_group_id, uint32_t init_codegen_group_id,
@@ -157,7 +165,7 @@ seastar::future<> hqps_adhoc_query_handler::cancel_current_scope() {
           hiactor::scope<hiactor::actor_group>(cur_codegen_group_id_));
   return hiactor::actor_engine()
       .cancel_scope_request(adhoc_builder, false)
-      .then([this, codegen_builder] {
+      .then([codegen_builder] {
         LOG(INFO) << "Cancel adhoc scope successfully!";
         return hiactor::actor_engine().cancel_scope_request(codegen_builder,
                                                             false);
@@ -223,8 +231,17 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
   return codegen_actor_refs_[0]
       .do_codegen(query_param{std::move(req->content)})
       .then([this, dst_executor](auto&& param) {
-        return executor_refs_[dst_executor].run_hqps_adhoc_query(
-            std::move(param));
+        param.content.append(gs::Schema::HQPS_ADHOC_PLUGIN_ID_STR, 1);
+        return executor_refs_[dst_executor].run_graph_db_query(
+            query_param{std::move(param.content)});
+      })
+      .then([](auto&& output) {
+        if (output.content.size() < 4) {
+          LOG(ERROR) << "Invalid output size: " << output.content.size();
+          return seastar::make_ready_future<query_param>(std::move(output));
+        }
+        return seastar::make_ready_future<query_param>(
+            std::move(output.content.substr(4)));
       })
       .then_wrapped(
           [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
@@ -317,7 +334,7 @@ seastar::future<> hqps_http_handler::stop_query_actors() {
         LOG(INFO) << "Cancel ic scope";
         return adhoc_query_handler_->cancel_current_scope();
       })
-      .then([this] {
+      .then([] {
         LOG(INFO) << "Cancel adhoc scope";
         return seastar::make_ready_future<>();
       });

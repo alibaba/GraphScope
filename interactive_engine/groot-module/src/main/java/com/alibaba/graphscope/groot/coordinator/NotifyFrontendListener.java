@@ -14,6 +14,7 @@
 package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
+import com.alibaba.graphscope.groot.common.exception.ServiceNotReadyException;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 
 import org.slf4j.Logger;
@@ -43,12 +44,14 @@ public class NotifyFrontendListener implements QuerySnapshotListener {
 
     @Override
     public void snapshotAdvanced(long snapshotId, long ddlSnapshotId) {
-        logger.debug(
-                "snapshot advanced to [{}]-[{}], will notify frontend", snapshotId, ddlSnapshotId);
-        GraphDef graphDef = null;
-        if (ddlSnapshotId > this.lastDdlSnapshotId.get()) {
+        GraphDef graphDef;
+        try {
             graphDef = this.schemaManager.getGraphDef();
+        } catch (ServiceNotReadyException ex) {
+            logger.warn("Schema manager is not ready: {}", ex.getMessage());
+            return;
         }
+        logger.debug("snapshot advanced to {}-{}, will notify frontend", snapshotId, ddlSnapshotId);
         this.frontendSnapshotClient.advanceQuerySnapshot(
                 snapshotId,
                 graphDef,

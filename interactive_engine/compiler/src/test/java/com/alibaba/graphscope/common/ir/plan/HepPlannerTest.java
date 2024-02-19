@@ -253,6 +253,40 @@ public class HepPlannerTest {
                     + " alias=[x], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
                 after2.explain().trim());
-        System.out.println(after2.getRowType());
+    }
+
+    @Test
+    public void push_filter_5_test() {
+        RelNode node =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a)-[b]-(c:person) Where labels(a)='person' and a.name ="
+                                        + " 'marko' Return a")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[=(a.name, _UTF-8'marko')])\n"
+                    + "    GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
+                    + " opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                node.explain().trim());
+        RelOptPlanner planner = Utils.mockPlanner(FilterMatchRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
+                    + " opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[a], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                after.explain().trim());
     }
 }

@@ -688,7 +688,7 @@ impl From<Object> for common_pb::Value {
                     // convert to days since from 1970-01-01
                     item: (date
                         .and_hms_opt(0, 0, 0)
-                        .unwrap() // can savely unwrap since it is valid hour/min/sec
+                        .unwrap() // can safely unwrap since it is valid hour/min/sec
                         .timestamp()
                         / 86400) as i32,
                 }),
@@ -962,6 +962,34 @@ impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::
             .op_kind
             .ok_or_else(|| ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
         Ok(op_kind)
+    }
+}
+
+impl common_pb::Logical {
+    pub fn is_unary(&self) -> bool {
+        match self {
+            common_pb::Logical::Not | common_pb::Logical::Isnull => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_binary(&self) -> bool {
+        match self {
+            common_pb::Logical::Eq
+            | common_pb::Logical::Ne
+            | common_pb::Logical::Lt
+            | common_pb::Logical::Le
+            | common_pb::Logical::Gt
+            | common_pb::Logical::Ge
+            | common_pb::Logical::Within
+            | common_pb::Logical::Without
+            | common_pb::Logical::Startswith
+            | common_pb::Logical::Endswith
+            | common_pb::Logical::And
+            | common_pb::Logical::Or
+            | common_pb::Logical::Regex => true,
+            _ => false,
+        }
     }
 }
 

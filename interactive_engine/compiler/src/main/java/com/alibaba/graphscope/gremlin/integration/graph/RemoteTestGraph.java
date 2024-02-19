@@ -312,7 +312,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         reason = "unsupported")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.CountTest",
-//        method = "g_V_whereXinXkknowsX_outXcreatedX_count_is_0XX_name",
+//        method = "g_V_whereXinXknowsX_outXcreatedX_count_is_0XX_name",
 //        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.GraphTest",
@@ -1001,7 +1001,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_asXaX_out_asXbX_out_asXcX_path_fromXbX_toXcX_byXnameX",
         reason = "unsupported")
 
-// TODO(siyuan): vineyard edge id has been changed
+// todo(siyuan): vineyard edge id has been changed
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
         method = "g_E",

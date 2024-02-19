@@ -133,7 +133,7 @@ cypher_to_plan() {
     err "Compiler jar = ${COMPILER_JAR} not exists."
     exit 1
   fi
-  # add extrac_key_value_config
+  # add extra_key_value_config
   extra_config="name:${procedure_name}"
   extra_config="${extra_config},description:${procedure_description}"
 
@@ -197,7 +197,7 @@ compile_hqps_so() {
 
   last_file_name=$(basename ${input_path})
 
-  # requiest last_file_name suffix is .pb
+  # request last_file_name suffix is .pb
   if [[ $last_file_name == *.pb ]]; then
     query_name="${last_file_name%.pb}"
   elif [[ $last_file_name == *.cc ]]; then
@@ -276,7 +276,7 @@ compile_hqps_so() {
   if [ ! -z ${CMAKE_C_COMPILER} ]; then
     cmd="${cmd} -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"
   fi
-  info "Cmake command = ${cmd}"
+  info "CMake command = ${cmd}"
   info "---------------------------"
   eval ${cmd}
 
@@ -358,7 +358,7 @@ compile_pegasus_so() {
   last_file_name=$(basename ${input_path})
 
   info "last file name: ${last_file_name}"
-  # requiest last_file_name suffix is .pb
+  # request last_file_name suffix is .pb
   if [[ $last_file_name == *.pb ]]; then
     query_name="${last_file_name%.pb}"
     info "File has .pb suffix."

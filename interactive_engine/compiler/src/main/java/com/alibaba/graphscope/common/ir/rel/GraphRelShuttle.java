@@ -51,4 +51,6 @@ public interface GraphRelShuttle {
     RelNode visit(GraphLogicalMultiMatch match);
 
     RelNode visit(LogicalJoin join);
+
+    RelNode visit(GraphLogicalDedupBy dedupBy);
 }

@@ -43,7 +43,13 @@ public class DataType {
     public static final DataType DOUBLE = new DataType(InternalDataType.DOUBLE);
     public static final DataType BYTES = new DataType(InternalDataType.BYTES);
     public static final DataType STRING = new DataType(InternalDataType.STRING);
+
+    // See also: `Date32` in common.proto.
     public static final DataType DATE = new DataType(InternalDataType.DATE);
+    // See also: `Time32` in common.proto.
+    public static final DataType TIME = new DataType(InternalDataType.TIME);
+    // See also: `Timestamp` in common.proto.
+    public static final DataType TIMESTAMP = new DataType(InternalDataType.TIMESTAMP);
 
     // For LIST, SET and MAP
     @JsonProperty private String expression;
@@ -58,6 +64,15 @@ public class DataType {
     }
 
     public static DataType valueOf(String typeName) {
+        if (typeName.startsWith("DATE")) {
+            return DATE;
+        }
+        if (typeName.startsWith("TIME")) {
+            return TIME;
+        }
+        if (typeName.startsWith("TIMESTAMP")) {
+            return TIMESTAMP;
+        }
         return new DataType(InternalDataType.valueOf(typeName));
     }
 

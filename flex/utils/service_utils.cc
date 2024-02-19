@@ -59,7 +59,7 @@ std::string find_codegen_bin() {
     // usr/local/
 
     LOG(INFO) << "infer flex_home as installed, flex_home: " << flex_home_str;
-    // check codege_bin_path exists
+    // check codegen_bin path exists
     codegen_bin = flex_home_str + "/bin/" + CODEGEN_BIN;
     // if flex_home exists, return flex_home
     if (std::filesystem::exists(codegen_bin)) {
@@ -105,8 +105,9 @@ std::pair<uint64_t, uint64_t> get_total_physical_memory_usage() {
 
 void init_cpu_usage_watch() {
   FILE* file = fopen("/proc/stat", "r");
-  fscanf(file, "cpu %llu %llu %llu %llu", &lastTotalUser, &lastTotalUserLow,
-         &lastTotalSys, &lastTotalIdle);
+  CHECK_EQ(fscanf(file, "cpu %llu %llu %llu %llu", &lastTotalUser,
+                  &lastTotalUserLow, &lastTotalSys, &lastTotalIdle),
+           4);
   fclose(file);
 }
 
@@ -116,8 +117,9 @@ std::pair<double, double> get_current_cpu_usage() {
   unsigned long long totalUser, totalUserLow, totalSys, totalIdle, total;
 
   file = fopen("/proc/stat", "r");
-  fscanf(file, "cpu %llu %llu %llu %llu", &totalUser, &totalUserLow, &totalSys,
-         &totalIdle);
+  CHECK_EQ(fscanf(file, "cpu %llu %llu %llu %llu", &totalUser, &totalUserLow,
+                  &totalSys, &totalIdle),
+           4);
   fclose(file);
 
   if (totalUser < lastTotalUser || totalUserLow < lastTotalUserLow ||

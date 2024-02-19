@@ -33,6 +33,7 @@ namespace gs {
 // The interface providing visitor pattern for RecordBatch.
 class IRecordBatchSupplier {
  public:
+  virtual ~IRecordBatchSupplier() = default;
   virtual std::shared_ptr<arrow::RecordBatch> GetNextBatch() = 0;
 };
 
@@ -68,6 +69,10 @@ void set_vertex_column_from_timestamp_array(
     gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
     const std::vector<vid_t>& vids);
 
+void set_vertex_column_from_timestamp_array_to_day(
+    gs::ColumnBase* col, std::shared_ptr<arrow::ChunkedArray> array,
+    const std::vector<vid_t>& vids);
+
 void set_vertex_properties(gs::ColumnBase* col,
                            std::shared_ptr<arrow::ChunkedArray> array,
                            const std::vector<vid_t>& vids);
@@ -95,7 +100,7 @@ struct _add_vertex {
                    << col->type()->ToString();
       }
       auto casted_array = std::static_pointer_cast<arrow_array_t>(col);
-      for (auto i = 0; i < row_num; ++i) {
+      for (size_t i = 0; i < row_num; ++i) {
         if (!indexer.add(casted_array->Value(i), vid)) {
           LOG(FATAL) << "Duplicate vertex id: " << casted_array->Value(i)
                      << "..";
@@ -105,7 +110,7 @@ struct _add_vertex {
     } else {
       if (col->type()->Equals(arrow::utf8())) {
         auto casted_array = std::static_pointer_cast<arrow::StringArray>(col);
-        for (auto i = 0; i < row_num; ++i) {
+        for (size_t i = 0; i < row_num; ++i) {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
@@ -116,7 +121,7 @@ struct _add_vertex {
       } else if (col->type()->Equals(arrow::large_utf8())) {
         auto casted_array =
             std::static_pointer_cast<arrow::LargeStringArray>(col);
-        for (auto i = 0; i < row_num; ++i) {
+        for (size_t i = 0; i < row_num; ++i) {
           auto str = casted_array->GetView(i);
           std::string_view str_view(str.data(), str.size());
           if (!indexer.add(str_view, vid)) {
@@ -253,7 +258,7 @@ static void append_edges(
 }
 
 // A AbstractArrowFragmentLoader with can load fragment from arrow::table.
-// Can not be used directly, should be inherited.
+// Cannot be used directly, should be inherited.
 class AbstractArrowFragmentLoader : public IFragmentLoader {
  public:
   AbstractArrowFragmentLoader(const std::string& work_dir, const Schema& schema,
@@ -296,13 +301,12 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
       CHECK_EQ(property_cols[i]->length(), row_num);
     }
 
-    double t = -grape::GetCurrentTime();
     std::vector<vid_t> vids;
     vids.reserve(row_num);
 
     _add_vertex<KEY_T>()(primary_key_col, indexer, vids);
 
-    for (auto j = 0; j < property_cols.size(); ++j) {
+    for (size_t j = 0; j < property_cols.size(); ++j) {
       auto array = property_cols[j];
       auto chunked_array = std::make_shared<arrow::ChunkedArray>(array);
       set_vertex_properties(
@@ -405,6 +409,10 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
     VLOG(10) << "src indexer size: " << src_indexer.size()
              << " dst indexer size: " << dst_indexer.size();
 
+    // use a dummy vector to store the string columns, to avoid the strings
+    // being released as record batch is released.
+    std::vector<std::shared_ptr<arrow::Array>> string_cols;
+
     for (auto filename : e_files) {
       auto record_batch_supplier = supplier_creator(
           src_label_id, dst_label_id, e_label_id, filename, loading_config_);
@@ -441,8 +449,12 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
             << " neq dst_col type: " << dst_col_type->ToString();
 
         std::vector<std::shared_ptr<arrow::Array>> property_cols;
-        for (auto i = 2; i < columns.size(); ++i) {
+        for (size_t i = 2; i < columns.size(); ++i) {
           property_cols.emplace_back(columns[i]);
+          if (columns[i]->type()->Equals(arrow::utf8()) ||
+              columns[i]->type()->Equals(arrow::large_utf8())) {
+            string_cols.emplace_back(columns[i]);
+          }
         }
         CHECK(property_cols.size() <= 1)
             << "Currently only support at most one property on edge";

@@ -163,7 +163,7 @@ void template_set_tuple_value(results::Collection* collection,
 template <typename T>
 void template_set_tuple_value(results::Collection* collection,
                               const std::vector<T>& t) {
-  for (auto i = 0; i < t.size(); ++i) {
+  for (size_t i = 0; i < t.size(); ++i) {
     auto cur_ele = collection->add_collection()->mutable_object();
     // if is tuple
     if constexpr (gs::is_tuple<T>::value) {
@@ -208,6 +208,12 @@ void set_any_to_common_value(const Any& any, common::Value* value) {
 }
 
 // set edge value
+void set_edge_property(results::Edge* edge, const std::string& prop_name,
+                       const std::tuple<int32_t>& value) {
+  auto prop = edge->add_properties();
+  prop->mutable_value()->set_i64(std::get<0>(value));
+  prop->mutable_key()->set_name(prop_name);
+}
 
 void set_edge_property(results::Edge* edge, const std::string& prop_name,
                        const std::tuple<int64_t>& value) {
@@ -240,8 +246,17 @@ void set_edge_property(results::Edge* edge, const std::string& prop_name,
   prop->mutable_key()->set_name(prop_name);
 }
 
+// set grape::EmptyType
+void set_edge_property(results::Edge* edge, const std::string& prop_name,
+                       const std::tuple<grape::EmptyType>& value) {
+  // just skip
+}
+
 void set_edge_property(results::Edge* edge, const std::string& prop_name,
                        const Any& value) {
+  if (value.type == PropertyType::kEmpty) {
+    return;
+  }
   auto prop = edge->add_properties();
   set_any_to_common_value(value, prop->mutable_value());
   prop->mutable_key()->set_name(prop_name);
@@ -250,6 +265,8 @@ void set_edge_property(results::Edge* edge, const std::string& prop_name,
 template <typename GRAPH_INTERFACE>
 class SinkOp {
  public:
+  using vid_t = typename GRAPH_INTERFACE::vertex_id_t;
+  using label_id_t = typename GRAPH_INTERFACE::label_id_t;
   // sink current context to results_pb defined in results.proto
   // return results::CollectiveResults
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,
@@ -260,13 +277,11 @@ class SinkOp {
       std::array<int32_t, Context<CTX_HEAD_T, cur_alias, base_tag,
                                   CTX_PREV_T...>::col_num>
           tag_ids) {
-    using CTX_T = Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV_T...>;
-
     // prepare enough record rows.
     auto size = ctx.GetHead().Size();
     // std::vector<results::Results> results_vec(size);
     results::CollectiveResults results_vec;
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       results_vec.add_results();
     }
     LOG(INFO) << "reserve " << size << " records";
@@ -356,18 +371,18 @@ class SinkOp {
     prop_names[1] = schema.get_vertex_property_names(labels[1]);
     // get all properties
     std::array<std::vector<std::shared_ptr<RefColumnBase>>, 2> column_ptrs;
-    for (auto i = 0; i < prop_names[0].size(); ++i) {
+    for (size_t i = 0; i < prop_names[0].size(); ++i) {
       column_ptrs[0].emplace_back(
           graph.GetRefColumnBase(labels[0], prop_names[0][i]));
     }
-    for (auto i = 0; i < prop_names[1].size(); ++i) {
+    for (size_t i = 0; i < prop_names[1].size(); ++i) {
       column_ptrs[1].emplace_back(
           graph.GetRefColumnBase(labels[1], prop_names[1][i]));
     }
 
     label_t label;
     if (repeat_offsets.empty()) {
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -375,22 +390,22 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        vertex->set_id(vids[i]);
         if (bitset.get_bit(i)) {
           label = labels[0];
         } else {
           label = labels[1];
         }
         vertex->mutable_label()->set_id(label);
+        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         // set properties.
         auto columns = column_ptrs[label];
-        for (auto j = 0; j < columns.size(); ++j) {
+        for (size_t j = 0; j < columns.size(); ++j) {
           auto& column_ptr = columns[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = vertex->add_properties();
             new_prop->mutable_key()->set_name(prop_names[label][j]);
-            set_any_to_common_value(column_ptr->get(i),
+            set_any_to_common_value(column_ptr->get(vids[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -398,21 +413,21 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == vids.size());
       {
-        int32_t num_rows = 0;
-        for (auto i : repeat_offsets) {
+        size_t num_rows = 0;
+        for (size_t i : repeat_offsets) {
           num_rows += i;
         }
         CHECK(num_rows == results_vec.results_size())
             << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         if (bitset.get_bit(i)) {
           label = labels[0];
         } else {
           label = labels[1];
         }
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -420,18 +435,17 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          vertex->set_id(vids[i]);
-          vertex->mutable_label()->set_id(label);
+          vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
           // set properties.
           auto columns = column_ptrs[label];
-          for (auto j = 0; j < columns.size(); ++j) {
+          for (size_t j = 0; j < columns.size(); ++j) {
             auto& column_ptr = columns[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = vertex->add_properties();
               new_prop->mutable_key()->set_name(prop_names[label][j]);
-              set_any_to_common_value(column_ptr->get(i),
+              set_any_to_common_value(column_ptr->get(vids[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -453,12 +467,12 @@ class SinkOp {
     auto prop_names = schema.get_vertex_property_names(label);
     // get all properties
     std::vector<std::shared_ptr<RefColumnBase>> column_ptrs;
-    for (auto i = 0; i < prop_names.size(); ++i) {
+    for (size_t i = 0; i < prop_names.size(); ++i) {
       column_ptrs.emplace_back(graph.GetRefColumnBase(label, prop_names[i]));
     }
     VLOG(10) << "PropNames: " << prop_names.size();
     if (repeat_offsets.empty()) {
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -466,16 +480,15 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        vertex->set_id(vids[i]);
+        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         vertex->mutable_label()->set_id(label);
-        for (auto j = 0; j < column_ptrs.size(); ++j) {
+        for (size_t j = 0; j < column_ptrs.size(); ++j) {
           auto& column_ptr = column_ptrs[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = vertex->add_properties();
-            VLOG(10) << "col:" << j << "PropName: " << prop_names[j];
             new_prop->mutable_key()->set_name(prop_names[j]);
-            set_any_to_common_value(column_ptr->get(i),
+            set_any_to_common_value(column_ptr->get(vids[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -484,30 +497,30 @@ class SinkOp {
       CHECK(repeat_offsets.size() == vids.size());
       {
         int32_t num_rows = 0;
-        for (auto i : repeat_offsets) {
+        for (size_t i : repeat_offsets) {
           num_rows += i;
         }
         CHECK(num_rows == results_vec.results_size())
             << num_rows << " " << results_vec.results_size();
       }
       size_t cur_ind = 0;
-      for (auto i = 0; i < vids.size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < vids.size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          vertex->set_id(vids[i]);
+          vertex->set_id(encode_unique_vertex_id(label, vids[i]));
           vertex->mutable_label()->set_id(label);
-          for (auto j = 0; j < column_ptrs.size(); ++j) {
+          for (size_t j = 0; j < column_ptrs.size(); ++j) {
             auto& column_ptr = column_ptrs[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = vertex->add_properties();
               new_prop->mutable_key()->set_name(prop_names[j]);
-              set_any_to_common_value(column_ptr->get(i),
+              set_any_to_common_value(column_ptr->get(vids[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -527,10 +540,10 @@ class SinkOp {
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
-      CHECK(collection.Size() == results_vec.results_size())
+      CHECK((int32_t) collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -543,8 +556,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -565,10 +578,10 @@ class SinkOp {
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
-      CHECK(collection.Size() == results_vec.results_size())
+      CHECK((int32_t) collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind);
         auto record = row->mutable_record();
@@ -581,8 +594,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -595,7 +608,7 @@ class SinkOp {
     }
   }
 
-  // sinke for tuple with one element
+  // sink for tuple with one element
   template <size_t Ind, size_t act_tag_id, typename T,
             typename std::enable_if<
                 (!gs::is_vector<T>::value) && (gs::is_tuple<T>::value) &&
@@ -609,7 +622,7 @@ class SinkOp {
       CHECK(collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -625,8 +638,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -654,7 +667,7 @@ class SinkOp {
       CHECK(collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -669,8 +682,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -695,7 +708,7 @@ class SinkOp {
       CHECK(collection.Size() == results_vec.results_size())
           << "size neq " << collection.Size() << " "
           << results_vec.results_size();
-      for (auto i = 0; i < collection.Size(); ++i) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
         // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
@@ -711,8 +724,8 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == collection.Size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < collection.Size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < collection.Size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
@@ -736,17 +749,17 @@ class SinkOp {
     auto vertices_vec = vertex_set.GetVertices();
     auto labels_vec = vertex_set.GetLabels();
     auto& bitsets = vertex_set.GetBitsets();
-    CHECK(vertices_vec.size() == labels_vec.size());
+    CHECK(bitsets.size() == labels_vec.size());
     std::vector<std::vector<std::string>> prop_names;
-    for (auto i = 0; i < labels_vec.size(); ++i) {
+    for (size_t i = 0; i < labels_vec.size(); ++i) {
       prop_names.emplace_back(schema.get_vertex_property_names(labels_vec[i]));
     }
     // get all properties
     std::vector<std::vector<std::shared_ptr<RefColumnBase>>> column_ptrs(
         labels_vec.size());
     if (labels_vec.size() > 0) {
-      for (auto i = 0; i < labels_vec.size(); ++i) {
-        for (auto j = 0; j < prop_names[i].size(); ++j) {
+      for (size_t i = 0; i < labels_vec.size(); ++i) {
+        for (size_t j = 0; j < prop_names[i].size(); ++j) {
           column_ptrs[i].emplace_back(
               graph.GetRefColumnBase(labels_vec[i], prop_names[i][j]));
         }
@@ -754,12 +767,13 @@ class SinkOp {
     }
 
     label_t label;
+    size_t label_vec_ind;
     if (repeat_offsets.empty()) {
       CHECK(vertex_set.Size() == results_vec.results_size())
           << "size neq " << vertex_set.Size() << " "
           << results_vec.results_size();
 
-      for (auto i = 0; i < vertices_vec.size(); ++i) {
+      for (size_t i = 0; i < vertices_vec.size(); ++i) {
         // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
@@ -770,25 +784,25 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto mutable_vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        mutable_vertex->set_id(vertices_vec[i]);
-
         // todo: set properties.
-        for (auto j = 0; j < bitsets.size(); ++j) {
+        for (size_t j = 0; j < bitsets.size(); ++j) {
           if (bitsets[j].get_bit(i)) {
             label = labels_vec[j];
+            label_vec_ind = j;
             break;
           }
         }
         mutable_vertex->mutable_label()->set_id(label);
+        mutable_vertex->set_id(encode_unique_vertex_id(label, vertices_vec[i]));
         // label must be set
-        auto columns = column_ptrs[label];
-        for (auto j = 0; j < columns.size(); ++j) {
-          auto& column_ptr = columns[j];
+        auto cur_column_ptrs = column_ptrs[label_vec_ind];
+        for (size_t j = 0; j < cur_column_ptrs.size(); ++j) {
+          auto& column_ptr = cur_column_ptrs[j];
           // Only set non-none properties.
           if (column_ptr) {
             auto new_prop = mutable_vertex->add_properties();
-            new_prop->mutable_key()->set_name(prop_names[label][j]);
-            set_any_to_common_value(column_ptr->get(i),
+            new_prop->mutable_key()->set_name(prop_names[label_vec_ind][j]);
+            set_any_to_common_value(column_ptr->get(vertices_vec[i]),
                                     new_prop->mutable_value());
           }
         }
@@ -796,31 +810,33 @@ class SinkOp {
     } else {
       CHECK(repeat_offsets.size() == vertices_vec.size());
       size_t cur_ind = 0;
-      for (auto i = 0; i < vertices_vec.size(); ++i) {
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+      for (size_t i = 0; i < vertices_vec.size(); ++i) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           auto record = row->mutable_record();
           auto new_col = record->add_columns();
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_vertex =
               new_col->mutable_entry()->mutable_element()->mutable_vertex();
-          mutable_vertex->set_id(vertices_vec[i]);
-          for (auto j = 0; j < bitsets.size(); ++j) {
+          for (size_t j = 0; j < bitsets.size(); ++j) {
             if (bitsets[j].get_bit(i)) {
               label = labels_vec[j];
+              label_vec_ind = j;
               break;
             }
           }
           mutable_vertex->mutable_label()->set_id(label);
+          mutable_vertex->set_id(
+              encode_unique_vertex_id(label, vertices_vec[i]));
           // label must be set
-          auto columns = column_ptrs[label];
-          for (auto j = 0; j < columns.size(); ++j) {
-            auto& column_ptr = columns[j];
+          auto cur_column_ptrs = column_ptrs[label_vec_ind];
+          for (size_t j = 0; j < cur_column_ptrs.size(); ++j) {
+            auto& column_ptr = cur_column_ptrs[j];
             // Only set non-none properties.
             if (column_ptr) {
               auto new_prop = mutable_vertex->add_properties();
-              new_prop->mutable_key()->set_name(prop_names[label][j]);
-              set_any_to_common_value(column_ptr->get(i),
+              new_prop->mutable_key()->set_name(prop_names[label_vec_ind][j]);
+              set_any_to_common_value(column_ptr->get(vertices_vec[i]),
                                       new_prop->mutable_value());
             }
           }
@@ -842,8 +858,7 @@ class SinkOp {
           << results_vec.results_size();
       auto iter = edge_set.begin();
       auto end_iter = edge_set.end();
-      for (auto i = 0; i < results_vec.results_size(); ++i) {
-        // auto& row = results_vec[i];
+      for (size_t i = 0; i < results_vec.results_size(); ++i) {
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
             << "record column size: " << row->record().columns_size()
@@ -854,8 +869,17 @@ class SinkOp {
         auto mutable_edge =
             new_col->mutable_entry()->mutable_element()->mutable_edge();
         CHECK(iter != end_iter);
-        mutable_edge->set_src_id(iter.GetSrc());
-        mutable_edge->set_dst_id(iter.GetDst());
+        auto unique_edge_label = generate_edge_label_id(
+            iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
+        mutable_edge->mutable_label()->set_id(unique_edge_label);
+        mutable_edge->set_id(encode_unique_edge_id(unique_edge_label, i));
+        mutable_edge->set_src_id(
+            encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
+        mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
+        mutable_edge->set_dst_id(
+            encode_unique_vertex_id(iter.GetDstLabel(), iter.GetDst()));
+        mutable_edge->mutable_dst_label()->set_id(iter.GetDstLabel());
+
         auto prop_names = iter.GetPropNames();
         if (prop_names.size() > 0) {
           set_edge_property(mutable_edge, prop_names[0], iter.GetData());
@@ -868,10 +892,9 @@ class SinkOp {
       size_t cur_ind = 0;
       auto iter = edge_set.begin();
       auto end_iter = edge_set.end();
-      for (auto i = 0; i < repeat_offsets.size(); ++i) {
+      for (size_t i = 0; i < repeat_offsets.size(); ++i) {
         CHECK(iter != end_iter);
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
-          // auto& row = results_vec[i];
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           auto row = results_vec.mutable_results(cur_ind++);
           CHECK(row->record().columns_size() == Ind)
               << "record column size: " << row->record().columns_size()
@@ -881,8 +904,17 @@ class SinkOp {
           new_col->mutable_name_or_id()->set_id(tag_id);
           auto mutable_edge =
               new_col->mutable_entry()->mutable_element()->mutable_edge();
-          mutable_edge->set_src_id(iter.GetSrc());
-          mutable_edge->set_dst_id(iter.GetDst());
+          auto unique_edge_label = generate_edge_label_id(
+              iter.GetSrcLabel(), iter.GetDstLabel(), iter.GetEdgeLabel());
+          mutable_edge->mutable_label()->set_id(unique_edge_label);
+          mutable_edge->set_id(
+              encode_unique_edge_id(unique_edge_label, cur_ind - 1));
+          mutable_edge->set_src_id(
+              encode_unique_vertex_id(iter.GetSrcLabel(), iter.GetSrc()));
+          mutable_edge->mutable_src_label()->set_id(iter.GetSrcLabel());
+          mutable_edge->set_dst_id(
+              encode_unique_vertex_id(iter.GetDstLabel(), iter.GetDst()));
+          mutable_edge->mutable_dst_label()->set_id(iter.GetDstLabel());
           auto prop_names = iter.GetPropNames();
           if (prop_names.size() > 0) {
             set_edge_property(mutable_edge, prop_names[0], iter.GetData());
@@ -894,10 +926,11 @@ class SinkOp {
   }
 
   // sink for compressed path set
-  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT>
+  template <size_t Ind, size_t act_tag_id, typename PATH_SET_T,
+            typename std::enable_if_t<(PATH_SET_T::is_path_set)>* = nullptr>
   static void sink_col_impl(const GRAPH_INTERFACE& graph,
                             results::CollectiveResults& results_vec,
-                            const CompressedPathSet<VID_T, LabelT>& path_set,
+                            const PATH_SET_T& path_set,
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
@@ -906,7 +939,7 @@ class SinkOp {
           << results_vec.results_size();
       auto iter = path_set.begin();
       auto end_iter = path_set.end();
-      for (auto i = 0; i < results_vec.results_size(); ++i) {
+      for (size_t i = 0; i < results_vec.results_size(); ++i) {
         // auto& row = results_vec[i];
         auto row = results_vec.mutable_results(i);
         CHECK(row->record().columns_size() == Ind)
@@ -927,9 +960,9 @@ class SinkOp {
       size_t cur_ind = 0;
       auto iter = path_set.begin();
       auto end_iter = path_set.end();
-      for (auto i = 0; i < repeat_offsets.size(); ++i) {
+      for (size_t i = 0; i < repeat_offsets.size(); ++i) {
         CHECK(iter != end_iter);
-        for (auto j = 0; j < repeat_offsets[i]; ++j) {
+        for (size_t j = 0; j < repeat_offsets[i]; ++j) {
           // auto& row = results_vec[i];
           auto row = results_vec.mutable_results(cur_ind++);
           CHECK(row->record().columns_size() == Ind)
@@ -949,15 +982,57 @@ class SinkOp {
     }
   }
 
-  template <typename VID_T, typename LabelT>
-  static void add_path_to_pb(const Path<VID_T, LabelT>& path,
+  // TODO(zhanglei): This is temporary solution for sink path to results.
+  // Out physical plan will only generate EndV option, so we can only sink the
+  // end vertex to results.
+  // If we sink all vertices to results, cypher driver seems failed to parse
+  // paths of different lengths or what:
+  // <Tried to construct a path that is not built like a path: even number of
+  // elements>
+  static void add_path_to_pb(const Path<vid_t, label_id_t>& path,
                              results::GraphPath& mutable_path) {
-    auto& vertices = path.GetVertices();
-    for (auto i = 0; i < vertices.size(); ++i) {
-      mutable_path.add_path()->mutable_vertex()->set_id(vertices[i]);
+    if (path.length() <= 0) {
+      return;
     }
+    vid_t vid;
+    label_id_t label;
+    std::tie(label, vid) = path.GetNode(path.length() - 1);
+    auto vertex = mutable_path.add_path()->mutable_vertex();
+    vertex->set_id(encode_unique_vertex_id(label, vid));
+    vertex->mutable_label()->set_id(label);
   }
-};  // namespace gs
+
+  static vid_t encode_unique_vertex_id(label_id_t label_id, vid_t vid) {
+    // encode label_id and vid to a unique vid
+    vid_t unique_vid = label_id;
+    static constexpr int num_bits = sizeof(vid_t) * 8 - sizeof(label_id_t) * 8;
+    unique_vid = unique_vid << num_bits;
+    unique_vid = unique_vid | vid;
+    return unique_vid;
+  }
+
+  static int64_t encode_unique_edge_id(label_id_t label_id, size_t index) {
+    // encode label_id and vid to a unique vid
+    int64_t unique_edge_id = label_id;
+    static constexpr int num_bits =
+        sizeof(int64_t) * 8 - sizeof(label_id_t) * 8;
+    unique_edge_id = unique_edge_id << num_bits;
+    unique_edge_id = unique_edge_id | index;
+    return unique_edge_id;
+  }
+
+  static label_id_t generate_edge_label_id(label_id_t src_label_id,
+                                           label_id_t dst_label_id,
+                                           label_id_t edge_label_id) {
+    label_id_t unique_edge_label_id = src_label_id;
+    static constexpr int num_bits = sizeof(label_id_t) * 8;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | dst_label_id;
+    unique_edge_label_id = unique_edge_label_id << num_bits;
+    unique_edge_label_id = unique_edge_label_id | edge_label_id;
+    return unique_edge_label_id;
+  }
+};
 }  // namespace gs
 
 #endif  // ENGINES_HQPS_ENGINE_OPERATOR_SINK_H_

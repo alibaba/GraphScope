@@ -97,7 +97,7 @@ class ODPSReadClient {
       const std::string& session_id, const TableIdentifier& table_identifier,
       std::vector<std::vector<std::shared_ptr<arrow::RecordBatch>>>&
           all_batches_,
-      const std::vector<int>& indices) const;
+      std::vector<int>&& indices) const;
 
   bool readRows(std::string session_id, const TableIdentifier& table_identifier,
                 std::vector<std::shared_ptr<arrow::RecordBatch>>& res_batches,
@@ -125,7 +125,6 @@ class ODPSStreamRecordBatchSupplier : public IRecordBatchSupplier {
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
  private:
-  label_t label_id_;
   std::string file_path_;
   const ODPSReadClient& odps_read_client_;
   std::string session_id_;
@@ -148,11 +147,9 @@ class ODPSTableRecordBatchSupplier : public IRecordBatchSupplier {
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
  private:
-  label_t label_id_;
   std::string file_path_;
   const ODPSReadClient& odps_read_client_;
   std::string session_id_;
-  int split_count_;
   TableIdentifier table_identifier_;
 
   std::shared_ptr<arrow::Table> table_;
