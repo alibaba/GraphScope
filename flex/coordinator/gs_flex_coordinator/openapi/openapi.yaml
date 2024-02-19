@@ -357,10 +357,9 @@ paths:
       operationId: upload_file
       requestBody:
         content:
-          application/octet-stream:
+          multipart/form-data:
             schema:
-              format: binary
-              type: string
+              $ref: '#/components/schemas/upload_file_request'
         required: true
       responses:
         "200":
@@ -2125,6 +2124,12 @@ components:
           title: batch_delete
           type: boolean
       title: update_alert_messages_request
+      type: object
+    upload_file_request:
+      properties:
+        filestorage:
+          format: binary
+          type: string
       type: object
     Graph_stored_procedures:
       example:

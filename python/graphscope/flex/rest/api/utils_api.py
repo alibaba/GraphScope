@@ -18,7 +18,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 
 from pydantic import StrictBytes, StrictStr
-from typing import Union
+from typing import Optional, Union
 
 from graphscope.flex.rest.api_client import ApiClient, RequestSerialized
 from graphscope.flex.rest.api_response import ApiResponse
@@ -41,7 +41,7 @@ class UtilsApi:
     @validate_call
     def upload_file(
         self,
-        body: Union[StrictBytes, StrictStr],
+        filestorage: Optional[Union[StrictBytes, StrictStr]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -58,8 +58,8 @@ class UtilsApi:
         """upload_file
 
 
-        :param body: (required)
-        :type body: bytearray
+        :param filestorage:
+        :type filestorage: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -83,7 +83,7 @@ class UtilsApi:
         """ # noqa: E501
 
         _param = self._upload_file_serialize(
-            body=body,
+            filestorage=filestorage,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -107,7 +107,7 @@ class UtilsApi:
     @validate_call
     def upload_file_with_http_info(
         self,
-        body: Union[StrictBytes, StrictStr],
+        filestorage: Optional[Union[StrictBytes, StrictStr]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -124,8 +124,8 @@ class UtilsApi:
         """upload_file
 
 
-        :param body: (required)
-        :type body: bytearray
+        :param filestorage:
+        :type filestorage: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -149,7 +149,7 @@ class UtilsApi:
         """ # noqa: E501
 
         _param = self._upload_file_serialize(
-            body=body,
+            filestorage=filestorage,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -173,7 +173,7 @@ class UtilsApi:
     @validate_call
     def upload_file_without_preload_content(
         self,
-        body: Union[StrictBytes, StrictStr],
+        filestorage: Optional[Union[StrictBytes, StrictStr]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -190,8 +190,8 @@ class UtilsApi:
         """upload_file
 
 
-        :param body: (required)
-        :type body: bytearray
+        :param filestorage:
+        :type filestorage: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -215,7 +215,7 @@ class UtilsApi:
         """ # noqa: E501
 
         _param = self._upload_file_serialize(
-            body=body,
+            filestorage=filestorage,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -234,7 +234,7 @@ class UtilsApi:
 
     def _upload_file_serialize(
         self,
-        body,
+        filestorage,
         _request_auth,
         _content_type,
         _headers,
@@ -257,14 +257,9 @@ class UtilsApi:
         # process the query parameters
         # process the header parameters
         # process the form parameters
+        if filestorage is not None:
+            _files['filestorage'] = filestorage
         # process the body parameter
-        if body is not None:
-            # convert to byte array if the input is a file name (str)
-            if isinstance(body, str):
-                with open(body, "rb") as _fp:
-                    _body_params = _fp.read()
-            else:
-                _body_params = body
 
 
         # set the HTTP header `Accept`
@@ -281,7 +276,7 @@ class UtilsApi:
             _default_content_type = (
                 self.api_client.select_header_content_type(
                     [
-                        'application/octet-stream'
+                        'multipart/form-data'
                     ]
                 )
             )

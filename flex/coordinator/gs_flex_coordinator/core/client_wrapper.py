@@ -26,33 +26,18 @@ import threading
 from typing import List, Union
 
 import psutil
-
-from gs_flex_coordinator.core.config import (
-    CLUSTER_TYPE,
-    COORDINATOR_STARTING_TIME,
-    INSTANCE_NAME,
-    SOLUTION,
-    WORKSPACE,
-)
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
+                                             COORDINATOR_STARTING_TIME,
+                                             DATASET_WORKSPACE, INSTANCE_NAME,
+                                             SOLUTION, WORKSPACE)
 from gs_flex_coordinator.core.interactive import init_hqps_client
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import (
-    GraphInfo,
-    decode_datetimestr,
-    encode_datetime,
-    get_current_time,
-)
-from gs_flex_coordinator.models import (
-    DeploymentInfo,
-    Graph,
-    JobStatus,
-    ModelSchema,
-    NodeStatus,
-    Procedure,
-    SchemaMapping,
-    ServiceStatus,
-    StartServiceRequest,
-)
+from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
+                                            encode_datetime, get_current_time)
+from gs_flex_coordinator.models import (DeploymentInfo, Graph, JobStatus,
+                                        ModelSchema, NodeStatus, Procedure,
+                                        SchemaMapping, ServiceStatus,
+                                        StartServiceRequest)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -231,8 +216,11 @@ class ClientWrapper(object):
         job_id = self._client.create_dataloading_job(graph_name, schema_mapping_dict)
         return job_id
 
-    def upload_file(self, body: bytes) -> str:
-        return "xxx"
+    def upload_file(self, filestorage) -> str:
+        if CLUSTER_TYPE == "HOSTS":
+            filepath = os.path.join(DATASET_WORKSPACE, filestorage.filename)
+            filestorage.save(filepath)
+            return str(filepath)
 
 
 client_wrapper = ClientWrapper()

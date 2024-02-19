@@ -60,7 +60,6 @@ def create_dataloading_job(graph_name: str, job_config: dict) -> str:
                     content = f.read()
                 path_after_uploaded = upload_file(filename, content, location)
                 mapping["inputs"][index] = path_after_uploaded
-    print('!!!!!!!!: ', job_config)
     # create job
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(
@@ -87,4 +86,4 @@ def upload_file(filename: str, content: bytes, location: str) -> str:
         graphscope.flex.rest.Configuration(context.coordinator_endpoint)
     ) as api_client:
         api_instance = graphscope.flex.rest.UtilsApi(api_client)
-        return api_instance.upload_file(content)
+        return api_instance.upload_file(location)
