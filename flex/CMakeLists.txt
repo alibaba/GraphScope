@@ -44,6 +44,11 @@ if (BUILD_HQPS)
     add_definitions(-DBUILD_HQPS)
 endif ()
 
+if(USE_PTHASH)
+    message("Use PTHash")
+    add_definitions(-DUSE_PTHASH)
+endif()
+
 execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
 string(STRIP ${LINUX_KERNEL_VERSION} LINUX_KERNEL_VERSION)
 message(${LINUX_KERNEL_VERSION})
