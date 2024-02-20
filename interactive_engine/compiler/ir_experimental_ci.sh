@@ -17,8 +17,7 @@ fi
 
 # restart compiler service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
-export gremlin.script.language.name=antlr_gremlin_calcite
-cd ${base_dir} && make run &
+cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite &
 sleep 5s
 # run gremlin standard tests to test calcite-based IR layer
 cd ${base_dir} && make gremlin_calcite_test
@@ -31,9 +30,7 @@ fi
 
 # restart compiler service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
-export gremlin.script.language.name=antlr_gremlin_calcite
-export physical.opt.config=proto
-cd ${base_dir} && make run &
+cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto &
 sleep 5s
 # run gremlin standard tests to test calcite-based IR layer
 cd ${base_dir} && make gremlin_calcite_test
