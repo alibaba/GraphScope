@@ -18,17 +18,14 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.column_mapping import ColumnMapping
 from graphscope.flex.rest.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner
 from graphscope.flex.rest.models.edge_mapping_source_vertex_mappings_inner import EdgeMappingSourceVertexMappingsInner
 from graphscope.flex.rest.models.edge_mapping_type_triplet import EdgeMappingTypeTriplet
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class EdgeMapping(BaseModel):
     """
@@ -58,7 +55,7 @@ class EdgeMapping(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of EdgeMapping from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -72,10 +69,12 @@ class EdgeMapping(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of type_triplet
@@ -105,7 +104,7 @@ class EdgeMapping(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of EdgeMapping from a dict"""
         if obj is None:
             return None
@@ -114,11 +113,11 @@ class EdgeMapping(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "type_triplet": EdgeMappingTypeTriplet.from_dict(obj.get("type_triplet")) if obj.get("type_triplet") is not None else None,
+            "type_triplet": EdgeMappingTypeTriplet.from_dict(obj["type_triplet"]) if obj.get("type_triplet") is not None else None,
             "inputs": obj.get("inputs"),
-            "source_vertex_mappings": [EdgeMappingSourceVertexMappingsInner.from_dict(_item) for _item in obj.get("source_vertex_mappings")] if obj.get("source_vertex_mappings") is not None else None,
-            "destination_vertex_mappings": [EdgeMappingDestinationVertexMappingsInner.from_dict(_item) for _item in obj.get("destination_vertex_mappings")] if obj.get("destination_vertex_mappings") is not None else None,
-            "column_mappings": [ColumnMapping.from_dict(_item) for _item in obj.get("column_mappings")] if obj.get("column_mappings") is not None else None
+            "source_vertex_mappings": [EdgeMappingSourceVertexMappingsInner.from_dict(_item) for _item in obj["source_vertex_mappings"]] if obj.get("source_vertex_mappings") is not None else None,
+            "destination_vertex_mappings": [EdgeMappingDestinationVertexMappingsInner.from_dict(_item) for _item in obj["destination_vertex_mappings"]] if obj.get("destination_vertex_mappings") is not None else None,
+            "column_mappings": [ColumnMapping.from_dict(_item) for _item in obj["column_mappings"]] if obj.get("column_mappings") is not None else None
         })
         return _obj
 
