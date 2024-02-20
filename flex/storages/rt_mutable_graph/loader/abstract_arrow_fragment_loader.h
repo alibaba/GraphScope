@@ -465,15 +465,11 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
         CHECK(primary_key_ind < columns.size());
         auto primary_key_column = columns[primary_key_ind];
         _add_vertex<KEY_T>()(primary_key_column, indexer_builder);
-
-        // addVertexBatchFromArray(v_label_id, indexer, primary_key_column,
-        //                       other_columns_array);
       }
       VLOG(10) << "Finish parsing vertex file:" << v_file << " for label "
                << v_label_name;
     }
     basic_fragment_loader_.FinishAddingVertex(v_label_id, indexer_builder);
-    // indexer_builder.finish(basic_fragment_loader_.GetLFIndexer(v_label_id));
     const auto& indexer = basic_fragment_loader_.GetLFIndexer(v_label_id);
 
     std::vector<std::thread> work_threads;
