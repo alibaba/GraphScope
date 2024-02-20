@@ -58,6 +58,8 @@ struct bit_vector_view {
   ref_vector<uint64_t> m_bits;
 };
 
+// This code is an adaptation from
+// https://github.com/jermp/pthash/blob/master/include/encoders/darray.hpp
 struct darray1_view {
   inline uint64_t select(const bit_vector_view& bv, uint64_t idx) const {
     assert(idx < m_positions);
@@ -110,6 +112,8 @@ struct darray1_view {
   ref_vector<uint64_t> m_overflow_positions;
 };
 
+// This code is an adaptation from
+// https://github.com/jermp/pthash/blob/master/include/encoders/compact_vector.hpp
 struct compact_vector_view {
   inline uint64_t size() const { return m_size; }
   inline uint64_t width() const { return m_width; }
@@ -135,6 +139,8 @@ struct compact_vector_view {
   ref_vector<uint64_t> m_bits;
 };
 
+// This code is an adaptation from
+// https://github.com/jermp/pthash/blob/master/include/encoders/ef_sequence.hpp
 struct ef_sequence_view {
   uint64_t access(uint64_t i) const {
     assert(i < m_low_bits.size());
@@ -156,6 +162,6 @@ struct ef_sequence_view {
 
 }  // namespace gs
 
-#endif // USE_PTHASH
+#endif  // USE_PTHASH
 
 #endif  // GRAPHSCOPE_PTHASH_UTILS_EF_SEQUENCE_VIEW_VIEW_H_
