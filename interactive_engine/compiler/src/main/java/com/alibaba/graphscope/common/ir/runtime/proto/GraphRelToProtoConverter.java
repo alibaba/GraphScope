@@ -18,6 +18,7 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
+import com.alibaba.graphscope.common.ir.rel.GraphLogicalDedupBy;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
 import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
@@ -444,6 +445,30 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             physicalBuilder.addPlan(oprBuilder.build());
         }
         return aggregate;
+    }
+
+    @Override
+    public RelNode visit(GraphLogicalDedupBy dedupBy) {
+        visitChildren(dedupBy);
+        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebra.Dedup.Builder dedupBuilder = GraphAlgebra.Dedup.newBuilder();
+        for (RexNode expr : dedupBy.getDedupByKeys()) {
+            Preconditions.checkArgument(
+                    expr instanceof RexGraphVariable,
+                    "each expression in dedup by should be type %s, but is %s",
+                    RexGraphVariable.class,
+                    expr.getClass());
+            OuterExpression.Variable var =
+                    expr.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
+                            .getOperators(0)
+                            .getVar();
+            dedupBuilder.addKeys(var);
+        }
+        oprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
+        physicalBuilder.addPlan(oprBuilder.build());
+        return dedupBy;
     }
 
     @Override

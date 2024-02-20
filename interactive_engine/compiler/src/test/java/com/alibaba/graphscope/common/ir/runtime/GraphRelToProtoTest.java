@@ -345,7 +345,7 @@ public class GraphRelToProtoTest {
     }
 
     @Test
-    public void dedup_test() throws Exception {
+    public void dedup_test_1() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         Iterable<AggCall> emptyIterable = Collections::emptyIterator;
         RelNode dedup =
@@ -367,7 +367,34 @@ public class GraphRelToProtoTest {
                         getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup))) {
             PhysicalPlan plan = protoBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("proto/dedup_test.json"), plan.explain().trim());
+                    FileUtils.readJsonFromResource("proto/dedup_test_1.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
+    public void dedup_test_2() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode dedup =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .dedupBy(ImmutableList.of(builder.variable("x", "name")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalDedupBy(dedupByKeys=[[x.name]])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[x], opt=[VERTEX])",
+                dedup.explain().trim());
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(dedup))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/dedup_test_2.json"),
+                    plan.explain().trim());
         }
     }
 

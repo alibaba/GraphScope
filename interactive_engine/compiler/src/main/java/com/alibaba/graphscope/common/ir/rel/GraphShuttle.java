@@ -80,4 +80,8 @@ public abstract class GraphShuttle extends RelShuttleImpl {
     public RelNode visit(GraphPhysicalGetV physicalGetV) {
         return visitChildren(physicalGetV);
     }
+
+    public RelNode visit(GraphLogicalDedupBy dedupBy) {
+        return visitChildren(dedupBy);
+    }
 }
