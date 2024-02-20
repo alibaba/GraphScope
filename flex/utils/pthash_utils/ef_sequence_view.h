@@ -45,6 +45,8 @@ struct ref_vector {
   size_t size_;
 };
 
+// This code is an adaptation from
+// https://github.com/jermp/pthash/blob/master/include/encoders/bit_vector.hpp
 struct bit_vector_view {
   const uint64_t* data() const { return m_bits.data(); }
 
