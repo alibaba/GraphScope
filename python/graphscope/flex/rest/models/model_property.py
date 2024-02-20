@@ -18,14 +18,11 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictInt, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.property_property_type import PropertyPropertyType
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class ModelProperty(BaseModel):
     """
@@ -53,7 +50,7 @@ class ModelProperty(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of ModelProperty from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -67,10 +64,12 @@ class ModelProperty(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of property_type
@@ -79,7 +78,7 @@ class ModelProperty(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of ModelProperty from a dict"""
         if obj is None:
             return None
@@ -90,7 +89,7 @@ class ModelProperty(BaseModel):
         _obj = cls.model_validate({
             "property_id": obj.get("property_id"),
             "property_name": obj.get("property_name"),
-            "property_type": PropertyPropertyType.from_dict(obj.get("property_type")) if obj.get("property_type") is not None else None
+            "property_type": PropertyPropertyType.from_dict(obj["property_type"]) if obj.get("property_type") is not None else None
         })
         return _obj
 

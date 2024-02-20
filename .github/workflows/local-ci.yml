@@ -59,7 +59,7 @@ jobs:
         # hack here: get all field of build-wheels which run on self-hosted machine
         if sed -n '/self-hosted/,/mini-test/ p' .github/workflows/local-ci.yml | \
           grep -v "grep" - | grep "action-tmate"; then
-          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          echo 'WARNING!!!the self-hosted machine cannot run tmate session, please debug it manually'
           exit 1
         fi
 
