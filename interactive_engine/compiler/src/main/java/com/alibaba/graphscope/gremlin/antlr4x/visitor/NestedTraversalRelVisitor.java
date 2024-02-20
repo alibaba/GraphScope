@@ -1,19 +1,21 @@
 package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
-import static java.util.Objects.requireNonNull;
-
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 
 import java.util.List;
 
+import static java.util.Objects.requireNonNull;
+
+/**
+ * convert sub traversal nested in {@code NestedTraversalContext} to RelNode
+ */
 public class NestedTraversalRelVisitor extends GremlinGSBaseVisitor<RelNode> {
     private final GraphBuilder parentBuilder;
     private final GraphBuilder nestedBuilder;

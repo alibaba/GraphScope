@@ -31,6 +31,9 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+/**
+ * convert sub traversal nested in {@code NestedTraversalContext} to RexNode
+ */
 public class NestedTraversalRexVisitor extends GremlinGSBaseVisitor<RexNode> {
     private final GraphBuilder parentBuilder;
     private final GraphBuilder nestedBuilder;
