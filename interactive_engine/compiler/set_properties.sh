@@ -34,6 +34,8 @@ frontend_query_per_second_limit="frontend.query.per.second.limit: $FRONTEND_QUER
 
 gremlin_script_language_name="gremlin.script.language.name: $GREMLIN_SCRIPT_LANGUAGE_NAME"
 
+physical_opt_config="physical.opt.config: $PHYSICAL_OPT_CONFIG"
+
 count=1;
 while (($count<$SERVERSSIZE))
 do

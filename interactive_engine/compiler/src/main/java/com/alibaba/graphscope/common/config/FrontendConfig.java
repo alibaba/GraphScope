@@ -56,5 +56,5 @@ public class FrontendConfig {
             Config.stringConfig("gremlin.script.language.name", "antlr_gremlin_traversal");
 
     public static final Config<String> PHYSICAL_OPT_CONFIG =
-            Config.stringConfig("physical.opt", "ffi");
+            Config.stringConfig("physical.opt.config", "ffi");
 }
