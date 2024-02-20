@@ -1,4 +1,4 @@
-/** Copyright (c) 2020-2024 Giulio Ermanno Pibiri and Roberto Trani
+/** Copyright 2020-2024 Giulio Ermanno Pibiri and Roberto Trani
  *
  * The following sets forth attribution notices for third party software.
  *

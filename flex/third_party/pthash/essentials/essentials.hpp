@@ -1,4 +1,4 @@
-/** Copyright (c) 2019-2021 Giulio Ermanno Pibiri
+/** Copyright 2019-2021 Giulio Ermanno Pibiri
  *
  * The following sets forth attribution notices for third party software.
  *
