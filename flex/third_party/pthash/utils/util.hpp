@@ -24,8 +24,8 @@
 #include <chrono>
 #include <string>
 
-#include "pthash/essentials/essentials.hpp"
-#include "pthash/fastmod/fastmod.h"
+#include "essentials/essentials.hpp"
+#include "fastmod/fastmod.h"
 
 #define PTHASH_LIKELY(expr) __builtin_expect((bool) (expr), true)
 

@@ -52,10 +52,6 @@ include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/nloh
 # include odps cpp sdk
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/odps/include/)
 
-if(USE_PTHASH)
-    include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/)
-endif()
-
 find_package(yaml-cpp REQUIRED)
 include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
 

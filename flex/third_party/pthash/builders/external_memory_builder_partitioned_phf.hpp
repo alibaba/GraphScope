@@ -21,11 +21,11 @@
 
 #pragma once
 
-#include "pthash/builders/util.hpp"
-#include "pthash/mm_file/mm_file.hpp"
+#include "builders/util.hpp"
+#include "mm_file/mm_file.hpp"
 
-#include "pthash/builders/internal_memory_builder_partitioned_phf.hpp"
-#include "pthash/builders/internal_memory_builder_single_phf.hpp"
+#include "builders/internal_memory_builder_partitioned_phf.hpp"
+#include "builders/internal_memory_builder_single_phf.hpp"
 
 namespace pthash {
 

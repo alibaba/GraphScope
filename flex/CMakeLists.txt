@@ -60,7 +60,8 @@ endif()
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
 
 if(USE_PTHASH)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pthash)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/murmurhash)
 endif()
 
 set(DEFAULT_BUILD_TYPE "Release")

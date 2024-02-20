@@ -22,8 +22,8 @@
 
 #include "flex/utils/property/column.h"
 #include "flex/utils/pthash_utils/single_phf_view.h"
-#include "murmurhash/murmurhash.h"
-#include "pthash/pthash.hpp"
+#include "murmurhash.h"
+#include "pthash.hpp"
 
 namespace gs {
 

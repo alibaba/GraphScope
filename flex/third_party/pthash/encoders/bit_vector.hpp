@@ -24,7 +24,7 @@
 #include <cstddef>
 #include <vector>
 
-#include "pthash/encoders/util.hpp"
+#include "encoders/util.hpp"
 
 namespace pthash {
 

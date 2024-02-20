@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include "pthash/encoders/bit_vector.hpp"
-#include "pthash/encoders/util.hpp"
+#include "encoders/bit_vector.hpp"
+#include "encoders/util.hpp"
 
 namespace pthash {
 namespace detail {

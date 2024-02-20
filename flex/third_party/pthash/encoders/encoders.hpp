@@ -21,11 +21,11 @@
 
 #pragma once
 
-#include "pthash/essentials/essentials.hpp"
+#include "essentials/essentials.hpp"
 
-#include "pthash/encoders/compact_vector.hpp"
-#include "pthash/encoders/ef_sequence.hpp"
-#include "pthash/encoders/sdc_sequence.hpp"
+#include "encoders/compact_vector.hpp"
+#include "encoders/ef_sequence.hpp"
+#include "encoders/sdc_sequence.hpp"
 
 #include <cassert>
 #include <unordered_map>

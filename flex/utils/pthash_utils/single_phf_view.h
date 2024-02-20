@@ -3,8 +3,8 @@
 
 #include "flex/utils/mmap_array.h"
 #include "flex/utils/pthash_utils/encoders_view.h"
-#include "pthash/utils/bucketers.hpp"
-#include "pthash/utils/hasher.hpp"
+#include "utils/bucketers.hpp"
+#include "utils/hasher.hpp"
 
 namespace gs {
 

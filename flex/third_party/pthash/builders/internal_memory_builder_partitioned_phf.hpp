@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include "pthash/builders/internal_memory_builder_single_phf.hpp"
-#include "pthash/builders/util.hpp"
+#include "builders/internal_memory_builder_single_phf.hpp"
+#include "builders/util.hpp"
 
 namespace pthash {
 

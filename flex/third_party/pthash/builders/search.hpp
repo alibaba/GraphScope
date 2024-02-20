@@ -24,11 +24,11 @@
 #include <math.h>   // for pow, round, log2
 #include <sstream>  // for stringbuf
 #include <vector>
-#include "pthash/essentials/essentials.hpp"
+#include "essentials/essentials.hpp"
 
-#include "pthash/builders/util.hpp"
-#include "pthash/encoders/bit_vector.hpp"
-#include "pthash/utils/hasher.hpp"
+#include "builders/util.hpp"
+#include "encoders/bit_vector.hpp"
+#include "utils/hasher.hpp"
 
 namespace pthash {
 

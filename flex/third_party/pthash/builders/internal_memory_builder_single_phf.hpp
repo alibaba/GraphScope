@@ -21,11 +21,11 @@
 
 #pragma once
 
-#include "pthash/builders/search.hpp"
-#include "pthash/builders/util.hpp"
-#include "pthash/utils/bucketers.hpp"
-#include "pthash/utils/hasher.hpp"
-#include "pthash/utils/logger.hpp"
+#include "builders/search.hpp"
+#include "builders/util.hpp"
+#include "utils/bucketers.hpp"
+#include "utils/hasher.hpp"
+#include "utils/logger.hpp"
 
 namespace pthash {
 

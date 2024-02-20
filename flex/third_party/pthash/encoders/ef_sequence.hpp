@@ -20,9 +20,9 @@
  */
 #pragma once
 
-#include "pthash/encoders/bit_vector.hpp"
-#include "pthash/encoders/compact_vector.hpp"
-#include "pthash/encoders/darray.hpp"
+#include "encoders/bit_vector.hpp"
+#include "encoders/compact_vector.hpp"
+#include "encoders/darray.hpp"
 
 namespace pthash {
 

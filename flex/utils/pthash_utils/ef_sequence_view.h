@@ -7,7 +7,7 @@
 
 #include <type_traits>
 
-#include "pthash/encoders/util.hpp"
+#include "encoders/util.hpp"
 
 namespace gs {
 

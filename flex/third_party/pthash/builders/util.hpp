@@ -24,7 +24,7 @@
 #include <fstream>
 #include <thread>
 
-#include "pthash/utils/logger.hpp"
+#include "utils/logger.hpp"
 
 namespace pthash {
 

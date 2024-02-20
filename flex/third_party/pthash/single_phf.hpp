@@ -21,10 +21,10 @@
 
 #pragma once
 
-#include "pthash/builders/external_memory_builder_single_phf.hpp"
-#include "pthash/builders/internal_memory_builder_single_phf.hpp"
-#include "pthash/builders/util.hpp"
-#include "pthash/utils/bucketers.hpp"
+#include "builders/external_memory_builder_single_phf.hpp"
+#include "builders/internal_memory_builder_single_phf.hpp"
+#include "builders/util.hpp"
+#include "utils/bucketers.hpp"
 
 namespace pthash {
 
