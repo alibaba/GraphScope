@@ -37,29 +37,33 @@ namespace fastmod {
 
 #ifdef _MSC_VER
 
-// __umulh is only available in x64 mode under Visual Studio: don't compile to 32-bit!
+// __umulh is only available in x64 mode under Visual Studio: don't compile to
+// 32-bit!
 FASTMOD_API uint64_t mul128_u32(uint64_t lowbits, uint32_t d) {
-    return __umulh(lowbits, d);
+  return __umulh(lowbits, d);
 }
 
 #else  // _MSC_VER NOT defined
 
 FASTMOD_API uint64_t mul128_u32(uint64_t lowbits, uint32_t d) {
-    return ((__uint128_t)lowbits * d) >> 64;
+  return ((__uint128_t) lowbits * d) >> 64;
 }
 
 FASTMOD_API uint64_t mul128_s32(uint64_t lowbits, int32_t d) {
-    return ((__int128_t)lowbits * d) >> 64;
+  return ((__int128_t) lowbits * d) >> 64;
 }
 
 // This is for the 64-bit functions.
 FASTMOD_API uint64_t mul128_u64(__uint128_t lowbits, uint64_t d) {
-    __uint128_t bottom_half = (lowbits & UINT64_C(0xFFFFFFFFFFFFFFFF)) * d;  // Won't overflow
-    bottom_half >>= 64;  // Only need the top 64 bits, as we'll shift the lower half away;
-    __uint128_t top_half = (lowbits >> 64) * d;
-    __uint128_t both_halves = bottom_half + top_half;  // Both halves are already shifted down by 64
-    both_halves >>= 64;                                // Get top half of both_halves
-    return (uint64_t)both_halves;
+  __uint128_t bottom_half =
+      (lowbits & UINT64_C(0xFFFFFFFFFFFFFFFF)) * d;  // Won't overflow
+  bottom_half >>=
+      64;  // Only need the top 64 bits, as we'll shift the lower half away;
+  __uint128_t top_half = (lowbits >> 64) * d;
+  __uint128_t both_halves =
+      bottom_half + top_half;  // Both halves are already shifted down by 64
+  both_halves >>= 64;          // Get top half of both_halves
+  return (uint64_t) both_halves;
 }
 
 #endif  // _MSC_VER
@@ -75,24 +79,22 @@ FASTMOD_API uint64_t mul128_u64(__uint128_t lowbits, uint64_t d) {
 
 // M = ceil( (1<<64) / d ), d > 0
 FASTMOD_API uint64_t computeM_u32(uint32_t d) {
-    return UINT64_C(0xFFFFFFFFFFFFFFFF) / d + 1;
+  return UINT64_C(0xFFFFFFFFFFFFFFFF) / d + 1;
 }
 
 // fastmod computes (a % d) given precomputed M
 FASTMOD_API uint32_t fastmod_u32(uint32_t a, uint64_t M, uint32_t d) {
-    uint64_t lowbits = M * a;
-    return (uint32_t)(mul128_u32(lowbits, d));
+  uint64_t lowbits = M * a;
+  return (uint32_t) (mul128_u32(lowbits, d));
 }
 
 // fastmod computes (a / d) given precomputed M for d>1
 FASTMOD_API uint32_t fastdiv_u32(uint32_t a, uint64_t M) {
-    return (uint32_t)(mul128_u32(M, a));
+  return (uint32_t) (mul128_u32(M, a));
 }
 
 // given precomputed M, checks whether n % d == 0
-FASTMOD_API bool is_divisible(uint32_t n, uint64_t M) {
-    return n * M <= M - 1;
-}
+FASTMOD_API bool is_divisible(uint32_t n, uint64_t M) { return n * M <= M - 1; }
 
 /**
  * signed integers
@@ -107,26 +109,28 @@ FASTMOD_API bool is_divisible(uint32_t n, uint64_t M) {
 // you must have that d is different from 0 and -2147483648
 // if d = -1 and a = -2147483648, the result is undefined
 FASTMOD_API uint64_t computeM_s32(int32_t d) {
-    if (d < 0) d = -d;
-    return UINT64_C(0xFFFFFFFFFFFFFFFF) / d + 1 + ((d & (d - 1)) == 0 ? 1 : 0);
+  if (d < 0)
+    d = -d;
+  return UINT64_C(0xFFFFFFFFFFFFFFFF) / d + 1 + ((d & (d - 1)) == 0 ? 1 : 0);
 }
 
 // fastmod computes (a % d) given precomputed M,
 // you should pass the absolute value of d
 FASTMOD_API int32_t fastmod_s32(int32_t a, uint64_t M, int32_t positive_d) {
-    uint64_t lowbits = M * a;
-    int32_t highbits = mul128_u32(lowbits, positive_d);
-    return highbits - ((positive_d - 1) & (a >> 31));
+  uint64_t lowbits = M * a;
+  int32_t highbits = mul128_u32(lowbits, positive_d);
+  return highbits - ((positive_d - 1) & (a >> 31));
 }
 
 #ifndef _MSC_VER
 // fastmod computes (a / d) given precomputed M, assumes that d must not
 // be one of -1, 1, or -2147483648
 FASTMOD_API int32_t fastdiv_s32(int32_t a, uint64_t M, int32_t d) {
-    uint64_t highbits = mul128_s32(M, a);
-    highbits += (a < 0 ? 1 : 0);
-    if (d < 0) return -(int32_t)(highbits);
-    return (int32_t)(highbits);
+  uint64_t highbits = mul128_s32(M, a);
+  highbits += (a < 0 ? 1 : 0);
+  if (d < 0)
+    return -(int32_t) (highbits);
+  return (int32_t) (highbits);
 }
 
 // What follows is the 64-bit functions.
@@ -136,33 +140,34 @@ FASTMOD_API int32_t fastdiv_s32(int32_t a, uint64_t M, int32_t d) {
 // can produce.
 
 FASTMOD_API __uint128_t computeM_u64(uint64_t d) {
-    // what follows is just ((__uint128_t)0 - 1) / d) + 1 spelled out
-    __uint128_t M = UINT64_C(0xFFFFFFFFFFFFFFFF);
-    M <<= 64;
-    M |= UINT64_C(0xFFFFFFFFFFFFFFFF);
-    M /= d;
-    M += 1;
-    return M;
+  // what follows is just ((__uint128_t)0 - 1) / d) + 1 spelled out
+  __uint128_t M = UINT64_C(0xFFFFFFFFFFFFFFFF);
+  M <<= 64;
+  M |= UINT64_C(0xFFFFFFFFFFFFFFFF);
+  M /= d;
+  M += 1;
+  return M;
 }
 
 FASTMOD_API __uint128_t computeM_s64(int64_t d) {
-    if (d < 0) d = -d;
-    __uint128_t M = UINT64_C(0xFFFFFFFFFFFFFFFF);
-    M <<= 64;
-    M |= UINT64_C(0xFFFFFFFFFFFFFFFF);
-    M /= d;
-    M += 1;
-    M += ((d & (d - 1)) == 0 ? 1 : 0);
-    return M;
+  if (d < 0)
+    d = -d;
+  __uint128_t M = UINT64_C(0xFFFFFFFFFFFFFFFF);
+  M <<= 64;
+  M |= UINT64_C(0xFFFFFFFFFFFFFFFF);
+  M /= d;
+  M += 1;
+  M += ((d & (d - 1)) == 0 ? 1 : 0);
+  return M;
 }
 
 FASTMOD_API uint64_t fastmod_u64(uint64_t a, __uint128_t M, uint64_t d) {
-    __uint128_t lowbits = M * a;
-    return mul128_u64(lowbits, d);
+  __uint128_t lowbits = M * a;
+  return mul128_u64(lowbits, d);
 }
 
 FASTMOD_API uint64_t fastdiv_u64(uint64_t a, __uint128_t M) {
-    return mul128_u64(M, a);
+  return mul128_u64(M, a);
 }
 
 // End of the 64-bit functions
@@ -173,31 +178,31 @@ FASTMOD_API uint64_t fastdiv_u64(uint64_t a, __uint128_t M) {
 
 template <uint32_t d>
 FASTMOD_API uint32_t fastmod(uint32_t x) {
-    FASTMOD_CONSTEXPR uint64_t v = computeM_u32(d);
-    return fastmod_u32(x, v, d);
+  FASTMOD_CONSTEXPR uint64_t v = computeM_u32(d);
+  return fastmod_u32(x, v, d);
 }
 template <uint32_t d>
 FASTMOD_API uint32_t fastdiv(uint32_t x) {
-    FASTMOD_CONSTEXPR uint64_t v = computeM_u32(d);
-    return fastdiv_u32(x, v);
+  FASTMOD_CONSTEXPR uint64_t v = computeM_u32(d);
+  return fastdiv_u32(x, v);
 }
 template <int32_t d>
 FASTMOD_API int32_t fastmod(int32_t x) {
-    FASTMOD_CONSTEXPR uint64_t v = computeM_s32(d);
-    return fastmod_s32(x, v, d);
+  FASTMOD_CONSTEXPR uint64_t v = computeM_s32(d);
+  return fastmod_s32(x, v, d);
 }
 template <int32_t d>
 FASTMOD_API int32_t fastdiv(int32_t x) {
-    FASTMOD_CONSTEXPR uint64_t v = computeM_s32(d);
-    return fastdiv_s32(x, v, d);
+  FASTMOD_CONSTEXPR uint64_t v = computeM_s32(d);
+  return fastdiv_s32(x, v, d);
 }
 
 }  // fastmod
 #endif
 
-// There's no reason to polute the global scope with this macro once its use ends
-// This won't create any problems as the preprocessor will have done its thing once
-// it reaches this point
+// There's no reason to polute the global scope with this macro once its use
+// ends This won't create any problems as the preprocessor will have done its
+// thing once it reaches this point
 #undef FASTMOD_API
 #undef FASTMOD_CONSTEXPR
 

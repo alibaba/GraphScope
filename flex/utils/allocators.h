@@ -36,8 +36,7 @@ class ArenaAllocator {
         cur_loc_(0),
         cur_size_(0),
         allocated_memory_(0),
-	allocated_batches_(0)
-  {
+        allocated_batches_(0) {
     if (strategy_ != MemoryStrategy::kSyncToFile) {
       prefix_.clear();
     }
