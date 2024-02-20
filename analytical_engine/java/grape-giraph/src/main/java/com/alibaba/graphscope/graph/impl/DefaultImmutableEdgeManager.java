@@ -36,7 +36,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 /**
- * Defeault edge manager, which extract all edata and oids from grape before accessing them in
+ * Default edge manager, which extract all edata and oids from grape before accessing them in
  * queries.
  *
  * @param <GRAPE_OID_T>

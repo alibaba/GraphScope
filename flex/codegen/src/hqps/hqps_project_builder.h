@@ -297,7 +297,7 @@ std::string project_mapping_to_string(
     BuildingContext& ctx, const physical::Project::ExprAlias& mapping,
     TagIndMapping& new_tag_ind_map) {
   int32_t res_alias = mapping.alias().value();
-  // TODO: Currenly we assume each expr_alias contains only property for that
+  // TODO: Currently we assume each expr_alias contains only property for that
   // input tag
 
   auto real_res_alias = new_tag_ind_map.CreateOrGetTagInd(res_alias);

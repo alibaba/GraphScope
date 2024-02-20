@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y vim wget \
       libboost-all-dev
 RUN apt-get install -y maven openssl \
       gcc make python3 libyaml-cpp-dev \
-      libc-ares-dev doxygen python3-pip net-tools curl
+      libc-ares-dev doxygen python3-pip net-tools curl libncurses5-dev
 
 # install libgrape-lite
 RUN cd /tmp && \

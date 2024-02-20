@@ -21,7 +21,7 @@ import inspect
 from graphscope.proto import error_codes_pb2
 from graphscope.proto import op_def_pb2
 
-# All kinds of Graphscope error.
+# All kinds of GraphScope error.
 __all__ = [
     "NotFoundError",
     "VineyardError",

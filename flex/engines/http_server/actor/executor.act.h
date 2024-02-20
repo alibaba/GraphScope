@@ -31,7 +31,7 @@ class ANNOTATION(actor:impl) executor : public hiactor::actor {
   seastar::future<query_result> ANNOTATION(actor:method) run_graph_db_query(query_param&& param);
 
 
-  // DECLARE_RUN_QUERYS;
+  // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.
   ACTOR_DO_WORK()
 

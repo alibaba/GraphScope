@@ -350,7 +350,7 @@ impl Operator {
         result
     }
 
-    // cancel output data of the scope on output port: `port`, if all output ports have canceled outputing
+    // cancel output data of the scope on output port: `port`, if all output ports have canceled outputting
     // this scope, the operator will cancel consuming the data of this scope, and try to notify its upstream
     // don't producing data of this scope to it;
     pub fn cancel(&mut self, port: usize, tag: Tag) -> Result<(), JobExecError> {

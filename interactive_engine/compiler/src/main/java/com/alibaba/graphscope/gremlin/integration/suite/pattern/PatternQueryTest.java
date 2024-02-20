@@ -25,6 +25,8 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Map;
+
 public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_pattern_1_test();
 
@@ -59,6 +61,8 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_pattern_16_test();
 
     public abstract Traversal<Vertex, Long> get_pattern_17_test();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_limit_100_group_test();
 
     @Test
     public void run_pattern_1_test() {
@@ -177,6 +181,15 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         Traversal<Vertex, Long> traversal = this.get_pattern_17_test();
         this.printTraversalForm(traversal);
         Assert.assertEquals(17367L, traversal.next().longValue());
+    }
+
+    @Test
+    public void run_g_V_limit_100_group_test() {
+        Traversal<Vertex, Map<Object, Object>> traversal = this.get_g_V_limit_100_group_test();
+        this.printTraversalForm(traversal);
+        Map<Object, Object> map = traversal.next();
+        Assert.assertEquals(100, map.size());
+        Assert.assertFalse(traversal.hasNext());
     }
 
     public static class Traversals extends PatternQueryTest {
@@ -385,6 +398,11 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                                     .hasLabel("TAG")
                                     .as("b"))
                     .count();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_limit_100_group_test() {
+            return g.V().hasLabel("PERSON").limit(100).group().by("id").by(__.count());
         }
     }
 }

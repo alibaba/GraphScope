@@ -404,7 +404,7 @@ fn partial_tokens_to_tokens(mut tokens: &[PartialToken]) -> ExprResult<Vec<Token
                     match &second {
                         // Be aware that minus can represent both subtraction or negative sign
                         // if it is a negative sign, it must be directly trailed by a number.
-                        // However, we can not actually tell whether the case "x -y", is actually
+                        // However, we cannot actually tell whether the case "x -y", is actually
                         // subtracting x by y, or -y must be treated as a number.
                         Some(PartialToken::Literal(literal)) => {
                             // Must check whether previous is what

@@ -276,7 +276,7 @@ class AWSLauncher(Launcher):
                 # A waiter is something which polls AWS to find out if an operation
                 # has completed.
                 waiter = self._cf.get_waiter("stack_create_complete")
-                # Wait for stack creation to complet
+                # Wait for stack creation to complete
                 waiter.wait(StackName=vpc_name)
             except Exception as e:
                 # If waiter fails, that'll be the thing taking too long to deploy.

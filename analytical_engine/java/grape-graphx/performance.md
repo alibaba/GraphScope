@@ -3,7 +3,7 @@
 We test GraphScope for GraphX in end-to-end scenarios to measure the performance improvement of graph computing on Spark GraphX. This includes:
 - Graph loading: loading graphs from the file system into memory in the form of a graph
 - RDD Op: transforming the graph using RDD-defined operators
-- Pregel computin: running graph algorithms based on GraphX Pregel, such as SSSP, PageRank, and CC
+- Pregel computing: running graph algorithms based on GraphX Pregel, such as SSSP, PageRank, and CC
 
 ##  Settings:
 

@@ -352,7 +352,7 @@ if (${LIBUNWIND_FOUND})
     target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
 endif ()
 
-# An executable to work around for graphx pregel.
+# An executable workaround for graphx pregel.
 if (ENABLE_JAVA_SDK)
     add_executable(graphx_runner core/java/graphx_runner.cc core/java/javasdk.cc)
     target_include_directories(graphx_runner PRIVATE core utils apps)
@@ -502,7 +502,7 @@ if(ENABLE_JAVA_SDK)
     set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/grape-graphx/target/grape-graphx-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GIRAPH_JAR "${GAE_JAVA_DIR}/grape-giraph/target/grape-giraph-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
-    # condiationally set grape-jni's name according to platform
+    # conditionally set grape-jni's name according to platform
     if (APPLE)
         set(GAE_JAVA_JNI_LIB "${GAE_JAVA_DIR}/grape-runtime/target/native/libgrape-jni.dylib")
     else ()

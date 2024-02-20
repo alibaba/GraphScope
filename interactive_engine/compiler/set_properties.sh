@@ -32,6 +32,8 @@ cypher_server_port="neo4j.bolt.server.port: $CYPHER_SERVER_PORT";
 
 frontend_query_per_second_limit="frontend.query.per.second.limit: $FRONTEND_QUERY_PER_SECOND_LIMIT"
 
+gremlin_script_language_name="gremlin.script.language.name: $GREMLIN_SCRIPT_LANGUAGE_NAME"
+
 count=1;
 while (($count<$SERVERSSIZE))
 do
@@ -43,6 +45,6 @@ done
 
 graph_schema="graph.schema: $GRAPH_SCHEMA"
 
-properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$frontend_query_per_second_limit"
+properties="$worker_num\n$timeout\n$batch_size\n$output_capacity\n$hosts\n$server_num\n$graph_schema\n$gremlin_server_port\n$cypher_server_port\n$frontend_query_per_second_limit\n$gremlin_script_language_name"
 
 echo -e $properties > ./conf/ir.compiler.properties

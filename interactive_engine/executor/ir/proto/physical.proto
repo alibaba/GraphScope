@@ -112,9 +112,9 @@ message Join {
     // aka. Cartesian product
     TIMES = 6;
   }
-  // The key to perferm Join (on results output by left_plan)
+  // The key to perform Join (on results output by left_plan)
   repeated common.Variable left_keys = 1;
-  // The key to perferm Join (on results output by right_plan)
+  // The key to perform Join (on results output by right_plan)
   repeated common.Variable right_keys = 2;
   JoinKind join_kind = 3;
   PhysicalPlan left_plan = 4;

@@ -41,11 +41,11 @@ ENV HOME=/home/graphscope
 # - Run cp ../_package/actions-runner-linux-x64-2.280.3.tar.gz ../../actions-runner-controller/runner/
 #   - Beware that `2.280.3` might change across versions
 #
-# See https://github.com/actions/runner/blob/main/.github/workflows/release.yml for more informatino on how you can use dev.sh
+# See https://github.com/actions/runner/blob/main/.github/workflows/release.yml for more information on how you can use dev.sh
 #
 # If you're willing to uncomment the following line, you'd also need to comment-out the
 #   && curl -L -o runner.tar.gz https://github.com/actions/runner/releases/download/v${RUNNER_VERSION}/actions-runner-linux-${ARCH}-${RUNNER_VERSION}.tar.gz \
-# line in the next `RUN` command in this Dockerfile, to avoid overwirting this runner.tar.gz with a remote one.
+# line in the next `RUN` command in this Dockerfile, to avoid overwriting this runner.tar.gz with a remote one.
 
 # COPY actions-runner-linux-x64-2.280.3.tar.gz /runnertmp/runner.tar.gz
 

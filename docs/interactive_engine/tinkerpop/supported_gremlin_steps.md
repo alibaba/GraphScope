@@ -594,7 +594,7 @@ g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 # vertices and edges can be duplicated, and all vertices and edges along the path should be kept
 g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'ALL_V_E')
 # expand hops within the range of [1, 10) along the outgoing edges,
-# vertices can not be duplicated and all vertices should be kept
+# vertices cannot be duplicated and all vertices should be kept
 g.V().out("1..10").with('PATH_OPT', 'SIMPLE').with('RESULT_OPT', 'ALL_V')
 # = g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 g.V().out("1..10")

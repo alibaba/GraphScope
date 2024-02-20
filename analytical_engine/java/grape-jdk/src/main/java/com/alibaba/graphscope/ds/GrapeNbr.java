@@ -30,7 +30,7 @@ import com.alibaba.fastffi.FFIGetter;
 import com.alibaba.fastffi.FFITypeAlias;
 
 /**
- * Java wrpper for <a
+ * Java wrapper for <a
  * href="https://github.com/alibaba/libgrape-lite/blob/master/grape/graph/adj_list.h#L35">grape::Nbr</a>,
  * representing an edge with dst vertex and edge data.
  *

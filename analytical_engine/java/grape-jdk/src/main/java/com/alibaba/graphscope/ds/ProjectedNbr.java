@@ -62,7 +62,7 @@ public interface ProjectedNbr<VID_T, EDATA_T> extends NbrBase<VID_T, EDATA_T> {
     /**
      * Self increment.
      *
-     * @return increated pointer.
+     * @return incremented pointer.
      */
     @CXXOperator("++")
     @CXXReference

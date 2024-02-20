@@ -170,7 +170,7 @@ def load_from(
              Defaults to False.
     """
 
-    # Don't import the :code:`nx` in top-level statments to improve the
+    # Don't import the :code:`nx` in top-level statements to improve the
     # performance of :code:`import graphscope`.
     from graphscope import nx
 

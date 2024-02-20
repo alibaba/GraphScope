@@ -62,8 +62,8 @@ class TypedEmptyColumn : public ColumnBase {
 template <>
 class TypedEmptyColumn<std::string_view> : public ColumnBase {
  public:
-  TypedEmptyColumn(int32_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH)
-      : max_length_(max_length) {}
+  TypedEmptyColumn(
+      int32_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH) {}
   ~TypedEmptyColumn() {}
 
   void open(const std::string& name, const std::string& snapshot_dir,
@@ -96,9 +96,6 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
   StorageStrategy storage_strategy() const override {
     return StorageStrategy::kNone;
   }
-
- private:
-  int32_t max_length_;
 };
 
 using IntEmptyColumn = TypedEmptyColumn<int32_t>;

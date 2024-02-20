@@ -664,7 +664,7 @@ class EdgeExpand {
 
     for (size_t i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
-      // return a hanlder to get edges
+      // return a handler to get edges
       std::vector<vertex_id_t> cur_src_vids;
       std::vector<int32_t> cur_active_inds;
       if (direction == Direction::Out || direction == Direction::Both) {
@@ -784,7 +784,7 @@ class EdgeExpand {
     auto prop_names_vec = prop_names_to_vec<PropTuple...>(prop_names);
     for (size_t i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
-      // return a hanlder to get edges
+      // return a handler to get edges
       auto sub_graph_vec = graph.GetSubGraph(
           edge_labels[i][0], edge_labels[i][1], edge_labels[i][2],
           gs::to_string(direction), prop_names_vec[i]);
@@ -901,7 +901,7 @@ class EdgeExpand {
     auto prop_names_vec = prop_names_to_vec<PropTuple...>(prop_names);
     for (size_t i = 0; i < edge_labels.size(); ++i) {
       // Check whether the edge triplet match input vertices.
-      // return a hanlder to get edges
+      // return a handler to get edges
       auto sub_graph_vec = graph.GetSubGraph(
           edge_labels[i][0], edge_labels[i][1], edge_labels[i][2],
           gs::to_string(direction), prop_names_vec[i]);

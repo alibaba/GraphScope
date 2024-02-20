@@ -19,11 +19,13 @@
 #include <tuple>
 #include <vector>
 
-#include "flex/engines/hqps_db/structures/collection.h"
 #include "grape/util.h"
 
 // Vertex set in with data in rows.
 namespace gs {
+
+template <typename T>
+class Collection;
 
 namespace internal {
 
@@ -1137,7 +1139,7 @@ class RowVertexSetImpl {
                          repeat_array);
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names) {
@@ -1300,9 +1302,6 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   // Filter current vertices with expression.
   template <typename EXPR>
   std::pair<self_type_t, std::vector<offset_t>> Filter(EXPR&& expr) {
-    // Expression contains the property name, we extract vertex store here.
-    static constexpr size_t num_args = EXPR::num_args;
-
     size_t cur = 0;
     std::vector<offset_t> offset;
     std::vector<lid_t> res_lids;
@@ -1428,14 +1427,14 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
                                                   std::move(new_datas));
   }
 
-  // Removed_indices is not repest to current set's indices.
+  // Removed_indices is not with respect to current set's indices.
   // It refer to the indices_range's index.
   // removed = [1]
   // indices_range = [0, 3, 5, 8]
   // Then we should remove eles in [3,5)
   // indices became
   // [0, 3, 6],
-  // num _elemenst 8 -> 6
+  // num _elements 8 -> 6
   // return the new offset range
   std::vector<offset_t> SubSetWithRemovedIndices(
       std::vector<size_t>& removed_indices,

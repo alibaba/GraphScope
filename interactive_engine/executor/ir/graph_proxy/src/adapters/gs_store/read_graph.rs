@@ -106,7 +106,7 @@ where
             let column_filter_pushdown = self.column_filter_pushdown;
             // props that will be returned by storage layer
             let prop_ids = if column_filter_pushdown {
-                // props that will be used in futher compute
+                // props that will be used in further computations
                 let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
                 if row_filter_exists_but_not_pushdown {
                     // need to call filter_limit!, so get columns in row_filter and params.columns
@@ -241,7 +241,7 @@ where
         let column_filter_pushdown = self.column_filter_pushdown;
         // also need props in filter, because `filter_limit!`
         let prop_ids = if column_filter_pushdown {
-            // props that will be used in futher compute
+            // props that will be used in further computations
             let cache_prop_ids = encode_storage_prop_keys(params.columns.as_ref())?;
             extract_needed_columns(params.filter.as_ref(), cache_prop_ids.as_ref())?
         } else {
@@ -452,7 +452,7 @@ where
 
     fn count_vertex(&self, params: &QueryParams) -> GraphProxyResult<u64> {
         if params.filter.is_some() {
-            // the filter can not be pushed down to store,
+            // the filter cannot be pushed down to store,
             // so we need to scan all vertices with filter and then count
             Ok(self.scan_vertex(params)?.count() as u64)
         } else {

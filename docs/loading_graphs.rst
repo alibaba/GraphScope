@@ -33,7 +33,7 @@ However, in kubernetes mode, it's not trivial to download the data to the pod's 
 
 Here, we first created a `Session` in a Kubernetes cluster, and mount the dataset bucket to :file:`/dataset`, this path is relative to Pods. Then we pass that session as first parameter, and :file:`/dataset/ogbn_mag_small` as second parameter. The :file:`/dataset` is the root path of datasets which we have assigned by `mount_dataset`, the `ogbn_mag_small` is the sub folder name of the dataset.
 
-You can view all avaiable datasets in `here <https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset>`_ , and get details description and usage in those source files.
+You can view all available datasets in `here <https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset>`_ , and get details description and usage in those source files.
 
 
 
@@ -80,7 +80,7 @@ A simple example:
     graph = sess.g()
     graph = graph.add_vertices('/home/ldbc_sample/person_0_0.csv')
 
-It will read data from the the location :file:`/home/ldbc_sample/person_0_0.csv`. Since we didn't give additional arguments, these vertices will be labeled ``_`` by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.
+It will read data from the location :file:`/home/ldbc_sample/person_0_0.csv`. Since we didn't give additional arguments, these vertices will be labeled ``_`` by default, using the first column in the file as their ID, and other columns as their properties. Both the names and data types of properties will be deduced.
 
 Another commonly used parameter is label:
 
@@ -255,7 +255,7 @@ but with different source and destination labels.
 
 .. note:
 
-   1. This feature(multiple relations using same edge label) is only avaiable in `lazy` mode yet.
+   1. This feature(multiple relations using same edge label) is only available in `lazy` mode yet.
    2. It is worth noting that for several configurations in the side `Label`, 
       the attributes should be the same in number and type, and preferably 
       have the same name, because the data of the same `Label` will be put into one Table, 

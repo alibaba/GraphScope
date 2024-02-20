@@ -3,7 +3,7 @@
 [Apache Spark](https://spark.apache.org/) is a famous engine for large-scale data analytics. [Spark GraphX](https://spark.apache.org/graphx/) is Spark's graph
 computing module, which provides  flexible and efficient graph computation framework.
 
-Graphscope is also developed to be integrated with Spark GraphX. User can easily deploy a graphscope cluster co-located with spark cluster. And by switch `SparkSession` to `GSSparkSession`, user can experience up to 7 times performance 
+GraphScope is also developed to be integrated with Spark GraphX. User can easily deploy a graphscope cluster co-located with spark cluster. And by switch `SparkSession` to `GSSparkSession`, user can experience up to 7 times performance 
 improvement when running GraphX algorithms.
 
 ## Deploy GraphScope along with Spark
@@ -43,13 +43,13 @@ wget https://raw.githubusercontent.com/GraphScope/gstest/master/p2p-31.e /home/g
 wget https://graphscope.oss-cn-beijing.aliyuncs.com/jar/grape-demo-0.19.0-shaded.jar /home/graphscope/grape-demo-0.19.0-shaded.jar
 ```
 
-Different from Giraph-on-Graphscope, for GraphX-GraphScope integration, we need to submit jobs to spark cluster, not with GraphScope python client.
+Different from Giraph-on-GraphScope, for GraphX-GraphScope integration, we need to submit jobs to spark cluster, not with GraphScope python client.
 
 
 ### Submit to Spark
 
 ```bash
-# Path to Graphscope jars is need for running graphx algo on GraphScope.
+# Path to GraphScope jars is need for running graphx algo on GraphScope.
 # FIXME(yuansi): Here we assume env var GRAPHSCOPE_HOME available in environment.
 export GS_JARS=`ls ${GRAPHSCOPE_HOME}/lib/grape-graphx-*.jar`:`ls ${GRAPHSCOPE_HOME}/lib/grape-runtime-*.jar` 
 
@@ -70,7 +70,7 @@ Remember to replace the placeholders like `${master_url}` with actual cluster ur
 ## Run customized GraphX apps
 
 To develop your GraphX algorithms which can run on GraphScope, users shall program towards the RDD interfaces provided by Spark GraphX, since all GraphX interfaces are
-supported by Graphscope.
+supported by GraphScope.
 
 ### Include dependency
 

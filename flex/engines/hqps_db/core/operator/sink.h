@@ -390,13 +390,13 @@ class SinkOp {
         new_col->mutable_name_or_id()->set_id(tag_id);
         auto vertex =
             new_col->mutable_entry()->mutable_element()->mutable_vertex();
-        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         if (bitset.get_bit(i)) {
           label = labels[0];
         } else {
           label = labels[1];
         }
         vertex->mutable_label()->set_id(label);
+        vertex->set_id(encode_unique_vertex_id(label, vids[i]));
         // set properties.
         auto columns = column_ptrs[label];
         for (size_t j = 0; j < columns.size(); ++j) {
@@ -608,7 +608,7 @@ class SinkOp {
     }
   }
 
-  // sinke for tuple with one element
+  // sink for tuple with one element
   template <size_t Ind, size_t act_tag_id, typename T,
             typename std::enable_if<
                 (!gs::is_vector<T>::value) && (gs::is_tuple<T>::value) &&
@@ -926,10 +926,11 @@ class SinkOp {
   }
 
   // sink for compressed path set
-  template <size_t Ind, size_t act_tag_id, typename VID_T, typename LabelT>
+  template <size_t Ind, size_t act_tag_id, typename PATH_SET_T,
+            typename std::enable_if_t<(PATH_SET_T::is_path_set)>* = nullptr>
   static void sink_col_impl(const GRAPH_INTERFACE& graph,
                             results::CollectiveResults& results_vec,
-                            const CompressedPathSet<VID_T, LabelT>& path_set,
+                            const PATH_SET_T& path_set,
                             const std::vector<size_t>& repeat_offsets,
                             int32_t tag_id) {
     if (repeat_offsets.empty()) {
@@ -981,13 +982,24 @@ class SinkOp {
     }
   }
 
-  template <typename VID_T, typename LabelT>
-  static void add_path_to_pb(const Path<VID_T, LabelT>& path,
+  // TODO(zhanglei): This is temporary solution for sink path to results.
+  // Out physical plan will only generate EndV option, so we can only sink the
+  // end vertex to results.
+  // If we sink all vertices to results, cypher driver seems failed to parse
+  // paths of different lengths or what:
+  // <Tried to construct a path that is not built like a path: even number of
+  // elements>
+  static void add_path_to_pb(const Path<vid_t, label_id_t>& path,
                              results::GraphPath& mutable_path) {
-    auto& vertices = path.GetVertices();
-    for (size_t i = 0; i < vertices.size(); ++i) {
-      mutable_path.add_path()->mutable_vertex()->set_id(vertices[i]);
+    if (path.length() <= 0) {
+      return;
     }
+    vid_t vid;
+    label_id_t label;
+    std::tie(label, vid) = path.GetNode(path.length() - 1);
+    auto vertex = mutable_path.add_path()->mutable_vertex();
+    vertex->set_id(encode_unique_vertex_id(label, vid));
+    vertex->mutable_label()->set_id(label);
   }
 
   static vid_t encode_unique_vertex_id(label_id_t label_id, vid_t vid) {

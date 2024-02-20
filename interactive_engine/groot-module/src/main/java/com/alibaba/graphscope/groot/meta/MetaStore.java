@@ -17,7 +17,7 @@ import java.io.IOException;
 
 /**
  * Distributed, reliable storage used for SnapshotManager to persist Snapshot related meta. We can
- * implement this interface with Zookeeper
+ * implement this interface with ZooKeeper
  */
 public interface MetaStore {
 

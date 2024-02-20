@@ -7,6 +7,7 @@ from gs_flex_coordinator.models.column_mapping import ColumnMapping
 from gs_flex_coordinator.models.connection import Connection
 from gs_flex_coordinator.models.connection_status import ConnectionStatus
 from gs_flex_coordinator.models.deployment_info import DeploymentInfo
+from gs_flex_coordinator.models.deployment_info_graphs_info_value import DeploymentInfoGraphsInfoValue
 from gs_flex_coordinator.models.deployment_status import DeploymentStatus
 from gs_flex_coordinator.models.edge_mapping import EdgeMapping
 from gs_flex_coordinator.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner

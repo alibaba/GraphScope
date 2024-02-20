@@ -23,7 +23,7 @@ else()
         message(FATAL_ERROR "FLEX_INCLUDE_PREFIX not set")
 endif()
 
-# try to find mpi, if not found warnning
+# try to find mpi, if not found warning
 find_package(MPI)
 if (MPI_FOUND)
     include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})

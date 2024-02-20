@@ -43,7 +43,6 @@ class LimitOpBuilder {
   }
 
  private:
-  int32_t lower_, upper_;
   BuildingContext& context_;
   algebra::Range range_;
 };

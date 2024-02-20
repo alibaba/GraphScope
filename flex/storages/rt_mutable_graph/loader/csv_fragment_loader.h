@@ -43,7 +43,6 @@ class CSVStreamRecordBatchSupplier : public IRecordBatchSupplier {
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
  private:
-  label_t label_id_;
   std::string file_path_;
   std::shared_ptr<arrow::csv::StreamingReader> reader_;
 };
@@ -58,7 +57,6 @@ class CSVTableRecordBatchSupplier : public IRecordBatchSupplier {
   std::shared_ptr<arrow::RecordBatch> GetNextBatch() override;
 
  private:
-  label_t label_id_;
   std::string file_path_;
   std::shared_ptr<arrow::Table> table_;
   std::shared_ptr<arrow::TableBatchReader> reader_;

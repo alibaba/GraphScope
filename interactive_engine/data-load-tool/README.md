@@ -45,7 +45,7 @@ The first line of the data file is a header that describes the key of each field
 If there is no header in the data file, you need to set `skip.header` to `false` in the data building process 
 (For details, see params description in "Building a partitioned graph").
 
-The rest lines are the data records. Each line represents one record. Data fields are seperated by a custom separator 
+The rest lines are the data records. Each line represents one record. Data fields are separated by a custom separator 
 ("|" in the example above). In the vertex data file `person.csv`, `id` field and `name` field are the primary-key and 
 the property of the vertex type `person` respectively. In the edge data file `person_knows_person.csv`, `person_id` 
 field is the primary-key of the source vertex, `person_id_1` field is the primary-key of the destination vertex, `date` 

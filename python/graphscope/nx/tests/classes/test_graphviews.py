@@ -155,7 +155,7 @@ class TestChainsOfViews(test_gvs.TestChainsOfViews):
         assert edges[1] in ((5, 6), (6, 5))
 
     def test_reverse_subgraph_toundirected(self):
-        # a view can not project subgraph in graphscope.nx
+        # a view cannot project subgraph in graphscope.nx
         G = self.DG.reverse()
         SG = G.subgraph([4, 5, 6])
         SSG = SG.to_undirected()

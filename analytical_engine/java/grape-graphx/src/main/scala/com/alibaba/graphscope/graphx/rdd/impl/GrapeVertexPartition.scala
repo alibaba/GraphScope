@@ -513,7 +513,7 @@ object GrapeVertexPartition extends Logging {
 
   /** @param pid
     * @param initialized
-    *   inidicate whether the pushed vertex data store has been filled with data array in shuffle
+    *   indicates whether the pushed vertex data store has been filled with data array in shuffle
     * @param store
     */
   def setVertexStore(

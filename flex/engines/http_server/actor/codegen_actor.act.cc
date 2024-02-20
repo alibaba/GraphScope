@@ -39,7 +39,7 @@ codegen_actor::codegen_actor(hiactor::actor_base* exec_ctx,
 
 seastar::future<query_result> codegen_actor::do_codegen(query_param&& param) {
   LOG(INFO) << "Running codegen for " << param.content.size();
-  // The received query's pay load shoud be able to deserialze to physical plan
+  // The received query's pay load should be able to deserialize to physical plan
   auto& str = param.content;
   if (str.size() <= 0) {
     LOG(INFO) << "Empty query";

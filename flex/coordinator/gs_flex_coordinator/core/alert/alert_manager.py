@@ -98,7 +98,7 @@ class AlertManager(object):
     ) -> List[AlertMessage]:
         enable_filter = True
         if start_time is None and end_time is not None:
-            # None -> date, fetch end day's messages, and disable date fileter
+            # None -> date, fetch end day's messages, and disable date filter
             enable_filter = False
             end_date_filter = decode_datetimestr(end_time)
             start_date_filter = end_date_filter
@@ -107,7 +107,7 @@ class AlertManager(object):
             start_date_filter = decode_datetimestr(start_time)
             end_date_filter = datetime.datetime.now()
         elif start_time is None and end_time is None:
-            # None -> None, fetch today's messages, and disable date fileter
+            # None -> None, fetch today's messages, and disable date filter
             enable_filter = False
             start_date_filter = end_date_filter = datetime.datetime.now()
         else:

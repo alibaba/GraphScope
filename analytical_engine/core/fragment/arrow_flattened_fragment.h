@@ -242,7 +242,7 @@ struct NbrDefault {
 };
 
 /**
- * @brief Union of all iteratable adjencent lists of a vertex. The union
+ * @brief Union of all iteratable adjacent lists of a vertex. The union
  * list contains all neighbors in format of NbrDefault, which contains the other
  * Node and the data on the Edge. The lists must be non-empty to construct the
  * UnionAdjList.
@@ -313,7 +313,7 @@ class UnionAdjList {
 
     pointer_type operator->() noexcept { return &curr_nbr_; }
 
-    // The only the interator's `operator++()` is exposed to the external
+    // Only the iterator's `operator++()` is exposed to the external
     // programs so we only need to check the validity here, and nothing
     // to do with the `operator++()` of NbrDefault.
     inline void move_to_next_valid_nbr() {
@@ -387,7 +387,7 @@ class UnionAdjList {
 
     pointer_type operator->() noexcept { return curr_nbr_; }
 
-    // The only the interator's `operator++()` is exposed to the external
+    // The only the iterator's `operator++()` is exposed to the external
     // programs so we only need to check the validity here, and nothing
     // to do with the `operator++()` of NbrDefault.
     inline void move_to_next_valid_nbr() {

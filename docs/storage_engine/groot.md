@@ -7,7 +7,7 @@ In addition to Vineyard, the in-memory columnar graph store supported in GraphSc
 The store is a distributed graph store built on top of the popular RocksDB key-value store. It adopts a row-oriented design to support frequent small updates to the graph. Each row is tagged with a snapshot ID as its version. A query reads the most recent version of rows relative to the snapshot ID when it starts and is hence not blocked by writes. For writes, we take a compromise between consistency and higher throughput. In our design, writes in the same session can be grouped and executed atomically as a unit, and the persistent store assigns a snapshot ID (which is a low-resolution timestamp of the current time) to each group and executes groups of writes by the order of their snapshot IDs and by a deterministic (though arbitrary) order for groups of writes that occur in the same snapshot ID. It provides high write throughput while still maintaining some degree of order and isolation, although it provides less consistency than strict snapshot isolation common in databases. We hope our design choice provides an interesting trade-off for practical usage.
 
 ## Known Limitation
-Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.
+Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going forward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.
 
 ## Deploy Groot
 
@@ -397,7 +397,7 @@ person_id|person_id_1|date
 
 The first line of the data file is a header that describes the key of each field. The header is not required. If there is no header in the data file, you need to set skip.header to true in the data building process (For details, see params description in “Building a partitioned graph”).
 
-The rest lines are the data records. Each line represents one record. Data fields are seperated by a custom seperator (“|” in the example above). In the vertex data file person.csv, id field and name field are the primary-key and the property of the vertex type person respectively. In the edge data file person_knows_person.csv, person_id field is the primary-key of the source vertex, person_id_1 field is the primary-key of the destination vertex, date is the property of the edge type knows.
+The rest lines are the data records. Each line represents one record. Data fields are separated by a custom separator (“|” in the example above). In the vertex data file person.csv, id field and name field are the primary-key and the property of the vertex type person respectively. In the edge data file person_knows_person.csv, person_id field is the primary-key of the source vertex, person_id_1 field is the primary-key of the destination vertex, date is the property of the edge type knows.
 
 All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.
 
@@ -503,7 +503,7 @@ def insert_vertices(self, vertices: list) -> int: pass
 # Update one vertex to new properties
 def update_vertex_properties(self, vertex: VertexRecordKey, properties: dict) -> int: pass
 
-# Delele one vertex
+# Delete one vertex
 def delete_vertex(self, vertex_pk: VertexRecordKey) -> int: pass
 
 # Delete a list of vertices
@@ -524,7 +524,7 @@ def delete_edge(self, edge: EdgeRecordKey) -> int: pass
 # Delete a list of edges
 def delete_edges(self, edge_pks: list) -> int: pass
 
-# Make sure the snapshot is avaiable
+# Make sure the snapshot is available
 def remote_flush(self, snapshot_id: int): pass
 ```
 

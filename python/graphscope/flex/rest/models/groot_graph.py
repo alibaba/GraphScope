@@ -18,16 +18,12 @@ import pprint
 import re  # noqa: F401
 import json
 
-
+from pydantic import BaseModel, Field, StrictBool, StrictStr
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictBool, StrictStr
-from pydantic import Field
 from graphscope.flex.rest.models.groot_graph_gremlin_interface import GrootGraphGremlinInterface
 from graphscope.flex.rest.models.groot_schema import GrootSchema
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class GrootGraph(BaseModel):
     """
@@ -57,7 +53,7 @@ class GrootGraph(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of GrootGraph from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -71,10 +67,12 @@ class GrootGraph(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of var_schema
@@ -86,7 +84,7 @@ class GrootGraph(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of GrootGraph from a dict"""
         if obj is None:
             return None
@@ -98,8 +96,8 @@ class GrootGraph(BaseModel):
             "name": obj.get("name"),
             "directed": obj.get("directed"),
             "creation_time": obj.get("creation_time"),
-            "schema": GrootSchema.from_dict(obj.get("schema")) if obj.get("schema") is not None else None,
-            "gremlin_interface": GrootGraphGremlinInterface.from_dict(obj.get("gremlin_interface")) if obj.get("gremlin_interface") is not None else None
+            "schema": GrootSchema.from_dict(obj["schema"]) if obj.get("schema") is not None else None,
+            "gremlin_interface": GrootGraphGremlinInterface.from_dict(obj["gremlin_interface"]) if obj.get("gremlin_interface") is not None else None
         })
         return _obj
 

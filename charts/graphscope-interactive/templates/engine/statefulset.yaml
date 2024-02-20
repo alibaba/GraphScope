@@ -71,7 +71,7 @@ spec:
                 echo "${ENGINE_BINARY_PATH} binary not found or not executable, exiting..."
                 exit 1
               fi
-              # always try to load the builin graph: gs_interactive_default_graph
+              # always try to load the built-in graph: gs_interactive_default_graph
               # for case CURRENT_GRAPH is not the default_graph, we assume the data is already loaded.
               # TODO.
               builtin_graph_schema_path="${INTERACTIVE_WORKSPACE}/data/${DEFAULT_GRAPH_NAME}/graph.yaml"

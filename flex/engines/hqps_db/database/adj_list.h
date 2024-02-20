@@ -77,7 +77,7 @@ class EdgeIter {
 };
 
 // A subGraph is a view of a simple graph, with one src label and one dst label.
-// Cound be empty.
+// Could be empty.
 template <typename LabelT, typename VID_T>
 class SubGraph {
  public:
@@ -324,7 +324,7 @@ class AdjList<T> {
   // copy constructor
   AdjList(const AdjList<T>& adj_list)
       : slice0_(adj_list.slice0_), slice1_(adj_list.slice1_) {}
-  // with sinle slice provided.
+  // with single slice provided.
   AdjList(const slice_t& slice0) : slice0_(slice0), slice1_() {}
   AdjList(const slice_t& slice0, const slice_t& slice1)
       : slice0_(slice0), slice1_(slice1) {}
@@ -586,7 +586,6 @@ class AdjListArray<grape::EmptyType> {
         dynamic_cast<const typed_csr_base_t*>(csr);
     if (casted_csr) {
       for (auto v : vids) {
-        auto edges = casted_csr->get_edges(v);
         slices_.emplace_back(
             std::make_pair(casted_csr->get_edges(v), slice_t()));
       }

@@ -346,7 +346,7 @@ function run_local_vertex_map() {
 }
 
 
-# The results of bfs and sssp_path is are non-determinstic.
+# The results of bfs and sssp_path is are non-deterministic.
 # The result of bfs is random because diamond-shaped subgraph,
 # e.g. there are four edges: 1->2, 1->3, 2->4, 3->4.
 # For vertex 4, result of bfs may come from vertex 2 or vertex 3.

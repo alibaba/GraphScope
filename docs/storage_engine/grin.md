@@ -71,7 +71,7 @@ The example demonstrates how to synchronize property values of vertices associat
                     GRIN_VERTEX u = grin_get_neighbor_from_adjacent_list(g, adj_list, k);  // get the dst vertex u
                     const void* value = grin_get_value_from_vertex_property_table(g, dst_vpt, u, dst_vp);  // get the property value of "features" of u
 
-                    GRIN_VERTEX_REF uref = grin_get_vertex_ref_for_vertex(g, u);  // get the reference of u that can be recoginized by other partitions
+                    GRIN_VERTEX_REF uref = grin_get_vertex_ref_for_vertex(g, u);  // get the reference of u that can be recognized by other partitions
                     GRIN_PARTITION u_master_partition = grin_get_master_partition_from_vertex_ref(g, uref);  // get the master partition for u
 
                     send_value(u_master_partition, uref, dst_vp_dt, value);  // the value must be casted to the correct type based on dst_vp_dt before sending
@@ -274,12 +274,12 @@ different data types in the underlying storage for efficiency concerns (e.g., sh
 
 ### Label
 - GRIN does **NOT** distinguish label on vertices and edges, that means a vertex and an edge may have a same label.
-- However the storage can tell GRIN whether labels are enabled in vertices or edges seperatedly with macros of `WITH_VERTEX_LABEL` and `WITH_EDGE_LABEL` respectively.
+- However the storage can tell GRIN whether labels are enabled in vertices or edges separatedly with macros of `WITH_VERTEX_LABEL` and `WITH_EDGE_LABEL` respectively.
 
 ### Order
 - GRIN provides sorted vertex list assumptions. 
 - GRIN also assumes that if a vertex list sorted, then there is complete ordering for the vertices from the list.
-- Sorted vertex list faciliates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.
+- Sorted vertex list facilitates computations like vertex list join and data structures like vertex array which uses vertex as the index of the array.
 
 ### Reference
 - GRIN introduces the reference concept in partitioned graph. It stands for the reference of an instance that can
@@ -300,7 +300,7 @@ be recognized in partitions other than the current partition where the instance 
 
         /* run.cc in machine 1 */
         {
-            auto vref = grin_get_vertex_ref_for_vertex(g, v);  // get v's vertex ref which can be recgonized in machine 2
+            auto vref = grin_get_vertex_ref_for_vertex(g, v);  // get v's vertex ref which can be recognized in machine 2
 
             const char* msg = grin_serialize_vertex_ref(g, vref);  // serialize into a message
 
@@ -310,7 +310,7 @@ be recognized in partitions other than the current partition where the instance 
 
         /* run.cc in machine 2 */
         {
-            // recieve the message from machine 1...
+            // receive the message from machine 1...
 
             auto vref = grin_deserialize_to_vertex_ref(g, msg);  // deserialize back to vertex ref
 
@@ -320,12 +320,12 @@ be recognized in partitions other than the current partition where the instance 
 
 ### Master and Mirror
 - Master & mirror vertices are the concept borrowed from vertexcut partition strategy. When a vertex is recognized in
-serveral partitions, GRIN refers one of them as the master vertex while others as mirrors. This is primarily for data
-aggregation purpose to share a common centural node for every one.
+several partitions, GRIN refers one of them as the master vertex while others as mirrors. This is primarily for data
+aggregation purpose to share a common central node for every one.
 - While in edgecut partition, the concept becomes inner & outer vertices. GRIN uses master & mirror vertices to represent inner & outer vertices respectively to unify these concepts.
 
 ### Local Complete
-- The concept of local complete is with repect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.
+- The concept of local complete is with respect to whether a graph component adhere to a vertex or an edge is locally complete within the partition.
 - Take vertex and properties as example. GRIN considers the vertex is "property local complete" if it can get all the properties of the vertex locally in the partition.
 - There are concepts like "edge property local complete", "vertex neighbor local complete" and so on.
 - GRIN does **NOT** assume any local complete on master vertices. Since in some extremely cases, master vertices

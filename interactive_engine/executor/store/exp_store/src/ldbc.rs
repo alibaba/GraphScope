@@ -45,7 +45,7 @@ pub static LDBC_SUFFIX: &'static str = "_0_0.csv";
 
 /// A ldbc raw file uses | to split data fields
 pub static SPLITTER: &'static str = "|";
-/// A hdfs partitioned data starts wtih "part-"
+/// A hdfs partitioned data starts with "part-"
 pub static PARTITION_PREFIX: &'static str = "part-";
 
 /// Given a worker of ID `worker`, identify the files it will processed

@@ -810,7 +810,6 @@ class GeneralVertexSet {
       res_data_vec.reserve(repeat_vec.back());
       for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
         auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
-        auto num_ele = cur_offset[i + 1] - cur_offset[i];
         for (size_t j = 0; j < times_to_repeat; ++j) {
           for (auto k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
             res_vec.emplace_back(vec_[k]);

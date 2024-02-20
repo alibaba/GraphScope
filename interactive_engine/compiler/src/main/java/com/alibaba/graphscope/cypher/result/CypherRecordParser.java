@@ -16,12 +16,15 @@
 
 package com.alibaba.graphscope.cypher.result;
 
-import com.alibaba.graphscope.common.ir.type.*;
+import com.alibaba.graphscope.common.ir.type.ArbitraryArrayType;
+import com.alibaba.graphscope.common.ir.type.ArbitraryMapType;
+import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.result.RecordParser;
+import com.alibaba.graphscope.common.result.Utils;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -212,7 +215,8 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
     protected NodeValue parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {
         return VirtualValues.nodeValue(
                 vertex.getId(),
-                Values.stringArray(getLabelName(vertex.getLabel(), getLabelTypes(dataType))),
+                Values.stringArray(
+                        Utils.getLabelName(vertex.getLabel(), Utils.getLabelTypes(dataType))),
                 parseProperties(vertex.getPropertiesList(), dataType));
     }
 
@@ -222,14 +226,17 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                 VirtualValues.nodeValue(
                         edge.getSrcId(),
                         Values.stringArray(
-                                getSrcLabelName(edge.getSrcLabel(), getLabelTypes(dataType))),
+                                Utils.getSrcLabelName(
+                                        edge.getSrcLabel(), Utils.getLabelTypes(dataType))),
                         MapValue.EMPTY),
                 VirtualValues.nodeValue(
                         edge.getDstId(),
                         Values.stringArray(
-                                getDstLabelName(edge.getDstLabel(), getLabelTypes(dataType))),
+                                Utils.getDstLabelName(
+                                        edge.getDstLabel(), Utils.getLabelTypes(dataType))),
                         MapValue.EMPTY),
-                Values.stringValue(getLabelName(edge.getLabel(), getLabelTypes(dataType))),
+                Values.stringValue(
+                        Utils.getLabelName(edge.getLabel(), Utils.getLabelTypes(dataType))),
                 parseProperties(edge.getPropertiesList(), dataType));
     }
 
@@ -247,7 +254,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         case NAME:
                             // find target field in typeFields by property name
                             field =
-                                    findFieldByPredicate(
+                                    Utils.findFieldByPredicate(
                                             k1 -> k1.getName().equals(key.getName()), typeFields);
                             keyStr = key.getName();
                             break;
@@ -255,7 +262,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         default:
                             // find target field in typeFields by property id
                             field =
-                                    findFieldByPredicate(
+                                    Utils.findFieldByPredicate(
                                             k1 -> k1.getIndex() == key.getId(), typeFields);
                             keyStr =
                                     (field != null) ? field.getName() : String.valueOf(key.getId());
@@ -267,11 +274,6 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
 
-    private RelDataTypeField findFieldByPredicate(
-            Predicate<RelDataTypeField> p, List<RelDataTypeField> typeFields) {
-        return typeFields.stream().filter(k -> p.test(k)).findFirst().orElse(null);
-    }
-
     protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
         List<NodeValue> nodes = Lists.newArrayList();
         List<RelationshipValue> relationships = Lists.newArrayList();
@@ -280,11 +282,13 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         k -> {
                             switch (k.getInnerCase()) {
                                 case VERTEX:
-                                    nodes.add(parseVertex(k.getVertex(), getVertexType(dataType)));
+                                    nodes.add(
+                                            parseVertex(
+                                                    k.getVertex(), Utils.getVertexType(dataType)));
                                     break;
                                 case EDGE:
                                     relationships.add(
-                                            parseEdge(k.getEdge(), getEdgeType(dataType)));
+                                            parseEdge(k.getEdge(), Utils.getEdgeType(dataType)));
                                     break;
                             }
                         });
@@ -294,7 +298,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
         if (dataType instanceof GraphLabelType) {
-            return Values.stringValue(parseLabelValue(value, (GraphLabelType) dataType));
+            return Values.stringValue(Utils.parseLabelValue(value, (GraphLabelType) dataType));
         }
         switch (value.getItemCase()) {
             case BOOLEAN:
@@ -345,121 +349,5 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
             default:
                 throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
         }
-    }
-
-    private String getLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
-        switch (nameOrId.getItemCase()) {
-            case NAME:
-                return nameOrId.getName();
-            case ID:
-            default:
-                List<Integer> labelIds = new ArrayList<>();
-                if (labelTypes != null) {
-                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
-                        if (labelType.getLabelId() == nameOrId.getId()) {
-                            return labelType.getLabel();
-                        }
-                        labelIds.add(labelType.getLabelId());
-                    }
-                }
-                logger.warn(
-                        "label id={} not found, expected ids are {}", nameOrId.getId(), labelIds);
-                return String.valueOf(nameOrId.getId());
-        }
-    }
-
-    private String getSrcLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
-        switch (nameOrId.getItemCase()) {
-            case NAME:
-                return nameOrId.getName();
-            case ID:
-            default:
-                List<Integer> labelIds = new ArrayList<>();
-                if (labelTypes != null) {
-                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
-                        if (labelType.getSrcLabelId() == nameOrId.getId()) {
-                            return labelType.getSrcLabel();
-                        }
-                    }
-                }
-                logger.warn(
-                        "src label id={} not found, expected ids are {}",
-                        nameOrId.getId(),
-                        labelIds);
-                return String.valueOf(nameOrId.getId());
-        }
-    }
-
-    private String getDstLabelName(Common.NameOrId nameOrId, @Nullable GraphLabelType labelTypes) {
-        switch (nameOrId.getItemCase()) {
-            case NAME:
-                return nameOrId.getName();
-            case ID:
-            default:
-                List<Integer> labelIds = new ArrayList<>();
-                if (labelTypes != null) {
-                    for (GraphLabelType.Entry labelType : labelTypes.getLabelsEntry()) {
-                        if (labelType.getDstLabelId() == nameOrId.getId()) {
-                            return labelType.getDstLabel();
-                        }
-                    }
-                }
-                logger.warn(
-                        "dst label id={} not found, expected ids are {}",
-                        nameOrId.getId(),
-                        labelIds);
-                return String.valueOf(nameOrId.getId());
-        }
-    }
-
-    private @Nullable GraphLabelType getLabelTypes(RelDataType dataType) {
-        if (dataType instanceof GraphSchemaType) {
-            return ((GraphSchemaType) dataType).getLabelType();
-        } else {
-            return null;
-        }
-    }
-
-    private RelDataType getVertexType(RelDataType graphPathType) {
-        return (graphPathType instanceof GraphPathType)
-                ? ((GraphPathType) graphPathType).getComponentType().getGetVType()
-                : graphPathType;
-    }
-
-    private RelDataType getEdgeType(RelDataType graphPathType) {
-        return (graphPathType instanceof GraphPathType)
-                ? ((GraphPathType) graphPathType).getComponentType().getExpandType()
-                : graphPathType;
-    }
-
-    private String parseLabelValue(Common.Value value, GraphLabelType type) {
-        switch (value.getItemCase()) {
-            case STR:
-                return value.getStr();
-            case I32:
-                return parseLabelValue(value.getI32(), type);
-            case I64:
-                return parseLabelValue(value.getI64(), type);
-            default:
-                throw new IllegalArgumentException(
-                        "cannot parse label value with type=" + value.getItemCase().name());
-        }
-    }
-
-    private String parseLabelValue(long labelId, GraphLabelType type) {
-        List<Object> expectedLabelIds = Lists.newArrayList();
-        for (GraphLabelType.Entry entry : type.getLabelsEntry()) {
-            if (entry.getLabelId() == labelId) {
-                return entry.getLabel();
-            }
-            expectedLabelIds.add(entry.getLabelId());
-        }
-        throw new IllegalArgumentException(
-                "cannot parse label value="
-                        + labelId
-                        + " from expected type="
-                        + type
-                        + ", expected ids are "
-                        + expectedLabelIds);
     }
 }

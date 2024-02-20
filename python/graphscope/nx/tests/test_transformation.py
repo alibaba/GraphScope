@@ -220,19 +220,19 @@ class TestGraphTransformation(object):
         gs_g = g(nx_g)
         self.assert_convert_success(gs_g, nx_g)
 
-        # node property aliged, edge not aliged
+        # node property aligned, edge not aligned
         nx_g2 = nx_g.copy()
         nx_g2.add_edge(0, 1, ep4="new propery")
         gs_g2 = g(nx_g2)
         self.assert_convert_success(gs_g2, nx_g2)
 
-        # edge property aliged, node not aliged
+        # edge property aligned, node not aligned
         nx_g3 = nx_g.copy()
         nx_g3.add_node(2, vp4="new propery")
         gs_g3 = g(nx_g3)
         self.assert_convert_success(gs_g3, nx_g3)
 
-        # both not aliged
+        # both not aligned
         nx_g4 = nx_g.copy()
         nx_g4.add_edge(0, 1, ep4="new propery")
         nx_g4.add_node(2, vp4="new propery")
@@ -361,7 +361,7 @@ class TestGraphTransformation(object):
         # test HAS_NODE and HAS_EDGE
         assert 0 not in G
         assert 933 in G
-        assert ("person", 933) not in G  # deault node must be non-tuple format
+        assert ("person", 933) not in G  # default node must be non-tuple format
         assert ("random", 933) not in G
         assert G.has_edge(933, 4398046511628)
         assert G.has_edge(("comment", 618475290625), ("post", 618475290624))

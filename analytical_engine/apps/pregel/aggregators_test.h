@@ -146,7 +146,7 @@ class AggregatorsTest
         assert(rlt.size() == 81308);
       }
 
-      // terminate itera
+      // terminate iterator
       v.vote_to_halt();
     }
   }

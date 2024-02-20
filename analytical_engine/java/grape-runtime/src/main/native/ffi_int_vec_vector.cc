@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 // Common Stubs
-// This file contains neccessary code enableing porting a
+// This file contains necessary code enabling porting a
 // std::vector<std::vector<char>> to a java byte vecvector, We don't generate
 // these jni files since the generated Java FFIByteVector class has been
 // modified for optimization.

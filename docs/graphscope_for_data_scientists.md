@@ -3,7 +3,7 @@
 A large number of real-world datasets can be naturally represented by graphs. Typical cases 
 are knowledge graphs, social networks, traffic networks and web graphs. Given the ever-growing amount of graph data available, graph computation, which tries to explore underlying insights hidden in graph data, has attracted increasing attention from data scientists.
 
-However, based on our experience of developing graph algorithms and feedbacks from other data scientists, we find that there still exist many challenging issues for data scientists to handle a real-world workload involving graph compuatition.
+However, based on our experience of developing graph algorithms and feedbacks from other data scientists, we find that there still exist many challenging issues for data scientists to handle a real-world workload involving graph computation.
 
 ## Challenges of Handling Graph Computation
 

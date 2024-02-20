@@ -1237,7 +1237,7 @@ class ArrowProjectedFragment
 
   inline size_t GetOutEdgeNum() const { return oenum_; }
 
-  /* Get outging edges num from this frag*/
+  /* Get outgoing edges num from this frag*/
   inline size_t GetOutgoingEdgeNum() const {
     return static_cast<size_t>(oe_offsets_end_->Value(ivnum_ - 1) -
                                oe_offsets_begin_->Value(0));
@@ -1315,8 +1315,8 @@ class ArrowProjectedFragment
     return vm_ptr_->GetGid(internal_oid_t(oid), gid);
   }
 
-  // For Java use, can not use Oid2Gid(const oid_t & oid, vid_t & gid) since
-  // Java can not pass vid_t by reference.
+  // For Java use, cannot use Oid2Gid(const oid_t & oid, vid_t & gid) since
+  // Java cannot pass vid_t by reference.
   inline vid_t Oid2Gid(const oid_t& oid) const {
     vid_t gid;
     if (vm_ptr_->GetGid(internal_oid_t(oid), gid)) {

@@ -231,14 +231,12 @@ def test_across_engine(sess):
     assert res[0] == 62586
 
 
-@pytest.mark.skip(reason="FIXME(@shirly121): The regex pattern is not correct.")
 def test_gremlin_timeout(sess):
     g_node = load_p2p_network(sess)
     interactive = sess.gremlin(g_node)
     # expect to timeout after 1s (caused by grpc timeout or pegasus timeout)
     with pytest.raises(
-        protocol.GremlinServerError,
-        match="|".join(["DEADLINE_EXCEEDED", "Job is canceled"]),
+        protocol.GremlinServerError, match=r".*exceeds the timeout limit.*"
     ):
         res = (
             interactive.execute(

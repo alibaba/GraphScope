@@ -130,7 +130,7 @@ class Client {
 enum Status {
   OK = 0,
   FAIL,
-  WAIT,  // CreateReadSession() and CommitWriteSession() may process the requst
+  WAIT,  // CreateReadSession() and CommitWriteSession() may process the request
          // asynchronously
   CANCELED,
 };

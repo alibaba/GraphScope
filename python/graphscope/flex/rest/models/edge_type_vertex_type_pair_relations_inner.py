@@ -18,14 +18,11 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.edge_type_vertex_type_pair_relations_inner_x_csr_params import EdgeTypeVertexTypePairRelationsInnerXCsrParams
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class EdgeTypeVertexTypePairRelationsInner(BaseModel):
     """
@@ -43,7 +40,7 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
         if value is None:
             return value
 
-        if value not in ('MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE'):
+        if value not in set(['MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE']):
             raise ValueError("must be one of enum values ('MANY_TO_MANY', 'ONE_TO_MANY', 'MANY_TO_ONE', 'ONE_TO_ONE')")
         return value
 
@@ -64,7 +61,7 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of EdgeTypeVertexTypePairRelationsInner from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -78,10 +75,12 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of x_csr_params
@@ -90,7 +89,7 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of EdgeTypeVertexTypePairRelationsInner from a dict"""
         if obj is None:
             return None
@@ -102,7 +101,7 @@ class EdgeTypeVertexTypePairRelationsInner(BaseModel):
             "source_vertex": obj.get("source_vertex"),
             "destination_vertex": obj.get("destination_vertex"),
             "relation": obj.get("relation"),
-            "x_csr_params": EdgeTypeVertexTypePairRelationsInnerXCsrParams.from_dict(obj.get("x_csr_params")) if obj.get("x_csr_params") is not None else None
+            "x_csr_params": EdgeTypeVertexTypePairRelationsInnerXCsrParams.from_dict(obj["x_csr_params"]) if obj.get("x_csr_params") is not None else None
         })
         return _obj
 

@@ -130,7 +130,7 @@ seastar::future<query_result> admin_actor::run_delete_graph(
 // load the graph.
 seastar::future<query_result> admin_actor::run_graph_loading(
     graph_management_param&& query_param) {
-  // query_param constains two parameter, first for graph name, second for graph
+  // query_param contains two parameter, first for graph name, second for graph
   // config
   auto content = query_param.content;
   auto& graph_name = content.first;
@@ -278,7 +278,7 @@ seastar::future<query_result> admin_actor::update_procedure(
 }
 
 // Start service on a graph first means stop all current running actors, then
-// switch graph and and create new actors with a unused scope_id.
+// switch graph and create new actors with a unused scope_id.
 seastar::future<query_result> admin_actor::start_service(
     query_param&& query_param) {
   // parse query_param.content as json and get graph_name
@@ -366,7 +366,7 @@ seastar::future<query_result> admin_actor::service_status(
     LOG(INFO) << "Query service has not been inited!";
     res["status"] = "Query service has not been inited!";
   }
-  return seastar::make_ready_future<query_result>(std::move(res.dump()));
+  return seastar::make_ready_future<query_result>(res.dump());
 }
 
 // get node status.

@@ -72,6 +72,34 @@ jobs:
                  -DBUILD_ODPS_FRAGMENT_LOADER=${{ matrix.BUILD_ODPS_FRAGMENT_LOADER }}
         sudo make -j4
 
+  test-AOCC-compilation:
+    runs-on: ubuntu-20.04
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download aocc compiler
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        wget https://download.amd.com/developer/eula/aocc/aocc-4-1/aocc-compiler-4.1.0_1_amd64.deb
+        sudo apt-get update && sudo apt-get install libncurses-dev libncurses5-dev
+        sudo dpkg -i aocc-compiler-4.1.0_1_amd64.deb
+    
+    - name: Test AOCC compiler
+      env:
+        CC: clang
+        CXX: clang++
+        OMPI_CC: clang
+        OMPI_CXX: clang++
+      run: |
+        . /opt/AMD/aocc-compiler-4.1.0/setenv_AOCC.sh
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. -DBUILD_DOC=OFF -DCMAKE_BUILD_TYPE=DEBUG
+        sudo make -j4
+
   test-flex:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}

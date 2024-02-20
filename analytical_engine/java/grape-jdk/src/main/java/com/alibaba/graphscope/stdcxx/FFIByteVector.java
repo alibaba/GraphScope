@@ -155,7 +155,7 @@ public class FFIByteVector extends FFIPointerImpl implements StdVector<Byte> {
     }
 
     /**
-     * Read serveral bytes to a byte array.
+     * Read several bytes to a byte array.
      *
      * @param b Receive data
      * @param bOff first place to put

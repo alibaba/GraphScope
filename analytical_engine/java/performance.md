@@ -1,6 +1,6 @@
 # Performance
 
-We evaluate the performandce of `grape-jdk` on [LDBC Graph Analytics Benchmark.](https://graphalytics.org/).
+We evaluate the performance of `grape-jdk` on [LDBC Graph Analytics Benchmark.](https://graphalytics.org/).
 In particular, we evaluate the performance with typical graph apps over LDBC XL-size datasets. 
 
 Comparing the performance result of `grape-jdk` with the performance data from native **analytical engine**, we found that the performance gap between **Java app** and **C++ app** has been made narrowed substantially with the help of `grape-jdk`.
@@ -138,6 +138,6 @@ pr_delta set to 0.85, running for 50 rounds.
 | Java(+LLVM4JNI) time 	| 49.80 	| 24.15 	| 10.54 	| 6.63  	| 3.83 	| 2.95 	| 3.42 	|
 
 
-## Graphscope-GraphX Integration
+## GraphScope-GraphX Integration
 
-We also evaluate the performance of `grape-graphx`, the integration of GraphScope on Spark GraphX. See [grape-graphX performace](grape-graphx/performance.md).
+We also evaluate the performance of `grape-graphx`, the integration of GraphScope on Spark GraphX. See [grape-graphX performance](grape-graphx/performance.md).

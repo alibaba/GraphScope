@@ -51,7 +51,7 @@ impl GroupGen<Record, RecordKey, Record> for pb::GroupBy {
 
 #[derive(Debug)]
 struct GroupMap {
-    /// aliases for group keys, if some key is not not required to be preserved, give None alias
+    /// aliases for group keys, if some key is not required to be preserved, give None alias
     key_aliases: Vec<KeyId>,
 }
 

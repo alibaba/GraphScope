@@ -159,7 +159,7 @@ class Configuration {
   static const int DEFAULT_SOCKET_TIMEOUT =
       300; /**< Socket超时默认时间，单位是秒*/
 
-  Account account;       /**< Acount类*/
+  Account account;       /**< Account类*/
   AppAccount appAccount; /**< AppAccount类，用于双签名*/
   StsToken stsToken;
 

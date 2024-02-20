@@ -24,7 +24,7 @@ into ``Nodes`` objects (similar to 1-hop neighbor sampling, but there is
 no ``Edges`` object).
 
 A negative sampling operation can be divided into the following three
-steps: - Define the negative sampling oprator by calling
+steps: - Define the negative sampling operator by calling
 ``g.negative_sampler()`` to get the ``NegativeSampler`` object ``S``; -
 Invoke ``S.get(ids)`` to get the ``Nodes`` object; - Invoke the
 `interface <graph_query_cn.md#FPU74>`__ of ``Nodes`` object to get

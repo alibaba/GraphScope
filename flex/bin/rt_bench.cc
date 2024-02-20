@@ -218,12 +218,12 @@ int main(int argc, char** argv) {
   int ac = 1;
   char* av[] = {(char*) "rt_bench"};
   app.run(ac, av, [shard_num] {
-    return seastar::parallel_for_each(
-               boost::irange<unsigned>(0u, shard_num),
-               [](unsigned id) {
-                 return seastar::smp::submit_to(
-                     id, [id] { return Req::get().simulate(); });
-               })
+    return seastar::parallel_for_each(boost::irange<unsigned>(0u, shard_num),
+                                      [](unsigned id) {
+                                        return seastar::smp::submit_to(id, [] {
+                                          return Req::get().simulate();
+                                        });
+                                      })
         .then([] {
           hiactor::actor_engine().exit();
           fmt::print("Exit actor system.\n");

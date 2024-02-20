@@ -823,6 +823,28 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
         '404':
           description: Reveiver not found
+  /api/v1/file/uploading:
+    post:
+      tags:
+        - utils
+      operationId: upload_file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                filestorage:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 components:
   schemas:
     ApiResponse:
@@ -1005,6 +1027,24 @@ components:
             - KUBERNETES
         version:
           type: string
+        solution:
+          type: string
+          enum:
+            - INTERACTIVE
+            - GRAPHSCOPE_INSIGHT
+        graphs_info:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              name:
+                type: string
+              creation_time:
+                type: string
+              update_time:
+                type: string
+              last_dataloading_time:
+                type: string
     DeploymentStatus:
       x-body-name: deployment_status
       type: object

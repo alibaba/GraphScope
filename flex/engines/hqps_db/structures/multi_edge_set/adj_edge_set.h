@@ -369,7 +369,7 @@ class AdjEdgeSet {
     LOG(WARNING) << "No implemented";
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         PropNameArray<PropT...>& prop_names) {
@@ -487,7 +487,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
     LOG(WARNING) << "No implemented";
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         PropNameArray<PropT...>& prop_names) {

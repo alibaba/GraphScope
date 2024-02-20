@@ -76,7 +76,7 @@ class Dag(object):
         # leaf op handle
         # there are two kinds of leaf op:
         #   1) unload graph / app
-        #   2) networkx releated op
+        #   2) networkx related op
         if len(ops) == 1 and ops[0].is_leaf_op():
             out.op.extend([ops[0].as_op_def()])
             return out

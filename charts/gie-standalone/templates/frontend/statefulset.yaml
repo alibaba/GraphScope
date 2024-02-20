@@ -125,6 +125,8 @@ spec:
               value: {{ .Values.pegasusOutputCapacity | quote }}
             - name: FRONTEND_QUERY_PER_SECOND_LIMIT
               value: {{ .Values.frontendQueryPerSecondLimit | quote }}
+            - name: GREMLIN_SCRIPT_LANGUAGE_NAME
+              value: {{ .Values.gremlinScriptLanguageName }}
           ports:
             - name: gremlin
               containerPort: {{ .Values.frontend.service.gremlinPort }}

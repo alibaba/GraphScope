@@ -36,7 +36,7 @@ public class AntlrGremlinScriptEngineFactory extends AbstractGremlinScriptEngine
     private static final String PLAIN = "plain";
     private static final List<String> EXTENSIONS = Collections.singletonList("gremlin");
 
-    public static final String LANGUAGE_NAME = "antlr_gremlin";
+    public static final String LANGUAGE_NAME = "antlr_gremlin_traversal";
 
     public AntlrGremlinScriptEngineFactory() {
         super(LANGUAGE_NAME, LANGUAGE_NAME, EXTENSIONS, Collections.singletonList(PLAIN));

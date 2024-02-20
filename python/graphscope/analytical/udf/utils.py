@@ -285,7 +285,7 @@ class InMemoryZip(object):
         raw: bool
             If True, return the raw bytes. Otherwise return the BytesIO object.
         """
-        # close the file first before reading bytes, close repeatly is OK.
+        # close the file first before reading bytes, close repeatedly is OK.
         self.zip_file.close()
         if raw:
             return self.in_memory_buffer.getvalue()

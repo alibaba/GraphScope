@@ -46,7 +46,7 @@ public interface GiraphMessageManager<
      * Check any message available on this vertex.
      *
      * @param lid local id
-     * @return true if recevied messages.
+     * @return true if received messages.
      */
     boolean messageAvailable(long lid);
 

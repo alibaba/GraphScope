@@ -98,7 +98,7 @@ class GSSparkSession(sparkContext: SparkContext) extends SparkSession(sparkConte
   }
 
   /** Similar to methods defined in GraphLoader, same signature but read the edges to GraphScope store. Although
-    * the Graph structure is stored in c++, with wrappers based on JNI, RDD can not differ GS-based RDD with graphx
+    * the Graph structure is stored in c++, with wrappers based on JNI, RDD cannot differ GS-based RDD with graphx
     * rdd in java heap.
     */
   def edgeListFile(
@@ -751,7 +751,7 @@ object GSSparkSession extends Logging {
       */
     def master(master: String): Builder = config("spark.master", master)
 
-    /** GraphgScope related param, setting vineyard memroy size.
+    /** GraphScope related param, setting vineyard memory size.
       */
     def vineyardMemory(memoryStr: String): Builder =
       config("spark.gs.vineyard.memory", memoryStr)

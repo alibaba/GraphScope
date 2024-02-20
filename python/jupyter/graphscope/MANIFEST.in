@@ -24,7 +24,7 @@ graft examples
 graft tests
 prune tests/build
 
-# Javascript files
+# JavaScript files
 graft graphscope-jupyter/nbextension
 graft src
 graft css

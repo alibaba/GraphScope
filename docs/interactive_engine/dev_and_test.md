@@ -13,7 +13,7 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
 ## Build GIE with Vineyard Store on Local
-In [GIE standalone deployment](./deployment.md), we have instructed on how to deploy GIE in a Kubenetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard store on a local machine.
+In [GIE standalone deployment](./deployment.md), we have instructed on how to deploy GIE in a Kubernetes cluster with Vineyard store. Here, we show how to develop and test GIE with vineyard store on a local machine.
 
 Clone the ``graphscope'' repo if you do not have it.
 ```bash

@@ -18,15 +18,12 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.schema_mapping_loading_config_data_source import SchemaMappingLoadingConfigDataSource
 from graphscope.flex.rest.models.schema_mapping_loading_config_format import SchemaMappingLoadingConfigFormat
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class SchemaMappingLoadingConfig(BaseModel):
     """
@@ -43,7 +40,7 @@ class SchemaMappingLoadingConfig(BaseModel):
         if value is None:
             return value
 
-        if value not in ('init', 'overwrite'):
+        if value not in set(['init', 'overwrite']):
             raise ValueError("must be one of enum values ('init', 'overwrite')")
         return value
 
@@ -64,7 +61,7 @@ class SchemaMappingLoadingConfig(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of SchemaMappingLoadingConfig from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -78,10 +75,12 @@ class SchemaMappingLoadingConfig(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of data_source
@@ -93,7 +92,7 @@ class SchemaMappingLoadingConfig(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of SchemaMappingLoadingConfig from a dict"""
         if obj is None:
             return None
@@ -102,9 +101,9 @@ class SchemaMappingLoadingConfig(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "data_source": SchemaMappingLoadingConfigDataSource.from_dict(obj.get("data_source")) if obj.get("data_source") is not None else None,
+            "data_source": SchemaMappingLoadingConfigDataSource.from_dict(obj["data_source"]) if obj.get("data_source") is not None else None,
             "import_option": obj.get("import_option"),
-            "format": SchemaMappingLoadingConfigFormat.from_dict(obj.get("format")) if obj.get("format") is not None else None
+            "format": SchemaMappingLoadingConfigFormat.from_dict(obj["format"]) if obj.get("format") is not None else None
         })
         return _obj
 

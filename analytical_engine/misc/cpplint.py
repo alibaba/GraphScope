@@ -865,7 +865,7 @@ _repository = None
 # Files to exclude from linting. This is set by the --exclude flag.
 _excludes = None
 
-# Whether to supress all PrintInfo messages, UNRELATED to --quiet flag
+# Whether to suppress all PrintInfo messages, UNRELATED to --quiet flag
 _quiet = False
 
 # The allowed line length of files.
@@ -1258,7 +1258,7 @@ class _CppLintState(object):
     self._filters_backup = self.filters[:]
     self.counting = 'total'  # In what way are we counting errors?
     self.errors_by_category = {}  # string to int dict storing error counts
-    self.quiet = False  # Suppress non-error messagess?
+    self.quiet = False  # Suppress non-error messages?
 
     # output format:
     # "emacs" - format that emacs can parse (default)
@@ -1586,7 +1586,7 @@ class FileInfo(object):
         repo = FileInfo(_repository).FullName()
         root_dir = project_dir
         while os.path.exists(root_dir):
-          # allow case insensitive compare on Windows
+          # allow case-insensitive compare on Windows
           if os.path.normcase(root_dir) == os.path.normcase(repo):
             return os.path.relpath(fullname, root_dir).replace('\\', '/')
           one_up_dir = os.path.dirname(root_dir)
@@ -3855,7 +3855,7 @@ def CheckOperatorSpacing(filename, clean_lines, linenum, error):
   elif not Match(r'#.*include', line):
     # Look for < that is not surrounded by spaces.  This is only
     # triggered if both sides are missing spaces, even though
-    # technically should should flag if at least one side is missing a
+    # technically it should flag if at least one side is missing a
     # space.  This is done to avoid some false positives with shifts.
     match = Match(r'^(.*[^\s<])<[^\s=<,]', line)
     if match:

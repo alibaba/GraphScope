@@ -4,7 +4,7 @@ Quick Start
 This tutorial has three parts: - How to quickly try out a graph learning
 model using **GL**. - How to import data into **GL**, and use the graph
 data, graph sampling and negative sampling APIs. - How to develop your
-own GNN models using **GL** and Tensorflow using **GraphSAGE** as an
+own GNN models using **GL** and TensorFlow using **GraphSAGE** as an
 example.
 
 1 Trying out the built-in models

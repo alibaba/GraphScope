@@ -1,4 +1,4 @@
-# Tutorial: Graph Operations with NetowrkX APIs
+# Tutorial: Graph Operations with NetworkX APIs
 [NetworkX](https://networkx.org/) is a Python package for the manipulation and functions for graph data on a single machine. However, it lacks the capability of handling large-scale graphs on a distributed environment. Fortunately, GraphScope is compatible with NetworkX APIs, and thus a program written with NetworkX can directly run on GraphScope with only some small changes. In this tutorial, we will first introduce how to manipulate graph data with NetworkX APIs.
 
 ## Creating an Empty Graph
@@ -264,7 +264,7 @@ list(K.edges)
 Note that different from `subgraph`/`edge_subgraph` APIs in NetworkX which return a view, `graphscope.nx` returns a deepcopy of `subgraph`/`edge_subgraph`.
 
 ## Making Copies
-One can use `to_directed` to return a directed representaion of the graph.
+One can use `to_directed` to return a directed representation of the graph.
 
 ```python
 DG = G.to_directed()  # here would return a "deepcopy" directed representation of G.

@@ -83,7 +83,7 @@ class BaseContextDAGNode(DAGNode):
         >>> c = graphscope.sssp(sg, 20)
         >>> print(c) # <graphscope.framework.context.VertexDataContextDAGNode>
         >>> r1 = c.to_numpy("r")
-        >>> print(r1) # <graphscope.ramework.context.ResultDAGNode>
+        >>> print(r1) # <graphscope.framework.context.ResultDAGNode>
         >>> r2 = c.to_dataframe({"id": "v.id", "result": "r"})
         >>> r3 = c.to_vineyard_tensor("r")
         >>> r4 = c.to_vineyard_dataframe({"id": "v.id", "result": "r"})

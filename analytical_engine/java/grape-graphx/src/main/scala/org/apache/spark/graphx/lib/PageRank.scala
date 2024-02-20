@@ -65,7 +65,7 @@ import scala.reflect.ClassTag
   * neighbors which link to `i` and `outDeg[j]` is the out degree of vertex `j`.
   *
   * @note This is not the "normalized" PageRank and as a consequence pages that have no
-  * inlinks will have a PageRank of alpha.
+  * in-links will have a PageRank of alpha.
   */
 object PageRank extends Logging {
 

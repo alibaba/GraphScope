@@ -2,7 +2,7 @@
 
 ## Compatibility with TinkerPop
 GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
-and provides a Gremlin Websockets server that supports TinkerPop version 3.4.
+and provides a Gremlin WebSockets server that supports TinkerPop version 3.4.
 In addition to the original Gremlin queries, we further introduce some syntactic sugars to allow
 more succinct expression. However, because of the distributed nature and practical considerations, it is worth to notice the following limitations of our implementations of Gremlin.
 

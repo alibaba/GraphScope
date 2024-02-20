@@ -37,7 +37,7 @@ namespace gs {
  *
  * Currently we only support path expand with only one edge label and only one
  *dst label.
- * The input vertex set must be of one labe.
+ * The input vertex set must be of one label.
  **/
 
 template <typename GRAPH_INTERFACE>
@@ -74,8 +74,102 @@ class PathExpand {
     return std::make_pair(std::move(path_set), std::move(offsets));
   }
 
+  // PathExpand Path with multiple edge triplet.
+  template <typename VERTEX_SET_T, typename LabelT, size_t get_v_num_labels,
+            typename EDGE_FILTER_T, typename VERTEX_FILTER_T>
+  static auto PathExpandP(
+      const GRAPH_INTERFACE& graph, const VERTEX_SET_T& vertex_set,
+      PathExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T, get_v_num_labels,
+                                 VERTEX_FILTER_T>&& path_expand_opt) {
+    auto& range = path_expand_opt.range_;
+    auto& edge_expand_opt = path_expand_opt.edge_expand_opt_;
+    auto& get_v_opt = path_expand_opt.get_v_opt_;
+    auto& edge_triplets = edge_expand_opt.edge_label_triplets_;
+    auto& vertex_other_labels = get_v_opt.v_labels_;
+    auto vertex_other_labels_vec = array_to_vec(vertex_other_labels);
+
+    std::vector<std::vector<vertex_id_t>> other_vertices;
+    std::vector<std::vector<label_id_t>> other_labels_vec;
+    std::vector<std::vector<offset_t>> other_offsets;
+    auto& vertices_vec = vertex_set.GetVertices();
+    std::vector<label_id_t> src_label_id_vec;
+    std::vector<label_id_t> src_labels_set;
+    static_assert(VERTEX_SET_T::is_row_vertex_set ||
+                      VERTEX_SET_T::is_two_label_set ||
+                      VERTEX_SET_T::is_general_set,
+                  "Unsupported vertex set type");
+    if constexpr (VERTEX_SET_T::is_row_vertex_set) {
+      auto src_label = vertex_set.GetLabel();
+      src_label_id_vec =
+          std::vector<label_id_t>(vertices_vec.size(), vertex_set.GetLabel());
+      src_labels_set = {src_label};
+    } else if constexpr (VERTEX_SET_T::is_two_label_set) {
+      auto src_label_vec = vertex_set.GetLabelVec();
+      src_labels_set = array_to_vec(vertex_set.GetLabels());
+      src_label_id_vec = label_key_vec_2_label_id_vec(src_label_vec);
+    } else {
+      src_labels_set = vertex_set.GetLabels();
+      src_label_id_vec = label_key_vec_2_label_id_vec(vertex_set.GetLabelVec());
+    }
+    std::tie(other_vertices, other_labels_vec, other_offsets) =
+        path_expandp_multi_triplet(graph, edge_triplets,
+                                   vertex_other_labels_vec,
+                                   edge_expand_opt.direction_, vertices_vec,
+                                   src_labels_set, src_label_id_vec, range);
+
+    // The path are stored in a compressed way, and we flat it.
+    std::vector<offset_t> res_offsets;
+    res_offsets.reserve(vertices_vec.size() + 1);
+    res_offsets.emplace_back(0);
+
+    std::vector<std::vector<Path<vid_t, LabelT>>> cur_path, next_path;
+    std::vector<std::vector<Path<vid_t, LabelT>>> prev_path;
+    // indexed by src_vid,
+    for (size_t i = 0; i < vertices_vec.size(); ++i) {
+      std::vector<Path<vid_t, LabelT>> tmp_path;
+      tmp_path.emplace_back(vertices_vec[i], src_label_id_vec[i]);
+      cur_path.emplace_back(tmp_path);
+    }
+    prev_path.resize(vertices_vec.size());
+
+    for (auto j = range.start_; j < range.limit_; ++j) {
+      next_path.clear();
+      auto& cur_offset_vec = other_offsets[j];
+      CHECK(cur_path.size() == vertices_vec.size());
+      next_path.resize(vertices_vec.size());
+
+      for (auto i = 0; i < vertices_vec.size(); ++i) {
+        auto& tmp_path = cur_path[i];
+        auto start = cur_offset_vec[i];
+        auto end = cur_offset_vec[i + 1];
+        for (auto k = start; k < end; ++k) {
+          auto& next_vid = other_vertices[j][k];
+          auto& label = other_labels_vec[j][k];
+          for (auto& path : tmp_path) {
+            path.EmplaceBack(next_vid, label);
+            next_path[i].emplace_back(path);
+            path.PopBack();
+          }
+        }
+        // push all next_path[i] to tmp_path
+        prev_path[i].insert(prev_path[i].end(), next_path[i].begin(),
+                            next_path[i].end());
+        next_path[i].swap(cur_path[i]);
+      }
+    }
+
+    std::vector<Path<vid_t, LabelT>> res_path;
+    for (auto i = 0; i < vertices_vec.size(); ++i) {
+      auto& tmp_path = prev_path[i];
+      res_path.insert(res_path.end(), tmp_path.begin(), tmp_path.end());
+      res_offsets.emplace_back(res_path.size());
+    }
+    return std::make_pair(PathSet<vertex_id_t, label_id_t>(std::move(res_path)),
+                          std::move(res_offsets));
+  }
+
   // Path expand to vertices with columns.
-  // PathExpand to vertices with vertex properties also retreived
+  // PathExpand to vertices with vertex properties also retrieved
   template <typename... V_SET_T, typename VERTEX_FILTER_T, typename LabelT,
             typename EDGE_FILTER_T, typename... T,
             typename std::enable_if<(sizeof...(T) > 0)>::type* = nullptr,
@@ -392,7 +486,6 @@ class PathExpand {
 
     double visit_array_time = 0.0;
     for (auto cur_hop = 1; cur_hop < range.limit_; ++cur_hop) {
-      double t0 = -grape::GetCurrentTime();
       std::vector<size_t> unused;
       std::tie(tmp_vec, unused) = graph.GetOtherVerticesV2(
           src_label, edge_expand_opt.other_label_, edge_expand_opt.edge_label_,
@@ -426,7 +519,7 @@ class PathExpand {
     }
     LOG(INFO) << "visit array time: " << visit_array_time
               << ", gid size: " << gids.size();
-    // select vetices that are in range.
+    // select vertices that are in range.
     offsets.emplace_back(0);
     offsets.emplace_back(gids.size());
 
@@ -490,7 +583,7 @@ class PathExpand {
       visit_array_time += t0;
     }
     LOG(INFO) << "visit array time: " << visit_array_time;
-    // select vetices that are in range.
+    // select vertices that are in range.
     std::vector<vertex_id_t> flat_gids;
     std::vector<offset_t> flat_offsets;
     std::vector<Dist> dists;
@@ -741,7 +834,7 @@ class PathExpand {
   // expand from vertices, with multiple edge triplets.
   // The intermediate vertices can also have multiple labels, and expand with
   // multiple edge triplet.
-  static auto path_expandv_multi_triplet(
+  static auto path_expandp_multi_triplet(
       const GRAPH_INTERFACE& graph,
       const std::vector<std::array<label_id_t, 3>>&
           edge_label_triplets,  // src, dst, edge
@@ -749,13 +842,6 @@ class PathExpand {
       const std::vector<vertex_id_t>& vertices_vec,
       const std::vector<label_id_t>& src_labels_set,
       const std::vector<label_id_t>& src_v_labels_vec, const Range& range) {
-    // (range, other_label_ind, vertices)
-    LOG(INFO) << "PathExpandV with multiple edge triplets: "
-              << gs::to_string(edge_label_triplets)
-              << ", direction: " << gs::to_string(direction)
-              << ", vertices size: " << vertices_vec.size()
-              << ", src_labels_set: " << gs::to_string(src_labels_set)
-              << ", range: " << range.start_ << ", " << range.limit_;
     std::vector<std::vector<vertex_id_t>> other_vertices;
     std::vector<std::vector<label_id_t>> other_labels_vec;
     std::vector<std::vector<offset_t>> other_offsets;
@@ -924,6 +1010,35 @@ class PathExpand {
             tmp_cur_offset[other_offsets[cur_hop - 1][i]]);
       }
     }
+    return std::make_tuple(std::move(other_vertices),
+                           std::move(other_labels_vec),
+                           std::move(other_offsets));
+  }
+
+  static auto path_expandv_multi_triplet(
+      const GRAPH_INTERFACE& graph,
+      const std::vector<std::array<label_id_t, 3>>&
+          edge_label_triplets,  // src, dst, edge
+      const std::vector<label_id_t>& get_v_labels, const Direction& direction,
+      const std::vector<vertex_id_t>& vertices_vec,
+      const std::vector<label_id_t>& src_labels_set,
+      const std::vector<label_id_t>& src_v_labels_vec, const Range& range) {
+    // (range, other_label_ind, vertices)
+    LOG(INFO) << "PathExpandV with multiple edge triplets: "
+              << gs::to_string(edge_label_triplets)
+              << ", direction: " << gs::to_string(direction)
+              << ", vertices size: " << vertices_vec.size()
+              << ", src_labels_set: " << gs::to_string(src_labels_set)
+              << ", range: " << range.start_ << ", " << range.limit_;
+
+    std::vector<std::vector<vertex_id_t>> other_vertices;
+    std::vector<std::vector<label_id_t>> other_labels_vec;
+    std::vector<std::vector<offset_t>> other_offsets;
+
+    std::tie(other_vertices, other_labels_vec, other_offsets) =
+        path_expandp_multi_triplet(graph, edge_label_triplets, get_v_labels,
+                                   direction, vertices_vec, src_labels_set,
+                                   src_v_labels_vec, range);
 
     // select vertices that are in range and are in vertex_other_labels.
     std::vector<vertex_id_t> res_vertices;

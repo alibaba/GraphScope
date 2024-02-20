@@ -47,6 +47,9 @@ test:
 gremlin_test:
 	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.IrGremlinTest
 
+gremlin_calcite_test:
+	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.calcite.IrGremlinTest
+
 run:
 	cd $(CUR_DIR) && $(java) \
 	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \

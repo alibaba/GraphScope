@@ -18,16 +18,13 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from graphscope.flex.rest.models.edge_mapping import EdgeMapping
 from graphscope.flex.rest.models.schema_mapping_loading_config import SchemaMappingLoadingConfig
 from graphscope.flex.rest.models.vertex_mapping import VertexMapping
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class SchemaMapping(BaseModel):
     """
@@ -56,7 +53,7 @@ class SchemaMapping(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of SchemaMapping from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -70,10 +67,12 @@ class SchemaMapping(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of loading_config
@@ -96,7 +95,7 @@ class SchemaMapping(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of SchemaMapping from a dict"""
         if obj is None:
             return None
@@ -106,9 +105,9 @@ class SchemaMapping(BaseModel):
 
         _obj = cls.model_validate({
             "graph": obj.get("graph"),
-            "loading_config": SchemaMappingLoadingConfig.from_dict(obj.get("loading_config")) if obj.get("loading_config") is not None else None,
-            "vertex_mappings": [VertexMapping.from_dict(_item) for _item in obj.get("vertex_mappings")] if obj.get("vertex_mappings") is not None else None,
-            "edge_mappings": [EdgeMapping.from_dict(_item) for _item in obj.get("edge_mappings")] if obj.get("edge_mappings") is not None else None
+            "loading_config": SchemaMappingLoadingConfig.from_dict(obj["loading_config"]) if obj.get("loading_config") is not None else None,
+            "vertex_mappings": [VertexMapping.from_dict(_item) for _item in obj["vertex_mappings"]] if obj.get("vertex_mappings") is not None else None,
+            "edge_mappings": [EdgeMapping.from_dict(_item) for _item in obj["edge_mappings"]] if obj.get("edge_mappings") is not None else None
         })
         return _obj
 

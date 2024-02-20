@@ -113,7 +113,7 @@ Additionally, if you can access into the pod, you can find all logs in `/var/log
 
 ```bash
 # frontend
-$ kubetl exec -it demo-graphscope-store-frontend-0 -- /bin/bash
+$ kubectl exec -it demo-graphscope-store-frontend-0 -- /bin/bash
 $ cd /var/log/graphscope && ls
 graphscope-store.2023-03-11.0.log  graphscope-store.2023-03-19.0.log  graphscope-store.log ...
 ```

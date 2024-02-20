@@ -4,7 +4,7 @@ Graph Sampling Language（GSL)
 # 1. Introduction There has been a well-developed programming paradigm
 since Graph Neural Network (GNN) was introduced. Developing a GNN model
 contains two parts: graph data processing and neural network training.
-There are matured Deep Learning framework such as Tensorflow and Pytorch
+There are matured Deep Learning framework such as TensorFlow and Pytorch
 for neural network training. Therefore, how to express and implement
 graph data processing easily and efficiently, and how to work with the
 DL frameworks are the focuses of Graphlearn. In reality, sampling is
@@ -389,7 +389,7 @@ that function is repeated ``times`` times.
 
 .. code:: python
 
-   def repeat(self, func, times, parmas_list=None):
+   def repeat(self, func, times, params_list=None):
    """
    Args:
      func(function): The function body to be expanded; the first parameter is the object to be executed.
@@ -456,7 +456,7 @@ The **SOURCE** or **STEP** of the ``*E()`` series corresponds to the
 strategy returns **SparseNodes**). For instruction on how to get the
 value of ``Nodes``/``Edges``/``SparseNodes``/``SparseEdges`` object,
 please refer to `API <graph_query_cn.md#FPU74>`__. Before **SINK**,
-Query describs multiple operations. These operations may have
+Query describes multiple operations. These operations may have
 ``alias()``. -For Query without ``alias()``, the results of all
 operations will be returned, arranged in a list object according to the
 order in the Query. Each element in this returned list is either
@@ -540,7 +540,7 @@ correctness of the code and data.
    # res = [Nodes, Nodes, Nodes]
    print(res[1].ids)
 
-Worth noticing that when the query only contains Soure (``g.V()`` /
+Worth noticing that when the query only contains Source (``g.V()`` /
 ``g.E()``), ``emit()`` directly returns the data of list[0].
 
 # 3 Query execution ## 3.1 run ``run()`` interface is used to execute

@@ -135,7 +135,7 @@ class PregelLouvain
       v.vote_to_halt();
       return;
     }
-    // at the start of each full pass check to see wether progress is still
+    // at the start of each full pass check to see whether progress is still
     // being made, if not halt
     if (current_minor_step == phase_one_minor_step_1 && current_iteration > 0 &&
         current_iteration % 2 == 0) {

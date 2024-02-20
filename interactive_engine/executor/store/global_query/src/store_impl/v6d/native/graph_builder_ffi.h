@@ -127,7 +127,7 @@ int v6d_add_edges(GraphBuilder builder, size_t edge_size,
  * 结束local GraphBuilder的build，点、边写完之后分别调用
  */
 int v6d_build(GraphBuilder builder);
-// as an alias due for backwardscompatibility
+// as an alias due for backwards compatibility
 int v6d_build_vertice(GraphBuilder builder);
 int v6d_build_vertices(GraphBuilder builder);
 int v6d_build_edges(GraphBuilder builder);

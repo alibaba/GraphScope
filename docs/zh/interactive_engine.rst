@@ -154,7 +154,7 @@ Gremlin语言丰富灵活的表达能力主要来自于它对 *嵌套遍历* 的
 Gremlin兼容性（对比TinkerPop）
 ----------------------------
 
-GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 *Websockets* 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。
+GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 *WebSockets* 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。
 
 属性图模型约束
 ~~~~~~~~~~~~~
@@ -279,7 +279,7 @@ GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实
 .. code:: java
 
     //constant
-    g.V().out().contant(1)
+    g.V().out().constant(1)
     g.V().out().constant("aaa")
     
     //id

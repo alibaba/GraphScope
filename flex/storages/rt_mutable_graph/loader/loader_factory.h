@@ -24,7 +24,7 @@ namespace gs {
 
 /**
  * @brief LoaderFactory is a factory class to create IFragmentLoader.
- * Support Using dynamicly built library as plugin.
+ * Support Using dynamically built library as plugin.
  */
 class LoaderFactory {
  public:

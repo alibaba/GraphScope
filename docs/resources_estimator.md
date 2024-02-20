@@ -2,4 +2,4 @@
 
 TBF.
 
-(this document describle how to estimate the resources of GraphScope.)
+(this document describes how to estimate the resources of GraphScope.)

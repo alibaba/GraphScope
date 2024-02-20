@@ -44,6 +44,8 @@ pegasusOutputCapacity: 16
 
 frontendQueryPerSecondLimit: 2147483647
 
+gremlinScriptLanguageName: "antlr_gremlin_traversal"
+
 ## need by vineyard in distributed env
 etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
 
@@ -117,7 +119,7 @@ executor:
   ##
   podAntiAffinityPreset: soft
 
-  ## Affinity for Graphscope store pods assignment
+  ## Affinity for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
@@ -300,7 +302,7 @@ frontend:
   ##
   podAntiAffinityPreset: soft
 
-  ## Affinity for Graphscope store pods assignment
+  ## Affinity for GraphScope store pods assignment
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##

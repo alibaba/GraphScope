@@ -143,7 +143,7 @@ print(q1.all().result())
 The output should be like:
 
 ```bash
-# All person veritces
+# All person vertices
 [v[216172782113783808], ......, v[216172782113784710]]
 ```
 
@@ -190,7 +190,7 @@ print(q1.all().result())
 In addition, you may further require the extracted properties satisfying some conditions. For example, if you want to extract persons whose first name is 'Joseph', you can write the following codes:
 
 ```python
-# Retrieve person vertices whose first name is 'Joeseph'
+# Retrieve person vertices whose first name is 'Joseph'
 q1 = g.execute('g.V().hasLabel("person").has("firstName", "Joseph")')
 print(q1.all().result())
 ```
@@ -336,8 +336,8 @@ The most basic unit in Graph Traversal is Expansion, which means starting from a
 Here is a local subgraph extracted from the LDBC Graph, which is formed by a center person vertex (id=216172782113784483) and all of its adjacent edges and vertices. Then we will use this subgraph to explain all of the expansion steps.
 
 :::{figure-md}
-<img src="../../images/loacal_graph_example.png"
-     alt="loacal_graph_example"
+<img src="../../images/local_graph_example.png"
+     alt="local_graph_example"
      width="33%">
 
 Figure 5. A local graph around a given person vertex.
@@ -810,7 +810,7 @@ print(q1.all().result())
 Until now, we can use expansion steps, filter steps and auxiliary steps like `as(TAG)` to write complicated Gremlin sentences to traverse the graph. However, there are still two shortcomings:
 
 - If we want to find a vertex which is 10-hop(edges) away from the current vertex, we need to write expansion step 10 times, which is very cost-ineffective.
-- The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it can not be solved by already introduced steps.
+- The number of hops from the source to the destination is arbitrary. For example, if we want to find all vertices which can be reached from a source vertex within 3-hops, it cannot be solved by already introduced steps.
 
 Therefore, we would like to introduce path expansion to solve the two problems, which extends the expansion steps `out()`, `in()` and `both()` as the [syntactic sugar](./supported_gremlin_steps.md).
 
@@ -896,8 +896,8 @@ plt.show()
 ```
 
 :::{figure-md}
-<img src="../../images/estimated_japan_brower_market_share.png"
-     alt="estimated_japan_brower_market_share"
+<img src="../../images/estimated_japan_browser_market_share.png"
+     alt="estimated_japan_browser_market_share"
      width="50%">
 
 Figure 20. Estimated Japan Browser Market Share
@@ -1320,7 +1320,7 @@ The output is `[0]`
 The `constant()` step is meant to map any object to a fixed object value. For example:
 
 ```python
-# Map all the vertinces to 1
+# Map all the vertices to 1
 q1 = g.execute('g.V().constant(1)')
 # Map all the vertices to "marko"
 q2 = g.execute('g.V().constant("marko")')
@@ -1346,7 +1346,7 @@ The output should be like:
 
 `value(PROPERTY)` step can only map an entity(vertex or edge) to one of its property's value. What if we want to extract many properties's value at the same time?
 
-`valueMap(PROPERTY1, PROPERTI2, ...)` step provides such ability. For example, the following code extracts `person` vertices' `firstName` and `lastName` together by `valueMap(...)` step.
+`valueMap(PROPERTY1, PROPERTY2, ...)` step provides such ability. For example, the following code extracts `person` vertices' `firstName` and `lastName` together by `valueMap(...)` step.
 
 ```python
 # Extract person vertices' firstName and lastName
@@ -1581,7 +1581,7 @@ The same as `group()` step, you can add either
 - Property name or
 - sub-traversal sentence which will generate a single value
 
-to the `by()` step as the order key. In addition, you can determine whether the order is `acsending` or `descending` in the second parameter of the `by()` step.
+to the `by()` step as the order key. In addition, you can determine whether the order is `ascending` or `descending` in the second parameter of the `by()` step.
 
 For example:
 
@@ -1888,7 +1888,7 @@ Assume `Forum's creationDate > '2012-01-01'`, we can write in GIE as
 
 ```python
 q1 = g.execute('g.V().hasLabel("place").as("country").in("isPartOf").in("isLocatedIn")\
-           .in("hasMember").as("forum").dedup("counry","forum")\
+           .in("hasMember").as("forum").dedup("country","forum")\
            .select("forum").by(out("hasMember").as("person").out("isLocatedIn")\
            .out("isPartOf").where(eq("country")).select("person").dedup().count())\
            .as("personCount").select("country", "forum", "personCount")')

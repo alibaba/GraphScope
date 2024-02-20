@@ -47,7 +47,7 @@ def configure_environ():
     else:
         os.environ["OPAL_PREFIX"] = opal_prefix
         if platform.system() == "Darwin":
-            # requires on MacOS, but break Kubernetes tests on Linux
+            # requires on macOS, but break Kubernetes tests on Linux
             os.environ["OPAL_BINDIR"] = os.path.join(opal_prefix, "bin")
             os.environ["OPAL_LIBDIR"] = os.path.join(opal_prefix, "lib")
             os.environ["OPAL_DATADIR"] = os.path.join(opal_prefix, "share")

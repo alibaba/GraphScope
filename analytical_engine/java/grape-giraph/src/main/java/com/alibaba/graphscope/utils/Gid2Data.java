@@ -36,7 +36,7 @@ public interface Gid2Data {
     /**
      * Number of bytes need for serialization.
      *
-     * @return number of butes
+     * @return number of bytes
      */
     int serializedSize();
 }

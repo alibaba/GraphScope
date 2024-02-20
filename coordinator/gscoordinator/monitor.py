@@ -125,7 +125,7 @@ class Monitor:
     analyticalRequestCounter = Counter(
         "analytical_request", "Count requests of analytical requests"
     )
-    # analyticalRequestGauge = Gauge("analytical_request_time", "The analytical opration task time", ["op_name"])
+    # analyticalRequestGauge = Gauge("analytical_request_time", "The analytical operation task time", ["op_name"])
     analyticalRequestGauge = TemGauge(
         "analytical_request_time", "The analytical operation task time", ["op_name"]
     )

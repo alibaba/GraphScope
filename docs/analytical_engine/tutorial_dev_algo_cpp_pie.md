@@ -36,7 +36,7 @@ class MyAppContext : public grape::VertexDataContext<FRAG_T, uint64_t> {
 };
 ```
 
-As shown in the code, the MyAppContext class defines two member variables called `step` and `param1` to store the current superstep and algorithm-specific parameter, respectively. And we also define a member variable named `result` with `uint64_t` type to store the the degree for each vertex in the fragment. The `Init` method is used to initialize the context of the computation. In current example, we initialize the `step` and `param1` variables to zero and the algorithm-specific parameter. We also set the result to zero for each vertex.
+As shown in the code, the MyAppContext class defines two member variables called `step` and `param1` to store the current superstep and algorithm-specific parameter, respectively. And we also define a member variable named `result` with `uint64_t` type to store the degree for each vertex in the fragment. The `Init` method is used to initialize the context of the computation. In current example, we initialize the `step` and `param1` variables to zero and the algorithm-specific parameter. We also set the result to zero for each vertex.
 
 ## Step 2: Define the Algorithm class
 
@@ -142,7 +142,7 @@ result = my_app(simple_graph, 10)  # pass 10 as param1 defined in 'MyAppContext.
 print(result.to_numpy('r'))
 ```
 
-## GraphScope C++ SDK with Github Template
+## GraphScope C++ SDK with GitHub Template
 
 To help you develop your algorithms more efficiently, we provide a [C++ template library](https://github.com/GraphScope/cpp-template) to help you get started with your algorithm development. It includes examples and best practices for implementing PIE algorithms in C++.
 

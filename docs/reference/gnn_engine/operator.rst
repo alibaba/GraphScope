@@ -34,7 +34,7 @@ context. It is usually made up of some **scalar**
 takes data **vectors**. For example, sampling one-hop neighbors for a
 batch of node ids, in which the ids should be put in ``tensors_``.
 
-In distributed mode, the graph data will be partitioned into serveral
+In distributed mode, the graph data will be partitioned into several
 servers. When a server receives an operator execution request, part of
 the request may be **redirected** to other servers. The data that needs
 to be partitioned should be placed into ``tensors_``, and rewrite the
@@ -121,7 +121,7 @@ Compile
    make clean
    make test
 
-Usually, writting a C++ test is the fast way to check errors. After
+Usually, writing a C++ test is the fast way to check errors. After
 that, you can make the python package and install it.
 
 ::

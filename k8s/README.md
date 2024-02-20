@@ -65,11 +65,11 @@ When pulling, Docker would automatically selects the image that matches the arch
        `docker push graphscope/graphscope-dev:latest`
 
 
-### Setup building environment
+### Set up building environment
 
 Incase you want to build a multi-platform on your own, here are steps to help you getting started.
 
-#### Setup the cross-platform enumator on x84_64 architecture
+#### Set up the cross-platform emulator on x84_64 architecture
 
 Use [qemu](https://github.com/multiarch/qemu-user-static)
 
@@ -79,7 +79,7 @@ docker buildx create --name builder --driver docker-container --bootstrap
 docker buildx use builder
 ```
 
-#### Setup the cross-platform enumator on Apple M1
+#### Set up the cross-platform emulator on Apple M1
 
 Just use [docker-desktop](https://www.docker.com/products/docker-desktop/)
 
@@ -92,7 +92,7 @@ docker buildx use builder
 
 Refer to [example](https://docs.docker.com/build/building/multi-platform/#example)
 
-#### Setup on GitHub Actions
+#### Set up on GitHub Actions
 
 Use [setup-qemu-action](https://github.com/docker/setup-qemu-action)
 

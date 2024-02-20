@@ -212,7 +212,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
     void initChannels(int channel_num);
 
     /**
-     * Retrive a message archive.
+     * Retrieve a message archive.
      *
      * @param buf place to store the archive.
      * @return true if got one.
@@ -318,7 +318,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
                     @FFISkip UNUSED_T vdata);
 
     /**
-     * Send the a vertex's data to other fragment througn outgoing edges.
+     * Send the a vertex's data to other fragment through outgoing edges.
      *
      * @param frag       ImmutableEdgeCutFragment.
      * @param vertex     querying vertex.
@@ -343,7 +343,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
                     @FFISkip UNUSED_T unused);
 
     /**
-     * Send the a vertex's data to other fragment througn outgoing edges.
+     * Send the a vertex's data to other fragment through outgoing edges.
      *
      * @param frag       ArrowProjectedFragment.
      * @param vertex     querying vertex.
@@ -418,7 +418,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
                     @FFISkip UNUSED_T unused);
 
     /**
-     * Send the a vertex's data to other fragment througn incoming edges.
+     * Send the a vertex's data to other fragment through incoming edges.
      *
      * @param frag       ImmutableEdgecutFragment.
      * @param vertex     querying vertex.
@@ -443,7 +443,7 @@ public interface ParallelMessageManager extends MessageManagerBase {
                     @FFISkip UNUSED_T unused);
 
     /**
-     * Send the a vertex's data to other fragment througn incoming edges.
+     * Send the a vertex's data to other fragment through incoming edges.
      *
      * @param <MSG_T>    message type.
      * @param frag       ArrowProjectedFragment.

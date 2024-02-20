@@ -5,7 +5,7 @@ After constructing the graph object, we can query on the graph. Graph
 query refers to getting **meta information** and **data information**
 without complex calculation and sampling logic.
 
-# 1 Meta Query Meta infomation refers to the graph structure and
+# 1 Meta Query Meta information refers to the graph structure and
 statistical data, including graph topology, number of vertices,
 distribution of edges and vertices, maximum in-and-out degrees and etc.
 
@@ -33,9 +33,9 @@ the heterogeneous graph shown in the following image.
    topo.print_all()
 
    """
-   egde_type:buy, src_type:user, dst_type:item
-   egde_type:click, src_type:user, dst_type:item
-   egde_type:swing, src_type:item, dst_type:item
+   edge_type:buy, src_type:user, dst_type:item
+   edge_type:click, src_type:user, dst_type:item
+   edge_type:swing, src_type:item, dst_type:item
    """
 
 ## 1.2 In-and-Out Degree Distribution Coming soon…
@@ -43,7 +43,7 @@ the heterogeneous graph shown in the following image.
 #2 Data Query
 
 **GL** has two basic data types: ``Nodes`` and ``Edges``. Graph
-raversal, query, and sampling operations all return a batch of vertices
+traversal, query, and sampling operations all return a batch of vertices
 or edges. In particular, non-aligned sampling returns the sparse form of
 two basic data types, namely ``SparseNodes`` and ``SparseEdges``. The
 interface of ``Nodes`` is shown as follows.
@@ -112,7 +112,7 @@ additional interfaces as follows.
 
    @property
    def offsets(self):
-   """ one dimentional int array: the number of neighbors of each vertex """
+   """ one dimensional int array: the number of neighbors of each vertex """
 
    @property
    def dense_shape(self):
@@ -120,7 +120,7 @@ additional interfaces as follows.
 
    @property
    def indices(self):
-   """ two dimentional arra: the location of each neighbor """
+   """ two dimensional array: the location of each neighbor """
 
    def __next__(self):
    """ iterator: iterate over the neighbors of each vertex """
@@ -134,7 +134,7 @@ interfaces as follows.
 
    @property
    def offsets(self):
-   """ one dimential int array: the number of neighbors of each vertex """
+   """ one dimensional int array: the number of neighbors of each vertex """
 
    @property
    def dense_shape(self):
@@ -142,7 +142,7 @@ interfaces as follows.
 
    @property
    def indices(self):
-   """ two dimentional array: the location of each neighbor """
+   """ two dimensional array: the location of each neighbor """
 
    def __next__(self):
    """ iterator: iterate the neighbors of each vertex """
@@ -184,7 +184,7 @@ In GSL，we can use ``V()`` to replace ``get_nodes()``
    g = Graph(...)
    u_nodes = g.V("user", feed=np.array([10001, 10002, 10003])).emit()
 
-## 2.2 Edges Query We can get edges from graph travesal, sampling or
+## 2.2 Edges Query We can get edges from graph traversal, sampling or
 specifying src_id and dst_id. Once we get the edges, we can query their
 attributes, weights or labels. edges query by specifying src_id, dst_id:
 
@@ -200,7 +200,7 @@ attributes, weights or labels. edges query by specifying src_id, dst_id:
      Edges object
    '''
 
-We use the following example to show the inferface and usage
+We use the following example to show the interface and usage
 ``get_edges()``
 
 Table2: swing edges

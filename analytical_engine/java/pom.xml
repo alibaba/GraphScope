@@ -420,7 +420,7 @@
     </pluginManagement>
 
     <!-- use flatten plugin to replace revision property value in mvn install,otherwise the version
-    of grape-jdk can not be resolved -->
+    of grape-jdk cannot be resolved -->
     <plugins>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

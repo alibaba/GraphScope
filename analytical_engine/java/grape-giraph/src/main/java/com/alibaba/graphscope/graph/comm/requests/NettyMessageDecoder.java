@@ -31,7 +31,7 @@ public class NettyMessageDecoder extends ByteToMessageDecoder {
     private static Logger logger = LoggerFactory.getLogger(NettyMessageDecoder.class);
 
     /**
-     * Decode the from one {@link ByteBuf} to an other. This method will be called till either the
+     * Decode the from one {@link ByteBuf} to another. This method will be called till either the
      * input {@link ByteBuf} has nothing to read when return from this method or till nothing was
      * read from the input {@link ByteBuf}.
      *

@@ -37,7 +37,7 @@ run_module() {
          --logfile ${TMP_LOG}
     # It's treated as error only when module's unit test exits abnormally,
     # otherwise it runs successfully no matter tests passed or failed.
-    # For the 126 maigc, see: https://www.gnu.org/software/bash/manual/bash.html#Exit-Status
+    # For the 126 magic, see: https://www.gnu.org/software/bash/manual/bash.html#Exit-Status
     if [ "$?" -ge 126 ]; then
         echo "Module's unit test exits abnormally, maybe killed with some signal."
         exit 1

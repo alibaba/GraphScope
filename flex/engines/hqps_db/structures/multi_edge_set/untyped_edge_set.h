@@ -189,7 +189,7 @@ class UnTypedEdgeSet {
   }
 
   iterator begin() const {
-    // generate a vector of vistable edge iterators.
+    // generate a vector of visitable edge iterators.
     auto tmp = generate_iters();
     return iterator(src_vertices_, std::move(tmp), 0);
   }

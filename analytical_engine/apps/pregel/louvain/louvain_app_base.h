@@ -171,7 +171,7 @@ class LouvainAppBase
       std::vector<std::vector<std::vector<md_t>>> buffer(
           thrd_num, std::vector<std::vector<md_t>>(thrd_num));
       messages.ParallelProcess<md_t>(
-          thrd_num, [&thrd_num, &buffer](int tid, md_t const& msg) {
+          thrd_num, [&thrd_num, &buffer](int tid, md_t& msg) {
             buffer[tid][msg.dst_id % thrd_num].emplace_back(std::move(msg));
           });
       {
@@ -180,7 +180,7 @@ class LouvainAppBase
           threads[tid] = std::thread(
               [&frag, &ctx, &thrd_num, &buffer](uint32_t tid) {
                 for (uint32_t index = 0; index < thrd_num; ++index) {
-                  for (auto const& msg : buffer[index][tid]) {
+                  for (auto& msg : buffer[index][tid]) {
                     vertex_t v;
                     frag.InnerVertexGid2Vertex(msg.dst_id, v);
                     ctx.compute_context().messages_in()[v].emplace_back(

@@ -70,7 +70,7 @@ public class Gid2DataFixed implements Gid2Data {
     /**
      * Number of bytes need for serialization.
      *
-     * @return number of butes
+     * @return number of bytes
      */
     @Override
     public int serializedSize() {

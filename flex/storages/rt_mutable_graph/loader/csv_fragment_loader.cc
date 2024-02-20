@@ -23,7 +23,7 @@ CSVStreamRecordBatchSupplier::CSVStreamRecordBatchSupplier(
     arrow::csv::ConvertOptions convert_options,
     arrow::csv::ReadOptions read_options,
     arrow::csv::ParseOptions parse_options)
-    : label_id_(label_id), file_path_(file_path) {
+    : file_path_(file_path) {
   auto read_result = arrow::io::ReadableFile::Open(file_path);
   if (!read_result.ok()) {
     LOG(FATAL) << "Failed to open file: " << file_path
@@ -58,7 +58,7 @@ CSVTableRecordBatchSupplier::CSVTableRecordBatchSupplier(
     arrow::csv::ConvertOptions convert_options,
     arrow::csv::ReadOptions read_options,
     arrow::csv::ParseOptions parse_options)
-    : label_id_(label_id), file_path_(path) {
+    : file_path_(path) {
   auto read_result = arrow::io::ReadableFile::Open(path);
   if (!read_result.ok()) {
     LOG(FATAL) << "Failed to open file: " << path

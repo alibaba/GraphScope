@@ -105,7 +105,7 @@ enum OperationType {
   UNLOAD_CONTEXT = 23;  // unload context
   ARCHIVE_GRAPH = 24;  // archive graph
   SERIALIZE_GRAPH = 25; // serialize graph
-  DESERIALIZE_GRAPH = 26; // desrialize graph
+  DESERIALIZE_GRAPH = 26; // deserialize graph
   CONSOLIDATE_COLUMNS = 27; // consolidate property columns in the graph
 
   SUBGRAPH = 32;  // subgraph in interactive query
@@ -268,7 +268,7 @@ enum ParamKey {
   JVM_OPTS = 503; // opts str to start a jvm
 }
 
-// For simulating networkx modifing functionalities
+// For simulating networkx modifying functionalities
 enum ModifyType {
   NX_ADD_NODES = 0;
   NX_ADD_EDGES = 1;

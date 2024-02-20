@@ -36,7 +36,7 @@ GraphScope 以 `Python 程序包 <https://pypi.org/project/graphscope>`_ 的形�
 - Python 3.7 - 3.9 (with pip)
 - Local Kubernetes cluster set-up tool (e.g. `Kind <https://kind.sigs.k8s.io>`_)
 
-对于 Windows 和 MacOS 的用户，可通过官方文档来安装上述依赖, 并在 Docker 中开启 Kubernetes 功能。
+对于 Windows 和 macOS 的用户，可通过官方文档来安装上述依赖, 并在 Docker 中开启 Kubernetes 功能。
 对于 Ubuntu/CentOS Linux 发行版用户，我们提供了脚本来准备运行时环境。
 您也可以在 Windows 上安装 `WSL2 <https://docs.microsoft.com/zh-cn/windows/wsl/install-win10>`_ 以使用脚本。
 

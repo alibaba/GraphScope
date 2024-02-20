@@ -16,6 +16,7 @@ gs_flex_coordinator/models/column_mapping.py
 gs_flex_coordinator/models/connection.py
 gs_flex_coordinator/models/connection_status.py
 gs_flex_coordinator/models/deployment_info.py
+gs_flex_coordinator/models/deployment_info_graphs_info_value.py
 gs_flex_coordinator/models/deployment_status.py
 gs_flex_coordinator/models/edge_mapping.py
 gs_flex_coordinator/models/edge_mapping_destination_vertex_mappings_inner.py

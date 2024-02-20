@@ -44,7 +44,7 @@ Each edge is associated with a timestamp, which is the timestamp of the transact
 
 When read graph with a `ReadTransaction` or `UpdateTransaction`, only edges with timestamp less than or equal to the timestamp of the transaction will be returned.
 
-### 3.2 Syncrhonization
+### 3.2 Synchronization
 
 There is no synchronization between read and insert transactions. All read and insert transactions can be executed concurrently.
 

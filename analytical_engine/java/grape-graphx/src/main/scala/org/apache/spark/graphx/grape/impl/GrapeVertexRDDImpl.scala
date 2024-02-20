@@ -170,7 +170,7 @@ class GrapeVertexRDDImpl[VD] private[graphx] (
     *   - For offHeap rdd ,just do the aggregation, since its partitioner is same with use, i.e. hashPartition with
     *     fnum = num of workers.
     *   - For common one, we need to make sure they share the same num of partitions. and then we repartition to
-    *     size of excutors.
+    *     size of executors.
     * @param messages
     * @param reduceFunc
     * @tparam VD2

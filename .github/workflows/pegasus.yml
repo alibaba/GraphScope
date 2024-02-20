@@ -20,7 +20,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  peagsus-build:
+  pegasus-build:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
@@ -56,7 +56,7 @@ jobs:
 #    - name: Detect the tmate session
 #      run: |
 #        if grep -v "grep" .github/workflows/pegasus.yml | grep "action-tmate"; then
-#          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+#          echo 'WARNING!!!the self-hosted machine cannot run tmate session, please debug it manually'
 #          exit 1
 #        fi
 #

@@ -37,7 +37,7 @@ The DegreeFusionRule capitalizes on the fact that most graph storage systems alr
 Match (p1:PERSON {id: $id1})-[]->(p2)
 Return p1, COUNT(p2);
 ```
-With this rule applied, instead of individually counting each neighbor of `p1`, we can directly obtain `p1`'s degree, streamlining the process considerably. This optimization effectively utilizes pre-existing graph data structures to expedite query execution.
+With this rule applied, instead of individually counting each neighbor of `p1`, we can directly obtain `p1`'s degree, streamlining the process considerably. This optimization effectively utilizes preexisting graph data structures to expedite query execution.
 
 ### NotMatchToAntiJoinRule
 This rule converts queries containing `Where Not` clauses into the equivalent anti-join structures, where the anti-join

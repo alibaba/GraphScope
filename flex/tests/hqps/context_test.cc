@@ -210,22 +210,18 @@ int main() {
     }
     {
       int32_t res = 0;
-      int64_t res0 = 0;
       double t0 = -grape::GetCurrentTime();
       for (size_t j = 0; j < 10; ++j) {
         for (auto ind : indices) {
           res += col1->get_view(ind);
-          res0 += col2->get_view(ind);
         }
       }
       t0 += grape::GetCurrentTime();
 
       double t1 = -grape::GetCurrentTime();
       res = 0;
-      res0 = 0;
       for (auto ind : indices) {
         res += col1->get_view(ind);
-        res0 += col2->get_view(ind);
       }
       t1 += grape::GetCurrentTime();
       LOG(INFO) << "ptr visit cost: " << t1 << " ,warm up took: " << t0
@@ -240,10 +236,8 @@ int main() {
 
       double t1 = -grape::GetCurrentTime();
       int32_t res = 0;
-      int64_t res0 = 0;
       for (auto ind : indices) {
         res += getter1.get_view(ind);
-        res0 += getter2.get_view(ind);
       }
       t1 += grape::GetCurrentTime();
       LOG(INFO) << "bench1 cost: " << t1 << ", res: " << res;

@@ -3,7 +3,7 @@
 GraphScope interactive is compatible with the existing neo4j cypher ecosystem. Users can use Cypher Shell as a client to connect to the database service and submit queries for execution.
 
 ## Downloading
-We currenly only support Cypher Shell version 4.4.22. You can download from the [official release](https://dist.neo4j.org/cypher-shell/cypher-shell-4.4.22.zip).
+We currently only support Cypher Shell version 4.4.22. You can download from the [official release](https://dist.neo4j.org/cypher-shell/cypher-shell-4.4.22.zip).
 
 ## Usage
 
@@ -17,4 +17,4 @@ cypher-shell -a neo4j://{ip}:7687.
 
 ## Limitation
 
-Currently write operations are not supported in GraphScope Interactive, so you can not use `create` clause in cypher shell.
+Currently write operations are not supported in GraphScope Interactive, so you cannot use `create` clause in cypher shell.

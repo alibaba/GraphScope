@@ -17,7 +17,7 @@ from graphscope.framework.app import load_app
 # turn on this line to enable log verbose
 # graphscope.set_option(show_log=True) 
 
-"""Or lauch session in k8s cluster"""
+"""Or launch session in k8s cluster"""
 sess = graphscope.session(cluster_type='hosts') 
 
 graph = load_p2p_network(sess)    
@@ -170,17 +170,17 @@ sess = graphscope.session(cluster_type='hosts')
 graph = load_p2p_network(sess)
 graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
 # you can also use your own graph, refer to graphscope load graph tutorial.
-# But remember project to singel property graph before running algorithms.
+# But remember project to single property graph before running algorithms.
 
 app=JavaApp(
     full_jar_path="{full/path/to/your/packed/jar}", # *-shaded.jar
-    java_app_class="{fullly/qualified/class/name/of/your/app}", # com.a.b.c
+    java_app_class="{fully/qualified/class/name/of/your/app}", # com.a.b.c
 )
 ctx=app(graph, "{param string}") # a=b,c=d
 ```
 
 After computation, you can obtain the results stored in context with the help of [`Context`](https://graphscope.io/docs/reference/context.html#context).
 
-## GraphScope JavaSDK with Github Template
+## GraphScope JavaSDK with GitHub Template
 
 If you don't bother creating new project to try `GRAPE-jdk`, we provide a template project [GraphScope-Java-template](https://github.com/zhanglei1949/GraphScope-Java-template). By click **Use this template**, you can create a new repository with same files and structure of the template repository. You can then try developing your own algorithms in this project.

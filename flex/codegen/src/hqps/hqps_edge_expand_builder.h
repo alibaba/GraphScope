@@ -42,7 +42,7 @@ static constexpr const char*
     EDGE_EXPAND_E_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR =
         "auto %1% = gs::make_edge_expand_multie_opt<%2%>(%3%, %4%, %5%);\n";
 
-// This opt can only be used by both edge expandv, with multiplet edge triplet,
+// This opt can only be used by both edge expandv, with multiple edge triplet,
 static constexpr const char*
     EDGE_EXPAND_V_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR =
         "auto %1% = gs::make_edge_expand_multiv_opt(%2%, %3%);\n";

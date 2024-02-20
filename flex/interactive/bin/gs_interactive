@@ -41,7 +41,7 @@ emph(){
 # source: https://github.com/mrbaseman/parse_yaml.git
 #
 ###############################################################################
-# Parses a YAML file and outputs variable assigments.  Can optionally accept a 
+# Parses a YAML file and outputs variable assignments.  Can optionally accept a 
 # variable name prefix and a variable name separator
 #
 # Usage:
@@ -241,7 +241,7 @@ DOCKER_DB_COMPILER_BIN="com.alibaba.graphscope.GraphServer"
 DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/load_plan_and_gen.sh"
 HOST_DB_TMP_DIR="/tmp/"
 
-#################### DEFINE DEFAULT CONSTATNS ####################
+#################### DEFINE DEFAULT CONSTANTS ####################
 DATABASE_VERSION="v0.0.3"
 DATABASE_DEFAULT_GRAPH_NAME="gs_interactive_default_graph"
 DATABASE_CURRENT_GRAPH_NAME=${DATABASE_DEFAULT_GRAPH_NAME}
@@ -638,7 +638,7 @@ function compile_usage(){
 EOF
 }
 
-## .enable and .disable file contols the stored procedure enable/disable
+## .enable and .disable file controls the stored procedure enable/disable
 
 function enable_proc_usage(){
   cat << EOF
@@ -855,7 +855,7 @@ function do_init(){
   # check running containers and exit
   check_running_containers_and_exit
   info "Ok, no running instance found, start init database..."
-  # if no containers running, procede to init
+  # if no containers running, proceed to init
 
 #  check args num 1, and get the first args as CONFIG_FILE
   if [ $# -eq 0 ]; then
@@ -1038,7 +1038,7 @@ function do_create(){
   fi
   check_file_exists "${schema_file}"
   amplify_schema_file="${HOST_DB_TMP_DIR}/graph0.yaml"
-  # add some default settings and non-user-awared settings to schema file.
+  # add some default settings and non-user-aware settings to schema file.
   amplify_graph_schema ${schema_file} ${amplify_schema_file}
   # check graph is running inside docker
   check_graph_not_running ${graph_name} || (err "Can not create graph ${graph_name}, since a graph with same nameing running." && exit 1)
@@ -1403,7 +1403,7 @@ function do_start(){
   # regenerate graph.yaml from graph0.yaml and override graph.yaml with stored procedure enable and disable
   update_graph_yaml_with_procedure_enabling ${graph_name}
 
-  # the bulk_load_file shoud place inside ${DATABASE_WORKSPACE}. and should use relative path
+  # the bulk_load_file should place inside ${DATABASE_WORKSPACE}. and should use relative path
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
   fi
@@ -1587,7 +1587,7 @@ function do_log(){
 }
 
 # the compiled dynamic libs will be placed at data/${graph_name}/plugins/
-# after compilation, the user need to write the cooresponding yaml, telling the compiler about 
+# after compilation, the user need to write the corresponding yaml, telling the compiler about 
 # the input and output of the stored procedure
 function do_compile() {
   ensure_container_running

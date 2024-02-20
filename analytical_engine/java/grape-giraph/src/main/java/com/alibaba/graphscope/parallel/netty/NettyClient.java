@@ -264,7 +264,7 @@ public class NettyClient {
                         try {
                             TimeUnit.SECONDS.sleep(1);
                             failedCnt += 1;
-                            // When encounter failure, we update the futreu;
+                            // When encounter failure, we update the future;
                             ChannelFuture newFuture = bootstrap.connect(connection.address);
                             connection.updateFuture(newFuture);
                         } catch (InterruptedException e) {

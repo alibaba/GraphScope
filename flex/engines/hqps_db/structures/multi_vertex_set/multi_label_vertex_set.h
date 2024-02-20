@@ -256,7 +256,6 @@ class MultiLabelVertexSet {
     std::vector<std::vector<offset_t>> indices_vec(N);
     std::array<std::vector<offset_t>, N> local_offsets;
 
-    size_t cur_cnt = 0;
     for (size_t i = 0; i < N; ++i) {
       local_offsets[i].emplace_back(0);
     }
@@ -326,7 +325,7 @@ class MultiLabelVertexSet {
     return std::move(*this);
   }
 
-  // Filter vertex sets with expresion and labels.
+  // Filter vertex sets with expression and labels.
   template <typename LabelT, typename EXPRESSION, size_t num_labels,
             typename ELE_TUPLE,
             typename RES_SET_T = MultiLabelVertexSet<VERTEX_SET_T, N>,

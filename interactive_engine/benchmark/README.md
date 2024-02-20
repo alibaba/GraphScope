@@ -13,7 +13,7 @@ The program uses a round-robin strategy to iterate all the **enabled** queries w
     - interactive-benchmark.properties  // configurations for running benchmark
 - data
     - substitution_parameters           // query parameter files using to fill the query templates
-- queries                               // qurery templates including LDBC queries, K-hop queries and user-defined queries
+- queries                               // query templates including LDBC queries, K-hop queries and user-defined queries
 - scripts
     - benchmark.sh                      // script for running benchmark
     - cal.py                            // script for calculating benchmark results

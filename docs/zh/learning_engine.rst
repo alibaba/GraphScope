@@ -70,7 +70,7 @@ GNNs, 知识图谱模型，图嵌入算法等，并且和主流的深度学习�
 
   我们抽象了4个基本的函数，``sample_seed``, ``positive_sample``,
   ``negative_sample`` 和 ``receptive_fn``。 ``sample_seed`` 用来遍历图数据产生 ``Nodes`` 或者
-  ``Edges``, 然后 ``positve_sample`` 以这些 ``Nodes`` 或者 ``Edges`` 为输入产生
+  ``Edges``, 然后 ``positive_sample`` 以这些 ``Nodes`` 或者 ``Edges`` 为输入产生
   训练的正样本。对于无监督学习 ``negative_sample`` 产生负样本。
   GNNs需要聚合邻居信息, 我们抽象了 ``receptive_fn`` 来采样邻居。
   最后将 ``sample_seed`` 产生的 ``Nodes``、``Edges`` 以及采样出的邻居组成 ``EgoGraph``。
@@ -247,7 +247,7 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
        return GCN(graph,
                   config['class_num'],
                   config['features_num'],
-                  config['batch_szie'],
+                  config['batch_size'],
                   ...)
      trainer = gle.LocalTFTrainer(model_fn, epoch=200)
      trainer.train()

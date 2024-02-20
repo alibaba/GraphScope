@@ -40,7 +40,7 @@ impl<B: Deref<Target = [u64]>> IdTopo<B> {
         }
     }
 
-    // depth firsh search k-hop neighbors;
+    // depth first search k-hop neighbors;
     pub fn get_k_hop_neighbors(&self, id: u64, k: u8) -> Box<dyn Iterator<Item = u64>> {
         if k == 0 {
             return Box::new(std::iter::empty());

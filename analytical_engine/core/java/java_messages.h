@@ -26,7 +26,7 @@
 namespace gs {
 
 /**
- * @brief Since Java can not pass Double, Long as reference, we need a wrapper
+ * @brief Since Java cannot pass Double, Long as reference, we need a wrapper
  * for primitives.
  */
 template <typename T>

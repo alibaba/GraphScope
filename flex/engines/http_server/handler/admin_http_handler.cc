@@ -524,7 +524,7 @@ void admin_http_handler::stop() {
 }
 
 seastar::future<> admin_http_handler::set_routes() {
-  return server_.set_routes([this](seastar::httpd::routes& r) {
+  return server_.set_routes([](seastar::httpd::routes& r) {
     auto admin_graph_handler = new admin_http_graph_handler_impl(
         interactive_admin_group_id, shard_admin_graph_concurrency);
 

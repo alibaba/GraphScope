@@ -30,7 +30,7 @@ class ANNOTATION(actor:impl) codegen_actor : public hiactor::actor {
 
   seastar::future<query_result> ANNOTATION(actor:method) do_codegen(query_param&& param);
 
-  // DECLARE_RUN_QUERYS;
+  // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.
   ACTOR_DO_WORK()
 

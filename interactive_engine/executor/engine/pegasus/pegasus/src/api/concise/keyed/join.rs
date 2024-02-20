@@ -27,7 +27,7 @@ use crate::Data;
 ///
 /// We now implement 6 types of joins, namely [`inner_join`], [`left_outer_join`],
 /// [`right_outer_join`], [`full_outer_join`], [`semi_join`] and [`anti_join`].
-/// While [`semi_join`] and [`anti_join`] have the variances of left and right, but we only consier
+/// While [`semi_join`] and [`anti_join`] have the variances of left and right, but we only consider
 /// the left case, knowing that the right case can be easily achieved by swapping the two streams.
 ///
 /// These joins are for now executed based on the equivalence of the keys of the left and right

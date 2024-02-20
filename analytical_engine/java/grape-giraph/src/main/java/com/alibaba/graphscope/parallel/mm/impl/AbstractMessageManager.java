@@ -132,7 +132,7 @@ public abstract class AbstractMessageManager<
      * Check any message available on this vertex.
      *
      * @param lid local id
-     * @return true if recevied messages.
+     * @return true if received messages.
      */
     @Override
     public boolean messageAvailable(long lid) {

@@ -67,7 +67,7 @@ public class BatchWritableMessageCache<I extends WritableComparable, M extends W
         cache = new Gid2Data[fragNum];
         for (int i = 0; i < fragNum; ++i) {
             if (i == fragId) {
-                // Message to self can be resiable.
+                // Message to self can be resizable.
                 cache[i] = Gid2Data.newResizable(cacheSize);
             } else {
                 cache[i] = Gid2Data.newFixed(cacheSize);

@@ -40,7 +40,7 @@ public class FileUtils {
     }
 
     public static FileFormatType getFormatType(String file) throws IOException {
-        // can not differentiate between properties and YAML format files based on their content,
+        // cannot differentiate between properties and YAML format files based on their content,
         // so here the determination is made based on the file extension.
         if (file.endsWith(".properties")) return FileFormatType.PROPERTIES;
         try (InputStream inputStream = new FileInputStream(file)) {

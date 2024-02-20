@@ -31,7 +31,7 @@ jobs:
     - name: Detect the tmate session
       run: |
         if grep -v "grep" .github/workflows/gaia.yml | grep "action-tmate"; then
-          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          echo 'WARNING!!!the self-hosted machine cannot run tmate session, please debug it manually'
           exit 1
         fi
 
@@ -88,12 +88,12 @@ jobs:
       run: |
         . ${HOME}/.graphscope_env
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git /tmp/gstest
-        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_ci.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_experimental_ci.sh
 
     - name: Ir Integration Pattern Test on Experimental Store
       run: |
         cd ${GITHUB_WORKSPACE}
-        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_exprimental_advanced_ci.sh
+        cd ${GITHUB_WORKSPACE}/interactive_engine/compiler && ./ir_experimental_advanced_ci.sh
 
     - name: Ir Integration Test on Csr Store
       run: |

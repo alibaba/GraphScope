@@ -57,7 +57,7 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
   seastar::future<query_result> ANNOTATION(actor:method) node_status(query_param&& param);
 
-  // DECLARE_RUN_QUERYS;
+  // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.
   ACTOR_DO_WORK()
 

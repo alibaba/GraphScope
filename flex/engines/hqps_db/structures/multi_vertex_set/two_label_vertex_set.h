@@ -644,6 +644,7 @@ class TwoLabelVertexSetImpl {
 
   static constexpr bool is_vertex_set = true;
   static constexpr bool is_general_set = false;
+  static constexpr bool is_row_vertex_set = false;
   static constexpr bool is_two_label_set = true;
   static constexpr size_t num_labels = 2;
   static constexpr size_t num_props = sizeof...(T);
@@ -943,6 +944,7 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
   static constexpr bool is_vertex_set = true;
   static constexpr bool is_general_set = false;
   static constexpr bool is_two_label_set = true;
+  static constexpr bool is_row_vertex_set = false;
   static constexpr size_t num_labels = 2;
   static constexpr size_t num_props = 0;
   static constexpr bool is_collection = false;
@@ -1182,7 +1184,6 @@ class TwoLabelVertexSetImpl<VID_T, LabelT, grape::EmptyType> {
     bitset_.swap(new_bitset);
     VLOG(10) << "after subset: " << vec_.size()
              << ",count: " << bitset_.count();
-    ;
   }
 
   void Repeat(std::vector<offset_t>& cur_offset,
@@ -1288,9 +1289,7 @@ static auto get_property_tuple_two_label(
     const TwoLabelVertexSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
                             VERTEX_SET_PROP_T...>& general_set,
     const std::array<std::string, sizeof...(T)>& prop_names) {
-  double t0 = -grape::GetCurrentTime();
   auto& label_array = general_set.GetLabels();
-  t0 += grape::GetCurrentTime();
 
   // Get data for multilabel vertices, mixed
   // double t1 = -grape::GetCurrentTime();

@@ -6,7 +6,7 @@ Welcome to GraphScope Interactive! This guide will walk you through the process 
 
 Make sure `GraphScope Interactive` is installed before proceeding on. If not, please follow [installation](./installation) to install the latest release.
 
-- **Administrative tool**: GraphScope Interactive offers an administrative tool of `bin/gs interactive` to help manage the Interactive service. For an in-depth guide on how to use this tool, please visit the page of [adminstrative tool](./tools/admin_tool). 
+- **Administrative tool**: GraphScope Interactive offers an administrative tool of `bin/gs interactive` to help manage the Interactive service. For an in-depth guide on how to use this tool, please visit the page of [administrative tool](./tools/admin_tool). 
 
 - **Graph Data**: By default, GraphScope Interactive uses Tinkerpop's [modern graph](https://tinkerpop.apache.org/docs/current/tutorials/getting-started/) to get you started. However, if you wish to configure your own graph and load your data, you can refer to the page of [using custom graph_data](./custom_graph) for detailed steps.
   
@@ -58,7 +58,7 @@ bin/gs_interactive service status
 You should be able to see the current status of the service, the graph that is running and the port (by default: 7687) for accepting Cypher queries.   
 
 
-### Destory the Service
+### Destroy the Service
 Execute the command below to terminate the service. Please be aware that this action will erase all the data you've generated and is irreversible. Please proceed with caution.
 
 ```bash
