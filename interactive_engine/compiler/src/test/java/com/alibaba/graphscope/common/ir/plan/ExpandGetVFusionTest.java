@@ -292,6 +292,46 @@ public class ExpandGetVFusionTest {
                 after.explain().trim());
     }
 
+    // g.V().hasLabel("person").outE("knows").outV(), can not be fused
+    @Test
+    public void expand_getv_fusion_6_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode before =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person")))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows")))
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.START,
+                                        new LabelConfig(false).addLabel("person")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[START])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                before.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(before);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[START])\n"
+                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX])",
+                after.explain().trim());
+    }
+
     // path expand: g.V().hasLabel("person").out('1..3', "knows").with('PATH_OPT',
     // SIMPLE).with('RESULT_OPT', ALL_V)
     @Test
