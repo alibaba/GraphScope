@@ -456,7 +456,6 @@ class StringMapColumn : public ColumnBase {
   }
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override;
-
   void open_in_memory(const std::string& name) override;
   void open_with_hugepages(const std::string& name, bool force) override;
   void dump(const std::string& filename) override;
