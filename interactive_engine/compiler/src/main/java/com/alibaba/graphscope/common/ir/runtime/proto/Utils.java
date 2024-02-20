@@ -452,7 +452,7 @@ public abstract class Utils {
         }
     }
 
-    public static final GraphAlgebraPhysical.EdgeExpand.Direction protoExpandOpt(
+    public static final GraphAlgebraPhysical.EdgeExpand.Direction protoExpandDirOpt(
             GraphOpt.Expand opt) {
         switch (opt) {
             case OUT:
@@ -467,7 +467,7 @@ public abstract class Utils {
         }
     }
 
-    public static final GraphAlgebraPhysical.EdgeExpand.ExpandOpt protoPhysicalExpandOpt(
+    public static final GraphAlgebraPhysical.EdgeExpand.ExpandOpt protoExpandOpt(
             GraphOpt.PhysicalExpandOpt opt) {
         switch (opt) {
             case EDGE:
@@ -482,8 +482,7 @@ public abstract class Utils {
         }
     }
 
-    public static final GraphAlgebraPhysical.GetV.VOpt protoPhysicalGetVOpt(
-            GraphOpt.PhysicalGetVOpt opt) {
+    public static final GraphAlgebraPhysical.GetV.VOpt protoGetVOpt(GraphOpt.PhysicalGetVOpt opt) {
         switch (opt) {
             case START:
                 return GraphAlgebraPhysical.GetV.VOpt.START;
