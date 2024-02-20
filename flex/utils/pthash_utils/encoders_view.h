@@ -21,6 +21,8 @@
 
 namespace gs {
 
+// This code is an adaptation from
+// https://github.com/jermp/pthash/blob/master/include/encoders/encoders.hpp
 struct dictionary_view {
   size_t size() const { return m_ranks.size(); }
   uint64_t access(uint64_t i) const {
