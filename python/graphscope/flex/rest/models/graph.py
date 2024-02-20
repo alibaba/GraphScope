@@ -18,16 +18,12 @@ import pprint
 import re  # noqa: F401
 import json
 
-
+from pydantic import BaseModel, Field, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from pydantic import BaseModel, StrictStr, field_validator
-from pydantic import Field
 from graphscope.flex.rest.models.graph_stored_procedures import GraphStoredProcedures
 from graphscope.flex.rest.models.model_schema import ModelSchema
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Optional, Set
+from typing_extensions import Self
 
 class Graph(BaseModel):
     """
@@ -45,7 +41,7 @@ class Graph(BaseModel):
         if value is None:
             return value
 
-        if value not in ('mutable_csr'):
+        if value not in set(['mutable_csr']):
             raise ValueError("must be one of enum values ('mutable_csr')")
         return value
 
@@ -66,7 +62,7 @@ class Graph(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of Graph from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -80,10 +76,12 @@ class Graph(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         # override the default output from pydantic by calling `to_dict()` of stored_procedures
@@ -95,7 +93,7 @@ class Graph(BaseModel):
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of Graph from a dict"""
         if obj is None:
             return None
@@ -106,8 +104,8 @@ class Graph(BaseModel):
         _obj = cls.model_validate({
             "name": obj.get("name"),
             "store_type": obj.get("store_type"),
-            "stored_procedures": GraphStoredProcedures.from_dict(obj.get("stored_procedures")) if obj.get("stored_procedures") is not None else None,
-            "schema": ModelSchema.from_dict(obj.get("schema")) if obj.get("schema") is not None else None
+            "stored_procedures": GraphStoredProcedures.from_dict(obj["stored_procedures"]) if obj.get("stored_procedures") is not None else None,
+            "schema": ModelSchema.from_dict(obj["schema"]) if obj.get("schema") is not None else None
         })
         return _obj
 

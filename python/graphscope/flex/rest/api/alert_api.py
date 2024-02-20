@@ -12,30 +12,20 @@
     Do not edit the class manually.
 """  # noqa: E501
 
-
-import io
 import warnings
-
 from pydantic import validate_call, Field, StrictFloat, StrictStr, StrictInt
-from typing import Dict, List, Optional, Tuple, Union, Any
-
-try:
-    from typing import Annotated
-except ImportError:
-    from typing_extensions import Annotated
-
-from pydantic import Field
+from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import Annotated
-from pydantic import StrictStr, field_validator
 
-from typing import List, Optional
-
+from pydantic import Field, StrictStr, field_validator
+from typing import Optional
+from typing_extensions import Annotated
 from graphscope.flex.rest.models.alert_message import AlertMessage
 from graphscope.flex.rest.models.alert_receiver import AlertReceiver
 from graphscope.flex.rest.models.alert_rule import AlertRule
 from graphscope.flex.rest.models.update_alert_messages_request import UpdateAlertMessagesRequest
 
-from graphscope.flex.rest.api_client import ApiClient
+from graphscope.flex.rest.api_client import ApiClient, RequestSerialized
 from graphscope.flex.rest.api_response import ApiResponse
 from graphscope.flex.rest.rest import RESTResponseType
 
@@ -254,7 +244,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -511,7 +501,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -817,7 +807,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -1076,7 +1066,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -1315,7 +1305,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -1567,7 +1557,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -1840,7 +1830,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -2120,7 +2110,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 
@@ -2405,7 +2395,7 @@ class AlertApi:
         _content_type,
         _headers,
         _host_index,
-    ) -> Tuple:
+    ) -> RequestSerialized:
 
         _host = None
 

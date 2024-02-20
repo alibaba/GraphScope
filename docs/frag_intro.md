@@ -21,8 +21,8 @@ GraphScope 的节点（vertex）存在以下编码方式：
 ## 1. 载图
 
 按照执行流程编号，描述了载图的主要逻辑：
-### 1.1 初始化partitoner
-   分为HashPartitioner和SegmentedPartitoned, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。
+### 1.1 初始化partitioner
+   分为HashPartitioner和SegmentedPartitioner, 初始化他们需要给出fragment的数量，SegmentedPartitioner还需给出全部的oid。
 ### 1.2 构建原始arrow table
 
 每个进程读取一部分点、边文件，得到多个vertex arrow table(vtable)和edge arrow table(etable)，其中vtable按照顶点标签(vertex label)分组，etable先按照边标签(edge label)分组，同一个边标签下面又按照src和dst的顶点标签分组
@@ -277,7 +277,7 @@ fid_t fid_, fnum_; // 当前fragment id，fragment总数
 bool directed_;    // 是否为有向图
 label_id_t vertex_label_num_; // 顶点种类数量
 label_id_t edge_label_num_;  // 边种类数量
-PropertyGraphSchema schema_; // shcema
+PropertyGraphSchema schema_; // schema
 vineyard::Array<vid_t> ivnums_, ovnums_, tvnums_; // 内部点、外部点、内部和外部点总数
 std::vector<std::shared_ptr<arrow::Table>> vertex_tables_; // 顶点属性表，不包含id列
 std::vector<std::shared_ptr<vid_array_t>> ovgid_lists_;  // 外部点gid

@@ -235,7 +235,7 @@ create_gremlin_instance_on_local() {
     # /var/log/graphscope is not existed/writable, switch to ${HOME}/.local/log/graphscope
     GS_LOG=${HOME}/.local/log/graphscope
   fi
-  # init Graphscope log location
+  # init GraphScope log location
   readonly GS_LOG
   mkdir -p ${GS_LOG}
 

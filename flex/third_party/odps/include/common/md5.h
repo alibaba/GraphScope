@@ -109,7 +109,7 @@ class Md5Stream {
    */
   void Initailize();
 
-  bool mLittleEndian;     /// true if litte endian, false if big endian
+  bool mLittleEndian;     /// true if little endian, false if big endian
   uint8_t mBuf[64];       /// hold remained input stream
   uint64_t mBufPosition;  /// indicate the position of stream end in buf
   uint32_t mH[4];         /// hold inter result

@@ -222,7 +222,7 @@ mod test {
         let time11 = "19600410";
         let time2 = "2012-07-21T07:59:14.322+0000";
         let time3 = "20120721075914";
-        // java miniseconds
+        // java milliseconds
         let time4 = "1316563200000";
         let time5 = "628646400000";
 

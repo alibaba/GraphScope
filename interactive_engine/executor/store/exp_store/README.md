@@ -1,6 +1,6 @@
 # Overview
 The codes maintain the distributed graph storage for GAIA. We adopt the property graph model as
-advocated in modern graph databses such as [Neo4j](https://neo4j.com/) adn [Tinkerpop](https://tinkerpop.apache.org/). 
+advocated in modern graph databases such as [Neo4j](https://neo4j.com/) adn [Tinkerpop](https://tinkerpop.apache.org/). 
 We split the graph data into two parts, namely structure data and property data. The structure data contains
 vertices and edges and their labels. Each vertex is identified by a globally unique identity, while the edges are
 maintained in the associated vertices using the conventional adjacency list. We leverage the Rust graph library
@@ -8,9 +8,9 @@ maintained in the associated vertices using the conventional adjacency list. We 
 
 The property data are maintained in a variety of ways, as can be found in `src/table.rs`, namely:
 * `PropertyTable`: The default option of in-memory hash table.
-* `SingleValueTable`: An optimized in-memory table that maintains one single value. Altough vertices
+* `SingleValueTable`: An optimized in-memory table that maintains one single value. Although vertices
 usually contain multiple properties, it is very common for the edges to only contain on single property in practice.
-  In addition, edges are often in a much larger order (10X~100X largers) than vertices. We thus implement `SingleValueTable`
+  In addition, edges are often in a much larger order (10X~100X larger) than vertices. We thus implement `SingleValueTable`
   as an optimization to ease the edges' storage burden.
 
 # Usage of LDBC Parser
@@ -19,7 +19,7 @@ We currently provide a tool for parsing (and partitioning) the LDBC raw data gen
 [LDBC Datagen](https://github.com/ldbc/ldbc_snb_datagen) into our distributed storage. 
 LDBC vertices are uniquely identified by its vertex type (label) and id. We leverage this feature by mapping
 each vertex label to a label id, and then assign each vertex a globally unique id using the combination
-of its label id and ldbc id. Note that certain vertex may have two-level (parimary and secondary) label, for 
+of its label id and ldbc id. Note that certain vertex may have two-level (primary and secondary) label, for 
 example, a `Company` vertex also has a primary label of `Organization`. In this case, the primary 
 label will be used. Edge is not the first-class citizen in our design, and will be indexed
 according to its source (and target) vertex. Given the global id, partitioning is straightforward: 
@@ -39,7 +39,7 @@ Same applies to each edge data.
 ## Data Schema
 The schema contains the following metadata for the graph storage:
 * Mapping from vertex label to label id.
-* Mapping from edge label to a 3-tuple, which contains edge label id, ource vertex label id, and target vertex
+* Mapping from edge label to a 3-tuple, which contains edge label id, source vertex label id, and target vertex
   label id. 
 * The properties (name and datatype) of each type of vertex/edge.
 

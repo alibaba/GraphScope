@@ -128,7 +128,7 @@ jobs:
         sudo docker rmi -f graphscope/graphscope-dev:wheel-${tag} || true
         sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag} || true
 
-  manifesh-push-wheel-image:
+  manifest-push-wheel-image:
     runs-on: ubuntu-20.04
     # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_wheel == 'true' }}
     if: false

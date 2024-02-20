@@ -582,7 +582,7 @@ mod test {
         };
         let expand_opr_b_c = pb::EdgeExpand {
             v_tag: None,
-            direction: 0, // outhaod
+            direction: 0, // out
             params: Some(query_params(vec![1.into()], vec![], None)),
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,

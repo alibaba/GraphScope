@@ -29,7 +29,7 @@ limitations under the License.
 namespace gs {
 
 /**
- * @brief LouvainVertex is a specific PregelVertex for louvain alorithm.
+ * @brief LouvainVertex is a specific PregelVertex for louvain algorithm.
  * LouvainVertex provides communication-related method to send messages to
  * certain fragment and also access to context of louvain.
  * @tparam FRAG_T

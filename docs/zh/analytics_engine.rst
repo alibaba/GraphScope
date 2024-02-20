@@ -367,7 +367,7 @@ GraphScope图分析引擎上运行这些示例算法。
     from graphscope import JavaApp
     from graphscope.dataset import load_p2p_network
 
-    """Or lauch session in k8s cluster"""
+    """Or launch session in k8s cluster"""
     sess = graphscope.session(cluster_type='hosts') 
 
     graph = load_p2p_network(sess)    
@@ -403,7 +403,7 @@ GraphScope图分析引擎上运行这些示例算法。
     </dependency>
 
 用户在开发自己算法的过程中，可能会用到其他的第三方jar包。为了解决依赖jar包的版本问题，用户需要使用确保自己生成的jar包包含所有依赖的jar包。
-例如，用户可以使用maven插件 `maven-shade-pluging`.
+例如，用户可以使用maven插件 `maven-shade-plugin`.
 
 .. code:: xml
 
@@ -518,7 +518,7 @@ GraphScope图分析引擎上运行这些示例算法。
     from graphscope import JavaApp
     from graphscope.dataset import load_p2p_network
     
-    """Or lauch session in k8s cluster"""
+    """Or launch session in k8s cluster"""
     sess = graphscope.session(cluster_type='hosts')
 
     graph = load_p2p_network(sess)
@@ -526,7 +526,7 @@ GraphScope图分析引擎上运行这些示例算法。
 
     app=JavaApp(
         full_jar_path="{full/path/to/your/packed/jar}", 
-        java_app_class="{fullly/qualified/class/name/of/your/app}", 
+        java_app_class="{fully/qualified/class/name/of/your/app}", 
     )
     ctx=app(graph, "${param string}")
 

@@ -60,7 +60,7 @@ message VineyardInfoPb {
     bool generate_eid = 6;
     // object id of the graph in vineyard
     int64 vineyard_id = 7;
-    // For client to reconstrut graph schema
+    // For client to reconstruct graph schema
     string property_schema_json = 8;
     // Global or local vertex map
     VertexMapTypePb vertex_map_type = 9;

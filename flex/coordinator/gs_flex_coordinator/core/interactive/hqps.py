@@ -22,13 +22,26 @@ import os
 from typing import List, Union
 
 import hqps_client
-from hqps_client import (Graph, JobResponse, JobStatus, ModelSchema, Procedure,
-                         SchemaMapping, Service)
+from hqps_client import (
+    Graph,
+    JobResponse,
+    JobStatus,
+    ModelSchema,
+    Procedure,
+    SchemaMapping,
+    Service,
+)
 
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
-                                             HQPS_ADMIN_SERVICE_PORT,
-                                             WORKSPACE)
-from gs_flex_coordinator.core.utils import encode_datetime, get_internal_ip
+from gs_flex_coordinator.core.config import (
+    CLUSTER_TYPE,
+    HQPS_ADMIN_SERVICE_PORT,
+    WORKSPACE,
+)
+from gs_flex_coordinator.core.utils import (
+    encode_datetime,
+    get_internal_ip,
+    get_public_ip,
+)
 from gs_flex_coordinator.models import StartServiceRequest
 
 logger = logging.getLogger("graphscope")
@@ -130,13 +143,15 @@ class HQPSClient(object):
             response = api_instance.get_service_status()
             # transfer
             if CLUSTER_TYPE == "HOSTS":
-                internal_ip = get_internal_ip()
+                host = get_public_ip()
+                if host is None:
+                    host = get_internal_ip()
                 return {
                     "status": response.status,
                     "graph_name": response.graph_name,
                     "sdk_endpoints": {
-                        "cypher": f"neo4j://{internal_ip}:{response.bolt_port}",
-                        "hqps": f"http://{internal_ip}:{response.hqps_port}",
+                        "cypher": f"neo4j://{host}:{response.bolt_port}",
+                        "hqps": f"http://{host}:{response.hqps_port}",
                     },
                 }
 
