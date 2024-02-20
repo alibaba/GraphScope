@@ -16,11 +16,13 @@
 #ifndef GRAPHSCOPE_GRAPH_PT_INDEXER_H_
 #define GRAPHSCOPE_GRAPH_PT_INDEXER_H_
 
+#ifdef USE_PTHASH
 #include <thread>
 
 #include "grape/util.h"
 
 #include "flex/utils/property/column.h"
+
 #include "flex/utils/pthash_utils/single_phf_view.h"
 #include "murmurhash.h"
 #include "pthash.hpp"
@@ -389,5 +391,6 @@ class PTIndexerBuilder {
 };
 
 }  // namespace gs
+#endif  // USE_PTHASH
 
 #endif  // GRAPHSCOPE_GRAPH_PT_INDEXER_H_
