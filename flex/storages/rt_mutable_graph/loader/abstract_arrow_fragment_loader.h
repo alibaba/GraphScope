@@ -86,6 +86,7 @@ void check_edge_invariant(
 
 template <typename KEY_T>
 struct _add_vertex {
+#ifndef USE_PTHASH
   void operator()(const std::shared_ptr<arrow::Array>& col,
                   IdIndexer<KEY_T, vid_t>& indexer, std::vector<vid_t>& vids) {
     size_t row_num = col->length();
@@ -135,6 +136,7 @@ struct _add_vertex {
     }
   }
 
+#else
   void operator()(const std::shared_ptr<arrow::Array>& col,
                   PTIndexerBuilder<KEY_T, vid_t>& indexer) {
     size_t row_num = col->length();
@@ -172,11 +174,12 @@ struct _add_vertex {
       }
     }
   }
+#endif
 };
 
 template <typename PK_T, typename EDATA_T>
 void _append(bool is_dst, size_t cur_ind, std::shared_ptr<arrow::Array> col,
-             const LFIndexer<vid_t>& indexer,
+             const IndexerType& indexer,
              std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,
              std::vector<int32_t>& degree) {
   if constexpr (std::is_same_v<PK_T, std::string_view>) {
@@ -543,8 +546,8 @@ class AbstractArrowFragmentLoader : public IFragmentLoader {
   template <typename SRC_PK_T, typename EDATA_T>
   void _append_edges(
       std::shared_ptr<arrow::Array> src_col,
-      std::shared_ptr<arrow::Array> dst_col,
-      const LFIndexer<vid_t>& src_indexer, const LFIndexer<vid_t>& dst_indexer,
+      std::shared_ptr<arrow::Array> dst_col, const IndexerType& src_indexer,
+      const IndexerType& dst_indexer,
       std::vector<std::shared_ptr<arrow::Array>>& property_cols,
       const PropertyType& edge_property,
       std::vector<std::tuple<vid_t, vid_t, EDATA_T>>& parsed_edges,

@@ -555,6 +555,7 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);
 
+#ifdef USE_PTHASH
 template <typename EDATA_T>
 class ConcatColumn : public ColumnBase {
  public:
@@ -626,6 +627,7 @@ class ConcatColumn : public ColumnBase {
   const TypedColumn<EDATA_T>& extra_column_;
   size_t basic_size_;
 };
+#endif
 
 /// Create RefColumn for ease of usage for hqps
 class RefColumnBase {

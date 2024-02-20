@@ -55,7 +55,7 @@ class BasicFragmentLoader {
     CHECK(col_ind < dst_columns.size());
     dst_columns[col_ind]->set_any(vid, prop);
   }
-
+#ifndef USE_PTHASH
   template <typename KEY_T>
   void FinishAddingVertex(label_t v_label,
                           const IdIndexer<KEY_T, vid_t>& indexer) {
@@ -70,7 +70,7 @@ class BasicFragmentLoader {
         lf_indexers_[v_label], snapshot_dir(work_dir_, 0), tmp_dir(work_dir_),
         type);
   }
-
+#else
   template <typename KEY_T>
   void FinishAddingVertex(label_t v_label,
                           PTIndexerBuilder<KEY_T, vid_t>& indexer_builder) {
@@ -80,6 +80,7 @@ class BasicFragmentLoader {
     indexer_builder.finish(PTIndexer<vid_t>::prefix() + "_" + filename,
                            snapshot_dir(work_dir_, 0), lf_indexers_[v_label]);
   }
+#endif
 
   template <typename EDATA_T>
   void AddNoPropEdgeBatch(label_t src_label_id, label_t dst_label_id,

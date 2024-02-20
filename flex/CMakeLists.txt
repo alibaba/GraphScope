@@ -58,7 +58,10 @@ if(LINUX_KERNEL_VERSION VERSION_GREATER_EQUAL "4.5")
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+
+if(USE_PTHASH)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+endif()
 
 set(DEFAULT_BUILD_TYPE "Release")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -235,12 +238,15 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash
-                  ${PROJECT_SOURCE_DIR}/third_party/pthash
-        DESTINATION include
-        FILES_MATCHING
-        PATTERN "*.h"
-        PATTERN "*.hpp"
-)
+
+if(USE_PTHASH)
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash
+                      ${PROJECT_SOURCE_DIR}/third_party/pthash
+            DESTINATION include
+            FILES_MATCHING
+            PATTERN "*.h"
+            PATTERN "*.hpp"
+    )
+endif()
 
 include(CPack)
