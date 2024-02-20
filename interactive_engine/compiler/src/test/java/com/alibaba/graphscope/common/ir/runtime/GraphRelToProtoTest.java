@@ -53,6 +53,30 @@ public class GraphRelToProtoTest {
     }
 
     @Test
+    public void scan_edge_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode scan =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.EDGE,
+                                        new LabelConfig(false).addLabel("knows"),
+                                        "x"))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[knows]}], alias=[x],"
+                        + " opt=[EDGE])",
+                scan.explain().trim());
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(scan))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/scan_edge_test.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
     public void scan_filter_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode scan =

@@ -90,6 +90,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         if (source.getAliasId() != AliasInference.DEFAULT_ID) {
             scanBuilder.setAlias(Utils.asAliasId(source.getAliasId()));
         }
+        scanBuilder.setScanOpt(Utils.protoScanOpt(source.getOpt()));
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setScan(scanBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(source.getRowType(), isColumnId));

@@ -578,6 +578,17 @@ public abstract class Utils {
         }
     }
 
+    public static final GraphAlgebraPhysical.Scan.ScanOpt protoScanOpt(GraphOpt.Source opt) {
+        switch (opt) {
+            case VERTEX:
+                return GraphAlgebraPhysical.Scan.ScanOpt.VERTEX;
+            case EDGE:
+                return GraphAlgebraPhysical.Scan.ScanOpt.EDGE;
+            default:
+                throw new UnsupportedOperationException("scan opt " + opt + " is unsupported yet");
+        }
+    }
+
     public static Common.NameOrId asNameOrId(int id) {
         Common.NameOrId.Builder builder = Common.NameOrId.newBuilder();
         builder.setId(id);
