@@ -26,7 +26,7 @@
 #include "flex/storages/rt_mutable_graph/dual_csr.h"
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/arrow_utils.h"
-#include "flex/utils/id_indexer.h"
+#include "flex/utils/indexers.h"
 #include "flex/utils/property/table.h"
 #include "flex/utils/yaml_utils.h"
 #include "grape/io/local_io_adaptor.h"
@@ -110,7 +110,7 @@ class MutablePropertyFragment {
   void loadSchema(const std::string& filename);
 
   Schema schema_;
-  std::vector<LFIndexer<vid_t>> lf_indexers_;
+  std::vector<IndexerType> lf_indexers_;
   std::vector<CsrBase*> ie_, oe_;
   std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
