@@ -107,16 +107,14 @@ impl SimpleServerDetector {
 
     pub fn update_peer_view<Iter: Iterator<Item = (u64, ServerAddr)>>(&self, peer_view: Iter) {
         let new_peers = peer_view
-            .map(|(id, server_addr)| {
-                loop {
-                    let addr = server_addr.to_socket_addr();
-                    if addr.is_ok() {
-                        let addr = addr.unwrap();
-                        return Server { id, addr }
-                    } else {
-                        error!("Cannot resolve address {:?}, retrying...", server_addr);
-                        sleep(Duration::from_secs(3));
-                    }
+            .map(|(id, server_addr)| loop {
+                let addr = server_addr.to_socket_addr();
+                if addr.is_ok() {
+                    let addr = addr.unwrap();
+                    return Server { id, addr };
+                } else {
+                    error!("Cannot resolve address {:?}, retrying...", server_addr);
+                    sleep(Duration::from_secs(3));
                 }
             })
             .collect::<Vec<Server>>();

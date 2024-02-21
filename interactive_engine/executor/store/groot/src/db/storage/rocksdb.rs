@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
 use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
-use crossbeam_epoch::{self as epoch, Atomic, Guard, Shared, Owned};
+use crossbeam_epoch::{self as epoch, Atomic, Guard, Owned, Shared};
 use grpcio_sys::grpc_serving_status_update;
 use libc::option;
 use rocksdb::{CompactOptions, DBCompactionStyle, DBCompressionType, WriteBatch};
@@ -57,7 +57,8 @@ impl RocksDB {
             .expect("invalid config, missing store.data.path");
         let mut sec_path = options
             .get("store.data.secondary.path")
-            .expect("invalid config, missing store.data.secondary.path").clone();
+            .expect("invalid config, missing store.data.secondary.path")
+            .clone();
         if reopen {
             while Path::new(&sec_path).exists() {
                 sec_path = format!("{}_1", sec_path);
@@ -76,7 +77,9 @@ impl RocksDB {
         let guard = epoch::pin();
         let new_db = Arc::new(db);
         let new_db_shared = Owned::new(new_db).into_shared(&guard);
-        let old_db_shared = self.db.swap(new_db_shared, Ordering::Release, &guard);
+        let old_db_shared = self
+            .db
+            .swap(new_db_shared, Ordering::Release, &guard);
         // Use Crossbeam's 'defer' mechanism to safely drop the old Arc
         unsafe {
             // Convert 'Shared' back to 'Arc' for deferred dropping
@@ -197,7 +200,10 @@ impl RocksDB {
                 gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
             })?;
             let mut val = false;
-            if let Some(conf_str) = self.options.get("store.rocksdb.disable.auto.compactions") {
+            if let Some(conf_str) = self
+                .options
+                .get("store.rocksdb.disable.auto.compactions")
+            {
                 val = conf_str.parse::<bool>().unwrap();
             }
             if !val {
@@ -243,8 +249,7 @@ impl RocksDB {
         if let Some(db) = unsafe { db_shared.as_ref() } {
             db.ingest_external_file_opts(&options, files.to_vec())
                 .map_err(|e| {
-                    let msg =
-                        format!("rocksdb.load file {:?} failed because {}", files, e.into_string());
+                    let msg = format!("rocksdb.load file {:?} failed because {}", files, e.into_string());
                     gen_graph_err!(GraphErrorCode::ExternalStorageError, msg)
                 })
         } else {
@@ -491,7 +496,7 @@ pub struct RocksDBIter<'a> {
     _db: Arc<DB>,
     inner: Option<DBRawIterator<'a>>,
     just_seeked: bool,
-    _guard: Guard
+    _guard: Guard,
 }
 
 unsafe impl Send for RocksDBIter<'_> {}

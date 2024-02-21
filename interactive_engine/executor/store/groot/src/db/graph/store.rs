@@ -658,11 +658,10 @@ impl GraphStore {
                 res_unwrap!(res, open, config, path)
             }
             "rocksdb_as_secondary" => {
-                let res = RocksDB::open_as_secondary(config.get_storage_options())
-                    .and_then(|db| {
-                        let storage = Arc::new(db);
-                        Self::init(config, storage, path)
-                    });
+                let res = RocksDB::open_as_secondary(config.get_storage_options()).and_then(|db| {
+                    let storage = Arc::new(db);
+                    Self::init(config, storage, path)
+                });
                 res_unwrap!(res, open, config, path)
             }
             unknown => {
@@ -677,7 +676,9 @@ impl GraphStore {
         self.storage.try_catch_up_with_primary()
     }
 
-    pub fn compact(&self) -> GraphResult<()> { self.storage.compact() }
+    pub fn compact(&self) -> GraphResult<()> {
+        self.storage.compact()
+    }
 
     pub fn reopen(&self, wait_sec: u64) -> GraphResult<()> {
         self.storage.reopen(wait_sec)
@@ -688,7 +689,10 @@ impl GraphStore {
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;
         let data_root = path.to_string();
         let mut download_root = "".to_string();
-        download_root = config.get_storage_option("store.data.download.path").unwrap_or(&download_root).clone();
+        download_root = config
+            .get_storage_option("store.data.download.path")
+            .unwrap_or(&download_root)
+            .clone();
         if download_root.is_empty() {
             download_root = format!("{}/../{}", data_root, "download");
         }

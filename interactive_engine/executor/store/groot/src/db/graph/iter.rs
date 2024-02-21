@@ -33,8 +33,7 @@ fn check_e(id: EdgeId, ts: SnapshotId, prev_id: Option<EdgeId>, data_ts: Snapsho
 
 impl VertexTypeScan {
     pub fn new(
-        storage: Arc<RocksDB>, si: SnapshotId, vertex_type_info: Arc<VertexTypeInfo>,
-        with_prop: bool,
+        storage: Arc<RocksDB>, si: SnapshotId, vertex_type_info: Arc<VertexTypeInfo>, with_prop: bool,
     ) -> Self {
         VertexTypeScan { storage, si, vertex_type_info, with_prop }
     }
@@ -98,8 +97,8 @@ pub struct EdgeTypeScan {
 
 impl EdgeTypeScan {
     pub fn new(
-        storage: Arc<RocksDB>, si: SnapshotId, edge_info: Arc<EdgeInfo>,
-        vertex_id: Option<VertexId>, direction: EdgeDirection, with_prop: bool,
+        storage: Arc<RocksDB>, si: SnapshotId, edge_info: Arc<EdgeInfo>, vertex_id: Option<VertexId>,
+        direction: EdgeDirection, with_prop: bool,
     ) -> Self {
         EdgeTypeScan { storage, si, edge_info, vertex_id, direction, with_prop }
     }

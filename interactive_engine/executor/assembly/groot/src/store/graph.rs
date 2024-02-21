@@ -2,9 +2,9 @@
 
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
-use std::{str, thread};
 use std::sync::{Arc, Once};
 use std::time::Duration;
+use std::{str, thread};
 
 use groot_store::db::api::multi_version_graph::MultiVersionGraph;
 use groot_store::db::api::PropertyMap;
@@ -133,8 +133,8 @@ pub extern "C" fn writeBatch(
 ) -> Box<JnaResponse> {
     trace!("writeBatch");
 
-    let graph_store_ptr = unsafe {&*(ptr as *const GraphStore)};
-    let buf = unsafe {::std::slice::from_raw_parts(data, len)};
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    let buf = unsafe { ::std::slice::from_raw_parts(data, len) };
     let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
         Ok((has_ddl, reopen_secondary)) => {
             let mut response = JnaResponse::new_success();
@@ -147,7 +147,6 @@ pub extern "C" fn writeBatch(
         }
     };
     return ret;
-
 }
 
 fn do_write_batch<G: MultiVersionGraph>(
@@ -448,7 +447,7 @@ pub extern "C" fn reopenSecondary(ptr: GraphHandle, wait_sec: i64) -> Box<JnaRes
         Ok(_) => {
             info!("Reopened store");
             JnaResponse::new_success()
-        },
+        }
         Err(e) => {
             let msg = format!("Reopen failed: {:?}", e);
             error!("{}", msg);
@@ -460,10 +459,10 @@ pub extern "C" fn reopenSecondary(ptr: GraphHandle, wait_sec: i64) -> Box<JnaRes
 #[no_mangle]
 pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
-    if snapshot_id % 60 != 0 {
-        return JnaResponse::new_success();
-    }
-    info!("garbageCollectSnapshot si {}", snapshot_id);
+    // if snapshot_id % 60 != 0 {
+    //     return JnaResponse::new_success();
+    // }
+    debug!("garbageCollectSnapshot si {}", snapshot_id);
     match graph_store_ptr.gc(snapshot_id) {
         Ok(_) => JnaResponse::new_success(),
         Err(e) => {
@@ -485,7 +484,7 @@ pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
                 Ok(_) => {
                     info!("Reopened store");
                     JnaResponse::new_success()
-                },
+                }
                 Err(e) => {
                     let msg = format!("Reopen failed: {:?}", e);
                     error!("{}", msg);
