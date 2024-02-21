@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.tests.store;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;

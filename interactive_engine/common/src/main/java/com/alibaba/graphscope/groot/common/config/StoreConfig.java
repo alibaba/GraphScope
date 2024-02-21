@@ -47,5 +47,6 @@ public class StoreConfig {
     public static final Config<String> STORE_SECONDARY_DATA_PATH =
             Config.stringConfig("store.data.secondary.path", "./data_secondary");
 
-    public static final Config<String> STORE_WAL_DIR = Config.stringConfig("store.rocksdb.wal.dir", "");
+    public static final Config<String> STORE_WAL_DIR =
+            Config.stringConfig("store.rocksdb.wal.dir", "");
 }

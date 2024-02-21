@@ -74,7 +74,8 @@ public class StoreIngestClient extends RpcClient {
     }
 
     public void storeCompact(CompletionCallback<Void> callback) {
-        this.stub.compactDB(CompactDBRequest.newBuilder().build(),
+        this.stub.compactDB(
+                CompactDBRequest.newBuilder().build(),
                 new StreamObserver<>() {
                     @Override
                     public void onNext(CompactDBResponse value) {
@@ -87,14 +88,13 @@ public class StoreIngestClient extends RpcClient {
                     }
 
                     @Override
-                    public void onCompleted() {
-
-                    }
+                    public void onCompleted() {}
                 });
     }
 
     public void reopenSecondary(CompletionCallback<Void> callback) {
-        this.stub.reopenSecondary(ReopenSecondaryRequest.newBuilder().build(),
+        this.stub.reopenSecondary(
+                ReopenSecondaryRequest.newBuilder().build(),
                 new StreamObserver<>() {
                     @Override
                     public void onNext(ReopenSecondaryResponse value) {
@@ -107,9 +107,7 @@ public class StoreIngestClient extends RpcClient {
                     }
 
                     @Override
-                    public void onCompleted() {
-
-                    }
+                    public void onCompleted() {}
                 });
     }
 }

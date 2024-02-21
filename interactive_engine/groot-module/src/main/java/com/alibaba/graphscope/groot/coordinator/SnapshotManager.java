@@ -394,9 +394,10 @@ public class SnapshotManager {
                         try {
                             listener.snapshotAdvanced(newSnapshotId, newDdlSnapshotId);
                         } catch (ServiceNotReadyException e) {
-                            logger.error("Error occurred when notify listeners, Schema manager is recovering.");
-                        }
-                        catch (Exception e) {
+                            logger.error(
+                                    "Error occurred when notify listeners, Schema manager is"
+                                        + " recovering.");
+                        } catch (Exception e) {
                             logger.error("Error occurred when notify listeners", e);
                         }
                     }

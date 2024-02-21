@@ -45,8 +45,12 @@ public class JnaGraphStore implements GraphPartition {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
         Path partitionPath = Paths.get(dataRoot, "" + partitionId);
         builder.put(StoreConfig.STORE_DATA_PATH.getKey(), partitionPath.toString());
+        String downloadRoot = StoreConfig.STORE_DATA_DOWNLOAD_PATH.get(configs);
+        if (downloadRoot.isEmpty()) {
+            downloadRoot = Paths.get(dataRoot, "download").toString();
+        }
+        this.downloadPath = Paths.get(downloadRoot);
 
-        this.downloadPath = Paths.get(dataRoot, "download");
         this.backupPath = Paths.get(dataRoot, "backups", "" + partitionId);
         String secondaryDataRoot = StoreConfig.STORE_SECONDARY_DATA_PATH.get(configs);
         Path secondPath = Paths.get(secondaryDataRoot, "" + partitionId);

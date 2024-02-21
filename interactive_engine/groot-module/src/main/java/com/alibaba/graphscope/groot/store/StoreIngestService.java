@@ -57,8 +57,7 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
 
     @Override
     public void storeClearIngest(
-            ClearIngestRequest request,
-            StreamObserver<ClearIngestResponse> responseObserver) {
+            ClearIngestRequest request, StreamObserver<ClearIngestResponse> responseObserver) {
         try {
             this.storeService.clearIngest(request.getDataPath());
             responseObserver.onNext(ClearIngestResponse.newBuilder().build());
@@ -71,42 +70,45 @@ public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
 
     @Override
     public void compactDB(
-            CompactDBRequest request,
-            StreamObserver<CompactDBResponse> responseObserver) {
-            this.storeService.compactDB(new CompletionCallback<Void>() {
-                @Override
-                public void onCompleted(Void res) {
-                    responseObserver.onNext(CompactDBResponse.newBuilder().build());
-                    responseObserver.onCompleted();
-                }
+            CompactDBRequest request, StreamObserver<CompactDBResponse> responseObserver) {
+        this.storeService.compactDB(
+                new CompletionCallback<Void>() {
+                    @Override
+                    public void onCompleted(Void res) {
+                        responseObserver.onNext(CompactDBResponse.newBuilder().build());
+                        responseObserver.onCompleted();
+                    }
 
-                @Override
-                public void onError(Throwable t) {
-                    responseObserver.onError(
-                            Status.INTERNAL
-                                    .withDescription(t.getMessage())
-                                    .asRuntimeException());
-                }
-            });
+                    @Override
+                    public void onError(Throwable t) {
+                        responseObserver.onError(
+                                Status.INTERNAL
+                                        .withDescription(t.getMessage())
+                                        .asRuntimeException());
+                    }
+                });
     }
 
     @Override
     public void reopenSecondary(
             ReopenSecondaryRequest request,
             StreamObserver<ReopenSecondaryResponse> responseObserver) {
-        this.storeService.reopenPartition(5, new CompletionCallback<Void>() {
-            @Override
-            public void onCompleted(Void res) {
-                responseObserver.onNext(ReopenSecondaryResponse.newBuilder().build());
-                responseObserver.onCompleted();
-            }
-            @Override
-            public void onError(Throwable t) {
-                responseObserver.onError(
-                        Status.INTERNAL
-                                .withDescription(t.getMessage())
-                                .asRuntimeException());
-            }
-        });
+        this.storeService.reopenPartition(
+                5,
+                new CompletionCallback<Void>() {
+                    @Override
+                    public void onCompleted(Void res) {
+                        responseObserver.onNext(ReopenSecondaryResponse.newBuilder().build());
+                        responseObserver.onCompleted();
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        responseObserver.onError(
+                                Status.INTERNAL
+                                        .withDescription(t.getMessage())
+                                        .asRuntimeException());
+                    }
+                });
     }
 }

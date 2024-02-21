@@ -434,7 +434,9 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
-    public void reopenSecondary(ReopenSecondaryRequest request, StreamObserver<ReopenSecondaryResponse> responseObserver) {
+    public void reopenSecondary(
+            ReopenSecondaryRequest request,
+            StreamObserver<ReopenSecondaryResponse> responseObserver) {
         logger.info("Reopen secondary");
         int storeCount = this.metaService.getStoreCount();
         AtomicInteger counter = new AtomicInteger(storeCount);
@@ -464,7 +466,10 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                             if (t != null) {
                                 responseObserver.onError(t);
                             } else {
-                                ReopenSecondaryResponse res = ReopenSecondaryResponse.newBuilder().setSuccess(true).build();
+                                ReopenSecondaryResponse res =
+                                        ReopenSecondaryResponse.newBuilder()
+                                                .setSuccess(true)
+                                                .build();
                                 responseObserver.onNext(res);
                                 responseObserver.onCompleted();
                             }
@@ -474,7 +479,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
-    public void compactDB(CompactDBRequest request, StreamObserver<CompactDBResponse> responseObserver) {
+    public void compactDB(
+            CompactDBRequest request, StreamObserver<CompactDBResponse> responseObserver) {
         logger.info("Compact DB");
         int storeCount = this.metaService.getStoreCount();
         AtomicInteger counter = new AtomicInteger(storeCount);
@@ -504,7 +510,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                             if (t != null) {
                                 responseObserver.onError(t);
                             } else {
-                                CompactDBResponse res = CompactDBResponse.newBuilder().setSuccess(true).build();
+                                CompactDBResponse res =
+                                        CompactDBResponse.newBuilder().setSuccess(true).build();
                                 responseObserver.onNext(res);
                                 responseObserver.onCompleted();
                             }
