@@ -230,7 +230,8 @@ class GetVertex {
       std::array<label_id_t, num_labels>& req_labels,
       Filter<EXPRESSION, SELECTOR...>& filter) {
     auto req_label_vec = array_to_vec(req_labels);
-    auto labels = set.GetLabels();
+    std::vector<label_id_t> labels = set.GetLabels(v_opt);
+
     // remove duplicate from labels
     std::sort(labels.begin(), labels.end());
     labels.erase(std::unique(labels.begin(), labels.end()), labels.end());
@@ -258,6 +259,16 @@ class GetVertex {
     auto property_getters_array =
         get_prop_getters_from_selectors(graph, labels, filter.selectors_);
     return set.GetVertices(v_opt, filter.expr_, property_getters_array);
+  }
+
+  // get no prop v from path set.
+  template <size_t num_labels, typename EXPRESSION, typename... SELECTOR>
+  static auto GetNoPropVFromPathSetImpl(
+      const GRAPH_INTERFACE& graph, const PathSet<vertex_id_t, label_id_t>& set,
+      VOpt v_opt, std::array<label_id_t, num_labels>& req_labels,
+      Filter<EXPRESSION, SELECTOR...>& filter) {
+    auto req_label_vec = array_to_vec(req_labels);
+    return set.GetVertices(v_opt, req_label_vec);
   }
 
   // User-defined expression

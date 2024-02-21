@@ -223,7 +223,7 @@ impl<D: Data> Push<MicroBatch<D>> for PerChannelPush<D> {
                 batch.set_tag(tag);
                 self.push.push(batch)
             } else {
-                //is not end, and is emtpy, ignore;
+                //is not end, and is empty, ignore;
                 Ok(())
             }
         } else if batch.tag.len() < self.delta.origin_scope_level {

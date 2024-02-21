@@ -62,7 +62,7 @@ pub trait BasicSentence: AsBaseSentence {
     /// Get the end tag of the `BasicSentence`, which is optional
     fn get_end_tag(&self) -> Option<&NameOrId>;
     /// Get the join kind, for identifying if the basic sentence carries the
-    /// anti/semi join semantics, which can not be composited
+    /// anti/semi join semantics, which cannot be composited
     fn get_join_kind(&self) -> pb::join::JoinKind;
     /// Get the reverse sentence, which not only reverse the start and end tag (must present),
     /// and the direction of all edge/path expansions if possible.
@@ -86,7 +86,7 @@ pub struct BaseSentence {
     /// Use `pb::logical_plan::Operator` rather than `pb::Pattern::binder`,
     /// to facilitate building the logical plan that may translate a tag into an `As` operator.
     operators: Vec<pb::logical_plan::Operator>,
-    /// Is this a sentence with Anti(No)-semanatics
+    /// Is this a sentence with Anti(No)-semantics
     join_kind: pb::join::JoinKind,
     /// What kind of entities this sentence binds to
     end_as: BindingOpt,
@@ -625,7 +625,7 @@ pub struct CompoSentence {
     tags: BTreeSet<NameOrId>,
 }
 
-/// Preprocess a plan such that it does not contain two root nodes. More speciically,
+/// Preprocess a plan such that it does not contain two root nodes. More specifically,
 /// we will add a common `As(None)` operator as the parent of the two original roots
 /// in the plan, which becomes the new and only root node of the plan
 fn preprocess_plan(plan: &mut pb::LogicalPlan) -> IrResult<()> {

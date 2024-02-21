@@ -215,6 +215,14 @@ class LFIndexer {
         rhs.hash_policy_.get_mod_function_index());
   }
 
+  ~LFIndexer() {
+    if (keys_ != nullptr) {
+      delete keys_;
+    }
+  }
+
+  static std::string prefix() { return "indexer"; }
+
   void init(const PropertyType& type) {
     if (keys_ != nullptr) {
       delete keys_;

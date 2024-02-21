@@ -503,7 +503,7 @@ PIE
    .. py:method:: Nbr.neighbor() -> Vertex
       :noindex:
 
-        Get nerghbor vertex.
+        Get neighbor vertex.
 
    .. py:method:: Nbr.get_str(column: int) -> str
       :noindex:

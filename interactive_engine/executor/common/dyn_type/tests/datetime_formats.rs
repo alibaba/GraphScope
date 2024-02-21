@@ -141,7 +141,7 @@ mod tests {
 
     #[test]
     fn test_dateformat_cmp() {
-        // Date comparason
+        // Date comparison
         // 2020-10-10
         let date = NaiveDate::from_ymd_opt(2020, 10, 10).unwrap();
         let date_format = DateTimeFormats::Date(date);
@@ -150,7 +150,7 @@ mod tests {
         let date_format2 = DateTimeFormats::Date(date2);
         assert!(date_format < date_format2);
 
-        // Time comparason
+        // Time comparison
         // 10:10:10
         let time = NaiveTime::from_hms_opt(10, 10, 10).unwrap();
         let time_format = DateTimeFormats::Time(time);
@@ -159,7 +159,7 @@ mod tests {
         let time_format2 = DateTimeFormats::Time(time2);
         assert!(time_format < time_format2);
 
-        // DateTime comparason
+        // DateTime comparison
         // 2020-10-10 10:10:10.100
         let date_time =
             NaiveDateTime::parse_from_str("2020-10-10 10:10:10.100", "%Y-%m-%d %H:%M:%S%.f").unwrap();
@@ -170,7 +170,7 @@ mod tests {
         let date_time_format2 = DateTimeFormats::DateTime(date_time2);
         assert!(date_time_format < date_time_format2);
 
-        // DateTimeWithTz comparason
+        // DateTimeWithTz comparison
         // 2020-10-09T23:10:10.100-11:00
         let date_time_with_tz = DateTime::parse_from_rfc3339("2020-10-09T23:10:10.100-11:00").unwrap();
         let date_time_with_tz_format = DateTimeFormats::DateTimeWithTz(date_time_with_tz);

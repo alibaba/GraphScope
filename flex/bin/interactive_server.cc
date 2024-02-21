@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
 
     auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
 
-    // Ths schema is loaded just to get the plugin dir and plugin list
+    // The schema is loaded just to get the plugin dir and plugin list
     gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
     db.Close();
     auto load_res = db.Open(schema, data_path, shard_num);

@@ -518,7 +518,7 @@ def compile_app(
         java_codegen_out_dir = os.path.join(
             workspace, f"{JAVA_CODEGEN_OUTPUT_PREFIX}-{library_name}"
         )
-        # TODO(zhanglei): Could this codegen caching happends on engine side?
+        # TODO(zhanglei): Could this codegen caching happens on engine side?
         if os.path.isdir(java_codegen_out_dir):
             logger.info(
                 "Found existing java codegen directory: %s, skipped codegen",
@@ -896,7 +896,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8", errors="ignore"),
         )
 
-        # for giraph app, we need to add args into orginal query_args, which is a json string
+        # for giraph app, we need to add args into original query_args, which is a json string
         # first one should be user params, second should be lib_path
         if app_type.startswith("giraph:"):
             user_params["app_class"] = GIRAPH_DRIVER_CLASS

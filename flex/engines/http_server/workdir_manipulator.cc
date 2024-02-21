@@ -1229,9 +1229,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::disable_procedure_on_graph(
   // error: procedure already exists.
   // remove procedure from enable_lists
   auto new_enable_list = YAML::Node(YAML::NodeType::Sequence);
-  int ind = -1;
   for (auto iter = enable_lists.begin(); iter != enable_lists.end(); iter++) {
-    ind += 1;
     if (iter->as<std::string>() == procedure_name) {
       LOG(INFO) << "Found procedure " << procedure_name << " in enable_lists";
       break;

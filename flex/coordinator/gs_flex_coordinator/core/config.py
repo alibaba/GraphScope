@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import datetime
 import logging
 import os
 import tempfile
@@ -63,6 +64,11 @@ ALERT_WORKSPACE = os.path.join(WORKSPACE, "alert")
 os.makedirs(ALERT_WORKSPACE, exist_ok=True)
 
 
+# dataset workspace
+DATASET_WORKSPACE = os.path.join(WORKSPACE, "dataset")
+os.makedirs(DATASET_WORKSPACE, exist_ok=True)
+
+
 # we use the solution encompasses the various applications and use cases of the
 # product across different industries and business scenarios, e.g. "INTERACTIVE",
 # "GRAPHSCOPE INSIGHT".
@@ -79,3 +85,7 @@ CLUSTER_TYPE = os.environ.get("CLUSTER_TYPE", "HOSTS")
 
 # interactive configuration
 HQPS_ADMIN_SERVICE_PORT = os.environ.get("HIACTOR_ADMIN_SERVICE_PORT", 7777)
+
+
+# coordinator starting time
+COORDINATOR_STARTING_TIME = datetime.datetime.now()

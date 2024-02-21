@@ -30,7 +30,8 @@ schema:
         - property_id: 0
           property_name: id
           property_type:
-            primitive_type: DT_SIGNED_INT64
+            varchar:
+              max_length: 64
         - property_id: 1
           property_name: name
           property_type:
