@@ -53,6 +53,8 @@ struct default_loader {
   const char* buffer_;
 };
 
+// This code is an adaptation from
+// https://github.com/jermp/pthash/blob/master/include/single_phf.hpp
 template <typename Hasher>
 struct SinglePHFView {
  public:
