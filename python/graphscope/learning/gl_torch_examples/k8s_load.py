@@ -1,5 +1,6 @@
 import graphscope as gs
 from graphscope.dataset import load_ogbn_arxiv
+import time
 
 
 gs.set_option(log_level='DEBUG')
@@ -9,10 +10,11 @@ gs.set_option(show_log=True)
 sess = gs.session(
     with_dataset=True,
     k8s_service_type='NodePort',
-    k8s_image_pull_policy='Always',
     k8s_image_tag="0.26.0a20240115-x86_64",
+    k8s_image_pull_policy="IfNotPresent",
     num_workers=2,
 )
+# time.sleep(1000)
 g = load_ogbn_arxiv(sess=sess, prefix="/dataset/ogbn_arxiv")
 print(f"here {g.fragments}, {g.vineyard_id}")
 glt_graph = gs.graphlearn_torch(

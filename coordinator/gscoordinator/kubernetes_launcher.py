@@ -1444,8 +1444,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._graphlearn_start_port += len(pod_name_list)
         # parse the service hosts and ports
         return server_list
-        
- 
 
     def create_learning_instance(self, object_id, handle, config, learning_backend):
         logger.info(learning_backend)
@@ -1465,6 +1463,14 @@ class KubernetesClusterLauncher(AbstractLauncher):
             return self._distribute_graphlearn_torch_process(
                 pod_name_list, pod_host_ip_list, object_id, handle, config
             )
+        else:
+            raise ValueError("invalid learning backend")
+
+    def close_learning_instance(self, object_id, learning_backend):
+        if learning_backend == message_pb2.LearningBackend.GRAPHLEARN:
+            self.close_graphlearn_instance(object_id)
+        elif learning_backend == message_pb2.LearningBackend.GRAPHLEARN_TORCH:
+            self.close_graphlearn_torch_instance(object_id)
         else:
             raise ValueError("invalid learning backend")
 

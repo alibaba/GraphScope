@@ -474,7 +474,8 @@ class GraphScopeOneServiceServicer(
             context.set_details(
                 f"Create learning instance failed: ${e}. The traceback is: {traceback.format_exc()}"
             )
-            self._launcher.close_learning_instance(object_id)
+            self._launcher.close_learning_instance(
+                object_id, learning_backend)
             self._object_manager.pop(object_id)
             return message_pb2.CreateLearningInstanceResponse()
         return message_pb2.CreateLearningInstanceResponse(
