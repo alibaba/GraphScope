@@ -7,12 +7,9 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
-
-import java.util.List;
 
 /**
  * convert sub traversal nested in {@code NestedTraversalContext} to RelNode
@@ -20,7 +17,6 @@ import java.util.List;
 public class NestedTraversalRelVisitor extends GremlinGSBaseVisitor<RelNode> {
     private final GraphBuilder parentBuilder;
     private final GraphBuilder nestedBuilder;
-    private final List<String> tags;
 
     public NestedTraversalRelVisitor(GraphBuilder parentBuilder) {
         this.parentBuilder = parentBuilder;
@@ -29,11 +25,6 @@ public class NestedTraversalRelVisitor extends GremlinGSBaseVisitor<RelNode> {
                         this.parentBuilder.getContext(),
                         (GraphOptCluster) this.parentBuilder.getCluster(),
                         this.parentBuilder.getRelOptSchema());
-        this.tags = Lists.newArrayList();
-    }
-
-    public void addTags(List<String> tags) {
-        this.tags.addAll(tags);
     }
 
     @Override
