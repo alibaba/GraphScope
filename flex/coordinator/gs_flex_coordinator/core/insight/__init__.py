@@ -1,7 +1,7 @@
-#!/usr/bin/env python3
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2024 Alibaba Group Holding Limited. All Rights Reserved.
+# Copyright 2024 Alibaba Group Holding Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,17 +16,4 @@
 # limitations under the License.
 #
 
-from typing import List
-
-import graphscope.flex.rest
-from graphscope.flex.rest import GrootGraph
-from graphscope.gsctl.config import get_current_context
-
-
-def list_groot_graph() -> List[GrootGraph]:
-    context = get_current_context()
-    with graphscope.flex.rest.ApiClient(
-        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
-    ) as api_client:
-        api_instance = graphscope.flex.rest.LegacyApi(api_client)
-        return api_instance.list_groot_graph()
+from gs_flex_coordinator.core.insight.groot import init_groot_client

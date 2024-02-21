@@ -1926,9 +1926,15 @@ components:
           gremlin_endpoint: gremlin_endpoint
           username: username
         name: name
+        type: GrootGraph
       properties:
         name:
           title: name
+          type: string
+        type:
+          enum:
+          - GrootGraph
+          title: type
           type: string
         directed:
           title: directed

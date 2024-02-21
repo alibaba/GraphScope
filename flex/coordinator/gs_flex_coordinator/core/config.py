@@ -46,6 +46,12 @@ def config_logging(log_level: str):
 config_logging("info")
 
 
+def str_to_bool(s):
+    if isinstance(s, bool):
+        return s
+    return s in ["true", "True", "y", "Y", "yes", "Yes", "1"]
+
+
 # workspace
 try:
     WORKSPACE = os.environ["GRAPHSCOPE_RUNTIME"]
@@ -75,10 +81,6 @@ os.makedirs(DATASET_WORKSPACE, exist_ok=True)
 SOLUTION = os.environ["SOLUTION"]
 
 
-# instance
-INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "demo")
-
-
 # cluster type, optional from "K8S", "HOSTS"
 CLUSTER_TYPE = os.environ.get("CLUSTER_TYPE", "HOSTS")
 
@@ -89,3 +91,32 @@ HQPS_ADMIN_SERVICE_PORT = os.environ.get("HIACTOR_ADMIN_SERVICE_PORT", 7777)
 
 # coordinator starting time
 COORDINATOR_STARTING_TIME = datetime.datetime.now()
+
+
+# kubernetes
+NAMESPACE = os.environ.get("NAMESPACE", "kubetask")
+INSTANCE_NAME = os.environ.get("INSTANCE_NAME", "demo")
+
+
+# groot
+GROOT_GRPC_PORT = os.environ.get("GROOT_GRPC_PORT", 55556)
+GROOT_GREMLIN_PORT = os.environ.get("GROOT_GREMLIN_PORT", 12312)
+GROOT_USERNAME = os.environ.get("GROOT_USERNAME", "")
+GROOT_PASSWORD = os.environ.get("GROOT_PASSWORD", "")
+# dataloading service for groot
+STUDIO_WRAPPER_ENDPOINT = os.environ.get("STUDIO_WRAPPER_ENDPOINT", None)
+
+
+# maximum size of the log queue
+MAXSIZE = 1000
+# batch size for fetching logs
+BATCHSIZE = 4096
+
+
+# odps
+BASEID = os.environ.get("BASEID", None)
+PROJECT = os.environ.get("PROJECT", "graphscope")
+# enable dns
+ENABLE_DNS = (
+    str_to_bool(os.environ["ENABLE_DNS"]) if "ENABLE_DNS" in os.environ else False
+)

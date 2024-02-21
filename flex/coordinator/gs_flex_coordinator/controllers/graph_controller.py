@@ -27,7 +27,7 @@ def create_edge_type(graph_name, edge_type):  # noqa: E501
     """
     if connexion.request.is_json:
         edge_type = EdgeType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.create_edge_type(graph_name, edge_type)
 
 
 @handle_api_exception()
@@ -61,7 +61,7 @@ def create_vertex_type(graph_name, vertex_type):  # noqa: E501
     """
     if connexion.request.is_json:
         vertex_type = VertexType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.create_vertex_type(graph_name, vertex_type)
 
 
 @handle_api_exception()

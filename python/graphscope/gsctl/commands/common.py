@@ -19,12 +19,9 @@
 """Group of commands used by all products under the FLEX architecture"""
 
 import click
-
-from graphscope.gsctl.config import Context
-from graphscope.gsctl.config import get_current_context
-from graphscope.gsctl.config import load_gs_config
-from graphscope.gsctl.impl import connect_coordinator
-from graphscope.gsctl.impl import disconnect_coordinator
+from graphscope.gsctl.config import (Context, get_current_context,
+                                     load_gs_config)
+from graphscope.gsctl.impl import connect_coordinator, disconnect_coordinator
 
 
 @click.group()
@@ -39,7 +36,7 @@ def cli():
     help="Coordinator endpoint which gsctl connect to, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to the launched coordinator.
+    """Connect to the launched coordinator
 
     By default, it will read context from  ~/.graphscope/config. If '--coordinator-endpoint'
     is specified, use it as the current context and override the config file.
@@ -64,7 +61,7 @@ def connect(coordinator_endpoint):
 
 @click.command()
 def close():
-    """Close the connection from the coordinator."""
+    """Close the connection from the coordinator"""
     try:
         context = disconnect_coordinator()
     except Exception as e:

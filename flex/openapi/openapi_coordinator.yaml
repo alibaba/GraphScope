@@ -1346,6 +1346,10 @@ components:
       properties:
         name:
           type: string
+        type:
+          type: string
+          enum:
+            - GrootGraph
         directed:
           type: boolean
         creation_time:

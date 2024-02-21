@@ -19,8 +19,7 @@
 from typing import List
 
 import graphscope.flex.rest
-from graphscope.flex.rest import Graph
-from graphscope.flex.rest import ModelSchema
+from graphscope.flex.rest import EdgeType, Graph, ModelSchema, VertexType
 from graphscope.gsctl.config import get_current_context
 
 
@@ -60,3 +59,21 @@ def delete_graph_by_name(graph_name: str) -> str:
     ) as api_client:
         api_instance = graphscope.flex.rest.GraphApi(api_client)
         return api_instance.delete_graph(graph_name)
+
+
+def create_vertex_type(graph_name: str, vtype: dict) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
+        return api_instance.create_vertex_type(graph_name, VertexType.from_dict(vtype))
+
+
+def create_edge_type(graph_name: str, etype: dict) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.GraphApi(api_client)
+        return api_instance.create_edge_type(graph_name, EdgeType.from_dict(etype))

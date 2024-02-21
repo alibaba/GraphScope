@@ -52,4 +52,4 @@ def list_groot_graph():  # noqa: E501
 
     :rtype: Union[List[GrootGraph], Tuple[List[GrootGraph], int], Tuple[List[GrootGraph], int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.list_groot_graph()

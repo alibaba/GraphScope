@@ -19,13 +19,19 @@ RUN cd /home/graphscope/graphscope \
     && mvn clean package -P groot -DskipTests --quiet -Drust.compile.mode="$profile" \
     && tar xzf /home/graphscope/graphscope/interactive_engine/assembly/target/groot.tar.gz -C /home/graphscope/
 
+# build coordinator
+RUN cd /home/graphscope/graphscope/flex/coordinator \
+    && python3 setup.py bdist_wheel \
+    && mkdir -p /home/graphscope/groot/wheel \
+    && cp dist/*.wml /home/graphscope/groot/wheel
+
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
     apt-get install -y sudo default-jdk dnsutils tzdata \
-        libjemalloc-dev libunwind-dev binutils less && \
+        libjemalloc-dev libunwind-dev binutils less python3 python3-pip && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -38,10 +44,14 @@ RUN useradd -m graphscope -u 1001 \
     && echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 RUN sudo chmod a+wrx /tmp
 
+# install coordinator
+RUN pip3 install /usr/local/groot/wheel/*.whl
+
 USER graphscope
 WORKDIR /home/graphscope
 
 ENV PATH=${PATH}:/home/graphscope/.local/bin
+ENV SOLUTION=GRAPHSCOPE_INSIGHT
 
 # init log directory
 RUN sudo mkdir /var/log/graphscope \

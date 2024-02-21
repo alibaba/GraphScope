@@ -26,18 +26,21 @@ import threading
 from typing import List, Union
 
 import psutil
+
 from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
                                              COORDINATOR_STARTING_TIME,
                                              DATASET_WORKSPACE, INSTANCE_NAME,
                                              SOLUTION, WORKSPACE)
+from gs_flex_coordinator.core.insight import init_groot_client
 from gs_flex_coordinator.core.interactive import init_hqps_client
 from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
                                             encode_datetime, get_current_time)
-from gs_flex_coordinator.models import (DeploymentInfo, Graph, JobStatus,
-                                        ModelSchema, NodeStatus, Procedure,
-                                        SchemaMapping, ServiceStatus,
-                                        StartServiceRequest)
+from gs_flex_coordinator.models import (DeploymentInfo, EdgeType, Graph,
+                                        GrootGraph, JobStatus, ModelSchema,
+                                        NodeStatus, Procedure, SchemaMapping,
+                                        ServiceStatus, StartServiceRequest,
+                                        VertexType)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -67,11 +70,17 @@ class ClientWrapper(object):
         except Exception as e:
             logger.warn("Failed to recover graphs info: %s", str(e))
         # set default graph info
-        for g in self.list_graphs():
-            if g.name not in self._graphs_info:
-                self._graphs_info[g.name] = GraphInfo(
-                    name=g.name, creation_time=COORDINATOR_STARTING_TIME
-                )
+        self._set_default_graph_info()
+
+    def _set_default_graph_info(self):
+        if SOLUTION == "INTERACTIVE":
+            for g in self.list_graphs():
+                if g.name not in self._graphs_info:
+                    self._graphs_info[g.name] = GraphInfo(
+                        name=g.name, creation_time=COORDINATOR_STARTING_TIME
+                    )
+        elif SOLUTION == "GRAPHSCOPE_INSIGHT":
+            pass
 
     def _pickle_graphs_info_impl(self):
         try:
@@ -81,12 +90,13 @@ class ClientWrapper(object):
             logger.warn("Failed to dump graphs info: %s", str(e))
 
     def _initialize_client(self):
-        service_initializer = {"INTERACTIVE": init_hqps_client}
+        service_initializer = {
+            "INTERACTIVE": init_hqps_client,
+            "GRAPHSCOPE_INSIGHT": init_groot_client,
+        }
         initializer = service_initializer.get(SOLUTION)
         if initializer is None:
-            raise RuntimeError(
-                "Client initializer of {0} not found.".format(self._solution)
-            )
+            raise RuntimeError(f"Client initializer of {SOLUTION} not found.")
         return initializer()
 
     def list_graphs(self) -> List[Graph]:
@@ -113,6 +123,14 @@ class ClientWrapper(object):
         )
         self._pickle_graphs_info_impl()
         return rlt
+
+    def create_vertex_type(self, graph_name: str, vtype: VertexType) -> str:
+        vtype_dict = vtype.to_dict()
+        return self._client.create_vertex_type(graph_name, vtype_dict)
+
+    def create_edge_type(self, graph_name: str, etype: EdgeType) -> str:
+        etype_dict = etype.to_dict()
+        return self._client.create_edge_type(graph_name, etype_dict)
 
     def delete_graph_by_name(self, graph_name: str) -> str:
         rlt = self._client.delete_graph_by_name(graph_name)
@@ -221,6 +239,12 @@ class ClientWrapper(object):
             filepath = os.path.join(DATASET_WORKSPACE, filestorage.filename)
             filestorage.save(filepath)
             return str(filepath)
+
+    def list_groot_graph(self) -> List[GrootGraph]:
+        graphs = self._client.list_groot_graph()
+        # transfer
+        rlts = [GrootGraph.from_dict(g) for g in graphs]
+        return rlts
 
 
 client_wrapper = ClientWrapper()
