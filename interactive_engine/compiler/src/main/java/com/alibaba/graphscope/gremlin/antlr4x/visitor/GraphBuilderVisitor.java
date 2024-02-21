@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
@@ -639,6 +640,9 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalMethod_match(
             GremlinGSParser.TraversalMethod_matchContext ctx) {
+        Preconditions.checkArgument(
+                builder.peek() instanceof GraphLogicalSource,
+                "match should start from global source vertices");
         GremlinGSParser.NestedTraversalExprContext exprCtx = ctx.nestedTraversalExpr();
         NestedTraversalRelVisitor visitor = new NestedTraversalRelVisitor(builder);
         List<RelNode> innerSentences = Lists.newArrayList();
