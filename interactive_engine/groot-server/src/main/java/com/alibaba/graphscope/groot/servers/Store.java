@@ -45,6 +45,8 @@ public class Store extends NodeBase {
 
     private KafkaProcessor processor;
 
+    private PartitionService partitionService;
+
     public Store(Configs configs) {
         super(configs);
         configs = reConfig(configs);
@@ -88,7 +90,7 @@ public class Store extends NodeBase {
         ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
-
+        this.partitionService = new PartitionService(configs, storeService);
         this.processor = new KafkaProcessor(configs, metaService, writerAgent, logService);
     }
 
@@ -100,13 +102,7 @@ public class Store extends NodeBase {
         } catch (IOException e) {
             throw new GrootException(e);
         }
-        long availSnapshotId;
-        try {
-            availSnapshotId = this.storeService.recover();
-        } catch (IOException | InterruptedException e) {
-            throw new GrootException(e);
-        }
-        this.writerAgent.init(availSnapshotId);
+        this.writerAgent.init(0);
         this.writerAgent.start();
         this.backupAgent.start();
         try {
@@ -118,10 +114,12 @@ public class Store extends NodeBase {
         this.channelManager.start();
         this.executorService.start();
         this.processor.start();
+        this.partitionService.start();
     }
 
     @Override
     public void close() throws IOException {
+        this.partitionService.stop();
         this.processor.stop();
         this.executorService.stop();
         this.rpcServer.stop();

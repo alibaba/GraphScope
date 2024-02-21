@@ -73,8 +73,9 @@ pub extern "C" fn OpenPartitionGraph(store_path: *const c_char) -> PartitionGrap
         let store_path_str = str::from_utf8(slice).unwrap();
         let mut config_builder = GraphConfigBuilder::new();
         config_builder.set_storage_engine("rocksdb");
+        config_builder.add_storage_option("store.data.path", store_path_str);
         let config = config_builder.build();
-        let graph_store = Arc::new(GraphStore::open(&config, store_path_str).unwrap());
+        let graph_store = Arc::new(GraphStore::open(&config).unwrap());
         let partition_graph = WrapperPartitionGraph::new(graph_store);
         Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
     }

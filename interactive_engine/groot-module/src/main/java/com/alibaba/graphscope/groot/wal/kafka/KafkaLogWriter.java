@@ -66,6 +66,12 @@ public class KafkaLogWriter implements LogWriter {
         return waitFuture(future);
     }
 
+    @Override
+    public Future<RecordMetadata> appendAsync(int partition, LogEntry logEntry) {
+        Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topicName, logEntry));
+        return future;
+    }
+
     public long waitFuture(Future<RecordMetadata> future) {
         RecordMetadata recordMetadata;
         try {

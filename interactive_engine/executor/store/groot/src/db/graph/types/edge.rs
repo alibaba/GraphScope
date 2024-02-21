@@ -284,7 +284,19 @@ impl EdgeTypeManager {
     }
 
     pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
-        self.modify(|inner| inner.gc(si))
+        let guard = &epoch::pin();
+        let inner = self.inner.load(Ordering::Relaxed, guard);
+        let mut clone = unsafe { inner.deref() }.clone();
+        let res = clone.gc(si)?;
+        if !res.is_empty() {
+            self.inner
+                .store(Owned::new(clone).into_shared(guard), Ordering::Relaxed);
+            unsafe {
+                guard.defer_destroy(inner);
+            }
+        }
+
+        Ok(res)
     }
 
     pub(crate) fn get_inner<'a>(&'a self, guard: &'a Guard) -> Shared<'a, EdgeManagerInner> {
@@ -294,10 +306,10 @@ impl EdgeTypeManager {
     fn modify<E, F: Fn(&mut EdgeManagerInner) -> E>(&self, f: F) -> E {
         let guard = &epoch::pin();
         let inner = self.inner.load(Ordering::Relaxed, guard);
-        let mut inner_clone = unsafe { inner.deref() }.clone();
-        let res = f(&mut inner_clone);
+        let mut clone = unsafe { inner.deref() }.clone();
+        let res = f(&mut clone);
         self.inner
-            .store(Owned::new(inner_clone).into_shared(guard), Ordering::Relaxed);
+            .store(Owned::new(clone).into_shared(guard), Ordering::Relaxed);
         unsafe {
             guard.defer_destroy(inner);
         }
