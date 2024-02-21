@@ -593,7 +593,7 @@ mod tests {
     fn test_rocksdb_iter() {
         let path = "test_rocksdb_iter";
         {
-            let db = RocksDB::open(&HashMap::new(), path).unwrap();
+            let db = RocksDB::open(&HashMap::new()).unwrap();
             let mut ans = Vec::new();
             for i in 1..=10 {
                 let key = format!("aaa#{:010}", i);
@@ -626,7 +626,7 @@ mod tests {
         let path = "test_rocksdb_scan_from";
         fs::rmr(path).unwrap();
         {
-            let db = RocksDB::open(&HashMap::new(), path).unwrap();
+            let db = RocksDB::open(&HashMap::new()).unwrap();
             for i in 1..=20 {
                 if i % 2 == 0 {
                     let key = format!("aaa#{:010}", i);

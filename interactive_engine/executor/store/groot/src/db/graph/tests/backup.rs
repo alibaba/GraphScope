@@ -86,5 +86,5 @@ fn open_graph(path: &str) -> GraphStore {
     let mut builder = GraphConfigBuilder::new();
     builder.set_storage_engine("rocksdb");
     let config = builder.build();
-    GraphStore::open(&config, path).unwrap()
+    GraphStore::open(&config).unwrap()
 }

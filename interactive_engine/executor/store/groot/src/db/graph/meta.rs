@@ -832,7 +832,7 @@ mod tests {
         let path = "test_meta_normal";
         fs::rmr(path).unwrap();
         {
-            let db = RocksDB::open(&HashMap::new(), path).unwrap();
+            let db = RocksDB::open(&HashMap::new()).unwrap();
             let store = Arc::new(db);
             let meta = Meta::new(store.clone());
             let mut schema_version = 1;
