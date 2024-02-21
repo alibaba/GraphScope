@@ -136,7 +136,7 @@ pub extern "C" fn writeBatch(
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
     let buf = unsafe { ::std::slice::from_raw_parts(data, len) };
     let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
-        Ok((has_ddl, reopen_secondary)) => {
+        Ok((has_ddl)) => {
             let mut response = JnaResponse::new_success();
             response.has_ddl(has_ddl);
             response
@@ -151,14 +151,13 @@ pub extern "C" fn writeBatch(
 
 fn do_write_batch<G: MultiVersionGraph>(
     graph: &G, snapshot_id: SnapshotId, buf: &[u8],
-) -> GraphResult<(bool, bool)> {
+) -> GraphResult<bool> {
     trace!("do_write_batch");
     let proto = parse_pb::<OperationBatchPb>(buf)?;
     let mut has_ddl = false;
-    let mut reopen_secondary = false;
     let operations = proto.get_operations();
     if operations.is_empty() {
-        return Ok((has_ddl, reopen_secondary));
+        return Ok(has_ddl);
     }
     for op in operations {
         match op.get_opType() {
@@ -211,12 +210,11 @@ fn do_write_batch<G: MultiVersionGraph>(
             OpTypePb::COMMIT_DATA_LOAD => {
                 if commit_data_load(graph, snapshot_id, op)? {
                     has_ddl = true;
-                    reopen_secondary = true;
                 }
             }
         };
     }
-    Ok((has_ddl, reopen_secondary))
+    Ok(has_ddl)
 }
 
 fn commit_data_load<G: MultiVersionGraph>(

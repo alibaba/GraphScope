@@ -396,7 +396,7 @@ public class SnapshotManager {
                         } catch (ServiceNotReadyException e) {
                             logger.error(
                                     "Error occurred when notify listeners, Schema manager is"
-                                        + " recovering.");
+                                            + " recovering.");
                         } catch (Exception e) {
                             logger.error("Error occurred when notify listeners", e);
                         }

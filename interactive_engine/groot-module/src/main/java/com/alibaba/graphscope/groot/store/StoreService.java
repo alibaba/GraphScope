@@ -403,6 +403,10 @@ public class StoreService implements MetricsAgent {
     }
 
     public void compactDB(CompletionCallback<Void> callback) {
+        if (isSecondary) {
+            callback.onCompleted(null);
+            return;
+        }
         this.compactExecutor.execute(
                 () -> {
                     logger.info("compact DB");
