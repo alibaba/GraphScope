@@ -1,0 +1,55 @@
+/**
+ * Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+syntax = "proto3";
+package protocol;
+option java_package = "com.alibaba.pegasus.service.protocol";
+option java_outer_classname = "PegasusClient";
+
+message BIJobRequest {
+  string job_name = 1;
+  string params   = 2;
+}
+
+message BIJobResponse {
+  uint64 job_index = 1;
+  bytes  resp   = 2;
+}
+
+// message BatchUpdateRequest {
+//   int32  update_type = 1;		// update查询的类型，0表示insert，1表示delete
+//   int32  data_type = 2;			// update的数据类型，0表示vertex，1表示edge
+//   string label_name = 3; 		// update的数据label
+//   string data_path = 4;		// update的数据路径
+// }
+
+// message BatchUpdateResponse {
+//   bool is_success = 1;
+// }
+
+// message PrecomputeRequest {
+// }
+
+// message PrecomputeResponse {
+//   bool is_success = 1;
+// }
+
+service BIJobService {
+  rpc Submit(BIJobRequest) returns(stream BIJobResponse) {}
+
+//  rpc SubmitBatchUpdate(BatchUpdateRequest) returns(stream BatchUpdateResponse) {}
+//
+//  rpc SubmitPrecompute(PrecomputeRequest) returns(stream PrecomputeResponse) {}
+}
