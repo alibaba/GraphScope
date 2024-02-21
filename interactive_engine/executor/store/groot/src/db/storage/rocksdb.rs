@@ -7,7 +7,7 @@ use std::time::Duration;
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
 use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
 use crossbeam_epoch::{self as epoch, Atomic, Guard, Owned, Shared};
-use rocksdb::{CompactOptions, WriteBatch};
+use rocksdb::WriteBatch;
 
 use super::{StorageIter, StorageRes};
 use crate::db::api::*;
