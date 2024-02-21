@@ -1139,6 +1139,7 @@ mod tests {
     pub fn create_empty_graph(path: &str) -> GraphStore {
         let mut builder = GraphConfigBuilder::new();
         builder.set_storage_engine("rocksdb");
+        builder.add_storage_option("store.data.path", path);
         let config = builder.build();
         GraphStore::open(&config).unwrap()
     }
@@ -1175,6 +1176,7 @@ mod bench {
     pub fn create_empty_graph(path: &str) -> GraphStore {
         let mut builder = GraphConfigBuilder::new();
         builder.set_storage_engine("rocksdb");
+        builder.add_storage_option("store.data.path", path);
         let config = builder.build();
         GraphStore::open(&config).unwrap()
     }

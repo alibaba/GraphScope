@@ -7,14 +7,11 @@ use std::time::Duration;
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
 use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
 use crossbeam_epoch::{self as epoch, Atomic, Guard, Owned, Shared};
-use grpcio_sys::grpc_serving_status_update;
-use libc::option;
-use rocksdb::{CompactOptions, DBCompactionStyle, DBCompressionType, WriteBatch};
+use rocksdb::{CompactOptions, WriteBatch};
 
 use super::{StorageIter, StorageRes};
 use crate::db::api::*;
 use crate::db::storage::{KvPair, RawBytes};
-use crate::db::util::fs;
 
 pub struct RocksDB {
     db: Atomic<Arc<DB>>,
@@ -226,7 +223,6 @@ impl RocksDB {
         let db_shared = self.get_db(&guard);
 
         if let Some(db) = unsafe { db_shared.as_ref() } {
-            let mut opts = CompactOptions::default();
             db.compact_range(None::<&[u8]>, None::<&[u8]>);
             info!("compacted rocksdb");
             Ok(())
@@ -593,7 +589,9 @@ mod tests {
     fn test_rocksdb_iter() {
         let path = "test_rocksdb_iter";
         {
-            let db = RocksDB::open(&HashMap::new()).unwrap();
+            let mut config = HashMap::new();
+            config.insert("store.data.path".to_owned(), path.to_owned());
+            let db = RocksDB::open(&config).unwrap();
             let mut ans = Vec::new();
             for i in 1..=10 {
                 let key = format!("aaa#{:010}", i);
@@ -626,7 +624,9 @@ mod tests {
         let path = "test_rocksdb_scan_from";
         fs::rmr(path).unwrap();
         {
-            let db = RocksDB::open(&HashMap::new()).unwrap();
+            let mut config = HashMap::new();
+            config.insert("store.data.path".to_owned(), path.to_owned());
+            let db = RocksDB::open(&config).unwrap();
             for i in 1..=20 {
                 if i % 2 == 0 {
                     let key = format!("aaa#{:010}", i);
