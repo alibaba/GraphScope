@@ -193,6 +193,18 @@ class Connection:
         )
         return response.partitionStates
 
+    def compact_db(self):
+        request = model_pb2.CompactDBRequest()
+        response = self._client_service_stub.compactDB(request, metadata=self._metadata)
+        return response.success
+
+    def reopen_secondary(self):
+        request = model_pb2.ReopenSecondaryRequest()
+        response = self._client_service_stub.reopenSecondary(
+            request, metadata=self._metadata
+        )
+        return response.success
+
     def _encode_metadata(self, username, password):
         if not (username and password):
             return None

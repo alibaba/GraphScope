@@ -16,27 +16,14 @@
 syntax = "proto3";
 package gs.rpc.groot;
 
+import "groot/sdk/model.proto";
+
 option java_package = "com.alibaba.graphscope.proto.groot";
 option java_multiple_files = true;
 
 service StoreIngest {
-  rpc storeIngest(StoreIngestRequest) returns(StoreIngestResponse);
-  rpc storeClearIngest(StoreClearIngestRequest) returns(StoreClearIngestResponse);
-}
-
-message StoreIngestRequest {
-  string dataPath = 1;
-  map<string, string> config = 2;
-}
-
-message StoreIngestResponse {
-
-}
-
-message StoreClearIngestRequest {
-  string dataPath = 1;
-}
-
-message StoreClearIngestResponse {
-  
+  rpc storeIngest(IngestDataRequest) returns(IngestDataResponse);
+  rpc storeClearIngest(ClearIngestRequest) returns(ClearIngestResponse);
+  rpc compactDB(CompactDBRequest) returns(CompactDBResponse);
+  rpc reopenSecondary(ReopenSecondaryRequest) returns (ReopenSecondaryResponse);
 }

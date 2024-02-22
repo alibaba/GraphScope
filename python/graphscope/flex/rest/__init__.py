@@ -26,6 +26,7 @@ from graphscope.flex.rest.api.job_api import JobApi
 from graphscope.flex.rest.api.legacy_api import LegacyApi
 from graphscope.flex.rest.api.procedure_api import ProcedureApi
 from graphscope.flex.rest.api.service_api import ServiceApi
+from graphscope.flex.rest.api.utils_api import UtilsApi
 
 # import ApiClient
 from graphscope.flex.rest.api_response import ApiResponse
@@ -46,6 +47,7 @@ from graphscope.flex.rest.models.column_mapping import ColumnMapping
 from graphscope.flex.rest.models.connection import Connection
 from graphscope.flex.rest.models.connection_status import ConnectionStatus
 from graphscope.flex.rest.models.deployment_info import DeploymentInfo
+from graphscope.flex.rest.models.deployment_info_graphs_info_value import DeploymentInfoGraphsInfoValue
 from graphscope.flex.rest.models.deployment_status import DeploymentStatus
 from graphscope.flex.rest.models.edge_mapping import EdgeMapping
 from graphscope.flex.rest.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner

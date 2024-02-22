@@ -51,4 +51,10 @@ public interface GraphLibrary extends Library {
     void deleteWrapperPartitionGraph(Pointer wrapperPartitionGraph);
 
     JnaResponse garbageCollectSnapshot(Pointer storePointer, long snapshotId);
+
+    JnaResponse tryCatchUpWithPrimary(Pointer storePointer);
+
+    JnaResponse reopenSecondary(Pointer storePointer, long wait_sec);
+
+    JnaResponse compact(Pointer storePointer);
 }

@@ -18,13 +18,10 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, StrictStr, field_validator
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
+from typing import Any, ClassVar, Dict, List, Optional
+from typing import Optional, Set
+from typing_extensions import Self
 
 class ConnectionStatus(BaseModel):
     """
@@ -40,7 +37,7 @@ class ConnectionStatus(BaseModel):
         if value is None:
             return value
 
-        if value not in ('CONNECTED'):
+        if value not in set(['CONNECTED']):
             raise ValueError("must be one of enum values ('CONNECTED')")
         return value
 
@@ -50,7 +47,7 @@ class ConnectionStatus(BaseModel):
         if value is None:
             return value
 
-        if value not in ('INTERACTIVE', 'GRAPHSCOPE_INSIGHT'):
+        if value not in set(['INTERACTIVE', 'GRAPHSCOPE_INSIGHT']):
             raise ValueError("must be one of enum values ('INTERACTIVE', 'GRAPHSCOPE_INSIGHT')")
         return value
 
@@ -71,7 +68,7 @@ class ConnectionStatus(BaseModel):
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Self:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of ConnectionStatus from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
@@ -85,16 +82,18 @@ class ConnectionStatus(BaseModel):
           were set at model initialization. Other fields with value `None`
           are ignored.
         """
+        excluded_fields: Set[str] = set([
+        ])
+
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude=excluded_fields,
             exclude_none=True,
         )
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: Dict) -> Self:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of ConnectionStatus from a dict"""
         if obj is None:
             return None
