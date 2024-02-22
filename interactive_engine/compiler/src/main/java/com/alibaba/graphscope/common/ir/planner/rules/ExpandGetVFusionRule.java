@@ -61,7 +61,8 @@ public abstract class ExpandGetVFusionRule<C extends RelRule.Config> extends Rel
                             input,
                             expand,
                             getV,
-                            GraphOpt.PhysicalExpandOpt.VERTEX);
+                            GraphOpt.PhysicalExpandOpt.VERTEX,
+                            getV.getAliasName());
             if (ObjectUtils.isEmpty(getV.getFilters())) {
                 return physicalExpand;
             } else {

@@ -189,8 +189,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 expandBaseBuilder.setGetV(auxilia);
                 if (fusedGetV.getInput() instanceof GraphPhysicalExpand) {
                     GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fusedGetV.getInput();
-                    GraphAlgebraPhysical.EdgeExpand.Builder expand =
-                            buildEdgeExpandVertex(fusedExpand);
+                    GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
                     expandBaseBuilder.setEdgeExpand(expand);
                 } else {
                     throw new UnsupportedOperationException(
@@ -200,7 +199,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             } else if (fused instanceof GraphPhysicalExpand) {
                 // fused into expand
                 GraphPhysicalExpand fusedExpand = (GraphPhysicalExpand) fused;
-                GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpandVertex(fusedExpand);
+                GraphAlgebraPhysical.EdgeExpand.Builder expand = buildEdgeExpand(fusedExpand);
                 expandBaseBuilder.setEdgeExpand(expand);
             } else {
                 throw new UnsupportedOperationException(
@@ -233,25 +232,11 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     }
 
     @Override
-    public RelNode visit(GraphLogicalExpandDegree expandDegree) {
-        visitChildren(expandDegree);
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpandDegree(expandDegree);
-        oprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
-        oprBuilder.addAllMetaData(
-                Utils.physicalProtoRowType(expandDegree.getRowType(), isColumnId));
-        physicalBuilder.addPlan(oprBuilder.build());
-        return expandDegree;
-    }
-
-    @Override
     public RelNode visit(GraphPhysicalExpand physicalExpand) {
         visitChildren(physicalExpand);
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpandVertex(physicalExpand);
+        GraphAlgebraPhysical.EdgeExpand.Builder edgeExpand = buildEdgeExpand(physicalExpand);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(
@@ -591,20 +576,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return buildEdgeExpand(expand, GraphOpt.PhysicalExpandOpt.EDGE, expand.getAliasId());
     }
 
-    private GraphAlgebraPhysical.EdgeExpand.Builder buildEdgeExpandVertex(
+    private GraphAlgebraPhysical.EdgeExpand.Builder buildEdgeExpand(
             GraphPhysicalExpand physicalExpand) {
         return buildEdgeExpand(
                 physicalExpand.getFusedExpand(),
-                GraphOpt.PhysicalExpandOpt.VERTEX,
+                physicalExpand.getPhysicalOpt(),
                 physicalExpand.getAliasId());
-    }
-
-    private GraphAlgebraPhysical.EdgeExpand.Builder buildEdgeExpandDegree(
-            GraphLogicalExpandDegree expandDegree) {
-        return buildEdgeExpand(
-                expandDegree.getFusedExpand(),
-                GraphOpt.PhysicalExpandOpt.DEGREE,
-                expandDegree.getAliasId());
     }
 
     private GraphAlgebraPhysical.GetV.Builder buildVertex(

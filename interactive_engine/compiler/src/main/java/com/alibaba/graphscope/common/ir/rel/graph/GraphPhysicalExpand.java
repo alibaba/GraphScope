@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.google.common.collect.ImmutableList;
 
+import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
@@ -31,6 +32,7 @@ import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.*;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -41,6 +43,8 @@ public class GraphPhysicalExpand extends SingleRel {
     private final GraphOpt.PhysicalExpandOpt physicalOpt;
     private final GraphLogicalExpand fusedExpand;
     private final GraphLogicalGetV fusedGetV;
+    private final String aliasName;
+    private final int aliasId;
 
     protected GraphPhysicalExpand(
             RelOptCluster cluster,
@@ -48,11 +52,16 @@ public class GraphPhysicalExpand extends SingleRel {
             RelNode input,
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
-            GraphOpt.PhysicalExpandOpt physicalOpt) {
+            GraphOpt.PhysicalExpandOpt physicalOpt,
+            String aliasName) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.physicalOpt = physicalOpt;
         this.fusedExpand = fusedExpand;
         this.fusedGetV = fusedGetV;
+        this.aliasName =
+                AliasInference.inferDefault(
+                        aliasName, AliasInference.getUniqueAliasList(input, true));
+        this.aliasId = ((GraphOptCluster) cluster).getIdGenerator().generate(this.aliasName);
     }
 
     public static GraphPhysicalExpand create(
@@ -61,8 +70,10 @@ public class GraphPhysicalExpand extends SingleRel {
             RelNode input,
             GraphLogicalExpand fusedExpand,
             GraphLogicalGetV fusedGetV,
-            GraphOpt.PhysicalExpandOpt physicalOpt) {
-        return new GraphPhysicalExpand(cluster, hints, input, fusedExpand, fusedGetV, physicalOpt);
+            GraphOpt.PhysicalExpandOpt physicalOpt,
+            String alias) {
+        return new GraphPhysicalExpand(
+                cluster, hints, input, fusedExpand, fusedGetV, physicalOpt, alias);
     }
 
     public GraphOpt.PhysicalExpandOpt getPhysicalOpt() {
@@ -78,11 +89,11 @@ public class GraphPhysicalExpand extends SingleRel {
     }
 
     public String getAliasName() {
-        return fusedGetV.getAliasName();
+        return aliasName;
     }
 
     public int getAliasId() {
-        return fusedGetV.getAliasId();
+        return aliasId;
     }
 
     public @Nullable ImmutableList<RexNode> getFilters() {
@@ -91,7 +102,23 @@ public class GraphPhysicalExpand extends SingleRel {
 
     @Override
     public RelDataType deriveRowType() {
-        return fusedGetV.deriveRowType();
+        switch (physicalOpt) {
+            case EDGE:
+                return fusedExpand.deriveRowType();
+            case DEGREE:
+                {
+                    RelDataTypeFactory typeFactory = getCluster().getTypeFactory();
+                    RelDataTypeField field =
+                            new RelDataTypeFieldImpl(
+                                    aliasName,
+                                    aliasId,
+                                    typeFactory.createSqlType(SqlTypeName.BIGINT));
+                    return new RelRecordType(ImmutableList.of(field));
+                }
+            case VERTEX:
+            default:
+                return fusedGetV.deriveRowType();
+        }
     }
 
     @Override

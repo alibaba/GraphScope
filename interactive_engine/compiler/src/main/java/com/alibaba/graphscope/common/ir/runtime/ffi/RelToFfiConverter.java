@@ -123,26 +123,26 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     @Override
-    public RelNode visit(GraphLogicalExpandDegree expandCount) {
-        GraphLogicalExpand fusedExpand = expandCount.getFusedExpand();
-        Pointer ptrExpandCount =
+    public RelNode visit(GraphPhysicalExpand physicalExpand) {
+        GraphLogicalExpand fusedExpand = physicalExpand.getFusedExpand();
+        Pointer ptrPhysicalExpand =
                 LIB.initEdgexpdOperator(
-                        FfiExpandOpt.Degree, Utils.ffiDirection(fusedExpand.getOpt()));
-        checkFfiResult(LIB.setEdgexpdParams(ptrExpandCount, ffiQueryParams(fusedExpand)));
-        if (expandCount.getAliasId() != AliasInference.DEFAULT_ID) {
+                        Utils.ffiPhysicalExpandOpt(physicalExpand.getPhysicalOpt()), Utils.ffiDirection(fusedExpand.getOpt()));
+        checkFfiResult(LIB.setEdgexpdParams(ptrPhysicalExpand, ffiQueryParams(fusedExpand)));
+        if (physicalExpand.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(
                     LIB.setEdgexpdAlias(
-                            ptrExpandCount, ArgUtils.asAlias(expandCount.getAliasId())));
+                            ptrPhysicalExpand, ArgUtils.asAlias(physicalExpand.getAliasId())));
         }
         checkFfiResult(
                 LIB.setEdgexpdMeta(
-                        ptrExpandCount,
+                        ptrPhysicalExpand,
                         new FfiPbPointer.ByValue(
                                 com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
-                                                expandCount.getRowType(), isColumnId)
+                                                physicalExpand.getRowType(), isColumnId)
                                         .get(0)
                                         .toByteArray())));
-        return new PhysicalNode(expandCount, ptrExpandCount);
+        return new PhysicalNode(physicalExpand, ptrPhysicalExpand);
     }
 
     @Override

@@ -1,3 +1,19 @@
+/*
+ * Copyright 2024 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.alibaba.graphscope.common.ir.runtime;
 
 import com.alibaba.graphscope.common.config.Configs;
@@ -579,8 +595,8 @@ public class GraphRelToProtoTest {
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
                         + " values=[[{operands=[DEFAULT], aggFunction=$SUM0, alias='cnt',"
                         + " distinct=false}]])\n"
-                        + "  GraphLogicalExpandDegree(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[DEGREE])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 after.explain().trim());
