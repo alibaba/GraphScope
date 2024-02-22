@@ -26,9 +26,6 @@ from dateutil import tz
 from graphscope.deploy.kubernetes.utils import (get_service_endpoints,
                                                 resolve_api_client)
 from gremlin_python.driver.client import Client
-from kubernetes import client as kube_client
-from kubernetes import config as kube_config
-
 from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
                                              COORDINATOR_STARTING_TIME,
                                              ENABLE_DNS, GROOT_GREMLIN_PORT,
@@ -40,6 +37,8 @@ from gs_flex_coordinator.core.utils import (data_type_to_groot,
                                             encode_datetime, get_internal_ip,
                                             get_public_ip)
 from gs_flex_coordinator.version import __version__
+from kubernetes import client as kube_client
+from kubernetes import config as kube_config
 
 logger = logging.getLogger("graphscope")
 
@@ -256,36 +255,44 @@ class GrootGraph(Graph):
         schema.update()
         self._schema = self._g.schema().to_dict()
 
-    def delete_vertex_type(self, data: dict):
-        print("[DEBUG]: delete vertex type: ", data)
+    def delete_vertex_type(self, graph_name: str, vertex_type: str):
         schema = self._g.schema()
-        vlabel = data["label"]
         for edge_schema in schema.to_dict()["edges"]:
             for relation in edge_schema["relations"]:
-                if vlabel == relation["src_label"] or vlabel == relation["dst_label"]:
+                if (
+                    vertex_type == relation["src_label"]
+                    or vertex_type == relation["dst_label"]
+                ):
                     raise RuntimeError(
                         "Can not delete '{0}' type, cause exists in edge type '{1}'".format(
-                            vlabel, edge_schema["label"]
+                            vertex_type, edge_schema["label"]
                         ),
                     )
-        schema.drop(vlabel)
+        schema.drop(vertex_type)
         schema.update()
         self._schema = self._g.schema().to_dict()
         # unbind datasource
-        if vlabel in self._data_source:
-            del self._data_source[vlabel]
+        if vertex_type in self._data_source:
+            del self._data_source[vertex_type]
             with open(self._data_source_pickle_file, "wb") as f:
                 pickle.dump(self._data_source, f)
 
-    def delete_edge_type(self, data: dict):
-        print("[DEBUG]: delete edge type: ", data)
+    def delete_edge_type(
+        self,
+        graph_name: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ):
         schema = self._g.schema()
-        schema.drop(data["label"], data["srcLabel"], data["dstLabel"])
-        schema.drop(data["label"])
+        schema.drop(edge_type, source_vertex_type, destination_vertex_type)
+        schema.drop(edge_type)
         schema.update()
         self._schema = self._g.schema().to_dict()
         # unbind datasource
-        elabel = "{0}_{1}_{2}".format(data["srcLabel"], data["label"], data["dstLabel"])
+        elabel = "{0}_{1}_{2}".format(
+            source_vertex_type, edge_type, destination_vertex_type
+        )
         if elabel in self._data_source:
             del self._data_source[elabel]
             with open(self._data_source_pickle_file, "wb") as f:

@@ -41,6 +41,20 @@ class GrootClient(object):
     def create_edge_type(self, graph_name: str, etype_dict: dict) -> str:
         return self._graph.create_edge_type(etype_dict)
 
+    def delete_vertex_type(self, graph_name: str, vertex_type: str) -> str:
+        return self._graph.delete_vertex_type(graph_name, vertex_type)
+
+    def delete_edge_type(
+        self,
+        graph_name: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ) -> str:
+        return self._graph.delete_edge_type(
+            graph_name, edge_type, source_vertex_type, destination_vertex_type
+        )
+
 
 def init_groot_client():
     return GrootClient()

@@ -81,7 +81,9 @@ def delete_edge_type(graph_name, type_name, source_vertex_type, destination_vert
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.delete_edge_type(
+        graph_name, type_name, source_vertex_type, destination_vertex_type
+    )
 
 
 @handle_api_exception()
@@ -111,7 +113,7 @@ def delete_vertex_type(graph_name, type_name):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.delete_vertex_type(graph_name, type_name)
 
 
 @handle_api_exception()

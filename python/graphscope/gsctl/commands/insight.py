@@ -19,6 +19,7 @@
 import click
 import yaml
 from graphscope.gsctl.impl import (create_edge_type, create_vertex_type,
+                                   delete_edge_type, delete_vertex_type,
                                    list_groot_graph)
 from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
                                     terminal_display)
@@ -31,7 +32,19 @@ def cli():
 
 @cli.group()
 def create():
-    """Create vertex(edge) type from a file"""
+    """Create a resource from a file"""
+    pass
+
+
+@cli.group()
+def delete():
+    """Delete a resource by name"""
+    pass
+
+
+@cli.group()
+def describe():
+    """Show details of a specific resource or group of resources"""
     pass
 
 
@@ -79,6 +92,31 @@ def graph():
         _construct_and_display_data(graphs)
 
 
+@describe.command()
+@click.argument("graph_name", required=True)
+def graph(graph_name):  # noqa: F811
+    """Show details of graphs"""
+    try:
+        graphs = list_groot_graph()
+    except Exception as e:
+        click.secho(f"Failed to list graphs: {str(e)}", fg="red")
+    else:
+        if not graphs:
+            click.secho("no graph found in database.", fg="blue")
+            return
+        specific_graph_exist = False
+        for g in graphs:
+            if graph_name is not None and g.name != graph_name:
+                continue
+            # display
+            click.secho(yaml.dump(g.to_dict()))
+            if graph_name is not None and g.name == graph_name:
+                specific_graph_exist = True
+                break
+        if graph_name is not None and not specific_graph_exist:
+            click.secho('graph "{0}" not found.'.format(graph_name), fg="blue")
+
+
 @create.command
 @click.option(
     "-f",
@@ -100,6 +138,53 @@ def vtype(filename):  # noqa: F811
     else:
         click.secho(
             f"Create vertex type {vtype['type_name']} successfully.", fg="green"
+        )
+
+
+@delete.command()
+@click.argument("vertex_type", required=True)
+def vtype(vertex_type):  # noqa: F811
+    """Delete a vertex type in database"""
+    try:
+        delete_vertex_type("placeholder", vertex_type)
+    except Exception as e:
+        click.secho(f"Failed to delete vertex type {vertex_type}: {str(e)}", fg="red")
+    else:
+        click.secho(f"Delete vertex type {vertex_type} successfully.", fg="green")
+
+
+@delete.command()
+@click.argument("edge_type", required=True)
+@click.option(
+    "-s",
+    "--source_vertex_type",
+    required=True,
+    help="Source vertex type of the edge",
+)
+@click.option(
+    "-d",
+    "--destination_vertex_type",
+    required=True,
+    help="Destination vertex type of the edge",
+)
+def etype(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
+    """Delete an edge type in database"""
+    try:
+        etype_full_name = (
+            f"({source_vertex_type})-[{edge_type}]->({destination_vertex_type})"
+        )
+        delete_edge_type(
+            "placeholder", edge_type, source_vertex_type, destination_vertex_type
+        )
+    except Exception as e:
+        click.secho(
+            f"Failed to delete edge type {etype_full_name}: {str(e)}",
+            fg="red",
+        )
+    else:
+        click.secho(
+            f"Delete edge type {etype_full_name} successfully.",
+            fg="green",
         )
 
 

@@ -26,7 +26,6 @@ import threading
 from typing import List, Union
 
 import psutil
-
 from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
                                              COORDINATOR_STARTING_TIME,
                                              DATASET_WORKSPACE, INSTANCE_NAME,
@@ -131,6 +130,20 @@ class ClientWrapper(object):
     def create_edge_type(self, graph_name: str, etype: EdgeType) -> str:
         etype_dict = etype.to_dict()
         return self._client.create_edge_type(graph_name, etype_dict)
+
+    def delete_vertex_type(self, graph_name: str, vertex_type: str) -> str:
+        return self._client.delete_vertex_type(graph_name, vertex_type)
+
+    def delete_edge_type(
+        self,
+        graph_name: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ) -> str:
+        return self._client.delete_edge_type(
+            graph_name, edge_type, source_vertex_type, destination_vertex_type
+        )
 
     def delete_graph_by_name(self, graph_name: str) -> str:
         rlt = self._client.delete_graph_by_name(graph_name)
