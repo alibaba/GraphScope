@@ -90,10 +90,22 @@ def launch_graphlearn_torch_server(handle, config, server_rank):
         dataset.random_node_split(**random_node_split, id_filter=glt.data.v6d_id_filter)
     logger.info(f"-- [Server {server_rank}] Running server ...")
 
-    torch.multiprocessing.spawn(
-        fn=run_server_proc, args=(handle, config, server_rank, dataset), nprocs=1
+    # torch.multiprocessing.spawn(
+    #     fn=run_server_proc, args=(handle, config, server_rank, dataset), nprocs=1
+    # )
+    glt.distributed.init_server(
+        num_servers=handle["num_servers"],
+        server_rank=server_rank,
+        dataset=dataset,
+        master_addr=handle["master_addr"],
+        master_port=handle["server_client_master_port"],
+        num_rpc_threads=16,
+        is_dynamic=True,
     )
-
+    logger.info(f"-- [Server {server_rank}] Waiting for exit ...")
+    glt.distributed.wait_and_shutdown_server()
+    logger.info(f"-- [Server {server_rank}] Exited ...")
+    
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

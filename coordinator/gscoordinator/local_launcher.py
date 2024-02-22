@@ -393,7 +393,7 @@ class LocalLauncher(AbstractLauncher):
         process.wait(timeout=self._timeout_seconds)
         return process
 
-    def close_learning_instance(self, object_id):
+    def close_learning_instance(self, object_id, learning_backend=0):
         if object_id not in self._learning_instance_processes:
             return
 

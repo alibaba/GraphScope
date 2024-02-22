@@ -110,7 +110,7 @@ class AbstractLauncher(metaclass=ABCMeta):
 
     @abstractmethod
     def close_learning_instance(
-        self, object_id: int, learning_backend: Optional[str] = None):
+        self, object_id: int, learning_backend: int):
         pass
 
     @abstractmethod

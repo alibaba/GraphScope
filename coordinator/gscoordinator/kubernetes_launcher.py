@@ -1374,7 +1374,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
         
     def _distribute_graphlearn_torch_process(
-        self, pod_name_list, pod_host_ip_list, object_id, handle, config
+        self, pod_name_list, pod_ip_list, object_id, handle, config
     ):
         #TODO: add graphlearn torch process
         # allocate service for ports
@@ -1399,11 +1399,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
         )
         logger.info(f"ports: {ports}")
         if handle["master_id"] != -1:
-            handle["master_addr"] = pod_host_ip_list[handle["master_id"]]
+            handle["master_addr"] = pod_ip_list[handle["master_id"]]
         else:
             handle["master_addr"] = "localhost"
         handle["server_client_master_port"] = ports[0]
-        server_list = [f"{pod_host_ip_list[0]}:{ports[i]}" for i in range(4)]
+        server_list = [f"{pod_ip_list[0]}:{ports[i]}" for i in range(4)]
 
         handle = base64.b64encode(
             json.dumps(handle).encode("utf-8", errors="ignore")
@@ -1413,7 +1413,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
         self._graphlearn_torch_instance_processes[object_id] = []
         for pod_index, pod in enumerate(self._pod_name_list):
             container = GRAPHLEARN_TORCH_CONTAINER_NAME
-            sub_cmd = f"python3 -m gscoordinator.launch_graphlearn_torch {handle} {config} {pod_index}"
+            sub_cmd = f"env PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python python3 -m gscoordinator.launch_graphlearn_torch {handle} {config} {pod_index}"
             cmd = f"kubectl -n {self._namespace} exec -it -c {container} {pod} -- {sub_cmd}"
             logger.debug("launching learning server: %s", " ".join(cmd))
             proc = subprocess.Popen(
@@ -1448,7 +1448,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def create_learning_instance(self, object_id, handle, config, learning_backend):
         logger.info(learning_backend)
         if learning_backend == message_pb2.LearningBackend.GRAPHLEARN:
-            logger.info("wtf!!!!!!!")
             pod_name_list, _, pod_host_ip_list = self._allocate_graphlearn_engine(object_id)
             if not pod_name_list or not pod_host_ip_list:
                 raise RuntimeError("Failed to allocate learning engine")
@@ -1456,12 +1455,11 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 pod_name_list, pod_host_ip_list, object_id, handle, config
             )
         elif learning_backend == message_pb2.LearningBackend.GRAPHLEARN_TORCH:
-            logger.info("???????????????????")
-            pod_name_list, _, pod_host_ip_list = self._allocate_graphlearn_torch_engine(object_id)
+            pod_name_list, pod_ip_list, pod_host_ip_list = self._allocate_graphlearn_torch_engine(object_id)
             if not pod_name_list or not pod_host_ip_list:
                 raise RuntimeError("Failed to allocate learning engine")
             return self._distribute_graphlearn_torch_process(
-                pod_name_list, pod_host_ip_list, object_id, handle, config
+                pod_name_list, pod_ip_list, object_id, handle, config
             )
         else:
             raise ValueError("invalid learning backend")
