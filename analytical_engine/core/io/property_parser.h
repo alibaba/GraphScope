@@ -133,6 +133,13 @@ struct Graph {
   bool retain_oid = true;
   bool compact_edges = false;
   bool use_perfect_hash = false;
+  // This is used to extend the label data
+  // when user try to add data to existed labels.
+  // the available option is 0/1/2,
+  // 0 stands for no extend,
+  // 1 stands for extend vertex label data,
+  // 2 stands for extend edge label data.
+  int extend_type = 0;
 
   std::string SerializeToString() const {
     std::stringstream ss;
@@ -289,6 +296,7 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
   BOOST_LEAF_AUTO(compact_edges, params.Get<bool>(rpc::COMPACT_EDGES, false));
   BOOST_LEAF_AUTO(use_perfect_hash,
                   params.Get<bool>(rpc::USE_PERFECT_HASH, false));
+  BOOST_LEAF_AUTO(extend_type, params.Get<int64_t>(rpc::EXTEND_LABEL_DATA, 0));
 
   auto graph = std::make_shared<detail::Graph>();
   graph->directed = directed;
@@ -296,6 +304,7 @@ inline bl::result<std::shared_ptr<detail::Graph>> ParseCreatePropertyGraph(
   graph->retain_oid = retain_oid;
   graph->compact_edges = compact_edges;
   graph->use_perfect_hash = use_perfect_hash;
+  graph->extend_type = extend_type;
 
   const auto& large_attr = params.GetLargeAttr();
   for (const auto& item : large_attr.chunk_list().items()) {

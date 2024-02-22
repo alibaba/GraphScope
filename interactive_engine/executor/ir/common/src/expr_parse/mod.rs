@@ -90,6 +90,7 @@ impl TryFrom<Token> for pb::ExprOpr {
             }
             Token::IdentArray(idents) => Ok((idents_to_vars(idents)?, false).into()),
             Token::IdentMap(idents) => Ok((idents_to_vars(idents)?, true).into()),
+            Token::IsNull => Ok(pb::Logical::Isnull.into()),
         }
     }
 }
@@ -155,7 +156,9 @@ impl ExprToken for pb::ExprOpr {
                         | pb::Logical::Within
                         | pb::Logical::Without
                         | pb::Logical::Startswith
-                        | pb::Logical::Endswith => 80,
+                        | pb::Logical::Endswith
+                        | pb::Logical::Isnull
+                        | pb::Logical::Regex => 80,
                         pb::Logical::And => 75,
                         pb::Logical::Or => 70,
                         pb::Logical::Not => 110,

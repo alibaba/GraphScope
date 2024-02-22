@@ -30,16 +30,6 @@ imagePullSecrets:
 
 
 {{/*
-Transform the Docker Image Registry Secret Names to string with comma separated.
-*/}}
-{{- define "graphscope.imagePullSecretsStr" -}}
-{{- if .Values.imagePullSecrets }}
-{{ join "," .Values.imagePullSecrets }}
-{{- end }}
-{{- end }}
-
-
-{{/*
 Return the proper image name
 {{ include "graphscope.images.image" ( dict "imageRoot" .Values.path.to.the.image "DefaultTag" .DefaultTag "Component" .Values.path.to.component) }}
 */}}

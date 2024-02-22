@@ -43,7 +43,8 @@ mod test {
     fn source_gen(alias: Option<KeyId>) -> Box<dyn Iterator<Item = Record> + Send> {
         let graph = create_exp_store(Arc::new(TestCluster {}));
         register_graph(graph);
-        let scan_opr_pb = pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None };
+        let scan_opr_pb =
+            pb::Scan { scan_opt: 0, alias, params: None, idx_predicate: None, is_count_only: false };
         let source = SourceOperator::new(scan_opr_pb.into(), Arc::new(TestRouter::default())).unwrap();
         source.gen_source(0).unwrap()
     }
@@ -507,5 +508,49 @@ mod test {
             result_count += 1;
         }
         assert_eq!(result_count, 6)
+    }
+
+    // g.V().outE().where(expr("weight>0.5"))
+    #[test]
+    fn auxilia_edge_filter_test() {
+        let expand_opr = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: Some(query_params(vec![], vec!["weight".into()], None)),
+            expand_opt: 1, // edge
+            alias: None,
+        };
+
+        let auxilia_opr = pb::GetV {
+            tag: None,
+            opt: 4,
+            params: Some(query_params(vec![], vec![], str_to_expr_pb("@.weight>0.5".to_string()).ok())),
+            alias: Some(TAG_A.into()),
+        };
+
+        let conf = JobConf::new("auxilia_edge_filter_test");
+        let mut result = pegasus::run(conf, || {
+            let expand = expand_opr.clone();
+            let auxilia = auxilia_opr.clone();
+            |input, output| {
+                let mut stream = input.input_from(source_gen(None))?;
+                let flatmap_func = expand.gen_flat_map().unwrap();
+                stream = stream.flat_map(move |input| flatmap_func.exec(input))?;
+                let filter_map_func = auxilia.gen_filter_map().unwrap();
+                stream = stream.filter_map(move |input| filter_map_func.exec(input))?;
+                stream.sink_into(output)
+            }
+        })
+        .expect("build job failure");
+
+        let expected_ids = vec![2, 4];
+        let mut result_ids = vec![];
+        while let Some(Ok(record)) = result.next() {
+            if let Some(element) = record.get(Some(TAG_A)).unwrap().as_edge() {
+                result_ids.push(element.id());
+            }
+        }
+        result_ids.sort();
+        assert_eq!(result_ids, expected_ids)
     }
 }

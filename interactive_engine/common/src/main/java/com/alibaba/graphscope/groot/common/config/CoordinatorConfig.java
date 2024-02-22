@@ -23,10 +23,10 @@ public class CoordinatorConfig {
             Config.longConfig("offsets.persist.interval.ms", 3000L);
 
     public static final Config<Boolean> LOG_RECYCLE_ENABLE =
-            Config.boolConfig("log.recycle.enable", true);
+            Config.boolConfig("log.recycle.enable", false);
 
     public static final Config<Long> LOG_RECYCLE_INTERVAL_SECOND =
-            Config.longConfig("log.recycle.interval.second", 60L);
+            Config.longConfig("log.recycle.interval.second", 600L);
 
     public static final Config<String> FILE_META_STORE_PATH =
             Config.stringConfig("file.meta.store.path", "./meta");

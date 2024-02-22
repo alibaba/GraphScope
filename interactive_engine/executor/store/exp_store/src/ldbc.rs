@@ -45,7 +45,7 @@ pub static LDBC_SUFFIX: &'static str = "_0_0.csv";
 
 /// A ldbc raw file uses | to split data fields
 pub static SPLITTER: &'static str = "|";
-/// A hdfs partitioned data starts wtih "part-"
+/// A hdfs partitioned data starts with "part-"
 pub static PARTITION_PREFIX: &'static str = "part-";
 
 /// Given a worker of ID `worker`, identify the files it will processed
@@ -220,15 +220,15 @@ impl LDBCParser {
             .meta_data
             .vertex_map
             .get(vertex_type)
-            .ok_or(GDBError::InvalidTypeError(vertex_type.to_string()))?;
+            .ok_or_else(|| GDBError::InvalidTypeError(vertex_type.to_string()))?;
         let id_index = vertex_meta
             .get_column_index(ID_FIELD)
-            .ok_or(GDBError::FieldNotExistError)?;
+            .ok_or_else(|| GDBError::FieldNotExistError)?;
         let label_index = vertex_meta.get_column_index(LABEL_FIELD);
         let vertex_type_id = *self
             .vertex_type_to_id
             .get(vertex_type)
-            .ok_or(GDBError::InvalidTypeError(vertex_type.to_string()))?;
+            .ok_or_else(|| GDBError::InvalidTypeError(vertex_type.to_string()))?;
 
         Ok(LDBCVertexParser {
             vertex_type: vertex_type_id,
@@ -245,25 +245,25 @@ impl LDBCParser {
             .meta_data
             .edge_map
             .get(edge_type.get())
-            .ok_or(GDBError::InvalidTypeError(edge_type.get().to_string()))?;
+            .ok_or_else(|| GDBError::InvalidTypeError(edge_type.get().to_string()))?;
         let src_id_index = edge_meta
             .get_column_index(START_ID_FIELD)
-            .ok_or(GDBError::ParseError)?;
+            .ok_or_else(|| GDBError::ParseError)?;
         let dst_id_index = edge_meta
             .get_column_index(END_ID_FIELD)
-            .ok_or(GDBError::ParseError)?;
+            .ok_or_else(|| GDBError::ParseError)?;
         let edge_type_id = *self
             .edge_type_to_id
             .get(edge_type.get())
-            .ok_or(GDBError::InvalidTypeError(edge_type.get().to_string()))?;
+            .ok_or_else(|| GDBError::InvalidTypeError(edge_type.get().to_string()))?;
         let src_vertex_type_id = *self
             .vertex_type_to_id
             .get(edge_type.get_src())
-            .ok_or(GDBError::InvalidTypeError(edge_type.get_src().to_string()))?;
+            .ok_or_else(|| GDBError::InvalidTypeError(edge_type.get_src().to_string()))?;
         let dst_vertex_type_id = *self
             .vertex_type_to_id
             .get(edge_type.get_dst())
-            .ok_or(GDBError::InvalidTypeError(edge_type.get_dst().to_string()))?;
+            .ok_or_else(|| GDBError::InvalidTypeError(edge_type.get_dst().to_string()))?;
 
         Ok(LDBCEdgeParser {
             src_id_index,
@@ -374,7 +374,7 @@ impl<G: FromStr + PartialEq + Default + IndexType> ParserTrait<G> for LDBCVertex
                     extra_label_id = *self
                         .vertex_type_to_id
                         .get(&record.to_uppercase())
-                        .ok_or(GDBError::FieldNotExistError)?;
+                        .ok_or_else(|| GDBError::FieldNotExistError)?;
                     // can break here because id always presents before label
                     break;
                 }
@@ -751,9 +751,9 @@ impl<G: FromStr + Send + Sync + IndexType, I: Send + Sync + IndexType> GraphLoad
 fn get_fname_from_path(path: &PathBuf) -> GDBResult<&str> {
     let fname = path
         .file_name()
-        .ok_or(GDBError::UnknownError)?
+        .ok_or_else(|| GDBError::UnknownError)?
         .to_str()
-        .ok_or(GDBError::UnknownError)?;
+        .ok_or_else(|| GDBError::UnknownError)?;
 
     Ok(fname)
 }

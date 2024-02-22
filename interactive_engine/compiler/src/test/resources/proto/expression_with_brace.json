@@ -1,0 +1,58 @@
+{
+  "operators": [{
+    "var": {
+      "tag": {
+        "id": 0
+      },
+      "property": {
+        "key": {
+          "name": "age"
+        }
+      },
+      "nodeType": {
+        "dataType": "INT32"
+      }
+    },
+    "nodeType": {
+      "dataType": "INT32"
+    }
+  }, {
+    "arith": "SUB",
+    "nodeType": {
+      "dataType": "INT32"
+    }
+  }, {
+    "brace": "LEFT_BRACE"
+  }, {
+    "const": {
+      "i32": 1
+    },
+    "nodeType": {
+      "dataType": "INT32"
+    }
+  }, {
+    "arith": "SUB",
+    "nodeType": {
+      "dataType": "INT32"
+    }
+  }, {
+    "var": {
+      "tag": {
+        "id": 0
+      },
+      "property": {
+        "key": {
+          "name": "age"
+        }
+      },
+      "nodeType": {
+        "dataType": "INT32"
+      }
+    },
+    "nodeType": {
+      "dataType": "INT32"
+    }
+  }, {
+    "brace": "RIGHT_BRACE"
+  }]
+}

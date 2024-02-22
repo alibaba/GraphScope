@@ -13,14 +13,13 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 
 public class DdlWriter {
 
-    private RoleClients<IngestorWriteClient> ingestorWriteClients;
+    private final RoleClients<IngestorWriteClient> ingestorWriteClients;
     private int queueId = 0;
 
     public DdlWriter(RoleClients<IngestorWriteClient> ingestorWriteClients) {

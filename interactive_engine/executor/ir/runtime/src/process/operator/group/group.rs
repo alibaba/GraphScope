@@ -36,9 +36,9 @@ impl GroupGen<Record, RecordKey, Record> for pb::GroupBy {
     fn gen_group_map(&self) -> FnGenResult<Box<dyn MapFunction<(RecordKey, Record), Record>>> {
         let mut key_aliases = Vec::with_capacity(self.mappings.len());
         for key_alias in self.mappings.iter() {
-            let alias = key_alias
-                .alias
-                .ok_or(ParsePbError::from(format!("key alias cannot be None in group opr {:?}", self)))?;
+            let alias = key_alias.alias.ok_or_else(|| {
+                ParsePbError::from(format!("key alias cannot be None in group opr {:?}", self))
+            })?;
             key_aliases.push(alias);
         }
         let group_map = GroupMap { key_aliases };
@@ -51,7 +51,7 @@ impl GroupGen<Record, RecordKey, Record> for pb::GroupBy {
 
 #[derive(Debug)]
 struct GroupMap {
-    /// aliases for group keys, if some key is not not required to be preserved, give None alias
+    /// aliases for group keys, if some key is not required to be preserved, give None alias
     key_aliases: Vec<KeyId>,
 }
 
@@ -428,6 +428,39 @@ mod tests {
             let val = result.get(Some(TAG_B)).unwrap();
             group_result.insert((key.clone(), val.clone()));
         }
+        assert_eq!(group_result, expected_result);
+    }
+
+    // g.V().group.by("name").first() with key as 'a', value as 'b'
+    #[test]
+    fn group_first_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 8, // First
+            alias: Some(TAG_B.into()),
+        };
+        let key_alias = pb::group_by::KeyAlias {
+            key: Some(common_pb::Variable::from("@.name".to_string())),
+            alias: Some(TAG_A.into()),
+        };
+        let group_opr_pb = pb::GroupBy { mappings: vec![key_alias], functions: vec![function] };
+        let mut result = group_test(group_opr_pb);
+        let mut group_result = vec![];
+        let mut expected_result: Vec<(Object, DynEntry)> = vec![
+            (object!("marko"), DynEntry::new(init_vertex1())),
+            (object!("vadas"), DynEntry::new(init_vertex2())),
+        ];
+        while let Some(Ok(result)) = result.next() {
+            let key = result
+                .get(Some(TAG_A))
+                .unwrap()
+                .as_object()
+                .unwrap();
+            let val = result.get(Some(TAG_B)).unwrap();
+            group_result.push((key.clone(), val.clone()));
+        }
+        expected_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
+        group_result.sort_by(|o1, o2| o1.0.cmp(&o2.0));
         assert_eq!(group_result, expected_result);
     }
 }

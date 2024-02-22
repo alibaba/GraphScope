@@ -83,6 +83,7 @@
               "extra": {}
             },
             "idx_predicate": null,
+            "is_count_only": false,
             "meta_data": {
               "type": {
                 "type": {
@@ -127,6 +128,25 @@
                 }
               },
               "alias": 0
+            }
+          }
+        }
+      },
+      "children": [
+        1
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Sink": {
+            "tags": [],
+            "sink_target": {
+              "inner": {
+                "SinkDefault": {
+                  "id_name_mappings": []
+                }
+              }
             }
           }
         }

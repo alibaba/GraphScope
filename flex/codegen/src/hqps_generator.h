@@ -26,13 +26,14 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_fold_builder.h"
 #include "flex/codegen/src/hqps/hqps_get_v_builder.h"
 #include "flex/codegen/src/hqps/hqps_join_utils.h"
+#include "flex/codegen/src/hqps/hqps_limit_builder.h"
 #include "flex/codegen/src/hqps/hqps_path_expand_builder.h"
 #include "flex/codegen/src/hqps/hqps_project_builder.h"
 #include "flex/codegen/src/hqps/hqps_scan_builder.h"
 #include "flex/codegen/src/hqps/hqps_select_builder.h"
 #include "flex/codegen/src/hqps/hqps_sink_builder.h"
 #include "flex/codegen/src/hqps/hqps_sort_builder.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
@@ -42,7 +43,7 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "// DO NOT EDIT\n"
     "\n"
     "#include \"flex/engines/hqps_db/core/sync_engine.h\"\n"
-    "#include \"flex/engines/hqps_db/app/hqps_app_base.h\"\n"  // app_base_header.h
+    "#include \"flex/engines/graph_db/app/app_base.h\"\n"  // app_base_header.h
     "#include \"%1%\"\n"  // graph_interface_header.h
     "\n"
     "\n"
@@ -51,38 +52,45 @@ static constexpr const char* QUERY_TEMPLATE_STR =
     "%2%\n"
     "\n"
     "// Auto generated query class definition\n"
-    "class %3% : public HqpsAppBase<%4%> {\n"
+    "class %3% : public AppBase {\n"
     " public:\n"
     "  using Engine = SyncEngine<%4%>;\n"
     "  using label_id_t = typename %4%::label_id_t;\n"
     "  using vertex_id_t = typename %4%::vertex_id_t;\n"
+    " // constructor\n"
+    "  %3%(const GraphDBSession& session) : %6%(session) {}\n"
     "// Query function for query class\n"
-    "  %5% Query(const %4%& %6% %7%) const{\n"
+    "  %5% Query(%7%) const{\n"
     "     %8%\n"
     "  }\n"
     "// Wrapper query function for query class\n"
-    "  %5% Query(const %4%& %6%, Decoder& decoder) const override {\n"
+    "  bool Query(Decoder& decoder, Encoder& encoder) override {\n"
     "    //decoding params from decoder, and call real query func\n"
     "    %9%\n"
-    "    return Query(%6% %10%);\n"
+    "    auto res =  Query(%10%);\n"
+    "    // dump results to string\n"
+    "    std::string res_str = res.SerializeAsString();\n"
+    "    // encode results to encoder\n"
+    "    if (!res_str.empty()){\n"
+    "      encoder.put_string_view(res_str);\n"
+    "    }\n"
+    "    return true;\n"
     "  }\n"
+    "  //private members\n"
+    " private:\n"
+    "  %4% %6%;\n"
     "};\n"
     "} // namespace gs\n"
     "\n"
     "// extern c interfaces\n"
     "extern \"C\" {\n"
-    "void* CreateApp(gs::GraphStoreType store_type) {\n"
-    "  if (store_type == %11%) {\n"
-    "    gs::%3%* app =\n"
-    "        new gs::%3%();\n"
-    "    return static_cast<void*>(app);\n"
-    "  }\n"
-    "  return nullptr;\n"
+    "void* CreateApp(gs::GraphDBSession& db) {\n"
+    "  gs::%3%* app = new gs::%3%(db);\n"
+    "  return static_cast<void*>(app);\n"
     "}\n"
-    "void DeleteApp(void* app, gs::GraphStoreType store_type) {\n"
-    "  if (store_type == %11%) {\n"
-    "    gs::%3%* casted =\n"
-    "        static_cast<gs::%3%*>(app);\n"
+    "void DeleteApp(void* app) {\n"
+    "  if (app != nullptr) {\n"
+    "    gs::%3%* casted = static_cast<gs::%3%*>(app);\n"
     "    delete casted;\n"
     "  }\n"
     "}\n"
@@ -145,7 +153,12 @@ void build_fused_edge_get_v(
   CHECK(vertex_labels.size() > 0);
   edge_expand_op.set_expand_opt(
       physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_VERTEX);
-  edge_expand_op.mutable_alias()->set_value(get_v_op.alias().value());
+  if (get_v_op.has_alias()) {
+    edge_expand_op.mutable_alias()->set_value(get_v_op.alias().value());
+  } else {
+    edge_expand_op.mutable_alias()->set_value(-1);
+  }
+
   ss << _4_SPACES
      << BuildEdgeExpandOp<LabelT>(ctx, edge_expand_op, edge_meta_data,
                                   vertex_labels)
@@ -168,7 +181,7 @@ class QueryGenerator {
       : ctx_(ctx), plan_(plan) {}
 
   std::string GenerateQuery() {
-    // During generate query body, we will track the parameteres
+    // During generate query body, we will track the parameters
     // And also generate the expression for needed
     std::string query_code = build_query_code();
     std::string expr_code;
@@ -189,7 +202,7 @@ class QueryGenerator {
     formater % ctx_.GetGraphHeader() % expr_code % ctx_.GetQueryClassName() %
         ctx_.GetGraphInterface() % ctx_.GetQueryRet() % ctx_.GraphVar() %
         dynamic_vars_str % query_code % decoding_params_code %
-        decoded_params_str % storage_backend_to_string(ctx_.GetStorageType());
+        decoded_params_str;
     return formater.str();
   }
 
@@ -209,22 +222,23 @@ class QueryGenerator {
     if (param_vars.size() > 0) {
       sort(param_vars.begin(), param_vars.end(),
            [](const auto& a, const auto& b) { return a.id < b.id; });
-      // FIXME: ENable this line
-      // the dynamic params can be duplicate.
       CHECK(param_vars[0].id == 0);
-      ss << ",";
-      for (auto i = 0; i < param_vars.size(); ++i) {
+      for (size_t i = 0; i < param_vars.size(); ++i) {
         if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
           // found duplicate
           CHECK(param_vars[i] == param_vars[i - 1]);
           continue;
         } else {
-          ss << ", " << data_type_2_string(param_vars[i].type) << " "
-             << param_vars[i].var_name;
+          ss << data_type_2_string(param_vars[i].type) << " "
+             << param_vars[i].var_name << ",";
         }
       }
     }
-    return ss.str();
+    auto str = ss.str();
+    if (str.size() > 0) {
+      str.pop_back();  // remove the last comma
+    }
+    return str;
   }
 
   // implement the function that overrides the base class.
@@ -238,7 +252,7 @@ class QueryGenerator {
       CHECK(param_vars[0].id == 0);  // encoding start from 0
     }
 
-    for (auto i = 0; i < param_vars.size(); ++i) {
+    for (size_t i = 0; i < param_vars.size(); ++i) {
       if (i > 0 && param_vars[i].id == param_vars[i - 1].id) {
         CHECK(param_vars[i] == param_vars[i - 1]);
         continue;
@@ -257,10 +271,7 @@ class QueryGenerator {
     std::string param_vars_decoding, param_vars_concat_str;
     {
       std::stringstream ss;
-      if (param_names.size() > 0) {
-        ss << ",";
-      }
-      for (auto i = 0; i < param_names.size(); ++i) {
+      for (size_t i = 0; i < param_names.size(); ++i) {
         ss << param_names[i];
         if (i != param_names.size() - 1) {
           ss << ", ";
@@ -270,7 +281,7 @@ class QueryGenerator {
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < param_decoding_codes.size(); ++i) {
+      for (size_t i = 0; i < param_decoding_codes.size(); ++i) {
         ss << param_decoding_codes[i] << std::endl;
       }
       param_vars_decoding = ss.str();
@@ -283,7 +294,7 @@ class QueryGenerator {
     auto size = plan_.plan_size();
 
     LOG(INFO) << "Found " << size << " operators in the plan";
-    for (auto i = 0; i < size; ++i) {
+    for (int32_t i = 0; i < size; ++i) {
       auto op = plan_.plan(i);
       auto& meta_datas = op.meta_data();
       // CHECK(meta_datas.size() == 1) << "meta data size: " <<
@@ -291,6 +302,11 @@ class QueryGenerator {
       // physical::PhysicalOpr::MetaData meta_data; //fake meta
       auto opr = op.opr();
       switch (opr.op_kind_case()) {
+      case physical::PhysicalOpr::Operator::kRoot: {
+        LOG(INFO) << "Skip root_scan";
+        break;
+      }
+
       case physical::PhysicalOpr::Operator::kScan: {  // scan
         // TODO: meta_data is not found in scan
         physical::PhysicalOpr::MetaData meta_data;
@@ -301,9 +317,10 @@ class QueryGenerator {
         ss << BuildScanOp(ctx_, scan_op, meta_data) << std::endl;
         break;
       }
+
       case physical::PhysicalOpr::Operator::kEdge: {  // edge expand
         physical::EdgeExpand real_edge_expand = opr.edge();
-        // try to use infomation from later operator
+        // try to use information from later operator
         std::vector<LabelT> dst_vertex_labels;
         if (i + 1 < size) {
           auto& get_v_op_opr = plan_.plan(i + 1).opr();
@@ -392,7 +409,7 @@ class QueryGenerator {
 
       case physical::PhysicalOpr::Operator::kGroupBy: {
         // auto& meta_data = meta_datas[0];
-        // meta_data is currenly not used in groupby.
+        // meta_data is currently not used in groupby.
         physical::PhysicalOpr::MetaData meta_data;
         auto& group_by_op = opr.group_by();
         if (group_by_op.mappings_size() > 0) {
@@ -413,30 +430,30 @@ class QueryGenerator {
       case physical::PhysicalOpr::Operator::kPath: {
         physical::PhysicalOpr::MetaData meta_data;
         LOG(INFO) << "Found a path operator";
-        if (FUSE_PATH_EXPAND_V) {
-          if (i + 1 < size) {
-            auto& path_op = opr.path();
-            auto& next_op = plan_.plan(i + 1).opr();
-            CHECK(next_op.op_kind_case() ==
-                  physical::PhysicalOpr::Operator::kVertex)
-                << "PathExpand must be followed by GetV";
+        auto& path_op = opr.path();
+        if (FUSE_PATH_EXPAND_V && !path_op.has_alias() && (i + 1 < size)) {
+          auto& next_op = plan_.plan(i + 1).opr();
+          if (next_op.op_kind_case() ==
+              physical::PhysicalOpr::Operator::kVertex) {
+            LOG(INFO) << " Fusing path expand and get_v";
             auto& get_v_op = next_op.vertex();
             int32_t get_v_res_alias = -1;
             if (get_v_op.has_alias()) {
               get_v_res_alias = get_v_op.alias().value();
             }
 
-            auto res = BuildPathExpandOp<LabelT>(ctx_, path_op, meta_datas,
-                                                 get_v_res_alias);
+            auto res = BuildPathExpandVOp<LabelT>(ctx_, path_op, meta_datas,
+                                                  get_v_res_alias);
             ss << res;
             i += 1;  // jump one step
             break;
-          } else {
-            LOG(FATAL) << "PathExpand is the last operator";
           }
-        } else {
-          LOG(FATAL) << "Currently not supported: PathExpand without Getv";
         }
+        LOG(INFO) << " PathExpand to Path";
+        // otherwise, just expand path
+        auto res = BuildPathExpandPathOp<LabelT>(ctx_, path_op, meta_datas);
+        ss << res;
+        break;
       }
 
       case physical::PhysicalOpr::Operator::kApply: {
@@ -500,6 +517,14 @@ class QueryGenerator {
         break;
       }
 
+      case physical::PhysicalOpr::Operator::kLimit: {
+        LOG(INFO) << "Found a limit operator";
+        auto& limit_op = opr.limit();
+        std::string limit_code = BuildLimitOp(ctx_, limit_op);
+        ss << limit_code << std::endl;
+        break;
+      }
+
       default:
         LOG(FATAL) << "Unsupported operator type: " << opr.op_kind_case();
       }
@@ -513,7 +538,7 @@ class QueryGenerator {
 };
 
 // When building a join op, we need to consider the following cases:
-// 0. tag_id to tag_ind mapping, two plan shoud keep different mappings
+// 0. tag_id to tag_ind mapping, two plan should keep different mappings
 // const physical::PhysicalOpr::MetaData& meta_data
 template <typename LabelT>
 static std::array<std::string, 4> BuildJoinOp(
@@ -524,7 +549,7 @@ static std::array<std::string, 4> BuildJoinOp(
   auto& left_keys = join_op_pb.left_keys();
   auto& right_keys = join_op_pb.right_keys();
   std::vector<int32_t> join_keys;  // the left_keys and
-  for (auto i = 0; i < left_keys.size(); ++i) {
+  for (int i = 0; i < left_keys.size(); ++i) {
     CHECK(left_keys[i].tag().id() == right_keys[i].tag().id());
     join_keys.push_back(left_keys[i].tag().id());
   }
@@ -562,6 +587,7 @@ static std::array<std::string, 4> BuildJoinOp(
         left_task_generator.GenerateSubTask();
     left_res_ctx_name = ctx.GetCurCtxName();
   }
+  LOG(INFO) << "Finish building left code";
 
   {
     // right code
@@ -579,6 +605,7 @@ static std::array<std::string, 4> BuildJoinOp(
       ctx.AddParameterVar(right_param_var);
     }
   }
+  LOG(INFO) << "Finish building right code";
 
   // join code.
   {
@@ -620,6 +647,21 @@ static std::array<std::string, 4> BuildJoinOp(
     cur_ss << ");";
     join_code = cur_ss.str();
   }
+  {
+    // The tags in right ctx should be added to left ctx.
+    // after join, the tags/columns from right ctx will be appended to left
+    // ctx.
+    auto right_tag_inds = right_context.GetTagIdAndIndMapping();
+    auto left_tag_inds = ctx.GetTagIdAndIndMapping();
+    for (auto right_tag : right_tag_inds.GetTagInd2TagIds()) {
+      left_tag_inds.CreateOrGetTagInd(right_tag);
+    }
+    VLOG(10) << "Merging right tag ids to left, got : "
+             << gs::to_string(left_tag_inds.GetTagInd2TagIds()) << std::endl
+             << gs::to_string(left_tag_inds.GetTagId2TagInds());
+    ctx.UpdateTagIdAndIndMapping(left_tag_inds);
+  }
+  LOG(INFO) << "Finish building join code";
   return std::array<std::string, 4>{copy_context_code, left_plan_code,
                                     right_plan_code, join_code};
 }
@@ -636,7 +678,7 @@ static std::string BuildApplyOp(
     auto new_building_ctx = ctx.CreateSubTaskContext();
     auto sub_task_generator =
         QueryGenerator<LabelT>(new_building_ctx, sub_plan);
-    // QueryGenrator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
+    // QueryGenerator<LabelT> sub_task_generator(new_building_ctx, sub_plan_);
     // gen a lambda function.
     lambda_func_name = ctx.GetNextLambdaFuncName();
     std::stringstream inner_ss;

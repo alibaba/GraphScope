@@ -17,6 +17,7 @@ use std::convert::TryInto;
 
 use graph_proxy::apis::GraphElement;
 use graph_proxy::apis::{get_graph, DynDetails, GraphPath, QueryParams, Vertex};
+use graph_proxy::utils::expr::eval_pred::EvalPred;
 use ir_common::error::ParsePbError;
 use ir_common::generated::physical as pb;
 use ir_common::generated::physical::get_v::VOpt;
@@ -79,21 +80,26 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                     VOpt::Other => {
                         let graph_path = input
                             .get_mut(self.start_tag)
-                            .ok_or(FnExecError::unexpected_data_error(&format!(
-                                "get_mut of GraphPath failed in {:?}",
-                                self
-                            )))?
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!(
+                                    "get_mut of GraphPath failed in {:?}",
+                                    self
+                                ))
+                            })?
                             .as_any_mut()
                             .downcast_mut::<GraphPath>()
-                            .ok_or(FnExecError::unexpected_data_error(&format!(
-                                "entry is not a path in GetV"
-                            )))?;
-                        let path_end_edge = graph_path.get_path_end().as_edge().ok_or(
-                            FnExecError::unexpected_data_error(&format!(
-                                "GetOtherVertex on a path entry with input: {:?}",
-                                graph_path.get_path_end()
-                            )),
-                        )?;
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!("entry is not a path in GetV"))
+                            })?;
+                        let path_end_edge = graph_path
+                            .get_path_end()
+                            .as_edge()
+                            .ok_or_else(|| {
+                                FnExecError::unexpected_data_error(&format!(
+                                    "GetOtherVertex on a path entry with input: {:?}",
+                                    graph_path.get_path_end()
+                                ))
+                            })?;
                         let label = path_end_edge.get_other_label();
                         if self.contains_label(label)? {
                             let vertex = Vertex::new(
@@ -111,7 +117,7 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                         let path_end_vertex = graph_path
                             .get_path_end()
                             .as_vertex()
-                            .ok_or(FnExecError::unsupported_error("Get end edge on a path entry"))?
+                            .ok_or_else(|| FnExecError::unsupported_error("Get end edge on a path entry"))?
                             .clone();
                         let label = path_end_vertex.label();
                         if self.contains_label(label.as_ref())? {
@@ -154,20 +160,25 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
             // e.g., for g.V().out().as("a").has("name", "marko"), we should compile as:
             // g.V().out().auxilia(as("a"))... where we give alias in auxilia,
             //     then we set tag=None and alias="a" in auxilia
-            // 1. filter by labels.
-            if !self.query_params.labels.is_empty() && entry.label().is_some() {
+
+            // 1. If to filter by labels, and the entry itself carries label information already, directly eval it without query the store
+            if self.query_params.has_labels() && entry.label().is_some() {
                 if !self
                     .query_params
                     .labels
                     .contains(&entry.label().unwrap())
                 {
+                    // pruning by labels
                     return Ok(None);
+                } else if !self.query_params.has_predicates() && !self.query_params.has_columns() {
+                    // if only filter by labels, directly return the results.
+                    return Ok(Some(input));
                 }
             }
-            // 2. further fetch properties, e.g., filter by columns.
+            // 2. Otherwise, filter after query store, e.g., the case of filter by columns.
             match entry.get_type() {
                 EntryType::Vertex => {
-                    let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+                    let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
                     let id = entry.id();
                     if let Some(vertex) = graph
                         .get_vertex(&[id], &self.query_params)?
@@ -187,31 +198,35 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     }
                 }
                 EntryType::Edge => {
-                    // TODO: This is a little bit tricky. Modify this logic to query store with eid when supported.
-                    // Currently, when getting properties from an edge,
-                    // we assume that it has already been carried in the edge (when the first time queried the edge)
-                    // since on most storages, query edges by eid is not supported yet.
-                    if self.tag.eq(&self.alias) {
-                        // do nothing as we assume properties is already carried
-                    } else {
-                        let entry = entry.clone();
-                        if let Some(alias) = self.alias {
-                            // append without moving head
-                            input
-                                .get_columns_mut()
-                                .insert(alias as usize, entry);
-                        } else {
-                            input.append_arc_entry(entry, self.alias.clone());
+                    // TODO: This is a little bit tricky. Modify this logic to query store once query by eid is supported.
+                    // Currently, we support two cases:
+                    // 1. use auxilia to rename the edge to a new alias;
+                    // 2. use auxilia to filter the edge by predicates, where the necessary properties of the edge is assumed to be already pre-cached.
+                    let entry = entry.clone();
+                    if let Some(predicate) = &self.query_params.filter {
+                        let res = predicate
+                            .eval_bool(Some(&input))
+                            .map_err(|e| FnExecError::from(e))?;
+                        if !res {
+                            return Ok(None);
                         }
+                    }
+                    if let Some(alias) = self.alias {
+                        // append without moving head
+                        input
+                            .get_columns_mut()
+                            .insert(alias as usize, entry);
+                    } else {
+                        input.append_arc_entry(entry, self.alias.clone());
                     }
                 }
                 EntryType::Path => {
                     // Auxilia for vertices in Path is for filtering.
                     let graph_path = entry
                         .as_graph_path()
-                        .ok_or(FnExecError::Unreachable)?;
+                        .ok_or_else(|| FnExecError::Unreachable)?;
                     let path_end = graph_path.get_path_end();
-                    let graph = get_graph().ok_or(FnExecError::NullGraphError)?;
+                    let graph = get_graph().ok_or_else(|| FnExecError::NullGraphError)?;
                     let id = path_end.id();
                     if graph
                         .get_vertex(&[id], &self.query_params)?
@@ -243,7 +258,7 @@ impl FilterMapFuncGen for pb::GetV {
             VOpt::Start | VOpt::End | VOpt::Other => {
                 let mut tables_condition: Vec<LabelId> = vec![];
                 if let Some(params) = self.params {
-                    if params.is_queryable() {
+                    if params.has_predicates() || params.has_columns() {
                         Err(FnGenError::unsupported_error(&format!("QueryParams in GetV {:?}", params)))?
                     } else {
                         tables_condition = params
@@ -253,7 +268,6 @@ impl FilterMapFuncGen for pb::GetV {
                             .collect::<Result<Vec<_>, _>>()?;
                     }
                 }
-
                 let get_vertex_operator = GetVertexOperator {
                     start_tag: self.tag,
                     opt,

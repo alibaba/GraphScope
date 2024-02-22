@@ -55,6 +55,21 @@ message NameOrId {
   }
 }
 
+message Date32 {
+  // int32 days since 1970-01-01
+  int32 item = 1;
+}
+
+message Time32 {
+  // int32 milliseconds past midnight
+  int32 item = 1;
+}
+
+message Timestamp {
+  // int64 milliseconds since 1970-01-01 00:00:00.000000 (in an unspecified timezone)
+  int64 item = 1;
+}
+
 message Value {
   oneof item {
     bool  boolean     = 2;
@@ -69,6 +84,9 @@ message Value {
     StringArray str_array    = 11;
     PairArray pair_array     = 12;
     None  none               = 13;
+    Date32 date              = 14;
+    Time32 time              = 15;
+    Timestamp timestamp      = 16;
   }
 }
 
@@ -85,4 +103,7 @@ enum DataType {
   STRING_ARRAY = 9;
   PAIR_ARRAY = 10;
   NONE = 11;
+  DATE32 = 12;
+  TIME32 = 13;
+  TIMESTAMP = 14;
 }

@@ -14,16 +14,16 @@ RUN cd /home/graphscope/GraphScope/ && \
     else \
         . /home/graphscope/.graphscope_env; \
         mkdir /home/graphscope/install; \
-        make learning-install INSTALL_PREFIX=/home/graphscope/install; \
-        cd python; \
-        python3 -m pip install --user -r requirements.txt; \
-        python3 setup.py bdist_wheel; \
-        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/graphscope/GraphScope/learning_engine/graph-learn/graphlearn/built/lib; \
-        auditwheel repair dist/*.whl; \
-        python3 -m pip install wheelhouse/*.whl; \
-        cp wheelhouse/*.whl /home/graphscope/install/; \
-        cd ../coordinator; \
-        python3 setup.py bdist_wheel; \
+        make learning-install INSTALL_PREFIX=/home/graphscope/install && \
+        cd python && \
+        python3 -m pip install --user -r requirements.txt && \
+        python3 setup.py bdist_wheel && \
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/home/graphscope/GraphScope/learning_engine/graph-learn/graphlearn/built/lib && \
+        auditwheel repair dist/*.whl && \
+        python3 -m pip install wheelhouse/*.whl && \
+        cp wheelhouse/*.whl /home/graphscope/install/ && \
+        cd ../coordinator && \
+        python3 setup.py bdist_wheel && \
         cp dist/*.whl /home/graphscope/install/; \
     fi
 
@@ -31,8 +31,10 @@ RUN cd /home/graphscope/GraphScope/ && \
 
 FROM ubuntu:22.04 AS coordinator
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update -y && \
-    apt-get install -y sudo python3-pip openmpi-bin curl && \
+    apt-get install -y sudo python3-pip openmpi-bin curl tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -44,7 +46,8 @@ RUN useradd -m graphscope -u 1001 \
 RUN sudo mkdir -p /var/log/graphscope \
   && sudo chown -R graphscope:graphscope /var/log/graphscope
 
-RUN curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/amd64/kubectl
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
+    curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/$arch/kubectl
 RUN chmod +x /usr/bin/kubectl
 
 COPY ./interactive_engine/assembly/src/bin/graphscope/giectl /opt/graphscope/bin/giectl

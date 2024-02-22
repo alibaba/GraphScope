@@ -170,7 +170,7 @@ public class GiraphComputationAdaptor<OID_T, VID_T, VDATA_T, EDATA_T> extends Co
         userComputation.incStep();
         workerContext.setCurStep(1);
 
-        // We can not judge whether to proceed by messages sent and check halted array.
+        // We cannot judge whether to proceed by messages sent and check halted array.
         logger.info(
                 "Any msg received: {} all halted {}",
                 giraphMessageManager.anyMessageReceived(),

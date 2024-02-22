@@ -346,9 +346,16 @@ AddLabelsToGraph(vineyard::ObjectID origin_frag_id,
   BOOST_LEAF_AUTO(graph_info, gs::ParseCreatePropertyGraph(params));
   using loader_t = gs::arrow_fragment_loader_t<oid_t, vid_t, vertex_map_t>;
   loader_t loader(client, comm_spec, graph_info);
+  vineyard::ObjectID frag_group_id = vineyard::InvalidObjectID();
 
-  BOOST_LEAF_AUTO(frag_group_id,
-                  loader.AddLabelsToFragmentAsFragmentGroup(origin_frag_id));
+  if (graph_info->extend_type) {
+    BOOST_LEAF_ASSIGN(
+        frag_group_id,
+        loader.ExtendLabelData(origin_frag_id, graph_info->extend_type));
+  } else {
+    BOOST_LEAF_ASSIGN(frag_group_id, loader.AddLabelsToFragmentAsFragmentGroup(
+                                         origin_frag_id));
+  }
   MPI_Barrier(comm_spec.comm());
 
   LOG_IF(INFO, comm_spec.worker_id() == 0)

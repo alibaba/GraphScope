@@ -69,10 +69,10 @@ impl ExactExtendEdge {
         path_opr
             .base
             .as_mut()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
+            .ok_or_else(|| ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
             .edge_expand
             .as_mut()
-            .ok_or(ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
+            .ok_or_else(|| ParsePbError::EmptyFieldError("PathExpand::base in Pattern".to_string()))?
             .direction = self.dir as i32;
         Ok(path_opr.into())
     }
@@ -147,7 +147,7 @@ impl ExactExtendStep {
                     vec![extend_edge.generate_path_expands(path_opr)?]
                 }
             };
-            // every exapand should followed by an getV operator to close
+            // every expand should followed by an getV operator to close
             let get_v =
                 self.generate_get_v_operator(origin_pattern, extend_edge.get_direction(), is_pure_path)?;
             expand_oprs.push(get_v.clone());

@@ -32,10 +32,34 @@ class Table {
   Table();
   ~Table();
 
-  void init(const std::vector<std::string>& col_name,
+  void init(const std::string& name, const std::string& work_dir,
+            const std::vector<std::string>& col_name,
             const std::vector<PropertyType>& types,
-            const std::vector<StorageStrategy>& strategies_,
-            size_t max_row_num);
+            const std::vector<StorageStrategy>& strategies_);
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir,
+            const std::vector<std::string>& col_name,
+            const std::vector<PropertyType>& property_types,
+            const std::vector<StorageStrategy>& strategies_);
+
+  void open_in_memory(const std::string& name, const std::string& snapshot_dir,
+                      const std::vector<std::string>& col_name,
+                      const std::vector<PropertyType>& property_types,
+                      const std::vector<StorageStrategy>& strategies_);
+
+  void open_with_hugepages(const std::string& name,
+                           const std::string& snapshot_dir,
+                           const std::vector<std::string>& col_name,
+                           const std::vector<PropertyType>& property_types,
+                           const std::vector<StorageStrategy>& strategies_, bool force);
+
+  void touch(const std::string& name, const std::string& work_dir);
+
+  void copy_to_tmp(const std::string& name, const std::string& snapshot_dir,
+                   const std::string& work_dir);
+
+  void dump(const std::string& name, const std::string& snapshot_dir);
 
   void reset_header(const std::vector<std::string>& col_name);
 
@@ -58,15 +82,19 @@ class Table {
   const std::shared_ptr<ColumnBase> get_column_by_id(size_t index) const;
 
   size_t col_num() const;
+  size_t row_num() const;
   std::vector<std::shared_ptr<ColumnBase>>& columns();
+  std::vector<ColumnBase*>& column_ptrs();
 
   void insert(size_t index, const std::vector<Any>& values);
 
-  void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer,
-                 const std::string& prefix, size_t row_num);
+  // insert properties except for the primary key
+  // col_ind_mapping: the mapping from the column index in
+  // the raw file row to the column index in the schema
+  void insert(size_t index, const std::vector<Any>& values,
+              const std::vector<int32_t>& col_ind_mapping);
 
-  void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader,
-                   const std::string& prefix);
+  void resize(size_t row_num);
 
   Any at(size_t row_id, size_t col_id);
 
@@ -76,11 +104,16 @@ class Table {
 
  private:
   void buildColumnPtrs();
+  void initColumns(const std::vector<std::string>& col_name,
+                   const std::vector<PropertyType>& types,
+                   const std::vector<StorageStrategy>& strategies_);
 
-  std::vector<std::shared_ptr<ColumnBase>> columns_;
   IdIndexer<std::string, int> col_id_indexer_;
 
+  std::vector<std::shared_ptr<ColumnBase>> columns_;
   std::vector<ColumnBase*> column_ptrs_;
+
+  bool touched_;
 };
 
 }  // namespace gs

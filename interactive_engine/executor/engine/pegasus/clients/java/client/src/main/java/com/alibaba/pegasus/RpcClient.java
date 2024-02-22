@@ -93,13 +93,12 @@ public class RpcClient {
                 return;
             }
             Status status = Status.fromThrowable(throwable);
-            logger.error("get job response error: {}", status);
+            logger.debug("get job response error: {}", status);
             processor.error(status);
         }
 
         @Override
         public void onCompleted() {
-            logger.info("finish get job response from one server");
             if (counter.decrementAndGet() == 0) {
                 logger.info("finish get job response from all servers");
                 processor.finish();

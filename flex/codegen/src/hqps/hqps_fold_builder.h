@@ -25,31 +25,31 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/hqps/hqps_group_by_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
 static constexpr const char* AGG_FUNC_TEMPLATE_STR =
-    "auto %1% = gs::make_aggregate_prop<%2%>(std::tuple{{%3%}, "
+    "auto %1% = gs::make_aggregate_prop<%2%>(std::tuple{%3%}, "
     "std::integer_sequence<int32_t, %4%>{});\n";
 
 static constexpr const char* FOLD_OP_TEMPLATE_STR =
-    "auto %1% = gs::make_fold_opt(%2%);\n"
-    "auto %3% = Engine::GroupByWithoutKey(%4%, std::move(%5%), %1%);\n";
+    "auto %2% = Engine::GroupByWithoutKey(%3%, std::move(%4%), "
+    "std::tuple{%1%});\n";
 
 std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
-    BuildingContext& ctx, const physical::GroupBy::AggFunc& agg_func) {
+    BuildingContext& ctx, const physical::GroupBy::AggFunc& agg_func,
+    TagIndMapping& tag_ind_mapping) {
   auto agg_func_name = agg_func_pb_2_str(agg_func.aggregate());
   auto cur_var_name = ctx.GetNextAggFuncName();
   std::vector<int32_t> in_tags;
   std::vector<std::string> in_prop_names;
   std::vector<std::string> in_prop_types;
-  int32_t res_alias = agg_func.alias().value();
-  auto real_res_alias = ctx.CreateOrGetTagInd(res_alias);
+  tag_ind_mapping.CreateOrGetTagInd(agg_func.alias().value());
   auto& vars = agg_func.vars();
-  for (auto i = 0; i < vars.size(); ++i) {
+  for (int32_t i = 0; i < vars.size(); ++i) {
     auto& var = vars[i];
     auto raw_tag_id = var.tag().id();
     in_tags.push_back(ctx.GetTagInd(raw_tag_id));
@@ -66,7 +66,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
         VLOG(10) << "aggregate on property " << var_prop.key().name();
         in_prop_names.push_back(var.property().key().name());
         in_prop_types.push_back(
-            common_data_type_pb_2_str(var.node_type().data_type()));
+            single_common_data_type_pb_2_str(var.node_type().data_type()));
       }
     } else {
       // var has no property, which means internal id.
@@ -79,7 +79,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   std::string selectors_str, in_tags_str;
   {
     std::stringstream ss;
-    for (auto i = 0; i < in_prop_types.size(); ++i) {
+    for (size_t i = 0; i < in_prop_types.size(); ++i) {
       boost::format selector_formater(PROPERTY_SELECTOR);
       selector_formater % in_prop_types[i] % in_prop_names[i];
       ss << selector_formater.str();
@@ -91,7 +91,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code_for_fold(
   }
   {
     std::stringstream ss;
-    for (auto i = 0; i < in_tags.size(); ++i) {
+    for (size_t i = 0; i < in_tags.size(); ++i) {
       ss << in_tags[i];
       if (i != in_tags.size() - 1) {
         ss << ", ";
@@ -113,7 +113,7 @@ class FoldOpBuilder {
   FoldOpBuilder& AddAggFunc(const physical::GroupBy::AggFunc& agg_func) {
     std::string agg_fun_var_name, agg_fun_code;
     std::tie(agg_fun_var_name, agg_fun_code) =
-        gen_agg_var_and_code_for_fold(ctx_, agg_func);
+        gen_agg_var_and_code_for_fold(ctx_, agg_func, new_tag_id_mapping_);
     agg_func_name_and_code.emplace_back(agg_fun_var_name, agg_fun_code);
     return *this;
   }
@@ -124,7 +124,7 @@ class FoldOpBuilder {
     std::string fold_ops_code;
     {
       std::stringstream ss;
-      for (auto i = 0; i < agg_func_name_and_code.size(); ++i) {
+      for (size_t i = 0; i < agg_func_name_and_code.size(); ++i) {
         ss << make_move(agg_func_name_and_code[i].first);
         if (i != agg_func_name_and_code.size() - 1) {
           ss << ", ";
@@ -134,28 +134,28 @@ class FoldOpBuilder {
     }
 
     std::string prev_ctx_name, next_ctx_name;
-    std::string fold_opt_var_name = ctx_.GetNextGroupOptName();
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
 
     std::string agg_func_code_con;
     {
       std::stringstream ss;
-      for (auto i = 0; i < agg_func_name_and_code.size(); ++i) {
+      for (size_t i = 0; i < agg_func_name_and_code.size(); ++i) {
         ss << agg_func_name_and_code[i].second << std::endl;
       }
       agg_func_code_con = ss.str();
     }
 
     boost::format formater(FOLD_OP_TEMPLATE_STR);
-    formater % fold_opt_var_name % fold_ops_code % next_ctx_name %
-        ctx_.GraphVar() % prev_ctx_name;
-
+    formater % fold_ops_code % next_ctx_name % ctx_.GraphVar() % prev_ctx_name;
+    ctx_.UpdateTagIdAndIndMapping(new_tag_id_mapping_);
     return agg_func_code_con + formater.str();
   }
 
  private:
   BuildingContext& ctx_;
   std::vector<std::pair<std::string, std::string>> agg_func_name_and_code;
+  // fold remove previous columns, use a new TagIdMapping
+  TagIndMapping new_tag_id_mapping_;
 };
 
 static std::string BuildGroupWithoutKeyOp(
@@ -163,7 +163,7 @@ static std::string BuildGroupWithoutKeyOp(
     const physical::PhysicalOpr::MetaData& meta_data) {
   CHECK(group_by_pb.mappings_size() == 0);
   FoldOpBuilder fold_op_builder(ctx);
-  for (auto i = 0; i < group_by_pb.functions_size(); ++i) {
+  for (int32_t i = 0; i < group_by_pb.functions_size(); ++i) {
     fold_op_builder.AddAggFunc(group_by_pb.functions(i));
   }
   return fold_op_builder.Build();

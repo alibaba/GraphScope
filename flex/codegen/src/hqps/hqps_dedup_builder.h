@@ -24,9 +24,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 namespace gs {
 
 enum DedupProp {
@@ -56,7 +56,7 @@ class DedupOpBuilder {
     std::string dedup_tag_ids_str;
     {
       std::stringstream ss;
-      for (auto i = 0; i < dedup_tag_ids_.size(); ++i) {
+      for (size_t i = 0; i < dedup_tag_ids_.size(); ++i) {
         if (i + 1 == dedup_tag_ids_.size()) {
           ss << dedup_tag_ids_[i];
         } else {

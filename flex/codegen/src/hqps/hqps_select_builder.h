@@ -24,9 +24,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
@@ -47,12 +47,12 @@ class SelectOpBuilder {
     std::string func_code;
     std::vector<codegen::ParamConst> func_call_params;
     std::vector<std::pair<int32_t, std::string>> tag_props;
-    common::DataType unused_expr_ret_type;
+    std::vector<common::DataType> unused_expr_ret_type;
     std::tie(expr_name_, func_call_params, tag_props, func_code,
              unused_expr_ret_type) = expr_builder.Build();
 
     // add func_call_params to ctx's param const;
-    for (auto i = 0; i < func_call_params.size(); ++i) {
+    for (size_t i = 0; i < func_call_params.size(); ++i) {
       ctx_.AddParameterVar(func_call_params[i]);
     }
 
@@ -61,7 +61,7 @@ class SelectOpBuilder {
     expr_var_name_ = ctx_.GetNextExprVarName();
     {
       std::stringstream ss;
-      for (auto i = 0; i < func_call_params.size(); ++i) {
+      for (size_t i = 0; i < func_call_params.size(); ++i) {
         ss << func_call_params[i].var_name;
         if (i != func_call_params.size() - 1) {
           ss << ",";
@@ -71,7 +71,7 @@ class SelectOpBuilder {
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < tag_props.size(); ++i) {
+      for (size_t i = 0; i < tag_props.size(); ++i) {
         ss << tag_props[i].second;
         if (i != tag_props.size() - 1) {
           ss << ",";
@@ -81,7 +81,7 @@ class SelectOpBuilder {
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < tag_props.size(); ++i) {
+      for (size_t i = 0; i < tag_props.size(); ++i) {
         ss << format_input_col(tag_props[i].first);
         if (i != tag_props.size() - 1) {
           ss << ",";

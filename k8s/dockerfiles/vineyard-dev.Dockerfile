@@ -1,8 +1,10 @@
 # The vineyard-dev image including all vineyard-related dependencies
 # that could compile graphscope analytical engine.
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
-FROM $REGISTRY/graphscope/manylinux2014:20230407-ext AS ext
+FROM $REGISTRY/graphscope/manylinux2014:ext AS ext
 FROM ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive
 
 # shanghai zoneinfo
 ENV TZ=Asia/Shanghai
@@ -22,7 +24,7 @@ ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin:$HADOOP_HOME/bin:/home/graphscope/.local/bin
 COPY --from=ext /opt/hadoop-3.3.0 /opt/hadoop-3.3.0
 
 RUN apt-get update && \
-    apt-get install -y sudo default-jre && \
+    apt-get install -y sudo default-jre python3-pip tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -36,12 +38,13 @@ RUN mkdir -p /var/log/graphscope && chown -R graphscope:graphscope /var/log/grap
 USER graphscope
 WORKDIR /home/graphscope
 
-COPY ./gs ./gs
+COPY --chown=graphscope:graphscope gsctl /home/graphscope/gsctl
 ARG VINEYARD_VERSION=main
 RUN sudo chmod a+wrx /tmp && \
-    ./gs install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j 2 && \
-    sudo apt-get clean -y && \
-    sudo rm -rf /var/lib/apt/lists/*
+    cd /home/graphscope/gsctl && \
+    python3 -m pip install click && \
+    python3 gsctl.py install-deps dev --for-analytical --v6d-version=$VINEYARD_VERSION -j $(nproc) && \
+    cd /home/graphscope && sudo rm -rf /home/graphscope/gsctl
 
 RUN python3 -m pip --no-cache install pyyaml --user
 

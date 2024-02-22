@@ -34,10 +34,18 @@ void actor_system::launch_worker() {
   char gateway[] = "--gw-ipv4-addr=172.24.255.253";
   char net_mask[] = "--netmask-ipv4-addr=255.255.240.0";
   char enable_dpdk[] = "--dpdk-pmd";
+  char enable_thread_resource_pool[] = "--open-thread-resource-pool=true";
+  char external_thread_num[32];
   char shards[16];
   snprintf(shards, sizeof(shards), "-c%d", num_shards_);
+  snprintf(external_thread_num, sizeof(external_thread_num),
+           "--worker-thread-number=%d", external_thread_num_);
 
   std::vector<char*> argv = {prog_name, shards};
+  if (enable_thread_resource_pool_) {
+    argv.push_back(enable_thread_resource_pool);
+    argv.push_back(external_thread_num);
+  }
   if (enable_dpdk_) {
     argv.push_back(enable_native_stack);
     argv.push_back(close_dhcp);

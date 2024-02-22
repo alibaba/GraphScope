@@ -1,17 +1,19 @@
 black>=23.3.0
 breathe>4.30
-docutils==0.16
+docutils==0.20.1
 flake8==4.0.1
 furo        # sphinx theme
 isort==5.10.1
+jinja2>=3.1.0
 linkify-it-py
 myst-parser>=0.13.0
 pylint
 pytest
 pytest-cov
+pytest-xdist
 pytest-timeout
 Pygments>=2.4.1
-sphinx>=4.1.0,<6
+sphinx>=7.1.2
 sphinx-copybutton
 sphinx-panels
 sphinxemoji

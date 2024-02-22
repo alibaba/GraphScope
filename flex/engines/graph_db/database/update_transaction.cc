@@ -16,17 +16,19 @@
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
 
-#include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/engines/graph_db/database/version_manager.h"
 #include "flex/engines/graph_db/database/wal.h"
+#include "flex/storages/rt_mutable_graph/file_names.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 
 namespace gs {
 
 UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
-                                     ArenaAllocator& alloc, WalWriter& logger,
-                                     VersionManager& vm, timestamp_t timestamp)
+                                     Allocator& alloc,
+                                     const std::string& work_dir,
+                                     WalWriter& logger, VersionManager& vm,
+                                     timestamp_t timestamp)
     : graph_(graph),
       alloc_(alloc),
       logger_(logger),
@@ -37,8 +39,27 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
 
   vertex_label_num_ = graph_.schema().vertex_label_num();
   edge_label_num_ = graph_.schema().edge_label_num();
+  for (label_t idx = 0; idx < vertex_label_num_; ++idx) {
+    if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<int64_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt64) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<uint64_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kInt32) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<int32_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<uint32_t, vid_t>>());
+    } else if (graph_.lf_indexers_[idx].get_type() == PropertyType::kString) {
+      added_vertices_.emplace_back(
+          std::make_shared<IdIndexer<std::string_view, vid_t>>());
+    } else {
+      LOG(FATAL) << "Only int64 and string_view types for pk are supported..";
+    }
+  }
 
-  added_vertices_.resize(vertex_label_num_);
   added_vertices_base_.resize(vertex_label_num_);
   vertex_nums_.resize(vertex_label_num_);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
@@ -46,10 +67,19 @@ UpdateTransaction::UpdateTransaction(MutablePropertyFragment& graph,
   }
   vertex_offsets_.resize(vertex_label_num_);
   extra_vertex_properties_.resize(vertex_label_num_);
+  std::string txn_work_dir = update_txn_dir(work_dir, 0);
+  if (std::filesystem::exists(txn_work_dir)) {
+    std::filesystem::remove_all(txn_work_dir);
+  }
+  std::filesystem::create_directories(txn_work_dir);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     const Table& table = graph_.get_vertex_table(i);
-    extra_vertex_properties_[i].init(table.column_names(), table.column_types(),
-                                     {}, 4096);
+    std::string v_label = graph_.schema().get_vertex_label_name(i);
+    std::string table_prefix = vertex_table_prefix(v_label);
+    extra_vertex_properties_[i].init(table_prefix, txn_work_dir,
+                                     table.column_names(), table.column_types(),
+                                     {});
+    extra_vertex_properties_[i].resize(4096);
   }
 
   size_t csr_num = 2 * vertex_label_num_ * vertex_label_num_ * edge_label_num_;
@@ -83,7 +113,7 @@ void UpdateTransaction::Commit() {
 
 void UpdateTransaction::Abort() { release(); }
 
-bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
+bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
                                   const std::vector<Any>& props) {
   vid_t id;
   const std::vector<PropertyType>& types =
@@ -94,11 +124,15 @@ bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
   int col_num = types.size();
   for (int col_i = 0; col_i != col_num; ++col_i) {
     if (props[col_i].type != types[col_i]) {
+      if (types[col_i] == PropertyType::kStringMap &&
+          props[col_i].type == PropertyType::kString) {
+        continue;
+      }
       return false;
     }
   }
   if (!oid_to_lid(label, oid, id)) {
-    added_vertices_[label]._add(oid);
+    added_vertices_[label]->_add(oid);
     id = vertex_nums_[label]++;
   }
 
@@ -113,37 +147,70 @@ bool UpdateTransaction::AddVertex(label_t label, oid_t oid,
   extra_vertex_properties_[label].ingest(row_num, oarc);
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(0) << label << oid;
+  arc_ << static_cast<uint8_t>(0) << label;
+  serialize_field(arc_, oid);
   arc_.AddBytes(arc.GetBuffer(), arc.GetSize());
   return true;
 }
 
-bool UpdateTransaction::AddEdge(label_t src_label, oid_t src, label_t dst_label,
-                                oid_t dst, label_t edge_label,
-                                const Any& value) {
-  vid_t src_lid, dst_lid;
-  if (!oid_to_lid(src_label, src, src_lid)) {
-    return false;
+static size_t get_offset(const std::shared_ptr<CsrConstEdgeIterBase>& base,
+                         vid_t target) {
+  size_t offset = 0;
+  while (base != nullptr && base->is_valid()) {
+    if (base->get_neighbor() == target) {
+      return offset;
+    }
+    offset++;
+    base->next();
   }
-  if (!oid_to_lid(dst_label, dst, dst_lid)) {
-    return false;
+  return std::numeric_limits<size_t>::max();
+}
+
+bool UpdateTransaction::AddEdge(label_t src_label, const Any& src,
+                                label_t dst_label, const Any& dst,
+                                label_t edge_label, const Any& value) {
+  vid_t src_lid, dst_lid;
+  static constexpr size_t sentinel = std::numeric_limits<size_t>::max();
+  size_t offset_out = sentinel, offset_in = sentinel;
+  if (graph_.get_lid(src_label, src, src_lid) &&
+      graph_.get_lid(dst_label, dst, dst_lid)) {
+    const auto& oe =
+        graph_.get_outgoing_edges(src_label, src_lid, dst_label, edge_label);
+    offset_out = get_offset(oe, dst_lid);
+    const auto& ie =
+        graph_.get_incoming_edges(dst_label, dst_lid, src_label, edge_label);
+    offset_in = get_offset(ie, src_lid);
+  } else {
+    if (!oid_to_lid(src_label, src, src_lid) ||
+        !oid_to_lid(dst_label, dst, dst_lid)) {
+      return false;
+    }
   }
   PropertyType type =
       graph_.schema().get_edge_property(src_label, dst_label, edge_label);
   if (type != value.type) {
     return false;
   }
+
   size_t in_csr_index = get_in_csr_index(src_label, dst_label, edge_label);
   size_t out_csr_index = get_out_csr_index(src_label, dst_label, edge_label);
-  added_edges_[in_csr_index][dst_lid].push_back(src_lid);
-  updated_edge_data_[in_csr_index][dst_lid].emplace(src_lid, value);
-
-  added_edges_[out_csr_index][src_lid].push_back(dst_lid);
-  updated_edge_data_[out_csr_index][src_lid].emplace(dst_lid, value);
+  if (offset_in == sentinel) {
+    added_edges_[in_csr_index][dst_lid].push_back(src_lid);
+  }
+  updated_edge_data_[in_csr_index][dst_lid].emplace(
+      src_lid, std::pair<Any, size_t>{value, offset_in});
+  if (offset_out == sentinel) {
+    added_edges_[out_csr_index][src_lid].push_back(dst_lid);
+  }
+  updated_edge_data_[out_csr_index][src_lid].emplace(
+      dst_lid, std::pair<Any, size_t>{value, offset_out});
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(1) << src_label << src << dst_label << dst
-       << edge_label;
+  arc_ << static_cast<uint8_t>(1) << src_label;
+  serialize_field(arc_, src);
+  arc_ << dst_label;
+  serialize_field(arc_, dst);
+  arc_ << edge_label;
   serialize_field(arc_, value);
 
   return true;
@@ -160,7 +227,7 @@ void UpdateTransaction::vertex_iterator::Goto(vid_t target) {
   cur_ = std::min(target, num_);
 }
 
-oid_t UpdateTransaction::vertex_iterator::GetId() const {
+Any UpdateTransaction::vertex_iterator::GetId() const {
   return txn_->lid_to_oid(label_, cur_);
 }
 
@@ -178,8 +245,7 @@ bool UpdateTransaction::vertex_iterator::SetField(int col_id,
 UpdateTransaction::edge_iterator::edge_iterator(
     bool dir, label_t label, vid_t v, label_t neighbor_label,
     label_t edge_label, const vid_t* aeb, const vid_t* aee,
-    std::shared_ptr<MutableCsrConstEdgeIterBase> init_iter,
-    UpdateTransaction* txn)
+    std::shared_ptr<CsrConstEdgeIterBase> init_iter, UpdateTransaction* txn)
     : dir_(dir),
       label_(label),
       v_(v),
@@ -188,7 +254,8 @@ UpdateTransaction::edge_iterator::edge_iterator(
       added_edges_cur_(aeb),
       added_edges_end_(aee),
       init_iter_(std::move(init_iter)),
-      txn_(txn) {}
+      txn_(txn),
+      offset_(0) {}
 UpdateTransaction::edge_iterator::~edge_iterator() = default;
 
 Any UpdateTransaction::edge_iterator::GetData() const {
@@ -213,12 +280,13 @@ Any UpdateTransaction::edge_iterator::GetData() const {
 void UpdateTransaction::edge_iterator::SetData(const Any& value) {
   if (init_iter_->is_valid()) {
     vid_t cur = init_iter_->get_neighbor();
-    txn_->SetEdgeData(dir_, label_, v_, neighbor_label_, cur, edge_label_,
-                      value);
+    txn_->set_edge_data_with_offset(dir_, label_, v_, neighbor_label_, cur,
+                                    edge_label_, value, offset_);
   } else {
     vid_t cur = *added_edges_cur_;
-    txn_->SetEdgeData(dir_, label_, v_, neighbor_label_, cur, edge_label_,
-                      value);
+    txn_->set_edge_data_with_offset(dir_, label_, v_, neighbor_label_, cur,
+                                    edge_label_, value,
+                                    std::numeric_limits<size_t>::max());
   }
 }
 
@@ -229,8 +297,27 @@ bool UpdateTransaction::edge_iterator::IsValid() const {
 void UpdateTransaction::edge_iterator::Next() {
   if (init_iter_->is_valid()) {
     init_iter_->next();
+    if (init_iter_->is_valid()) {
+      ++offset_;
+    } else {
+      offset_ = std::numeric_limits<size_t>::max();
+    }
   } else {
+    offset_ = std::numeric_limits<size_t>::max();
     ++added_edges_cur_;
+  }
+}
+
+void UpdateTransaction::edge_iterator::Forward(size_t offset) {
+  if (offset < init_iter_->size()) {
+    *init_iter_ += offset;
+    offset_ += offset;
+  } else {
+    size_t len = init_iter_->size();
+    *init_iter_ += offset;
+    offset -= len;
+    added_edges_cur_ += offset;
+    offset_ = std::numeric_limits<size_t>::max();
   }
 }
 
@@ -346,7 +433,9 @@ bool UpdateTransaction::SetVertexField(label_t label, vid_t lid, int col_id,
   }
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(2) << label << lid_to_oid(label, lid) << col_id;
+  arc_ << static_cast<uint8_t>(2) << label;
+  serialize_field(arc_, lid_to_oid(label, lid));
+  arc_ << col_id;
   serialize_field(arc_, value);
   return true;
 }
@@ -354,22 +443,37 @@ bool UpdateTransaction::SetVertexField(label_t label, vid_t lid, int col_id,
 void UpdateTransaction::SetEdgeData(bool dir, label_t label, vid_t v,
                                     label_t neighbor_label, vid_t nbr,
                                     label_t edge_label, const Any& value) {
+  const auto& edges =
+      dir ? graph_.get_outgoing_edges(label, v, neighbor_label, edge_label)
+          : graph_.get_incoming_edges(label, v, neighbor_label, edge_label);
+  size_t offset = get_offset(edges, nbr);
+  set_edge_data_with_offset(dir, label, v, neighbor_label, nbr, edge_label,
+                            value, offset);
+}
+
+void UpdateTransaction::set_edge_data_with_offset(
+    bool dir, label_t label, vid_t v, label_t neighbor_label, vid_t nbr,
+    label_t edge_label, const Any& value, size_t offset) {
   size_t csr_index = dir ? get_out_csr_index(label, neighbor_label, edge_label)
-                         : get_in_csr_index(label, neighbor_label, edge_label);
+                         : get_in_csr_index(neighbor_label, label, edge_label);
   if (value.type == PropertyType::kString) {
     size_t loc = sv_vec_.size();
     sv_vec_.emplace_back(std::string(value.value.s));
     Any dup_value;
     dup_value.set_string(sv_vec_[loc]);
-    updated_edge_data_[csr_index][v].emplace(nbr, dup_value);
+    updated_edge_data_[csr_index][v].emplace(
+        nbr, std::pair<Any, size_t>{dup_value, offset});
   } else {
-    updated_edge_data_[csr_index][v].emplace(nbr, value);
+    updated_edge_data_[csr_index][v].emplace(
+        nbr, std::pair<Any, size_t>{value, offset});
   }
 
   op_num_ += 1;
-  arc_ << static_cast<uint8_t>(3) << static_cast<uint8_t>(dir ? 1 : 0) << label
-       << lid_to_oid(label, v) << neighbor_label
-       << lid_to_oid(neighbor_label, nbr) << edge_label;
+  arc_ << static_cast<uint8_t>(3) << static_cast<uint8_t>(dir ? 1 : 0) << label;
+  serialize_field(arc_, lid_to_oid(label, v));
+  arc_ << neighbor_label;
+  serialize_field(arc_, lid_to_oid(neighbor_label, nbr));
+  arc_ << edge_label;
   serialize_field(arc_, value);
 }
 
@@ -387,16 +491,17 @@ bool UpdateTransaction::GetUpdatedEdgeData(bool dir, label_t label, vid_t v,
     if (iter == updates.end()) {
       return false;
     } else {
-      ret = iter->second;
+      ret = iter->second.first;
       return true;
     }
   }
 }
 
 void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
+                                  const std::string& work_dir,
                                   uint32_t timestamp, char* data, size_t length,
-                                  ArenaAllocator& alloc) {
-  std::vector<IdIndexer<oid_t, vid_t>> added_vertices;
+                                  Allocator& alloc) {
+  std::vector<std::shared_ptr<IdIndexerBase<vid_t>>> added_vertices;
   std::vector<vid_t> added_vertices_base;
   std::vector<vid_t> vertex_nums;
   std::vector<ska::flat_hash_map<vid_t, vid_t>> vertex_offsets;
@@ -409,7 +514,28 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
   size_t vertex_label_num = graph.schema().vertex_label_num();
   size_t edge_label_num = graph.schema().edge_label_num();
 
-  added_vertices.resize(vertex_label_num);
+  for (label_t idx = 0; idx < vertex_label_num; ++idx) {
+    if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt64) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<int64_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt64) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<uint64_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kInt32) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<int32_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kUInt32) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<uint32_t, vid_t>>());
+    } else if (graph.lf_indexers_[idx].get_type() == PropertyType::kString) {
+      added_vertices.emplace_back(
+          std::make_shared<IdIndexer<std::string_view, vid_t>>());
+    } else {
+      LOG(FATAL) << "Only int64, uint64, int32, uint32 and string_view types "
+                    "for pk are supported..";
+    }
+  }
+
   added_vertices_base.resize(vertex_label_num);
   vertex_nums.resize(vertex_label_num);
   for (size_t i = 0; i < vertex_label_num; ++i) {
@@ -417,10 +543,15 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
   }
   vertex_offsets.resize(vertex_label_num);
   extra_vertex_properties.resize(vertex_label_num);
+  std::string txn_work_dir = update_txn_dir(work_dir, timestamp);
+  std::filesystem::create_directories(txn_work_dir);
   for (size_t i = 0; i < vertex_label_num; ++i) {
     const Table& table = graph.get_vertex_table(i);
-    extra_vertex_properties[i].init(table.column_names(), table.column_types(),
-                                    {}, 4096);
+    std::string v_label = graph.schema().get_vertex_label_name(i);
+    std::string table_prefix = vertex_table_prefix(v_label);
+    extra_vertex_properties[i].init(
+        table_prefix, work_dir, table.column_names(), table.column_types(), {});
+    extra_vertex_properties[i].resize(4096);
   }
 
   size_t csr_num = 2 * vertex_label_num * vertex_label_num * edge_label_num;
@@ -434,9 +565,8 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
     arc >> op_type;
     if (op_type == 0) {
       label_t label;
-      oid_t oid;
-
-      arc >> label >> oid;
+      Any oid;
+      label = deserialize_oid(graph, arc, oid);
       vid_t vid;
       if (!graph.get_lid(label, oid, vid)) {
         vid = graph.add_vertex(label, oid);
@@ -444,34 +574,37 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
       graph.get_vertex_table(label).ingest(vid, arc);
     } else if (op_type == 1) {
       label_t src_label, dst_label, edge_label;
-      oid_t src, dst;
+      Any src, dst;
       vid_t src_vid, dst_vid;
-
-      arc >> src_label >> src >> dst_label >> dst >> edge_label;
+      src_label = deserialize_oid(graph, arc, src);
+      dst_label = deserialize_oid(graph, arc, dst);
+      arc >> edge_label;
       CHECK(graph.get_lid(src_label, src, src_vid));
       CHECK(graph.get_lid(dst_label, dst, dst_vid));
       graph.IngestEdge(src_label, src_vid, dst_label, dst_vid, edge_label,
                        timestamp, arc, alloc);
     } else if (op_type == 2) {
       label_t label;
-      oid_t oid;
+      Any oid;
       int col_id;
-
-      arc >> label >> oid >> col_id;
+      label = deserialize_oid(graph, arc, oid);
+      arc >> col_id;
       vid_t vid;
       CHECK(graph.get_lid(label, oid, vid));
       graph.get_vertex_table(label).get_column_by_id(col_id)->ingest(vid, arc);
     } else if (op_type == 3) {
       uint8_t dir;
       label_t label, neighbor_label, edge_label;
-      oid_t v, nbr;
+      Any v, nbr;
       vid_t v_lid, nbr_lid;
-
-      arc >> dir >> label >> v >> neighbor_label >> nbr >> edge_label;
+      arc >> dir;
+      label = deserialize_oid(graph, arc, v);
+      neighbor_label = deserialize_oid(graph, arc, nbr);
+      arc >> edge_label;
       CHECK(graph.get_lid(label, v, v_lid));
       CHECK(graph.get_lid(neighbor_label, nbr, nbr_lid));
 
-      std::shared_ptr<MutableCsrEdgeIterBase> edge_iter(nullptr);
+      std::shared_ptr<CsrEdgeIterBase> edge_iter(nullptr);
       if (dir == 0) {
         edge_iter = graph.get_incoming_edges_mut(label, v_lid, neighbor_label,
                                                  edge_label);
@@ -492,7 +625,7 @@ void UpdateTransaction::IngestWal(MutablePropertyFragment& graph,
         edge_iter->next();
       }
     } else {
-      LOG(FATAL) << "unexpected op_type";
+      LOG(FATAL) << "unexpected op_type " << static_cast<int>(op_type) << "..";
     }
   }
 }
@@ -511,11 +644,12 @@ size_t UpdateTransaction::get_out_csr_index(label_t src_label,
          vertex_label_num_ * vertex_label_num_ * edge_label_num_;
 }
 
-bool UpdateTransaction::oid_to_lid(label_t label, oid_t oid, vid_t& lid) const {
+bool UpdateTransaction::oid_to_lid(label_t label, const Any& oid,
+                                   vid_t& lid) const {
   if (graph_.get_lid(label, oid, lid)) {
     return true;
   } else {
-    if (added_vertices_[label].get_index(oid, lid)) {
+    if (added_vertices_[label]->get_index(oid, lid)) {
       lid += added_vertices_base_[label];
       return true;
     }
@@ -523,13 +657,13 @@ bool UpdateTransaction::oid_to_lid(label_t label, oid_t oid, vid_t& lid) const {
   return false;
 }
 
-oid_t UpdateTransaction::lid_to_oid(label_t label, vid_t lid) const {
+Any UpdateTransaction::lid_to_oid(label_t label, vid_t lid) const {
   if (graph_.vertex_num(label) > lid) {
     return graph_.get_oid(label, lid);
   } else {
-    oid_t ret;
-    CHECK(
-        added_vertices_[label].get_key(lid - added_vertices_base_[label], ret));
+    Any ret;
+    CHECK(added_vertices_[label]->get_key(lid - added_vertices_base_[label],
+                                          ret));
     return ret;
   }
 }
@@ -551,21 +685,60 @@ void UpdateTransaction::release() {
   }
 }
 
+void UpdateTransaction::batch_commit(UpdateBatch& batch) {
+  if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
+    return;
+  }
+  const auto& updateVertices = batch.GetUpdateVertices();
+  for (auto& [label, oid, props] : updateVertices) {
+    vid_t lid;
+
+    if (graph_.get_lid(label, oid, lid)) {
+      graph_.get_vertex_table(label).insert(lid, props);
+    } else {
+      lid = graph_.add_vertex(label, oid);
+      graph_.get_vertex_table(label).insert(lid, props);
+    }
+  }
+  const auto& updateEdges = batch.GetUpdateEdges();
+
+  for (auto& [src_label, src, dst_label, dst, edge_label, prop] : updateEdges) {
+    vid_t src_lid, dst_lid;
+    bool src_flag = graph_.get_lid(src_label, src, src_lid);
+    bool dst_flag = graph_.get_lid(dst_label, dst, dst_lid);
+
+    if (src_flag && dst_flag) {
+      graph_.UpdateEdge(src_label, src_lid, dst_label, dst_lid, edge_label,
+                        timestamp_, prop, alloc_);
+    }
+  }
+  auto& arc = batch.GetArc();
+  auto* header = reinterpret_cast<WalHeader*>(arc.GetBuffer());
+  if (arc.GetSize() != sizeof(WalHeader)) {
+    header->length = arc.GetSize() - sizeof(WalHeader);
+    header->type = 1;
+    header->timestamp = timestamp_;
+    logger_.append(arc.GetBuffer(), arc.GetSize());
+  }
+
+  release();
+}
+
 void UpdateTransaction::applyVerticesUpdates() {
   for (label_t label = 0; label < vertex_label_num_; ++label) {
-    std::vector<std::pair<vid_t, oid_t>> added_vertices;
-    vid_t added_vertices_num = added_vertices_[label].size();
+    std::vector<std::pair<vid_t, Any>> added_vertices;
+    vid_t added_vertices_num = added_vertices_[label]->size();
     for (vid_t v = 0; v < added_vertices_num; ++v) {
       vid_t lid = v + added_vertices_base_[label];
-      oid_t oid;
-      CHECK(added_vertices_[label].get_key(v, oid));
+      Any oid;
+      CHECK(added_vertices_[label]->get_key(v, oid));
       added_vertices.emplace_back(lid, oid);
     }
-    std::sort(added_vertices.begin(), added_vertices.end(),
-              [](const std::pair<vid_t, oid_t>& lhs,
-                 const std::pair<vid_t, oid_t>& rhs) {
-                return lhs.first < rhs.first;
-              });
+    std::sort(
+        added_vertices.begin(), added_vertices.end(),
+        [](const std::pair<vid_t, Any>& lhs, const std::pair<vid_t, Any>& rhs) {
+          return lhs.first < rhs.first;
+        });
 
     auto& table = extra_vertex_properties_[label];
     auto& vertex_offset = vertex_offsets_[label];
@@ -603,31 +776,46 @@ void UpdateTransaction::applyEdgesUpdates() {
           if (updates.empty()) {
             continue;
           }
-          std::shared_ptr<MutableCsrEdgeIterBase> edge_iter =
+
+          std::shared_ptr<CsrEdgeIterBase> edge_iter =
               graph_.get_outgoing_edges_mut(src_label, pair.first, dst_label,
                                             edge_label);
-          while (edge_iter->is_valid()) {
-            auto iter = updates.find(edge_iter->get_neighbor());
-            if (iter != updates.end()) {
-              edge_iter->set_data(iter->second, timestamp_);
+          for (auto& edge : updates) {
+            if (edge.second.second != std::numeric_limits<size_t>::max()) {
+              auto& iter = *edge_iter;
+              iter += edge.second.second;
+              if (iter.is_valid() && iter.get_neighbor() == edge.first) {
+                iter.set_data(edge.second.first, timestamp_);
+              } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
+                LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
+                           << " " << edge.first << "\n";
+              } else {
+                LOG(FATAL) << "Illegal offset: " << edge.first << " "
+                           << edge.second.second << "\n";
+              }
             }
-            edge_iter->next();
           }
         }
-
-        MutableCsrBase* csr =
-            graph_.get_oe_csr(src_label, dst_label, edge_label);
 
         for (auto& pair : added_edges_[oe_csr_index]) {
           vid_t v = pair.first;
           auto& add_list = pair.second;
+
           if (add_list.empty()) {
             continue;
           }
+          std::sort(add_list.begin(), add_list.end());
           auto& edge_data = updated_edge_data_[oe_csr_index].at(v);
-          for (auto u : add_list) {
-            auto value = edge_data.at(u);
-            csr->put_generic_edge(v, u, value, timestamp_, alloc_);
+          for (size_t idx = 0; idx < add_list.size(); ++idx) {
+            if (idx && add_list[idx] == add_list[idx - 1])
+              continue;
+            auto u = add_list[idx];
+            auto value = edge_data.at(u).first;
+            grape::InArchive iarc;
+            serialize_field(iarc, value);
+            grape::OutArchive oarc(std::move(iarc));
+            graph_.IngestEdge(src_label, v, dst_label, u, edge_label,
+                              timestamp_, oarc, alloc_);
           }
         }
       }
@@ -644,31 +832,23 @@ void UpdateTransaction::applyEdgesUpdates() {
           if (updates.empty()) {
             continue;
           }
-          std::shared_ptr<MutableCsrEdgeIterBase> edge_iter =
+          std::shared_ptr<CsrEdgeIterBase> edge_iter =
               graph_.get_incoming_edges_mut(dst_label, pair.first, src_label,
                                             edge_label);
-          while (edge_iter->is_valid()) {
-            auto iter = updates.find(edge_iter->get_neighbor());
-            if (iter != updates.end()) {
-              edge_iter->set_data(iter->second, timestamp_);
+          for (auto& edge : updates) {
+            if (edge.second.second != std::numeric_limits<size_t>::max()) {
+              auto& iter = *edge_iter;
+              iter += edge.second.second;
+              if (iter.is_valid() && iter.get_neighbor() == edge.first) {
+                iter.set_data(edge.second.first, timestamp_);
+              } else if (iter.is_valid() && iter.get_neighbor() != edge.first) {
+                LOG(FATAL) << "Inconsistent neighbor id:" << iter.get_neighbor()
+                           << " " << edge.first << "\n";
+              } else {
+                LOG(FATAL) << "Illegal offset: " << edge.first << " "
+                           << edge.second.second << "\n";
+              }
             }
-            edge_iter->next();
-          }
-        }
-
-        MutableCsrBase* csr =
-            graph_.get_ie_csr(dst_label, src_label, edge_label);
-
-        for (auto& pair : added_edges_[ie_csr_index]) {
-          vid_t v = pair.first;
-          auto& add_list = pair.second;
-          if (add_list.empty()) {
-            continue;
-          }
-          auto& edge_data = updated_edge_data_[ie_csr_index].at(v);
-          for (auto u : add_list) {
-            auto value = edge_data.at(u);
-            csr->put_generic_edge(v, u, value, timestamp_, alloc_);
           }
         }
       }

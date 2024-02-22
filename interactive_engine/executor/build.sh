@@ -38,11 +38,10 @@ if [ "$MODE" = "debug" ]; then
 elif [ "$MODE" = "release" ]; then
   cargo build --release $append
 else
-  echo "Invalid mode, choose from debug or release."
-  exit 1
+  cargo build --profile $MODE $append
 fi
 
 if [ "$TARGET" = "groot" ]; then
-  strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX}
+  # strip ${STRIP_OPTION} $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX}
   ln -sf $(pwd)/target/${MODE}/libgroot_ffi.${SUFFIX} $(pwd)/target/libgroot_ffi.${SUFFIX}
 fi

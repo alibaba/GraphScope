@@ -23,11 +23,13 @@ RUN cd /home/graphscope/GraphScope/ && \
 ############### RUNTIME: frontend #######################
 FROM ubuntu:22.04 AS frontend
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 ENV GRAPHSCOPE_HOME=/opt/graphscope
 ENV PATH=$PATH:$GRAPHSCOPE_HOME/bin LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRAPHSCOPE_HOME/lib
 
 RUN apt-get update -y && \
-    apt-get install -y sudo default-jdk && \
+    apt-get install -y sudo default-jdk tzdata && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 
@@ -50,7 +52,7 @@ USER graphscope
 WORKDIR /home/graphscope
 
 ############### RUNTIME: executor #######################
-FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:20230407-ext AS ext
+FROM registry.cn-hongkong.aliyuncs.com/graphscope/manylinux2014:ext AS ext
 FROM $REGISTRY/graphscope/vineyard-runtime:$RUNTIME_VERSION AS executor
 
 ENV RUST_BACKTRACE=1
@@ -69,7 +71,8 @@ RUN sudo chmod +x /opt/hadoop-3.3.0/bin/*
 # set the CLASSPATH for hadoop, must run after install java
 RUN bash -l -c 'echo export CLASSPATH="$($HADOOP_HOME/bin/hdfs classpath --glob)" >> /home/graphscope/.profile'
 
-RUN sudo curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/amd64/kubectl
+RUN arch=$(arch | sed s/aarch64/arm64/ | sed s/x86_64/amd64/) && \
+    sudo env arch=$arch curl -L -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v1.19.2/bin/linux/$arch/kubectl
 RUN sudo chmod +x /usr/bin/kubectl
 
 # gaia_executor, giectl

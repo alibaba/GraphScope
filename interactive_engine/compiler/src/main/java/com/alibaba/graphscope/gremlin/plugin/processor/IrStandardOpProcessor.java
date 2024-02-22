@@ -26,12 +26,15 @@
 package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
+import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
@@ -40,14 +43,18 @@ import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
 import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.script.GremlinCalciteScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
+import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.RpcClient;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
+import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -57,6 +64,7 @@ import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.groovy.engine.GremlinExecutor;
 import org.apache.tinkerpop.gremlin.groovy.jsr223.TimedInterruptTimeoutException;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
+import org.apache.tinkerpop.gremlin.process.traversal.TraversalSource;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategies;
 import org.apache.tinkerpop.gremlin.process.traversal.TraversalStrategy;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversalSource;
@@ -70,6 +78,7 @@ import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -81,20 +90,24 @@ import java.util.function.Supplier;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    protected Graph graph;
-    protected GraphTraversalSource g;
-    protected Configs configs;
+    protected final Graph graph;
+    protected final GraphTraversalSource g;
+    protected final Configs configs;
     /**
      * todo: replace with {@link com.alibaba.graphscope.common.client.ExecutionClient} after unifying Gremlin into the Calcite stack
      */
-    protected RpcClient rpcClient;
+    protected final RpcClient rpcClient;
 
-    protected IrMetaQueryCallback metaQueryCallback;
-    protected final GraphPlanner graphPlanner;
+    protected final IrMetaQueryCallback metaQueryCallback;
+    protected final QueryIdGenerator idGenerator;
+    protected final QueryCache queryCache;
+    protected final ExecutionClient executionClient;
 
     public IrStandardOpProcessor(
             Configs configs,
-            GraphPlanner graphPlanner,
+            QueryIdGenerator idGenerator,
+            QueryCache queryCache,
+            ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
@@ -104,7 +117,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.configs = configs;
         this.rpcClient = new RpcClient(fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
-        this.graphPlanner = graphPlanner;
+        this.idGenerator = idGenerator;
+        this.queryCache = queryCache;
+        this.executionClient = executionClient;
     }
 
     @Override
@@ -117,14 +132,43 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         Map<String, Object> args = msg.getArgs();
         String script = (String) args.get("gremlin");
 
-        String language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
-
-        long jobId = graphPlanner.generateInstanceId();
+        String defaultValidateQuery = "''";
+        // ad-hoc handling for connection validation
+        if (script.equals(defaultValidateQuery)) {
+            ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SUCCESS).create());
+            return;
+        }
+        long jobId = idGenerator.generateId();
+        String jobName = idGenerator.generateName(jobId);
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
-        GremlinExecutor.LifeCycle lifeCycle =
-                createLifeCycle(
-                        ctx, gremlinExecutorSupplier, bindingsSupplier, irMeta, statusCallback);
+        String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
+        GremlinExecutor.LifeCycle lifeCycle;
+        switch (language) {
+            case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:
+                lifeCycle =
+                        createLifeCycle(
+                                ctx,
+                                gremlinExecutorSupplier,
+                                bindingsSupplier,
+                                irMeta,
+                                statusCallback);
+                break;
+            case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
+                lifeCycle =
+                        new LifeCycleSupplier(
+                                        ctx,
+                                        queryCache,
+                                        executionClient,
+                                        jobId,
+                                        jobName,
+                                        irMeta,
+                                        statusCallback)
+                                .get();
+                break;
+            default:
+                throw new IllegalArgumentException("invalid script language name: " + language);
+        }
         try {
             CompletableFuture<Object> evalFuture =
                     gremlinExecutor.eval(script, language, new SimpleBindings(), lifeCycle);
@@ -132,7 +176,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                     (v, t) -> {
                         metaQueryCallback.afterExec(irMeta);
                         if (t != null) {
-                            statusCallback.onEnd(false);
+                            statusCallback.onEnd(false, null);
                             if (v instanceof AbstractResultProcessor) {
                                 ((AbstractResultProcessor) v).cancel();
                             }
@@ -233,10 +277,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         return null;
                     });
         } catch (RejectedExecutionException var17) {
+            statusCallback.getQueryLogger().error(var17.getMessage());
             ctx.writeAndFlush(
                     ResponseMessage.build(msg)
                             .code(ResponseStatusCode.TOO_MANY_REQUESTS)
-                            .statusMessage("Rate limiting")
+                            .statusMessage(var17.getMessage())
                             .create());
         }
     }
@@ -280,7 +325,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     processTraversal(
                                             traversal,
                                             new GremlinResultProcessor(
-                                                    ctx, traversal, statusCallback),
+                                                    ctx, traversal, statusCallback, timeoutConfig),
                                             irMeta,
                                             timeoutConfig,
                                             statusCallback.getQueryLogger());
@@ -300,6 +345,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             QueryTimeoutConfig timeoutConfig,
             QueryLogger queryLogger)
             throws InvalidProtocolBufferException, IOException, RuntimeException {
+        // get configs per query from traversal
+        Configs queryConfigs = getQueryConfigs(traversal);
+
         InterOpCollection opCollection = (new InterOpCollectionBuilder(traversal)).build();
         // fuse order with limit to topK
         InterOpCollection.applyStrategies(opCollection);
@@ -307,30 +355,50 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         InterOpCollection.process(opCollection);
 
         long jobId = queryLogger.getQueryId();
-        String jobName = "ir_plan_" + jobId;
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
         queryLogger.info("ir plan {}", irPlan.getPlanAsJson());
-        byte[] physicalPlanBytes = irPlan.toPhysicalBytes(configs);
+        byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
         irPlan.close();
 
         PegasusClient.JobRequest request =
                 PegasusClient.JobRequest.newBuilder()
                         .setPlan(ByteString.copyFrom(physicalPlanBytes))
                         .build();
+        String jobName = "ir_plan_" + jobId;
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(jobId)
                         .setJobName(jobName)
-                        .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(configs))
-                        .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(configs))
-                        .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(configs))
-                        .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(configs))
+                        .setWorkers(PegasusConfig.PEGASUS_WORKER_NUM.get(queryConfigs))
+                        .setBatchSize(PegasusConfig.PEGASUS_BATCH_SIZE.get(queryConfigs))
+                        .setMemoryLimit(PegasusConfig.PEGASUS_MEMORY_LIMIT.get(queryConfigs))
+                        .setBatchCapacity(PegasusConfig.PEGASUS_OUTPUT_CAPACITY.get(queryConfigs))
                         .setTimeLimit(timeoutConfig.getEngineTimeoutMS())
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
+
         this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+    }
+
+    private Configs getQueryConfigs(Traversal traversal) {
+        // the config priority is query > system env > system property > config file
+        Iterator<Object> keyIterator = this.configs.getKeys();
+        Map configMap = Maps.newHashMap();
+        while (keyIterator.hasNext()) {
+            String key = keyIterator.next().toString();
+            configMap.put(key, this.configs.get(key));
+        }
+        if (traversal instanceof IrCustomizedTraversal) {
+            Optional<TraversalSource> sourceOpt =
+                    ((IrCustomizedTraversal) traversal).getTraversalSource();
+            if (sourceOpt.isPresent()) {
+                // will override the config set before
+                configMap.putAll(((IrCustomizedTraversalSource) sourceOpt.get()).getConfigs());
+            }
+        }
+        return new Configs(configMap);
     }
 
     public static void applyStrategies(Traversal traversal) {

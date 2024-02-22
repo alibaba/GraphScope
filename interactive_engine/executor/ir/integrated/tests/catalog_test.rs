@@ -582,7 +582,7 @@ mod test {
         };
         let expand_opr_b_c = pb::EdgeExpand {
             v_tag: None,
-            direction: 0, // outhaod
+            direction: 0, // out
             params: Some(query_params(vec![1.into()], vec![], None)),
             expand_opt: pb::edge_expand::ExpandOpt::Edge as i32,
             alias: None,
@@ -1638,7 +1638,7 @@ mod test {
     }
 
     fn get_patmat_logical_plan(pattern: &Pattern, pb_plan: pb::LogicalPlan) -> LogicalPlan {
-        let mut plan = LogicalPlan::default();
+        let mut plan = LogicalPlan::with_root();
         plan.append_plan(pb_plan.into(), vec![0])
             .unwrap();
         plan.append_operator_as_node(get_sink_of_pattern(pattern).into(), vec![plan.get_max_node_id() - 1])

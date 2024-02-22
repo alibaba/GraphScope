@@ -41,7 +41,7 @@ pub struct Evaluator {
     suffix_tree: Vec<InnerOpr>,
     /// A stack for evaluating the suffix-tree-based expression
     /// Wrap it in a `RefCell` to avoid conflict mutable reference
-    stack: RefCell<Vec<Object>>,
+    stack: RefCell<Vec<ExprEvalResult<Object>>>,
 }
 
 unsafe impl Sync for Evaluator {}
@@ -52,6 +52,13 @@ pub enum Operand {
     Var { tag: Option<NameOrId>, prop_key: Option<PropKey> },
     Vars(Vec<Operand>),
     VarMap(Vec<Operand>),
+    // TODO: this is the new definition of VarMap. Will replace VarMap soon.
+    Map(Vec<(Object, Operand)>),
+}
+
+#[derive(Debug, Clone)]
+pub enum Function {
+    Extract(common_pb::extract::Interval),
 }
 
 /// An inner representation of `common_pb::ExprOpr` for one-shot translation of `common_pb::ExprOpr`.
@@ -59,6 +66,7 @@ pub enum Operand {
 pub(crate) enum InnerOpr {
     Logical(common_pb::Logical),
     Arith(common_pb::Arithmetic),
+    Function(Function),
     Operand(Operand),
 }
 
@@ -68,6 +76,7 @@ impl ToString for InnerOpr {
             InnerOpr::Logical(logical) => format!("{:?}", logical),
             InnerOpr::Arith(arith) => format!("{:?}", arith),
             InnerOpr::Operand(item) => format!("{:?}", item),
+            InnerOpr::Function(func) => format!("{:?}", func),
         }
     }
 }
@@ -160,12 +169,65 @@ fn apply_arith<'a>(
     })
 }
 
+pub(crate) fn apply_function<'a>(
+    function: &Function, a: BorrowObject<'a>, _b_opt: Option<BorrowObject<'a>>,
+) -> ExprEvalResult<Object> {
+    use common_pb::extract::Interval;
+    match function {
+        Function::Extract(interval) => match interval {
+            Interval::Year => Ok(a
+                .as_date_format()?
+                .year()
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                .into()),
+            Interval::Month => Ok((a
+                .as_date_format()?
+                .month()
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
+                .into()),
+            Interval::Day => Ok((a
+                .as_date_format()?
+                .day()
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
+                .into()),
+            Interval::Hour => Ok((a
+                .as_date_format()?
+                .hour()
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
+                .into()),
+            Interval::Minute => Ok((a
+                .as_date_format()?
+                .minute()
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
+                .into()),
+            Interval::Second => Ok((a
+                .as_date_format()?
+                .second()
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
+                .into()),
+            Interval::Millisecond => Ok((a
+                .as_date_format()?
+                .millisecond()
+                .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
+                as i32)
+                .into()),
+        },
+    }
+}
+
 pub(crate) fn apply_logical<'a>(
     logical: &common_pb::Logical, a: BorrowObject<'a>, b_opt: Option<BorrowObject<'a>>,
 ) -> ExprEvalResult<Object> {
     use common_pb::Logical::*;
     if logical == &Not {
         return Ok((!a.eval_bool::<(), NoneContext>(None)?).into());
+    } else if logical == &Isnull {
+        return Ok(a.eq(&BorrowObject::None).into());
     } else {
         if b_opt.is_some() {
             let b = b_opt.unwrap();
@@ -192,7 +254,12 @@ pub(crate) fn apply_logical<'a>(
                     .as_str()?
                     .ends_with(b.as_str()?.as_ref())
                     .into()),
+                Regex => {
+                    let regex = regex::Regex::new(b.as_str()?.as_ref())?;
+                    Ok(regex.is_match(a.as_str()?.as_ref()).into())
+                }
                 Not => unreachable!(),
+                Isnull => unreachable!(),
             }
         } else {
             Err(ExprEvalError::MissingOperands(InnerOpr::Logical(*logical).into()))
@@ -217,7 +284,17 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             if let InnerOpr::Logical(logical) = second {
-                Ok(apply_logical(logical, first.eval(context)?.as_borrow(), None)?)
+                let mut first = first.eval(context);
+                if common_pb::Logical::Isnull.eq(logical) {
+                    match first {
+                        Err(ExprEvalError::GetNoneFromContext) => first = Ok(Object::None),
+                        _ => {}
+                    }
+                }
+                Ok(apply_logical(logical, first?.as_borrow(), None)?)
+            } else if let InnerOpr::Function(function) = second {
+                let first = first.eval(context)?;
+                Ok(apply_function(function, first.as_borrow(), None)?)
             } else {
                 if !second.is_operand() {
                     Err(ExprEvalError::MissingOperands(second.into()))
@@ -229,11 +306,36 @@ impl Evaluator {
             let first = _first.unwrap();
             let second = _second.unwrap();
             let third = _third.unwrap();
-
             if let InnerOpr::Logical(logical) = third {
-                let a = first.eval(context)?;
-                let b = second.eval(context)?;
-                Ok(apply_logical(logical, a.as_borrow(), Some(b.as_borrow()))?)
+                if third.is_unary() {
+                    // to deal with two unary operators cases, e.g., !(!true), !(isNull(a)),isNull(extract(a)) etc.
+                    if let InnerOpr::Logical(inner_logical) = second {
+                        let mut inner_first = first.eval(context);
+                        if common_pb::Logical::Isnull.eq(inner_logical) {
+                            match inner_first {
+                                Err(ExprEvalError::GetNoneFromContext) => inner_first = Ok(Object::None),
+                                _ => {}
+                            }
+                        }
+                        let mut first = Ok(apply_logical(inner_logical, inner_first?.as_borrow(), None)?);
+                        if common_pb::Logical::Isnull.eq(logical) {
+                            match first {
+                                Err(ExprEvalError::GetNoneFromContext) => first = Ok(Object::None),
+                                _ => {}
+                            }
+                        }
+                        return Ok(apply_logical(logical, first?.as_borrow(), None)?);
+                    } else if let InnerOpr::Function(function) = second {
+                        let inner_first = first.eval(context)?;
+                        return Ok(apply_function(function, inner_first.as_borrow(), None)?);
+                    } else {
+                        return Err(ExprEvalError::OtherErr("invalid expression".to_string()));
+                    }
+                } else {
+                    let a = first.eval(context)?;
+                    let b = second.eval(context)?;
+                    Ok(apply_logical(logical, a.as_borrow(), Some(b.as_borrow()))?)
+                }
             } else if let InnerOpr::Arith(arith) = third {
                 let a = first.eval(context)?;
                 let b = second.eval(context)?;
@@ -307,17 +409,36 @@ impl Evaluate for Evaluator {
         stack.clear();
         for opr in &self.suffix_tree {
             if opr.is_operand() {
-                stack.push(opr.eval(context)?);
+                stack.push(opr.eval(context));
             } else {
                 if let Some(first) = stack.pop() {
-                    let first_borrow = first.as_borrow();
                     let rst = match opr {
                         InnerOpr::Logical(logical) => {
                             if logical == &common_pb::Logical::Not {
-                                apply_logical(logical, first_borrow, None)
+                                apply_logical(logical, first?.as_borrow(), None)
+                            } else if logical == &common_pb::Logical::Isnull {
+                                let first_obj = match first {
+                                    Ok(obj) => obj,
+                                    Err(err) => match err {
+                                        ExprEvalError::GetNoneFromContext => Object::None,
+                                        _ => return Err(err),
+                                    },
+                                };
+                                apply_logical(logical, first_obj.as_borrow(), None)
                             } else {
                                 if let Some(second) = stack.pop() {
-                                    apply_logical(logical, second.as_borrow(), Some(first_borrow))
+                                    apply_logical(logical, second?.as_borrow(), Some(first?.as_borrow()))
+                                } else {
+                                    Err(ExprEvalError::OtherErr("invalid expression".to_string()))
+                                }
+                            }
+                        }
+                        InnerOpr::Function(function) => {
+                            if opr.is_unary() {
+                                apply_function(function, first?.as_borrow(), None)
+                            } else {
+                                if let Some(second) = stack.pop() {
+                                    apply_function(function, second?.as_borrow(), Some(first?.as_borrow()))
                                 } else {
                                     Err(ExprEvalError::OtherErr("invalid expression".to_string()))
                                 }
@@ -325,20 +446,20 @@ impl Evaluate for Evaluator {
                         }
                         InnerOpr::Arith(arith) => {
                             if let Some(second) = stack.pop() {
-                                apply_arith(arith, second.as_borrow(), first_borrow)
+                                apply_arith(arith, second?.as_borrow(), first?.as_borrow())
                             } else {
                                 Err(ExprEvalError::OtherErr("invalid expression".to_string()))
                             }
                         }
                         _ => unreachable!(),
                     };
-                    stack.push((rst?).into());
+                    stack.push(rst);
                 }
             }
         }
 
         if stack.len() == 1 {
-            Ok(stack.pop().unwrap())
+            Ok(stack.pop().unwrap()?)
         } else {
             Err("invalid expression".into())
         }
@@ -422,6 +543,25 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     }
                     Ok(Self::VarMap(vec))
                 }
+
+                Map(key_vals) => {
+                    let mut vec = Vec::with_capacity(key_vals.key_vals.len());
+                    for key_val in key_vals.key_vals {
+                        let (_key, _value) = (key_val.key, key_val.value);
+                        let key = if let Some(key) = _key {
+                            Object::try_from(key)?
+                        } else {
+                            return Err(ParsePbError::from("empty key provided in Map"));
+                        };
+                        let value = if let Some(value) = _value {
+                            Operand::try_from(value)?
+                        } else {
+                            return Err(ParsePbError::from("empty value provided in Map"));
+                        };
+                        vec.push((key, value));
+                    }
+                    Ok(Self::Map(vec))
+                }
                 _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {
@@ -446,6 +586,9 @@ impl TryFrom<common_pb::ExprOpr> for InnerOpr {
                 Arith(arith) => {
                     Ok(Self::Arith(unsafe { std::mem::transmute::<_, common_pb::Arithmetic>(*arith) }))
                 }
+                Extract(extract) => Ok(Self::Function(Function::Extract(unsafe {
+                    std::mem::transmute::<_, common_pb::extract::Interval>(extract.interval)
+                }))),
                 _ => Ok(Self::Operand(unit.clone().try_into()?)),
             }
         } else {
@@ -467,13 +610,13 @@ impl Evaluate for Operand {
                             } else {
                                 let graph_element = element
                                     .as_graph_element()
-                                    .ok_or(ExprEvalError::UnexpectedDataType(self.into()))?;
+                                    .ok_or_else(|| ExprEvalError::UnexpectedDataType(self.into()))?;
                                 match property {
                                     PropKey::Id => graph_element.id().into(),
                                     PropKey::Label => graph_element
                                         .label()
                                         .map(|label| label.into())
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Len => unreachable!(),
                                     PropKey::All => graph_element
                                         .get_all_properties()
@@ -489,23 +632,27 @@ impl Evaluate for Operand {
                                                 .collect::<Vec<(Object, Object)>>()
                                                 .into()
                                         })
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?,
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?,
                                     PropKey::Key(key) => graph_element
                                         .get_property(key)
-                                        .ok_or(ExprEvalError::GetNoneFromContext)?
+                                        .ok_or_else(|| ExprEvalError::GetNoneFromContext)?
                                         .try_to_owned()
-                                        .ok_or(ExprEvalError::OtherErr(
-                                            "cannot get `Object` from `BorrowObject`".to_string(),
-                                        ))?,
+                                        .ok_or_else(|| {
+                                            ExprEvalError::OtherErr(
+                                                "cannot get `Object` from `BorrowObject`".to_string(),
+                                            )
+                                        })?,
                                 }
                             }
                         } else {
                             element
                                 .as_borrow_object()
                                 .try_to_owned()
-                                .ok_or(ExprEvalError::OtherErr(
-                                    "cannot get `Object` from `BorrowObject`".to_string(),
-                                ))?
+                                .ok_or_else(|| {
+                                    ExprEvalError::OtherErr(
+                                        "cannot get `Object` from `BorrowObject`".to_string(),
+                                    )
+                                })?
                         };
 
                         Ok(result)
@@ -558,6 +705,13 @@ impl Evaluate for Operand {
                 }
                 Ok(Object::KV(map))
             }
+            Self::Map(vars) => {
+                let mut map = BTreeMap::new();
+                for (obj_key, var) in vars {
+                    map.insert(obj_key.clone(), get_object(var.eval(context))?);
+                }
+                Ok(Object::KV(map))
+            }
         }
     }
 }
@@ -578,11 +732,25 @@ impl InnerOpr {
             _ => false,
         }
     }
+
+    pub fn is_unary(&self) -> bool {
+        match self {
+            InnerOpr::Logical(logical) => match logical {
+                common_pb::Logical::Not | common_pb::Logical::Isnull => true,
+                _ => false,
+            },
+            InnerOpr::Function(function) => match function {
+                Function::Extract(_) => true,
+            },
+            _ => false,
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use ahash::HashMap;
+    use dyn_type::DateTimeFormats;
     use ir_common::expr_parse::str_to_expr_pb;
 
     use super::*;
@@ -662,6 +830,7 @@ mod tests {
             "1 << 2",         // 4
             "4 >> 2",         // 1
             "232 & 64 != 0",  // true
+            "!(!true)",       // true
         ];
 
         let expected: Vec<Object> = vec![
@@ -696,6 +865,7 @@ mod tests {
             object!(3),
             object!(4),
             object!(1),
+            object!(true),
             object!(true),
         ];
 
@@ -921,6 +1091,252 @@ mod tests {
                 expected
             );
             is_context = true;
+        }
+    }
+
+    #[test]
+    fn test_eval_is_null() {
+        // [v0: id = 1, label = 9, age = 31, name = John, birthday = 19900416, hobbies = [football, guitar]]
+        // [v1: id = 2, label = 11, age = 26, name = Jimmy, birthday = 19950816]
+        let ctxt = prepare_context();
+        let cases: Vec<&str> = vec![
+            "isNull @0.hobbies",                 // false
+            "isNull (@0.hobbies)",               // false
+            "!(isNull @0.hobbies)",              // true
+            "isNull @1.hobbies",                 // true
+            "isNull (@1.hobbies)",               // true
+            "!(isNull @1.hobbies)",              // false
+            "isNull true",                       // false
+            "isNull false",                      // false
+            "!(isNull true)",                    // true
+            "isNull @1.hobbies && @1.age == 26", // true
+        ];
+        let expected: Vec<Object> = vec![
+            object!(false),
+            object!(false),
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(true),
+            object!(true),
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+        }
+    }
+
+    fn prepare_context_with_date() -> Vertices {
+        let map1: HashMap<NameOrId, Object> = vec![
+            (
+                NameOrId::from("date1".to_string()),
+                (DateTimeFormats::from_str("2020-08-08").unwrap()).into(),
+            ),
+            (
+                NameOrId::from("date2".to_string()),
+                chrono::NaiveDate::from_ymd_opt(2020, 8, 8)
+                    .unwrap()
+                    .into(),
+            ),
+            (
+                NameOrId::from("time1".to_string()),
+                (DateTimeFormats::from_str("10:11:12.100").unwrap()).into(),
+            ),
+            (
+                NameOrId::from("time2".to_string()),
+                chrono::NaiveTime::from_hms_milli_opt(10, 11, 12, 100)
+                    .unwrap()
+                    .into(),
+            ),
+            (
+                NameOrId::from("datetime1".to_string()),
+                (DateTimeFormats::from_str("2020-08-08T23:11:12.100-11:00").unwrap()).into(),
+            ),
+            (
+                NameOrId::from("datetime2".to_string()),
+                (DateTimeFormats::from_str("2020-08-09 10:11:12.100").unwrap()).into(),
+            ),
+            (
+                NameOrId::from("datetime3".to_string()),
+                chrono::NaiveDateTime::from_timestamp_millis(1602324610100)
+                    .unwrap()
+                    .into(),
+            ), // 2020-10-10 10:10:10
+        ]
+        .into_iter()
+        .collect();
+        Vertices { vec: vec![Vertex::new(1, Some(9.into()), DynDetails::new(map1))] }
+    }
+
+    fn prepare_extract(expr_str: &str, interval: common_pb::extract::Interval) -> common_pb::Expression {
+        let mut operators = str_to_expr_pb(expr_str.to_string())
+            .unwrap()
+            .operators;
+        let extract_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Extract(common_pb::Extract {
+                interval: interval as i32,
+            })),
+        };
+        operators.push(extract_opr);
+        common_pb::Expression { operators }
+    }
+
+    #[test]
+    fn test_eval_extract() {
+        let ctxt = prepare_context_with_date();
+        let cases = vec![
+            // date1: "2020-08-08"
+            prepare_extract("@0.date1", common_pb::extract::Interval::Year),
+            prepare_extract("@0.date1", common_pb::extract::Interval::Month),
+            prepare_extract("@0.date1", common_pb::extract::Interval::Day),
+            // date2: 20200808
+            prepare_extract("@0.date2", common_pb::extract::Interval::Year),
+            prepare_extract("@0.date2", common_pb::extract::Interval::Month),
+            prepare_extract("@0.date2", common_pb::extract::Interval::Day),
+            // time1: "10:11:12.100"
+            prepare_extract("@0.time1", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Second),
+            prepare_extract("@0.time1", common_pb::extract::Interval::Millisecond),
+            // time2: 101112100
+            prepare_extract("@0.time2", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Second),
+            prepare_extract("@0.time2", common_pb::extract::Interval::Millisecond),
+            // datetime1: "2020-08-08T23:11:12.100-11:00"
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Year),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Month),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Day),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Second),
+            prepare_extract("@0.datetime1", common_pb::extract::Interval::Millisecond),
+            // datetime2: "2020-08-09 10:11:12.100"
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Year),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Month),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Day),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Second),
+            prepare_extract("@0.datetime2", common_pb::extract::Interval::Millisecond),
+            // datetime3: 1602324610100, i.e., 2020-10-10 10:10:10
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Year),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Month),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Day),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Hour),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Minute),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Second),
+            prepare_extract("@0.datetime3", common_pb::extract::Interval::Millisecond),
+        ];
+
+        let expected = vec![
+            object!(2020),
+            object!(8),
+            object!(8),
+            object!(2020),
+            object!(8),
+            object!(8),
+            object!(10),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(10),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(2020),
+            object!(8),
+            object!(8),
+            object!(23),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(2020),
+            object!(8),
+            object!(9),
+            object!(10),
+            object!(11),
+            object!(12),
+            object!(100),
+            object!(2020),
+            object!(10),
+            object!(10),
+            object!(10),
+            object!(10),
+            object!(10),
+            object!(100),
+        ];
+
+        for (case, expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(case).unwrap();
+            println!("{:?}", eval.eval::<_, Vertices>(Some(&ctxt)).unwrap());
+            assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
+        }
+    }
+
+    fn gen_regex_expression(to_match: &str, pattern: &str) -> common_pb::Expression {
+        let mut regex_expr = common_pb::Expression { operators: vec![] };
+        let left = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                item: Some(common_pb::value::Item::Str(to_match.to_string())),
+            })),
+        };
+        regex_expr.operators.push(left);
+        let regex_opr = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Logical(common_pb::Logical::Regex as i32)),
+        };
+        regex_expr.operators.push(regex_opr);
+        let right = common_pb::ExprOpr {
+            node_type: None,
+            item: Some(common_pb::expr_opr::Item::Const(common_pb::Value {
+                item: Some(common_pb::value::Item::Str(pattern.to_string())),
+            })),
+        };
+        regex_expr.operators.push(right);
+        regex_expr
+    }
+
+    #[test]
+    fn test_eval_regex() {
+        // TODO: the parser does not support escape characters in regex well yet.
+        // So use gen_regex_expression() to help generate expression
+        let cases: Vec<(&str, &str)> = vec![
+            ("Josh", r"^J"),                                                    // startWith, true
+            ("Josh", r"J.*"),                                                   // true
+            ("Josh", r"h$"),                                                    // endWith, true
+            ("Josh", r".*h"),                                                   // true
+            ("Josh", r"os"),                                                    // true
+            ("Josh", r"A.*"),                                                   // false
+            ("Josh", r".*A"),                                                   // false
+            ("Josh", r"ab"),                                                    // false
+            ("Josh", r"Josh.+"),                                                // false
+            ("2010-03-14", r"^\d{4}-\d{2}-\d{2}$"),                             // true
+            (r"I categorically deny having triskaidekaphobia.", r"\b\w{13}\b"), //true
+        ];
+        let expected: Vec<Object> = vec![
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(true),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(false),
+            object!(true),
+            object!(true),
+        ];
+
+        for ((to_match, pattern), expected) in cases.into_iter().zip(expected.into_iter()) {
+            let eval = Evaluator::try_from(gen_regex_expression(to_match, pattern)).unwrap();
+            assert_eq!(eval.eval::<(), NoneContext>(None).unwrap(), expected);
         }
     }
 }

@@ -20,7 +20,7 @@ import os
 import platform
 import sys
 
-# Tensorflow with Python 3.7 and ARM platform requires lower version of protobuf
+# TensorFlow with Python 3.7 and ARM platform requires lower version of protobuf
 if (sys.version_info.major == 3 and sys.version_info.minor == 7) or (
     platform.system() == "Linux" and platform.processor() == "aarch64"
 ):
@@ -40,8 +40,8 @@ from graphscope.client.connection import conn
 from graphscope.client.session import Session
 from graphscope.client.session import g
 from graphscope.client.session import get_default_session
-from graphscope.client.session import get_option
 from graphscope.client.session import graphlearn
+from graphscope.client.session import graphlearn_torch
 from graphscope.client.session import gremlin
 from graphscope.client.session import has_default_session
 from graphscope.client.session import interactive

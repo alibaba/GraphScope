@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -61,7 +62,7 @@ class LouvainAppBase
   using context_t = LouvainContext<FRAG_T, pregel_compute_context_t>;
   using message_manager_t = grape::ParallelMessageManager;
   using worker_t = grape::ParallelWorker<app_t>;
-
+  using edata_t = typename context_t::edata_t;
   virtual ~LouvainAppBase<FRAG_T, VERTEX_PROGRAM_T>() {}
 
   static std::shared_ptr<worker_t> CreateWorker(std::shared_ptr<app_t> app,
@@ -170,7 +171,7 @@ class LouvainAppBase
       std::vector<std::vector<std::vector<md_t>>> buffer(
           thrd_num, std::vector<std::vector<md_t>>(thrd_num));
       messages.ParallelProcess<md_t>(
-          thrd_num, [&thrd_num, &buffer](int tid, md_t const& msg) {
+          thrd_num, [&thrd_num, &buffer](int tid, md_t& msg) {
             buffer[tid][msg.dst_id % thrd_num].emplace_back(std::move(msg));
           });
       {
@@ -179,7 +180,7 @@ class LouvainAppBase
           threads[tid] = std::thread(
               [&frag, &ctx, &thrd_num, &buffer](uint32_t tid) {
                 for (uint32_t index = 0; index < thrd_num; ++index) {
-                  for (auto const& msg : buffer[index][tid]) {
+                  for (auto& msg : buffer[index][tid]) {
                     vertex_t v;
                     frag.InnerVertexGid2Vertex(msg.dst_id, v);
                     ctx.compute_context().messages_in()[v].emplace_back(
@@ -198,7 +199,7 @@ class LouvainAppBase
 
     if (current_minor_step == phase_one_minor_step_1 && current_iteration > 0 &&
         current_iteration % 2 == 0) {
-      // aggreate total change
+      // aggregate total change
       int64_t total_change =
           ctx.compute_context().template get_aggregated_value<int64_t>(
               change_aggregator);
@@ -218,13 +219,15 @@ class LouvainAppBase
               << " total change: " << total_change;
     } else if (ctx.halt()) {
       // after decide_to_halt and aggregate actual quality in previous super
-      // step, here we check terminate computaion or start phase 2.
-      double actual_quality =
+      // step, here we check terminate computation or start phase 2.
+      auto actual_quality =
           ctx.compute_context().template get_aggregated_value<double>(
               actual_quality_aggregator);
       // after one pass if already decided halt, that means the pass yield no
       // changes, so we halt computation.
-      if (current_super_step <= 14 || actual_quality <= ctx.prev_quality()) {
+      if (current_super_step <= 14 ||
+          std::fabs(actual_quality - ctx.prev_quality()) <
+              min_quality_improvement) {
         // turn to sync community result
         ctx.compute_context().set_superstep(sync_result_step);
         syncCommunity(frag, ctx, messages);
@@ -314,7 +317,7 @@ class LouvainAppBase
                                 int tid, vertex_t v) {
       const auto& member_list = ctx.vertex_state()[v].nodes_in_community;
       if (!member_list.empty()) {
-        auto community_id = frag.Gid2Oid(member_list.front());
+        auto community_id = frag.Gid2Oid(ctx.vertex_state()[v].community);
         // send community id to members
         for (const auto& member_gid : member_list) {
           auto fid = vid_parser.GetFid(member_gid);

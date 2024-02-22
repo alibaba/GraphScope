@@ -18,10 +18,10 @@ limitations under the License.
 #include <string>
 #include <vector>
 
+#include "flex/proto_generated_gie/physical.pb.h"
 #include "google/protobuf/message.h"
 #include "google/protobuf/text_format.h"
 #include "google/protobuf/util/json_util.h"
-#include "proto_generated_gie/physical.pb.h"
 
 #include "flex/codegen/src/building_context.h"
 #include "flex/codegen/src/pegasus/pegasus_dedup_builder.h"
@@ -92,7 +92,7 @@ class PegasusGenerator {
       // FIXME: ENable this line
       // the dynamic params can be duplicate.
       CHECK(vars[0].id == 0);
-      for (auto i = 0; i < vars.size(); ++i) {
+      for (size_t i = 0; i < vars.size(); ++i) {
         if (i > 0 && vars[i].id == vars[i - 1].id) {
           // found duplicate
           CHECK(vars[i] == vars[i - 1]);

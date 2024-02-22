@@ -24,21 +24,29 @@ pub trait MultiVersionGraph {
     type V: RocksVertex;
     type E: RocksEdge;
 
+    /// Get vertex of given `vertex_id` at `si`, with given properties.
+    /// In the following interfaces, for properties,
+    /// * `None`: no properties
+    /// * `Some(vec![])`: all properties
+    /// * `Some(property_ids)`: given properties
     fn get_vertex(
         &self, snapshot_id: SnapshotId, vertex_id: VertexId, label_id: Option<LabelId>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::V>>;
 
+    /// Get edge of given `edge_id` at `si`, with given properties.
     fn get_edge(
         &self, snapshot_id: SnapshotId, edge_id: EdgeId, edge_relation: Option<&EdgeKind>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Option<Self::E>>;
 
+    /// Scan vertices of given `label_id` at `si`, with given properties.
     fn scan_vertex(
         &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
     ) -> GraphResult<Records<Self::V>>;
 
+    /// Scan edges of given `label_id` at `si`, with given properties.
     fn scan_edge(
         &self, snapshot_id: SnapshotId, label_id: Option<LabelId>, condition: Option<&Condition>,
         property_ids: Option<&Vec<PropertyId>>,
@@ -151,6 +159,9 @@ pub trait MultiVersionGraph {
         &self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap,
     ) -> GraphResult<()>;
 
+    fn clear_vertex_properties(
+        &self, si: SnapshotId, id: VertexId, label: LabelId, prop_ids: &[PropertyId],
+    ) -> GraphResult<()>;
     /// Delete a vertex with `id` and `label` at `si`. The existence will not be checked. This interface is thread safe.
     ///
     /// If vertex type of `label` not found, storage error or other errors, `GraphError` will be returned.
@@ -175,6 +186,10 @@ pub trait MultiVersionGraph {
     fn insert_update_edge(
         &self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool,
         properties: &dyn PropertyMap,
+    ) -> GraphResult<()>;
+
+    fn clear_edge_properties(
+        &self, si: SnapshotId, id: EdgeId, edge_kind: &EdgeKind, forward: bool, prop_ids: &[PropertyId],
     ) -> GraphResult<()>;
 
     /// Delete an edge with `id` and `edge_kind` at `si`. The existence will not be checked. This interface is thread safe.

@@ -21,11 +21,14 @@ limitations under the License.
 #include <cmath>
 #include <memory>
 #include <string_view>
+#include <thread>
 #include <type_traits>
 #include <vector>
 
 #include "flat_hash_map/flat_hash_map.hpp"
 #include "flex/utils/mmap_array.h"
+#include "flex/utils/property/column.h"
+#include "flex/utils/property/types.h"
 #include "flex/utils/string_view_vector.h"
 #include "glog/logging.h"
 #include "grape/io/local_io_adaptor.h"
@@ -59,7 +62,8 @@ struct KeyBuffer {
   using type = std::vector<T>;
 
   template <typename IOADAPTOR_T>
-  static void serialize(std::unique_ptr<IOADAPTOR_T>& writer, type& buffer) {
+  static void serialize(std::unique_ptr<IOADAPTOR_T>& writer,
+                        const type& buffer) {
     size_t size = buffer.size();
     CHECK(writer->Write(&size, sizeof(size_t)));
     if (size > 0) {
@@ -83,7 +87,8 @@ struct KeyBuffer<std::string> {
   using type = std::vector<std::string>;
 
   template <typename IOADAPTOR_T>
-  static void serialize(std::unique_ptr<IOADAPTOR_T>& writer, type& buffer) {
+  static void serialize(std::unique_ptr<IOADAPTOR_T>& writer,
+                        const type& buffer) {
     grape::InArchive arc;
     arc << buffer;
     CHECK(writer->WriteArchive(arc));
@@ -102,7 +107,8 @@ struct KeyBuffer<std::string_view> {
   using type = StringViewVector;
 
   template <typename IOADAPTOR_T>
-  static void serialize(std::unique_ptr<IOADAPTOR_T>& writer, type& buffer) {
+  static void serialize(std::unique_ptr<IOADAPTOR_T>& writer,
+                        const type& buffer) {
     size_t content_buffer_size = buffer.content_buffer().size();
     CHECK(writer->Write(&content_buffer_size, sizeof(size_t)));
     if (content_buffer_size > 0) {
@@ -146,11 +152,28 @@ struct GHash {
 template <>
 struct GHash<int64_t> {
   size_t operator()(const int64_t& val) const {
-    uint64_t x = static_cast<int64_t>(val);
+    uint64_t x = static_cast<uint64_t>(val);
     x = (x ^ (x >> 30)) * UINT64_C(0xbf58476d1ce4e5b9);
     x = (x ^ (x >> 27)) * UINT64_C(0x94d049bb133111eb);
     x = x ^ (x >> 31);
     return x;
+  }
+};
+
+template <>
+struct GHash<Any> {
+  size_t operator()(const Any& val) const {
+    if (val.type == PropertyType::kInt64) {
+      return GHash<int64_t>()(val.AsInt64());
+    } else if (val.type == PropertyType::kInt32) {
+      return GHash<int32_t>()(val.AsInt32());
+    } else if (val.type == PropertyType::kUInt64) {
+      return GHash<uint64_t>()(val.AsUInt64());
+    } else if (val.type == PropertyType::kUInt32) {
+      return GHash<uint32_t>()(val.AsUInt32());
+    } else {
+      return GHash<std::string_view>()(val.AsStringView());
+    }
   }
 };
 
@@ -160,143 +183,353 @@ class IdIndexer;
 template <typename INDEX_T>
 class LFIndexer;
 
-template <class INDEX_T>
-void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
-                      LFIndexer<INDEX_T>& output, double rate = 0.8);
+template <typename KEY_T, typename INDEX_T>
+void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
+                      const std::string& filename, LFIndexer<INDEX_T>& lf,
+                      const std::string& snapshot_dir,
+                      const std::string& work_dir, PropertyType type);
 
 template <typename INDEX_T>
 class LFIndexer {
  public:
-  LFIndexer() : num_elements_(0), hasher_() {}
-  LFIndexer(const LFIndexer& rhs)
-      : keys_(rhs.keys_),
-        indices_(rhs.indices_),
+  LFIndexer()
+      : indices_(),
+        indices_size_(0),
+        num_elements_(0),
+        num_slots_minus_one_(0),
+        keys_(nullptr),
+        hasher_() {}
+  LFIndexer(LFIndexer&& rhs)
+      : indices_(std::move(rhs.indices_)),
+        indices_size_(rhs.indices_size_),
         num_elements_(rhs.num_elements_.load()),
         num_slots_minus_one_(rhs.num_slots_minus_one_),
         hasher_(rhs.hasher_) {
+    if (keys_ != rhs.keys_) {
+      if (keys_ != nullptr) {
+        delete keys_;
+      }
+      keys_ = rhs.keys_;
+    }
     hash_policy_.set_mod_function_by_index(
         rhs.hash_policy_.get_mod_function_index());
   }
 
-  size_t size() const { return num_elements_.load(); }
+  ~LFIndexer() {
+    if (keys_ != nullptr) {
+      delete keys_;
+    }
+  }
 
-  INDEX_T insert(int64_t oid) {
+  static std::string prefix() { return "indexer"; }
+
+  void init(const PropertyType& type) {
+    if (keys_ != nullptr) {
+      delete keys_;
+    }
+    keys_ = nullptr;
+    if (type == PropertyType::kInt64) {
+      keys_ = new TypedColumn<int64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kInt32) {
+      keys_ = new TypedColumn<int32_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kUInt64) {
+      keys_ = new TypedColumn<uint64_t>(StorageStrategy::kMem);
+    } else if (type == PropertyType::kUInt32) {
+      keys_ = new TypedColumn<uint32_t>(StorageStrategy::kMem);
+    } else if (type.type_enum == impl::PropertyTypeImpl::kVarChar) {
+      keys_ = new StringColumn(StorageStrategy::kMem,
+                               type.additional_type_info.max_length);
+    } else {
+      LOG(FATAL) << "Not support type [" << type << "] as pk type ..";
+    }
+  }
+
+  void build_empty_LFIndexer(const std::string& filename,
+                             const std::string& snapshot_dir,
+                             const std::string& work_dir) {
+    keys_->open(filename + ".keys", "", work_dir);
+    indices_.open(work_dir + "/" + filename + ".indices", true);
+
+    num_elements_.store(0);
+    indices_size_ = 0;
+    dump_meta(work_dir + "/" + filename + ".meta");
+    indices_.reset();
+    keys_->close();
+  }
+
+  void reserve(size_t size) { rehash(std::max(size, num_elements_.load())); }
+
+  void rehash(size_t size) {
+    size = std::max(size, 4ul);
+    keys_->resize(size);
+    size =
+        static_cast<size_t>(std::ceil(size / id_indexer_impl::max_load_factor));
+    if (size == indices_size_) {
+      return;
+    }
+
+    auto new_prime_index = hash_policy_.next_size_over(size);
+    hash_policy_.commit(new_prime_index);
+    size_t num_elements = num_elements_.load();
+    indices_.resize(size);
+    indices_size_ = size;
+    for (size_t k = 0; k != size; ++k) {
+      indices_[k] = std::numeric_limits<INDEX_T>::max();
+    }
+    num_slots_minus_one_ = size - 1;
+    for (INDEX_T idx = 0; idx < num_elements; ++idx) {
+      const auto& oid = keys_->get(idx);
+      size_t index =
+          hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
+      static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
+      while (true) {
+        if (indices_[index] == sentinel) {
+          indices_[index] = idx;
+          break;
+        }
+        index = (index + 1) % (num_slots_minus_one_ + 1);
+      }
+    }
+  }
+
+  size_t capacity() const { return keys_->size(); }
+
+  size_t size() const { return num_elements_.load(); }
+  PropertyType get_type() const { return keys_->type(); }
+
+  INDEX_T insert(const Any& oid) {
+    assert(oid.type == get_type());
     INDEX_T ind = static_cast<INDEX_T>(num_elements_.fetch_add(1));
-    keys_[ind] = oid;
+    keys_->set_any(ind, oid);
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
     while (true) {
-      if (__sync_bool_compare_and_swap(&indices_[index], sentinel, ind)) {
+      if (__sync_bool_compare_and_swap(&indices_.data()[index], sentinel,
+                                       ind)) {
         break;
       }
-      index = (index + 1) % num_slots_minus_one_;
+      index = (index + 1) % (num_slots_minus_one_ + 1);
     }
     return ind;
   }
 
-  INDEX_T get_index(int64_t oid) const {
+  INDEX_T get_index(const Any& oid) const {
+    assert(oid.type == get_type());
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
     while (true) {
-      INDEX_T ind = indices_[index];
+      INDEX_T ind = indices_.get(index);
       if (ind == sentinel) {
-        LOG(FATAL) << "cannot find " << oid << " in id_indexer";
-      } else if (keys_[ind] == oid) {
+        LOG(FATAL) << "cannot find " << oid.to_string() << " in lf_indexer";
+      } else if (keys_->get(ind) == oid) {
         return ind;
       } else {
-        index = (index + 1) % indices_size_;
+        index = (index + 1) % (num_slots_minus_one_ + 1);
       }
     }
   }
 
-  bool get_index(int64_t oid, INDEX_T& ret) const {
+  bool get_index(const Any& oid, INDEX_T& ret) const {
+    if (oid.type != get_type()) {
+      return false;
+    }
     size_t index =
         hash_policy_.index_for_hash(hasher_(oid), num_slots_minus_one_);
     static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
     while (true) {
-      INDEX_T ind = indices_[index];
+      INDEX_T ind = indices_.get(index);
       if (ind == sentinel) {
         return false;
-      } else if (keys_[ind] == oid) {
+      } else if (keys_->get(ind) == oid) {
         ret = ind;
         return true;
       } else {
-        index = (index + 1) % num_slots_minus_one_;
+        index = (index + 1) % (num_slots_minus_one_ + 1);
       }
     }
     return false;
   }
 
-  int64_t get_key(const INDEX_T& index) const { return keys_[index]; }
+  Any get_key(const INDEX_T& index) const { return keys_->get(index); }
 
-  void Serialize(const std::string& prefix) {
-    {
-      grape::InArchive arc;
-      arc << keys_.size() << indices_.size();
-      arc << hash_policy_.get_mod_function_index() << num_elements_.load()
-          << num_slots_minus_one_ << indices_size_;
-      std::string meta_file_path = prefix + ".meta";
-      FILE* fout = fopen(meta_file_path.c_str(), "wb");
-      fwrite(arc.GetBuffer(), sizeof(char), arc.GetSize(), fout);
-      fflush(fout);
-      fclose(fout);
-    }
-
-    if (keys_.size() > 0) {
-      keys_.dump_to_file(prefix + ".keys");
-    }
-    if (indices_.size() > 0) {
-      indices_.dump_to_file(prefix + ".indices");
-    }
+  void copy_to_tmp(const std::string& cur_path, const std::string& tmp_path) {
+    copy_file(cur_path + ".meta", tmp_path + ".meta");
+    load_meta(tmp_path + ".meta");
+    keys_->copy_to_tmp(cur_path + ".keys", tmp_path + ".keys");
+    copy_file(cur_path + ".indices", tmp_path + ".indices");
   }
 
-  void Deserialize(const std::string& prefix) {
-    size_t keys_size, indices_size;
-    size_t mod_function_index;
-    size_t num_elements;
-    {
-      std::string meta_file_path = prefix + ".meta";
-      size_t meta_file_size = std::filesystem::file_size(meta_file_path);
-      std::vector<char> buf(meta_file_size);
-      FILE* fin = fopen(meta_file_path.c_str(), "r");
-      CHECK_EQ(fread(buf.data(), sizeof(char), meta_file_size, fin),
-               meta_file_size);
-      grape::OutArchive arc;
-      arc.SetSlice(buf.data(), meta_file_size);
-
-      arc >> keys_size >> indices_size;
-      arc >> mod_function_index >> num_elements >> num_slots_minus_one_ >>
-          indices_size_;
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) {
+    if (std::filesystem::exists(snapshot_dir + "/" + name + ".meta")) {
+      copy_to_tmp(snapshot_dir + "/" + name, work_dir + "/" + name);
+    } else {
+      build_empty_LFIndexer(name, "", work_dir);
     }
-    keys_.open_for_read(prefix + ".keys");
-    CHECK_EQ(keys_.size(), keys_size);
-    indices_.open_for_read(prefix + ".indices");
-    CHECK_EQ(indices_.size(), indices_size);
-    hash_policy_.set_mod_function_by_index(mod_function_index);
+
+    load_meta(work_dir + "/" + name + ".meta");
+    keys_->open(name + ".keys", "", work_dir);
+    indices_.open(work_dir + "/" + name + ".indices", true);
+    size_t num_elements = num_elements_.load();
+
+    keys_->resize(num_elements + (num_elements >> 2));
+
+    indices_size_ = indices_.size();
+  }
+
+  void open_in_memory(const std::string& name) {
+    if (std::filesystem::exists(name + ".meta")) {
+      load_meta(name + ".meta");
+    } else {
+      num_elements_.store(0);
+    }
+    keys_->open_in_memory(name + ".keys");
+    indices_.open(name + ".indices", false);
+    indices_size_ = indices_.size();
+    size_t num_elements = num_elements_.load();
+    keys_->resize(num_elements + (num_elements >> 2));
+  }
+
+  void open_with_hugepages(const std::string& name, bool hugepage_table) {
+    if (std::filesystem::exists(name + ".meta")) {
+      load_meta(name + ".meta");
+    } else {
+      num_elements_.store(0);
+    }
+    keys_->open_with_hugepages(name + ".keys", true);
+    if (hugepage_table) {
+      indices_.open_with_hugepages(name + ".indices");
+    } else {
+      indices_.open(name + ".indices", false);
+    }
+    indices_size_ = indices_.size();
+    size_t num_elements = num_elements_.load();
+    keys_->resize(num_elements + (num_elements >> 2));
+  }
+
+  void dump(const std::string& name, const std::string& snapshot_dir) {
+    keys_->resize(num_elements_.load());
+    keys_->dump(snapshot_dir + "/" + name + ".keys");
+    indices_.dump(snapshot_dir + "/" + name + ".indices");
+    dump_meta(snapshot_dir + "/" + name + ".meta");
+  }
+
+  void close() {
+    keys_->close();
+    indices_.reset();
+  }
+
+  void dump_meta(const std::string& filename) const {
+    grape::InArchive arc;
+    arc << get_type() << num_elements_.load() << num_slots_minus_one_
+        << hash_policy_.get_mod_function_index();
+    FILE* fout = fopen(filename.c_str(), "wb");
+    fwrite(arc.GetBuffer(), sizeof(char), arc.GetSize(), fout);
+    fflush(fout);
+    fclose(fout);
+  }
+
+  void load_meta(const std::string& filename) {
+    grape::OutArchive arc;
+    FILE* fin = fopen(filename.c_str(), "r");
+    size_t meta_file_size = std::filesystem::file_size(filename);
+    std::vector<char> buf(meta_file_size);
+    CHECK_EQ(fread(buf.data(), sizeof(char), meta_file_size, fin),
+             meta_file_size);
+    arc.SetSlice(buf.data(), meta_file_size);
+    size_t mod_function_index;
+    PropertyType type;
+    arc >> type;
+    size_t num_elements;
+    arc >> num_elements;
+
     num_elements_.store(num_elements);
+    arc >> num_slots_minus_one_ >> mod_function_index;
+    init(type);
+    hash_policy_.set_mod_function_by_index(mod_function_index);
+    fclose(fin);
   }
 
   // get keys
-  const mmap_array<int64_t>& get_keys() const { return keys_; }
+  const ColumnBase& get_keys() const { return *keys_; }
+  void warmup(int thread_num) const {
+    size_t keys_size = num_elements_.load();
+    size_t indices_size = indices_.size();
+    std::atomic<size_t> k_i(0), i_i(0);
+    std::atomic<size_t> output(0);
+    size_t chunk = 4096;
+    std::vector<std::thread> threads;
+    for (int i = 0; i < thread_num; ++i) {
+      threads.emplace_back([&]() {
+        size_t ret = 0;
+        while (true) {
+          size_t begin = std::min(k_i.fetch_add(chunk), keys_size);
+          size_t end = std::min(begin + chunk, keys_size);
+          if (begin == end) {
+            break;
+          }
+          while (begin < end) {
+            keys_->get(begin);
+            ++begin;
+          }
+        }
+        while (true) {
+          size_t begin = std::min(i_i.fetch_add(chunk), indices_size);
+          size_t end = std::min(begin + chunk, indices_size);
+          if (begin >= end) {
+            break;
+          }
+          while (begin < end) {
+            ret += indices_.get(begin);
+            ++begin;
+          }
+        }
+        output.fetch_add(ret);
+      });
+    }
+    for (auto& thrd : threads) {
+      thrd.join();
+    }
+    (void) output.load();
+  }
 
  private:
-  mmap_array<int64_t> keys_;
-  mmap_array<INDEX_T> indices_;
+  mmap_array<INDEX_T>
+      indices_;  // size() == indices_size_ == num_slots_minus_one_ +
+                 // log(num_slots_minus_one_)
+  size_t indices_size_;
   std::atomic<size_t> num_elements_;
   size_t num_slots_minus_one_;
-  size_t indices_size_;
-  ska::ska::prime_number_hash_policy hash_policy_;
-  GHash<int64_t> hasher_;
+  ColumnBase* keys_;
 
-  template <typename _INDEX_T>
-  friend void build_lf_indexer(const IdIndexer<int64_t, _INDEX_T>& input,
-                               LFIndexer<_INDEX_T>& output, double rate);
+  ska::ska::prime_number_hash_policy hash_policy_;
+  GHash<Any> hasher_;
+
+  template <typename _KEY_T, typename _INDEX_T>
+  friend void build_lf_indexer(const IdIndexer<_KEY_T, _INDEX_T>& input,
+                               const std::string& filename,
+                               LFIndexer<_INDEX_T>& output,
+                               const std::string& snapshot_dir,
+                               const std::string& work_dir, PropertyType type);
+};
+
+template <typename INDEX_T>
+class IdIndexerBase {
+ public:
+  IdIndexerBase() = default;
+  virtual ~IdIndexerBase() = default;
+  virtual PropertyType get_type() const = 0;
+  virtual void _add(const Any& oid) = 0;
+  virtual bool add(const Any& oid, INDEX_T& lid) = 0;
+  virtual bool get_key(const INDEX_T& lid, Any& oid) const = 0;
+  virtual bool get_index(const Any& oid, INDEX_T& lid) const = 0;
+  virtual size_t size() const = 0;
 };
 
 template <typename KEY_T, typename INDEX_T>
-class IdIndexer {
+class IdIndexer : public IdIndexerBase<INDEX_T> {
  public:
   using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
   using ind_buffer_t = std::vector<INDEX_T>;
@@ -304,6 +537,46 @@ class IdIndexer {
 
   IdIndexer() : hasher_() { reset_to_empty_state(); }
   ~IdIndexer() {}
+
+  PropertyType get_type() const override { return AnyConverter<KEY_T>::type(); }
+
+  void _add(const Any& oid) override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    _add(oid_);
+  }
+
+  bool add(const Any& oid, INDEX_T& lid) override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    return add(oid_, lid);
+  }
+
+  bool get_key(const INDEX_T& lid, Any& oid) const override {
+    KEY_T oid_;
+    bool flag = get_key(lid, oid_);
+    if (flag) {
+      oid = Any::From(oid_);
+    }
+    return flag;
+  }
+
+  bool get_index(const Any& oid, INDEX_T& lid) const override {
+    assert(get_type() == oid.type);
+    KEY_T oid_;
+    ConvertAny<KEY_T>::to(oid, oid_);
+    return get_index(oid_, lid);
+  }
+  void Clear() {
+    keys_.clear();
+    indices_.clear();
+    distances_.clear();
+    num_elements_ = 0;
+    num_slots_minus_one_ = 0;
+    hash_policy_.reset();
+  }
 
   size_t entry_num() const { return distances_.size(); }
 
@@ -439,7 +712,7 @@ class IdIndexer {
 
   bool empty() const { return (num_elements_ == 0); }
 
-  size_t size() const { return num_elements_; }
+  size_t size() const override { return num_elements_; }
 
   bool get_key(INDEX_T lid, KEY_T& oid) const {
     if (static_cast<size_t>(lid) >= num_elements_) {
@@ -493,7 +766,7 @@ class IdIndexer {
 
   key_buffer_t& keys() { return keys_; }
 
-  void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) {
+  void Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
     id_indexer_impl::KeyBuffer<KEY_T>::serialize(writer, keys_);
     grape::InArchive arc;
     arc << hash_policy_.get_mod_function_index() << max_lookups_
@@ -503,11 +776,12 @@ class IdIndexer {
     arc.Clear();
 
     if (indices_.size() > 0) {
-      CHECK(writer->Write(indices_.data(), indices_.size() * sizeof(INDEX_T)));
+      CHECK(writer->Write(const_cast<uint8_t*>(indices_.data()),
+                          indices_.size() * sizeof(INDEX_T)));
     }
     if (distances_.size() > 0) {
-      CHECK(
-          writer->Write(distances_.data(), distances_.size() * sizeof(int8_t)));
+      CHECK(writer->Write(const_cast<int8_t*>(distances_.data()),
+                          distances_.size() * sizeof(int8_t)));
     }
   }
 
@@ -533,7 +807,7 @@ class IdIndexer {
     }
   }
 
-  void _rehash(int num) { rehash(num); }
+  void _rehash(size_t num) { rehash(num); }
 
  private:
   void emplace(INDEX_T lid) {
@@ -660,51 +934,98 @@ class IdIndexer {
   size_t num_elements_ = 0;
   size_t num_slots_minus_one_ = 0;
 
-  // std::hash<KEY_T> hasher_;
   GHash<KEY_T> hasher_;
 
-  template <typename _INDEX_T>
-  friend void build_lf_indexer(const IdIndexer<int64_t, _INDEX_T>& input,
-                               LFIndexer<_INDEX_T>& output, double rate);
+  template <typename _KEY_T, typename _INDEX_T>
+  friend void build_lf_indexer(const IdIndexer<_KEY_T, _INDEX_T>& input,
+                               const std::string& filename,
+                               LFIndexer<_INDEX_T>& output,
+                               const std::string& snapshot_dir,
+                               const std::string& work_dir, PropertyType type);
 };
 
-template <class INDEX_T>
-void build_lf_indexer(const IdIndexer<int64_t, INDEX_T>& input,
-                      LFIndexer<INDEX_T>& lf, double rate) {
-  double indices_rate = static_cast<double>(input.keys_.size()) /
-                        static_cast<double>(input.indices_.size());
-  CHECK_LT(indices_rate, rate);
+template <typename KEY_T, typename INDEX_T>
+struct _move_data {
+  using key_buffer_t = typename id_indexer_impl::KeyBuffer<KEY_T>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
+    auto& keys = dynamic_cast<TypedColumn<KEY_T>&>(col);
+    for (size_t idx = 0; idx < size; ++idx) {
+      keys.set_value(idx, input[idx]);
+    }
+  }
+};
 
+template <typename INDEX_T>
+struct _move_data<std::string_view, INDEX_T> {
+  using key_buffer_t =
+      typename id_indexer_impl::KeyBuffer<std::string_view>::type;
+  void operator()(const key_buffer_t& input, ColumnBase& col, size_t size) {
+    auto& keys = dynamic_cast<StringColumn&>(col);
+    for (size_t idx = 0; idx < size; ++idx) {
+      keys.set_value(idx, input[idx]);
+    }
+  }
+};
+
+template <typename KEY_T, typename INDEX_T>
+void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
+                      const std::string& filename, LFIndexer<INDEX_T>& lf,
+                      const std::string& snapshot_dir,
+                      const std::string& work_dir, PropertyType type) {
   size_t size = input.keys_.size();
-  size_t lf_size = static_cast<double>(size) / rate + 1;
-  lf_size = std::max(lf_size, static_cast<size_t>(1024));
-
-  lf.keys_.resize(lf_size);
-  memcpy(lf.keys_.data(), input.keys_.data(), sizeof(int64_t) * size);
-
+  lf.init(type);
+  lf.keys_->open(filename + ".keys", "", work_dir);
+  lf.keys_->resize(size);
+  _move_data<KEY_T, INDEX_T>()(input.keys_, *lf.keys_, size);
   lf.num_elements_.store(size);
 
-  lf.indices_.clear();
-  lf.indices_.resize_fill(input.indices_.size(),
-                          std::numeric_limits<INDEX_T>::max());
+  lf.indices_.open(snapshot_dir + "/" + filename + ".indices", true);
+  lf.indices_.resize(input.num_slots_minus_one_ + 1);
+  for (size_t k = 0; k != input.num_slots_minus_one_ + 1; ++k) {
+    lf.indices_[k] = std::numeric_limits<INDEX_T>::max();
+  }
   lf.indices_size_ = input.indices_.size();
 
   lf.hash_policy_.set_mod_function_by_index(
       input.hash_policy_.get_mod_function_index());
   lf.num_slots_minus_one_ = input.num_slots_minus_one_;
-
-  for (auto oid : input.keys_) {
+  std::vector<std::pair<KEY_T, INDEX_T>> res;
+  for (size_t idx = 0; idx < input.keys_.size(); ++idx) {
+    const auto& oid = input.keys_[idx];
     size_t index = input.hash_policy_.index_for_hash(
         input.hasher_(oid), input.num_slots_minus_one_);
     for (int8_t distance = 0; input.distances_[index] >= distance;
          ++distance, ++index) {
       INDEX_T ret = input.indices_[index];
       if (input.keys_[ret] == oid) {
-        lf.indices_[index] = ret;
+        if (index > input.num_slots_minus_one_) {
+          res.emplace_back(oid, ret);
+        } else {
+          lf.indices_[index] = ret;
+        }
         break;
       }
     }
   }
+  static constexpr INDEX_T sentinel = std::numeric_limits<INDEX_T>::max();
+
+  for (const auto& [oid, lid] : res) {
+    size_t index = input.hash_policy_.index_for_hash(
+        input.hasher_(oid), input.num_slots_minus_one_);
+    while (true) {
+      if (lf.indices_[index] == sentinel) {
+        lf.indices_[index] = lid;
+        break;
+      }
+      index = (index + 1) % (input.num_slots_minus_one_ + 1);
+    }
+  }
+  lf.dump_meta(snapshot_dir + "/" + filename + ".meta");
+
+  lf.keys_->dump(snapshot_dir + "/" + filename + ".keys");
+  std::filesystem::remove(work_dir + "/" + filename + ".meta");
+  lf.keys_->close();
+  lf.keys_->open(filename + ".keys", snapshot_dir, "");
 }
 
 }  // namespace gs

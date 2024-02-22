@@ -18,7 +18,8 @@ use std::convert::{TryFrom, TryInto};
 use std::fmt;
 use std::ops::Deref;
 
-use dyn_type::{Object, Primitives};
+use chrono::Timelike;
+use dyn_type::{DateTimeFormats, Object, Primitives};
 
 use crate::error::ParsePbError;
 use crate::generated::algebra as pb;
@@ -132,6 +133,12 @@ impl From<(common_pb::VariableKeys, bool)> for common_pb::ExprOpr {
             // is a map
             common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::VarMap(vars.0)) }
         }
+    }
+}
+
+impl From<common_pb::VariableKeyValues> for common_pb::ExprOpr {
+    fn from(vars: common_pb::VariableKeyValues) -> Self {
+        common_pb::ExprOpr { node_type: None, item: Some(common_pb::expr_opr::Item::Map(vars)) }
     }
 }
 
@@ -254,6 +261,39 @@ impl From<String> for common_pb::Variable {
     }
 }
 
+impl From<i32> for pb::index_predicate::triplet::Value {
+    fn from(value: i32) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<i64> for pb::index_predicate::triplet::Value {
+    fn from(value: i64) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<String> for pb::index_predicate::triplet::Value {
+    fn from(value: String) -> Self {
+        let val: common_pb::Value = value.into();
+        val.into()
+    }
+}
+
+impl From<common_pb::Value> for pb::index_predicate::triplet::Value {
+    fn from(value: common_pb::Value) -> Self {
+        pb::index_predicate::triplet::Value::Const(value)
+    }
+}
+
+impl From<common_pb::DynamicParam> for pb::index_predicate::triplet::Value {
+    fn from(param: common_pb::DynamicParam) -> Self {
+        pb::index_predicate::triplet::Value::Param(param)
+    }
+}
+
 impl From<i64> for pb::index_predicate::AndPredicate {
     fn from(id: i64) -> Self {
         pb::index_predicate::AndPredicate {
@@ -262,7 +302,7 @@ impl From<i64> for pb::index_predicate::AndPredicate {
                     item: Some(common_pb::property::Item::Id(common_pb::IdKey {})),
                 }),
                 value: Some(id.into()),
-                cmp: None,
+                cmp: unsafe { std::mem::transmute(common_pb::Logical::Eq) },
             }],
         }
     }
@@ -285,7 +325,7 @@ impl From<String> for pb::index_predicate::AndPredicate {
                     item: Some(common_pb::property::Item::Label(common_pb::LabelKey {})),
                 }),
                 value: Some(label.into()),
-                cmp: None,
+                cmp: unsafe { std::mem::transmute(common_pb::Logical::Eq) },
             }],
         }
     }
@@ -329,6 +369,15 @@ impl TryFrom<common_pb::Value> for Object {
                     }
                     Ok(vec.into())
                 }
+                Date(date) => {
+                    Ok((DateTimeFormats::from_date32(date.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Time(time) => {
+                    Ok((DateTimeFormats::from_time32(time.item).map_err(|e| format!("{:?}", e))?).into())
+                }
+                Timestamp(timestamp) => Ok((DateTimeFormats::from_timestamp_millis(timestamp.item)
+                    .map_err(|e| format!("{:?}", e))?)
+                .into()),
             };
         }
 
@@ -345,27 +394,36 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
             let predicate = and_predicate
                 .predicates
                 .get(0)
-                .ok_or(ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
+                .ok_or_else(|| ParsePbError::EmptyFieldError("`AndCondition` is emtpy".to_string()))?;
 
             let (key, value) = (predicate.key.as_ref(), predicate.value.as_ref());
-            let key = key.ok_or("key is empty in kv_pair in indexed_scan")?;
+            let key = key.ok_or_else(|| {
+                ParsePbError::EmptyFieldError("key is empty in kv_pair in indexed_scan".to_string())
+            })?;
             if let Some(common_pb::property::Item::Id(_id_key)) = key.item.as_ref() {
-                let value = value.ok_or("value is empty in kv_pair in indexed_scan")?;
+                let value_item = value.ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("`Value` is empty in kv_pair in indexed_scan".to_string())
+                })?;
 
-                match &value.item {
-                    Some(common_pb::value::Item::I64(v)) => {
-                        global_ids.push(*v);
-                    }
-                    Some(common_pb::value::Item::I64Array(arr)) => {
-                        global_ids.extend(arr.item.iter().cloned())
-                    }
-                    Some(common_pb::value::Item::I32(v)) => {
-                        global_ids.push(*v as i64);
-                    }
-                    Some(common_pb::value::Item::I32Array(arr)) => {
-                        global_ids.extend(arr.item.iter().map(|i| *i as i64));
-                    }
-                    _ => Err(ParsePbError::Unsupported(
+                match value_item {
+                    pb::index_predicate::triplet::Value::Const(value) => match value.item.as_ref() {
+                        Some(common_pb::value::Item::I64(v)) => {
+                            global_ids.push(*v);
+                        }
+                        Some(common_pb::value::Item::I64Array(arr)) => {
+                            global_ids.extend(arr.item.iter().cloned())
+                        }
+                        Some(common_pb::value::Item::I32(v)) => {
+                            global_ids.push(*v as i64);
+                        }
+                        Some(common_pb::value::Item::I32Array(arr)) => {
+                            global_ids.extend(arr.item.iter().map(|i| *i as i64));
+                        }
+                        _ => Err(ParsePbError::Unsupported(
+                            "indexed value other than integer (I32, I64) and integer array".to_string(),
+                        ))?,
+                    },
+                    pb::index_predicate::triplet::Value::Param(_) => Err(ParsePbError::Unsupported(
                         "indexed value other than integer (I32, I64) and integer array".to_string(),
                     ))?,
                 }
@@ -375,33 +433,76 @@ impl TryFrom<pb::IndexPredicate> for Vec<i64> {
     }
 }
 
-impl TryFrom<pb::IndexPredicate> for Vec<(NameOrId, Object)> {
+impl TryFrom<pb::IndexPredicate> for Vec<Vec<(NameOrId, Object)>> {
     type Error = ParsePbError;
 
     fn try_from(value: pb::IndexPredicate) -> Result<Self, Self::Error> {
-        let mut primary_key_values = vec![];
-        // for pk values, which should be a set of and_conditions.
-        let and_predicates = value
-            .or_predicates
-            .get(0)
-            .ok_or(ParsePbError::EmptyFieldError("`OrCondition` is emtpy".to_string()))?;
-        for predicate in &and_predicates.predicates {
-            let key_pb = predicate
-                .key
-                .clone()
-                .ok_or("key is empty in kv_pair in indexed_scan")?;
-            let value = predicate
-                .value
-                .clone()
-                .ok_or("value is empty in kv_pair in indexed_scan")?;
-            let key = match key_pb.item {
-                Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
-                _ => Err(ParsePbError::Unsupported(
-                    "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
-                ))?,
-            };
-            let obj_val = Object::try_from(value)?;
-            primary_key_values.push((key, obj_val));
+        let mut primary_key_values = Vec::with_capacity(value.or_predicates.len());
+        for and_predicates in value.or_predicates {
+            // PkValue can be one-column or multi-columns, which is a set of and_conditions.
+            let mut primary_key_value = Vec::with_capacity(and_predicates.predicates.len());
+            for predicate in &and_predicates.predicates {
+                let cmp: common_pb::Logical = unsafe { std::mem::transmute(predicate.cmp) };
+                if !cmp.eq(&common_pb::Logical::Eq) && !cmp.eq(&common_pb::Logical::Within) {
+                    Err(ParsePbError::Unsupported(format!("unsupported indexed predicate cmp {:?}", cmp)))?
+                }
+                let key_pb = predicate.key.clone().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("key is empty in kv_pair in indexed_scan".to_string())
+                })?;
+                let value_pb = predicate.value.clone().ok_or_else(|| {
+                    ParsePbError::EmptyFieldError("value is empty in kv_pair in indexed_scan".to_string())
+                })?;
+                let key: NameOrId = match key_pb.item {
+                    Some(common_pb::property::Item::Key(prop_key)) => prop_key.try_into()?,
+                    _ => Err(ParsePbError::Unsupported(
+                        "Other keys rather than property key in kv_pair in indexed_scan".to_string(),
+                    ))?,
+                };
+
+                if let pb::index_predicate::triplet::Value::Const(value) = value_pb {
+                    if let Some(item) = value.item.as_ref() {
+                        if cmp.eq(&common_pb::Logical::Within) {
+                            // specifically, if the cmp is within, the value must be an array
+                            match item {
+                                common_pb::value::Item::I32Array(array) => {
+                                    for v in array.item.iter() {
+                                        primary_key_value.push((key.clone(), (*v).into()));
+                                    }
+                                }
+                                common_pb::value::Item::I64Array(array) => {
+                                    for v in array.item.iter() {
+                                        primary_key_value.push((key.clone(), (*v).into()));
+                                    }
+                                }
+                                common_pb::value::Item::F64Array(array) => {
+                                    for v in array.item.iter() {
+                                        primary_key_value.push((key.clone(), (*v).into()));
+                                    }
+                                }
+                                common_pb::value::Item::StrArray(array) => {
+                                    for v in array.item.iter() {
+                                        primary_key_value.push((key.clone(), (v.clone()).into()));
+                                    }
+                                }
+                                _ => Err(ParsePbError::ParseError(format!(
+                                    "within predicate value must be an array, while it is {:?}",
+                                    item
+                                )))?,
+                            }
+                        } else {
+                            primary_key_value.push((key, value.try_into()?));
+                        }
+                    } else {
+                        Err(ParsePbError::ParseError("empty indexed predicate value".to_string()))?
+                    }
+                } else {
+                    Err(ParsePbError::Unsupported(format!(
+                        "unsupported indexed predicate value {:?}",
+                        value_pb
+                    )))?
+                }
+            }
+            primary_key_values.push(primary_key_value);
         }
         Ok(primary_key_values)
     }
@@ -479,6 +580,12 @@ impl From<pb::Scan> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::Root> for pb::logical_plan::Operator {
+    fn from(opr: pb::Root) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Root(opr)) }
+    }
+}
+
 impl From<pb::logical_plan::Operator> for Option<pb::Scan> {
     fn from(opr: pb::logical_plan::Operator) -> Self {
         if let Some(opr) = opr.opr {
@@ -541,6 +648,12 @@ impl From<pb::Sink> for pb::logical_plan::Operator {
     }
 }
 
+impl From<pb::Sample> for pb::logical_plan::Operator {
+    fn from(opr: pb::Sample) -> Self {
+        pb::logical_plan::Operator { opr: Some(pb::logical_plan::operator::Opr::Sample(opr)) }
+    }
+}
+
 impl From<Object> for common_pb::Value {
     fn from(value: Object) -> Self {
         let item = match value {
@@ -570,6 +683,28 @@ impl From<Object> for common_pb::Value {
                 common_pb::value::Item::PairArray(common_pb::PairArray { item: pairs })
             }
             Object::None => common_pb::value::Item::None(common_pb::None {}),
+            Object::DateFormat(datetime_formats) => match datetime_formats {
+                DateTimeFormats::Date(date) => common_pb::value::Item::Date(common_pb::Date32 {
+                    // convert to days since from 1970-01-01
+                    item: (date
+                        .and_hms_opt(0, 0, 0)
+                        .unwrap() // can safely unwrap since it is valid hour/min/sec
+                        .timestamp()
+                        / 86400) as i32,
+                }),
+                DateTimeFormats::Time(time) => common_pb::value::Item::Time(common_pb::Time32 {
+                    // convert to milliseconds past midnight
+                    item: (time.hour() as i32 * 3600 + time.minute() as i32 * 60 + time.second() as i32)
+                        * 1000
+                        + time.nanosecond() as i32 / 1000_000,
+                }),
+                DateTimeFormats::DateTime(dt) => {
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
+                }
+                DateTimeFormats::DateTimeWithTz(dt) => {
+                    common_pb::value::Item::Timestamp(common_pb::Timestamp { item: dt.timestamp_millis() })
+                }
+            },
             _ => unimplemented!(),
         };
 
@@ -589,35 +724,25 @@ impl From<(pb::EdgeExpand, pb::GetV)> for pb::path_expand::ExpandBase {
     }
 }
 
-impl pb::logical_plan::Operator {
-    pub fn is_whole_graph(&self) -> bool {
-        if let Some(opr) = &self.opr {
-            match opr {
-                pb::logical_plan::operator::Opr::Scan(scan) => {
-                    scan.idx_predicate.is_none()
-                        && scan.alias.is_none()
-                        && scan
-                            .params
-                            .as_ref()
-                            .map(|params| !params.is_queryable())
-                            .unwrap_or(true)
-                }
-                _ => false,
-            }
-        } else {
-            false
-        }
-    }
-}
-
 impl pb::QueryParams {
-    // is_queryable doesn't consider tables as we assume that the table info can be inferred directly from current data.
-    pub fn is_queryable(&self) -> bool {
-        !(self.predicate.is_none()
-            && self.limit.is_none()
-            && self.sample_ratio == 1.0
-            && self.columns.is_empty()
-            && !self.is_all_columns)
+    pub fn has_labels(&self) -> bool {
+        !self.tables.is_empty()
+    }
+
+    pub fn has_columns(&self) -> bool {
+        !self.columns.is_empty() || self.is_all_columns
+    }
+
+    pub fn has_predicates(&self) -> bool {
+        self.predicate.is_some()
+    }
+
+    pub fn has_sample(&self) -> bool {
+        self.sample_ratio != 1.0
+    }
+
+    pub fn has_limit(&self) -> bool {
+        self.limit.is_some()
     }
 
     pub fn is_empty(&self) -> bool {
@@ -801,6 +926,7 @@ impl From<pb::Scan> for physical_pb::Scan {
             alias: scan.alias.map(|tag| tag.try_into().unwrap()),
             params: scan.params,
             idx_predicate: scan.idx_predicate,
+            is_count_only: scan.is_count_only,
         }
     }
 }
@@ -832,10 +958,38 @@ impl TryFrom<physical_pb::PhysicalOpr> for physical_pb::physical_opr::operator::
     fn try_from(op: PhysicalOpr) -> Result<Self, Self::Error> {
         let op_kind = op
             .opr
-            .ok_or(ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
+            .ok_or_else(|| ParsePbError::EmptyFieldError("algebra op is empty".to_string()))?
             .op_kind
-            .ok_or(ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
+            .ok_or_else(|| ParsePbError::EmptyFieldError("algebra op_kind is empty".to_string()))?;
         Ok(op_kind)
+    }
+}
+
+impl common_pb::Logical {
+    pub fn is_unary(&self) -> bool {
+        match self {
+            common_pb::Logical::Not | common_pb::Logical::Isnull => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_binary(&self) -> bool {
+        match self {
+            common_pb::Logical::Eq
+            | common_pb::Logical::Ne
+            | common_pb::Logical::Lt
+            | common_pb::Logical::Le
+            | common_pb::Logical::Gt
+            | common_pb::Logical::Ge
+            | common_pb::Logical::Within
+            | common_pb::Logical::Without
+            | common_pb::Logical::Startswith
+            | common_pb::Logical::Endswith
+            | common_pb::Logical::And
+            | common_pb::Logical::Or
+            | common_pb::Logical::Regex => true,
+            _ => false,
+        }
     }
 }
 

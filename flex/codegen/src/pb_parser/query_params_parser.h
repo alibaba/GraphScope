@@ -18,8 +18,8 @@ limitations under the License.
 #include <vector>
 
 #include "flex/codegen/src/graph_types.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
 
 namespace gs {
 
@@ -167,7 +167,7 @@ bool try_to_get_oid_from_expr(const common::Expression& expression,
   if (num_oprs == 3) {
     return try_to_get_oid_from_expr_impl(expression, oid);
   }
-  // TODO: current hacks the implementaion. (label within 1) && (id == 8780)
+  // TODO: current hacks the implementation. (label within 1) && (id == 8780)
   common::Expression new_expr;
   new_expr.add_operators()->CopyFrom(expression.operators(7));
   new_expr.add_operators()->CopyFrom(expression.operators(8));

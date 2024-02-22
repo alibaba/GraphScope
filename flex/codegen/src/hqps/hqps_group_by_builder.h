@@ -24,9 +24,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
@@ -63,6 +63,8 @@ std::string agg_func_pb_2_str(
     return "gs::AggFunc::TO_LIST";
   case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_TO_SET:
     return "gs::AggFunc::TO_SET";
+  case physical::GroupBy::AggFunc::Aggregate::GroupBy_AggFunc_Aggregate_FIRST:
+    return "gs::AggFunc::FIRST";
   default:
     LOG(FATAL) << "Unsupported aggregate function";
   }
@@ -76,10 +78,9 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
   std::vector<int32_t> in_tags;
   std::vector<std::string> in_prop_names;
   std::vector<std::string> in_prop_types;
-  int32_t res_alias = agg_func.alias().value();
-  auto real_res_alias = new_mapping.CreateOrGetTagInd(res_alias);
+  new_mapping.CreateOrGetTagInd(agg_func.alias().value());
   auto& vars = agg_func.vars();
-  for (auto i = 0; i < vars.size(); ++i) {
+  for (int32_t i = 0; i < vars.size(); ++i) {
     auto& var = vars[i];
     auto raw_tag_id = var.tag().id();
     in_tags.push_back(ctx.GetTagInd(raw_tag_id));
@@ -94,7 +95,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
         VLOG(10) << "aggregate on property " << var_prop.key().name();
         in_prop_names.push_back(var.property().key().name());
         in_prop_types.push_back(
-            common_data_type_pb_2_str(var.node_type().data_type()));
+            single_common_data_type_pb_2_str(var.node_type().data_type()));
       }
     } else {
       // var has no property, which means internal id.
@@ -107,7 +108,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
   std::string selectors_str, in_tags_str;
   {
     std::stringstream ss;
-    for (auto i = 0; i < in_prop_types.size(); ++i) {
+    for (size_t i = 0; i < in_prop_types.size(); ++i) {
       boost::format selector_formater(PROPERTY_SELECTOR);
       selector_formater % in_prop_types[i] % in_prop_names[i];
       ss << selector_formater.str();
@@ -119,7 +120,7 @@ std::pair<std::string, std::string> gen_agg_var_and_code(
   }
   {
     std::stringstream ss;
-    for (auto i = 0; i < in_tags.size(); ++i) {
+    for (size_t i = 0; i < in_tags.size(); ++i) {
       ss << in_tags[i];
       if (i != in_tags.size() - 1) {
         ss << ", ";
@@ -151,7 +152,7 @@ class GroupByOpBuilder {
     int32_t output_tag_id =
         new_tag_id_mapping.CreateOrGetTagInd(key_alias.alias().value());
     // output_col_id should equal to current key's length
-    CHECK(output_tag_id == key_alias_name_and_code.size());
+    CHECK(output_tag_id == (int32_t) key_alias_name_and_code.size());
     // we currently assume group key is always on internal id or graph ele
     auto key_alias_key = key_alias.key();
     if (key_alias_key.has_property()) {
@@ -163,11 +164,14 @@ class GroupByOpBuilder {
       } else if (prop.item_case() == common::Property::kKey) {
         auto& prop_key = prop.key();
         prop_name = prop_key.name();
-        prop_type =
-            common_data_type_pb_2_str(key_alias_key.node_type().data_type());
+        prop_type = single_common_data_type_pb_2_str(
+            key_alias_key.node_type().data_type());
+      } else if (prop.item_case() == common::Property::kLabel) {
+        prop_type = "LabelKey";
       } else {
-        LOG(FATAL)
-            << "Current only support key_alias on internal id or property";
+        LOG(FATAL) << "Current only support key_alias on internal id or "
+                      "property, but got: "
+                   << prop.DebugString();
       }
     } else {
       VLOG(10) << "Apply internal id since no property provided";
@@ -214,25 +218,25 @@ class GroupByOpBuilder {
     std::string group_by_agg_vars_str;
     {
       std::stringstream ss;
-      for (auto i = 0; i < key_alias_name_and_code.size(); ++i) {
+      for (size_t i = 0; i < key_alias_name_and_code.size(); ++i) {
         ss << key_alias_name_and_code[i].second << std::endl;
       }
       key_alias_con_str = ss.str();
     }
     {
       std::stringstream ss;
-      for (auto i = 0; i < agg_func_name_and_code.size(); ++i) {
+      for (size_t i = 0; i < agg_func_name_and_code.size(); ++i) {
         ss << agg_func_name_and_code[i].second << std::endl;
       }
       agg_func_con_str = ss.str();
     }
-    for (auto i = 0; i < key_alias_name_and_code.size(); ++i) {
+    for (size_t i = 0; i < key_alias_name_and_code.size(); ++i) {
       group_by_keys_vars_str += key_alias_name_and_code[i].first;
       if (i != key_alias_name_and_code.size() - 1) {
         group_by_keys_vars_str += ", ";
       }
     }
-    for (auto i = 0; i < agg_func_name_and_code.size(); ++i) {
+    for (size_t i = 0; i < agg_func_name_and_code.size(); ++i) {
       group_by_agg_vars_str += agg_func_name_and_code[i].first;
       if (i != agg_func_name_and_code.size() - 1) {
         group_by_agg_vars_str += ", ";
@@ -259,18 +263,16 @@ static std::string BuildGroupByOp(
     BuildingContext& ctx, const physical::GroupBy& group_by_pb,
     const physical::PhysicalOpr::MetaData& meta_data) {
   GroupByOpBuilder builder(ctx);
-  CHECK(group_by_pb.mappings_size() == 1)
-      << "Currently we only support one key";
   auto& key_aliases = group_by_pb.mappings();
 
   CHECK(group_by_pb.functions_size() >= 1);
   auto& functions = group_by_pb.functions();
-  for (auto i = 0; i < key_aliases.size(); ++i) {
+  for (int32_t i = 0; i < key_aliases.size(); ++i) {
     auto& key_alias = key_aliases[i];
     builder.AddKeyAlias(key_alias);
   }
 
-  for (auto i = 0; i < functions.size(); ++i) {
+  for (int32_t i = 0; i < functions.size(); ++i) {
     auto& func = functions[i];
     builder.AddAggFunc(func);
   }

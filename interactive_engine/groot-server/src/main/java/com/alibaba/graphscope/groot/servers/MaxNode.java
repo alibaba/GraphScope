@@ -31,68 +31,29 @@ public class MaxNode extends NodeBase {
     private static final Logger logger = LoggerFactory.getLogger(MaxNode.class);
 
     private KafkaTestCluster kafkaTestCluster;
-    private NodeBase coordinator;
-    private List<NodeBase> frontends = new ArrayList<>();
-    private List<NodeBase> ingestors = new ArrayList<>();
-    private List<NodeBase> stores = new ArrayList<>();
+    private final NodeBase coordinator;
+    private final List<NodeBase> frontends = new ArrayList<>();
+    private final List<NodeBase> stores = new ArrayList<>();
 
     public MaxNode(Configs configs) throws Exception {
-        Properties kafkaConfigs = new Properties();
-        kafkaConfigs.put("max.request.size", 10000000);
-        this.kafkaTestCluster = new KafkaTestCluster(1, kafkaConfigs);
-        this.kafkaTestCluster.start();
+        String zkConnectString = ZkConfig.ZK_CONNECT_STRING.get(configs);
+        String kafkaServers = KafkaConfig.KAFKA_SERVERS.get(configs);
+        if (CommonConfig.KAFKA_TEST_CLUSTER_ENABLE.get(configs)) {
+            Properties kafkaConfigs = new Properties();
+            kafkaConfigs.put("max.request.size", 10000000);
+            this.kafkaTestCluster = new KafkaTestCluster(1, kafkaConfigs);
+            this.kafkaTestCluster.start();
+            zkConnectString = this.kafkaTestCluster.getZookeeperConnectString();
+            kafkaServers = this.kafkaTestCluster.getKafkaConnectString();
+        }
 
-        int frontendCount = 1;
-        int ingestorCount = 2;
+        int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
 
         Configs baseConfigs =
                 Configs.newBuilder(configs)
-                        .put(
-                                ZkConfig.ZK_CONNECT_STRING.getKey(),
-                                this.kafkaTestCluster.getZookeeperConnectString())
-                        .put(
-                                KafkaConfig.KAFKA_SERVERS.getKey(),
-                                this.kafkaTestCluster.getKafkaConnectString())
-                        .put(
-                                CommonConfig.INGESTOR_NODE_COUNT.getKey(),
-                                String.valueOf(ingestorCount))
-                        .put(
-                                CommonConfig.INGESTOR_QUEUE_COUNT.getKey(),
-                                String.valueOf(ingestorCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_ENGINE.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_GRAPH.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_MANAGE.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.EXECUTOR_QUERY.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.GAIA_RPC.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                String.format(
-                                        CommonConfig.NODE_COUNT_FORMAT,
-                                        RoleType.GAIA_ENGINE.getName()),
-                                String.valueOf(storeCount))
-                        .put(
-                                CommonConfig.FRONTEND_NODE_COUNT.getKey(),
-                                String.valueOf(frontendCount))
+                        .put(ZkConfig.ZK_CONNECT_STRING.getKey(), zkConnectString)
+                        .put(KafkaConfig.KAFKA_SERVERS.getKey(), kafkaServers)
                         .build();
 
         Configs coordinatorConfigs =
@@ -106,18 +67,8 @@ public class MaxNode extends NodeBase {
                     Configs.newBuilder(baseConfigs)
                             .put(CommonConfig.ROLE_NAME.getKey(), RoleType.FRONTEND.getName())
                             .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                            .put(CommonConfig.RPC_PORT.getKey(), "55555")
-                            .put(FrontendConfig.FRONTEND_SERVICE_PORT.getKey(), "55556")
                             .build();
             this.frontends.add(new Frontend(frontendConfigs));
-        }
-        for (int i = 0; i < ingestorCount; i++) {
-            Configs ingestConfigs =
-                    Configs.newBuilder(baseConfigs)
-                            .put(CommonConfig.ROLE_NAME.getKey(), RoleType.INGESTOR.getName())
-                            .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                            .build();
-            this.ingestors.add(new Ingestor(ingestConfigs));
         }
         for (int i = 0; i < storeCount; i++) {
             Configs storeConfigs =
@@ -131,6 +82,12 @@ public class MaxNode extends NodeBase {
 
     public void start() {
         List<Thread> startThreads = new ArrayList<>();
+        startThreads.add(
+                new Thread(
+                        () -> {
+                            this.coordinator.start();
+                            logger.info("[" + this.coordinator.getName() + "] started");
+                        }));
         for (NodeBase store : this.stores) {
             startThreads.add(
                     new Thread(
@@ -139,6 +96,7 @@ public class MaxNode extends NodeBase {
                                 logger.info("[" + store.getName() + "] started");
                             }));
         }
+
         for (NodeBase frontend : this.frontends) {
             startThreads.add(
                     new Thread(
@@ -147,21 +105,7 @@ public class MaxNode extends NodeBase {
                                 logger.info("[" + frontend.getName() + "] started");
                             }));
         }
-        for (NodeBase ingestor : this.ingestors) {
-            startThreads.add(
-                    new Thread(
-                            () -> {
-                                ingestor.start();
-                                logger.info("[" + ingestor.getName() + "] started");
-                            }));
-        }
 
-        startThreads.add(
-                new Thread(
-                        () -> {
-                            this.coordinator.start();
-                            logger.info("[" + this.coordinator.getName() + "] started");
-                        }));
         for (Thread startThread : startThreads) {
             startThread.start();
         }
@@ -177,9 +121,6 @@ public class MaxNode extends NodeBase {
 
     @Override
     public void close() throws IOException {
-        for (NodeBase ingestor : this.ingestors) {
-            ingestor.close();
-        }
         for (NodeBase frontend : this.frontends) {
             frontend.close();
         }
@@ -189,7 +130,9 @@ public class MaxNode extends NodeBase {
         this.coordinator.close();
 
         try {
-            this.kafkaTestCluster.close();
+            if (this.kafkaTestCluster != null) {
+                this.kafkaTestCluster.close();
+            }
         } catch (Exception e) {
             logger.warn("close kafka failed", e);
         }
@@ -198,7 +141,6 @@ public class MaxNode extends NodeBase {
     public static void main(String[] args) throws Exception {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
-        conf = Configs.newBuilder(conf).put(CommonConfig.ENGINE_TYPE.getKey(), "gaia").build();
         MaxNode maxNode = new MaxNode(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(maxNode);
         nodeLauncher.start();

@@ -16,18 +16,24 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
 import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
+import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 public class GraphLogicalSource extends AbstractBindableTableScan {
     private final GraphOpt.Source opt;
+    private @Nullable RexNode uniqueKeyFilters;
 
     protected GraphLogicalSource(
             GraphOptCluster cluster,
@@ -54,6 +60,24 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("opt", getOpt());
+        return super.explainTerms(pw)
+                .item("opt", getOpt())
+                .itemIf("uniqueKeyFilters", uniqueKeyFilters, uniqueKeyFilters != null);
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
+    }
+
+    public void setUniqueKeyFilters(RexNode uniqueKeyFilters) {
+        this.uniqueKeyFilters = Objects.requireNonNull(uniqueKeyFilters);
+    }
+
+    public @Nullable RexNode getUniqueKeyFilters() {
+        return uniqueKeyFilters;
     }
 }

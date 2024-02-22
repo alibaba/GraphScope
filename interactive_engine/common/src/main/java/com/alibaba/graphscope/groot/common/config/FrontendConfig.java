@@ -18,11 +18,20 @@ public class FrontendConfig {
 
     public static final Config<String> AUTH_PASSWORD = Config.stringConfig("auth.password", "");
 
+    //
     public static final Config<Integer> FRONTEND_SERVICE_PORT =
-            Config.intConfig("frontend.service.port", 8182);
+            Config.intConfig("frontend.service.port", 55556);
+    public static final Config<Integer> GREMLIN_SERVER_PORT =
+            Config.intConfig("gremlin.server.port", 8182);
 
     public static final Config<Integer> FRONTEND_SERVICE_THREAD_COUNT =
             Config.intConfig(
                     "frontend.service.thread.count",
                     Math.max(Math.min(Runtime.getRuntime().availableProcessors() / 2, 64), 4));
+
+    public static final Config<Boolean> ENABLE_HASH_GENERATE_EID =
+            Config.boolConfig("enable.hash.generate.eid", false);
+
+    public static final Config<Integer> WRITE_QUEUE_BUFFER_MAX_COUNT =
+            Config.intConfig("write.queue.buffer.max.count", 1024000);
 }

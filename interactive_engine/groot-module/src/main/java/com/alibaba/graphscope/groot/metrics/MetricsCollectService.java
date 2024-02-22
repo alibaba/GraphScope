@@ -25,7 +25,7 @@ import java.util.Map;
 
 public class MetricsCollectService extends MetricsCollectGrpc.MetricsCollectImplBase {
 
-    private MetricsCollector metricsCollector;
+    private final MetricsCollector metricsCollector;
 
     public MetricsCollectService(MetricsCollector metricsCollector) {
         this.metricsCollector = metricsCollector;

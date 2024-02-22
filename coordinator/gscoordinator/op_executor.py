@@ -1,10 +1,13 @@
 import datetime
+import itertools
 import json
 import logging
 import os
 import pickle
 import random
+import sys
 import time
+import traceback
 import zipfile
 from concurrent import futures
 from io import BytesIO
@@ -28,6 +31,7 @@ from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 from graphscope.proto.error_codes_pb2 import OK
 
+from gscoordinator.launcher import AbstractLauncher
 from gscoordinator.monitor import Monitor
 from gscoordinator.object_manager import GraphMeta
 from gscoordinator.object_manager import LibMeta
@@ -52,7 +56,7 @@ logger = logging.getLogger("graphscope")
 
 
 class OperationExecutor:
-    def __init__(self, session_id: str, launcher, object_manager):
+    def __init__(self, session_id: str, launcher: AbstractLauncher, object_manager):
         self._session_id = session_id
         self._launcher = launcher
 
@@ -342,8 +346,8 @@ class OperationExecutor:
             ("grpc.max_metadata_size", GS_GRPC_MAX_MESSAGE_LENGTH),
         ]
         # Check connectivity, otherwise the stub is useless
-        delay = 2
-        for retry in range(8):  # approximated 255s
+        max_retries, backoff, err = 8, 2, ""
+        for retry in range(max_retries):  # approximated 255s
             try:
                 channel = grpc.insecure_channel(
                     self._launcher.analytical_engine_endpoint, options=options
@@ -352,16 +356,18 @@ class OperationExecutor:
                 stub.HeartBeat(message_pb2.HeartBeatRequest())
                 return stub
             except grpc.RpcError as e:
-                logger.warning(
-                    "Connecting to analytical engine... tried %d time, will retry in %d seconds",
+                err = f"Error code: {e.code()}, details {e.details()}"
+                logger.debug(
+                    "Connecting to analytical engine failed, tried %d time, will retry in %d seconds, error is %s",
                     retry + 1,
-                    delay,
+                    backoff,
+                    err,
                 )
-                logger.warning("Error code: %s, details %s", e.code(), e.details())
-                time.sleep(delay)
-                delay *= 2  # back off
+                time.sleep(backoff)
+                backoff *= 2  # exponential backoff
         raise RuntimeError(
-            "Failed to connect to engine in a reasonable time, deployment may failed. Please check coordinator log for details"
+            f"Failed to connect to engine in a reasonable time, deployment may failed: '{err}'. "
+            "Please check coordinator log for more details"
         )
 
     @property
@@ -455,7 +461,7 @@ class OperationExecutor:
             self._op_result_pool[op.key] = op_result
         return message_pb2.RunStepResponse(head=response_head), []
 
-    def _gremlin_to_subgraph(self, op: op_def_pb2.OpDef):
+    def _gremlin_to_subgraph(self, op: op_def_pb2.OpDef):  # noqa: C901
         gremlin_script = op.attr[types_pb2.GIE_GREMLIN_QUERY_MESSAGE].s.decode()
         oid_type = op.attr[types_pb2.OID_TYPE].s.decode()
         request_options = None
@@ -508,6 +514,8 @@ class OperationExecutor:
             vertex_metadata["typename"] = "vineyard::ParallelStream"
             vertex_metadata["__streams_-size"] = len(chunk_instances)
 
+            vertex_streams, edge_streams = [], []
+
             # NB: we don't respect `num_workers`, instead, we create a substream
             # on each vineyard instance.
             #
@@ -529,6 +537,7 @@ class OperationExecutor:
                 edge = vineyard_client.create_metadata(edge_stream, instance_id)
                 vineyard_client.persist(edge.id)
                 edge_metadata.add_member("__streams_-%d" % worker, edge)
+                edge_streams.append(edge.id)
 
                 vertex_stream = vineyard.ObjectMeta()
                 vertex_stream["typename"] = "vineyard::RecordBatchStream"
@@ -542,6 +551,7 @@ class OperationExecutor:
                 vertex = vineyard_client.create_metadata(vertex_stream, instance_id)
                 vineyard_client.persist(vertex.id)
                 vertex_metadata.add_member("__streams_-%d" % worker, vertex)
+                vertex_streams.append(vertex.id)
 
                 chunk_stream = vineyard.ObjectMeta()
                 chunk_stream["typename"] = "vineyard::htap::PropertyGraphOutStream"
@@ -563,14 +573,56 @@ class OperationExecutor:
             # build the parallel stream for edge
             edge = vineyard_client.create_metadata(edge_metadata)
             vineyard_client.persist(edge.id)
-            vineyard_client.put_name(edge.id, "__%s_edge_stream" % graph_name)
+            vineyard_client.put_name(edge.id, f"__{graph_name}_edge_stream")
 
             # build the parallel stream for vertex
             vertex = vineyard_client.create_metadata(vertex_metadata)
             vineyard_client.persist(vertex.id)
-            vineyard_client.put_name(vertex.id, "__%s_vertex_stream" % graph_name)
+            vineyard_client.put_name(vertex.id, f"__{graph_name}_vertex_stream")
 
-            return repr(graph.id), repr(edge.id), repr(vertex.id)
+            return (
+                repr(graph.id),
+                repr(edge.id),
+                repr(vertex.id),
+                vertex_streams,
+                edge_streams,
+            )
+
+        def cleanup_stream(
+            graph_name,
+            vineyard_rpc_endpoint,
+            vertex_stream_id,
+            edge_stream_id,
+            vertex_streams,
+            edge_streams,
+        ):
+            import vineyard
+
+            vineyard_client = vineyard.connect(*vineyard_rpc_endpoint.split(":"))
+
+            vertex_stream_id = vineyard.ObjectID(vertex_stream_id)
+            edge_stream_id = vineyard.ObjectID(edge_stream_id)
+            for s in itertools.chain(vertex_streams, edge_streams):
+                try:
+                    vineyard_client.stop_stream(vineyard.ObjectID(s), failed=True)
+                except Exception:  # noqa: E722, pylint: disable=broad-except
+                    pass
+                try:
+                    vineyard_client.drop_stream(vineyard.ObjectID(s))
+                except Exception:  # noqa: E722, pylint: disable=broad-except
+                    pass
+            try:
+                vineyard_client.drop_name(f"__{graph_name}_vertex_stream")
+            except Exception:  # noqa: E722, pylint: disable=broad-except
+                pass
+            try:
+                vineyard_client.drop_name(f"__{graph_name}_edge_stream")
+            except Exception:  # noqa: E722, pylint: disable=broad-except
+                pass
+            try:
+                vineyard_client.drop_name(graph_name)
+            except Exception:  # noqa: E722, pylint: disable=broad-except
+                pass
 
         def load_subgraph(
             graph_name,
@@ -648,21 +700,15 @@ class OperationExecutor:
         else:
             executor_workers_num = self._launcher.num_workers
             threads_per_executor = threads_per_worker
-        if self._launcher.type() == types_pb2.HOSTS:
-            engine_config = self.get_analytical_engine_config()
-            vineyard_rpc_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
-            if self._launcher.vineyard_deployment_exists():
-                vineyard_rpc_endpoint = self._launcher._vineyard_service_endpoint
-            else:
-                vineyard_rpc_endpoint = self._launcher._vineyard_internal_endpoint
+        vineyard_rpc_endpoint = self._launcher.vineyard_endpoint
         total_builder_chunks = executor_workers_num * threads_per_executor
 
         (
             _graph_builder_id,
             edge_stream_id,
             vertex_stream_id,
+            vertex_streams,
+            edge_streams,
         ) = create_global_graph_builder(
             graph_name,
             executor_workers_num,
@@ -686,11 +732,52 @@ class OperationExecutor:
             gremlin_script,
             graph_name,
         )
-        gremlin_client.submit(
-            subgraph_script, request_options=request_options
-        ).all().result()
 
-        return subgraph_task.result()
+        gremlin_error_message, graph_loading_error_message = None, None
+
+        try:
+            gremlin_client.submit(
+                subgraph_script, request_options=request_options
+            ).all().result()
+        except Exception:  # noqa: E722, pylint: disable=broad-except
+            # # abort the streams
+            e, err, _ = sys.exc_info()
+            gremlin_error_message = (
+                f"Exception during subgraph's gremlin query execution: "
+                f"'{e}', '{err}', with traceback: {traceback.format_exc()}"
+            )
+            logger.error(gremlin_error_message)
+            # cancel the stream to let the analytical engine exit the current loop
+            logger.info("clean up stream ...")
+            cleanup_stream(
+                graph_name,
+                vineyard_rpc_endpoint,
+                vertex_stream_id,
+                edge_stream_id,
+                vertex_streams,
+                edge_streams,
+            )
+            logger.info("clean up stream finished ...")
+
+        subgraph_object = None
+        try:
+            subgraph_object = subgraph_task.result()
+        except Exception:  # noqa: E722, pylint: disable=broad-except
+            e, err, _ = sys.exc_info()
+            graph_loading_error_message = (
+                f"Exception during subgraph's graph loading execution: "
+                f"'{e}', '{err}', with traceback: {traceback.format_exc()}"
+            )
+            logger.error(graph_loading_error_message)
+
+        if gremlin_error_message is not None or graph_loading_error_message is not None:
+            error_message = (
+                f"Error during subgraph execution, "
+                f'gremlin error: "{gremlin_error_message}", '
+                f'graph loading error: "{graph_loading_error_message}"'
+            )
+            raise RuntimeError(error_message)
+        return subgraph_object
 
     # Learning engine related operations
     # ==================================
@@ -733,12 +820,8 @@ class OperationExecutor:
                 "\n"
             )
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
         obj_id = op.attr[types_pb2.VINEYARD_ID].i
@@ -769,12 +852,8 @@ class OperationExecutor:
                 "\n"
             )
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         path = op.attr[types_pb2.GRAPH_SERIALIZATION_PATH].s.decode()
         graph_id = vineyard.io.deserialize(
@@ -825,12 +904,8 @@ class OperationExecutor:
         write_options = json.loads(op.attr[types_pb2.WRITE_OPTIONS].s.decode())
         fd = op.attr[types_pb2.FD].s.decode()
         df = op.attr[types_pb2.VINEYARD_ID].s.decode()
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
         dfstream = vineyard.io.open(
             "vineyard://" + str(df),
@@ -924,15 +999,8 @@ class OperationExecutor:
                 loader.attr[types_pb2.PROTOCOL].CopyFrom(utils.s_to_attr(new_protocol))
                 loader.attr[types_pb2.SOURCE].CopyFrom(utils.s_to_attr(new_source))
 
-        engine_config = self.get_analytical_engine_config()
-        if self._launcher.type() == types_pb2.HOSTS:
-            vineyard_endpoint = engine_config["vineyard_rpc_endpoint"]
-        else:
-            if self._launcher.vineyard_deployment_exists():
-                vineyard_endpoint = self._launcher._vineyard_service_endpoint
-            else:
-                vineyard_endpoint = self._launcher._vineyard_internal_endpoint
-        vineyard_ipc_socket = engine_config["vineyard_socket"]
+        vineyard_endpoint = self._launcher.vineyard_endpoint
+        vineyard_ipc_socket = self._launcher.vineyard_socket
 
         for loader in op.large_attr.chunk_meta_list.items:
             # handle vertex or edge loader

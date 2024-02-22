@@ -55,6 +55,7 @@ import org.apache.tinkerpop.gremlin.structure.Direction;
 import org.javatuples.Pair;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -210,6 +211,19 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             return op;
         }
     },
+    UNFOLD_STEP {
+        // unfold()
+        @Override
+        public InterOpBase apply(Step step) {
+            UnfoldStep unfoldStep = (UnfoldStep) step;
+            UnfoldOp op = new UnfoldOp();
+
+            // new OpArg<>(ArgUtils.asNameOrId(tagname))
+            op.setUnfoldTag(new OpArg<>(ArgUtils.asNoneAlias()));
+
+            return op;
+        }
+    },
     AGGREGATE_STEP {
         // count/sum/min/max/fold/mean(avg)
         @Override
@@ -228,6 +242,7 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
                     && aggAlias.alias.opt == FfiNameIdOpt.Name) {
                 step.removeLabel(aggFn.getAlias().alias.name);
             }
+
             return op;
         }
     },
@@ -386,17 +401,13 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
         private String getMapKey(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue keyAlias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
-            return keyAlias.alias.name;
+            return AliasManager.getAliasName(new AliasArg(AliasPrefixType.GROUP_KEYS, stepIdx));
         }
 
         private String getMapValue(TraversalMapStep step) {
             Step groupStep = getPreviousGroupStep(step);
             int stepIdx = TraversalHelper.stepIndex(groupStep, groupStep.getTraversal());
-            FfiAlias.ByValue valueAlias =
-                    AliasManager.getFfiAlias(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
-            return valueAlias.alias.name;
+            return AliasManager.getAliasName(new AliasArg(AliasPrefixType.GROUP_VALUES, stepIdx));
         }
 
         private Step getPreviousGroupStep(Step step) {
@@ -615,6 +626,26 @@ public enum StepTransformFactory implements Function<Step, InterOpBase> {
             projectOp.setExprWithAlias(
                     new OpArg(Collections.singletonList(Pair.with(expr, ArgUtils.asNoneAlias()))));
             return projectOp;
+        }
+    },
+
+    COIN_STEP {
+        @Override
+        public InterOpBase apply(Step step) {
+            CoinStep coinStep = (CoinStep) step;
+            double probability = Utils.getFieldValue(CoinStep.class, coinStep, "probability");
+            SampleOp sampleOp =
+                    new SampleOp(
+                            SampleOp.RatioType.create(probability),
+                            getSeed(coinStep),
+                            ArgUtils.asNoneVar());
+            return sampleOp;
+        }
+
+        private long getSeed(CoinStep step) {
+            Random random = Utils.getFieldValue(CoinStep.class, step, "random");
+            AtomicLong seed = Utils.getFieldValue(Random.class, random, "seed");
+            return seed.get();
         }
     };
 

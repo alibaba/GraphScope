@@ -58,6 +58,9 @@ enum OpTypePb {
 
   PREPARE_DATA_LOAD = 13;
   COMMIT_DATA_LOAD = 14;
+
+  CLEAR_VERTEX_PROPERTIES = 15;
+  CLEAR_EDGE_PROPERTIES = 16;
 }
 
 message VertexIdPb {
@@ -81,6 +84,7 @@ message DataOperationPb {
   // One of [LabelIdPb, EdgeLocation]
   bytes locationBlob = 2;
   map<int32, gs.rpc.graph.PropertyValuePb> props = 3;
+  repeated int32 propIds = 4;
 }
 
 message KindOperationPb {
@@ -175,4 +179,48 @@ message CommitDataLoadPb {
   int64 tableIdx = 2;
   string path = 3;
   int32 partitionId = 4;
+}
+
+message GetStoreStateRequest {
+
+}
+
+message PartitionStatePb {
+    // number of bytes
+    int64 totalSpace = 1;
+    int64 usableSpace = 2;
+}
+
+message GetStoreStateResponse {
+    map<int32, PartitionStatePb> partitionStates = 1;
+}
+
+message IngestDataRequest {
+  string dataPath = 1;
+  map<string, string> config = 2;
+}
+
+message IngestDataResponse {
+}
+
+message ClearIngestRequest {
+  string dataPath = 1;
+}
+
+message ClearIngestResponse {
+  bool success = 1;
+}
+
+message CompactDBRequest {
+}
+
+message CompactDBResponse {
+  bool success = 1;
+}
+
+message ReopenSecondaryRequest {
+}
+
+message ReopenSecondaryResponse {
+  bool success = 1;
 }

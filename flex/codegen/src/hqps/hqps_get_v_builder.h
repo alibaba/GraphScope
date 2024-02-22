@@ -23,10 +23,10 @@ limitations under the License.
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/pb_parser/name_id_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 #include <boost/format.hpp>
 
@@ -40,7 +40,7 @@ static constexpr const char* GET_V_NO_FILTER_TEMPLATE_STR =
     "auto %4% = Engine::template GetV<%5%,%6%>(%7%, std::move(%8%), "
     "std::move(%1%));\n";
 static constexpr const char* GET_V_FILTER_TEMPLATE_STR =
-    "auto %1% = gs::make_filter(%2%(%3%), %4%);\n"
+    "auto %1% = gs::make_filter(%2%(%3%) %4%);\n"
     "auto %5% = make_getv_opt(%6%, %7%, std::move(%1%));\n"
     "auto %8% = Engine::template GetV<%9%,%10%>(%11%, std::move(%12%), "
     "std::move(%5%));\n";
@@ -136,7 +136,7 @@ class GetVOpBuilder {
       auto& expr_oprs = expr.operators();
       expr_builder.AddAllExprOpr(expr_oprs);
       expr_builder.set_return_type(common::DataType::BOOLEAN);
-      common::DataType unused_expr_ret_type;
+      std::vector<common::DataType> unused_expr_ret_type;
       if (!expr_builder.empty()) {
         std::tie(expr_name_, expr_call_param_, tag_propertys_, expr_code_,
                  unused_expr_ret_type) = expr_builder.Build();
@@ -176,7 +176,7 @@ class GetVOpBuilder {
       std::string selectors_str;
       {
         std::stringstream ss;
-        for (int i = 0; i < expr_call_param_.size(); ++i) {
+        for (size_t i = 0; i < expr_call_param_.size(); ++i) {
           ss << expr_call_param_[i].var_name;
           if (i != expr_call_param_.size() - 1) {
             ss << ", ";
@@ -186,7 +186,10 @@ class GetVOpBuilder {
       }
       {
         std::stringstream ss;
-        for (int i = 0; i < tag_propertys_.size(); ++i) {
+        if (tag_propertys_.size() > 0) {
+          ss << ", ";
+        }
+        for (size_t i = 0; i < tag_propertys_.size(); ++i) {
           ss << tag_propertys_[i].second;
           if (i != tag_propertys_.size() - 1) {
             ss << ", ";

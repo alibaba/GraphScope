@@ -16,16 +16,19 @@
 
 package com.alibaba.graphscope.cypher.executor;
 
-import com.alibaba.graphscope.common.antlr4.Antlr4Parser;
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.client.type.ExecutionRequest;
+import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
-import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.gaia.proto.IrResult;
+import com.google.common.base.Preconditions;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.neo4j.fabric.config.FabricConfig;
 import org.neo4j.fabric.eval.CatalogManager;
 import org.neo4j.fabric.eval.UseEvaluation;
@@ -41,6 +44,7 @@ import org.neo4j.values.virtual.MapValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.Executor;
 
 public class GraphQueryExecutor extends FabricExecutor {
@@ -49,12 +53,12 @@ public class GraphQueryExecutor extends FabricExecutor {
             "CALL dbms.routing.getRoutingTable($routingContext, $databaseName)";
     private static String PING_STATEMENT = "CALL db.ping()";
     private final Configs graphConfig;
-    private final Antlr4Parser antlr4Parser;
     private final IrMetaQueryCallback metaQueryCallback;
     private final ExecutionClient client;
 
-    private final GraphPlanner graphPlanner;
+    private final QueryIdGenerator idGenerator;
     private final FabricConfig fabricConfig;
+    private final QueryCache queryCache;
 
     public GraphQueryExecutor(
             FabricConfig config,
@@ -65,10 +69,10 @@ public class GraphQueryExecutor extends FabricExecutor {
             FabricStatementLifecycles statementLifecycles,
             Executor fabricWorkerExecutor,
             Configs graphConfig,
-            Antlr4Parser antlr4Parser,
-            GraphPlanner graphPlanner,
+            QueryIdGenerator idGenerator,
             IrMetaQueryCallback metaQueryCallback,
-            ExecutionClient client) {
+            ExecutionClient client,
+            QueryCache queryCache) {
         super(
                 config,
                 planner,
@@ -79,10 +83,10 @@ public class GraphQueryExecutor extends FabricExecutor {
                 fabricWorkerExecutor);
         this.fabricConfig = config;
         this.graphConfig = graphConfig;
-        this.antlr4Parser = antlr4Parser;
-        this.graphPlanner = graphPlanner;
+        this.idGenerator = idGenerator;
         this.metaQueryCallback = metaQueryCallback;
         this.client = client;
+        this.queryCache = queryCache;
     }
 
     /**
@@ -105,28 +109,61 @@ public class GraphQueryExecutor extends FabricExecutor {
                 return super.run(fabricTransaction, statement, parameters);
             }
             irMeta = metaQueryCallback.beforeExec();
-            ParseTree parseTree = antlr4Parser.parse(statement);
-            GraphPlanner.PlannerInstance instance = graphPlanner.instance(parseTree, irMeta);
-            GraphPlanner.Summary planSummary = instance.plan();
-            try (PhysicalBuilder physicalBuilder = planSummary.getPhysicalBuilder()) {
-                logger.info(
-                        "cypher query \"{}\", job conf name \"{}\", logical plan {}, physical plan"
-                                + " {}",
-                        statement,
-                        planSummary.getName(),
-                        planSummary.getLogicalPlan().explain(),
-                        physicalBuilder.explain());
-                if (planSummary.getLogicalPlan().isReturnEmpty()) {
-                    return StatementResults.initial();
-                }
-                QuerySubject querySubject = new QuerySubject.BasicQuerySubject();
-                QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
-                StatementResults.SubscribableExecution execution =
-                        new GraphPlanExecution(this.client, planSummary, timeoutConfig);
-                metaQueryCallback.afterExec(irMeta);
-                StatementResult result = StatementResults.connectVia(execution, querySubject);
-                return result;
+            QueryCache.Key cacheKey = queryCache.createKey(statement, irMeta);
+            QueryCache.Value cacheValue = queryCache.get(cacheKey);
+            Preconditions.checkArgument(
+                    cacheValue != null,
+                    "value should have been loaded automatically in query cache");
+            long jobId = idGenerator.generateId();
+            String jobName = idGenerator.generateName(jobId);
+            GraphPlanner.Summary planSummary =
+                    new GraphPlanner.Summary(
+                            cacheValue.summary.getLogicalPlan(),
+                            cacheValue.summary.getPhysicalPlan());
+            logger.debug(
+                    "cypher query \"{}\", job conf name \"{}\", calcite logical plan {}, hash id"
+                            + " {}",
+                    statement,
+                    jobName,
+                    planSummary.getLogicalPlan().explain(),
+                    cacheKey.hashCode());
+            if (planSummary.getLogicalPlan().isReturnEmpty()) {
+                return StatementResults.initial();
             }
+            logger.info(
+                    "cypher query \"{}\", job conf name \"{}\", ir core logical plan {}",
+                    statement,
+                    jobName,
+                    planSummary.getPhysicalPlan().explain());
+            StatementResults.SubscribableExecution execution;
+            if (cacheValue.result != null && cacheValue.result.isCompleted) {
+                execution =
+                        new AbstractPlanExecution(planSummary) {
+                            @Override
+                            protected void execute(ExecutionResponseListener listener) {
+                                List<IrResult.Results> records = cacheValue.result.records;
+                                records.forEach(k -> listener.onNext(k.getRecord()));
+                                listener.onCompleted();
+                            }
+                        };
+            } else {
+                execution =
+                        new AbstractPlanExecution(planSummary) {
+                            @Override
+                            protected void execute(ExecutionResponseListener listener)
+                                    throws Exception {
+                                ExecutionRequest request =
+                                        new ExecutionRequest(
+                                                jobId,
+                                                jobName,
+                                                planSummary.getLogicalPlan(),
+                                                planSummary.getPhysicalPlan());
+                                QueryTimeoutConfig timeoutConfig = getQueryTimeoutConfig();
+                                client.submit(request, listener, timeoutConfig);
+                            }
+                        };
+            }
+            return StatementResults.connectVia(execution, new QuerySubject.BasicQuerySubject());
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

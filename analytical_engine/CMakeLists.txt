@@ -235,23 +235,21 @@ endif ()
 find_package(libgrapelite REQUIRED)
 include_directories(${LIBGRAPELITE_INCLUDE_DIRS})
 
+if (NETWORKX)
+    find_package(RapidJSON REQUIRED)
+    if (DEFINED RapidJSON_INCLUDE_DIRS)  # rapidjson > 1.1.0
+        include_directories(${RapidJSON_INCLUDE_DIRS})
+    else ()  # rapidjson <= 1.1.0
+        include_directories(${RAPIDJSON_INCLUDE_DIRS})
+    endif ()
+endif ()
+
 find_package(Protobuf CONFIG QUIET)
 if (NOT Protobuf_FOUND)
     find_package(Protobuf REQUIRED)
 endif()
 include_directories(${Protobuf_INCLUDE_DIRS})
 
-find_package(gRPC QUIET)
-if(gRPC_FOUND)
-    set(GRPC_LIBRARIES gRPC::gpr gRPC::grpc gRPC::grpc++)
-    get_target_property(GRPC_CPP_PLUGIN gRPC::grpc_cpp_plugin LOCATION)
-    get_target_property(GRPC_INCLUDE_DIR gRPC::grpc INTERFACE_INCLUDE_DIRECTORIES)
-else()
-    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGRPC.cmake)
-    set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
-endif()
-
-# Make sure FindArrow is behind FindGRPC to address the "'c-ares::cares_shared' target already exists" error.
 find_package(Arrow QUIET)
 if(Arrow_FOUND)
     set(ARROW_INCLUDE_DIR)
@@ -266,6 +264,16 @@ else()
     if(NOT ARROW_FOUND)
         message(FATAL_ERROR "apache-arrow is required, please install it and retry")
     endif()
+endif()
+
+find_package(gRPC QUIET)
+if(gRPC_FOUND)
+    set(GRPC_LIBRARIES gRPC::gpr gRPC::grpc gRPC::grpc++)
+    get_target_property(GRPC_CPP_PLUGIN gRPC::grpc_cpp_plugin LOCATION)
+    get_target_property(GRPC_INCLUDE_DIR gRPC::grpc INTERFACE_INCLUDE_DIRECTORIES)
+else()
+    include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGRPC.cmake)
+    set(GRPC_LIBRARIES ${GPR_LIBRARY} ${GRPC_LIBRARY} ${GRPC_GRPC++_LIBRARY})
 endif()
 
 # find vineyard after arrow to avoid duplicate target names
@@ -344,7 +352,7 @@ if (${LIBUNWIND_FOUND})
     target_link_libraries(grape_engine PRIVATE ${LIBUNWIND_LIBRARIES})
 endif ()
 
-# An executable to work around for graphx pregel.
+# An executable workaround for graphx pregel.
 if (ENABLE_JAVA_SDK)
     add_executable(graphx_runner core/java/graphx_runner.cc core/java/javasdk.cc)
     target_include_directories(graphx_runner PRIVATE core utils apps)
@@ -494,7 +502,7 @@ if(ENABLE_JAVA_SDK)
     set(GAE_JAVA_RUNTIME_JAR "${GAE_JAVA_RUNTIME_DIR}/target/grape-runtime-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GRAPHX_JAR "${GAE_JAVA_DIR}/grape-graphx/target/grape-graphx-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
     set(GAE_JAVA_GIRAPH_JAR "${GAE_JAVA_DIR}/grape-giraph/target/grape-giraph-${GRAPHSCOPE_ANALYTICAL_JAR_VERSION}-shaded.jar")
-    # condiationally set grape-jni's name according to platform
+    # conditionally set grape-jni's name according to platform
     if (APPLE)
         set(GAE_JAVA_JNI_LIB "${GAE_JAVA_DIR}/grape-runtime/target/native/libgrape-jni.dylib")
     else ()

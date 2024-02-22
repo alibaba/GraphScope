@@ -33,19 +33,32 @@ if (GLOG_FOUND)
     set(CMAKE_REQUIRED_LIBRARIES "${CMAKE_REQUIRED_LIBRARIES} ${GLOG_LIBRARIES}")
 endif ()
 
+#find arrow----------------------------------------------------------------------
+include("../../../../flex/cmake/FindArrow.cmake")
+if (NOT ARROW_FOUND)
+    message(FATAL_ERROR "arrow not found, please install the arrow library")
+else ()
+    include_directories(SYSTEM ${ARROW_INCLUDE_DIRS})
+    if (TARGET arrow_shared)
+        set(ARROW_SHARED_LIB arrow_shared)
+    endif()
+    if (TARGET arrow_static)
+        set(ARROW_STATIC_LIB arrow_static)
+    endif()
+endif ()
+
+# include nlohmann json
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/nlohmann-json/single_include)
+# include odps cpp sdk
+include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/odps/include/)
+
 find_package(yaml-cpp REQUIRED)
 include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
-
-#set(yaml-cpp_INCLUDE_DIRS "/usr/local/Cellar/yaml-cpp/0.7.0/include")
-#include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
-#set(YAML_CPP_LIBRARIES "/usr/local/Cellar/yaml-cpp/0.7.0/lib/libyaml-cpp.0.7.0.dylib")
-
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../..)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../..)
-message(STATUS "${CMAKE_CURRENT_SOURCE_DIR}")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../storages/rt_mutable_graph)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../../../utils/property)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -57,13 +70,18 @@ add_custom_target(grin_clformat
         COMMENT "Running clang-format."
         VERBATIM)
 
-file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "../../../utils/property/*.cc" "../../../storages/rt_mutable_graph/*.cc")
+file(GLOB SOURCES "src/*.cc" "src/topology/*.cc" "src/property/*.cc" "src/index/*.cc" "src/common/*.cc" "../../../utils/property/*.cc" "../../../utils/*.cc"
+                  "../../../storages/rt_mutable_graph/*.cc" "../../../storages/rt_mutable_graph/loader/*.cc")
 add_library(flex_grin SHARED ${SOURCES})
 target_link_libraries(flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS}  ${YAML_CPP_LIBRARIES})
-
+if (ARROW_SHARED_LIB)
+        target_link_libraries(flex_grin ${ARROW_SHARED_LIB})
+else()
+        target_link_libraries(flex_grin ${ARROW_STATIC_LIB})
+endif()
 
 add_executable(run_grin_test test/test.c)
 
 target_include_directories(run_grin_test PRIVATE ${LIBGRAPELITE_INCLUDE_DIRS}/grape/analytical_apps fragment)
 target_link_libraries(run_grin_test flex_grin ${LIBGRAPELITE_LIBRARIES} ${GFLAGS_LIBRARIES} ${CMAKE_DL_LIBS})
-target_link_libraries(run_grin_test)
+

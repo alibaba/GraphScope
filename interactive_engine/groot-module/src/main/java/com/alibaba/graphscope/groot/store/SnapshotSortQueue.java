@@ -34,15 +34,15 @@ public class SnapshotSortQueue {
 
     private static final Logger logger = LoggerFactory.getLogger(SnapshotSortQueue.class);
 
-    private long queueWaitMs;
-    private int queueCount;
+    private final long queueWaitMs;
+    private final int queueCount;
 
-    private List<BlockingQueue<StoreDataBatch>> innerQueues;
-    private List<StoreDataBatch> queueHeads;
+    private final List<BlockingQueue<StoreDataBatch>> innerQueues;
+    private final List<StoreDataBatch> queueHeads;
 
     private int currentPollQueueIdx;
     private long currentPollSnapshotId;
-    private AtomicInteger size;
+    private final AtomicInteger size;
 
     public SnapshotSortQueue(Configs configs, MetaService metaService) {
         this.currentPollSnapshotId = -1L;
@@ -88,25 +88,22 @@ public class SnapshotSortQueue {
                     }
                     this.queueHeads.set(i, entry);
                 }
-                long entrySnapshotId = entry.getSnapshotId();
-                if (entrySnapshotId < minSnapshotId) {
-                    minSnapshotId = entrySnapshotId;
-                }
+                minSnapshotId = Math.min(minSnapshotId, entry.getSnapshotId());
             }
             this.currentPollSnapshotId = minSnapshotId;
-            logger.info("currentPollSnapshotId initialize to [" + this.currentPollSnapshotId + "]");
+            logger.info("currentPollSnapshotId initialize to [{}]", currentPollSnapshotId);
         }
         while (true) {
             StoreDataBatch entry = this.queueHeads.get(this.currentPollQueueIdx);
             this.queueHeads.set(this.currentPollQueueIdx, null);
             if (entry == null) {
                 entry =
-                        this.innerQueues
-                                .get(this.currentPollQueueIdx)
-                                .poll(this.queueWaitMs, TimeUnit.MILLISECONDS);
-                if (entry == null) {
-                    return null;
-                }
+                        innerQueues
+                                .get(currentPollQueueIdx)
+                                .poll(queueWaitMs, TimeUnit.MILLISECONDS);
+            }
+            if (entry == null) {
+                return null;
             }
 
             long snapshotId = entry.getSnapshotId();
@@ -123,13 +120,11 @@ public class SnapshotSortQueue {
                 }
             } else {
                 logger.warn(
-                        "Illegal entry polled from queue ["
-                                + this.currentPollQueueIdx
-                                + "]. entrySnapshotId ["
-                                + snapshotId
-                                + "] < currentSnapshotId ["
-                                + this.currentPollSnapshotId
-                                + "]. Ignored entry.");
+                        "Illegal entry polled from queue [{}]. entrySnapshotId [{}] <"
+                                + " currentSnapshotId [{}]. Ignored entry",
+                        currentPollQueueIdx,
+                        snapshotId,
+                        currentPollSnapshotId);
             }
         }
     }

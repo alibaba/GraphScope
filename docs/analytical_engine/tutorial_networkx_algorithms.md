@@ -1,4 +1,4 @@
-# Tutorial: Graph Algorithms with NetowrkX APIs
+# Tutorial: Graph Algorithms with NetworkX APIs
 
 In the [previous tutorial](https://graphscope.io/docs/latest/analytical_engine/tutorial_networkx_operations.html), we have introduced how to manipulate graph data with NetworkX APIs. In this tutorial, we will show how to use GraphScope to perform graph analysis like Networkx. 
 
@@ -119,7 +119,7 @@ Download dataset if it is not in environment:
 wget https://raw.githubusercontent.com/GraphScope/gstest/master/twitter.e -P /tmp
 ```
 
-Then load dataset both in GraphScope and NetwrokX.
+Then load dataset both in GraphScope and NetworkX.
 
 ```python
 import os

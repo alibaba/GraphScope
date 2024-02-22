@@ -27,14 +27,15 @@
 #include <vector>
 
 #include "flex/engines/hqps_db/core/params.h"
-
 #include "flex/storages/rt_mutable_graph/types.h"
 #include "flex/utils/property/column.h"
+#include "flex/utils/property/types.h"
+
+#include "arrow/api.h"
 
 namespace gs {
 
 // demangle a c++ variable's class name
-
 template <typename T>
 std::string demangle(const T& t) {
   int status;
@@ -197,6 +198,18 @@ bool operator>(const WithProxy<T>& lhs, const std::array<T, N>& rhs) {
   return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_);
 }
 
+template <size_t N, typename std::enable_if<(N > 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return rhs.end() != std::find(rhs.begin(), rhs.end(), lhs.t_.label_id);
+}
+
+template <size_t N, typename std::enable_if<(N == 0)>::type* = nullptr>
+bool operator>(const WithProxy<LabelKey>& lhs,
+               const std::array<int64_t, N>& rhs) {
+  return false;
+}
+
 template <
     typename T, size_t N,
     typename std::enable_if<std::is_pod_v<T> && (N == 0)>::type* = nullptr>
@@ -345,7 +358,7 @@ inline std::vector<offset_t> merge_union_offset(std::vector<offset_t>& a,
   std::vector<offset_t> res;
   res.reserve(a.size());
   res[0] = a[0] + b[0];
-  for (auto i = 1; i < a.size(); ++i) {
+  for (size_t i = 1; i < a.size(); ++i) {
     res[i] = res[i - 1] + a[i] - a[i - 1] + b[i] - b[i - 1];
   }
   return res;
@@ -354,16 +367,37 @@ inline std::vector<offset_t> merge_union_offset(std::vector<offset_t>& a,
 inline auto make_offset_vector(size_t m, size_t n) {
   std::vector<std::vector<size_t>> offsets;
   //[0,m)
-  for (auto i = 0; i < m; ++i) {
+  for (size_t i = 0; i < m; ++i) {
     // [0, n]
     std::vector<offset_t> cur(n + 1, 0);
-    for (auto j = 0; j <= n; ++j) {
+    for (size_t j = 0; j <= n; ++j) {
       cur[j] = j;
     }
     offsets.emplace_back(std::move(cur));
   }
   return offsets;
 }
+
+template <int I, int... Is>
+struct FirstElement {
+  static constexpr int value = I;
+};
+
+// Create a tuple of const references to the elements of a tuple.
+template <typename... Args>
+auto make_tuple_of_const_refs(const std::tuple<Args...>& t) {
+  return std::apply(
+      [](const Args&... args) { return std::make_tuple(std::cref(args)...); },
+      t);
+}
+
+template <typename T>
+struct ConstRefRemoveHelper;
+
+template <typename... T>
+struct ConstRefRemoveHelper<std::tuple<T...>> {
+  using type = std::tuple<std::remove_const_t<std::remove_reference_t<T>>...>;
+};
 
 // first n ele in tuple type
 
@@ -414,6 +448,16 @@ constexpr auto tuple_slice(T&& t) {
                 "slice index out of bounds");
   return tuple_slice_impl<l>(std::forward<T>(t),
                              std::make_index_sequence<r - l>{});
+}
+
+// [l, tuple_size - 1]
+template <size_t l, typename T>
+constexpr auto tuple_slice(T&& t) {
+  static_assert(std::tuple_size<std::decay_t<T>>::value > l,
+                "slice index out of bounds");
+  return tuple_slice_impl<l>(
+      std::forward<T>(t),
+      std::make_index_sequence<std::tuple_size<std::decay_t<T>>::value - l>{});
 }
 
 template <int Is, typename... T,
@@ -470,16 +514,16 @@ auto transform_tuple(const std::tuple<T...>&& tuple, FUNC_T&& func) {
                               std::make_index_sequence<N>());
 }
 
-template <typename FUNC, typename... T>
-bool apply_on_tuple(const FUNC& func, const std::tuple<T...>& tuple) {
-  return apply_on_tuple_impl(func, tuple,
-                             std::make_index_sequence<sizeof...(T)>());
-}
-
 template <typename FUNC, typename... T, size_t... Is>
 bool apply_on_tuple_impl(const FUNC& func, const std::tuple<T...>& tuple,
                          std::index_sequence<Is...>) {
   return func(std::get<Is>(tuple)...);
+}
+
+template <typename FUNC, typename... T>
+bool apply_on_tuple(const FUNC& func, const std::tuple<T...>& tuple) {
+  return apply_on_tuple_impl(func, tuple,
+                             std::make_index_sequence<sizeof...(T)>());
 }
 
 template <typename T, size_t N, typename FUNC_T, size_t... Is,
@@ -586,6 +630,14 @@ auto make_getter_tuple(label_t label, std::tuple<ColMetas...>&& tuple,
   return std::make_tuple(std::get<Is>(tuple).CreateGetter(label)...);
 }
 
+template <typename GRAPH, typename T>
+struct GetAdjListArrayT;
+
+template <typename GRAPH, typename... T>
+struct GetAdjListArrayT<GRAPH, std::tuple<T...>> {
+  using type = typename GRAPH::template adj_list_array_t<T...>;
+};
+
 template <typename T>
 using ValueTypeOf = typename T::value_type;
 
@@ -620,7 +672,7 @@ struct ColumnAccessorImpl;
 template <std::size_t i>
 struct ColumnAccessorImpl<i> {};
 
-// Recurvise
+// Recursive
 template <std::size_t i, typename FIRST, typename... OTHER>
 struct ColumnAccessorImpl<i, FIRST, OTHER...>
     : public SingleColumn<i, FIRST>,
@@ -671,6 +723,16 @@ enum class EntryType {
   kProjectedEdgeEntry = 5,
 };
 
+template <typename T, size_t N>
+std::vector<T> array_to_vec(const std::array<T, N>& array) {
+  std::vector<T> res;
+  res.reserve(N);
+  for (size_t i = 0; i < N; ++i) {
+    res.emplace_back(array[i]);
+  }
+  return res;
+}
+
 template <typename PRIORITY_QUEUE_T>
 static typename PRIORITY_QUEUE_T::container_type priority_queue_to_vec(
     PRIORITY_QUEUE_T& pq, bool reversed = false) {
@@ -695,7 +757,7 @@ struct to_string_impl<std::vector<T>> {
     std::ostringstream ss;
     //    ss << "Vec[";
     if (vec.size() > 0) {
-      for (int i = 0; i < vec.size() - 1; ++i) {
+      for (size_t i = 0; i < vec.size() - 1; ++i) {
         ss << to_string_impl<T>::to_string(vec[i]) << ",";
       }
       ss << to_string_impl<T>::to_string(vec[vec.size() - 1]);
@@ -712,6 +774,20 @@ struct to_string_impl<std::array<T, N>> {
     for (auto i : empty) {
       ss << i << ",";
     }
+    return ss.str();
+  }
+};
+
+template <typename T, size_t M, size_t N>
+struct to_string_impl<std::array<std::array<T, N>, M>> {
+  static inline std::string to_string(
+      const std::array<std::array<T, N>, M>& empty) {
+    std::stringstream ss;
+    ss << "[";
+    for (auto i : empty) {
+      ss << to_string_impl<std::array<T, N>>::to_string(i) << ",";
+    }
+    ss << "]";
     return ss.str();
   }
 };
@@ -810,6 +886,13 @@ template <>
 struct to_string_impl<std::string> {
   static inline std::string to_string(const std::string& empty) {
     return empty;
+  }
+};
+
+template <>
+struct to_string_impl<LabelKey> {
+  static inline std::string to_string(const LabelKey& label_key) {
+    return std::to_string(label_key.label_id);
   }
 };
 
@@ -937,23 +1020,14 @@ struct Edge<VID_T, grape::EmptyType> {
   }
 };
 
+template <typename VID_T>
+using DefaultEdge = Edge<VID_T, grape::EmptyType>;
+
 struct QPSError {
   std::string message;
   explicit QPSError(std::string msg) : message(std::move(msg)) {}
 
   std::string GetMessage() { return message; }
-};
-
-class QPSException : public std::exception {
- public:
-  explicit QPSException(std::string&& error_msg)
-      : std::exception(), _err_msg(error_msg) {}
-  ~QPSException() override = default;
-
-  const char* what() const noexcept override { return _err_msg.c_str(); }
-
- private:
-  std::string _err_msg;
 };
 
 template <typename T>

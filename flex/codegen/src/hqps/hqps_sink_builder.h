@@ -24,14 +24,14 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
 static constexpr const char* SINK_OP_TEMPLATE_STR =
-    "return Engine::Sink(%1%, std::array<int32_t, %2%>{%3%});";
+    "return Engine::Sink(%1%, %2%, std::array<int32_t, %3%>{%4%});";
 class SinkOpBuilder {
  public:
   SinkOpBuilder(BuildingContext& ctx) : ctx_(ctx) {}
@@ -46,7 +46,7 @@ class SinkOpBuilder {
     std::string tag_ids_str;
     {
       std::stringstream ss;
-      for (auto i = 0; i < tag_ind_2_tag_ids.size(); ++i) {
+      for (size_t i = 0; i < tag_ind_2_tag_ids.size(); ++i) {
         if (i == tag_ind_2_tag_ids.size() - 1) {
           ss << tag_ind_2_tag_ids[i];
         } else {
@@ -56,7 +56,8 @@ class SinkOpBuilder {
       tag_ids_str = ss.str();
     }
     boost::format formater(SINK_OP_TEMPLATE_STR);
-    formater % prev_ctx_name % tag_ind_2_tag_ids.size() % tag_ids_str;
+    formater % ctx_.GraphVar() % prev_ctx_name % tag_ind_2_tag_ids.size() %
+        tag_ids_str;
     return formater.str();
   }
 

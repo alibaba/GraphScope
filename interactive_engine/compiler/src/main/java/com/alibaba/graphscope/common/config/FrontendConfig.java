@@ -24,7 +24,7 @@ public class FrontendConfig {
             Config.intConfig("gremlin.server.port", 8182);
 
     public static final Config<Boolean> NEO4J_BOLT_SERVER_DISABLED =
-            Config.boolConfig("neo4j.bolt.server.disabled", false);
+            Config.boolConfig("neo4j.bolt.server.disabled", true);
 
     public static final Config<Integer> NEO4J_BOLT_SERVER_PORT =
             Config.intConfig("neo4j.bolt.server.port", 7687);
@@ -39,4 +39,19 @@ public class FrontendConfig {
 
     public static final Config<Integer> FRONTEND_SERVER_NUM =
             Config.intConfig("frontend.server.num", 1);
+
+    public static final Config<String> CALCITE_DEFAULT_CHARSET =
+            Config.stringConfig("calcite.default.charset", "UTF-8");
+
+    public static final Config<Integer> QUERY_CACHE_SIZE =
+            Config.intConfig("query.cache.size", 100);
+
+    public static final Config<Integer> QUERY_PER_SECOND_LIMIT =
+            Config.intConfig("frontend.query.per.second.limit", 2147483647);
+
+    public static final Config<Boolean> GRAPH_TYPE_INFERENCE_ENABLED =
+            Config.boolConfig("graph.type.inference.enabled", true);
+
+    public static final Config<String> GREMLIN_SCRIPT_LANGUAGE_NAME =
+            Config.stringConfig("gremlin.script.language.name", "antlr_gremlin_traversal");
 }

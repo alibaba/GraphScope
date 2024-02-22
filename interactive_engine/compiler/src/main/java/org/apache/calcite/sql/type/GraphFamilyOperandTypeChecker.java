@@ -23,10 +23,12 @@ import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.*;
+import org.apache.calcite.sql.SqlCallBinding;
+import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.validate.implicit.TypeCoercion;
 import org.apache.calcite.util.Litmus;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -159,13 +161,18 @@ public class GraphFamilyOperandTypeChecker extends FamilyOperandTypeChecker {
             return true;
         }
 
-        if (!family.getTypeNames().contains(typeName)) {
+        if (!getAllowedTypeNames(family, iFormalOperand).contains(typeName)) {
             if (throwOnFailure) {
                 throw callBinding.newValidationSignatureError();
             }
             return false;
         }
         return true;
+    }
+
+    protected Collection<SqlTypeName> getAllowedTypeNames(
+            SqlTypeFamily family, int iFormalOperand) {
+        return family.getTypeNames();
     }
 
     private boolean isNullLiteral(RexNode node) {

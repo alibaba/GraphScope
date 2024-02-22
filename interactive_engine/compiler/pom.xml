@@ -261,7 +261,10 @@
                     <excludes>
                         <exclude>**/IrGremlinTest.java</exclude>
                         <exclude>**/IrLdbcTest.java</exclude>
+                        <exclude>**/SimpleMatchTest.java</exclude>
                         <exclude>**/IrPatternTest.java</exclude>
+                        <exclude>**/MovieTest.java</exclude>
+                        <exclude>**/GraphAlgoTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

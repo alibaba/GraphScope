@@ -21,21 +21,14 @@ import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.OffsetSpec;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.time.*;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 
 public class KafkaLogReader implements LogReader {
@@ -43,82 +36,105 @@ public class KafkaLogReader implements LogReader {
     private static final Logger logger = LoggerFactory.getLogger(KafkaLogReader.class);
 
     private static final LogEntryDeserializer deSer = new LogEntryDeserializer();
-    private Consumer<LogEntry, LogEntry> consumer;
+    private final Consumer<LogEntry, LogEntry> consumer;
     private Iterator<ConsumerRecord<LogEntry, LogEntry>> iterator;
-    private long latestOffset;
+    private final long latest;
     private long nextReadOffset;
 
     public KafkaLogReader(
-            String servers, AdminClient adminClient, String topicName, int partitionId, long offset)
+            String servers,
+            AdminClient client,
+            String topicName,
+            int partitionId,
+            long offset,
+            long timestamp)
             throws IOException {
         Map<String, Object> kafkaConfigs = new HashMap<>();
         kafkaConfigs.put("bootstrap.servers", servers);
 
         TopicPartition partition = new TopicPartition(topicName, partitionId);
-        long earliestOffset;
+
+        long earliest = getOffset(client, partition, OffsetSpec.earliest());
+        latest = getOffset(client, partition, OffsetSpec.latest());
+
+        if (offset == -1 && timestamp == -1) { // Seek to end
+            offset = latest;
+        } else if (offset == -1) { // Get offset from timestamp
+            offset = getOffset(client, partition, OffsetSpec.forTimestamp(timestamp));
+        }
+        if (earliest > offset || offset > latest) {
+            throw new IllegalArgumentException(
+                    "invalid offset " + offset + ", hint: [" + earliest + ", " + latest + ")");
+        }
+        consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
+
+        consumer.assign(List.of(partition));
+        consumer.seek(partition, offset);
+        nextReadOffset = offset;
+        logger.info(
+                "reader created with offset [{}], offset range is [{}] ~ [{}]",
+                offset,
+                earliest,
+                latest);
+    }
+
+    private long getOffset(AdminClient client, TopicPartition partition, OffsetSpec spec)
+            throws IOException {
         try {
-            earliestOffset =
-                    adminClient
-                            .listOffsets(Collections.singletonMap(partition, OffsetSpec.earliest()))
-                            .partitionResult(partition)
-                            .get()
-                            .offset();
-            this.latestOffset =
-                    adminClient
-                            .listOffsets(Collections.singletonMap(partition, OffsetSpec.latest()))
-                            .partitionResult(partition)
-                            .get()
-                            .offset();
+            return client.listOffsets(Collections.singletonMap(partition, spec))
+                    .partitionResult(partition)
+                    .get()
+                    .offset();
         } catch (InterruptedException | ExecutionException e) {
             throw new IOException(e);
         }
-        if (earliestOffset > offset || offset > this.latestOffset) {
-            throw new IllegalArgumentException(
-                    "cannot read from ["
-                            + offset
-                            + "], earliest offset is ["
-                            + earliestOffset
-                            + "], latest offset is ["
-                            + this.latestOffset
-                            + "]");
-        }
-        this.consumer = new KafkaConsumer<>(kafkaConfigs, deSer, deSer);
-        this.consumer.assign(Arrays.asList(partition));
-        this.consumer.seek(partition, offset);
-        this.nextReadOffset = offset;
-        logger.info(
-                "reader created. kafka offset range is ["
-                        + earliestOffset
-                        + "] ~ ["
-                        + this.latestOffset
-                        + "]");
     }
 
     @Override
     public ReadLogEntry readNext() {
-        if (this.nextReadOffset == this.latestOffset) {
+        if (nextReadOffset == latest) {
             return null;
         }
-        while (this.iterator == null || !this.iterator.hasNext()) {
+        while (iterator == null || !iterator.hasNext()) {
             ConsumerRecords<LogEntry, LogEntry> consumerRecords =
-                    this.consumer.poll(Duration.ofMillis(100L));
+                    consumer.poll(Duration.ofMillis(100L));
             if (consumerRecords == null || consumerRecords.isEmpty()) {
-                logger.info(
-                        "polled nothing from Kafka. nextReadOffset is ["
-                                + this.nextReadOffset
-                                + "]");
+                logger.info("polled nothing from Kafka. nextReadOffset is [{}]", nextReadOffset);
                 continue;
             }
-            this.iterator = consumerRecords.iterator();
+            iterator = consumerRecords.iterator();
         }
         ConsumerRecord<LogEntry, LogEntry> record = iterator.next();
-        this.nextReadOffset = record.offset() + 1;
+        nextReadOffset = record.offset() + 1;
         LogEntry v = record.value();
         return new ReadLogEntry(record.offset(), v);
     }
 
     @Override
+    public ConsumerRecord<LogEntry, LogEntry> readNextRecord() {
+        if (nextReadOffset == latest) {
+            return null;
+        }
+        while (iterator == null || !iterator.hasNext()) {
+            ConsumerRecords<LogEntry, LogEntry> consumerRecords =
+                    consumer.poll(Duration.ofMillis(100L));
+            if (consumerRecords == null || consumerRecords.isEmpty()) {
+                logger.info("polled nothing from Kafka. nextReadOffset is [{}]", nextReadOffset);
+                continue;
+            }
+            iterator = consumerRecords.iterator();
+        }
+        ConsumerRecord<LogEntry, LogEntry> record = iterator.next();
+        nextReadOffset = record.offset() + 1;
+        return record;
+    }
+
+    public ConsumerRecords<LogEntry, LogEntry> getLatestUpdates() {
+        return consumer.poll(Duration.ofMillis(1000L));
+    }
+
+    @Override
     public void close() throws IOException {
-        this.consumer.close();
+        consumer.close();
     }
 }

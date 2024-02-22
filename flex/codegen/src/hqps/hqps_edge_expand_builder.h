@@ -26,14 +26,26 @@ limitations under the License.
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
 #include "flex/codegen/src/string_utils.h"
 
+#include "boost/format.hpp"
+
 // Expand to vertices with filter.
 static constexpr const char* EDGE_EXPAND_V_OPT_FILTER_TEMPLATE_STR =
     "auto %1% = gs::make_filter(%2%(%3%) %4%);\n"
     "auto %5% = gs::make_edge_expandv_opt(%6%, %7%, %8%, std::move(%1%));\n";
 
 // Expand to vertices with no filter.
-static constexpr const char* EDGE_EXPAND_V_OPT_NO_FILTERTEMPLATE_STR =
+static constexpr const char* EDGE_EXPAND_V_OPT_NO_FILTER_TEMPLATE_STR =
     "auto %1% = gs::make_edge_expandv_opt(%2%, %3%, %4%);\n";
+
+// This opt can only be used by both edge expande, with multiple edge triplet.
+static constexpr const char*
+    EDGE_EXPAND_E_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR =
+        "auto %1% = gs::make_edge_expand_multie_opt<%2%>(%3%, %4%, %5%);\n";
+
+// This opt can only be used by both edge expandv, with multiple edge triplet,
+static constexpr const char*
+    EDGE_EXPAND_V_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR =
+        "auto %1% = gs::make_edge_expand_multiv_opt(%2%, %3%);\n";
 
 // Expand to Edges with Filter.
 // propNames, direction, edge_label, vertex_label, filter
@@ -62,8 +74,146 @@ namespace gs {
 // create edge expand opt
 // the expression in query params are applied on edge.
 // extract the edge property from ir_data_type
+// Building for only one label.
+
+std::string make_edge_expand_e_func_template_str(
+    const std::vector<std::vector<std::string>>& edge_prop_types) {
+  std::stringstream ss;
+  ss << "label_id_t";
+  if (edge_prop_types.size() > 0) {
+    ss << ",";
+  }
+  // if empty type is given, use grape::EmptyType.
+  for (size_t i = 0; i < edge_prop_types.size(); ++i) {
+    ss << "std::tuple<";
+    if (edge_prop_types[i].size() == 0) {
+      ss << "grape::EmptyType";
+    } else {
+      for (size_t j = 0; j < edge_prop_types[i].size(); ++j) {
+        ss << edge_prop_types[i][j];
+        if (j != edge_prop_types[i].size() - 1) {
+          ss << ", ";
+        }
+      }
+    }
+    ss << ">";
+    if (i != edge_prop_types.size() - 1) {
+      ss << ", ";
+    }
+  }
+  return ss.str();
+}
+
+std::string edge_label_triplet_to_array_str(
+    const std::vector<std::vector<int32_t>>& edge_label_triplet) {
+  std::stringstream ss;
+  ss << "std::array<std::array<label_id_t, 3>, " << edge_label_triplet.size()
+     << ">{";
+  for (size_t i = 0; i < edge_label_triplet.size(); ++i) {
+    ss << "std::array<label_id_t, 3>{";
+    CHECK(edge_label_triplet[i].size() == 3);
+    for (size_t j = 0; j < edge_label_triplet[i].size(); ++j) {
+      ss << edge_label_triplet[i][j];
+      if (j != edge_label_triplet[i].size() - 1) {
+        ss << ", ";
+      }
+    }
+    ss << "}";
+    if (i != edge_label_triplet.size() - 1) {
+      ss << ", ";
+    }
+  }
+  ss << "}";
+  return ss.str();
+}
+
+std::string edge_label_triplet_to_vector_str(
+    const std::vector<std::vector<int32_t>>& edge_label_triplet) {
+  std::stringstream ss;
+  ss << "std::vector<std::array<label_id_t, 3>>{";
+  for (size_t i = 0; i < edge_label_triplet.size(); ++i) {
+    ss << "std::array<label_id_t, 3>{";
+    if (edge_label_triplet[i].size() != 3) {
+      throw std::runtime_error("edge label triplet size must be 3");
+    }
+    for (size_t j = 0; j < edge_label_triplet[i].size(); ++j) {
+      ss << edge_label_triplet[i][j];
+      if (j != edge_label_triplet[i].size() - 1) {
+        ss << ", ";
+      }
+    }
+    ss << "}";
+    if (i != edge_label_triplet.size() - 1) {
+      ss << ", ";
+    }
+  }
+  ss << "}";
+  return ss.str();
+}
+
+std::string make_prop_tuple_array(const std::vector<std::string>& prop_names,
+                                  const std::vector<std::string>& prop_types) {
+  std::stringstream ss;
+  static constexpr const char* PROP_TUPLE_ARRAY_TEMPLATE =
+      "PropTupleArrayT<std::tuple<%1%>>{%2%}";
+  // join prop_names with ,
+  std::string prop_names_str;
+  {
+    std::stringstream ss;
+    for (size_t i = 0; i < prop_names.size(); ++i) {
+      ss << add_quote(prop_names[i]);
+      if (i != prop_names.size() - 1) {
+        ss << ", ";
+      }
+    }
+    prop_names_str = ss.str();
+  }
+  // join prop_types with ,
+  std::string prop_types_str;
+  {
+    std::stringstream ss;
+    if (prop_types.size() == 0) {
+      ss << "grape::EmptyType";
+    } else {
+      for (size_t i = 0; i < prop_types.size(); ++i) {
+        if (prop_types[i].empty()) {
+          ss << "grape::EmptyType";
+        } else {
+          ss << prop_types[i];
+        }
+        if (i != prop_types.size() - 1) {
+          ss << ", ";
+        }
+      }
+    }
+    prop_types_str = ss.str();
+  }
+  boost::format formater(PROP_TUPLE_ARRAY_TEMPLATE);
+  formater % prop_types_str % prop_names_str;
+  return formater.str();
+}
+
+// for  properties of one label. construct a propTupleArray.
+std::string make_prop_tuple_array_tuple(
+    const std::vector<std::vector<std::string>>& prop_names,
+    const std::vector<std::vector<std::string>>& prop_types) {
+  std::stringstream ss;
+  ss << "std::tuple{";
+  CHECK(prop_names.size() == prop_types.size());
+  for (size_t i = 0; i < prop_names.size(); ++i) {
+    VLOG(10) << "prop_names: " << gs::to_string(prop_names[i])
+             << ", prop_types: " << gs::to_string(prop_types[i]);
+    ss << make_prop_tuple_array(prop_names[i], prop_types[i]);
+    if (i != prop_names.size() - 1) {
+      ss << ", ";
+    }
+  }
+  ss << "}";
+  return ss.str();
+}
+
 template <typename LabelT>
-static std::pair<std::string, std::string> BuildEdgeExpandOpt(
+static std::pair<std::string, std::string> BuildOneLabelEdgeExpandOpt(
     BuildingContext& ctx, const internal::Direction& direction,
     const algebra::QueryParams& params,
     const std::vector<LabelT>& dst_vertex_labels,
@@ -72,56 +222,65 @@ static std::pair<std::string, std::string> BuildEdgeExpandOpt(
   std::string expr_func_name;
   std::string expr_var_name = ctx.GetNextExprVarName();
   std::string opt_var_name = ctx.GetNextEdgeOptName();
-  std::string func_construct_params_str;
-  std::string property_selectors_str;
-  std::string edge_label_id_str;
-  std::string dst_label_ids_str;
-  std::string edge_prop_selectors_str;
-  std::string edge_expand_e_types_str;
+  std::string func_construct_params_str, property_selectors_str,
+      edge_label_id_str, dst_label_ids_str, edge_prop_selectors_str,
+      edge_expand_e_types_str;
   {
     std::vector<std::vector<std::string>> prop_names;
     std::vector<std::vector<std::string>> prop_types;
-    auto& ir_data_type = meta_data.type();
-    // do we nneed to extract prop name from data_type?
-    // for edge_expand_e, we need the type info, but for edge_expand_v, we
-    // don't cause grape_graph need the exact type info.
-    if (try_to_get_prop_names_and_types_from_ir_data_type(
-            ir_data_type, prop_names, prop_types)) {
-      CHECK(prop_names.size() == 1);
+    std::tie(prop_names, prop_types) =
+        parse_prop_names_and_prop_types_from_ir_data_type(meta_data.type());
+    // we only support one property.
+
+    if (prop_names.size() > 0) {
+      // check prop_names[0] is same with prop_names[1] and others
+      for (size_t i = 1; i < prop_names.size(); ++i) {
+        CHECK(prop_names[0] == prop_names[i]);
+      }
       auto& cur_prop_names = prop_names[0];
       auto& cur_prop_types = prop_types[0];
+
       CHECK(cur_prop_names.size() == cur_prop_types.size());
       {
         std::string type_names;
         {
           std::stringstream ss;
-          for (int i = 0; i < cur_prop_types.size(); ++i) {
-            ss << cur_prop_types[i];
+          for (size_t i = 0; i < cur_prop_types.size(); ++i) {
+            if (cur_prop_types[i].empty()) {
+              ss << "grape::EmptyType";
+            } else {
+              ss << cur_prop_types[i];
+            }
             if (i != cur_prop_types.size() - 1) {
               ss << ", ";
             }
           }
           edge_expand_e_types_str = ss.str();
+          if (edge_expand_e_types_str.empty()) {
+            edge_expand_e_types_str = "grape::EmptyType";
+          }
         }
         {
           std::stringstream ss;
-          for (int i = 0; i < cur_prop_names.size(); ++i) {
+          for (size_t i = 0; i < cur_prop_names.size(); ++i) {
             ss << add_quote(cur_prop_names[i]);
             if (i != cur_prop_names.size() - 1) {
               ss << ", ";
             }
           }
           type_names = ss.str();
+          if (type_names.empty()) {
+            type_names = "\"\"";
+          }
         }
         boost::format formater(PROP_NAME_ARRAY);
         formater % edge_expand_e_types_str % type_names;
         edge_prop_selectors_str = formater.str();
       }
     } else {
-      VLOG(10) << "No prop types found.";
+      VLOG(10) << "No property found for edge expand";
     }
   }
-
   // first check whether expand_opt contains expression.
   if (params.has_predicate()) {
     VLOG(10) << "Found expr in edge expand";
@@ -132,7 +291,7 @@ static std::pair<std::string, std::string> BuildEdgeExpandOpt(
     std::string expr_code;
     std::vector<codegen::ParamConst> func_call_param_const;
     std::vector<std::pair<int32_t, std::string>> expr_tag_props;
-    common::DataType unused_expr_ret_type;
+    std::vector<common::DataType> unused_expr_ret_type;
     std::tie(expr_func_name, func_call_param_const, expr_tag_props, expr_code,
              unused_expr_ret_type) = expr_builder.Build();
     VLOG(10) << "Found expr in edge_expand_opt:  " << expr_func_name;
@@ -141,7 +300,7 @@ static std::pair<std::string, std::string> BuildEdgeExpandOpt(
 
     {
       std::stringstream ss;
-      for (auto i = 0; i < func_call_param_const.size(); ++i) {
+      for (size_t i = 0; i < func_call_param_const.size(); ++i) {
         ss << func_call_param_const[i].var_name;
         if (i != func_call_param_const.size() - 1) {
           ss << ", ";
@@ -154,7 +313,7 @@ static std::pair<std::string, std::string> BuildEdgeExpandOpt(
       if (expr_tag_props.size() > 0) {
         ss << ",";
       }
-      for (int i = 0; i < expr_tag_props.size(); ++i) {
+      for (size_t i = 0; i < expr_tag_props.size(); ++i) {
         ss << expr_tag_props[i].second;
         if (i != expr_tag_props.size() - 1) {
           ss << ", ";
@@ -165,8 +324,6 @@ static std::pair<std::string, std::string> BuildEdgeExpandOpt(
   }
 
   {
-    auto& edge_table = params.tables();
-    CHECK(edge_table.size() == 1) << "edge table size should be 1";
     LabelT edge_label =
         try_get_label_from_name_or_id<LabelT>(params.tables()[0]);
     edge_label_id_str = ensure_label_id(edge_label);
@@ -207,10 +364,62 @@ static std::pair<std::string, std::string> BuildEdgeExpandOpt(
           dst_label_ids_str;
     } else {
       VLOG(10) << "Buliding EdgeExpandV without predicate";
-      formater = boost::format(EDGE_EXPAND_V_OPT_NO_FILTERTEMPLATE_STR);
+      formater = boost::format(EDGE_EXPAND_V_OPT_NO_FILTER_TEMPLATE_STR);
       formater % opt_var_name % gs::direction_pb_to_str(direction) %
           edge_label_id_str % dst_label_ids_str;
     }
+  }
+
+  return std::make_pair(opt_var_name, formater.str());
+}
+
+// Building edge expand opt with multiple edge triplet, no expression are
+// supported in query currently.
+static std::pair<std::string, std::string> BuildMultiLabelEdgeExpandOpt(
+    BuildingContext& ctx, const internal::Direction& direction,
+    const algebra::QueryParams& params,
+    const physical::EdgeExpand::ExpandOpt& expand_opt,
+    const physical::PhysicalOpr::MetaData& meta_data) {
+  std::string opt_var_name = ctx.GetNextEdgeOptName();
+  std::string func_construct_params_str, property_selectors_str,
+      edge_label_id_str, dst_label_ids_str, edge_prop_selectors_str,
+      edge_expand_e_types_str;
+
+  std::vector<std::vector<std::string>> prop_names;
+  std::vector<std::vector<std::string>> prop_types;
+  std::tie(prop_names, prop_types) =
+      parse_prop_names_and_prop_types_from_ir_data_type(meta_data.type());
+  CHECK(prop_names.size() == prop_types.size());
+
+  std::vector<std::vector<int32_t>> edge_label_triplet =
+      parse_edge_label_triplet_from_ir_data_type(meta_data.type());
+  CHECK(edge_label_triplet.size() == prop_names.size());
+  LOG(INFO) << "Find multiple edge triplet: " << edge_label_triplet.size();
+
+  auto func_template_str = make_edge_expand_e_func_template_str(prop_types);
+  auto edge_named_prop_array =
+      make_prop_tuple_array_tuple(prop_names, prop_types);
+
+  boost::format formater;
+  if (expand_opt ==
+      physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_EDGE) {
+    auto edge_triplet_2d_array =
+        edge_label_triplet_to_array_str(edge_label_triplet);
+    formater =
+        boost::format(EDGE_EXPAND_E_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR);
+    formater % opt_var_name % func_template_str %
+        gs::direction_pb_to_str(direction) % edge_triplet_2d_array %
+        edge_named_prop_array;
+  } else if (expand_opt ==
+             physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_VERTEX) {
+    auto edge_triplet_2d_vector =
+        edge_label_triplet_to_vector_str(edge_label_triplet);
+    formater =
+        boost::format(EDGE_EXPAND_V_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR);
+    formater % opt_var_name % gs::direction_pb_to_str(direction) %
+        edge_triplet_2d_vector;
+  } else {
+    throw std::runtime_error("Unknown expand opt");
   }
 
   return std::make_pair(opt_var_name, formater.str());
@@ -293,6 +502,7 @@ class EdgeExpandOpBuilder {
       for (auto ele_labe_type : graph_data_type) {
         auto& triplet = ele_labe_type.label();
         auto& dst_label = triplet.dst_label();
+        edge_labels_.emplace_back(triplet.label());
         if (direction_ == internal::Direction::kOut) {
           VLOG(10) << "got dst_label : " << dst_label.value();
           dst_vertex_labels_.emplace_back(dst_label.value());
@@ -300,9 +510,6 @@ class EdgeExpandOpBuilder {
           dst_vertex_labels_.emplace_back(triplet.src_label().value());
         } else {  // kBoth
           auto src = triplet.src_label().value();
-          auto dst = triplet.dst_label().value();
-          CHECK(src == dst) << "When expand with direction, both, src and dst "
-                               "label should be the same";
           dst_vertex_labels_.emplace_back(src);
         }
       }
@@ -326,9 +533,19 @@ class EdgeExpandOpBuilder {
 
   std::string Build() const {
     std::string opt_name, opt_code;
-    std::tie(opt_name, opt_code) =
-        BuildEdgeExpandOpt(ctx_, direction_, query_params_, dst_vertex_labels_,
-                           expand_opt_, meta_data_);
+    // if edge expand contains only one edge_triplet, generate the simple
+    // EdgeExpandOpt.
+    std::unordered_set<LabelT> edge_label_set(edge_labels_.begin(),
+                                              edge_labels_.end());
+    if (edge_label_set.size() == 1) {
+      LOG(INFO) << "Building simple edge expand opt, with only one edge label";
+      std::tie(opt_name, opt_code) = BuildOneLabelEdgeExpandOpt(
+          ctx_, direction_, query_params_, dst_vertex_labels_, expand_opt_,
+          meta_data_);
+    } else {
+      std::tie(opt_name, opt_code) = BuildMultiLabelEdgeExpandOpt(
+          ctx_, direction_, query_params_, expand_opt_, meta_data_);
+    }
 
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
@@ -354,6 +571,7 @@ class EdgeExpandOpBuilder {
   physical::EdgeExpand::ExpandOpt expand_opt_;
   internal::Direction direction_;
   std::vector<LabelT> dst_vertex_labels_;
+  std::vector<LabelT> edge_labels_;
   std::vector<LabelT> get_v_vertex_labels_;
   int32_t v_tag_;
   physical::PhysicalOpr::MetaData meta_data_;

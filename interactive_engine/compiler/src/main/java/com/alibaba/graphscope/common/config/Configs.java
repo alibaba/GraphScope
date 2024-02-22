@@ -16,16 +16,21 @@
 
 package com.alibaba.graphscope.common.config;
 
-import org.apache.commons.lang3.NotImplementedException;
+import com.alibaba.graphscope.common.utils.FileUtils;
 
-import java.io.File;
+import org.apache.calcite.plan.Context;
+import org.apache.commons.lang3.NotImplementedException;
+import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
-public class Configs {
-    private Properties properties;
+public class Configs implements Context {
+    protected Properties properties;
 
     public Configs(String file) throws IOException {
         this(file, FileLoadType.RELATIVE_PATH);
@@ -35,22 +40,11 @@ public class Configs {
         properties = new Properties();
         switch (loadType) {
             case RELATIVE_PATH:
-                properties.load(new FileInputStream(new File(file)));
+                properties.load(new FileInputStream(file));
                 break;
             default:
                 throw new NotImplementedException("unimplemented load type " + loadType);
         }
-        // replace with the value from system property
-        properties
-                .keySet()
-                .forEach(
-                        k -> {
-                            String value = System.getProperty((String) k);
-                            String trimValue;
-                            if (value != null && !(trimValue = value.trim()).isEmpty()) {
-                                properties.setProperty((String) k, trimValue);
-                            }
-                        });
     }
 
     public Configs(Map<String, String> configs) {
@@ -64,15 +58,53 @@ public class Configs {
     }
 
     public String get(String name) {
-        return this.properties.getProperty(name);
+        String value;
+        if ((value = System.getenv(name)) != null) {
+            return value;
+        } else if ((value = System.getProperty(name)) != null) {
+            return value;
+        } else {
+            return this.properties.getProperty(name);
+        }
     }
 
     public String get(String name, String defaultValue) {
-        return this.properties.getProperty(name, defaultValue);
+        String value;
+        if (!StringUtils.isEmpty(value = System.getenv(name))) {
+            return value;
+        } else if (!StringUtils.isEmpty(value = System.getProperty(name))) {
+            return value;
+        } else {
+            return this.properties.getProperty(name, defaultValue);
+        }
+    }
+
+    public Iterator<Object> getKeys() {
+        return this.properties.keys().asIterator();
     }
 
     @Override
     public String toString() {
         return this.properties.toString();
+    }
+
+    @Override
+    public <C> @Nullable C unwrap(Class<C> aClass) {
+        return aClass.isInstance(this) ? aClass.cast(this) : null;
+    }
+
+    public static class Factory {
+        public static Configs create(String file) throws Exception {
+            switch (FileUtils.getFormatType(file)) {
+                case YAML:
+                    return new YamlConfigs(file);
+                case PROPERTIES:
+                    return new Configs(file);
+                case JSON:
+                default:
+                    throw new UnsupportedOperationException(
+                            "can not initiate Configs from the file " + file);
+            }
+        }
     }
 }

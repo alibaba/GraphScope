@@ -16,15 +16,18 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
+import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rel.hint.RelHint;
@@ -32,7 +35,6 @@ import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFieldImpl;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -53,6 +55,8 @@ public class GraphLogicalPathExpand extends SingleRel {
 
     private final int aliasId;
 
+    private final AliasNameWithId startAlias;
+
     protected GraphLogicalPathExpand(
             GraphOptCluster cluster,
             @Nullable List<RelHint> hints,
@@ -63,7 +67,8 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
-            @Nullable String aliasName) {
+            @Nullable String aliasName,
+            AliasNameWithId startAlias) {
         super(cluster, RelTraitSet.createEmpty(), input);
         this.expand = Objects.requireNonNull(expand);
         this.getV = Objects.requireNonNull(getV);
@@ -75,6 +80,7 @@ public class GraphLogicalPathExpand extends SingleRel {
                 AliasInference.inferDefault(
                         aliasName, AliasInference.getUniqueAliasList(input, true));
         this.aliasId = cluster.getIdGenerator().generate(this.aliasName);
+        this.startAlias = Objects.requireNonNull(startAlias);
     }
 
     public static GraphLogicalPathExpand create(
@@ -87,9 +93,20 @@ public class GraphLogicalPathExpand extends SingleRel {
             @Nullable RexNode fetch,
             GraphOpt.PathExpandResult resultOpt,
             GraphOpt.PathExpandPath pathOpt,
-            String aliasName) {
+            String aliasName,
+            AliasNameWithId startAlias) {
         return new GraphLogicalPathExpand(
-                cluster, hints, input, expand, getV, offset, fetch, resultOpt, pathOpt, aliasName);
+                cluster,
+                hints,
+                input,
+                expand,
+                getV,
+                offset,
+                fetch,
+                resultOpt,
+                pathOpt,
+                aliasName,
+                startAlias);
     }
 
     @Override
@@ -101,7 +118,11 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf("fetch", fetch, fetch != null)
                 .item("path_opt", getPathOpt())
                 .item("result_opt", getResultOpt())
-                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()));
+                .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
+                .itemIf(
+                        "start_alias",
+                        startAlias.getAliasName(),
+                        startAlias.getAliasName() != AliasInference.DEFAULT_NAME);
     }
 
     public String getAliasName() {
@@ -136,6 +157,10 @@ public class GraphLogicalPathExpand extends SingleRel {
         return fetch;
     }
 
+    public AliasNameWithId getStartAlias() {
+        return startAlias;
+    }
+
     @Override
     protected RelDataType deriveRowType() {
         ObjectUtils.requireNonEmpty(
@@ -149,8 +174,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                         new RelDataTypeFieldImpl(
                                 getAliasName(),
                                 getAliasId(),
-                                new ArraySqlType(
-                                        new GraphPxdElementType(
+                                new GraphPathType(
+                                        new GraphPathType.ElementType(
                                                 this.expand
                                                         .getRowType()
                                                         .getFieldList()
@@ -160,7 +185,14 @@ public class GraphLogicalPathExpand extends SingleRel {
                                                         .getRowType()
                                                         .getFieldList()
                                                         .get(0)
-                                                        .getType()),
-                                        false))));
+                                                        .getType())))));
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
     }
 }

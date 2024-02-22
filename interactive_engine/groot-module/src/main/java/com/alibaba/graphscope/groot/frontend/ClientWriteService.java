@@ -12,14 +12,15 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientWriteService.class);
 
-    private WriteSessionGenerator writeSessionGenerator;
-    private GraphWriter graphWriter;
+    private final WriteSessionGenerator writeSessionGenerator;
+    private final GraphWriter graphWriter;
 
     public ClientWriteService(
             WriteSessionGenerator writeSessionGenerator, GraphWriter graphWriter) {
@@ -40,16 +41,13 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
             BatchWriteRequest request, StreamObserver<BatchWriteResponse> responseObserver) {
         String requestId = UuidUtils.getBase64UUIDString();
         String writeSession = request.getClientId();
-        int writeRequestsCount = request.getWriteRequestsCount();
-        List<WriteRequest> writeRequests = new ArrayList<>(writeRequestsCount);
-        logger.info(
-                "received batchWrite request. requestId ["
-                        + requestId
-                        + "] writeSession ["
-                        + writeSession
-                        + "] batchSize ["
-                        + writeRequestsCount
-                        + "]");
+        int count = request.getWriteRequestsCount();
+        List<WriteRequest> writeRequests = new ArrayList<>(count);
+        logger.debug(
+                "batchWrite: requestId {} writeSession {} batchSize {}",
+                requestId,
+                writeSession,
+                count);
         try {
             for (WriteRequestPb writeRequestPb : request.getWriteRequestsList()) {
                 writeRequests.add(WriteRequest.parseProto(writeRequestPb));
@@ -69,11 +67,9 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
                         @Override
                         public void onError(Throwable t) {
                             logger.error(
-                                    "batch write callback error. request ["
-                                            + requestId
-                                            + "] session ["
-                                            + writeSession
-                                            + "]",
+                                    "batch write error. request {} session {}",
+                                    requestId,
+                                    writeSession,
                                     t);
                             responseObserver.onError(
                                     Status.INTERNAL
@@ -84,8 +80,7 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
 
         } catch (Exception e) {
             logger.error(
-                    "batchWrite failed. request [" + requestId + "] session [" + writeSession + "]",
-                    e);
+                    "batchWrite failed. request [{}] session [{}]", requestId, writeSession, e);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
@@ -94,28 +89,42 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     @Override
     public void remoteFlush(
             RemoteFlushRequest request, StreamObserver<RemoteFlushResponse> responseObserver) {
-        long flushSnapshotId = request.getSnapshotId();
-        long waitTimeMs = request.getWaitTimeMs();
-        logger.info(
-                "flush snapshot id [" + flushSnapshotId + "] with timeout [" + waitTimeMs + "]ms");
+        long snapshotId = request.getSnapshotId();
+        long timeout = request.getWaitTimeMs();
+        logger.info("flush snapshot id [{}] with timeout [{}]ms", snapshotId, timeout);
         try {
             boolean suc;
-            if (flushSnapshotId == 0L) {
-                suc = graphWriter.flushLastSnapshot(waitTimeMs);
+            if (snapshotId == 0L) {
+                suc = graphWriter.flushLastSnapshot(timeout);
             } else {
-                suc = graphWriter.flushSnapshot(flushSnapshotId, waitTimeMs);
+                suc = graphWriter.flushSnapshot(snapshotId, timeout);
             }
             responseObserver.onNext(RemoteFlushResponse.newBuilder().setSuccess(suc).build());
             responseObserver.onCompleted();
         } catch (InterruptedException e) {
             logger.error(
-                    "remoteFlush failed. flushSnapshotId ["
-                            + flushSnapshotId
-                            + "] waitTimeMs ["
-                            + waitTimeMs
-                            + "]");
+                    "remoteFlush failed. flushSnapshotId [{}] waitTimeMs [{}]",
+                    snapshotId,
+                    timeout);
             responseObserver.onError(
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void replayRecords(
+            ReplayRecordsRequest request, StreamObserver<ReplayRecordsResponse> responseObserver) {
+        long offset = request.getOffset();
+        long timestamp = request.getTimestamp();
+        logger.info("replay records from offset {}, timestamp {}", offset, timestamp);
+        try {
+            List<Long> ids = graphWriter.replayWALFrom(offset, timestamp);
+            responseObserver.onNext(
+                    ReplayRecordsResponse.newBuilder().addAllSnapshotId(ids).build());
+            responseObserver.onCompleted();
+        } catch (IOException e) {
+            logger.error("replayRecords failed", e);
+            responseObserver.onError(e);
         }
     }
 }

@@ -112,9 +112,9 @@ message Join {
     // aka. Cartesian product
     TIMES = 6;
   }
-  // The key to perferm Join (on results output by left_plan)
+  // The key to perform Join (on results output by left_plan)
   repeated common.Variable left_keys = 1;
-  // The key to perferm Join (on results output by right_plan)
+  // The key to perform Join (on results output by right_plan)
   repeated common.Variable right_keys = 2;
   JoinKind join_kind = 3;
   PhysicalPlan left_plan = 4;
@@ -151,6 +151,8 @@ message Scan {
   algebra.QueryParams params = 3;
   // The optional filtering predicate for the field that have been indexed
   algebra.IndexPredicate idx_predicate = 4;
+  // The flag that indicates to SCAN + COUNT
+  bool is_count_only = 5;
 }
 
 // It is typical to use the operator when:
@@ -267,7 +269,7 @@ message Repartition {
 }
 
 // A dummy node to delegate a source opr for multiple scan cases.
-message RootScan {}
+message Root {}
 
 message PhysicalOpr {
   message Operator {
@@ -286,7 +288,8 @@ message PhysicalOpr {
       Union union = 12;
       Intersect intersect = 13;
       Repartition repartition = 14;
-      RootScan root = 16;
+      Root root = 16;
+      algebra.Sample sample = 17;
       // Saving the room for relational operators
       GetV vertex = 30;
       EdgeExpand edge = 31;
@@ -304,5 +307,6 @@ message PhysicalOpr {
 }
 
 message PhysicalPlan {
-  repeated PhysicalOpr plan = 1;
+  int32 plan_id = 1;
+  repeated PhysicalOpr plan = 2;
 }

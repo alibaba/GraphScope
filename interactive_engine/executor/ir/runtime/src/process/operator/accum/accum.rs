@@ -27,7 +27,7 @@ use pegasus::codec::{Decode, Encode, ReadExt, WriteExt};
 use crate::error::{FnExecError, FnExecResult, FnGenError, FnGenResult};
 use crate::process::entry::{CollectionEntry, DynEntry, Entry};
 use crate::process::operator::accum::accumulator::{
-    Accumulator, Count, DistinctCount, Maximum, Minimum, Sum, ToList, ToSet,
+    Accumulator, Count, DistinctCount, First, Maximum, Minimum, Sum, ToList, ToSet,
 };
 use crate::process::operator::accum::AccumFactoryGen;
 use crate::process::operator::TagKey;
@@ -43,6 +43,7 @@ pub enum EntryAccumulator {
     ToDistinctCount(DistinctCount<DynEntry>),
     ToSum(Sum<Primitives>),
     ToAvg(Sum<Primitives>, Count<()>),
+    ToFirst(First<DynEntry>),
 }
 
 /// Accumulator for Record, including multiple accumulators for entries(columns) in Record.
@@ -86,7 +87,9 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 EntryAccumulator::ToSum(sum) => {
                     let primitive = next
                         .as_object()
-                        .ok_or(FnExecError::unexpected_data_error("DynEntry is not a object type `Sum`"))?
+                        .ok_or_else(|| {
+                            FnExecError::unexpected_data_error("DynEntry is not a object type `Sum`")
+                        })?
                         .as_primitive()
                         .map_err(|e| {
                             FnExecError::unexpected_data_error(&format!(
@@ -99,7 +102,9 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 EntryAccumulator::ToAvg(sum, count) => {
                     let primitive = next
                         .as_object()
-                        .ok_or(FnExecError::unexpected_data_error("DynEntry is not a object type `ToAvg`"))?
+                        .ok_or_else(|| {
+                            FnExecError::unexpected_data_error("DynEntry is not a object type `ToAvg`")
+                        })?
                         .as_primitive()
                         .map_err(|e| {
                             FnExecError::unexpected_data_error(&format!(
@@ -110,6 +115,7 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                     sum.accum(primitive)?;
                     count.accum(())
                 }
+                EntryAccumulator::ToFirst(first) => first.accum(next),
             }
         } else {
             Ok(())
@@ -126,12 +132,12 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 let list_entry = CollectionEntry { inner: list.finalize()? };
                 Ok(DynEntry::new(list_entry))
             }
-            EntryAccumulator::ToMin(min) => min
+            EntryAccumulator::ToMin(min) => Ok(min
                 .finalize()?
-                .ok_or(FnExecError::accum_error("min_entry is none")),
-            EntryAccumulator::ToMax(max) => max
+                .unwrap_or(DynEntry::new(Object::None))),
+            EntryAccumulator::ToMax(max) => Ok(max
                 .finalize()?
-                .ok_or(FnExecError::accum_error("max_entry is none")),
+                .unwrap_or(DynEntry::new(Object::None))),
             EntryAccumulator::ToSet(set) => {
                 let set_entry = CollectionEntry { inner: set.finalize()? };
                 Ok(DynEntry::new(set_entry))
@@ -141,26 +147,32 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                 Ok(DynEntry::new(object!(cnt)))
             }
             EntryAccumulator::ToSum(sum) => {
-                let primitive = sum
-                    .finalize()?
-                    .ok_or(FnExecError::accum_error("sum_entry is none"))?;
-                Ok(DynEntry::new(object!(primitive)))
-            }
-            EntryAccumulator::ToAvg(sum, count) => {
-                let sum_primitive = sum
-                    .finalize()?
-                    .ok_or(FnExecError::accum_error("sum_entry is none"))?;
-                let cnt = count.finalize()?;
-                // TODO: confirm if it should be Object::None, or throw error;
-                if cnt == 0 {
-                    warn!("cnt value is 0 in accum avg");
-                    Ok(DynEntry::new(Object::None))
+                let primitive = sum.finalize()?;
+                if let Some(primitive) = primitive {
+                    Ok(DynEntry::new(object!(primitive)))
                 } else {
-                    let cnt_primitive = Primitives::Float(cnt as f64);
-                    let result = sum_primitive.div(cnt_primitive);
-                    Ok(DynEntry::new(object!(result)))
+                    Ok(DynEntry::new(Object::None))
                 }
             }
+            EntryAccumulator::ToAvg(sum, count) => {
+                let sum_primitive = sum.finalize()?;
+                if let Some(sum_primitive) = sum_primitive {
+                    let cnt = count.finalize()?;
+                    if cnt == 0 {
+                        warn!("cnt value is 0 in accum avg");
+                        Ok(DynEntry::new(Object::None))
+                    } else {
+                        let cnt_primitive = Primitives::Float(cnt as f64);
+                        let result = sum_primitive.div(cnt_primitive);
+                        Ok(DynEntry::new(object!(result)))
+                    }
+                } else {
+                    Ok(DynEntry::new(Object::None))
+                }
+            }
+            EntryAccumulator::ToFirst(first) => Ok(first
+                .finalize()?
+                .unwrap_or(DynEntry::new(Object::None))),
         }
     }
 }
@@ -190,10 +202,7 @@ impl AccumFactoryGen for pb::GroupBy {
                 Err(ParsePbError::from("accum value alias is missing in MultiAccum"))?
             }
             let entry_accumulator = match agg_kind {
-                Aggregate::First => {
-                    //not implemented
-                    Err(FnGenError::unsupported_error("aggregate `First` is not implemented"))?
-                }
+                Aggregate::First => EntryAccumulator::ToFirst(First { first: None }),
                 Aggregate::Count => EntryAccumulator::ToCount(Count { value: 0, _ph: Default::default() }),
                 Aggregate::ToList => EntryAccumulator::ToList(ToList { inner: vec![] }),
                 Aggregate::Min => EntryAccumulator::ToMin(Minimum { min: None }),
@@ -252,6 +261,10 @@ impl Encode for EntryAccumulator {
                 sum.write_to(writer)?;
                 count.write_to(writer)?;
             }
+            EntryAccumulator::ToFirst(first) => {
+                writer.write_u8(8)?;
+                first.write_to(writer)?;
+            }
         }
         Ok(())
     }
@@ -294,6 +307,10 @@ impl Decode for EntryAccumulator {
                 let count = <Count<()>>::read_from(reader)?;
                 Ok(EntryAccumulator::ToAvg(sum, count))
             }
+            8 => {
+                let first = <First<DynEntry>>::read_from(reader)?;
+                Ok(EntryAccumulator::ToFirst(first))
+            }
             _ => Err(std::io::Error::new(std::io::ErrorKind::Other, "unreachable")),
         }
     }
@@ -330,6 +347,7 @@ mod tests {
 
     use std::cmp::Ordering;
 
+    use dyn_type::Object;
     use ir_common::generated::common as common_pb;
     use ir_common::generated::physical as pb;
     use pegasus::api::{Fold, Sink};
@@ -600,5 +618,90 @@ mod tests {
             }
         }
         assert_eq!(res, object!(20));
+    }
+
+    fn fold_with_none_record_test(aggregate: i32) {
+        let r = Record::new(Object::None, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate,
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r], fold_opr_pb);
+        let mut res_num = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                assert!(entry.is_none());
+                res_num += 1;
+            }
+        }
+        assert_eq!(res_num, 1);
+    }
+
+    fn fold_with_none_vertex_prop_record_test(aggregate: i32) {
+        let v1 = init_vertex1();
+        let v2 = init_vertex2();
+        let r1 = Record::new(v1, None);
+        let r2 = Record::new(v2, None);
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@.addr".to_string())],
+            aggregate,
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(vec![r1, r2], fold_opr_pb);
+        let mut res_num = 0;
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                assert!(entry.is_none());
+                res_num += 1;
+            }
+        }
+        assert_eq!(res_num, 1);
+    }
+
+    #[test]
+    fn min_with_none_test() {
+        fold_with_none_record_test(1);
+        fold_with_none_vertex_prop_record_test(1);
+    }
+
+    #[test]
+    fn max_with_none_test() {
+        fold_with_none_record_test(2);
+        fold_with_none_vertex_prop_record_test(2);
+    }
+
+    #[test]
+    fn sum_with_none_test() {
+        fold_with_none_record_test(0);
+        fold_with_none_vertex_prop_record_test(0);
+    }
+
+    #[test]
+    fn avg_with_none_test() {
+        fold_with_none_record_test(7);
+        fold_with_none_vertex_prop_record_test(7);
+    }
+
+    // g.V().fold().first()
+    #[test]
+    fn first_test() {
+        let function = pb::group_by::AggFunc {
+            vars: vec![common_pb::Variable::from("@".to_string())],
+            aggregate: 8, // first
+            alias: Some(TAG_A.into()),
+        };
+        let fold_opr_pb = pb::GroupBy { mappings: vec![], functions: vec![function] };
+        let mut result = fold_test(init_source(), fold_opr_pb);
+        let mut fold_result = DynEntry::new(Object::None);
+        let expected_result = DynEntry::new(init_vertex1());
+        if let Some(Ok(record)) = result.next() {
+            if let Some(entry) = record.get(Some(TAG_A)) {
+                fold_result = entry.clone();
+            }
+        }
+        assert_eq!(fold_result, expected_result);
     }
 }

@@ -19,7 +19,7 @@ use std::fmt::Debug;
 use std::io;
 use std::sync::RwLock;
 
-use pegasus_common::codec::{Decode, Encode};
+use pegasus_common::codec::{Decode, Encode, WriteExt};
 
 use crate::DynType;
 
@@ -88,12 +88,22 @@ impl<T: Decode + DynType> Ph for PhImpl<T> {
     }
 }
 
+#[rustversion::before(1.72.0)]
+fn type_id_to_bytes<W: WriteExt>(typeid: TypeId, out: &mut W) -> io::Result<()> {
+    let number: u64 = unsafe { std::mem::transmute(typeid) };
+    number.write_to(out)
+}
+
+#[rustversion::since(1.72.0)]
+fn type_id_to_bytes<W: WriteExt>(typeid: TypeId, out: &mut W) -> io::Result<()> {
+    let number: u128 = unsafe { std::mem::transmute(typeid) };
+    number.write_to(out)
+}
+
 impl<T: Any + Send + Sync + Clone + Debug + Encode> DynType for T {
     fn to_bytes(&self) -> io::Result<Vec<u8>> {
         let mut bytes = vec![];
-        let t = TypeId::of::<T>();
-        let number: u64 = unsafe { std::mem::transmute(t) };
-        number.write_to(&mut bytes)?;
+        type_id_to_bytes(TypeId::of::<T>(), &mut bytes)?;
         self.write_to(&mut bytes)?;
         Ok(bytes)
     }

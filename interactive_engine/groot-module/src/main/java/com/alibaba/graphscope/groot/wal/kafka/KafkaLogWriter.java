@@ -36,18 +36,16 @@ public class KafkaLogWriter implements LogWriter {
     private static final Logger logger = LoggerFactory.getLogger(KafkaLogWriter.class);
 
     private static final LogEntrySerializer ser = new LogEntrySerializer();
-    private Producer<LogEntry, LogEntry> producer;
-    private String topicName;
-    private int partitionId;
+    private final Producer<LogEntry, LogEntry> producer;
+    private final String topicName;
 
-    public KafkaLogWriter(
-            String servers, String topicName, int partitionId, Map<String, String> customConfigs) {
+    public KafkaLogWriter(String servers, String topicName, Map<String, String> customConfigs) {
         this.topicName = topicName;
-        this.partitionId = partitionId;
 
         Map<String, Object> producerConfig = new HashMap<>();
         producerConfig.put("bootstrap.servers", servers);
         producerConfig.put("enable.idempotence", true);
+        producerConfig.put("max.request.size", 1048576000);
 
         customConfigs.forEach(
                 (k, v) -> {
@@ -56,11 +54,25 @@ public class KafkaLogWriter implements LogWriter {
         this.producer = new KafkaProducer<>(producerConfig, ser, ser);
     }
 
+    public long append(int partition, LogEntry logEntry) {
+        Future<RecordMetadata> future =
+                producer.send(new ProducerRecord<>(topicName, partition, null, logEntry));
+        return waitFuture(future);
+    }
+
     @Override
     public long append(LogEntry logEntry) {
-        Future<RecordMetadata> future =
-                producer.send(
-                        new ProducerRecord<>(this.topicName, this.partitionId, null, logEntry));
+        Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topicName, logEntry));
+        return waitFuture(future);
+    }
+
+    @Override
+    public Future<RecordMetadata> appendAsync(int partition, LogEntry logEntry) {
+        Future<RecordMetadata> future = producer.send(new ProducerRecord<>(topicName, logEntry));
+        return future;
+    }
+
+    public long waitFuture(Future<RecordMetadata> future) {
         RecordMetadata recordMetadata;
         try {
             recordMetadata = future.get();

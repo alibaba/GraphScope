@@ -1,0 +1,94 @@
+graph: graph_algo
+loading_config:
+  data_source:
+    scheme: file  # file, oss, s3, hdfs; only file is supported now
+#    location: /home/graphscope/graph_algo/
+  import_option: init # append, overwrite, only init is supported now
+  format:
+    type: csv
+    metadata:
+      delimiter: '|'  # other loading configuration places here
+      header_row: true # whether to use the first row as the header
+      quoting: false
+      quote_char: '"'
+      double_quote: true
+      escape_char: '\'
+      escaping: false
+      block_size: 4MB
+      batch_reader: false
+vertex_mappings:
+  - type_name: Paper  # must align with the schema
+    inputs:
+      - Paper.csv
+  - type_name: Challenge
+    inputs:
+      - Challenge.csv
+  - type_name: Topic
+    inputs:
+      - Topic.csv
+  - type_name: Task
+    inputs:
+      - Task.csv
+  - type_name: Solution
+    inputs:
+      - Solution.csv
+  - type_name: CCFField
+    inputs:
+      - CCFField.csv
+edge_mappings:
+  - type_triplet:
+      edge: WorkOn
+      source_vertex:  Paper
+      destination_vertex:  Task
+    inputs:
+      - Paper_WorkOn_Task.csv
+  - type_triplet:
+      edge: Resolve
+      source_vertex:  Paper
+      destination_vertex:  Challenge
+    inputs:
+      - Paper_Resolve_Challenge.csv
+  - type_triplet: 
+      edge: Target
+      source_vertex:  Task
+      destination_vertex:  Challenge
+    source_vertex_mappings:
+      - column:
+          index: 0
+          name: id
+    destination_vertex_mappings:
+      - column:
+          index: 1
+          name: id
+    inputs:
+      - Task_Target_Challenge.csv
+  - type_triplet: 
+      edge: Belong
+      source_vertex:  Task
+      destination_vertex:  Topic
+    inputs:
+      - Task_Belong_Topic.csv
+  - type_triplet:
+      edge: Use
+      source_vertex:  Paper
+      destination_vertex:  Solution
+    inputs:
+      - Paper_Use_Solution.csv
+  - type_triplet:
+      edge: ApplyOn
+      source_vertex:  Solution
+      destination_vertex:  Challenge
+    inputs:
+      - Solution_ApplyOn_Challenge.csv
+  - type_triplet:
+      edge: HasField
+      source_vertex:  Paper
+      destination_vertex:  CCFField
+    inputs:
+      - Paper_HasField_CCFField.csv
+  - type_triplet:
+      edge: Citation
+      source_vertex:  Paper
+      destination_vertex:  Paper
+    inputs:
+      - Paper_Citation_Paper.csv

@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import datetime
 import logging
 import os
 import sys
@@ -27,6 +28,8 @@ from graphscope.analytical.udf.decorators import pregel
 from graphscope.dataset import load_modern_graph
 from graphscope.dataset import load_ogbn_mag
 from graphscope.framework.app import AppAssets
+from graphscope.framework.loader import Loader
+from graphscope.tests.conftest import property_dir
 
 logger = logging.getLogger("graphscope")
 
@@ -274,7 +277,26 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
         }
 
     def make_edges_set(edges):
-        return {item.get("eid", [None])[0]: item for item in edges}
+        from gremlin_python.process.traversal import Enum as GremlinEnum
+
+        edge_list, attr_keys = [], set()
+        for item in edges:
+            elements = dict()
+            for k, v in item.items():
+                if isinstance(k, GremlinEnum):
+                    elements[k.name] = v
+                else:
+                    elements[k] = v
+                    attr_keys.add(k)
+            edge_list.append(elements)
+        edge_set = []
+        for item in edge_list:
+            edge = []
+            for k in attr_keys:
+                edge.append((k, item[k]))
+            edge_set.append(edge)
+        edge_set.sort()
+        return edge_set
 
     def subgraph_roundtrip_and_pk_scan(num_workers, threads_per_worker):
         logger.info(
@@ -299,7 +321,7 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
 
         # test subgraph
         vquery = "g.V().valueMap()"
-        equery = "g.E().valueMap()"
+        equery = "g.E().elementMap()"  # introduce labels into the result
 
         nodes = interactive0.execute(vquery).all().result()
         edges = interactive0.execute(equery).all().result()
@@ -330,3 +352,103 @@ def test_modern_graph(parallel_executors, num_workers, threads_per_worker):
         }
     ):
         subgraph_roundtrip_and_pk_scan(num_workers, threads_per_worker)
+
+
+def test_graph_with_datetime_property():
+    def check_node_values(nodes):
+        values1 = set(
+            [
+                datetime.datetime(2017, 10, 17, 0, 0),
+                datetime.datetime(2017, 10, 18, 0, 0),
+                datetime.datetime(2017, 10, 19, 0, 0),
+                datetime.datetime(2017, 10, 20, 0, 0),
+            ]
+        )
+        values2 = set(
+            [
+                "1991-06-22T04:00Z",
+                "1991-06-23T05:00Z",
+                "1991-06-24T06:00Z",
+                "1991-06-25T07:00Z",
+            ]
+        )
+        node_values1, node_values2 = set(), set()
+        for item in nodes:
+            if "vval1" in item and "vval2" in item:
+                node_values1.add(item["vval1"][0])
+                node_values2.add(item["vval2"][0])
+        assert node_values1 == values1
+        assert node_values2 == values2
+
+    def check_edge_values(edges):
+        values1 = set(
+            [
+                datetime.datetime(2017, 10, 17, 0, 0),
+                datetime.datetime(2017, 10, 18, 0, 0),
+                datetime.datetime(2017, 10, 19, 0, 0),
+                datetime.datetime(2017, 10, 20, 0, 0),
+            ]
+        )
+        values2 = set(
+            [
+                "1991-06-22T04:00Z",
+                "1991-06-23T05:00Z",
+                "1991-06-24T06:00Z",
+                "1991-06-25T07:00Z",
+            ]
+        )
+        edge_values1, edge_values2 = set(), set()
+        for item in nodes:
+            if "vval1" in item and "vval2" in item:
+                edge_values1.add(item["vval1"][0])
+                edge_values2.add(item["vval2"][0])
+        assert edge_values1 == values1
+        assert edge_values2 == values2
+
+    session = graphscope.session(cluster_type="hosts")
+    g = session.load_from(
+        edges={
+            "e0": [
+                (
+                    Loader(
+                        f"{property_dir}/e_with_date.csv",
+                        header_row=True,
+                        delimiter=",",
+                    ),
+                ),
+            ],
+        },
+        vertices={
+            "v0": Loader(
+                f"{property_dir}/v_with_date.csv",
+                header_row=True,
+                delimiter=",",
+            ),
+        },
+        generate_eid=True,
+        retain_oid=True,
+        directed=True,
+        compact_edges=False,
+        use_perfect_hash=False,
+    )
+
+    interactive = session.gremlin(g)
+
+    # test subgraph
+    vquery = "g.V().valueMap()"
+    equery = "g.E().valueMap()"  # introduce labels into the result
+
+    nodes = interactive.execute(vquery).all().result()
+    edges = interactive.execute(equery).all().result()
+
+    logger.info("nodes = %s", nodes)
+    logger.info("edges = %s", edges)
+
+    check_node_values(nodes)
+    check_edge_values(edges)
+
+    # check subgraph
+    g1 = interactive.subgraph("g.E()")
+    logger.info("subgraph = %s", g1.schema)
+
+    session.close()

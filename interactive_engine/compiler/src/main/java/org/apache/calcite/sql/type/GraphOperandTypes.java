@@ -67,6 +67,9 @@ public abstract class GraphOperandTypes {
     public static final SqlSingleOperandTypeChecker BOOLEAN_BOOLEAN =
             family(SqlTypeFamily.BOOLEAN, SqlTypeFamily.BOOLEAN);
 
+    public static final SqlSingleOperandTypeChecker INTERVALINTERVAL_INTERVALDATETIME =
+            OperandTypes.or(INTERVAL_SAME_SAME, INTERVAL_DATETIME);
+
     /**
      * create {@code RexFamilyOperandTypeChecker} to validate type based on {@code RexNode}
      * @param families

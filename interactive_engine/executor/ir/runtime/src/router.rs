@@ -60,6 +60,7 @@ impl<P: PartitionInfo, C: ClusterInfo> Router for DefaultRouter<P, C> {
         let server_id = self
             .partition_info
             .get_server_id(partition_id)?;
+        trace!("route partition id {:?}, server id: {:?}", partition_id, server_id);
         let servers_num = self.cluster_info.get_server_num()?;
         let magic_num = (data as u32) / servers_num;
         let workers_num = self.cluster_info.get_local_worker_num()?;

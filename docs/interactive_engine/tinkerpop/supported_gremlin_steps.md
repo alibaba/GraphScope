@@ -11,6 +11,8 @@
    8. [Union](#union)
    9. [Match](#match)
    10. [Subgraph](#subgraph)
+   11. [Identity](#identity)
+   12. [Unfold](#unfold)
 3. [Syntactic Sugars](#syntactic-sugars)
    1. [PathExpand](#pathexpand)
    2. [Expression](#expression)
@@ -503,8 +505,20 @@ Filter the object in the stream given a biased coin toss.
 Parameters: </br>
 probability - the probability that the object will pass through.
 ```bash
-g.V().coin(0.2) # range is [0, 1]
+g.V().coin(0.2) # range is [0.0, 1.0]
+g.V().out().coin(0.2)
 ```
+
+#### [sample()](https://tinkerpop.apache.org/docs/current/reference/#sample-step)
+Generate a certain number of sample results.
+
+Parameters: </br>
+number - allow specified number of objects to pass through the stream.
+```bash
+g.V().sample(10)
+g.V().out().sample(10)
+```
+
 ### Union
 #### [union()](https://tinkerpop.apache.org/docs/current/reference/#union-step)
 Merges the results of an arbitrary number of traversals.
@@ -541,13 +555,31 @@ graphName - the name of the side-effect key that will hold the subgraph.
 g.E().subgraph("all")
 g.V().has('name', "marko").outE("knows").subgraph("partial")
 ```
+### Identity
+#### [identity()](https://tinkerpop.apache.org/docs/current/reference/#identity-step)
+The identity()-step maps the current object to itself.
+
+```bash
+g.V().identity().values("id")
+g.V().hasLabel("person").as("a").identity().values("id")
+g.V().has("name", "marko").union(identity(), out()).values("id")
+```
+### Unfold
+#### [unfold()](https://tinkerpop.apache.org/docs/current/reference/#unfold-step)
+The unfold()-step unrolls an iterator, iterable or map into a linear form.
+```bash
+g.V().fold().unfold().values("id")
+g.V().fold().as("a").unfold().values("id")
+g.V().has("name", "marko").fold().as("a").select("a").unfold().values("id")
+g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V').unfold()
+```
 ## Syntactic Sugars
 The following steps are extended to denote more complex situations.
 ### PathExpand
 In Graph querying, expanding a multiple-hops path from a starting point is called `PathExpand`, which is commonly used in graph scenarios. In addition, there are different requirements for expanding strategies in different scenarios, i.e. it is required to output a simple path or all vertices explored along the expanding path. We introduce the with()-step to configure the corresponding behaviors of the `PathExpand`-step.
 
 #### out()
-Expand a multiple-hops path along the outgoing edges, which length is within the given range.
+Expand a multiple-hops path along the outgoing edges, which length is within the given range. 
 
 Parameters: </br>
 lengthRange - the lower and the upper bounds of the path length, </br> edgeLabels - the edge labels to traverse.
@@ -562,7 +594,7 @@ g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 # vertices and edges can be duplicated, and all vertices and edges along the path should be kept
 g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'ALL_V_E')
 # expand hops within the range of [1, 10) along the outgoing edges,
-# vertices can not be duplicated and all vertices should be kept
+# vertices cannot be duplicated and all vertices should be kept
 g.V().out("1..10").with('PATH_OPT', 'SIMPLE').with('RESULT_OPT', 'ALL_V')
 # = g.V().out("1..10").with('PATH_OPT', 'ARBITRARY').with('RESULT_OPT', 'END_V')
 g.V().out("1..10")
@@ -572,6 +604,9 @@ g.V().out("1..10", "knows")
 # expand hops within the range of [1, 10) along the outgoing edges which label is `knows` or `created`,
 # vertices can be duplicated and only the end vertex should be kept
 g.V().out("1..10", "knows", "created")
+# expand hops within the range of [1, 10) along the outgoing edges,
+# and project the properties "id" and "name" of every vertex along the path
+g.V().out("1..10").with('RESULT_OPT', 'ALL_V').values("name")
 ```
 Running Example:
 ```bash
@@ -584,6 +619,12 @@ gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V_E')
 gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'END_V').endV()
 ==>v[2]
 ==>v[4]
+gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V').values("name")
+==>[marko, vadas]
+==>[marko, josh]
+gremlin> g.V().out("1..3", "knows").with('RESULT_OPT', 'ALL_V').valueMap("id","name")
+==>{id=[[1, 2]], name=[[marko, vadas]]}
+==>{id=[[1, 4]], name=[[marko, josh]]}
 ```
 #### in()
 Expand a multiple-hops path along the incoming edges, which length is within the given range.
@@ -701,6 +742,7 @@ Expression(s) in project or filter:
     g.V().where(expr("@.name == \"marko\"")) # = g.V().has("name", "marko")
     g.V().where(expr("@.age > 10")) # = g.V().has("age", P.gt(10))
     g.V().as("a").out().where(expr("@.name == \"marko\" || (@a.age > 10)"))
+    g.V().where(expr("@.age isNull"))
     ```
 * project: select(expr("..."))
     ```bash
@@ -715,6 +757,14 @@ gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
 ==>v[1]
 ==>v[4]
 ==>v[6]
+gremlin> g.V().where(expr("@.age isNull")).values("name")
+==>ripple
+==>lop
+gremlin>  g.V().where(expr("!(@.age isNull)")).values("name")
+==>marko
+==>vadas
+==>josh
+==>peter
 gremlin> g.V().select(expr("@.name"))
 ==>marko
 ==>vadas
@@ -758,12 +808,12 @@ Here we list steps which are unsupported yet. Some will be supported in the near
 
 ### To be Supported
 The following steps will be supported in the near future.
-#### identity()
+<!--#### identity()
 Map the current object to itself.
 ```bash
 g.V().identity()
 g.V().union(identity(), out().out())
-```
+```<-->
 #### path()
 Map the traverser to its path history.
 ```bash

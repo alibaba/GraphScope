@@ -17,9 +17,10 @@ use graph_proxy::apis::{DynDetails, Element, Vertex};
 use ir_common::generated::physical as pb;
 use ir_common::KeyId;
 use pegasus::api::function::{DynIter, FlatMapFunction, FnResult};
+use pegasus_common::downcast::AsAny;
 
 use crate::error::{FnExecError, FnGenResult};
-use crate::process::entry::{CollectionEntry, EntryType};
+use crate::process::entry::{CollectionEntry, Entry, EntryType};
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::map::IntersectionEntry;
 use crate::process::record::Record;
@@ -37,60 +38,73 @@ impl FlatMapFunction<Record, Record> for UnfoldOperator {
     type Target = DynIter<Record>;
 
     fn exec(&self, mut input: Record) -> FnResult<Self::Target> {
-        // Consider 'take' the column since the collection won't be used anymore in most cases.
-        // e.g., in EdgeExpandIntersection case, we only set alias of the collection to give the hint of intersection.
-        let mut entry = input
-            .take(self.tag.as_ref())
-            .ok_or(FnExecError::get_tag_error(&format!(
-                "get tag {:?} from record in `Unfold` operator, the record is {:?}",
-                self.tag, input
-            )))?;
-        // take head in case that head entry is an arc clone of `self.tag`;
-        // besides, head will be replaced by the items in collections anyway.
-        input.take(None);
-        if let Some(entry) = entry.get_mut() {
-            match entry.get_type() {
-                EntryType::Collection => {
-                    let collection = entry
-                        .as_any_mut()
-                        .downcast_mut::<CollectionEntry>()
-                        .unwrap();
-                    let mut res = Vec::with_capacity(collection.len());
-                    for item in collection.inner.drain(..) {
-                        let mut new_entry = input.clone();
-                        new_entry.append(item, self.alias);
-                        res.push(new_entry);
-                    }
-                    Ok(Box::new(res.into_iter()))
+        let entry_type = input
+            .get(self.tag)
+            .ok_or_else(|| {
+                FnExecError::get_tag_error(&format!(
+                    "get tag {:?} from record in `Unfold` operator, the record is {:?}",
+                    self.tag, input
+                ))
+            })?
+            .get_type();
+        match entry_type {
+            EntryType::Intersection => {
+                // Take the entry when it is EdgeExpandIntersection.
+                // The reason is that the alias of the collection is system-given, which is used as a hint of intersection,
+                // hence there's no need to preserve the collection anymore.
+                let entry = input.take(self.tag.as_ref()).unwrap();
+                let intersection = entry
+                    .as_any_ref()
+                    .downcast_ref::<IntersectionEntry>()
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error("downcast intersection entry in UnfoldOperator")
+                    })?;
+                let mut res = Vec::with_capacity(intersection.len());
+                for item in intersection.iter().cloned() {
+                    let mut new_entry = input.clone();
+                    new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
+                    res.push(new_entry);
                 }
-                EntryType::Intersection => {
-                    let intersection = entry
-                        .as_any_mut()
-                        .downcast_mut::<IntersectionEntry>()
-                        .unwrap();
-                    let mut res = Vec::with_capacity(intersection.len());
-                    for item in intersection.drain() {
-                        let mut new_entry = input.clone();
-                        new_entry.append(Vertex::new(item, None, DynDetails::default()), self.alias);
-                        res.push(new_entry);
-                    }
-                    Ok(Box::new(res.into_iter()))
-                }
-                EntryType::Path => Err(FnExecError::unsupported_error(&format!(
-                    "unfold path entry {:?} in UnfoldOperator",
-                    entry
-                )))?,
-                _ => Err(FnExecError::unexpected_data_error(&format!(
-                    "unfold entry {:?} in UnfoldOperator",
-                    entry
-                )))?,
+                Ok(Box::new(res.into_iter()))
             }
-        } else {
-            Err(FnExecError::unexpected_data_error(&format!(
-                "get mutable entry {:?} of tag {:?} failed in UnfoldOperator",
-                entry,
-                self.tag.as_ref()
-            )))?
+            EntryType::Collection => {
+                let entry = input.get(self.tag).unwrap();
+                let collection = entry
+                    .as_any_ref()
+                    .downcast_ref::<CollectionEntry>()
+                    .ok_or_else(|| {
+                        FnExecError::unexpected_data_error("downcast collection entry in UnfoldOperator")
+                    })?;
+                let mut res = Vec::with_capacity(collection.len());
+                for item in collection.inner.iter().cloned() {
+                    let mut new_entry = input.clone();
+                    new_entry.append(item, self.alias);
+                    res.push(new_entry);
+                }
+                Ok(Box::new(res.into_iter()))
+            }
+            EntryType::Path => {
+                let entry = input.get(self.tag).unwrap();
+                let path = entry.as_graph_path().ok_or_else(|| {
+                    FnExecError::unexpected_data_error("downcast path entry in UnfoldOperatro")
+                })?;
+                let path_vec = if let Some(path) = path.get_path() {
+                    path.clone()
+                } else {
+                    vec![path.get_path_end().clone()]
+                };
+                let mut res = Vec::with_capacity(path_vec.len());
+                for item in path_vec {
+                    let mut new_entry = input.clone();
+                    new_entry.append(item, self.alias);
+                    res.push(new_entry)
+                }
+                Ok(Box::new(res.into_iter()))
+            }
+            _ => Err(FnExecError::unexpected_data_error(&format!(
+                "unfold entry {:?} in UnfoldOperator",
+                input.get(self.tag)
+            )))?,
         }
     }
 }
@@ -115,7 +129,9 @@ mod tests {
     use pegasus::api::{Fold, Map, Sink};
     use pegasus::result::ResultStream;
     use pegasus::JobConf;
+    use pegasus_common::downcast::AsAny;
 
+    use crate::process::entry::CollectionEntry;
     use crate::process::entry::Entry;
     use crate::process::functions::FoldGen;
     use crate::process::operator::accum::accumulator::Accumulator;
@@ -167,6 +183,13 @@ mod tests {
             if let Some(v) = res.get(None).unwrap().as_vertex() {
                 result_ids.push(v.id());
             }
+            let collection = res
+                .get(Some(TAG_A))
+                .unwrap()
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            assert!(collection.inner.len() == 2);
         }
         result_ids.sort();
         assert_eq!(result_ids, expected_result);
@@ -197,8 +220,8 @@ mod tests {
 
     #[test]
     // g.V().fold().as('a').unfold(head)
-    // This is not expected, since we can only unfold 'head', while collection tagged 'a' is still in the record.
-    fn fold_as_a_unfold_head_fail_test() {
+    // in this case, after unfold by head, each result record still contains a collection tagged 'a'.
+    fn fold_as_a_unfold_head_test() {
         let function = pb::group_by::AggFunc {
             vars: vec![common_pb::Variable::from("@".to_string())],
             aggregate: 5, // ToList
@@ -208,15 +231,20 @@ mod tests {
         let unfold_opr_pb = pb::Unfold { tag: None, alias: None };
 
         let mut result = fold_unfold_test(fold_opr_pb, unfold_opr_pb);
-        if let Some(result) = result.next() {
-            match result {
-                Ok(_) => {
-                    assert!(false)
-                }
-                Err(_) => {
-                    assert!(true)
-                }
+        let expected_result = vec![1, 2];
+        let mut result_ids = vec![];
+        while let Some(Ok(res)) = result.next() {
+            if let Some(v) = res.get(None).unwrap().as_vertex() {
+                result_ids.push(v.id());
             }
+            let entry = res.get(Some(TAG_A)).unwrap();
+            let collection = entry
+                .as_any_ref()
+                .downcast_ref::<CollectionEntry>()
+                .unwrap();
+            assert!(collection.inner.len() == 2);
         }
+        result_ids.sort();
+        assert_eq!(result_ids, expected_result);
     }
 }

@@ -26,6 +26,7 @@
               "extra": {}
             },
             "idx_predicate": null,
+            "is_count_only": false,
             "meta_data": {
               "type": {
                 "type": {
@@ -419,6 +420,25 @@
                 "alias": 1
               }
             ]
+          }
+        }
+      },
+      "children": [
+        4
+      ]
+    },
+    {
+      "opr": {
+        "opr": {
+          "Sink": {
+            "tags": [],
+            "sink_target": {
+              "inner": {
+                "SinkDefault": {
+                  "id_name_mappings": []
+                }
+              }
+            }
           }
         }
       },

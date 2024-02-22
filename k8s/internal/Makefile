@@ -19,13 +19,13 @@ endif
 
 # x86_64 or arm64
 ARCH := $(shell uname -m)
-ifeq ($(ARCH), arm64)
-	MACOS_WHEEL_VERSION := 12_0
-else
-	MACOS_WHEEL_VERSION := 11_0
-endif
+MACOS_WHEEL_VERSION := 12_0
 
-BUILD_PROGRESS    = auto
+# docker build arguments
+BUILD_PROGRESS		= auto
+
+# pip installation arguments
+PIP_ARGS 			= --timeout=1000 --no-cache-dir
 
 # Default null
 TARGET_SERVER_PACKAGE      :=
@@ -42,7 +42,7 @@ GRAPHSCOPE_HOME ?= /usr/local
 INSTALL_PREFIX ?= /opt/graphscope
 
 VERSION ?= latest
-VINEYARD_VERSION ?= v0.16.1
+VINEYARD_VERSION ?= v0.20.3
 PROFILE ?= release
 CI ?= false
 
@@ -71,7 +71,7 @@ MAKE_INSTALL_COMMAND=make install INSTALL_PREFIX=${INSTALL_PREFIX}
 graphscope-darwin-py3:
 	# build graphscope
 	cd $(WORKING_DIR)/../.. && \
-		python3 -m pip install --upgrade setuptools && \
+		python3 -m pip install ${PIP_ARGS} --upgrade setuptools && \
 		export INSTALL_PREFIX=/opt/graphscope && \
 		for _ in {1..5}; do if $(MAKE_COMMAND); then succeed=1; break; else succeed=0; fi; done && \
 		if [[ $$succeed == 1 ]]; then echo "Build succeed"; else echo "Build failed"; exit 1; fi && \
@@ -110,8 +110,8 @@ graphscope-manylinux2014-py3-nodocker:
 	cd $(WORKING_DIR)/../.. && \
 		if [[ "${ARCH}" == "aarch64" ]]; then \
 			export AUDITWHEEL_PLAT=manylinux2014_${ARCH}; \
-			python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
-			python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+			python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
+			python3 -m pip install ${PIP_ARGS} grpcio-tools==1.49.1 --no-binary grpcio-tools; \
 		fi && \
 		sudo rm -rf ./learning_engine/graph-learn/graphlearn/built && \
 		for _ in {1..5}; do if $(MAKE_COMMAND); then succeed=1; break; else succeed=0; fi; done && \
@@ -156,6 +156,9 @@ graphscope-manylinux2014-py3:
 
 graphscope-client-manylinux2014-py3-nodocker:
 	set -euxo pipefail && \
+	cd $(WORKING_DIR)/../../python && \
+		python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 	git submodule update --init third_party/pybind11 && \
 	cd graphlearn && \
@@ -170,39 +173,39 @@ graphscope-client-manylinux2014-py3-nodocker:
 	for py in cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311; do \
 		cd $(WORKING_DIR)/../../python; \
 		export PATH=/opt/python/$$py/bin:$$PATH; \
-		python3 -m pip install -U pip; \
+		python3 -m pip install ${PIP_ARGS} -U pip; \
 		if [[ "$$py" == "cp311-cp311" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
-				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
-				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install ${PIP_ARGS} grpcio-tools==1.49.1 --no-binary grpcio-tools; \
 			else \
-				python3 -m pip install "grpcio" "grpcio-tools"; \
+				python3 -m pip install ${PIP_ARGS} "grpcio" "grpcio-tools"; \
 			fi; \
-			python3 -m pip install mypy-protobuf "numpy==1.23.2" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.23.2" "pandas" wheel "auditwheel==5.0.0"; \
 		elif [[ "$$py" == "cp310-cp310" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
-				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
-				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install ${PIP_ARGS} grpcio-tools==1.49.1 --no-binary grpcio-tools; \
 			else \
-				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
+				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install mypy-protobuf "numpy==1.21.2" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.21.2" "pandas" wheel "auditwheel==5.0.0"; \
 		elif [[ "$$py" == "cp39-cp39" ]]; then \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
-				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
-				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install ${PIP_ARGS} grpcio-tools==1.49.1 --no-binary grpcio-tools; \
 			else \
-				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
+				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install mypy-protobuf "numpy==1.19.3" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.19.3" "pandas" wheel "auditwheel==5.0.0"; \
 		else \
 			if [[ "${ARCH}" == "aarch64" ]]; then \
-				python3 -m pip install grpcio==1.49.1 --no-binary grpcio; \
-				python3 -m pip install grpcio-tools==1.49.1 --no-binary grpcio-tools; \
+				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
+				python3 -m pip install ${PIP_ARGS} grpcio-tools==1.49.1 --no-binary grpcio-tools; \
 			else \
-				python3 -m pip install "grpcio>=1.49" "grpcio-tools>=1.49"; \
+				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install mypy-protobuf "numpy" "pandas" wheel "auditwheel==5.0.0"; \
+			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy" "pandas" wheel "auditwheel==5.0.0"; \
 		fi; \
 		sudo rm -rf build; \
 		sudo rm -rf dist/*.whl; \
@@ -212,6 +215,9 @@ graphscope-client-manylinux2014-py3-nodocker:
 	done
 
 graphscope-client-darwin-py3:
+	cd $(WORKING_DIR)/../../python && \
+		python3 -m pip install ${PIP_ARGS} "torch" "networkx<=3.0" --index-url https://download.pytorch.org/whl/cpu --user && \
+		python3 -m pip install ${PIP_ARGS} -r requirements.txt -r requirements-dev.txt --user && \
 	cd $(WORKING_DIR)/../../learning_engine/graph-learn && \
 		(git submodule update --init third_party/pybind11 || true) && \
 		export GRAPHSCOPE_HOME=${GRAPHSCOPE_HOME} && \
@@ -225,22 +231,22 @@ graphscope-client-darwin-py3:
 		export DYLD_LIBRARY_PATH=$(WORKING_DIR)/../../learning_engine/graph-learn/graphlearn/built/lib:/usr/local/lib:${GRAPHSCOPE_HOME}/lib:$$DYLD_LIBRARY_PATH && \
 		cd $(WORKING_DIR)/../../python && \
 		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
-		pip3 install -U pip && \
+		pip3 install ${PIP_ARGS} -U pip && \
 		if [[ "$$py" == "311" ]]; then \
-			pip3 install mypy-protobuf "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		elif [[ "$$py" == "310" ]]; then \
-			pip3 install mypy-protobuf "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		elif [[ "$$py" == "39" ]]; then \
 			if [[ "${ARCH}" == "arm64" ]]; then \
-				pip3 install mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			else \
-				pip3 install mypy-protobuf "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			fi; \
 		else \
 			if [[ "${ARCH}" == "arm64" ]]; then \
-				pip3 install mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			else \
-				pip3 install mypy-protobuf "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			fi; \
 		fi; \
 		rm -rf build dist/*.whl || true && \

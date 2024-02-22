@@ -21,12 +21,12 @@ limitations under the License.
 
 #include <boost/format.hpp>
 
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 #include "flex/codegen/src/building_context.h"
 #include "flex/codegen/src/codegen_utils.h"
@@ -171,7 +171,7 @@ class ScanOpBuilder {
         "}\n");
 
     std::string vars_code;
-    for (auto i = 0; i < var_names.size(); i++) {
+    for (size_t i = 0; i < var_names.size(); i++) {
       std::string var_name = var_names[i];
       std::string prop_name = properties[i].var_name;
       std::string prop_column_name =

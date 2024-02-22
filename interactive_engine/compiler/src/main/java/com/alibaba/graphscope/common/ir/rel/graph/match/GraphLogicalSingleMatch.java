@@ -16,21 +16,24 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph.match;
 
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rel.type.StructKind;
-import org.apache.commons.lang3.ObjectUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
 
 public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
     private final RelNode sentence;
@@ -65,14 +68,17 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
 
     @Override
     public RelDataType deriveRowType() {
-        List<RelDataTypeField> fields = new ArrayList<>();
-        RelNode node = this.sentence;
-        addFields(fields, node.getRowType());
-        while (ObjectUtils.isNotEmpty(node.getInputs())) {
-            node = node.getInput(0);
-            addFields(fields, node.getRowType());
-        }
+        List<RelDataTypeField> fields = Lists.newArrayList();
+        addFields(fields, sentence);
         return new RelRecordType(StructKind.FULLY_QUALIFIED, fields);
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
     }
 
     public RelNode getSentence() {

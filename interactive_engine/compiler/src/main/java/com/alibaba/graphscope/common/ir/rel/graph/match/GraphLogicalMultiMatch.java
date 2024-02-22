@@ -16,11 +16,14 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph.match;
 
+import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.hint.RelHint;
 import org.apache.calcite.rel.type.RelDataType;
@@ -75,14 +78,27 @@ public class GraphLogicalMultiMatch extends AbstractLogicalMatch {
     public RelDataType deriveRowType() {
         List<RelDataTypeField> fields = new ArrayList<>();
         for (RelNode node : sentences) {
-            addFields(fields, node.getRowType());
-            while (ObjectUtils.isNotEmpty(node.getInputs())) {
-                node = node.getInput(0);
-                addFields(fields, node.getRowType());
-            }
+            addFields(fields, node);
         }
-        List<RelDataTypeField> dedup = fields.stream().distinct().collect(Collectors.toList());
+        Set<String> fieldNames = Sets.newHashSet();
+        List<RelDataTypeField> dedup =
+                fields.stream()
+                        .filter(
+                                k -> {
+                                    boolean notExist = !fieldNames.contains(k.getName());
+                                    fieldNames.add(k.getName());
+                                    return notExist;
+                                })
+                        .collect(Collectors.toList());
         return new RelRecordType(StructKind.FULLY_QUALIFIED, dedup);
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphRelVisitor) {
+            return ((GraphRelVisitor) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
     }
 
     public List<RelNode> getSentences() {

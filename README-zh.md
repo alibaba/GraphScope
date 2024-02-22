@@ -13,7 +13,7 @@
 
 GraphScope 是阿里巴巴达摩院智能计算实验室研发并开源的一站式图计算平台。依托于阿里海量数据和丰富场景，与达摩院的高水平研究，GraphScope 致力于针对实际生产场景中图计算的挑战，提供一站式高效的解决方案。
 
-GraphScope 提供了 Python 客户端，能十分方便的对接上下游工作流，具有一站式、开发便捷、性能极致等特点。它整合了智能计算实验室多个重要的创新性技术，包括 [GRAPE](https://github.com/alibaba/libgrape-lite)，[MaxGraph](interactive_engine/)，[Graph-Learn](https://github.com/alibaba/graph-learn)，分别支持图分析、图的交互式查询和图学习任务，引擎间使用 [Vineyard](htps://github.com/v6d-io/v6d) 存储，提供跨进程，零拷贝的内存数据共享服务。其中核心优势包括在业界首次支持了 Gremlin 分布式编译优化，支持了算法的自动并行化、提供了企业级场景下的极致性能等。在阿里巴巴内外部应用中，GraphScope 已经证明在多个关键互联网领域（如风控，电商推荐，广告，网络安全，知识图谱等）实现了重要的业务新价值。
+GraphScope 提供了 Python 客户端，能十分方便的对接上下游工作流，具有一站式、开发便捷、性能极致等特点。它整合了智能计算实验室多个重要的创新性技术，包括 [GRAPE](https://github.com/alibaba/libgrape-lite)，[MaxGraph](interactive_engine/)，[Graph-Learn](https://github.com/alibaba/graph-learn)，分别支持图分析、图的交互式查询和图学习任务，引擎间使用 [Vineyard](https://github.com/v6d-io/v6d) 存储，提供跨进程，零拷贝的内存数据共享服务。其中核心优势包括在业界首次支持了 Gremlin 分布式编译优化，支持了算法的自动并行化、提供了企业级场景下的极致性能等。在阿里巴巴内外部应用中，GraphScope 已经证明在多个关键互联网领域（如风控，电商推荐，广告，网络安全，知识图谱等）实现了重要的业务新价值。
 
 GraphScope 整合了达摩院的多项学术研究成果，其中的核心技术曾获得数据库领域顶级学术会议 SIGMOD2017 最佳论文奖、VLDB2017 最佳演示奖、VLDB2020 最佳论文奖亚军、世界人工智能创新大赛SAIL奖等。GraphScope 的交互查询引擎的论文已被 NSDI 2021录用。还有其它围绕 GraphScope 的十多项研究成果发表在领域顶级的学术会议或期刊上，如 TODS、SIGMOD、VLDB、KDD等。
 
@@ -36,7 +36,7 @@ pip3 install graphscope
 
 注意 `graphscope` 的版本要求，需要 `Python` >= 3.7 及 `pip` >= 19.0.
 
-GraphScope 包在大多数流行的Linux发行版 (Ubuntu 20.04+ / Centos 7+) 与 macOS 11+ (Intel) / macOS 12+ (Apple silicon) 上测试通过，对于 Windows 用户，需要在 WSL2 上安装 Ubuntu 来使用 GraphScope。
+GraphScope 包在大多数流行的Linux发行版 (Ubuntu 20.04+ / Centos 7+) 与 macOS 12+ (Intel/Apple silicon) 上测试通过，对于 Windows 用户，需要在 WSL2 上安装 Ubuntu 来使用 GraphScope。
 
 接下来我们会用一个具体的例子，来演示 GraphScope 如何帮助数据科学家高效的分析、处理大规模图数据。
 
@@ -285,7 +285,7 @@ g = load_ogbn_mag(sess, "/dataset/ogbn_mag_small")
 sess.close()
 ```
 
-请注意当前发布的版本没有包含一些例如鉴权、加密之列的安全功能，暂时不推荐在生产环境使用。我们后续会有一些安全性更新，请您持续关注。
+请注意当前发布的版本没有包含一些例如鉴权、加密之类的安全功能，暂时不推荐在生产环境使用。我们后续会有一些安全性更新，请您持续关注。
 
 ## 开发
 
@@ -294,16 +294,16 @@ sess.close()
 为了构建 graphscope Python 包以及引擎，你需要安装一些依赖和构建工具。
 
 ```bash
-./gs install-deps dev
+python3 gsctl.py install-deps dev
 
 # 如果在中国，加入参数 `--cn` 来加速下载
-./gs install-deps dev --cn
+python3 gsctl.py install-deps dev --cn
 ```
 
 现在你可以使用 `make` 来构建 GraphScope
 
 ```bash
-# 编译所有组件，包括 Python 包和 引擎可执行文件
+# 编译所有组件，包括 Python 包和引擎可执行文件
 sudo make install
 
 # 或者只编译指定的引擎

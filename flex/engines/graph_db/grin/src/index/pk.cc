@@ -31,10 +31,35 @@ GRIN_VERTEX grin_get_vertex_by_primary_keys_row(GRIN_GRAPH g,
                                                 GRIN_ROW r) {
   auto _r = static_cast<GRIN_ROW_T*>(r);
   auto _g = static_cast<GRIN_GRAPH_T*>(g);
-  auto oid = *static_cast<const gs::oid_t*>((*_r)[0]);
+  auto type = _g->g.lf_indexers_[label].get_type();
   uint32_t vid;
 
-  if (!_g->g.get_lid(label, oid, vid)) {
+  if (type == gs::PropertyType::kInt64) {
+    auto oid = *static_cast<const int64_t*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
+  } else if (type == gs::PropertyType::kInt32) {
+    auto oid = *static_cast<const int32_t*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
+  } else if (type == gs::PropertyType::kUInt32) {
+    auto oid = *static_cast<const uint32_t*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
+  } else if (type == gs::PropertyType::kUInt64) {
+    auto oid = *static_cast<const uint64_t*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
+  } else if (type == gs::PropertyType::kString) {
+    auto oid = *static_cast<const std::string_view*>((*_r)[0]);
+    if (!_g->g.get_lid(label, oid, vid)) {
+      return GRIN_NULL_VERTEX;
+    }
+  } else {
     return GRIN_NULL_VERTEX;
   }
   uint64_t v = ((label * 1ull) << 32) + vid;

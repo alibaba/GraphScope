@@ -2,6 +2,7 @@ package com.alibaba.graphscope.groot.coordinator;
 
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 
@@ -16,15 +17,17 @@ import java.util.concurrent.TimeUnit;
 
 public class GarbageCollectManager {
     private static final Logger logger = LoggerFactory.getLogger(GarbageCollectManager.class);
-    private Configs configs;
-    private ConcurrentHashMap<Integer, Long> hashMap;
-    private RoleClients<CoordinatorSnapshotClient> clients;
-    private ScheduledExecutorService updateStoreMinSnapshotScheduler;
+    private final Configs configs;
+    private final ConcurrentHashMap<Integer, Long> hashMap;
+    private final RoleClients<CoordinatorSnapshotClient> clients;
+    private ScheduledExecutorService updateScheduler;
+    private long interval;
 
     public GarbageCollectManager(Configs configs, RoleClients<CoordinatorSnapshotClient> clients) {
         this.configs = configs;
         this.hashMap = new ConcurrentHashMap<>();
         this.clients = clients;
+        this.interval = StoreConfig.STORE_GC_INTERVAL_MS.get(configs);
     }
 
     public void put(int frontendId, long snapshotId) {
@@ -32,11 +35,11 @@ public class GarbageCollectManager {
     }
 
     public void start() {
-        this.updateStoreMinSnapshotScheduler =
+        this.updateScheduler =
                 Executors.newSingleThreadScheduledExecutor(
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "update-store-min-snapshot-scheduler", logger));
-        this.updateStoreMinSnapshotScheduler.scheduleWithFixedDelay(
+        this.updateScheduler.scheduleWithFixedDelay(
                 () -> {
                     try {
                         if (!hashMap.isEmpty()) {
@@ -44,29 +47,27 @@ public class GarbageCollectManager {
                             for (int i = 0; i < CommonConfig.STORE_NODE_COUNT.get(configs); i++) {
                                 CoordinatorSnapshotClient client = clients.getClient(i);
                                 client.synchronizeSnapshot(offlineVersion);
-                                logger.info(
-                                        "Offline version of store ["
-                                                + i
-                                                + "] updated to ["
-                                                + offlineVersion
-                                                + "]");
+                                if (i == 0 && offlineVersion % 1000 == 0) {
+                                    logger.info("Offline version updated to {}", offlineVersion);
+                                }
                             }
                         }
                     } catch (Exception e) {
-                        logger.error("error in updateStoreMinSnapshotScheduler, ignore", e);
+                        logger.error(
+                                "error in updateStoreMinSnapshotScheduler {}, ignore",
+                                e.getMessage());
                     }
                 },
-                5000L,
-                2000L,
+                interval,
+                interval,
                 TimeUnit.MILLISECONDS);
     }
 
     public void stop() {
-        if (updateStoreMinSnapshotScheduler != null) {
-            updateStoreMinSnapshotScheduler.shutdownNow();
+        if (updateScheduler != null) {
+            updateScheduler.shutdownNow();
             try {
-                if (!updateStoreMinSnapshotScheduler.awaitTermination(
-                        1000, TimeUnit.MILLISECONDS)) {
+                if (!updateScheduler.awaitTermination(1000, TimeUnit.MILLISECONDS)) {
                     logger.error("updateStoreMinSnapshotScheduler await timeout before shutdown");
                 }
             } catch (InterruptedException e) {

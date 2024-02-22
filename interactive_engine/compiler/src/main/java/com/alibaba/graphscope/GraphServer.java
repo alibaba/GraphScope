@@ -21,13 +21,18 @@ import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.FileLoadType;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
+import com.alibaba.graphscope.common.ir.tools.*;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
+import com.alibaba.graphscope.common.store.IrMeta;
+import com.alibaba.graphscope.cypher.antlr4.parser.CypherAntlr4Parser;
+import com.alibaba.graphscope.cypher.antlr4.visitor.LogicalPlanVisitor;
 import com.alibaba.graphscope.cypher.service.CypherBootstrapper;
+import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
+import com.alibaba.graphscope.gremlin.antlr4x.visitor.GraphBuilderVisitor;
 import com.alibaba.graphscope.gremlin.integration.result.GraphProperties;
 import com.alibaba.graphscope.gremlin.integration.result.TestGraphFactory;
 import com.alibaba.graphscope.gremlin.service.IrGremlinServer;
@@ -69,17 +74,39 @@ public class GraphServer {
 
     public void start() throws Exception {
         ExecutionClient executionClient = ExecutionClient.Factory.create(configs, channelFetcher);
-        GraphPlanner graphPlanner = new GraphPlanner(configs);
+        QueryIdGenerator idGenerator = new QueryIdGenerator(configs);
         if (!FrontendConfig.GREMLIN_SERVER_DISABLED.get(configs)) {
+            GraphPlanner graphPlanner =
+                    new GraphPlanner(
+                            configs,
+                            (GraphBuilder builder, IrMeta irMeta, String query) ->
+                                    new LogicalPlan(
+                                            new GraphBuilderVisitor(builder)
+                                                    .visit(new GremlinAntlr4Parser().parse(query))
+                                                    .build()));
+            QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.gremlinServer =
                     new IrGremlinServer(
-                            configs, graphPlanner, channelFetcher, metaQueryCallback, testGraph);
+                            configs,
+                            idGenerator,
+                            queryCache,
+                            executionClient,
+                            channelFetcher,
+                            metaQueryCallback,
+                            testGraph);
             this.gremlinServer.start();
         }
         if (!FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs)) {
+            GraphPlanner graphPlanner =
+                    new GraphPlanner(
+                            configs,
+                            (GraphBuilder builder, IrMeta irMeta, String query) ->
+                                    new LogicalPlanVisitor(builder, irMeta)
+                                            .visit(new CypherAntlr4Parser().parse(query)));
+            QueryCache queryCache = new QueryCache(configs, graphPlanner);
             this.cypherBootstrapper =
                     new CypherBootstrapper(
-                            configs, graphPlanner, metaQueryCallback, executionClient);
+                            configs, idGenerator, metaQueryCallback, executionClient, queryCache);
             Path neo4jHomePath = getNeo4jHomePath();
             this.cypherBootstrapper.start(
                     neo4jHomePath,
@@ -136,9 +163,10 @@ public class GraphServer {
         if (args.length == 0 || args[0].isEmpty()) {
             throw new IllegalArgumentException("usage: GraphServer '<path_to_config_file>'");
         }
-        Configs configs = new Configs(args[0], FileLoadType.RELATIVE_PATH);
+        Configs configs = Configs.Factory.create(args[0]);
         IrMetaQueryCallback queryCallback =
-                new IrMetaQueryCallback(new ExperimentalMetaFetcher(configs));
+                new IrMetaQueryCallback(
+                        new ExperimentalMetaFetcher(new LocalMetaDataReader(configs)));
         GraphServer server =
                 new GraphServer(
                         configs, getChannelFetcher(configs), queryCallback, getTestGraph(configs));

@@ -38,27 +38,24 @@ public interface IrCoreLibrary extends Library {
 
     void destroyLogicalPlan(Pointer plan);
 
-    FfiData.ByValue buildPhysicalPlan(Pointer plan, int workers, int servers);
+    default FfiData.ByValue buildPhysicalPlan(Pointer plan, int workers, int servers) {
+        return buildPhysicalPlan(plan, workers, servers, 0);
+    }
+
+    FfiData.ByValue buildPhysicalPlan(Pointer plan, int workers, int servers, int planId);
 
     Pointer initScanOperator(FfiScanOpt opt);
 
     FfiResult.ByValue appendScanOperator(
             Pointer plan, Pointer scan, int parent, IntByReference oprIdx);
 
-    // set primary index
-    Pointer initIndexPredicate();
-
-    FfiResult.ByValue andEquivPredicate(
-            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
-
-    FfiResult.ByValue orEquivPredicate(
-            Pointer predicate, FfiProperty.ByValue key, FfiConst.ByValue value);
-
-    FfiResult.ByValue addScanIndexPredicate(Pointer scan, Pointer predicate);
+    FfiResult.ByValue addIndexPredicatePb(Pointer scan, FfiPbPointer.ByValue pbPointer);
 
     FfiResult.ByValue setScanParams(Pointer scan, Pointer params);
 
     FfiResult.ByValue setScanAlias(Pointer scan, FfiAlias.ByValue alias);
+
+    FfiResult.ByValue setCountOnly(Pointer scan, boolean countOnly);
 
     Pointer initEdgexpdOperator(FfiExpandOpt expandOpt, FfiDirection direction);
 
@@ -68,6 +65,8 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue setEdgexpdParams(Pointer edgeXpd, Pointer params);
 
     FfiResult.ByValue setEdgexpdAlias(Pointer edgeXpd, FfiAlias.ByValue alias);
+
+    FfiResult.ByValue setEdgexpdVtag(Pointer edgeXpd, FfiNameOrId.ByValue vTag);
 
     Pointer initLimitOperator();
 
@@ -128,11 +127,7 @@ public interface IrCoreLibrary extends Library {
     FfiResult.ByValue addGroupbyKeyPbAlias(
             Pointer groupBy, FfiPbPointer.ByValue pbPointer, FfiAlias.ByValue alias);
 
-    FfiResult.ByValue addGroupbyAggFnPb(
-            Pointer group,
-            FfiPbPointer.ByValue pbPointer,
-            FfiAggOpt aggOpt,
-            FfiAlias.ByValue alias);
+    FfiResult.ByValue addGroupbyAggFnPb(Pointer group, FfiPbPointer.ByValue pbPointer);
 
     FfiResult.ByValue appendGroupbyOperator(
             Pointer plan, Pointer groupBy, int parent, IntByReference oprIdx);
@@ -157,6 +152,8 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue setGetvAlias(Pointer getV, FfiAlias.ByValue alias);
 
+    FfiResult.ByValue setGetvTag(Pointer getV, FfiNameOrId.ByValue vTag);
+
     FfiResult.ByValue appendGetvOperator(
             Pointer plan, Pointer getV, int parent, IntByReference oprIdx);
 
@@ -175,6 +172,8 @@ public interface IrCoreLibrary extends Library {
             Pointer expand, Pointer getV, PathOpt pathOpt, ResultOpt resultOpt);
 
     FfiResult.ByValue setPathxpdAlias(Pointer pathXpd, FfiAlias.ByValue alias);
+
+    FfiResult.ByValue setPathxpdTag(Pointer pathXpd, FfiNameOrId.ByValue vTag);
 
     FfiResult.ByValue setPathxpdHops(Pointer pathXpd, int lower, int upper);
 
@@ -242,5 +241,34 @@ public interface IrCoreLibrary extends Library {
 
     FfiResult.ByValue addPatternMeta(Pointer pattern, FfiPbPointer.ByValue meta);
 
+    Pointer initUnfoldOperator();
+
+    FfiResult.ByValue appendUnfoldOperator(
+            Pointer plan, Pointer unfold, int parent, IntByReference oprIdx);
+
+    FfiResult.ByValue setUnfoldPair(
+            Pointer unfold, FfiNameOrId.ByValue tag, FfiNameOrId.ByValue alias);
+
     FfiResult.ByValue setUnfoldMeta(Pointer unfold, FfiPbPointer.ByValue meta);
+
+    Pointer initJoinOperator(FfiJoinKind joinKind);
+
+    FfiResult.ByValue addJoinKeyPairPb(
+            Pointer join, FfiPbPointer.ByValue left, FfiPbPointer.ByValue right);
+
+    FfiResult.ByValue appendJoinOperator(
+            Pointer plan, Pointer join, int leftParent, int rightParent, IntByReference oprIdx);
+
+    Pointer initSampleOperator();
+
+    FfiResult.ByValue setSampleType(Pointer sample, FfiPbPointer.ByValue sampleType);
+
+    FfiResult.ByValue setSampleSeed(Pointer sample, long seed);
+
+    FfiResult.ByValue setSampleWeightVariable(Pointer sample, FfiPbPointer.ByValue weightVariable);
+
+    FfiResult.ByValue appendSampleOperator(
+            Pointer plan, Pointer sample, int parent, IntByReference oprIdx);
+
+    void destroyCstrPointer(Pointer cstr);
 }

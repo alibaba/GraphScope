@@ -99,7 +99,6 @@ Here we give a list of most frequently used parameters.
 | store.replicaCount | Number of nodes | 2 |
 | frontend.replicaCount | Number of nodes | 1 |
 | frontend.service.type| Kubernetes Service type| NodePort |
-| ingestor.replicaCount | Number of nodes | 1 |
 | coordinator.replicaCount | Number of nodes | 1 |
 
 ### Kafka chart parameters
@@ -126,7 +125,7 @@ $ helm install my-release \
 ```
 
 Add multiple extra config to the component which is defined in the configmap by
-`--set extraConfig="k1=v1;k2=v2"`. Note we use `;` to seperate config items. For example,
+`--set extraConfig="k1=v1;k2=v2"`. Note we use `;` to separate config items. For example,
 
 ```bash
 $ helm install my-release \

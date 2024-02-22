@@ -296,25 +296,85 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
   auto vid = v & (0xffffffff);
 
   switch (type) {
+  case GRIN_DATATYPE::Bool: {
+    auto _col = static_cast<const gs::BoolColumn*>(col);
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
+  }
   case GRIN_DATATYPE::Int32: {
     auto _col = static_cast<const gs::IntColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
+  }
+  case GRIN_DATATYPE::UInt32: {
+    auto _col = static_cast<const gs::UIntColumn*>(col);
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::Int64: {
     auto _col = static_cast<const gs::LongColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
+  }
+  case GRIN_DATATYPE::UInt64: {
+    auto _col = static_cast<const gs::ULongColumn*>(col);
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::String: {
     auto _col = static_cast<const gs::StringColumn*>(col);
-    return _col->buffer()[vid].data();
+    auto s = _col->get_view(vid);
+    auto len = s.size() + 1;
+    char* out = new char[len];
+    snprintf(out, len, "%s", s.data());
+    return out;
   }
   case GRIN_DATATYPE::Timestamp64: {
     auto _col = static_cast<const gs::DateColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   case GRIN_DATATYPE::Double: {
     auto _col = static_cast<const gs::DoubleColumn*>(col);
-    return _col->buffer().data() + vid;
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
+  }
+  case GRIN_DATATYPE::Float: {
+    auto _col = static_cast<const gs::FloatColumn*>(col);
+    auto basic_size = _col->basic_buffer_size();
+    if (vid < basic_size) {
+      return _col->basic_buffer().data() + vid;
+    } else {
+      return _col->extra_buffer().data() + vid - basic_size;
+    }
   }
   default:
     grin_error_code = UNKNOWN_DATATYPE;
@@ -359,8 +419,13 @@ int grin_get_edge_property_value_of_int32(GRIN_GRAPH g, GRIN_EDGE e,
 
 unsigned int grin_get_edge_property_value_of_uint32(GRIN_GRAPH g, GRIN_EDGE e,
                                                     GRIN_EDGE_PROPERTY ep) {
-  grin_error_code = INVALID_VALUE;
-  return 0;
+  auto _e = static_cast<GRIN_EDGE_T*>(e);
+  auto idx = ep >> 24;
+  if (idx > 0 || _get_data_type(_e->data.type) != GRIN_DATATYPE::UInt32) {
+    grin_error_code = INVALID_VALUE;
+    return 0;
+  }
+  return _e->data.value.ui;
 }
 
 long long int grin_get_edge_property_value_of_int64(GRIN_GRAPH g, GRIN_EDGE e,
@@ -376,14 +441,24 @@ long long int grin_get_edge_property_value_of_int64(GRIN_GRAPH g, GRIN_EDGE e,
 
 unsigned long long int grin_get_edge_property_value_of_uint64(
     GRIN_GRAPH g, GRIN_EDGE e, GRIN_EDGE_PROPERTY ep) {
-  grin_error_code = INVALID_VALUE;
-  return 0;
+  auto _e = static_cast<GRIN_EDGE_T*>(e);
+  auto idx = ep >> 24;
+  if (idx > 0 || _get_data_type(_e->data.type) != GRIN_DATATYPE::UInt64) {
+    grin_error_code = INVALID_VALUE;
+    return 0;
+  }
+  return _e->data.value.ul;
 }
 
 float grin_get_edge_property_value_of_float(GRIN_GRAPH g, GRIN_EDGE e,
                                             GRIN_EDGE_PROPERTY ep) {
-  grin_error_code = INVALID_VALUE;
-  return 0.0;
+  auto _e = static_cast<GRIN_EDGE_T*>(e);
+  auto idx = ep >> 24;
+  if (idx > 0 || _get_data_type(_e->data.type) != GRIN_DATATYPE::Float) {
+    grin_error_code = INVALID_VALUE;
+    return 0.0f;
+  }
+  return _e->data.value.f;
 }
 double grin_get_edge_property_value_of_double(GRIN_GRAPH g, GRIN_EDGE e,
                                               GRIN_EDGE_PROPERTY ep) {

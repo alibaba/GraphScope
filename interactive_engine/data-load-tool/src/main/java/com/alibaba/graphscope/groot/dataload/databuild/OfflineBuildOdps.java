@@ -14,26 +14,23 @@
 package com.alibaba.graphscope.groot.dataload.databuild;
 
 import com.alibaba.graphscope.groot.common.config.DataLoadConfig;
-import com.alibaba.graphscope.groot.common.schema.api.GraphEdge;
-import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
 import com.alibaba.graphscope.groot.common.schema.api.GraphSchema;
-import com.alibaba.graphscope.groot.common.schema.api.GraphVertex;
 import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.common.util.JSON;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
+import com.alibaba.graphscope.proto.groot.GraphDefPb;
 import com.aliyun.odps.Odps;
-import com.aliyun.odps.data.TableInfo;
 import com.aliyun.odps.mapred.JobClient;
 import com.aliyun.odps.mapred.conf.JobConf;
 import com.aliyun.odps.mapred.conf.SessionState;
 import com.aliyun.odps.mapred.utils.InputUtils;
 import com.aliyun.odps.mapred.utils.OutputUtils;
 import com.aliyun.odps.mapred.utils.SchemaUtils;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
@@ -46,7 +43,6 @@ import java.util.*;
 
 public class OfflineBuildOdps {
     private static final Logger logger = LoggerFactory.getLogger(OfflineBuildOdps.class);
-
     private static Odps odps;
 
     public static void main(String[] args) throws IOException {
@@ -58,79 +54,43 @@ public class OfflineBuildOdps {
         }
         odps = SessionState.get().getOdps();
 
-        String columnMappingConfigStr =
-                properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        String configStr = properties.getProperty(DataLoadConfig.COLUMN_MAPPING_CONFIG);
+        configStr = Utils.replaceVars(configStr, Arrays.copyOfRange(args, 1, args.length));
+
         String graphEndpoint = properties.getProperty(DataLoadConfig.GRAPH_ENDPOINT);
         String username = properties.getProperty(DataLoadConfig.USER_NAME, "");
         String password = properties.getProperty(DataLoadConfig.PASS_WORD, "");
+        long waitTimeBeforeCommit =
+                Long.parseLong(
+                        properties.getProperty(DataLoadConfig.WAIT_TIME_BEFORE_COMMIT, "-1"));
 
         String uniquePath =
                 properties.getProperty(DataLoadConfig.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
 
-        ObjectMapper objectMapper = new ObjectMapper();
-        Map<String, FileColumnMapping> columnMappingConfig =
-                objectMapper.readValue(
-                        columnMappingConfigStr,
-                        new TypeReference<Map<String, FileColumnMapping>>() {});
+        Map<String, FileColumnMapping> mappingConfig = Utils.parseColumnMapping(configStr);
 
-        List<DataLoadTargetPb> targets = new ArrayList<>();
-        for (FileColumnMapping fileColumnMapping : columnMappingConfig.values()) {
-            DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
-            builder.setLabel(fileColumnMapping.getLabel());
-            if (fileColumnMapping.getSrcLabel() != null) {
-                builder.setSrcLabel(fileColumnMapping.getSrcLabel());
-            }
-            if (fileColumnMapping.getDstLabel() != null) {
-                builder.setDstLabel(fileColumnMapping.getDstLabel());
-            }
-            targets.add(builder.build());
-        }
+        List<DataLoadTargetPb> targets = Utils.getDataLoadTargets(mappingConfig);
 
-        GrootClient client =
-                GrootClient.newBuilder()
-                        .setHosts(graphEndpoint)
-                        .setUsername(username)
-                        .setPassword(password)
-                        .build();
+        GrootClient client = Utils.getClient(graphEndpoint, username, password);
 
-        GraphSchema schema = GraphDef.parseProto(client.prepareDataLoad(targets));
-        String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
+        GraphDefPb graphDefPb = client.prepareDataLoad(targets);
+        System.out.println("GraphDef: " + graphDefPb);
+        GraphSchema schema = GraphDef.parseProto(graphDefPb);
+        System.out.println("GraphSchema: " + JSON.toJson(schema));
+
         // number of reduce task
         int partitionNum = client.getPartitionNum();
-
-        Map<String, GraphElement> tableType = new HashMap<>();
-
-        Map<String, ColumnMappingInfo> columnMappingInfos = new HashMap<>();
-        columnMappingConfig.forEach(
-                (fileName, fileColumnMapping) -> {
-                    ColumnMappingInfo columnMappingInfo =
-                            fileColumnMapping.toColumnMappingInfo(schema);
-                    // Note the project and partition is stripped (if exists)
-                    columnMappingInfos.put(getTableName(fileName), columnMappingInfo);
-                    tableType.put(fileName, schema.getElement(columnMappingInfo.getLabelId()));
-                });
         long splitSize = Long.parseLong(properties.getProperty(DataLoadConfig.SPLIT_SIZE, "256"));
 
         JobConf job = new JobConf();
-        String mappings = objectMapper.writeValueAsString(columnMappingInfos);
 
-        // Avoid java sandbox protection
-        job.set("odps.isolation.session.enable", "true");
-        // Don't introduce legacy jar files
-        job.set("odps.sql.udf.java.retain.legacy", "false");
-        // Default priority is 9
-        job.setInstancePriority(0);
-        job.set("odps.mr.run.mode", "sql");
-        job.set("odps.mr.sql.group.enable", "true");
+        job.set("odps.isolation.session.enable", "true"); // Avoid java sandbox protection
+        job.set("odps.sql.udf.java.retain.legacy", "false"); // exclude legacy jar files
+        job.setInstancePriority(0); // Default priority is 9
+        // Disable backups from competing with original instances
+        job.set("odps.sql.backupinstance.enabled", "false");
         job.setFunctionTimeout(2400);
-        job.setMemoryForReducerJVM(2048);
-
-        for (Map.Entry<String, GraphElement> entry : tableType.entrySet()) {
-            if (entry.getValue() instanceof GraphVertex || entry.getValue() instanceof GraphEdge) {
-                String name = entry.getKey();
-                InputUtils.addTable(parseTableURL(name), job);
-            }
-        }
+        job.setMemoryForReducerJVM(4096);
 
         job.setMapperClass(DataBuildMapperOdps.class);
         job.setReducerClass(DataBuildReducerOdps.class);
@@ -139,6 +99,9 @@ public class OfflineBuildOdps {
         job.setNumReduceTasks(partitionNum);
         job.setMapOutputKeySchema(SchemaUtils.fromString("key:string"));
         job.setMapOutputValueSchema(SchemaUtils.fromString("value:string"));
+
+        mappingConfig.forEach(
+                (name, x) -> InputUtils.addTable(Utils.parseTableURL(odps, name), job));
 
         String dataSinkType = properties.getProperty(DataLoadConfig.DATA_SINK_TYPE, "VOLUME");
         Map<String, String> config;
@@ -158,20 +121,26 @@ public class OfflineBuildOdps {
                 fullQualifiedDataPath = fs.getQualifiedPath();
             }
             String outputTable = properties.getProperty(DataLoadConfig.OUTPUT_TABLE);
-            OutputUtils.addTable(parseTableURL(outputTable), job);
+            OutputUtils.addTable(Utils.parseTableURL(odps, outputTable), job);
         } else if (dataSinkType.equalsIgnoreCase("HDFS")) {
             throw new IOException("HDFS as a data sink is not supported in ODPS");
         } else {
             throw new IOException("Unsupported data sink: " + dataSinkType);
         }
+
+        String schemaJson = GraphSchemaMapper.parseFromSchema(schema).toJsonString();
+        System.out.println("schemaJson is :" + schemaJson);
+        Map<String, ColumnMappingInfo> info = Utils.getMappingInfo(odps, schema, mappingConfig);
+        ObjectMapper mapper = new ObjectMapper();
+
         Map<String, String> outputMeta = new HashMap<>();
         outputMeta.put(DataLoadConfig.GRAPH_ENDPOINT, graphEndpoint);
         outputMeta.put(DataLoadConfig.SCHEMA_JSON, schemaJson);
-        outputMeta.put(DataLoadConfig.COLUMN_MAPPINGS, mappings);
+        outputMeta.put(DataLoadConfig.COLUMN_MAPPINGS, mapper.writeValueAsString(info));
         outputMeta.put(DataLoadConfig.UNIQUE_PATH, uniquePath);
         outputMeta.put(DataLoadConfig.DATA_SINK_TYPE, dataSinkType);
 
-        job.set(DataLoadConfig.META_INFO, objectMapper.writeValueAsString(outputMeta));
+        job.set(DataLoadConfig.META_INFO, mapper.writeValueAsString(outputMeta));
         job.set(DataLoadConfig.DATA_SINK_TYPE, dataSinkType);
         try {
             JobClient.runJob(job);
@@ -179,10 +148,8 @@ public class OfflineBuildOdps {
             throw new IOException(e);
         }
 
-        boolean loadAfterBuild =
-                properties
-                        .getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "false")
-                        .equalsIgnoreCase("true");
+        String _tmp = properties.getProperty(DataLoadConfig.LOAD_AFTER_BUILD, "false");
+        boolean loadAfterBuild = Utils.parseBoolean(_tmp);
         if (loadAfterBuild) {
             fullQualifiedDataPath = fullQualifiedDataPath + uniquePath;
             logger.info("start ingesting data from " + fullQualifiedDataPath);
@@ -191,66 +158,25 @@ public class OfflineBuildOdps {
             try {
                 client.ingestData(fullQualifiedDataPath, config);
                 logger.info("start committing bulk load");
-                Map<Long, DataLoadTargetPb> tableToTarget = new HashMap<>();
-                for (ColumnMappingInfo columnMappingInfo : columnMappingInfos.values()) {
-                    long tableId = columnMappingInfo.getTableId();
-                    int labelId = columnMappingInfo.getLabelId();
-                    GraphElement graphElement = schema.getElement(labelId);
-                    String label = graphElement.getLabel();
-                    DataLoadTargetPb.Builder builder = DataLoadTargetPb.newBuilder();
-                    builder.setLabel(label);
-                    if (graphElement instanceof GraphEdge) {
-                        builder.setSrcLabel(
-                                schema.getElement(columnMappingInfo.getSrcLabelId()).getLabel());
-                        builder.setDstLabel(
-                                schema.getElement(columnMappingInfo.getDstLabelId()).getLabel());
+                Map<Long, DataLoadTargetPb> tableToTarget = Utils.getTableToTargets(schema, info);
+                if (waitTimeBeforeCommit > 0) {
+                    long waitStartTime = System.currentTimeMillis();
+                    logger.info("start wait before commit: " + waitStartTime);
+                    try {
+                        Thread.sleep(waitTimeBeforeCommit);
+                        logger.info("wait time has arrived. will commit soon.");
+                    } catch (InterruptedException e) {
+                        logger.warn("wait thread has been interrupt. will commit soon.");
                     }
-                    tableToTarget.put(tableId, builder.build());
                 }
                 client.commitDataLoad(tableToTarget, uniquePath);
-
-            } catch (Exception ex) {
-                logger.error("Failed to ingest/commit data", ex);
-                client.clearIngest(uniquePath);
-                throw ex;
+            } finally {
+                try {
+                    client.clearIngest(uniquePath);
+                } catch (Exception e) {
+                    logger.warn("Clear ingest failed, ignored");
+                }
             }
         }
-    }
-
-    private static String getTableName(String tableFullName) {
-        TableInfo info = parseTableURL(tableFullName);
-        return info.getTableName();
-    }
-
-    /**
-     * Parse table URL to @TableInfo
-     * @param url the pattern of [projectName.]tableName[|partitionSpec]
-     * @return TableInfo
-     */
-    private static TableInfo parseTableURL(String url) {
-        String projectName = odps.getDefaultProject();
-        String tableName;
-        String partitionSpec = null;
-        if (url.contains(".")) {
-            String[] items = url.split("\\.");
-            projectName = items[0];
-            tableName = items[1];
-        } else {
-            tableName = url;
-        }
-        if (tableName.contains("|")) {
-            String[] items = tableName.split("\\|");
-            tableName = items[0];
-            partitionSpec = items[1];
-        }
-
-        TableInfo.TableInfoBuilder builder = TableInfo.builder();
-        builder.projectName(projectName);
-
-        builder.tableName(tableName);
-        if (partitionSpec != null) {
-            builder.partSpec(partitionSpec);
-        }
-        return builder.build();
     }
 }

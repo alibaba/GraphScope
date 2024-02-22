@@ -16,30 +16,37 @@
 
 package com.alibaba.graphscope.cypher.result;
 
+import com.alibaba.graphscope.common.ir.type.ArbitraryArrayType;
+import com.alibaba.graphscope.common.ir.type.ArbitraryMapType;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.common.ir.type.GraphPxdElementType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
+import com.alibaba.graphscope.common.ir.type.GraphPathType;
 import com.alibaba.graphscope.common.result.RecordParser;
+import com.alibaba.graphscope.common.result.Utils;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.IrResult;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.sql.type.ArraySqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.neo4j.values.AnyValue;
-import org.neo4j.values.storable.BooleanValue;
-import org.neo4j.values.storable.Values;
-import org.neo4j.values.virtual.*;
+import org.neo4j.values.storable.*;
+import org.neo4j.values.virtual.MapValue;
+import org.neo4j.values.virtual.NodeValue;
+import org.neo4j.values.virtual.RelationshipValue;
+import org.neo4j.values.virtual.VirtualValues;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CypherRecordParser implements RecordParser<AnyValue> {
@@ -52,6 +59,7 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     @Override
     public List<AnyValue> parseFrom(IrResult.Record record) {
+        logger.debug("record {}", record);
         Preconditions.checkArgument(
                 record.getColumnsCount() == outputType.getFieldCount(),
                 "column size of results "
@@ -72,82 +80,57 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
         return this.outputType;
     }
 
-    protected NodeValue parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(
-                dataType instanceof GraphSchemaType,
-                "data type of vertex should be " + GraphSchemaType.class);
-        return VirtualValues.nodeValue(
-                vertex.getId(),
-                Values.stringArray(
-                        getLabelName(vertex.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
-                MapValue.EMPTY);
-    }
-
-    protected RelationshipValue parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(
-                dataType instanceof GraphSchemaType,
-                "data type of edge should be " + GraphSchemaType.class);
-        return VirtualValues.relationshipValue(
-                edge.getId(),
-                VirtualValues.nodeValue(
-                        edge.getSrcId(),
-                        Values.stringArray(
-                                getSrcLabelName(
-                                        edge.getSrcLabel(),
-                                        getLabelTypes((GraphSchemaType) dataType))),
-                        MapValue.EMPTY),
-                VirtualValues.nodeValue(
-                        edge.getDstId(),
-                        Values.stringArray(
-                                getDstLabelName(
-                                        edge.getDstLabel(),
-                                        getLabelTypes((GraphSchemaType) dataType))),
-                        MapValue.EMPTY),
-                Values.stringValue(
-                        getLabelName(edge.getLabel(), getLabelTypes((GraphSchemaType) dataType))),
-                MapValue.EMPTY);
-    }
-
-    protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
-        Preconditions.checkArgument(dataType.getSqlTypeName() == SqlTypeName.ARRAY);
-        ArraySqlType arrayType = (ArraySqlType) dataType;
-        Preconditions.checkArgument(arrayType.getComponentType() instanceof GraphPxdElementType);
-        // todo: support path expand result
-        GraphPxdElementType elementType = (GraphPxdElementType) arrayType.getComponentType();
-        throw new NotImplementedException("type " + PathValue.class + " is not implemented yet");
-    }
-
-    protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
-        switch (value.getItemCase()) {
-            case BOOLEAN:
-                return value.getBoolean() ? BooleanValue.TRUE : BooleanValue.FALSE;
-            case I32:
-                return Values.intValue(value.getI32());
-            case I64:
-                return Values.longValue(value.getI64());
-            case F64:
-                return Values.doubleValue(value.getF64());
-            case STR:
-                return Values.stringValue(value.getStr());
+    protected AnyValue parseEntry(IrResult.Entry entry, @Nullable RelDataType dataType) {
+        if (dataType instanceof GraphPathType) {
+            return parseElement(entry.getElement(), dataType);
+        }
+        switch (dataType.getSqlTypeName()) {
+            case MULTISET:
+            case ARRAY:
+                if (dataType instanceof ArbitraryArrayType) {
+                    return parseCollection(
+                            entry.getCollection(),
+                            ((ArbitraryArrayType) dataType).getComponentTypes());
+                } else {
+                    return parseCollection(entry.getCollection(), dataType.getComponentType());
+                }
+            case MAP:
+                if (dataType instanceof ArbitraryMapType) {
+                    return parseKeyValues(
+                            entry.getMap(),
+                            ((ArbitraryMapType) dataType).getKeyTypes(),
+                            ((ArbitraryMapType) dataType).getValueTypes());
+                } else {
+                    return parseKeyValues(
+                            entry.getMap(), dataType.getKeyType(), dataType.getValueType());
+                }
             default:
-                throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
+                return parseElement(entry.getElement(), dataType);
         }
     }
 
-    protected AnyValue parseCollection(
-            IrResult.Collection collection, @Nullable RelDataType dataType) {
-        // multiset is the data type of aggregate function collect
-        // array is the data type of path collection
-        Preconditions.checkArgument(
-                dataType.getSqlTypeName() == SqlTypeName.MULTISET
-                        || dataType.getSqlTypeName() == SqlTypeName.ARRAY);
-        switch (dataType.getComponentType().getSqlTypeName()) {
+    protected AnyValue parseElement(IrResult.Element element, @Nullable RelDataType dataType) {
+        switch (element.getInnerCase()) {
+            case VERTEX:
+                return parseVertex(element.getVertex(), dataType);
+            case EDGE:
+                return parseEdge(element.getEdge(), dataType);
+            case GRAPH_PATH:
+                return parseGraphPath(element.getGraphPath(), dataType);
+            case OBJECT:
+            default:
+                return parseValue(element.getObject(), dataType);
+        }
+    }
+
+    protected AnyValue parseCollection(IrResult.Collection collection, RelDataType componentType) {
+        switch (componentType.getSqlTypeName()) {
             case BOOLEAN:
-                return Values.booleanArray(
-                        convert(
-                                collection.getCollectionList().stream()
-                                        .map(k -> k.getObject().getBoolean())
-                                        .collect(Collectors.toList())));
+                Boolean[] boolObjs =
+                        collection.getCollectionList().stream()
+                                .map(k -> k.getObject().getBoolean())
+                                .toArray(Boolean[]::new);
+                return Values.booleanArray(ArrayUtils.toPrimitive(boolObjs));
             case INTEGER:
                 return Values.intArray(
                         collection.getCollectionList().stream()
@@ -168,116 +151,203 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
                         collection.getCollectionList().stream()
                                 .map(k -> k.getObject().getStr())
                                 .toArray(String[]::new));
+            case ROW:
+                return VirtualValues.fromList(
+                        collection.getCollectionList().stream()
+                                .map(k -> parseElement(k, componentType))
+                                .collect(Collectors.toList()));
             default:
                 throw new NotImplementedException(
-                        dataType.getComponentType().getSqlTypeName() + " is unsupported yet");
+                        componentType.getSqlTypeName() + " is unsupported yet");
         }
     }
 
-    private boolean[] convert(List<Boolean> values) {
-        boolean[] result = new boolean[values.size()];
-        for (int i = 0; i < values.size(); i++) {
-            result[i] = values.get(i);
+    protected AnyValue parseCollection(
+            IrResult.Collection collection, List<RelDataType> componentTypes) {
+        List<IrResult.Element> elements = collection.getCollectionList();
+        Preconditions.checkArgument(
+                elements.size() == componentTypes.size(),
+                "Collection element size="
+                        + elements.size()
+                        + " is not consistent with type size="
+                        + componentTypes.size());
+        List<AnyValue> values = Lists.newArrayList();
+        for (int i = 0; i < elements.size(); ++i) {
+            values.add(parseElement(elements.get(i), componentTypes.get(i)));
         }
-        return result;
+        return VirtualValues.fromList(values);
     }
 
-    protected AnyValue parseEntry(IrResult.Entry entry, @Nullable RelDataType dataType) {
-        switch (entry.getInnerCase()) {
-            case ELEMENT:
-                return parseElement(entry.getElement(), dataType);
-            case COLLECTION:
-            default:
-                return parseCollection(entry.getCollection(), dataType);
-        }
+    protected AnyValue parseKeyValues(
+            IrResult.KeyValues keyValues, RelDataType keyType, RelDataType valueType) {
+        Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
+        keyValues
+                .getKeyValuesList()
+                .forEach(
+                        entry -> {
+                            valueMap.put(
+                                    entry.getKey().getStr(),
+                                    parseElement(entry.getValue(), valueType));
+                        });
+        return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
 
-    protected AnyValue parseElement(IrResult.Element element, @Nullable RelDataType dataType) {
-        switch (element.getInnerCase()) {
-            case VERTEX:
-                return parseVertex(element.getVertex(), dataType);
-            case EDGE:
-                return parseEdge(element.getEdge(), dataType);
-            case GRAPH_PATH:
-                return parseGraphPath(element.getGraphPath(), dataType);
-            case OBJECT:
-            default:
-                return parseValue(element.getObject(), dataType);
+    protected AnyValue parseKeyValues(
+            IrResult.KeyValues keyValues,
+            List<RelDataType> keyTypes,
+            List<RelDataType> valueTypes) {
+        List<IrResult.KeyValues.KeyValue> entries = keyValues.getKeyValuesList();
+        Preconditions.checkArgument(
+                entries.size() == valueTypes.size(),
+                "KeyValues entry size="
+                        + entries.size()
+                        + " is not consistent with value type size="
+                        + valueTypes.size());
+        Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
+        for (int i = 0; i < entries.size(); ++i) {
+            IrResult.KeyValues.KeyValue entry = entries.get(i);
+            valueMap.put(
+                    entry.getKey().getStr(), parseElement(entry.getValue(), valueTypes.get(i)));
         }
+        return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
 
-    private String getLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
-        switch (nameOrId.getItemCase()) {
-            case NAME:
-                return nameOrId.getName();
-            case ID:
-            default:
-                List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getLabelId() == nameOrId.getId()) {
-                        return labelType.getLabel();
+    protected NodeValue parseVertex(IrResult.Vertex vertex, @Nullable RelDataType dataType) {
+        return VirtualValues.nodeValue(
+                vertex.getId(),
+                Values.stringArray(
+                        Utils.getLabelName(vertex.getLabel(), Utils.getLabelTypes(dataType))),
+                parseProperties(vertex.getPropertiesList(), dataType));
+    }
+
+    protected RelationshipValue parseEdge(IrResult.Edge edge, @Nullable RelDataType dataType) {
+        return VirtualValues.relationshipValue(
+                edge.getId(),
+                VirtualValues.nodeValue(
+                        edge.getSrcId(),
+                        Values.stringArray(
+                                Utils.getSrcLabelName(
+                                        edge.getSrcLabel(), Utils.getLabelTypes(dataType))),
+                        MapValue.EMPTY),
+                VirtualValues.nodeValue(
+                        edge.getDstId(),
+                        Values.stringArray(
+                                Utils.getDstLabelName(
+                                        edge.getDstLabel(), Utils.getLabelTypes(dataType))),
+                        MapValue.EMPTY),
+                Values.stringValue(
+                        Utils.getLabelName(edge.getLabel(), Utils.getLabelTypes(dataType))),
+                parseProperties(edge.getPropertiesList(), dataType));
+    }
+
+    private MapValue parseProperties(List<IrResult.Property> properties, RelDataType dataType) {
+        Map<String, AnyValue> valueMap = Maps.newLinkedHashMap();
+        // data types of properties
+        List<RelDataTypeField> typeFields = dataType.getFieldList();
+        properties.forEach(
+                k -> {
+                    Common.NameOrId key = k.getKey();
+                    // property key string which is used for display
+                    String keyStr;
+                    RelDataTypeField field;
+                    switch (key.getItemCase()) {
+                        case NAME:
+                            // find target field in typeFields by property name
+                            field =
+                                    Utils.findFieldByPredicate(
+                                            k1 -> k1.getName().equals(key.getName()), typeFields);
+                            keyStr = key.getName();
+                            break;
+                        case ID:
+                        default:
+                            // find target field in typeFields by property id
+                            field =
+                                    Utils.findFieldByPredicate(
+                                            k1 -> k1.getIndex() == key.getId(), typeFields);
+                            keyStr =
+                                    (field != null) ? field.getName() : String.valueOf(key.getId());
                     }
-                    labelIds.add(labelType.getLabelId());
-                }
-                throw new IllegalArgumentException(
-                        "label id="
-                                + nameOrId.getId()
-                                + " not found, expected ids are "
-                                + labelIds);
-        }
+                    AnyValue value =
+                            parseValue(k.getValue(), field != null ? field.getType() : null);
+                    valueMap.put(keyStr, value);
+                });
+        return VirtualValues.fromMap(valueMap, valueMap.size(), 0);
     }
 
-    private String getSrcLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
-        switch (nameOrId.getItemCase()) {
-            case NAME:
-                return nameOrId.getName();
-            case ID:
+    protected AnyValue parseGraphPath(IrResult.GraphPath path, @Nullable RelDataType dataType) {
+        List<NodeValue> nodes = Lists.newArrayList();
+        List<RelationshipValue> relationships = Lists.newArrayList();
+        path.getPathList()
+                .forEach(
+                        k -> {
+                            switch (k.getInnerCase()) {
+                                case VERTEX:
+                                    nodes.add(
+                                            parseVertex(
+                                                    k.getVertex(), Utils.getVertexType(dataType)));
+                                    break;
+                                case EDGE:
+                                    relationships.add(
+                                            parseEdge(k.getEdge(), Utils.getEdgeType(dataType)));
+                                    break;
+                            }
+                        });
+        return VirtualValues.path(
+                nodes.toArray(NodeValue[]::new), relationships.toArray(RelationshipValue[]::new));
+    }
+
+    protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
+        if (dataType instanceof GraphLabelType) {
+            return Values.stringValue(Utils.parseLabelValue(value, (GraphLabelType) dataType));
+        }
+        switch (value.getItemCase()) {
+            case BOOLEAN:
+                return value.getBoolean() ? BooleanValue.TRUE : BooleanValue.FALSE;
+            case I32:
+                return Values.intValue(value.getI32());
+            case I64:
+                return Values.longValue(value.getI64());
+            case F64:
+                return Values.doubleValue(value.getF64());
+            case STR:
+                return Values.stringValue(value.getStr());
+            case I32_ARRAY:
+                return Values.intArray(
+                        value.getI32Array().getItemList().stream()
+                                .mapToInt(k -> k.intValue())
+                                .toArray());
+            case I64_ARRAY:
+                return Values.longArray(
+                        value.getI64Array().getItemList().stream()
+                                .mapToLong(k -> k.longValue())
+                                .toArray());
+            case F64_ARRAY:
+                return Values.doubleArray(
+                        value.getF64Array().getItemList().stream()
+                                .mapToDouble(k -> k.doubleValue())
+                                .toArray());
+            case STR_ARRAY:
+                return Values.stringArray(value.getStrArray().getItemList().toArray(String[]::new));
+            case NONE:
+                return Values.NO_VALUE;
+            case DATE:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.DATE,
+                        "date32 value should have date type");
+                return DateValue.epochDate(value.getDate().getItem());
+            case TIME:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.TIME,
+                        "time32 value should have time type");
+                return TimeValue.time(value.getTime().getItem() * 1000_000L, ZoneOffset.UTC);
+            case TIMESTAMP:
+                Preconditions.checkArgument(
+                        dataType.getSqlTypeName() == SqlTypeName.TIMESTAMP,
+                        "timestamp value should have timestamp type");
+                return DateTimeValue.ofEpochMillis(
+                        Values.longValue(value.getTimestamp().getItem()));
             default:
-                List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getSrcLabelId() == nameOrId.getId()) {
-                        return labelType.getSrcLabel();
-                    }
-                }
-                throw new IllegalArgumentException(
-                        "src label id="
-                                + nameOrId.getId()
-                                + " not found, expected ids are "
-                                + labelIds);
+                throw new NotImplementedException(value.getItemCase() + " is unsupported yet");
         }
-    }
-
-    private String getDstLabelName(Common.NameOrId nameOrId, List<GraphLabelType> labelTypes) {
-        switch (nameOrId.getItemCase()) {
-            case NAME:
-                return nameOrId.getName();
-            case ID:
-            default:
-                List<Integer> labelIds = new ArrayList<>();
-                for (GraphLabelType labelType : labelTypes) {
-                    if (labelType.getDstLabelId() == nameOrId.getId()) {
-                        return labelType.getDstLabel();
-                    }
-                }
-                throw new IllegalArgumentException(
-                        "dst label id="
-                                + nameOrId.getId()
-                                + " not found, expected ids are "
-                                + labelIds);
-        }
-    }
-
-    private List<GraphLabelType> getLabelTypes(GraphSchemaType dataType) {
-        List<GraphLabelType> labelTypes = new ArrayList<>();
-        if (dataType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) dataType)
-                    .forEach(
-                            k -> {
-                                labelTypes.add(k.getLabelType());
-                            });
-        } else {
-            labelTypes.add(dataType.getLabelType());
-        }
-        return labelTypes;
     }
 }

@@ -65,7 +65,7 @@ class ResourceBuilder:
         role_ref = kube_client.V1RoleRef(
             kind="Role", name=role_name, api_group="rbac.authorization.k8s.io"
         )
-        subject = kube_client.V1Subject(
+        subject = kube_client.RbacV1Subject(
             kind="ServiceAccount", name=service_account_name, namespace=namespace
         )
         role_binding = kube_client.V1RoleBinding(
@@ -81,7 +81,7 @@ class ResourceBuilder:
         role_ref = kube_client.V1RoleRef(
             kind="ClusterRole", name=role_name, api_group="rbac.authorization.k8s.io"
         )
-        subject = kube_client.V1Subject(
+        subject = kube_client.RbacV1Subject(
             kind="ServiceAccount", name=service_account_name, namespace=namespace
         )
         role_binding = kube_client.V1ClusterRoleBinding(
@@ -196,9 +196,9 @@ class ResourceBuilder:
         return volumes, source_volume_mounts, destination_volume_mounts
 
     @staticmethod
-    def get_resources(requests, limits, preemptive=True):
+    def get_resources(requests, limits):
         resource_requirements = kube_client.V1ResourceRequirements()
-        if not preemptive and requests is not None:
+        if requests is not None:
             resource_requirements.requests = requests
         if limits is not None:
             resource_requirements.limits = limits

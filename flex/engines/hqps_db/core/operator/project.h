@@ -25,8 +25,10 @@ limitations under the License.
 #include "flex/engines/hqps_db/core/utils/keyed.h"
 
 #include "flex/engines/hqps_db/structures/collection.h"
+#include "flex/engines/hqps_db/structures/multi_edge_set/untyped_edge_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/general_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
+#include "flex/engines/hqps_db/structures/path.h"
 
 namespace gs {
 
@@ -136,7 +138,7 @@ class ProjectOp {
     VLOG(10) << "Current head size: " << node_size;
 
     std::vector<offset_t> offsets(node_size + 1, 0);
-    for (auto i = 1; i <= node_size; ++i) {
+    for (size_t i = 1; i <= node_size; ++i) {
       offsets[i] = i;
     }
 
@@ -174,12 +176,12 @@ class ProjectOp {
     auto node_size = gs::Get<-1>(ctx).Size();
     // VLOG(10) << "Current head size: " << node_size;
     std::vector<offset_t> offset(node_size + 1, 0);
-    for (auto i = 1; i <= node_size; ++i) {
+    for (size_t i = 1; i <= node_size; ++i) {
       offset[i] = i;
     }
     std::vector<std::vector<offset_t>> offsets;
     offsets.reserve(proj_num - 1);
-    for (auto i = 0; i < proj_num - 1; ++i) {
+    for (size_t i = 0; i + 1 < proj_num; ++i) {
       offsets.push_back(offset);
     }
 
@@ -188,11 +190,6 @@ class ProjectOp {
         apply_single_project(graph, ctx, std::get<proj_num - 1>(mappers));
     auto prev_tuple = apply_single_project_until<proj_num - 1>(
         graph, ctx, mappers, std::make_index_sequence<proj_num - 1>{});
-    using new_head_t =
-        std::remove_const_t<std::remove_reference_t<decltype(head)>>;
-    using first_alias_t = std::tuple_element_t<0, std::tuple<ProjectMapper...>>;
-    using last_alias_t =
-        std::tuple_element_t<proj_num - 1, std::tuple<ProjectMapper...>>;
     return make_context<0, proj_num - 1>(std::move(prev_tuple), std::move(head),
                                          std::move(offsets));
   }
@@ -289,8 +286,31 @@ class ProjectOp {
 
   ///////////////////Project implementation for all data structures.
 
+  /// Special case for project for labelKey
+  template <
+      typename T, typename NODE_T,
+      typename std::enable_if<std::is_same_v<T, LabelKey>>::type* = nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
+      const std::vector<size_t>& repeat_array) {
+    LOG(INFO) << "[Single project on labelKey]" << demangle(node);
+    auto label_vec = node.GetLabelVec();
+    std::vector<T> res_prop_vec;
+    CHECK(label_vec.size() == repeat_array.size())
+        << "label size: " << label_vec.size()
+        << " repeat size: " << repeat_array.size();
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
+        res_prop_vec.emplace_back(label_vec[i]);
+      }
+    }
+    return Collection<T>(std::move(res_prop_vec));
+  }
+
   // single label vertex set.
-  template <typename T, typename LabelT, typename VID_T, typename... SET_T>
+  template <
+      typename T, typename LabelT, typename VID_T, typename... SET_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       RowVertexSetImpl<LabelT, VID_T, SET_T...>& node,
@@ -301,8 +321,8 @@ class ProjectOp {
     // VLOG(10) << "Finish fetching properties";
     node.fillBuiltinProps(prop_tuple_vec, {prop_name}, repeat_array);
     std::vector<T> res_prop_vec;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         res_prop_vec.push_back(std::get<0>(prop_tuple_vec[i]));
       }
     }
@@ -313,8 +333,10 @@ class ProjectOp {
   }
 
   // single keyed label vertex set.
-  template <typename T, typename LabelT, typename KEY_T, typename VID_T,
-            typename... SET_T>
+  template <
+      typename T, typename LabelT, typename KEY_T, typename VID_T,
+      typename... SET_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>& node,
@@ -326,8 +348,8 @@ class ProjectOp {
     // VLOG(10) << "Finish fetching properties";
     node.fillBuiltinProps(prop_tuple_vec, {prop_name}, repeat_array);
     std::vector<T> res_prop_vec;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         res_prop_vec.push_back(std::get<0>(prop_tuple_vec[i]));
       }
     }
@@ -338,7 +360,9 @@ class ProjectOp {
   }
 
   // project for two label vertex set.
-  template <typename T, typename VID_T, typename LabelT, typename... SET_T>
+  template <
+      typename T, typename VID_T, typename LabelT, typename... SET_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph,
       TwoLabelVertexSetImpl<VID_T, LabelT, SET_T...>& node,
@@ -349,7 +373,7 @@ class ProjectOp {
     // make_repeat;
     size_t sum = 0;
     bool flag = true;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       if (repeat_array[i] != 1) {
         flag = false;
       }
@@ -367,8 +391,8 @@ class ProjectOp {
       return Collection<T>(std::move(res_prop_vec));
     } else {
       res_prop_vec.reserve(sum);
-      for (auto i = 0; i < repeat_array.size(); ++i) {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+      for (size_t i = 0; i < repeat_array.size(); ++i) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           res_prop_vec.emplace_back(std::get<0>(tmp_prop_vec[i]));
         }
       }
@@ -377,18 +401,23 @@ class ProjectOp {
   }
 
   // general vertex set.
-  template <typename T, typename VID_T, typename LabelT, size_t N>
+  template <
+      typename T, typename VID_T, typename LabelT, typename... SET_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
-      const GRAPH_INTERFACE& graph, GeneralVertexSet<VID_T, LabelT, N>& node,
+      const GRAPH_INTERFACE& graph,
+      GeneralVertexSet<VID_T, LabelT, SET_T...>& node,
       const std::string& prop_name_, const std::vector<size_t>& repeat_array) {
     VLOG(10) << "start fetching properties";
-    auto tmp_prop_vec =
-        get_property_tuple_general<T>(graph, node, {prop_name_});
+    auto tmp_prop_vec = get_property_tuple_general<T>(
+        graph, node, std::array<std::string, 1>{prop_name_});
+    VLOG(10) << "Got properties for general vertex set: "
+             << gs::to_string(tmp_prop_vec);
     std::vector<T> res_prop_vec;
     // make_repeat;
     size_t sum = 0;
     bool flag = true;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       if (repeat_array[i] != 1) {
         flag = false;
       }
@@ -399,14 +428,14 @@ class ProjectOp {
         // convert tmp_prop_vec to vector.
         res_prop_vec.reserve(tmp_prop_vec.size());
         for (auto& ele : tmp_prop_vec) {
-          res_prop_vec.push_back(ele);
+          res_prop_vec.push_back(std::get<0>(ele));
         }
       }
-      return Collection<T>(std::move(tmp_prop_vec));
+      return Collection<T>(std::move(res_prop_vec));
     } else {
       res_prop_vec.reserve(sum);
-      for (auto i = 0; i < repeat_array.size(); ++i) {
-        for (auto j = 0; j < repeat_array[i]; ++j) {
+      for (size_t i = 0; i < repeat_array.size(); ++i) {
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
           res_prop_vec.push_back(std::get<0>(tmp_prop_vec[i]));
         }
       }
@@ -415,8 +444,10 @@ class ProjectOp {
   }
 
   // single label edge set
-  template <typename T, typename NODE_T,
-            typename std::enable_if<NODE_T::is_edge_set>::type* = nullptr>
+  template <
+      typename T, typename NODE_T,
+      typename std::enable_if<NODE_T::is_edge_set &&
+                              (!std::is_same_v<T, LabelKey>)>::type* = nullptr>
   static auto apply_single_project_impl(
       const GRAPH_INTERFACE& graph, NODE_T& node, const std::string& prop_name,
       const std::vector<size_t>& repeat_array) {
@@ -442,6 +473,50 @@ class ProjectOp {
     }
 
     return Collection<T>(std::move(res_prop_vec));
+  }
+
+  /// Apply project on untyped edge set.
+  template <
+      typename T, typename VID_T, typename LabelT, typename SUB_GRAPH_T,
+      typename std::enable_if<(!std::is_same_v<T, LabelKey>)>::type* = nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph,
+      UnTypedEdgeSet<VID_T, LabelT, SUB_GRAPH_T>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    VLOG(10) << "Finish fetching properties";
+
+    // We assume edge properties are already got in getEdges.
+    std::array<std::string, 1> prop_array{prop_name};
+    std::vector<T> tmp_prop_vec =
+        node.template getProperties<T>(prop_array, repeat_array);
+
+    return Collection<T>(std::move(tmp_prop_vec));
+  }
+
+  // apply project on path set，the type must be lengthKey
+  template <typename PROP_T, typename VID_T, typename LabelT,
+            typename std::enable_if<std::is_same_v<PROP_T, LengthKey>>::type* =
+                nullptr>
+  static auto apply_single_project_impl(
+      const GRAPH_INTERFACE& graph, CompressedPathSet<VID_T, LabelT>& node,
+      const std::string& prop_name, const std::vector<size_t>& repeat_array) {
+    VLOG(10) << "Finish fetching properties";
+
+    std::vector<typename LengthKey::length_data_type> lengths_vec;
+    auto path_vec = node.get_all_valid_paths();
+    CHECK(path_vec.size() == repeat_array.size());
+    lengths_vec.reserve(path_vec.size());
+    for (size_t i = 0; i < path_vec.size(); ++i) {
+      if (repeat_array[i] > 0) {
+        auto length = path_vec[i].length();
+        for (size_t j = 0; j < repeat_array[i]; ++j) {
+          lengths_vec.push_back(length);
+        }
+      }
+    }
+
+    return Collection<typename LengthKey::length_data_type>(
+        std::move(lengths_vec));
   }
 
   // evaluate expression in project op

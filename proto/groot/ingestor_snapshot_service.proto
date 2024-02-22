@@ -34,21 +34,10 @@ message AdvanceIngestSnapshotIdResponse {
 }
 
 
-service IngestProgress {
-  rpc getTailOffsets(GetTailOffsetsRequest) returns(GetTailOffsetsResponse);
-}
-
-message GetTailOffsetsRequest {
-  repeated int32 queueId = 1;
-}
-
-message GetTailOffsetsResponse {
-  repeated int64 offsets = 1;
-}
-
 service IngestorWrite {
   rpc writeIngestor(WriteIngestorRequest) returns (WriteIngestorResponse);
 }
+
 
 message WriteIngestorRequest {
   string requestId = 1;

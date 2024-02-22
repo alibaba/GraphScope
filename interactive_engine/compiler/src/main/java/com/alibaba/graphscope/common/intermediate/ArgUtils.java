@@ -24,6 +24,7 @@ public class ArgUtils {
     public static String ID = "~id";
     public static String LEN = "~len";
     public static String PROPERTY_ALL = "~all";
+    public static String SEED_KEY = "REPEATABLE";
 
     public static FfiConst.ByValue asConst(int id) {
         FfiConst.ByValue ffiConst = new FfiConst.ByValue();

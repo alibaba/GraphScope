@@ -26,9 +26,9 @@ limitations under the License.
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
 #include "flex/codegen/src/string_utils.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 static constexpr const char* PROJECT_MAPPER_VAR_TEMPLATE_STR =
@@ -42,9 +42,6 @@ static constexpr const char* PROJECT_OP_TEMPLATE_STR =
 
 // to check the output type of case when is the same.
 bool sanity_check(const common::Case& expr_case) {
-  auto& when_exprs = expr_case.when_then_expressions();
-  auto& else_expr = expr_case.else_result_expression();
-
   // TODO: implement this check
   return true;
 }
@@ -56,7 +53,7 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
   std::string in_col_ids, expr_constructor_param_str, expr_selector_str;
   {
     std::stringstream ss;
-    for (auto i = 0; i < expr_selectors.size(); ++i) {
+    for (size_t i = 0; i < expr_selectors.size(); ++i) {
       ss << expr_selectors[i].first;
       if (i != expr_selectors.size() - 1) {
         ss << ", ";
@@ -69,7 +66,7 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
     if (func_construct_param_const.size() > 0) {
       ss << ", ";
     }
-    for (auto i = 0; i < func_construct_param_const.size(); ++i) {
+    for (size_t i = 0; i < func_construct_param_const.size(); ++i) {
       ss << func_construct_param_const[i].var_name;
       if (i != func_construct_param_const.size() - 1) {
         ss << ", ";
@@ -82,7 +79,7 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
     if (expr_selectors.size() > 0) {
       ss << ", ";
     }
-    for (auto i = 0; i < expr_selectors.size(); ++i) {
+    for (size_t i = 0; i < expr_selectors.size(); ++i) {
       ss << expr_selectors[i].second;
       if (i != expr_selectors.size() - 1) {
         ss << ", ";
@@ -117,14 +114,15 @@ std::string project_case_when_from_project_mapping(
     throw std::runtime_error("case when sanity check failed");
   }
   CaseWhenBuilder builder(ctx);
-  builder.return_type(data_type)
-      .when_then_exprs(expr_case.when_then_expressions())
+  builder.when_then_exprs(expr_case.when_then_expressions())
       .else_expr(expr_case.else_result_expression());
 
   std::string expr_func_name, expr_code;
   std::vector<codegen::ParamConst> func_construct_param_const;
   std::vector<std::pair<int32_t, std::string>> expr_selectors;
-  common::DataType ret_data_type;  // returned data type for case when building
+  std::vector<common::DataType>
+      ret_data_type;  // returned data type for case when building
+  // ret_data_type is not used.
   std::tie(expr_func_name, func_construct_param_const, expr_selectors,
            expr_code, ret_data_type) = builder.Build();
 
@@ -150,17 +148,17 @@ std::string project_expression_from_project_mapping(
     BuildingContext& ctx, const common::Expression& expr,
     int32_t out_alias_tag) {
   auto expr_builder = ExprBuilder(ctx);
-  CHECK(expr.operators_size() == 3)
-      << "Current only support binary expression for project";
-  CHECK(expr.operators(1).has_node_type());
-  auto data_type_name =
-      common_data_type_pb_2_str(expr.operators(1).node_type().data_type());
-  expr_builder.set_return_type(expr.operators(1).node_type().data_type());
+  VLOG(10) << "Projecting expression: " << expr.DebugString();
+  auto ret_data_type = eval_expr_return_type(expr);
+  LOG(INFO) << "Expression return type: "
+            << single_common_data_type_pb_2_str(ret_data_type);
+
   expr_builder.AddAllExprOpr(expr.operators());
+  expr_builder.set_return_type(ret_data_type);
   std::string expr_func_name, expr_code;
   std::vector<codegen::ParamConst> func_construct_param_const;
   std::vector<std::pair<int32_t, std::string>> expr_selectors;
-  common::DataType unused_expr_ret_type;
+  std::vector<common::DataType> unused_expr_ret_type;
   std::tie(expr_func_name, func_construct_param_const, expr_selectors,
            expr_code, unused_expr_ret_type) = expr_builder.Build();
 
@@ -195,7 +193,6 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
     VLOG(10) << "Got case when in projecting";
     auto case_when = expr_op.case_();
     VLOG(10) << case_when.DebugString();
-    CHECK(expr_op.node_type().type_case() == common::IrDataType::kDataType);
     return project_case_when_from_project_mapping(
         ctx, case_when, expr_op.node_type().data_type(), real_res_col_id);
   }
@@ -211,6 +208,13 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
         prop_names.push_back(prop.key().name());
         data_types.push_back(
             common_data_type_pb_2_data_type(var.node_type().data_type()));
+      } else if (prop.item_case() == common::Property::kLen) {
+        prop_names.push_back("length");
+        data_types.push_back(codegen::DataType::kLength);
+      } else if (prop.item_case() == common::Property::kLabel) {
+        // return the label id.
+        prop_names.push_back("label");
+        data_types.push_back(codegen::DataType::kLabelId);
       } else {
         LOG(FATAL) << "Unknown property type" << prop.DebugString();
       }
@@ -230,7 +234,7 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
     // project properties to a list.
     auto& vars =
         expr_op.has_vars() ? expr_op.vars().keys() : expr_op.var_map().keys();
-    for (auto i = 0; i < vars.size(); ++i) {
+    for (int32_t i = 0; i < vars.size(); ++i) {
       auto& var = vars[i];
       if (in_tag_id == -2) {
         in_tag_id = var.tag().id();
@@ -293,7 +297,7 @@ std::string project_mapping_to_string(
     BuildingContext& ctx, const physical::Project::ExprAlias& mapping,
     TagIndMapping& new_tag_ind_map) {
   int32_t res_alias = mapping.alias().value();
-  // TODO: Currenly we assume each expr_alias contains only property for that
+  // TODO: Currently we assume each expr_alias contains only property for that
   // input tag
 
   auto real_res_alias = new_tag_ind_map.CreateOrGetTagInd(res_alias);
@@ -337,7 +341,7 @@ class ProjectOpBuilder {
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
     std::stringstream ss;
-    for (int i = 0; i < mappings_.size(); ++i) {
+    for (size_t i = 0; i < mappings_.size(); ++i) {
       ss << project_mapping_to_string(ctx_, mappings_[i], new_tag_id_mapping);
       if (i != mappings_.size() - 1) {
         ss << ", ";
@@ -365,7 +369,7 @@ static std::string BuildProjectOp(
   ProjectOpBuilder builder(ctx);
   builder.is_append(project_pb.is_append());
   auto& mappings = project_pb.mappings();
-  for (auto i = 0; i < mappings.size(); ++i) {
+  for (int32_t i = 0; i < mappings.size(); ++i) {
     builder.add_mapping(mappings[i]);
   }
   return builder.Build();

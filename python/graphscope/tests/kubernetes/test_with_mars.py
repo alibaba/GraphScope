@@ -22,7 +22,7 @@ import os
 import pytest
 
 import graphscope
-from graphscope.config import GSConfig as gs_config
+from graphscope.config import gs_config
 
 graphscope.set_option(show_log=True)
 logger = logging.getLogger("graphscope")
@@ -42,13 +42,13 @@ def get_k8s_volumes():
 def get_gs_registry_on_ci_env():
     if "GS_REGISTRY" in os.environ:
         return os.environ["GS_REGISTRY"]
-    return gs_config.k8s_image_registry
+    return gs_config.kubernetes_launcher.image.registry
 
 
 def get_gs_tag_on_ci_env():
     if "GS_TAG" in os.environ:
         return os.environ["GS_TAG"]
-    return gs_config.k8s_image_tag
+    return gs_config.kubernetes_launcher.image.tag
 
 
 @pytest.fixture

@@ -6,17 +6,21 @@ use protobuf::Message;
 use crate::db::api::GraphErrorCode::InvalidData;
 use crate::db::api::{GraphError, GraphResult};
 
+/// define the size that a length field takes in encoding an array
+pub const LEN_SIZE: usize = ::std::mem::size_of::<u32>();
+
 /// This reader won't check whether the offset is overflow when read bytes.
 /// It's for performance purpose. Be careful to use it.
 #[derive(Clone)]
 pub struct UnsafeBytesReader<'a> {
     buf: *const u8,
+    len: usize,
     _phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> UnsafeBytesReader<'a> {
     pub fn new(buf: &[u8]) -> Self {
-        UnsafeBytesReader { buf: buf.as_ptr(), _phantom: Default::default() }
+        UnsafeBytesReader { buf: buf.as_ptr(), len: buf.len(), _phantom: Default::default() }
     }
 
     pub fn read_u8(&self, offset: usize) -> u8 {
@@ -54,6 +58,9 @@ impl<'a> UnsafeBytesReader<'a> {
     }
     pub fn read_bytes(&self, offset: usize, len: usize) -> &'a [u8] {
         unsafe { ::std::slice::from_raw_parts(self.buf.offset(offset as isize), len) }
+    }
+    pub fn len(&self) -> usize {
+        self.len
     }
 }
 
@@ -118,9 +125,9 @@ mod tests {
         ($r_func:ident, $w_func:ident, $ty:ty) => {
             let mut buf = Vec::with_capacity(100);
             let mut writer = UnsafeBytesWriter::new(&mut buf);
-            writer.$w_func(20, 1.0 as $ty);
+            writer.$w_func(16, 1.0 as $ty);
             let reader = UnsafeBytesReader::new(&buf);
-            assert_eq!(reader.$r_func(20), 1.0 as $ty);
+            assert_eq!(reader.$r_func(16), 1.0 as $ty);
         };
     }
 

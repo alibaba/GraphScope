@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir;
 
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
@@ -115,7 +116,7 @@ public class ExpressionTest {
         RexNode var = builder.source(mockSourceConfig("a")).variable("a", "age");
         RexNode equal = builder.call(GraphStdOperatorTable.EQUALS, var, builder.literal("X"));
         Assert.assertEquals(equal.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
-        Assert.assertEquals("=(a.age, 'X')", equal.toString());
+        Assert.assertEquals("=(a.age, _UTF-8'X')", equal.toString());
     }
 
     // a.age + 10 == 30
@@ -138,7 +139,7 @@ public class ExpressionTest {
         RexNode equal2 = builder.call(GraphStdOperatorTable.EQUALS, var2, builder.literal("x"));
         RexNode node = builder.call(GraphStdOperatorTable.AND, equal1, equal2);
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.BOOLEAN);
-        Assert.assertEquals("AND(>(a.age, 10), =(a.name, 'x'))", node.toString());
+        Assert.assertEquals("AND(>(a.age, 10), =(a.name, _UTF-8'x'))", node.toString());
     }
 
     // a.age % 10
@@ -167,6 +168,47 @@ public class ExpressionTest {
         RexNode node = builder.call(GraphStdOperatorTable.UNARY_MINUS, var);
         Assert.assertEquals(node.getType().getSqlTypeName(), SqlTypeName.INTEGER);
         Assert.assertEquals("-(a.age)", node.toString());
+    }
+
+    // @age + 1
+    @Test
+    public void dynamic_param_type_test() {
+        GraphRexBuilder rexBuilder = (GraphRexBuilder) builder.getRexBuilder();
+        RexNode plus =
+                builder.call(
+                        GraphStdOperatorTable.PLUS,
+                        rexBuilder.makeGraphDynamicParam("age", 0),
+                        builder.literal(1));
+        Assert.assertEquals(SqlTypeName.INTEGER, plus.getType().getSqlTypeName());
+    }
+
+    @Test
+    public void posix_regex_test() {
+        RexNode regex =
+                builder.source(mockSourceConfig(null))
+                        .call(
+                                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                                builder.variable(null, "name"),
+                                builder.literal("^marko"));
+        Assert.assertEquals(SqlTypeName.BOOLEAN, regex.getType().getSqlTypeName());
+        Assert.assertEquals(
+                "POSIX REGEX CASE SENSITIVE(DEFAULT.name, _UTF-8'^marko')", regex.toString());
+    }
+
+    @Test
+    public void map_constructor_test() {
+        RexNode map =
+                builder.source(mockSourceConfig(null))
+                        .call(
+                                GraphStdOperatorTable.MAP_VALUE_CONSTRUCTOR,
+                                builder.literal("id"),
+                                builder.variable(null, "id"),
+                                builder.literal("age"),
+                                builder.variable(null, "age"));
+        Assert.assertEquals(
+                "MAP(_UTF-8'id', DEFAULT.id, _UTF-8'age', DEFAULT.age)", map.toString());
+        // key type is string while value type is bigint
+        Assert.assertEquals("(CHAR(3), BIGINT) MAP", map.getType().toString());
     }
 
     private SourceConfig mockSourceConfig(String alias) {

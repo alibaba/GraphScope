@@ -26,5 +26,5 @@ public interface StoreIngestor {
             Map<String, String> config,
             CompletionCallback<Void> callback);
 
-    void clearIngest(int storeId, CompletionCallback<Void> callback);
+    void clearIngest(int storeId, String path, CompletionCallback<Void> callback);
 }

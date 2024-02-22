@@ -136,7 +136,7 @@ impl<T: Send> Clone for MessageSender<T> {
 impl<T: Send> Drop for MessageSender<T> {
     fn drop(&mut self) {
         if !self.is_closed.get() {
-            warn!("dropping an unclosed 'MessageSender' id = {}", self.id);
+            trace!("dropping an unclosed 'MessageSender' id = {}", self.id);
             self.poison();
             self.close();
         }

@@ -25,9 +25,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
 #include "flex/codegen/src/pb_parser/query_params_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 
@@ -54,10 +54,26 @@ std::string sort_pair_pb_to_order_pair(
   auto real_key_tag_id = ctx.GetTagInd(pair.key().tag().id());
   CHECK(pair.key().node_type().type_case() == common::IrDataType::kDataType)
       << "sort ordering pair only support primitive";
-  sort_prop_type =
-      common_data_type_pb_2_str(pair.key().node_type().data_type());
-  // the type of sorted property.
-  sort_prop_name = pair.key().property().key().name();
+  if (pair.key().has_property()) {
+    auto sort_property = pair.key().property();
+    if (sort_property.has_label()) {
+      sort_prop_name = "label";
+      sort_prop_type = data_type_2_string(codegen::DataType::kLabelId);
+    } else if (sort_property.has_key()) {
+      sort_prop_name = pair.key().property().key().name();
+      sort_prop_type =
+          single_common_data_type_pb_2_str(pair.key().node_type().data_type());
+    } else {
+      throw std::runtime_error("Unknown sort property type" +
+                               sort_property.DebugString());
+    }
+  } else if (pair.key().has_tag()) {
+    sort_prop_name = "";
+    sort_prop_type =
+        single_common_data_type_pb_2_str(pair.key().node_type().data_type());
+  } else {
+    throw std::runtime_error("Unknown sort property type" + pair.DebugString());
+  }
 
   boost::format formater(ORDERING_PAIR_TEMPLATE_STR);
   formater % sort_order_str % real_key_tag_id % sort_prop_type % sort_prop_name;
@@ -77,6 +93,10 @@ class SortOpBuilder {
   SortOpBuilder& range(const algebra::Range& limit) {
     lower_ = limit.lower();
     upper_ = limit.upper();
+    if (upper_ == 0) {
+      LOG(WARNING) << "Receive upper limit 0, set to INT_MAX";
+      upper_ = std::numeric_limits<int32_t>::max();
+    }
 
     VLOG(10) << "Sort Range: " << lower_.value()
              << ", upper: " << upper_.value();
@@ -123,7 +143,7 @@ class SortOpBuilder {
     }
     {
       std::stringstream ss;
-      for (int i = 0; i < sort_pairs_.size(); ++i) {
+      for (size_t i = 0; i < sort_pairs_.size(); ++i) {
         ss << sort_pair_pb_to_order_pair(ctx_, sort_pairs_[i]);
         if (i != sort_pairs_.size() - 1) {
           ss << ", ";

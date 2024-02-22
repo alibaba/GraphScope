@@ -39,9 +39,11 @@ def wrap_init(
             {
                 "algo": module_name,
                 "context_type": "labeled_vertex_data",
-                "type": "cython_pie"
-                if program_model == ProgramModel.PIE
-                else "cython_pregel",
+                "type": (
+                    "cython_pie"
+                    if program_model == ProgramModel.PIE
+                    else "cython_pregel"
+                ),
                 "class_name": "gs::PregelPropertyAppBase",
                 "compatible_graph": ["vineyard::ArrowFragment"],
                 "vd_type": vd_type,

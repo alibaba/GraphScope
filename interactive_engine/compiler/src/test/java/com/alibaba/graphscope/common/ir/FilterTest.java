@@ -22,9 +22,12 @@ import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.LabelConfig;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
+import com.google.common.collect.ImmutableList;
 
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalValues;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.type.SqlTypeName;
@@ -207,8 +210,8 @@ public class FilterTest {
         RelNode filter = builder.filter(condition1, condition2).build();
         Assert.assertEquals(
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, 'marko'))]],"
-                        + " opt=[VERTEX])",
+                    + " fusedFilter=[[AND(>(DEFAULT.age, 20), =(DEFAULT.name, _UTF-8'marko'))]],"
+                    + " opt=[VERTEX])",
                 filter.explain().trim());
     }
 
@@ -236,5 +239,163 @@ public class FilterTest {
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
                     + " fusedFilter=[[AND(>(DEFAULT.age, 20), <(DEFAULT.age, 30))]], opt=[VERTEX])",
                 filter.explain().trim());
+    }
+
+    // g.V().hasLabel('person')
+    @Test
+    public void label_equals_1_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, GraphProperty.LABEL_KEY),
+                                        builder.literal("person")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                        + " opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    // g.V().hasLabel('XX'), 'XX' is not a valid label
+    @Test
+    public void label_equals_2_test() {
+        try {
+            GraphBuilder builder = Utils.mockGraphBuilder();
+            RelNode node =
+                    builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                            .filter(
+                                    builder.call(
+                                            GraphStdOperatorTable.EQUALS,
+                                            builder.variable(null, GraphProperty.LABEL_KEY),
+                                            builder.literal("XX")))
+                            .build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(
+                    "cannot find common labels between values= [XX] and label="
+                            + " [[VertexLabel(software), VertexLabel(person)]]",
+                    e.getMessage());
+            return;
+        }
+        Assert.fail();
+    }
+
+    // g.V().hasLabel('person').hasLabel('software')
+    @Test
+    public void label_equals_3_test() {
+        try {
+            GraphBuilder builder = Utils.mockGraphBuilder();
+            RelNode node =
+                    builder.source(
+                                    new SourceConfig(
+                                            GraphOpt.Source.VERTEX,
+                                            new LabelConfig(false).addLabel("person")))
+                            .filter(
+                                    builder.call(
+                                            GraphStdOperatorTable.EQUALS,
+                                            builder.variable(null, GraphProperty.LABEL_KEY),
+                                            builder.literal("software")))
+                            .build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(
+                    "cannot find common labels between values= [software] and label="
+                            + " [[VertexLabel(person)]]",
+                    e.getMessage());
+            return;
+        }
+        Assert.fail();
+    }
+
+    // g.V().has('age', 10).hasLabel('person')
+    @Test
+    public void label_equals_4_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, "age"),
+                                        builder.literal(10)))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.EQUALS,
+                                        builder.variable(null, GraphProperty.LABEL_KEY),
+                                        builder.literal("person")))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    // g.V().has('age', 10).hasLabel('software'), property 'age' not exist in label='software'
+    @Test
+    public void label_equals_5_test() {
+        try {
+            GraphBuilder builder = Utils.mockGraphBuilder();
+            RelNode node =
+                    builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                            .filter(
+                                    builder.call(
+                                            GraphStdOperatorTable.EQUALS,
+                                            builder.variable(null, "age"),
+                                            builder.literal(10)))
+                            .filter(
+                                    builder.call(
+                                            GraphStdOperatorTable.EQUALS,
+                                            builder.variable(null, GraphProperty.LABEL_KEY),
+                                            builder.literal("software")))
+                            .build();
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals(
+                    "{property=age} not found; expected properties are: [id, name, lang,"
+                            + " creationDate]",
+                    e.getMessage());
+            return;
+        }
+        Assert.fail();
+    }
+
+    // ~label within ['person']
+    @Test
+    public void label_within_1_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .filter(
+                                rexBuilder.makeIn(
+                                        builder.variable(null, GraphProperty.LABEL_KEY),
+                                        ImmutableList.of(builder.literal("person"))))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                        + " opt=[VERTEX])",
+                node.explain().trim());
+    }
+
+    // g.V().hasId(1, 2, 3)
+    @Test
+    public void unique_key_within_test() {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .filter(
+                                rexBuilder.makeIn(
+                                        builder.variable(null, GraphProperty.ID_KEY),
+                                        ImmutableList.of(
+                                                builder.literal(1),
+                                                builder.literal(2),
+                                                builder.literal(3))))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
+                        + " Sarg[1, 2, 3])])",
+                node.explain().trim());
     }
 }

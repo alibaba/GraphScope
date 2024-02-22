@@ -17,25 +17,25 @@
 #define GRAPHSCOPE_DATABASE_SINGLE_EDGE_INSERT_TRANSACTION_H_
 
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/allocators.h"
 #include "grape/serialization/in_archive.h"
 
 namespace gs {
 
 class MutablePropertyFragment;
-class ArenaAllocator;
 class WalWriter;
 class VersionManager;
-class Any;
+struct Any;
 
 class SingleEdgeInsertTransaction {
  public:
-  SingleEdgeInsertTransaction(MutablePropertyFragment& graph,
-                              ArenaAllocator& alloc, WalWriter& logger,
-                              VersionManager& vm, timestamp_t timestamp);
+  SingleEdgeInsertTransaction(MutablePropertyFragment& graph, Allocator& alloc,
+                              WalWriter& logger, VersionManager& vm,
+                              timestamp_t timestamp);
   ~SingleEdgeInsertTransaction();
 
-  bool AddEdge(label_t src_label, oid_t src, label_t dst_label, oid_t dst,
-               label_t edge_label, const Any& prop);
+  bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
+               const Any& dst, label_t edge_label, const Any& prop);
 
   void Abort();
 
@@ -55,7 +55,8 @@ class SingleEdgeInsertTransaction {
   grape::InArchive arc_;
 
   MutablePropertyFragment& graph_;
-  ArenaAllocator& alloc_;
+
+  Allocator& alloc_;
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

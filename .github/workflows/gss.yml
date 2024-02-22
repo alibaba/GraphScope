@@ -49,7 +49,7 @@ jobs:
     - name: Detect the tmate session
       run: |
         if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
-          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          echo 'WARNING!!!the self-hosted machine cannot run tmate session, please debug it manually'
           exit 1
         fi
 
@@ -69,23 +69,6 @@ jobs:
           ~/.cargo/git/db/
           ~/.cache/sccache
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-
-    - name: Build GraphScope Store With Column Filter Push Down
-      run: |
-        . ${HOME}/.graphscope_env
-        export SCCACHE_DIR=~/.cache/sccache
-        export RUSTC_WRAPPER=/usr/local/bin/sccache
-        sccache --start-server
-        cd ${GITHUB_WORKSPACE}/interactive_engine
-        mvn clean install -P groot -Drust.compile.mode=debug -DskipTests -Dgroot.compile.feature="column_filter_push_down" --quiet
-
-        sccache --show-stats
-
-    - name: Gremlin Tests with Column Filter Push Down
-      run: |
-        . ${HOME}/.graphscope_env
-        cd interactive_engine/groot-server
-        mvn test -P gremlin-test
 
     - name: Build GraphScope Store
       run: |
@@ -127,7 +110,7 @@ jobs:
     - name: Detect the tmate session
       run: |
         if grep -v "grep" .github/workflows/gss.yml | grep "action-tmate"; then
-          echo 'WARNING!!!the self-hosted machine can not run tmate session, please debug it manually'
+          echo 'WARNING!!!the self-hosted machine cannot run tmate session, please debug it manually'
           exit 1
         fi
 

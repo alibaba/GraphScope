@@ -20,11 +20,12 @@ import com.alibaba.graphscope.gremlin.integration.suite.utils.__;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
-import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Map;
 
 public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_pattern_1_test();
@@ -59,25 +60,29 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Long> get_pattern_16_test();
 
+    public abstract Traversal<Vertex, Long> get_pattern_17_test();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_limit_100_group_test();
+
     @Test
     public void run_pattern_1_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_1_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(155633L, traversal.next().longValue());
+        Assert.assertEquals(240390L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_2_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_2_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(55488L, traversal.next().longValue());
+        Assert.assertEquals(118209L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_3_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_3_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(568408L, traversal.next().longValue());
+        Assert.assertEquals(1247146L, traversal.next().longValue());
     }
 
     @Test
@@ -91,7 +96,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public void run_pattern_5_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_5_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(16291L, traversal.next().longValue());
+        Assert.assertEquals(5596L, traversal.next().longValue());
     }
 
     @Test
@@ -105,14 +110,14 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public void run_pattern_7_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_7_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(2944L, traversal.next().longValue());
+        Assert.assertEquals(20858L, traversal.next().longValue());
     }
 
     @Test
     public void run_pattern_8_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_8_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(782347L, traversal.next().longValue());
+        Assert.assertEquals(1247146L, traversal.next().longValue());
     }
 
     @Test
@@ -126,7 +131,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public void run_pattern_10_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_10_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(3019L, traversal.next().longValue());
+        Assert.assertEquals(11547L, traversal.next().longValue());
     }
 
     @Test
@@ -154,7 +159,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
     public void run_pattern_14_test() {
         Traversal<Vertex, Long> traversal = this.get_pattern_14_test();
         this.printTraversalForm(traversal);
-        Assert.assertEquals(55488L, traversal.next().longValue());
+        Assert.assertEquals(118209L, traversal.next().longValue());
     }
 
     @Test
@@ -171,18 +176,29 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(23286L, traversal.next().longValue());
     }
 
+    @Test
+    public void run_pattern_17_test() {
+        Traversal<Vertex, Long> traversal = this.get_pattern_17_test();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(17367L, traversal.next().longValue());
+    }
+
+    @Test
+    public void run_g_V_limit_100_group_test() {
+        Traversal<Vertex, Map<Object, Object>> traversal = this.get_g_V_limit_100_group_test();
+        this.printTraversalForm(traversal);
+        Map<Object, Object> map = traversal.next();
+        Assert.assertEquals(100, map.size());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
     public static class Traversals extends PatternQueryTest {
 
         // PM1
         @Override
         public Traversal<Vertex, Long> get_pattern_1_test() {
             return g.V().match(
-                            __.as("a").out("KNOWS").as("b"),
-                            __.as("b")
-                                    .outE("KNOWS")
-                                    .has("creationDate", P.gt(20120101000000000L))
-                                    .inV()
-                                    .as("c"))
+                            __.as("a").out("KNOWS").as("b"), __.as("b").outE("KNOWS").inV().as("c"))
                     .count();
         }
 
@@ -193,7 +209,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                             __.as("a").out("KNOWS").as("b"),
                             __.as("b")
                                     .hasLabel("PERSON")
-                                    .has("creationDate", P.gt(20120101000000000L))
+                                    .has("gender", "male")
                                     .out("KNOWS")
                                     .as("c"))
                     .count();
@@ -207,9 +223,8 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                             __.as("b").out("KNOWS").as("c"),
                             __.as("c")
                                     .hasLabel("PERSON")
-                                    .has("creationDate", P.gt(20120101000000000L))
+                                    .has("gender", "male")
                                     .outE("KNOWS")
-                                    .has("creationDate", P.gt(20120601000000000L))
                                     .inV()
                                     .as("d"))
                     .count();
@@ -229,21 +244,9 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         @Override
         public Traversal<Vertex, Long> get_pattern_5_test() {
             return g.V().match(
-                            __.as("a")
-                                    .outE("KNOWS")
-                                    .has("creationDate", P.gt(20110101000000000L))
-                                    .inV()
-                                    .as("b"),
-                            __.as("b")
-                                    .outE("KNOWS")
-                                    .has("creationDate", P.gt(20110101000000000L))
-                                    .inV()
-                                    .as("c"),
-                            __.as("a")
-                                    .outE("KNOWS")
-                                    .has("creationDate", P.gt(20110101000000000L))
-                                    .inV()
-                                    .as("c"))
+                            __.as("a").has("gender", "male").out("KNOWS").as("b"),
+                            __.as("b").has("gender", "female").out("KNOWS").as("c"),
+                            __.as("a").out("KNOWS").as("c"))
                     .count();
         }
 
@@ -264,19 +267,10 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Long> get_pattern_7_test() {
             return g.V().match(
                             __.as("a").out("KNOWS").as("b"),
-                            __.as("b")
-                                    .has("creationDate", P.gt(20120101000000000L))
-                                    .outE("KNOWS")
-                                    .has("creationDate", P.gt(20120201000000000L))
-                                    .inV()
-                                    .as("c"),
+                            __.as("b").has("gender", "male").outE("KNOWS").inV().as("c"),
                             __.as("a").out("KNOWS").as("c"),
                             __.as("c").out("KNOWS").as("d"),
-                            __.as("b")
-                                    .outE("KNOWS")
-                                    .has("creationDate", P.gt(20120301000000000L))
-                                    .inV()
-                                    .as("d"))
+                            __.as("b").outE("KNOWS").inV().as("d"))
                     .count();
         }
 
@@ -290,7 +284,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                             ((IrCustomizedTraversal)
                                             __.as("c")
                                                     .hasLabel("PERSON")
-                                                    .has("creationDate", P.gt(20120101000000000L))
+                                                    .has("gender", "male")
                                                     .out("1..2", "KNOWS"))
                                     .endV()
                                     .as("d"))
@@ -316,10 +310,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                                     .endV()
                                     .as("b"),
                             ((IrCustomizedTraversal)
-                                            __.as("b")
-                                                    .has("creationDate", P.gt(20120101000000000L))
-                                                    .outE("KNOWS")
-                                                    .has("creationDate", P.gt(20120601000000000L)))
+                                            __.as("b").has("gender", "female").outE("KNOWS"))
                                     .inV()
                                     .as("c"),
                             ((IrCustomizedTraversal) __.as("a").out("1..2", "KNOWS"))
@@ -357,10 +348,7 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
         public Traversal<Vertex, Long> get_pattern_14_test() {
             return g.V().match(
                             __.as("a").out("KNOWS").as("b"),
-                            __.as("b")
-                                    .hasLabel("PERSON")
-                                    .has("creationDate", P.gt(20120101000000000L))
-                                    .as("b"),
+                            __.as("b").hasLabel("PERSON").has("gender", "male").as("b"),
                             __.as("b").out("KNOWS").as("c"))
                     .count();
         }
@@ -389,6 +377,32 @@ public abstract class PatternQueryTest extends AbstractGremlinProcessTest {
                     .by("firstName")
                     .by("firstName")
                     .count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_pattern_17_test() {
+            return g.V().match(
+                            __.as("a")
+                                    .hasLabel("PERSON")
+                                    .out("HASINTEREST")
+                                    .hasLabel("TAG")
+                                    .as("b"),
+                            __.as("a")
+                                    .hasLabel("PERSON")
+                                    .in("HASCREATOR")
+                                    .hasLabel("COMMENT", "POST")
+                                    .as("c"),
+                            __.as("c")
+                                    .hasLabel("COMMENT", "POST")
+                                    .out("HASTAG")
+                                    .hasLabel("TAG")
+                                    .as("b"))
+                    .count();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_limit_100_group_test() {
+            return g.V().hasLabel("PERSON").limit(100).group().by("id").by(__.count());
         }
     }
 }

@@ -30,18 +30,27 @@ public interface LogService {
 
     /**
      * Create a writer that can append data to a specific queue of LogService.
-     * @param queueId
      * @return
      */
-    LogWriter createWriter(int queueId);
+    LogWriter createWriter();
 
     /**
-     * Create a reader can read data of specific a queue from certain offset.
+     * Create a reader can read data of specific queue from certain offset.
      * @param queueId
      * @param offset
      * @return
      */
     LogReader createReader(int queueId, long offset) throws IOException;
+
+    /**
+     * Create a reader that can read data of a specific queue from certain offset or timestamp
+     * @param queueId
+     * @param offset -1 if timestamp is specified.
+     * @param timestamp -1 if offset is specified.
+     * @return
+     * @throws IOException
+     */
+    LogReader createReader(int queueId, long offset, long timestamp) throws IOException;
 
     /**
      * Delete all data before certain offset in the queue.

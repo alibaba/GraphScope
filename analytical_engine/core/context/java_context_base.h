@@ -140,7 +140,7 @@ class JavaContextBase : public grape::ContextBase {
  protected:
   virtual const char* evalDescriptor() = 0;
 
-  // Set frag_group_id to zero inidicate not available.
+  // Set frag_group_id to zero indicates not available.
   void init(jlong messages_addr, const char* java_message_manager_name,
             const std::string& params, const std::string& lib_path,
             int local_num = 1) {
@@ -209,7 +209,7 @@ class JavaContextBase : public grape::ContextBase {
       {
         jobject json_object = createArgsObject(env, args_str);
         // 3.1 If we find a setClassLoaderMethod, then we invoke.(NOt
-        // neccessary) this is specially for giraph adaptors
+        // necessary) this is specially for giraph adaptors
         setContextClassLoader(env, context_class);
 
         // 4. Invoke java method
@@ -279,7 +279,7 @@ class JavaContextBase : public grape::ContextBase {
     return std::string(user_class_path);
   }
   // user library name should be absolute
-  // serial path is used in graphx, to specify the path to serializaed class
+  // serial path is used in graphx, to specify the path to serialized class
   // objects of vd,ed.etc.
   std::string parseParamsAndSetupJVMEnv(const std::string& params,
                                         const std::string lib_path,
@@ -342,7 +342,7 @@ class JavaContextBase : public grape::ContextBase {
     // vineyard_id(frag_group_id)
     // pt.put("vineyard_id", frag_group_id);
 
-    // JVM runtime opt should consists of java.libaray.path and
+    // JVM runtime opt should consists of java.libarray.path and
     // java.class.path maybe this should be set by the backend not user.
     std::string grape_jvm_opt = generate_jvm_opts();
     if (!grape_jvm_opt.empty()) {

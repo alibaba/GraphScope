@@ -18,6 +18,9 @@ python/proto
 # dot file
 *.dot
 
+# swp file
+*.swp
+
 # Protobuf GRPC
 *.pb.*
 *_pb2.py
@@ -90,3 +93,8 @@ core.*
 
 # Flex related
 flex/docs/
+flex/interactive/data/*
+flex/interactive/logs/*
+flex/interactive/examples/sf0.1-raw/
+flex/interactive/.running
+flex/interactive/.env

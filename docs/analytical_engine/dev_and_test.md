@@ -14,11 +14,11 @@ docker run --name dev -it --shm-size=4096m registry.cn-hongkong.aliyuncs.com/gra
 Alternatively, you can also manually install all dependencies on your local machine.
 Please refer to [Dev Environment](../development/dev_guide.md#dev-environment) to find more options to get a dev environment.
 
-After the environment is prepared, clone the repository and enter the `analatical_engine` directory of the repository.
+After the environment is prepared, clone the repository and enter the `analytical_engine` directory of the repository.
 
 ```bash
 git clone https://github.com/alibaba/GraphScope.git
-cd analatical_engine
+cd analytical_engine
 ```
 
 ## Understanding the Codebase
@@ -27,7 +27,7 @@ Since the analytical engine inherits from GRAPE, it requires libgrape-lite as a 
 Please note that the core functionalities of libgrape-lite, such as graph structures, graph partitioners, workers, 
 communication between workers, and applications, are heavily reused in the analytical engine of GraphScope.
 
-If you want to fully understand the analytcial engine, it is highly recommaned that you start from libgrape-lite.
+If you want to fully understand the analytical engine, it is highly recommended that you start from libgrape-lite.
 
 The code located in the `analytical_engine` directory functions like extensions to libgrape-lite, thereby making it full-fledged with the following enhancements:
 
@@ -85,7 +85,7 @@ With `gs` command-line utility, you can build analytical engine of GraphScope wi
 # Clone a repo if needed
 # git clone https://github.com/alibaba/graphscope
 # cd graphscope
-./gs make analytical
+python3 gsctl.py make analytical
 ```
 
 The code of analytical engine is a cmake project, with a `CMakeLists.txt` in the its root directory (`/analytical_engine`). After the building with `gs`, you may found the built artifacts in `analytical_engine/build/grape_engine`.
@@ -95,7 +95,7 @@ Together with the `grape_engine` are shared libraries, or there may have a bunch
 You could install it to a location by
 
 ```bash
-./gs make analytical-install --install-prefix /usr/local
+python3 gsctl.py make analytical-install --install-prefix /usr/local
 ```
 
 ````{note}
@@ -116,7 +116,7 @@ export GRAPHSCOPE_HOME=`pwd`
 See more about `GRAPHSCOPE_HOME` in [run tests](../development/how_to_test.md#run-tests)
 
 ```bash
-./gs test analytical
+python3 gsctl.py test analytical
 ```
 
 It would download the test dataset to the `/tmp/gstest` (if not exists) and run multiple algorithms against various graphs, and compare the result with the ground truth.

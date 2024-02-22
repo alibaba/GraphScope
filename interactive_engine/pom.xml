@@ -115,6 +115,13 @@
       <build>
         <plugins>
             <plugin>
+              <artifactId>maven-compiler-plugin</artifactId>
+              <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+              </configuration>
+            </plugin>
+            <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-gpg-plugin</artifactId>
             </plugin>
@@ -191,7 +198,7 @@
     <antlr4.version>4.9.1</antlr4.version>
 
     <aliyun.oss.version>3.16.3</aliyun.oss.version>
-    <!-- httpcomponents version should aligh with version of OSS SDK -->
+    <!-- httpcomponents version should align with version of OSS SDK -->
     <httpcomponents.version>4.5.13</httpcomponents.version>
 
     <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>
@@ -216,6 +223,9 @@
     <exec.maven.version>3.0.0</exec.maven.version>
     <scala.maven.version>3.2.2</scala.maven.version>
     <cobertura.maven.version>2.7</cobertura.maven.version>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+
     <noe4j.version>4.4.0</noe4j.version>
   </properties>
 

@@ -21,10 +21,7 @@ import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.DeleteRecordsResult;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.clients.admin.RecordsToDelete;
+import org.apache.kafka.clients.admin.*;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,12 +36,12 @@ import java.util.concurrent.ExecutionException;
 public class KafkaLogService implements LogService {
     private static final Logger logger = LoggerFactory.getLogger(KafkaLogService.class);
 
-    private Configs configs;
-    private String servers;
-    private String topic;
-    private int queueCount;
-    private short replicationFactor;
-    private int maxMessageMb;
+    private final Configs configs;
+    private final String servers;
+    private final String topic;
+    private final int storeCount;
+    private final short replicationFactor;
+    private final int maxMessageMb;
 
     private volatile AdminClient adminClient;
 
@@ -52,15 +49,16 @@ public class KafkaLogService implements LogService {
         this.configs = configs;
         this.servers = KafkaConfig.KAFKA_SERVERS.get(configs);
         this.topic = KafkaConfig.KAKFA_TOPIC.get(configs);
-        this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
+        this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.replicationFactor = KafkaConfig.KAFKA_REPLICATION_FACTOR.get(configs);
         this.maxMessageMb = KafkaConfig.KAFKA_MAX_MESSAGE_MB.get(configs);
+        logger.info("Initialized KafkaLogService");
     }
 
     @Override
     public void init() {
         AdminClient admin = getAdmin();
-        NewTopic newTopic = new NewTopic(this.topic, this.queueCount, this.replicationFactor);
+        NewTopic newTopic = new NewTopic(this.topic, this.storeCount, this.replicationFactor);
         Map<String, String> configs = new HashMap<>();
         configs.put("retention.ms", "-1");
         configs.put("retention.bytes", "-1");
@@ -94,10 +92,12 @@ public class KafkaLogService implements LogService {
     }
 
     @Override
-    public LogWriter createWriter(int queueId) {
+    public LogWriter createWriter() {
+        while (!initialized())
+            ;
         String customConfigsStr = KafkaConfig.KAFKA_PRODUCER_CUSTOM_CONFIGS.get(configs);
         Map<String, String> customConfigs = new HashMap<>();
-        if (!"".equals(customConfigsStr)) {
+        if (!customConfigsStr.isEmpty()) {
             for (String item : customConfigsStr.split("\\|")) {
                 String[] kv = item.split(":");
                 if (kv.length != 2) {
@@ -107,12 +107,19 @@ public class KafkaLogService implements LogService {
                 customConfigs.put(kv[0], kv[1]);
             }
         }
-        return new KafkaLogWriter(servers, topic, queueId, customConfigs);
+        logger.info("Kafka writer configs {}", customConfigs);
+        return new KafkaLogWriter(servers, topic, customConfigs);
     }
 
     @Override
     public LogReader createReader(int queueId, long offset) throws IOException {
-        return new KafkaLogReader(servers, getAdmin(), topic, queueId, offset);
+        while (!initialized())
+            ;
+        return createReader(queueId, offset, -1);
+    }
+
+    public LogReader createReader(int queueId, long offset, long timestamp) throws IOException {
+        return new KafkaLogReader(servers, getAdmin(), topic, queueId, offset, timestamp);
     }
 
     @Override
@@ -134,12 +141,30 @@ public class KafkaLogService implements LogService {
         if (this.adminClient == null) {
             synchronized (this) {
                 if (this.adminClient == null) {
-                    Map<String, Object> adminConfig = new HashMap<>();
-                    adminConfig.put("bootstrap.servers", this.servers);
-                    this.adminClient = AdminClient.create(adminConfig);
+                    try {
+                        this.adminClient = createAdminWithRetry();
+                    } catch (InterruptedException e) {
+                        logger.error("Create Kafka Client interrupted");
+                    }
                 }
             }
         }
+        logger.info("Created AdminClient");
         return this.adminClient;
+    }
+
+    private AdminClient createAdminWithRetry() throws InterruptedException {
+        Map<String, Object> adminConfig = new HashMap<>();
+        adminConfig.put("bootstrap.servers", this.servers);
+
+        for (int i = 0; i < 30; ++i) {
+            try {
+                return AdminClient.create(adminConfig);
+            } catch (Exception e) {
+                logger.warn("Error creating Kafka AdminClient", e);
+                Thread.sleep(10000);
+            }
+        }
+        throw new RuntimeException("Create Kafka Client failed");
     }
 }

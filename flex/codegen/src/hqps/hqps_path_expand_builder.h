@@ -23,9 +23,9 @@ limitations under the License.
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_get_v_builder.h"
 #include "flex/codegen/src/pb_parser/expand_parser.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
 
 // #ifndef HOP_RANGE_PARAM
 // #define HOP_RANGE_PARAM
@@ -33,12 +33,20 @@ limitations under the License.
 
 namespace gs {
 
-static constexpr const char* PATH_EXPAND_OP_TEMPLATE_STR =
+static constexpr const char* PATH_EXPAND_V_OP_TEMPLATE_STR =
     "%1%\n"
     "%2%\n"
-    "auto %3% = gs::make_path_expand_opt(std::move(%4%), std::move(%5%), "
+    "auto %3% = gs::make_path_expandv_opt(std::move(%4%), std::move(%5%), "
     "gs::Range(%6%, %7%));\n"
     "auto %8% = Engine::PathExpandV<%9%, %10%>(%11%, std::move(%12%), "
+    "std::move(%13%));\n";
+
+static constexpr const char* PATH_EXPAND_PATH_OP_TEMPLATE_STR =
+    "%1%\n"
+    "%2%\n"
+    "auto %3% = gs::make_path_expandv_opt(std::move(%4%), std::move(%5%), "
+    "gs::Range(%6%, %7%));\n"
+    "auto %8% = Engine::PathExpandP<%9%, %10%>(%11%, std::move(%12%), "
     "std::move(%13%));\n";
 
 std::string path_opt_pb_2_str(
@@ -109,13 +117,16 @@ class PathExpandOpBuilder {
           throw std::runtime_error("Expect edge graph type");
         }
         auto& edge_type = act_graph_type.graph_data_type();
-        if (edge_type.size() != 1) {
-          throw std::runtime_error("Expect only one edge type");
+        if (edge_type.size() == 0) {
+          throw std::runtime_error("Expect edge type size > 0");
         }
-        auto& edge_type0 = edge_type[0];
-        auto& edge_labels = edge_type0.label();
-        auto src_label = edge_labels.src_label().value();
-        auto dst_label = edge_labels.dst_label().value();
+        std::vector<int32_t> src_labels, dst_labels;
+        for (int i = 0; i < edge_type.size(); ++i) {
+          auto& edge_type_i = edge_type[i];
+          auto& edge_labels_i = edge_type_i.label();
+          src_labels.push_back(edge_labels_i.src_label().value());
+          dst_labels.push_back(edge_labels_i.dst_label().value());
+        }
 
         // if find edge triplets, we clear current
         VLOG(10) << "Clear current dst labels:"
@@ -123,12 +134,30 @@ class PathExpandOpBuilder {
         dst_vertex_labels_.clear();
 
         if (direction_ == internal::Direction::kBoth) {
-          CHECK(src_label == dst_label);
-          dst_vertex_labels_.emplace_back(src_label);
+          // if direction is both, we need to check src_label == dst_label
+          // dedup src_labels
+          std::sort(src_labels.begin(), src_labels.end());
+          src_labels.erase(std::unique(src_labels.begin(), src_labels.end()),
+                           src_labels.end());
+          // dedup dst_labels
+          std::sort(dst_labels.begin(), dst_labels.end());
+          dst_labels.erase(std::unique(dst_labels.begin(), dst_labels.end()),
+                           dst_labels.end());
+          for (size_t i = 0; i < src_labels.size(); ++i) {
+            if (src_labels[i] != dst_labels[i]) {
+              throw std::runtime_error(
+                  "Expect src_label == dst_label for both direction");
+            }
+            dst_vertex_labels_.emplace_back(dst_labels[i]);
+          }
         } else if (direction_ == internal::Direction::kOut) {
-          dst_vertex_labels_.emplace_back(dst_label);
+          for (size_t i = 0; i < dst_labels.size(); ++i) {
+            dst_vertex_labels_.emplace_back(dst_labels[i]);
+          }
         } else if (direction_ == internal::Direction::kIn) {
-          dst_vertex_labels_.emplace_back(src_label);
+          for (size_t i = 0; i < src_labels.size(); ++i) {
+            dst_vertex_labels_.emplace_back(src_labels[i]);
+          }
         } else {
           throw std::runtime_error("Unknown direction");
         }
@@ -145,7 +174,7 @@ class PathExpandOpBuilder {
       auto& v_labels_pb = get_v_pb.params().tables();
 
       if (dst_vertex_labels_.empty()) {
-        for (auto i = 0; i < v_labels_pb.size(); ++i) {
+        for (int i = 0; i < v_labels_pb.size(); ++i) {
           dst_vertex_labels_.push_back(
               try_get_label_from_name_or_id<LabelT>(v_labels_pb[i]));
         }
@@ -167,11 +196,26 @@ class PathExpandOpBuilder {
       auto expand_opt = edge_expand_pb.expand_opt();
       CHECK(dst_vertex_labels_.size() > 0) << "no dst lables found";
 
-      physical::PhysicalOpr::MetaData meta_data;
-      // pass an empty meta_data, since we need no meta_data for
-      // edge_expand_opt.
-      std::tie(edge_expand_opt_name_, edge_expand_opt_) = BuildEdgeExpandOpt(
-          ctx_, direction_, params, dst_vertex_labels_, expand_opt, meta_data);
+      if (params.tables().size() < 1) {
+        throw std::runtime_error("no edge labels found");
+      } else if (params.tables().size() == 1) {
+        physical::PhysicalOpr::MetaData meta_data;
+        // pass an empty meta_data, since we need no meta_data for
+        std::tie(edge_expand_opt_name_, edge_expand_opt_) =
+            BuildOneLabelEdgeExpandOpt(ctx_, direction_, params,
+                                       dst_vertex_labels_, expand_opt,
+                                       meta_data);
+      } else {
+        // get the first meta_data
+        if (meta_data_pb.size() < 1) {
+          throw std::runtime_error("no meta_data found");
+        }
+        auto& meta_data = meta_data_pb[0];
+        std::tie(edge_expand_opt_name_, edge_expand_opt_) =
+            BuildMultiLabelEdgeExpandOpt(ctx_, direction_, params, expand_opt,
+                                         meta_data);
+      }
+
       VLOG(10) << "edge_expand_opt_name_: " << edge_expand_opt_name_;
       VLOG(10) << "edge_expand_opt_: " << edge_expand_opt_;
     }
@@ -252,6 +296,16 @@ class PathExpandOpBuilder {
     return *this;
   }
 
+  PathExpandOpBuilder& set_output_to_vertices() {
+    output_to_vertices_ = true;
+    return *this;
+  }
+
+  PathExpandOpBuilder& set_output_paths() {
+    output_to_vertices_ = false;
+    return *this;
+  }
+
   std::string Build() const {
     {
       // first put the possible param vars into context
@@ -283,7 +337,13 @@ class PathExpandOpBuilder {
 
     auto append_opt = res_alias_to_append_opt(out_tag_id_);
     auto input_col_str = format_input_col(in_tag_id_);
-    boost::format formater(PATH_EXPAND_OP_TEMPLATE_STR);
+    boost::format formater("");
+    if (output_to_vertices_) {
+      formater = boost::format(PATH_EXPAND_V_OP_TEMPLATE_STR);
+    } else {
+      formater = boost::format(PATH_EXPAND_PATH_OP_TEMPLATE_STR);
+    }
+
     formater % edge_expand_opt_ % getv_opt_code_ % path_expand_opt_var %
         edge_expand_opt_name_ % getv_opt_name_ % range_lower_value %
         range_upper_value % next_ctx_name % append_opt % input_col_str %
@@ -302,17 +362,18 @@ class PathExpandOpBuilder {
   std::string path_opt_str_, result_opt_str_;
   std::vector<LabelT> dst_vertex_labels_;
   internal::Direction direction_;
+  bool output_to_vertices_;  // true: output to vertices, false: output to paths
 };
 
 // edge_expand_opt
 // get_v_opt
 // path_expand_opt
 // op_code.
-// NOTE: we currenly only support path expand v, the in_tag can be fetch fromn
-// path_expand_pb itself, while the res_alilas shall be fetch from the later
+// NOTE: we currently only support path expand v, the in_tag can be fetch from
+// path_expand_pb itself, while the res_alias shall be fetch from the later
 // get_v
 template <typename LabelT>
-static std::string BuildPathExpandOp(
+static std::string BuildPathExpandVOp(
     BuildingContext& ctx, const physical::PathExpand& path_expand_pb,
     const google::protobuf::RepeatedPtrField<physical::PhysicalOpr::MetaData>&
         meta_data,
@@ -325,7 +386,7 @@ static std::string BuildPathExpandOp(
   }
 
   // CHECK(!path_expand_pb.has_alias());
-  builder.out_tag(out_tag_id);
+  builder.out_tag(out_tag_id);  // out_tag_id overrides alias
 
   return builder
       .path_expand_opt(path_expand_pb.base().edge_expand(),
@@ -336,7 +397,41 @@ static std::string BuildPathExpandOp(
       .path_opt(path_expand_pb.path_opt())
       .result_opt(path_expand_pb.result_opt())
       .condition(path_expand_pb.condition())
+      .set_output_to_vertices()
+      .Build();
+}
 
+// PathExpand without fusing with getv.
+template <typename LabelT>
+static std::string BuildPathExpandPathOp(
+    BuildingContext& ctx, const physical::PathExpand& path_expand_pb,
+    const google::protobuf::RepeatedPtrField<physical::PhysicalOpr::MetaData>&
+        meta_data) {
+  PathExpandOpBuilder<LabelT> builder(ctx);
+  if (path_expand_pb.has_start_tag()) {
+    builder.in_tag(path_expand_pb.start_tag().value());
+  } else {
+    builder.in_tag(-1);
+  }
+
+  // CHECK(path_expand_pb.has_alias());
+  // if not, alias should be 0?
+  if (path_expand_pb.has_alias()) {
+    builder.out_tag(path_expand_pb.alias().value());
+  } else {
+    builder.out_tag(-1);
+  }
+
+  return builder
+      .path_expand_opt(path_expand_pb.base().edge_expand(),
+                       path_expand_pb.base().get_v(),
+                       meta_data)  // get_v_opt must be called first to
+                                   // provide dst_label ids.
+      .hop_range(path_expand_pb.hop_range())
+      .path_opt(path_expand_pb.path_opt())
+      .result_opt(path_expand_pb.result_opt())
+      .condition(path_expand_pb.condition())
+      .set_output_paths()
       .Build();
 }
 }  // namespace gs

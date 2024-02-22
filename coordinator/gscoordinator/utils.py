@@ -19,6 +19,7 @@
 
 import copy
 import datetime
+import functools
 import glob
 import hashlib
 import inspect
@@ -30,13 +31,16 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
 import uuid
 import zipfile
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 from queue import Queue
 from string import Template
+from typing import List
 
+import grpc
 import yaml
 from google.protobuf.any_pb2 import Any
 from graphscope.framework import utils
@@ -52,6 +56,7 @@ from graphscope.proto import graph_def_pb2
 from graphscope.proto import op_def_pb2
 from graphscope.proto import types_pb2
 
+from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
 from gscoordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -180,6 +185,36 @@ INTERACTIVE_INSTANCE_TIMEOUT_SECONDS = 120  # 2 mins
 INTERACTIVE_ENGINE_THREADS_PER_WORKER = 2
 
 
+def catch_unknown_errors(response_on_error=None, using_yield=False):
+    """A catcher that catches all (unknown) exceptions in gRPC handlers to ensure
+    the client not think the coordinator services is crashed.
+    """
+
+    def catch_exceptions(handler):
+        @functools.wraps(handler)
+        def handler_execution(self, request, context):
+            try:
+                if using_yield:
+                    for result in handler(self, request, context):
+                        yield result
+                else:
+                    yield handler(self, request, context)
+            except Exception as exc:
+                error_message = repr(exc)
+                error_traceback = traceback.format_exc()
+                context.set_code(grpc.StatusCode.ABORTED)
+                context.set_details(
+                    'Error occurs in handler: "%s", with traceback: ' % error_message
+                    + error_traceback
+                )
+                if response_on_error is not None:
+                    yield response_on_error
+
+        return handler_execution
+
+    return catch_exceptions
+
+
 def get_timestamp() -> float:
     return datetime.datetime.timestamp(datetime.datetime.now())
 
@@ -282,9 +317,9 @@ def check_java_app_graph_consistency(
     return True
 
 
-def run_command(args: str, cwd=None):
+def run_command(args: str, cwd=None, **kwargs):
     logger.info("Running command: %s, cwd: %s", args, cwd)
-    cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd)
+    cp = subprocess.run(shlex.split(args), capture_output=True, cwd=cwd, **kwargs)
     if cp.returncode != 0:
         err = cp.stderr.decode("utf-8", errors="ignore")
         logger.error(
@@ -330,7 +365,7 @@ def compile_library(commands, workdir, output_name, launcher):
             workdir,
             output_name,
             launcher.hosts_list[0],
-            launcher._engine_cluster.analytical_container_name,
+            ANALYTICAL_CONTAINER_NAME,
         )
     elif launcher.type() == types_pb2.HOSTS:
         return _compile_on_local(commands, workdir, output_name)
@@ -483,7 +518,7 @@ def compile_app(
         java_codegen_out_dir = os.path.join(
             workspace, f"{JAVA_CODEGEN_OUTPUT_PREFIX}-{library_name}"
         )
-        # TODO(zhanglei): Could this codegen caching happends on engine side?
+        # TODO(zhanglei): Could this codegen caching happens on engine side?
         if os.path.isdir(java_codegen_out_dir):
             logger.info(
                 "Found existing java codegen directory: %s, skipped codegen",
@@ -861,7 +896,7 @@ def _pre_process_for_run_app_op(op, op_result_pool, key_to_op, **kwargs):
             parent_op.attr[types_pb2.E_DATA_TYPE].s.decode("utf-8", errors="ignore"),
         )
 
-        # for giraph app, we need to add args into orginal query_args, which is a json string
+        # for giraph app, we need to add args into original query_args, which is a json string
         # first one should be user params, second should be lib_path
         if app_type.startswith("giraph:"):
             user_params["app_class"] = GIRAPH_DRIVER_CLASS
@@ -1894,27 +1929,21 @@ class ResolveMPICmdPrefix(object):
 
     @staticmethod
     def alloc(num_workers, hosts):
-        host_list = hosts.split(",")
-        host_list_len = len(host_list)
-        assert host_list_len != 0
-
-        host_to_proc_num = {}
-        if num_workers >= host_list_len:
-            quotient = num_workers / host_list_len
-            residue = num_workers % host_list_len
-            for host in host_list:
+        length = len(hosts)
+        assert length != 0
+        proc_num = {}
+        if num_workers >= length:
+            quotient = num_workers / length
+            residue = num_workers % length
+            for host in hosts:
                 if residue > 0:
-                    host_to_proc_num[host] = quotient + 1
+                    proc_num[host] = quotient + 1
                     residue -= 1
                 else:
-                    host_to_proc_num[host] = quotient
+                    proc_num[host] = quotient
         else:
             raise RuntimeError("The number of hosts less then num_workers")
-
-        for i in range(host_list_len):
-            host_list[i] = f"{host_list[i]}:{host_to_proc_num[host_list[i]]}"
-
-        return ",".join(host_list)
+        return ",".join([f"{host}:{proc_num[host]}" for host in hosts])
 
     @staticmethod
     def find_mpi():
@@ -1931,11 +1960,10 @@ class ResolveMPICmdPrefix(object):
             raise RuntimeError("mpirun command not found.")
         return mpi
 
-    def resolve(self, num_workers, hosts):
+    def resolve(self, num_workers: int, hosts: List[str]):
         cmd = []
         env = {}
-
-        if num_workers == 1 and (hosts == "localhost" or hosts == "127.0.0.1"):
+        if num_workers == 1 and hosts[0] in ("localhost", "127.0.0.1"):
             # run without mpi on localhost if workers num is 1
             if shutil.which("ssh") is None:
                 # also need a fake ssh agent

@@ -236,8 +236,7 @@ def test_gremlin_timeout(sess):
     interactive = sess.gremlin(g_node)
     # expect to timeout after 1s (caused by grpc timeout or pegasus timeout)
     with pytest.raises(
-        protocol.GremlinServerError,
-        match="|".join(["DEADLINE_EXCEEDED", "Job is canceled"]),
+        protocol.GremlinServerError, match=r".*exceeds the timeout limit.*"
     ):
         res = (
             interactive.execute(
@@ -249,10 +248,6 @@ def test_gremlin_timeout(sess):
 
 
 def test_cypher_endpoint(sess):
-    from neo4j import RoutingControl
-
     g_node = load_p2p_network(sess)
-    interactive = sess.interactive(g_node)
-    _ = interactive.execute(
-        "MATCH (n) RETURN n LIMIT 1", lang="cypher", routing_=RoutingControl.READ
-    )
+    interactive = sess.interactive(g_node, with_cypher=True)
+    _ = interactive.execute("MATCH (n) RETURN n LIMIT 1", lang="cypher")

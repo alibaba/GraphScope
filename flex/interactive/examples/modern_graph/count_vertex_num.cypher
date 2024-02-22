@@ -1,0 +1,1 @@
+MATCH(v:person) RETURN COUNT(v);

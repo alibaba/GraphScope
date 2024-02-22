@@ -16,11 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.runtime.ffi;
 
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.intermediate.ArgUtils;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
-import com.alibaba.graphscope.common.ir.rel.GraphLogicalSort;
-import com.alibaba.graphscope.common.ir.rel.GraphRelShuttle;
+import com.alibaba.graphscope.common.ir.rel.*;
 import com.alibaba.graphscope.common.ir.rel.graph.*;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
@@ -28,37 +26,36 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
+import com.alibaba.graphscope.common.ir.runtime.proto.RexToIndexPbConverter;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.runtime.type.PhysicalNode;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
+import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
-import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.common.ir.type.GraphSchemaTypeList;
 import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
+import com.alibaba.graphscope.gaia.proto.Common;
+import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.sun.jna.Pointer;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.logical.*;
+import org.apache.calcite.rel.logical.LogicalFilter;
+import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.type.RelDataTypeField;
-import org.apache.calcite.rex.RexCall;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexVariable;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -71,17 +68,20 @@ public class RelToFfiConverter implements GraphRelShuttle {
     private static final Logger logger = LoggerFactory.getLogger(RelToFfiConverter.class);
     private static final IrCoreLibrary LIB = IrCoreLibrary.INSTANCE;
     private final boolean isColumnId;
+    private final RexBuilder rexBuilder;
 
-    public RelToFfiConverter(boolean isColumnId) {
+    public RelToFfiConverter(boolean isColumnId, Configs configs) {
         this.isColumnId = isColumnId;
+        this.rexBuilder = GraphPlanner.rexBuilderFactory.apply(configs);
     }
 
     @Override
     public RelNode visit(GraphLogicalSource source) {
         Pointer ptrScan = LIB.initScanOperator(Utils.ffiScanOpt(source.getOpt()));
-        Pointer ptrIndex = ffiIndexPredicates(source);
-        if (ptrIndex != null) {
-            checkFfiResult(LIB.addScanIndexPredicate(ptrScan, ptrIndex));
+        if (source.getUniqueKeyFilters() != null) {
+            checkFfiResult(
+                    LIB.addIndexPredicatePb(
+                            ptrScan, ffiIndexPredicates(source.getUniqueKeyFilters())));
         }
         checkFfiResult(LIB.setScanParams(ptrScan, ffiQueryParams(source)));
         if (source.getAliasId() != AliasInference.DEFAULT_ID) {
@@ -106,6 +106,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         if (expand.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setEdgexpdAlias(ptrExpand, ArgUtils.asAlias(expand.getAliasId())));
         }
+        if (expand.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setEdgexpdVtag(
+                            ptrExpand, ArgUtils.asNameOrId(expand.getStartAlias().getAliasId())));
+        }
         checkFfiResult(
                 LIB.setEdgexpdMeta(
                         ptrExpand,
@@ -118,11 +123,39 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     @Override
+    public RelNode visit(GraphLogicalExpandDegree expandCount) {
+        GraphLogicalExpand fusedExpand = expandCount.getFusedExpand();
+        Pointer ptrExpandCount =
+                LIB.initEdgexpdOperator(
+                        FfiExpandOpt.Degree, Utils.ffiDirection(fusedExpand.getOpt()));
+        checkFfiResult(LIB.setEdgexpdParams(ptrExpandCount, ffiQueryParams(fusedExpand)));
+        if (expandCount.getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setEdgexpdAlias(
+                            ptrExpandCount, ArgUtils.asAlias(expandCount.getAliasId())));
+        }
+        checkFfiResult(
+                LIB.setEdgexpdMeta(
+                        ptrExpandCount,
+                        new FfiPbPointer.ByValue(
+                                com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
+                                                expandCount.getRowType(), isColumnId)
+                                        .get(0)
+                                        .toByteArray())));
+        return new PhysicalNode(expandCount, ptrExpandCount);
+    }
+
+    @Override
     public RelNode visit(GraphLogicalGetV getV) {
         Pointer ptrGetV = LIB.initGetvOperator(Utils.ffiVOpt(getV.getOpt()));
         checkFfiResult(LIB.setGetvParams(ptrGetV, ffiQueryParams(getV)));
         if (getV.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setGetvAlias(ptrGetV, ArgUtils.asAlias(getV.getAliasId())));
+        }
+        if (getV.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setGetvTag(
+                            ptrGetV, ArgUtils.asNameOrId(getV.getStartAlias().getAliasId())));
         }
         checkFfiResult(
                 LIB.setGetvMeta(
@@ -149,6 +182,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         checkFfiResult(LIB.setPathxpdHops(ptrPxd, hops.get(0), hops.get(1)));
         if (pxd.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(LIB.setPathxpdAlias(ptrPxd, ArgUtils.asAlias(pxd.getAliasId())));
+        }
+        if (pxd.getStartAlias().getAliasId() != AliasInference.DEFAULT_ID) {
+            checkFfiResult(
+                    LIB.setPathxpdTag(
+                            ptrPxd, ArgUtils.asNameOrId(pxd.getStartAlias().getAliasId())));
         }
         return new PhysicalNode(pxd, ptrPxd);
     }
@@ -204,7 +242,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
     @Override
     public RelNode visit(LogicalFilter logicalFilter) {
         OuterExpression.Expression exprProto =
-                logicalFilter.getCondition().accept(new RexToProtoConverter(true, isColumnId));
+                logicalFilter
+                        .getCondition()
+                        .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
         Pointer ptrFilter = LIB.initSelectOperator();
         checkFfiResult(
                 LIB.setSelectPredicatePb(
@@ -218,7 +258,9 @@ public class RelToFfiConverter implements GraphRelShuttle {
         List<RelDataTypeField> fields = project.getRowType().getFieldList();
         for (int i = 0; i < project.getProjects().size(); ++i) {
             OuterExpression.Expression expression =
-                    project.getProjects().get(i).accept(new RexToProtoConverter(true, isColumnId));
+                    project.getProjects()
+                            .get(i)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             int aliasId = fields.get(i).getIndex();
             FfiAlias.ByValue ffiAlias =
                     (aliasId == AliasInference.DEFAULT_ID)
@@ -259,7 +301,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
                         RexGraphVariable.class,
                         var.getClass());
                 OuterExpression.Expression expr =
-                        var.accept(new RexToProtoConverter(true, isColumnId));
+                        var.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
                 int aliasId;
                 if (i >= fields.size()
                         || (aliasId = fields.get(i).getIndex()) == AliasInference.DEFAULT_ID) {
@@ -276,9 +318,13 @@ public class RelToFfiConverter implements GraphRelShuttle {
             for (int i = 0; i < keys.groupKeyCount(); ++i) {
                 RelDataTypeField field = fields.get(i);
                 RexVariable rexVar =
-                        RexGraphVariable.of(field.getIndex(), field.getName(), field.getType());
+                        RexGraphVariable.of(
+                                field.getIndex(),
+                                AliasInference.DEFAULT_COLUMN_ID,
+                                field.getName(),
+                                field.getType());
                 OuterExpression.Variable exprVar =
-                        rexVar.accept(new RexToProtoConverter(true, isColumnId))
+                        rexVar.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                                 .getOperators(0)
                                 .getVar();
                 checkFfiResult(
@@ -300,7 +346,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
             OuterExpression.Variable var =
                     groupKeys
                             .get(i)
-                            .accept(new RexToProtoConverter(true, isColumnId))
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                             .getOperators(0)
                             .getVar();
             int aliasId = fields.get(i).getIndex();
@@ -317,32 +363,41 @@ public class RelToFfiConverter implements GraphRelShuttle {
             if (operands.isEmpty()) {
                 throw new IllegalArgumentException(
                         "operands in aggregate call should not be empty");
-            } else if (operands.size() > 1) {
-                throw new UnsupportedOperationException(
-                        "aggregate on multiple variables is unsupported yet");
             }
-            FfiAggOpt ffiAggOpt = Utils.ffiAggOpt(groupCalls.get(i));
             int aliasId = fields.get(i + groupKeys.size()).getIndex();
-            FfiAlias.ByValue ffiAlias =
+            Common.NameOrId alias =
                     (aliasId == AliasInference.DEFAULT_ID)
-                            ? ArgUtils.asNoneAlias()
-                            : ArgUtils.asAlias(aliasId);
-            Preconditions.checkArgument(
-                    operands.get(0) instanceof RexGraphVariable,
-                    "each expression in aggregate call should be type %s, but is %s",
-                    RexGraphVariable.class,
-                    operands.get(0).getClass());
-            OuterExpression.Variable var =
-                    operands.get(0)
-                            .accept(new RexToProtoConverter(true, isColumnId))
-                            .getOperators(0)
-                            .getVar();
+                            ? Common.NameOrId.newBuilder().build()
+                            : Common.NameOrId.newBuilder().setId(aliasId).build();
+            List<OuterExpression.Variable> vars =
+                    operands.stream()
+                            .map(
+                                    k -> {
+                                        Preconditions.checkArgument(
+                                                k instanceof RexGraphVariable,
+                                                "each operand in aggregate call should be type %s,"
+                                                        + " but is %s",
+                                                RexGraphVariable.class,
+                                                k.getClass());
+                                        return k.accept(
+                                                        new RexToProtoConverter(
+                                                                true, isColumnId, this.rexBuilder))
+                                                .getOperators(0)
+                                                .getVar();
+                                    })
+                            .collect(Collectors.toList());
             checkFfiResult(
                     LIB.addGroupbyAggFnPb(
                             ptrGroup,
-                            new FfiPbPointer.ByValue(var.toByteArray()),
-                            ffiAggOpt,
-                            ffiAlias));
+                            new FfiPbPointer.ByValue(
+                                    GraphAlgebra.GroupBy.AggFunc.newBuilder()
+                                            .addAllVars(vars)
+                                            .setAggregate(
+                                                    com.alibaba.graphscope.common.ir.runtime.proto
+                                                            .Utils.protoAggFn(groupCalls.get(i)))
+                                            .setAlias(alias)
+                                            .build()
+                                            .toByteArray())));
         }
         com.alibaba.graphscope.common.ir.runtime.proto.Utils.protoRowType(
                         aggregate.getRowType(), isColumnId)
@@ -356,6 +411,27 @@ public class RelToFfiConverter implements GraphRelShuttle {
     }
 
     @Override
+    public PhysicalNode visit(GraphLogicalDedupBy dedupBy) {
+        Preconditions.checkArgument(
+                !dedupBy.getDedupByKeys().isEmpty(), "dedup by keys should not be empty");
+        Pointer ptrDedup = LIB.initDedupOperator();
+        for (RexNode key : dedupBy.getDedupByKeys()) {
+            Preconditions.checkArgument(
+                    key instanceof RexGraphVariable,
+                    "each dedup by key should be type %s, but is %s",
+                    RexGraphVariable.class,
+                    key.getClass());
+            OuterExpression.Variable var =
+                    key.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
+                            .getOperators(0)
+                            .getVar();
+            checkFfiResult(
+                    LIB.addDedupKeyPb(ptrDedup, new FfiPbPointer.ByValue(var.toByteArray())));
+        }
+        return new PhysicalNode(dedupBy, ptrDedup);
+    }
+
+    @Override
     public PhysicalNode visit(GraphLogicalSort sort) {
         List<RelFieldCollation> collations = sort.getCollation().getFieldCollations();
         Pointer ptrNode = null;
@@ -364,7 +440,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
             for (int i = 0; i < collations.size(); ++i) {
                 RexGraphVariable expr = ((GraphFieldCollation) collations.get(i)).getVariable();
                 OuterExpression.Variable var =
-                        expr.accept(new RexToProtoConverter(true, isColumnId))
+                        expr.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
                                 .getOperators(0)
                                 .getVar();
                 checkFfiResult(
@@ -386,9 +462,57 @@ public class RelToFfiConverter implements GraphRelShuttle {
         return new PhysicalNode(sort, ptrNode);
     }
 
+    @Override
+    public PhysicalNode visit(LogicalJoin join) {
+        Pointer ptrJoin = LIB.initJoinOperator(Utils.ffiJoinKind(join.getJoinType()));
+        List<RexNode> conditions = RelOptUtil.conjunctions(join.getCondition());
+        String errorMessage =
+                "join condition in ir core should be 'AND' of equal conditions, each equal"
+                        + " condition has two variables as operands";
+        Preconditions.checkArgument(!conditions.isEmpty(), errorMessage);
+        for (RexNode condition : conditions) {
+            List<RexGraphVariable> leftRightVars = getLeftRightVariables(condition);
+            Preconditions.checkArgument(leftRightVars.size() == 2, errorMessage);
+            OuterExpression.Variable leftVar =
+                    leftRightVars
+                            .get(0)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
+                            .getOperators(0)
+                            .getVar();
+            OuterExpression.Variable rightVar =
+                    leftRightVars
+                            .get(1)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
+                            .getOperators(0)
+                            .getVar();
+            checkFfiResult(
+                    LIB.addJoinKeyPairPb(
+                            ptrJoin,
+                            new FfiPbPointer.ByValue(leftVar.toByteArray()),
+                            new FfiPbPointer.ByValue(rightVar.toByteArray())));
+        }
+        return new PhysicalNode(join, ptrJoin);
+    }
+
+    private List<RexGraphVariable> getLeftRightVariables(RexNode condition) {
+        List<RexGraphVariable> vars = Lists.newArrayList();
+        if (condition instanceof RexCall) {
+            RexCall call = (RexCall) condition;
+            if (call.getOperator().getKind() == SqlKind.EQUALS) {
+                RexNode left = call.getOperands().get(0);
+                RexNode right = call.getOperands().get(1);
+                if (left instanceof RexGraphVariable && right instanceof RexGraphVariable) {
+                    vars.add((RexGraphVariable) left);
+                    vars.add((RexGraphVariable) right);
+                }
+            }
+        }
+        return vars;
+    }
+
     private Pointer ffiQueryParams(AbstractBindableTableScan tableScan) {
         Set<Integer> uniqueLabelIds =
-                getGraphLabels(tableScan).stream()
+                getGraphLabels(tableScan).getLabelsEntry().stream()
                         .map(k -> k.getLabelId())
                         .collect(Collectors.toSet());
         Pointer params = LIB.initQueryParams();
@@ -398,7 +522,10 @@ public class RelToFfiConverter implements GraphRelShuttle {
                 });
         if (ObjectUtils.isNotEmpty(tableScan.getFilters())) {
             OuterExpression.Expression expression =
-                    tableScan.getFilters().get(0).accept(new RexToProtoConverter(true, isColumnId));
+                    tableScan
+                            .getFilters()
+                            .get(0)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             checkFfiResult(
                     LIB.setParamsPredicatePb(
                             params, new FfiPbPointer.ByValue(expression.toByteArray())));
@@ -406,47 +533,11 @@ public class RelToFfiConverter implements GraphRelShuttle {
         return params;
     }
 
-    private @Nullable Pointer ffiIndexPredicates(GraphLogicalSource source) {
-        ImmutableList<RexNode> filters = source.getFilters();
-        if (ObjectUtils.isEmpty(filters)) return null;
-        // decomposed by OR
-        List<RexNode> disJunctions = RelOptUtil.disjunctions(filters.get(0));
-        List<RexNode> literals = new ArrayList<>();
-        for (RexNode rexNode : disJunctions) {
-            if (!isIdEqualsLiteral(rexNode, literals)) {
-                return null;
-            }
-        }
-        Pointer ptrIndex = LIB.initIndexPredicate();
-        for (RexNode literal : literals) {
-            FfiProperty.ByValue property = new FfiProperty.ByValue();
-            property.opt = FfiPropertyOpt.Id;
-            checkFfiResult(
-                    LIB.orEquivPredicate(ptrIndex, property, Utils.ffiConst((RexLiteral) literal)));
-        }
-        // remove index predicates from filter conditions
-        source.setFilters(ImmutableList.of());
-        return ptrIndex;
-    }
-
-    // i.e. a.~id == 10
-    private boolean isIdEqualsLiteral(RexNode rexNode, List<RexNode> literal) {
-        if (rexNode.getKind() != SqlKind.EQUALS) return false;
-        List<RexNode> operands = ((RexCall) rexNode).getOperands();
-        return isGlobalId(operands.get(0)) && isLiteral(operands.get(1), literal)
-                || isGlobalId(operands.get(1)) && isLiteral(operands.get(0), literal);
-    }
-
-    // i.e. a.~id
-    private boolean isGlobalId(RexNode rexNode) {
-        return rexNode instanceof RexGraphVariable
-                && ((RexGraphVariable) rexNode).getProperty().getOpt() == GraphProperty.Opt.ID;
-    }
-
-    private boolean isLiteral(RexNode rexNode, List<RexNode> literal) {
-        boolean isLiteral = rexNode.getKind() == SqlKind.LITERAL;
-        if (isLiteral) literal.add(rexNode);
-        return isLiteral;
+    private FfiPbPointer.ByValue ffiIndexPredicates(RexNode uniqueKeyFilters) {
+        GraphAlgebra.IndexPredicate indexPredicate =
+                uniqueKeyFilters.accept(
+                        new RexToIndexPbConverter(true, this.isColumnId, this.rexBuilder));
+        return new FfiPbPointer.ByValue(indexPredicate.toByteArray());
     }
 
     private List<Integer> range(RexNode offset, RexNode fetch) {
@@ -516,7 +607,7 @@ public class RelToFfiConverter implements GraphRelShuttle {
 
     private void addFilterToFfiBinder(Pointer ptrSentence, AbstractBindableTableScan tableScan) {
         Set<Integer> uniqueLabelIds =
-                getGraphLabels(tableScan).stream()
+                getGraphLabels(tableScan).getLabelsEntry().stream()
                         .map(k -> k.getLabelId())
                         .collect(Collectors.toSet());
         // add labels as select operator
@@ -539,7 +630,8 @@ public class RelToFfiConverter implements GraphRelShuttle {
         List<RexNode> filters = tableScan.getFilters();
         if (ObjectUtils.isNotEmpty(filters)) {
             OuterExpression.Expression exprProto =
-                    filters.get(0).accept(new RexToProtoConverter(true, isColumnId));
+                    filters.get(0)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             Pointer ptrFilter = LIB.initSelectOperator();
             checkFfiResult(
                     LIB.setSelectPredicatePb(
@@ -548,20 +640,14 @@ public class RelToFfiConverter implements GraphRelShuttle {
         }
     }
 
-    private List<GraphLabelType> getGraphLabels(AbstractBindableTableScan tableScan) {
+    private GraphLabelType getGraphLabels(AbstractBindableTableScan tableScan) {
         List<RelDataTypeField> fields = tableScan.getRowType().getFieldList();
         Preconditions.checkArgument(
                 !fields.isEmpty() && fields.get(0).getType() instanceof GraphSchemaType,
                 "data type of graph operators should be %s ",
                 GraphSchemaType.class);
         GraphSchemaType schemaType = (GraphSchemaType) fields.get(0).getType();
-        List<GraphLabelType> labelTypes = new ArrayList<>();
-        if (schemaType instanceof GraphSchemaTypeList) {
-            ((GraphSchemaTypeList) schemaType).forEach(k -> labelTypes.add(k.getLabelType()));
-        } else {
-            labelTypes.add(schemaType.getLabelType());
-        }
-        return labelTypes;
+        return schemaType.getLabelType();
     }
 
     private void checkFfiResult(FfiResult res) {

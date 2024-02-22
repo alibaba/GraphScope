@@ -1,8 +1,8 @@
 #include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
-#include <math.h>
 
 #include "grin/predefine.h"
 
@@ -715,9 +715,9 @@ void test_property(const char* uri_str) {
 /**
 void test_partition_reference(const char* uri_str) {
   printf("+++++++++++++++++++++ Test partition/reference
-+++++++++++++++++++++\n"); 
++++++++++++++++++++++\n");
 GRIN_PARTITIONED_GRAPH pg =
-grin_get_partitioned_graph_from_storage(argv[1]); 
+grin_get_partitioned_graph_from_storage(argv[1]);
 GRIN_PARTITION_LIST
 local_partitions = grin_get_local_partition_list(pg);
   assert(grin_get_partition_list_size(pg, local_partitions) >= 2);
@@ -1050,11 +1050,17 @@ void test_vertex_property_value(const char* uri_str) {
 }
 
 void test_perf(const char* uri_str) { test_vertex_property_value(uri_str); }
-
+// uri_str =
+//"flex://"
+//    "../../../../storages/rt_mutable_graph/modern_graph/?schema_file={schema_file}&data_dir={data_dir}";
 int main(int argc, char** argv) {
-  const char* uri_str =
-      "flex://"
-      "../../../../storages/rt_mutable_graph/modern_graph/";
+  if (argc != 2) {
+    printf("Usage: %s <uri>\n", argv[0]);
+    return 1;
+  }
+  const char* uri_str = argv[1];
+  // print uri
+  printf("uri: %s\n", uri_str);
 
   test_index(uri_str);
   test_property(uri_str);

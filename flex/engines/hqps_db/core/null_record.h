@@ -18,6 +18,7 @@
 #include <limits>
 #include <tuple>
 #include "flex/engines/hqps_db/core/utils/hqps_utils.h"
+#include "flex/engines/hqps_db/structures/path.h"
 
 namespace gs {
 
@@ -42,6 +43,13 @@ template <typename... T>
 struct NullRecordCreator<std::tuple<T...>> {
   static inline std::tuple<T...> GetNull() {
     return std::make_tuple(NullRecordCreator<T>::GetNull()...);
+  }
+};
+
+template <typename VID_T, typename LabelT>
+struct NullRecordCreator<Path<VID_T, LabelT>> {
+  static inline Path<VID_T, LabelT> GetNull() {
+    return Path<VID_T, LabelT>::Null();
   }
 };
 
@@ -77,10 +85,30 @@ static inline bool IsNull(const T& opt) {
   return opt == NullRecordCreator<T>::GetNull();
 }
 
+template <typename VID_T>
+static inline bool IsNull(const DefaultEdge<VID_T>& edge) {
+  return IsNull(edge.src) || IsNull(edge.dst);
+}
+
 // customized operator ==
 template <typename T>
 bool operator==(const T& lhs, const None& rhs) {
   return IsNull(lhs);
+}
+
+template <typename T>
+bool operator==(const None& lhs, const T& rhs) {
+  return IsNull(rhs);
+}
+
+template <typename T>
+bool operator!=(const T& lhs, const None& rhs) {
+  return !IsNull(lhs);
+}
+
+template <typename T>
+bool operator!=(const None& lhs, const T& rhs) {
+  return !IsNull(rhs);
 }
 }  // namespace gs
 

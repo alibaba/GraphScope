@@ -1,4 +1,4 @@
-name: Build GraphScope Wheels on MacOS
+name: Build GraphScope Wheels on macOS
 
 # on: [push, pull_request]
 on:
@@ -19,24 +19,38 @@ concurrency:
 jobs:
   build-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
-    runs-on: macos-11
+    runs-on: macos-12
+    strategy:
+      matrix:
+        python-version: ['3.11']
+
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: true
 
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
     - name: Install Dependencies
       run: |
         brew update || true
         brew install bash coreutils
+
         alias bash=$(brew --prefix)/bin/bash
+
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
+
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
         # Not sure when the first installation would fail, saying that the lock of python3.10 is taken
         # However the second trial would success.
-        ./gs install-deps dev || true
-        ./gs install-deps dev
+        python3 -m pip install click
+        python3 gsctl.py install-deps dev || true
+        python3 gsctl.py install-deps dev
         echo "export PATH=/usr/local/opt/coreutils/libexec/gnubin:\$PATH" >> ~/.graphscope_env
 
     - name: Install JDK 11
@@ -50,10 +64,10 @@ jobs:
         # Essential cause glog installed by brew is broken and produce corrupted messages
         brew uninstall --ignore-dependencies glog
         . ~/.graphscope_env
-        git clone https://github.com/google/glog.git
+        git clone https://github.com/google/glog.git -b v0.6.0
         cd glog
 
-        cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF
+        cmake . -DWITH_TLS=OFF -DWITH_SYMBOLIZE=OFF -DWITH_UNWIND=OFF -DWITH_GTEST=OFF -DBUILD_TESTING=OFF
         make -j
         sudo make install
 
@@ -94,6 +108,9 @@ jobs:
         python3 -m pip install libclang
         echo ${CC}
 
+        # make sure the python's local bin is in PATH (by `pip install --user`)
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
+
         # change the version for nightly release
         # e.g. 0.15.0 -> 0.15.0a20220808
         time=$(date "+%Y%m%d")
@@ -105,7 +122,6 @@ jobs:
 
         python3 -m pip install numpy pandas "grpcio>=1.49" "grpcio-tools>=1.49" "mypy-protobuf>=3.4.0" wheel
 
-        export PATH=$PATH:/Users/runner/Library/Python/3.11/bin
         # build graphscope server wheel
         cd ${GITHUB_WORKSPACE}/k8s/internal
         sudo -E env PATH=$PATH make graphscope-py3-package GRAPHSCOPE_HOME=/usr/local
@@ -127,7 +143,7 @@ jobs:
 
   build-client-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       matrix:
         python-version: ['3.8', '3.9', '3.10', '3.11']
@@ -150,8 +166,9 @@ jobs:
         sudo mkdir /opt/graphscope
         sudo chown -R $(id -u):$(id -g) /opt/graphscope
 
-        ./gs install-deps dev || true
-        ./gs install-deps dev
+        python3 -m pip install click
+        python3 gsctl.py install-deps dev || true
+        python3 gsctl.py install-deps dev
 
     - name: Install latest libgrape-lite
       if: false
@@ -168,7 +185,7 @@ jobs:
       run: |
         . ~/.graphscope_env
         python3 -m pip install libclang
-        git clone --single-branch -b v0.16.1 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone --single-branch -b v0.20.3 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
@@ -183,6 +200,9 @@ jobs:
       run: |
         python3 -c "import sys; print(sys.version)"
         . ~/.graphscope_env
+
+        # make sure the python's local bin is in PATH (by `pip install --user`)
+        export PATH=$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
 
         # change the version for nightly release
         # 0.15.0 -> 0.15.0a20220808
@@ -225,7 +245,7 @@ jobs:
       env:
         PYTHON: ${{ matrix.python-version }}
       run: |
-        # move wheels into one floder to upload to PyPI
+        # move wheels into one folder to upload to PyPI
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
 
         cd ${GITHUB_WORKSPACE}/artifacts
@@ -257,7 +277,7 @@ jobs:
 
   python-test:
     if: ${{ (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch') }}
-    runs-on: macos-11
+    runs-on: macos-12
     needs: [build-wheels, build-client-wheels]
     strategy:
       fail-fast: false
@@ -296,8 +316,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         export JAVA_HOME=$(/usr/libexec/java_home -v11)
-        export PATH=$JAVA_HOME/bin:$HOME/.local/bin:$PATH
-        export PATH=$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
+        export PATH=$JAVA_HOME/bin:$HOME/.local/bin:$HOME/Library/Python/${{ matrix.python-version }}/bin:$PATH
 
         python3 -c "import sys; print(sys.version)"
         git clone -b master --single-branch --depth=1 https://github.com/7br/gstest.git ${GS_TEST_DIR}

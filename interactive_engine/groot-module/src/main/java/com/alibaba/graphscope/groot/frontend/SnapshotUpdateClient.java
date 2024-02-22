@@ -30,17 +30,11 @@ import org.slf4j.LoggerFactory;
 public class SnapshotUpdateClient extends RpcClient {
     private static final Logger logger = LoggerFactory.getLogger(SnapshotUpdateClient.class);
 
-    private CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub;
+    private final CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub;
 
     public SnapshotUpdateClient(ManagedChannel channel) {
         super(channel);
         this.stub = CoordinatorSnapshotServiceGrpc.newBlockingStub(channel);
-    }
-
-    public SnapshotUpdateClient(
-            CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub) {
-        super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
     }
 
     public void updateSnapshot(int frontendId, long snapshotId) throws RuntimeException {

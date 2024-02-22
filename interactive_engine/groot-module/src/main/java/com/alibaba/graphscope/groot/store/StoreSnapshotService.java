@@ -14,7 +14,7 @@ public class StoreSnapshotService
     private static final Logger logger =
             LoggerFactory.getLogger(com.alibaba.graphscope.groot.store.StoreSnapshotService.class);
 
-    private StoreService storeService;
+    private final StoreService storeService;
 
     public StoreSnapshotService(StoreService storeService) {
         this.storeService = storeService;

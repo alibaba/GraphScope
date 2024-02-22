@@ -24,11 +24,13 @@ import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.common.ir.tools.config.*;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -82,14 +84,12 @@ public class FfiLogicalPlanTest {
                     + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[x], opt=[VERTEX])",
                 aggregate.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(),
-                        Utils.schemaMeta,
-                        new LogicalPlan(aggregate, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(aggregate))) {
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan_1.json"),
-                    ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_1.json"), plan.explain());
         }
     }
 
@@ -114,12 +114,12 @@ public class FfiLogicalPlanTest {
                 "GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}], alias=[x],"
                         + " fusedFilter=[[=(DEFAULT.age, ?0)]], opt=[VERTEX])",
                 filter.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter))) {
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan_2.json"),
-                    ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_2.json"), plan.explain());
         }
     }
 
@@ -140,12 +140,12 @@ public class FfiLogicalPlanTest {
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[n], opt=[VERTEX])",
                 project.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("ffi_logical_plan_3.json"),
-                    ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_3.json"), plan.explain());
         }
     }
 
@@ -153,10 +153,11 @@ public class FfiLogicalPlanTest {
     public void logical_plan_4_test() throws Exception {
         LogicalPlan logicalPlan =
                 com.alibaba.graphscope.cypher.antlr4.Utils.evalLogicalPlan(
-                        "Call query_ic2(10l, 20120112l)");
-        try (PhysicalBuilder<byte[]> ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
+                        "Call ldbc_ic2(10l, 20120112l)");
+        try (PhysicalBuilder ffiBuilder = new ProcedurePhysicalBuilder(logicalPlan)) {
+            PhysicalPlan plan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("call_procedure.json"), ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("call_procedure.json"), plan.explain());
         }
     }
 
@@ -182,15 +183,120 @@ public class FfiLogicalPlanTest {
         RelNode project =
                 builder.project(ImmutableList.of(caseExpr), ImmutableList.of("case")).build();
         Assert.assertEquals(
-                "GraphLogicalProject(case=[CASE(=(a.name, 'marko'), 1, 3)], isAppend=[false])\n"
+                "GraphLogicalProject(case=[CASE(=(a.name, _UTF-8'marko'), 1, 3)],"
+                        + " isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[VERTEX])",
                 project.explain().trim());
-        try (PhysicalBuilder<byte[]> ffiBuilder =
+        try (PhysicalBuilder ffiBuilder =
                 new FfiPhysicalBuilder(
-                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project, false))) {
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(project))) {
+            PhysicalPlan plan = ffiBuilder.build();
+            Assert.assertEquals(FileUtils.readJsonFromResource("case_when.json"), plan.explain());
+        }
+    }
+
+    // test conversion from search operator to within operator in ir core
+    // a.age SEARCH [1, 2, 3] -> a.age within [1, 2, 3]
+    @Test
+    public void logical_plan_6_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .filter(
+                                rexBuilder.makeIn(
+                                        builder.variable(null, "age"),
+                                        ImmutableList.of(
+                                                builder.literal(1),
+                                                builder.literal(2),
+                                                builder.literal(3))))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[1, 2, 3])]],"
+                        + " opt=[VERTEX])",
+                node.explain().trim());
+        try (PhysicalBuilder ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
+            PhysicalPlan physicalPlan = ffiBuilder.build();
             Assert.assertEquals(
-                    FileUtils.readJsonFromResource("case_when.json"), ffiBuilder.explain());
+                    FileUtils.readJsonFromResource("ffi_logical_plan_6.json"),
+                    physicalPlan.explain());
+        }
+    }
+
+    // test conversion from search continuous ranges to compositions of 'and' in ir core
+    // a.age SEARCH [[1..10]] -> a.age >= 1 and a.age <= 10
+    @Test
+    public void logical_plan_7_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .filter(
+                                rexBuilder.makeBetween(
+                                        builder.variable(null, "age"),
+                                        builder.literal(1),
+                                        builder.literal(10)))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[[1..10]])]],"
+                        + " opt=[VERTEX])",
+                node.explain().trim());
+        try (PhysicalBuilder ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
+            PhysicalPlan physicalPlan = ffiBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("ffi_logical_plan_7.json"),
+                    physicalPlan.explain());
+        }
+    }
+
+    // test conversion of index predicate
+    // ~id SEARCH [1, 2] -> ~id == 1 or ~id == 2
+    @Test
+    public void logical_plan_8_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        RelNode node =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .filter(
+                                rexBuilder.makeIn(
+                                        builder.variable(null, GraphProperty.ID_KEY),
+                                        ImmutableList.of(builder.literal(1), builder.literal(2))))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                        + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
+                        + " Sarg[1, 2])])",
+                node.explain().trim());
+        try (PhysicalBuilder ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
+            PhysicalPlan physicalPlan = ffiBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("ffi_logical_plan_8.json"),
+                    physicalPlan.explain());
+        }
+    }
+
+    @Test
+    public void logical_plan_9_test() throws Exception {
+        RelNode node =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a) Return count(distinct a.name, a.age)")
+                        .build();
+        try (PhysicalBuilder ffiBuilder =
+                new FfiPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(node))) {
+            PhysicalPlan physicalPlan = ffiBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("ffi_logical_plan_9.json"),
+                    physicalPlan.explain());
         }
     }
 

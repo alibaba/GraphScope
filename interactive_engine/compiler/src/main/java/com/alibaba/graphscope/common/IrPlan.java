@@ -31,15 +31,22 @@ import com.alibaba.graphscope.common.jna.IrCoreLibrary;
 import com.alibaba.graphscope.common.jna.type.*;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.common.utils.ClassUtils;
+import com.alibaba.graphscope.gaia.proto.Common;
+import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
+import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.Utils;
+import com.google.common.base.Preconditions;
 import com.sun.jna.Pointer;
 import com.sun.jna.ptr.IntByReference;
 
 import org.javatuples.Pair;
 
 import java.io.Closeable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 // represent ir plan as a chain of operators
 public class IrPlan implements Closeable {
@@ -66,27 +73,30 @@ public class IrPlan implements Closeable {
                     FfiResult e1 = irCoreLib.setScanParams(scan, createParams(paramsOpt.get()));
                     if (e1.code != ResultCode.Success) {
                         throw new InterOpIllegalArgException(
-                                baseOp.getClass(), "params", "setScanParams returns " + e1.msg);
+                                baseOp.getClass(),
+                                "params",
+                                "setScanParams returns " + e1.getMsg());
                     }
                 }
 
                 // set index predicate
                 Optional<OpArg> ids = op.getIds();
                 if (ids.isPresent()) {
-                    Pointer idsPredicate = irCoreLib.initIndexPredicate();
                     List<FfiConst.ByValue> ffiIds = (List<FfiConst.ByValue>) ids.get().applyArg();
-                    for (int i = 0; i < ffiIds.size(); ++i) {
-                        FfiResult e2 =
-                                irCoreLib.orEquivPredicate(
-                                        idsPredicate, ArgUtils.asKey(ArgUtils.ID), ffiIds.get(i));
-                        if (e2.code != ResultCode.Success) {
+                    if (!ffiIds.isEmpty()) {
+                        FfiResult.ByValue res =
+                                irCoreLib.addIndexPredicatePb(scan, ffiIndexPredicate(ffiIds));
+                        if (res.code != ResultCode.Success) {
                             throw new InterOpIllegalArgException(
-                                    baseOp.getClass(), "ids", "orEquivPredicate returns " + e2.msg);
+                                    baseOp.getClass(),
+                                    "ids",
+                                    "addIndexPredicatePb returns " + res.getMsg());
                         }
                     }
-                    if (!ffiIds.isEmpty()) {
-                        irCoreLib.addScanIndexPredicate(scan, idsPredicate);
-                    }
+                }
+
+                if (op.isCountOnly()) {
+                    irCoreLib.setCountOnly(scan, true);
                 }
 
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
@@ -95,6 +105,101 @@ public class IrPlan implements Closeable {
                     irCoreLib.setScanAlias(scan, alias);
                 }
                 return scan;
+            }
+
+            private FfiPbPointer.ByValue ffiIndexPredicate(List<FfiConst.ByValue> ffiIds) {
+                GraphAlgebra.IndexPredicate.Triplet.Builder tripletBuilder =
+                        GraphAlgebra.IndexPredicate.Triplet.newBuilder()
+                                .setKey(
+                                        OuterExpression.Property.newBuilder()
+                                                .setId(OuterExpression.IdKey.newBuilder().build())
+                                                .build());
+                if (ffiIds.size() == 1) {
+                    tripletBuilder.setCmp(OuterExpression.Logical.EQ);
+                } else {
+                    tripletBuilder.setCmp(OuterExpression.Logical.WITHIN);
+                }
+                tripletBuilder.setConst(protoValue(ffiIds));
+                return new FfiPbPointer.ByValue(
+                        GraphAlgebra.IndexPredicate.newBuilder()
+                                .addOrPredicates(
+                                        GraphAlgebra.IndexPredicate.AndPredicate.newBuilder()
+                                                .addPredicates(tripletBuilder))
+                                .build()
+                                .toByteArray());
+            }
+
+            private Common.Value protoValue(List<FfiConst.ByValue> ffiIds) {
+                Preconditions.checkArgument(!ffiIds.isEmpty(), "ffiIds should not be empty");
+                FfiConst.ByValue constVal = ffiIds.get(0);
+                if (ffiIds.size() == 1) {
+                    switch (constVal.dataType) {
+                        case I32:
+                            return Common.Value.newBuilder().setI32(constVal.int32).build();
+                        case I64:
+                            return Common.Value.newBuilder().setI64(constVal.int64).build();
+                        case Str:
+                            return Common.Value.newBuilder().setStr(constVal.cstr).build();
+                        case Boolean:
+                            return Common.Value.newBuilder().setBoolean(constVal.bool).build();
+                        case F64:
+                            return Common.Value.newBuilder().setF64(constVal.float64).build();
+                        case Unknown:
+                        default:
+                            throw new IllegalArgumentException(
+                                    "cannot convert "
+                                            + constVal.dataType
+                                            + " to basic type in proto");
+                    }
+                } else {
+                    switch (constVal.dataType) {
+                        case I32:
+                            return Common.Value.newBuilder()
+                                    .setI32Array(
+                                            Common.I32Array.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.int32)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        case I64:
+                            return Common.Value.newBuilder()
+                                    .setI64Array(
+                                            Common.I64Array.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.int64)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        case Str:
+                            return Common.Value.newBuilder()
+                                    .setStrArray(
+                                            Common.StringArray.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.cstr)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        case F64:
+                            return Common.Value.newBuilder()
+                                    .setF64Array(
+                                            Common.DoubleArray.newBuilder()
+                                                    .addAllItem(
+                                                            ffiIds.stream()
+                                                                    .map(k -> k.float64)
+                                                                    .collect(Collectors.toList()))
+                                                    .build())
+                                    .build();
+                        default:
+                            throw new IllegalArgumentException(
+                                    "cannot convert array of "
+                                            + constVal.dataType
+                                            + " to array type in proto");
+                    }
+                }
             }
         },
         SELECT_OP {
@@ -113,7 +218,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             baseOp.getClass(),
                             "predicate",
-                            "setSelectPredicate returns " + error.msg);
+                            "setSelectPredicate returns " + error.getMsg());
                 }
                 return select;
             }
@@ -142,7 +247,9 @@ public class IrPlan implements Closeable {
                             irCoreLib.setEdgexpdParams(expand, createParams(paramsOpt.get()));
                     if (e1.code != ResultCode.Success) {
                         throw new InterOpIllegalArgException(
-                                baseOp.getClass(), "params", "setEdgexpdParams returns " + e1.msg);
+                                baseOp.getClass(),
+                                "params",
+                                "setEdgexpdParams returns " + e1.getMsg());
                     }
                 }
                 Optional<OpArg> aliasOpt = baseOp.getAlias();
@@ -173,7 +280,9 @@ public class IrPlan implements Closeable {
                                 (Integer) upper.get().applyArg());
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            baseOp.getClass(), "lower+upper", "setLimitRange returns " + error.msg);
+                            baseOp.getClass(),
+                            "lower+upper",
+                            "setLimitRange returns " + error.getMsg());
                 }
                 return ptrLimit;
             }
@@ -200,7 +309,7 @@ public class IrPlan implements Closeable {
                                 throw new InterOpIllegalArgException(
                                         baseOp.getClass(),
                                         "exprWithAlias",
-                                        "append returns " + error.msg);
+                                        "append returns " + error.getMsg());
                             }
                         });
                 return ptrProject;
@@ -307,6 +416,100 @@ public class IrPlan implements Closeable {
                 return ptrDedup;
             }
         },
+        SAMPLE_OP {
+            @Override
+            public Pointer apply(InterOpBase baseOp) {
+                SampleOp sampleOp = (SampleOp) baseOp;
+                Pointer ptrSample = irCoreLib.initSampleOperator();
+                FfiResult.ByValue error1 =
+                        irCoreLib.setSampleType(
+                                ptrSample,
+                                new FfiPbPointer.ByValue(
+                                        createSampleType(sampleOp.getSampleType()).toByteArray()));
+                if (error1.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(),
+                            "sampleType",
+                            "setSampleType returns " + error1.getMsg());
+                }
+                FfiResult.ByValue error3 =
+                        irCoreLib.setSampleWeightVariable(
+                                ptrSample,
+                                new FfiPbPointer.ByValue(
+                                        createVariable(sampleOp.getVariable()).toByteArray()));
+                if (error3.code != ResultCode.Success) {
+                    throw new InterOpIllegalArgException(
+                            baseOp.getClass(),
+                            "variable",
+                            "setSampleWeightVariable returns " + error3.getMsg());
+                }
+                return ptrSample;
+            }
+
+            private GraphAlgebra.Sample.SampleType createSampleType(SampleOp.SampleType type) {
+                GraphAlgebra.Sample.SampleType.Builder builder =
+                        GraphAlgebra.Sample.SampleType.newBuilder();
+                if (type instanceof SampleOp.RatioType) {
+                    SampleOp.RatioType ratioType = (SampleOp.RatioType) type;
+                    builder.setSampleByRatio(
+                            GraphAlgebra.Sample.SampleByRatio.newBuilder()
+                                    .setRatio(ratioType.getRatio()));
+                } else if (type instanceof SampleOp.AmountType) {
+                    SampleOp.AmountType amountType = (SampleOp.AmountType) type;
+                    builder.setSampleByNum(
+                            GraphAlgebra.Sample.SampleByNum.newBuilder()
+                                    .setNum((int) amountType.getAmount()));
+                } else {
+                    throw new IllegalArgumentException("Illegal sample type " + type.getClass());
+                }
+                return builder.build();
+            }
+
+            private OuterExpression.Variable createVariable(FfiVariable.ByValue var) {
+                OuterExpression.Variable.Builder builder = OuterExpression.Variable.newBuilder();
+                if (var.tag != null && var.tag.opt != FfiNameIdOpt.None) {
+                    builder.setTag(createNameOrId(var.tag));
+                }
+                if (var.property != null && var.property.opt != FfiPropertyOpt.None) {
+                    builder.setProperty(createProperty(var.property));
+                }
+                return builder.build();
+            }
+
+            private Common.NameOrId createNameOrId(FfiNameOrId.ByValue nameOrId) {
+                switch (nameOrId.opt) {
+                    case Name:
+                        return Common.NameOrId.newBuilder().setName(nameOrId.name).build();
+                    case Id:
+                        return Common.NameOrId.newBuilder().setId(nameOrId.nameId).build();
+                    default:
+                        throw new IllegalArgumentException("Illegal name or id " + nameOrId.opt);
+                }
+            }
+
+            private OuterExpression.Property createProperty(FfiProperty.ByValue property) {
+                switch (property.opt) {
+                    case Key:
+                        return OuterExpression.Property.newBuilder()
+                                .setKey(createNameOrId(property.key))
+                                .build();
+                    case Id:
+                        return OuterExpression.Property.newBuilder()
+                                .setId(OuterExpression.IdKey.newBuilder())
+                                .build();
+                    case Label:
+                        return OuterExpression.Property.newBuilder()
+                                .setLabel(OuterExpression.LabelKey.newBuilder())
+                                .build();
+                    case Len:
+                        return OuterExpression.Property.newBuilder()
+                                .setLen(OuterExpression.LengthKey.newBuilder())
+                                .build();
+                    default:
+                        throw new IllegalArgumentException("Illegal property " + property.opt);
+                }
+            }
+        },
         SINK_OP {
             @Override
             public Pointer apply(InterOpBase baseOp) {
@@ -333,7 +536,7 @@ public class IrPlan implements Closeable {
                                     throw new InterOpIllegalArgException(
                                             baseOp.getClass(),
                                             "columns",
-                                            "addSinkColumn returns " + error.msg);
+                                            "addSinkColumn returns " + error.getMsg());
                                 }
                             });
                 } else if (sinkArg instanceof SinkGraph) {
@@ -370,7 +573,7 @@ public class IrPlan implements Closeable {
                         throw new InterOpIllegalArgException(
                                 baseOp.getClass(),
                                 "setPathxpdCondition",
-                                res.code + ", " + res.msg);
+                                res.code + ", " + res.getMsg());
                     }
                 }
 
@@ -400,7 +603,9 @@ public class IrPlan implements Closeable {
                     FfiResult e1 = irCoreLib.setGetvParams(ptrGetV, createParams(paramsOpt.get()));
                     if (e1.code != ResultCode.Success) {
                         throw new InterOpIllegalArgException(
-                                baseOp.getClass(), "params", "setGetvParams returns " + e1.msg);
+                                baseOp.getClass(),
+                                "params",
+                                "setGetvParams returns " + e1.getMsg());
                     }
                 }
 
@@ -459,6 +664,25 @@ public class IrPlan implements Closeable {
                             irCoreLib.addUnionParent(ptrUnion, id);
                         });
                 return ptrUnion;
+            }
+        },
+        UNFOLD_OP {
+            public Pointer apply(InterOpBase baseOp) {
+                UnfoldOp unfoldOp = (UnfoldOp) baseOp;
+
+                Pointer ptrUnfold = irCoreLib.initUnfoldOperator();
+                FfiAlias.ByValue tag = (FfiAlias.ByValue) unfoldOp.getUnfoldTag().get().applyArg();
+
+                Optional<OpArg> aliasOpt = baseOp.getAlias();
+
+                if (aliasOpt.isPresent()) {
+                    FfiAlias.ByValue alias = (FfiAlias.ByValue) aliasOpt.get().applyArg();
+                    irCoreLib.setUnfoldPair(ptrUnfold, tag.alias, alias.alias);
+                } else {
+                    irCoreLib.setUnfoldPair(ptrUnfold, tag.alias, ArgUtils.asNoneNameOrId());
+                }
+
+                return ptrUnfold;
             }
         },
         MATCH_OP {
@@ -522,7 +746,7 @@ public class IrPlan implements Closeable {
                 Pointer asPtr = irCoreLib.initAsOperator();
                 FfiResult error = irCoreLib.setAsAlias(asPtr, ArgUtils.asNoneAlias());
                 if (error != null && error.code != ResultCode.Success) {
-                    throw new AppendInterOpException(baseOp.getClass(), error.msg);
+                    throw new AppendInterOpException(baseOp.getClass(), error.getMsg());
                 }
                 return asPtr;
             }
@@ -534,14 +758,16 @@ public class IrPlan implements Closeable {
                 FfiResult error = irCoreLib.addParamsTable(ptrParams, table);
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            InterOpBase.class, "table", "addParamsTable returns " + error.msg);
+                            InterOpBase.class, "table", "addParamsTable returns " + error.getMsg());
                 }
             }
             for (FfiNameOrId.ByValue column : params.getColumns()) {
                 FfiResult error = irCoreLib.addParamsColumn(ptrParams, column);
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            InterOpBase.class, "column", "addParamsColumn returns " + error.msg);
+                            InterOpBase.class,
+                            "column",
+                            "addParamsColumn returns " + error.getMsg());
                 }
             }
             Optional<String> predicateOpt = params.getPredicate();
@@ -551,7 +777,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             InterOpBase.class,
                             "predicate",
-                            "setParamsPredicate returns " + error.msg);
+                            "setParamsPredicate returns " + error.getMsg());
                 }
             }
             Optional<Pair<Integer, Integer>> rangeOpt = params.getRange();
@@ -561,7 +787,7 @@ public class IrPlan implements Closeable {
                         irCoreLib.setParamsRange(ptrParams, range.getValue0(), range.getValue1());
                 if (error.code != ResultCode.Success) {
                     throw new InterOpIllegalArgException(
-                            InterOpBase.class, "range", "setParamsRange returns " + error.msg);
+                            InterOpBase.class, "range", "setParamsRange returns " + error.getMsg());
                 }
             }
             params.getExtraParams()
@@ -572,7 +798,7 @@ public class IrPlan implements Closeable {
                                     throw new InterOpIllegalArgException(
                                             InterOpBase.class,
                                             "extraParams",
-                                            "addParamsExtra returns " + error.msg);
+                                            "addParamsExtra returns " + error.getMsg());
                                 }
                             });
             if (params.isAllColumns()) {
@@ -581,7 +807,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             InterOpBase.class,
                             "setIsAll",
-                            "setParamsIsAllColumns returns " + error.msg);
+                            "setParamsIsAllColumns returns " + error.getMsg());
                 }
             }
             Optional<Double> sampleRatioOpt = params.getSampleRatioOpt();
@@ -591,7 +817,7 @@ public class IrPlan implements Closeable {
                     throw new InterOpIllegalArgException(
                             InterOpBase.class,
                             "setIsAll",
-                            "setParamsSampleRatio returns " + error.msg);
+                            "setParamsSampleRatio returns " + error.getMsg());
                 }
             }
             return ptrParams;
@@ -631,7 +857,7 @@ public class IrPlan implements Closeable {
         FfiResult error = buffer.error;
         if (error.code != ResultCode.Success) {
             throw new BuildPhysicalException(
-                    "call libc returns " + error.code.name() + ", msg is " + error.msg);
+                    "call libc returns " + error.code.name() + ", msg is " + error.getMsg());
         }
         byte[] bytes = buffer.getBytes();
         buffer.close();
@@ -646,7 +872,7 @@ public class IrPlan implements Closeable {
                 throw new InterOpIllegalArgException(
                         InterOpBase.class, "printPlanAsJson", "code is " + e.code);
             }
-            json = e.msg;
+            json = e.getMsg();
         }
         return json;
     }
@@ -755,15 +981,21 @@ public class IrPlan implements Closeable {
         } else if (ClassUtils.equalClass(base, MatchOp.class)) {
             Pointer ptrMatch = TransformFactory.MATCH_OP.apply(base);
             error = irCoreLib.appendPatternOperator(ptrPlan, ptrMatch, oprId.getValue(), oprId);
+        } else if (ClassUtils.equalClass(base, UnfoldOp.class)) {
+            Pointer ptrUnfold = TransformFactory.UNFOLD_OP.apply(base);
+            error = irCoreLib.appendUnfoldOperator(ptrPlan, ptrUnfold, oprId.getValue(), oprId);
         } else if (ClassUtils.equalClass(base, AsNoneOp.class)) {
             Pointer ptrAs = TransformFactory.AS_NONE_OP.apply(base);
             error = irCoreLib.appendAsOperator(ptrPlan, ptrAs, oprId.getValue(), oprId);
+        } else if (ClassUtils.equalClass(base, SampleOp.class)) {
+            Pointer ptrSample = TransformFactory.SAMPLE_OP.apply(base);
+            error = irCoreLib.appendSampleOperator(ptrPlan, ptrSample, oprId.getValue(), oprId);
         } else {
             throw new InterOpUnsupportedException(base.getClass(), "unimplemented yet");
         }
         if (error != null && error.code != ResultCode.Success) {
             throw new AppendInterOpException(
-                    base.getClass(), error.code.name() + ", msg is " + error.msg);
+                    base.getClass(), error.code.name() + ", msg is " + error.getMsg());
         }
         // add alias after the op if necessary
         return setPostAlias(oprId.getValue(), base);
@@ -776,11 +1008,11 @@ public class IrPlan implements Closeable {
             Pointer ptrAs = irCoreLib.initAsOperator();
             FfiResult error = irCoreLib.setAsAlias(ptrAs, ffiAlias);
             if (error != null && error.code != ResultCode.Success) {
-                throw new AppendInterOpException(base.getClass(), error.msg);
+                throw new AppendInterOpException(base.getClass(), error.getMsg());
             }
             FfiResult appendOp = irCoreLib.appendAsOperator(ptrPlan, ptrAs, parentId, oprId);
             if (appendOp != null && appendOp.code != ResultCode.Success) {
-                throw new AppendInterOpException(base.getClass(), appendOp.msg);
+                throw new AppendInterOpException(base.getClass(), appendOp.getMsg());
             }
         }
         return oprId;

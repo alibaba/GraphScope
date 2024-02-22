@@ -27,9 +27,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * build physical plan from logical plan of a regular query
  * @param <T>
- * @param <R>
  */
-public abstract class RegularPhysicalBuilder<T, R> extends PhysicalBuilder<R> {
+public abstract class RegularPhysicalBuilder<T> extends PhysicalBuilder {
     protected RelShuttle relShuttle;
 
     protected RegularPhysicalBuilder(LogicalPlan logicalPlan, RelShuttle relShuttle) {
@@ -44,7 +43,12 @@ public abstract class RegularPhysicalBuilder<T, R> extends PhysicalBuilder<R> {
                     new RelVisitor() {
                         @Override
                         public void visit(RelNode node, int ordinal, @Nullable RelNode parent) {
-                            super.visit(node, ordinal, parent);
+                            /**
+                             * for operators like join, we will visit its inputs in {@code appendNode}
+                             */
+                            if (node.getInputs().size() == 1) {
+                                super.visit(node, ordinal, parent);
+                            }
                             appendNode((PhysicalNode) node.accept(relShuttle));
                         }
                     };

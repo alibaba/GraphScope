@@ -14,7 +14,10 @@
 //! limitations under the License.
 //
 
-use pegasus::api::{Collect, CorrelatedSubTask, Count, Filter, Fold, FoldByKey, KeyBy, Map, Sink, SortBy};
+use pegasus::api::{
+    Collect, CorrelatedSubTask, Count, Filter, Fold, FoldByKey, HasAny, KeyBy, Limit, Map, Sink, SortBy,
+    SortLimitBy,
+};
 use pegasus::JobConf;
 
 #[test]
@@ -72,6 +75,61 @@ fn count_test_02() {
 
     assert_eq!(0, sum);
     assert_eq!(1, count);
+}
+
+#[test]
+fn count_test_03() {
+    let mut conf = JobConf::new("count_test_03");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        move |input, output| {
+            input
+                .input_from(vec![1u64])?
+                .sort_limit_by(1, |x, y| x.cmp(&y))?
+                .repartition(|input| Ok(*input))
+                .count()?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure:");
+
+    let mut count = 0;
+    while let Some(Ok(d)) = result.next() {
+        count += d;
+    }
+
+    assert_eq!(1, count);
+}
+
+#[test]
+fn count_test_04() {
+    let mut conf = JobConf::new("count_test_03");
+    conf.set_workers(2);
+    let mut result = pegasus::run(conf, || {
+        move |input, output| {
+            input
+                .input_from(0..10u64)?
+                .apply(|sub| {
+                    sub.repartition(move |id| Ok(*id % 2))
+                        .flat_map(|i| Ok(0..i))?
+                        .repartition(move |id| Ok(*id % 2))
+                        .count()?
+                        .into_stream()?
+                        .map(|i| Ok(i))?
+                        .any()
+                })?
+                .filter_map(|i| if i.1 { Ok(Some(i.0)) } else { Ok(None) })?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure:");
+
+    let mut count = 0;
+    while let Some(Ok(d)) = result.next() {
+        count += d;
+    }
+
+    assert_eq!(90, count);
 }
 
 #[test]
@@ -192,6 +250,50 @@ fn fold_by_key_test() {
     assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 2).count() as u32);
     let cnt_3 = groups.get(&3).unwrap();
     assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 3).count() as u32);
+}
+
+#[test]
+fn fold_partition_by_key_test() {
+    let mut conf = JobConf::new("fold_partition_by_key");
+    conf.set_workers(2);
+    let num = 1000u32;
+    let mut result = pegasus::run(conf, || {
+        let index = pegasus::get_current_worker().index;
+        let src = index * num..(index + 1) * num;
+        move |input, output| {
+            input
+                .input_from(src)?
+                .key_by(|x| Ok((x % 4, x)))?
+                .fold_partition_by_key(0u32, || |a, _| Ok(a + 1))?
+                .sink_into(output)
+        }
+    })
+    .expect("submit job failure:");
+    let groups_1 = result.next().unwrap().unwrap();
+    let groups_2 = result.next().unwrap().unwrap();
+    println!("groups 1: {:?}\n groups 2: {:?}", groups_1, groups_2);
+
+    assert_eq!(groups_1.len(), 2);
+    if let Some(cnt_0) = groups_1.get(&0) {
+        assert_eq!(*cnt_0, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if let Some(cnt_0) = groups_2.get(&0) {
+        assert_eq!(*cnt_0, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
+    if let Some(cnt_1) = groups_1.get(&1) {
+        assert_eq!(*cnt_1, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if let Some(cnt_1) = groups_2.get(&1) {
+        assert_eq!(*cnt_1, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
+    if let Some(cnt_2) = groups_1.get(&2) {
+        assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if let Some(cnt_2) = groups_2.get(&2) {
+        assert_eq!(*cnt_2, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
+    if let Some(cnt_3) = groups_1.get(&3) {
+        assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    } else if let Some(cnt_3) = groups_2.get(&3) {
+        assert_eq!(*cnt_3, (0..num * 2).filter(|x| x % 4 == 0).count() as u32);
+    }
 }
 
 #[test]

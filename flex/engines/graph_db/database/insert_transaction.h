@@ -19,28 +19,28 @@
 #include <limits>
 
 #include "flex/storages/rt_mutable_graph/types.h"
+#include "flex/utils/allocators.h"
 #include "flex/utils/property/types.h"
 #include "grape/serialization/in_archive.h"
 
 namespace gs {
 
 class MutablePropertyFragment;
-class ArenaAllocator;
 class WalWriter;
 class VersionManager;
 
 class InsertTransaction {
  public:
-  InsertTransaction(MutablePropertyFragment& graph, ArenaAllocator& alloc,
+  InsertTransaction(MutablePropertyFragment& graph, Allocator& alloc,
                     WalWriter& logger, VersionManager& vm,
                     timestamp_t timestamp);
 
   ~InsertTransaction();
 
-  bool AddVertex(label_t label, oid_t id, const std::vector<Any>& props);
+  bool AddVertex(label_t label, const Any& id, const std::vector<Any>& props);
 
-  bool AddEdge(label_t src_label, oid_t src, label_t dst_label, oid_t dst,
-               label_t edge_label, const Any& prop);
+  bool AddEdge(label_t src_label, const Any& src, label_t dst_label,
+               const Any& dst, label_t edge_label, const Any& prop);
 
   void Commit();
 
@@ -49,20 +49,22 @@ class InsertTransaction {
   timestamp_t timestamp() const;
 
   static void IngestWal(MutablePropertyFragment& graph, uint32_t timestamp,
-                        char* data, size_t length, ArenaAllocator& alloc);
+                        char* data, size_t length, Allocator& alloc);
 
  private:
   void clear();
 
   static bool get_vertex_with_retries(MutablePropertyFragment& graph,
-                                      label_t label, oid_t oid, vid_t& lid);
+                                      label_t label, const Any& oid,
+                                      vid_t& lid);
 
   grape::InArchive arc_;
 
-  std::set<std::pair<label_t, oid_t>> added_vertices_;
+  std::set<std::pair<label_t, Any>> added_vertices_;
 
   MutablePropertyFragment& graph_;
-  ArenaAllocator& alloc_;
+
+  Allocator& alloc_;
   WalWriter& logger_;
   VersionManager& vm_;
   timestamp_t timestamp_;

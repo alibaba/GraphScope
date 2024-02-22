@@ -15,7 +15,7 @@ The *GRAPE* engine is written in C++, its static type system has a huge positive
 for performance. At the same time, it means an algorithm with fixed data type cannot be
 used on graphs with another data type. That means, our algorithm should be *polymorphic*
 and to be instantized when data type of given graph workload is known, aka. when *binding*
-the applciation to a graph.
+the application to a graph.
 
 In `pygrape`, an algorithm needs to be bound to a graph first before executing queries.
 Then the bound application can be used to run different queries on the graph for multiple
@@ -48,7 +48,7 @@ on that:
 
 The data type of edge data is :code:`int64_t`. You will notice a delay when running
 :code:`sess.run(r1)` but not when running :code:`sess.run(r2)`. When the first time
-a bound applciation is used, a C++ compilation process will be triggerred behind the
+a bound application is used, a C++ compilation process will be triggered behind the
 screen. The next time the same bound application is applied, the compilation result
 will be resulted.
 

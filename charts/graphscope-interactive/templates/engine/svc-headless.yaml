@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "graphscope-interactive.engine.fullname" . }}-headless
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: engine
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.engine.service.type }}
+  {{- if and (eq .Values.engine.service.type "ClusterIP") .Values.engine.service.clusterIP }}
+  clusterIP: {{ .Values.engine.service.clusterIP }}
+  {{- end }}
+  {{- if and .Values.engine.service.loadBalancerIP (eq .Values.engine.service.type "LoadBalancer") }}
+  loadBalancerIP: {{ .Values.engine.service.loadBalancerIP }}
+  externalTrafficPolicy: {{ .Values.engine.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.engine.service.type "LoadBalancer") .Values.engine.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.engine.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  ports:
+    - name: admin-port
+      port: {{ .Values.engine.service.adminPort }}
+      protocol: TCP
+      targetPort: admin-port
+    - name: query-port
+      port: {{ .Values.engine.service.queryPort }}
+      protocol: TCP
+      targetPort: query-port
+  selector: {{- include "graphscope-interactive.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: engine

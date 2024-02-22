@@ -1,3 +1,17 @@
+/** Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include <climits>
 #include <cstdlib>
 #include <vector>
@@ -63,13 +77,13 @@ auto make_vertex_set_b() {
 
 auto make_vertex_set_c() {
   std::vector<gs::vid_t> vids{0, 1, 4};
-  auto res = gs::MakeDefaultRowVertexSet(std::move(vids), "0");
+  auto res = gs::make_default_row_vertex_set(std::move(vids), "0");
   return res;
 }
 
 auto make_vertex_set_d() {
   std::vector<gs::vid_t> vids{2, 3, 1, 0};
-  auto res = gs::MakeDefaultRowVertexSet(std::move(vids), "0");
+  auto res = gs::make_default_row_vertex_set(std::move(vids), "0");
   return res;
 }
 
@@ -114,7 +128,7 @@ int main() {
     auto two_label_set = gs::make_two_label_set(
         std::move(vec), std::move(labels), std::move(set));
     {
-      size_t cnt = 1;
+      int32_t cnt = 1;
       for (auto iter : two_label_set) {
         CHECK(iter.GetElement().second == cnt);
         cnt += 1;
@@ -129,21 +143,21 @@ int main() {
     std::vector<int32_t> indices;
     indices.reserve(limit);
     unsigned int tmp;
-    for (auto i = 0; i < limit; ++i) {
+    for (size_t i = 0; i < limit; ++i) {
       rand_r(&tmp);
       indices.emplace_back((int32_t) tmp % limit);
     }
     auto col1 =
         std::make_shared<gs::TypedColumn<int32_t>>(gs::StorageStrategy::kMem);
 
-    col1->init(limit);
-    for (int i = 0; i < limit; ++i) {
+    col1->resize(limit);
+    for (size_t i = 0; i < limit; ++i) {
       col1->set_value(i, (int32_t)(i));
     }
     {
       int32_t res = 0;
       double t0 = -grape::GetCurrentTime();
-      for (auto j = 0; j < 10; ++j) {
+      for (size_t j = 0; j < 10; ++j) {
         for (auto ind : indices) {
           res += col1->get_view(ind);
         }
@@ -179,7 +193,7 @@ int main() {
     std::vector<int32_t> indices;
     indices.reserve(limit);
     unsigned int tmp;
-    for (auto i = 0; i < limit; ++i) {
+    for (size_t i = 0; i < limit; ++i) {
       rand_r(&tmp);
       indices.emplace_back(tmp % limit);
     }
@@ -188,30 +202,26 @@ int main() {
     auto col2 =
         std::make_shared<gs::TypedColumn<int64_t>>(gs::StorageStrategy::kMem);
 
-    col1->init(limit);
-    col2->init(limit);
-    for (int i = 0; i < limit; ++i) {
+    col1->resize(limit);
+    col2->resize(limit);
+    for (size_t i = 0; i < limit; ++i) {
       col1->set_value(i, (int32_t)(i));
       col2->set_value(i, (int64_t) i);
     }
     {
       int32_t res = 0;
-      int64_t res0 = 0;
       double t0 = -grape::GetCurrentTime();
-      for (auto j = 0; j < 10; ++j) {
+      for (size_t j = 0; j < 10; ++j) {
         for (auto ind : indices) {
           res += col1->get_view(ind);
-          res0 += col2->get_view(ind);
         }
       }
       t0 += grape::GetCurrentTime();
 
       double t1 = -grape::GetCurrentTime();
       res = 0;
-      res0 = 0;
       for (auto ind : indices) {
         res += col1->get_view(ind);
-        res0 += col2->get_view(ind);
       }
       t1 += grape::GetCurrentTime();
       LOG(INFO) << "ptr visit cost: " << t1 << " ,warm up took: " << t0
@@ -226,11 +236,8 @@ int main() {
 
       double t1 = -grape::GetCurrentTime();
       int32_t res = 0;
-      int64_t res0 = 0;
       for (auto ind : indices) {
         res += getter1.get_view(ind);
-        res0 += getter2.get_view(ind);
-        auto tuple = std::tuple{res, res0};
       }
       t1 += grape::GetCurrentTime();
       LOG(INFO) << "bench1 cost: " << t1 << ", res: " << res;
@@ -243,8 +250,8 @@ int main() {
       nbrs.resize(300);
       {
         double t0 = -grape::GetCurrentTime();
-        for (auto i = 0; i < 300; ++i) {
-          for (auto j = 0; j < 1000; ++j) {
+        for (size_t i = 0; i < 300; ++i) {
+          for (size_t j = 0; j < 1000; ++j) {
             vids[i].emplace_back(j);
           }
         }
@@ -262,8 +269,8 @@ int main() {
       }
       {
         double t0 = -grape::GetCurrentTime();
-        for (auto i = 0; i < 300; ++i) {
-          for (auto j = 0; j < 1000; ++j) {
+        for (size_t i = 0; i < 300; ++i) {
+          for (size_t j = 0; j < 1000; ++j) {
             nbrs[i].emplace_back(gs::mutable_csr_graph_impl::Nbr(j));
           }
         }
@@ -271,7 +278,7 @@ int main() {
         LOG(INFO) << "emplacing nbr: " << t0;
         double t1 = -grape::GetCurrentTime();
         int64_t tmp = 0;
-        for (int i = 0; i < nbrs.size(); ++i) {
+        for (size_t i = 0; i < nbrs.size(); ++i) {
           for (auto nbr : nbrs[i]) {
             tmp += nbr.neighbor();
           }
@@ -288,12 +295,12 @@ int main() {
       auto col2 =
           std::make_shared<gs::TypedColumn<int32_t>>(gs::StorageStrategy::kMem);
 
-      col1->init(limit);
-      col2->init(limit);
-      for (int i = 0; i < limit; i += 2) {
+      col1->resize(limit);
+      col2->resize(limit);
+      for (size_t i = 0; i < limit; i += 2) {
         col1->set_value(i, (int32_t)(i));
       }
-      for (int i = 1; i < limit; i += 2) {
+      for (size_t i = 1; i < limit; i += 2) {
         col2->set_value(i, (int32_t)(i));
       }
       // test two label vertex set prop getter.
@@ -307,7 +314,7 @@ int main() {
       // generate index ele
       std::vector<std::tuple<size_t, size_t>> index_eles;
       index_eles.reserve(limit);
-      for (auto i = 0; i < limit; ++i) {
+      for (size_t i = 0; i < limit; ++i) {
         if (i % 2 == 0) {
           index_eles.emplace_back(std::make_tuple(0, i));
         } else {
@@ -329,7 +336,7 @@ int main() {
         // more locality
         grape::Bitset bitset;
         bitset.init(limit);
-        for (auto i = 0; i < limit; ++i) {
+        for (size_t i = 0; i < limit; ++i) {
           if (i % 2 == 0) {
             bitset.set_bit(i);
           }
@@ -338,13 +345,13 @@ int main() {
         int32_t res = 0;
 
         auto& first = array[0];
-        for (auto i = 0; i < limit; ++i) {
+        for (size_t i = 0; i < limit; ++i) {
           if (bitset.get_bit(i)) {
             res += first.get_view(std::get<1>(index_eles[i]));
           }
         }
         auto& second = array[1];
-        for (auto i = 0; i < limit; ++i) {
+        for (size_t i = 0; i < limit; ++i) {
           if (!bitset.get_bit(i)) {
             res += second.get_view(std::get<1>(index_eles[i]));
           }
@@ -368,21 +375,21 @@ int main() {
         vec2.reserve(limit);
         {
           unsigned int tmp;
-          for (auto i = 0; i < limit; ++i) {
+          for (size_t i = 0; i < limit; ++i) {
             rand_r(&tmp);
             vec0.emplace_back(tmp % limit);
           }
         }
         {
           unsigned int tmp;
-          for (auto i = 0; i < limit; ++i) {
+          for (size_t i = 0; i < limit; ++i) {
             rand_r(&tmp);
             vec1.emplace_back((int64_t) tmp % limit);
           }
         }
         {
           unsigned int tmp;
-          for (auto i = 0; i < limit; ++i) {
+          for (size_t i = 0; i < limit; ++i) {
             rand_r(&tmp);
             vec2.emplace_back((double) (tmp % limit));
           }
@@ -394,7 +401,7 @@ int main() {
                             TmpComparator>
             pq(sorter);
         double t1 = -grape::GetCurrentTime();
-        for (auto i = 0; i < limit; ++i) {
+        for (size_t i = 0; i < limit; ++i) {
           if (pq.size() < 20) {
             pq.emplace(vec0[i], vec1[i], vec2[i]);
           } else {
@@ -419,7 +426,7 @@ int main() {
         // double third;
         sort_tuple_t empty_tuple;
         sort_tuple_t& top_tuple = empty_tuple;
-        for (auto i = 0; i < limit; ++i) {
+        for (size_t i = 0; i < limit; ++i) {
           if (pq.size() < 20) {
             auto tuple = std::make_tuple(vec0[i], vec1[i], vec2[i]);
             pq.emplace(std::move(tuple));
@@ -437,15 +444,6 @@ int main() {
         LOG(INFO) << " emplace tuple: " << t1;
       }
     }
-  }
-  {
-    using result_t = typename gs::ResultContextTImpl<
-        1, gs::RowVertexSetImpl<int32_t, long long, grape::EmptyType>, 0,
-        gs::RowVertexSetImpl<int32_t, long long, grape::EmptyType>, 0,
-        std::tuple<grape::EmptyType>,
-        gs::Dummy<1, gs::RowVertexSetImpl<int32_t, long long, grape::EmptyType>,
-                  0, gs::RowVertexSetImpl<int32_t, long long, grape::EmptyType>,
-                  0, grape::EmptyType>>::result_t;
   }
 
   LOG(INFO) << "Finish context test.";

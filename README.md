@@ -15,16 +15,20 @@
 [![Docs-zh](https://shields.io/badge/Docs-%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/)
 [![FAQ-zh](https://img.shields.io/badge/-FAQ%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/frequently_asked_questions.html)
 [![README-zh](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-zh.md)
+[![ACM DL](https://img.shields.io/badge/ACM%20DL-10.14778%2F3476311.3476369-blue)](https://dl.acm.org/doi/10.14778/3476311.3476369)
 
-🎉 See our ongoing [GraphScope Flex](flex/): a LEGO-inspired, modular, and user-friendly GraphScope evolution. 🎉
+🎉 See our ongoing [GraphScope Flex](https://github.com/alibaba/GraphScope/tree/main/flex): a LEGO-inspired, modular, and user-friendly GraphScope evolution. 🎉
 
 GraphScope is a unified distributed graph computing platform that provides a one-stop environment for performing diverse graph operations on a cluster of computers through a user-friendly Python interface. GraphScope makes multi-staged processing of large-scale graph data on compute clusters simply by combining several important pieces of Alibaba technology: including [GRAPE](https://github.com/alibaba/libgrape-lite), [MaxGraph](interactive_engine/), and [Graph-Learn](https://github.com/alibaba/graph-learn) (GL) for analytics, interactive, and graph neural networks (GNN) computation, respectively, and the [Vineyard](https://github.com/v6d-io/v6d) store that offers efficient in-memory data transfers.
 
 Visit our website at [graphscope.io](https://graphscope.io) to learn more.
 
 ## Latest News
-- [20/07/2023] GraphScope achieved record-breaking results on the [LDBC Social Network Benchmark Interactive workload](https://ldbcouncil.org/benchmarks/snb-interactive/), with a 2.45× higher throughput on SF300 than the previous record holder! 🏆
-- [04/07/2023] GraphScope Flex tech preview released with [v0.23.0](https://github.com/alibaba/GraphScope/releases/tag/v0.23.0)
+- [05/02/2024] 🎉 GraphScope Flex [paper](https://arxiv.org/abs/2312.12107) was accepted by [SIGMOD 2024](https://2024.sigmod.org/) Industry Track. See you in 🇨🇱!
+- [19/12/2023] 📑 A paper introducing GraphScope Flex released on [arXiv.org](https://arxiv.org/abs/2312.12107).
+- [20/07/2023] 🏆 GraphScope achieved record-breaking results on the [LDBC Social Network Benchmark Interactive workload](https://ldbcouncil.org/benchmarks/snb-interactive/), with a 2.45× higher throughput on SF300 than the previous record holder! 🏆
+- [04/07/2023] 🚀 GraphScope Flex tech preview released with [v0.23.0](https://github.com/alibaba/GraphScope/releases/tag/v0.23.0).
+  
 ## Table of Contents
 
 - [Getting Started](#getting-started)
@@ -64,7 +68,7 @@ GraphScope pre-compiled package is distributed as a python package and can be ea
 pip3 install graphscope
 ```
 
-Note that `graphscope` requires `Python` >= 3.8 and `pip` >= 19.3. The package is built for and tested on the most popular Linux (Ubuntu 20.04+ / CentOS 7+) and macOS 11+ (Intel) / macOS 12+ (Apple silicon) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
+Note that `graphscope` requires `Python` >= `3.8` and `pip` >= `19.3`. The package is built for and tested on the most popular Linux (Ubuntu 20.04+ / CentOS 7+) and macOS 12+ (Intel/Apple silicon) distributions. For Windows users, you may want to install Ubuntu on WSL2 to use this package.
 
 Next, we will walk you through a concrete example to illustrate how GraphScope can be used by data scientists to effectively analyze large graphs.
 
@@ -332,10 +336,10 @@ Please note that we have not hardened this release for production use and it lac
 To build graphscope Python package and the engine binaries, you need to install some dependencies and build tools.
 
 ```bash
-./gs install-deps dev
+python3 gsctl.py install-deps dev
 
 # With argument --cn to speed up the download if you are in China.
-./gs install-deps dev --cn
+python3 gsctl.py install-deps dev --cn
 ```
 
 Then you can build GraphScope with pre-configured `make` commands.
@@ -414,6 +418,20 @@ GraphScope is released under [Apache License 2.0](https://www.apache.org/license
 - Wenfei Fan, Tao He, Longbin Lai, Xue Li, Yong Li, Zhao Li, Zhengping Qian, Chao Tian, Lei Wang, Jingbo Xu, Youyang Yao, Qiang Yin, Wenyuan Yu, Jingren Zhou, Diwen Zhu, Rong Zhu. [GraphScope: A Unified Engine For Big Graph Processing](http://vldb.org/pvldb/vol14/p2879-qian.pdf). The 47th International Conference on Very Large Data Bases (VLDB), industry, 2021.
 - Jingbo Xu, Zhanning Bai, Wenfei Fan, Longbin Lai, Xue Li, Zhao Li, Zhengping Qian, Lei Wang, Yanyan Wang, Wenyuan Yu, Jingren Zhou. [GraphScope: A One-Stop Large Graph Processing System](http://vldb.org/pvldb/vol14/p2703-xu.pdf). The 47th International Conference on Very Large Data Bases (VLDB), demo, 2021
 
+If you use this software, please cite our paper using the following metadata:
+
+```bibtex
+@article{fan2021graphscope,
+  title={GraphScope: a unified engine for big graph processing},
+  author={Fan, Wenfei and He, Tao and Lai, Longbin and Li, Xue and Li, Yong and Li, Zhao and Qian, Zhengping and Tian, Chao and Wang, Lei and Xu, Jingbo and others},
+  journal={Proceedings of the VLDB Endowment},
+  volume={14},
+  number={12},
+  pages={2879--2892},
+  year={2021},
+  publisher={VLDB Endowment}
+}
+```
 
 ## Contributing
 

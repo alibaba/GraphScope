@@ -23,7 +23,7 @@ import io.grpc.ManagedChannel;
 import java.util.List;
 
 public class BackupClient extends RpcClient {
-    private BackupGrpc.BackupBlockingStub stub;
+    private final BackupGrpc.BackupBlockingStub stub;
 
     public BackupClient(ManagedChannel channel) {
         super(channel);

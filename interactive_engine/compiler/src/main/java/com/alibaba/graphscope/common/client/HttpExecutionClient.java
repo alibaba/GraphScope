@@ -73,21 +73,33 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                             .headers(CONTENT_TYPE, TEXT_PLAIN)
                             .POST(
                                     HttpRequest.BodyPublishers.ofByteArray(
-                                            (byte[]) request.getRequestPhysical().build()))
+                                            (byte[]) request.getRequestPhysical().getContent()))
                             .build();
             CompletableFuture<HttpResponse<byte[]>> responseFuture =
                     httpClient
                             .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofByteArray())
                             .orTimeout(timeoutConfig.getChannelTimeoutMS(), TimeUnit.MILLISECONDS)
                             .whenComplete(
-                                    (bytes, exception) -> {
+                                    (response, exception) -> {
                                         if (exception != null) {
                                             listener.onError(exception);
                                         }
                                         try {
+                                            // if response is not 200
+                                            if (response.statusCode() != 200) {
+                                                // parse String from response.body()
+                                                String errorMessage = new String(response.body());
+                                                listener.onError(
+                                                        new RuntimeException(
+                                                                "Query execution failed: response"
+                                                                        + " status code is "
+                                                                        + response.statusCode()
+                                                                        + ", error message: "
+                                                                        + errorMessage));
+                                            }
                                             IrResult.CollectiveResults results =
                                                     IrResult.CollectiveResults.parseFrom(
-                                                            bytes.body());
+                                                            response.body());
                                             for (IrResult.Results irResult :
                                                     results.getResultsList()) {
                                                 listener.onNext(irResult.getRecord());

@@ -21,10 +21,10 @@ limitations under the License.
 #include "flex/codegen/src/building_context.h"
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
-#include "proto_generated_gie/physical.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/physical.pb.h"
 
 namespace gs {
 namespace pegasus {
@@ -45,7 +45,7 @@ class IntersectOpBuilder {
   std::string Build() {
     VLOG(10) << "Start Build intersect";
     std::stringstream ss;
-    for (auto i = 0; i < sub_plans_.size(); i++) {
+    for (size_t i = 0; i < sub_plans_.size(); i++) {
       auto operator_size = sub_plans_[i].plan_size();
       for (auto j = 0; j < operator_size; j++) {
         VLOG(10) << "Get " << j << "th operator from sub plan " << i;

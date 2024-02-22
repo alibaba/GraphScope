@@ -139,7 +139,7 @@ class ShortestPathOp {
     }
     auto nbr_list_array = graph.GetOtherVertices(
         v_label, v_label, edge_label, ids_to_query, direction, INT_MAX);
-    for (auto i = 0; i < nbr_list_array.size(); ++i) {
+    for (size_t i = 0; i < nbr_list_array.size(); ++i) {
       for (auto nbr : nbr_list_array.get(i)) {
         auto v = nbr.neighbor();
         if (cur_vid_dist.find(v) == cur_vid_dist.end()) {
@@ -208,7 +208,7 @@ class ShortestPathOp {
     std::vector<vertex_id_t> tmp_vec;
     while (!q.empty()) {
       tmp_vec.clear();
-      for (auto i = 0; i < q.size(); ++i) {
+      for (size_t i = 0; i < q.size(); ++i) {
         auto v = q.front();
         q.pop();
         tmp_vec.emplace_back(v);
@@ -216,7 +216,7 @@ class ShortestPathOp {
 
       auto nbr_list_array = graph.GetOtherVertices(v_label, v_label, edge_label,
                                                    tmp_vec, direction, INT_MAX);
-      for (auto i = 0; i < nbr_list_array.size(); ++i) {
+      for (size_t i = 0; i < nbr_list_array.size(); ++i) {
         auto cur_v = tmp_vec[i];
         for (auto nbr : nbr_list_array.get(i)) {
           auto v = nbr.neighbor();
@@ -255,7 +255,8 @@ class ShortestPathOp {
     for (auto path : paths) {
       size_t s = path.size();
       std::vector<int32_t> offset(s, 0);
-      Path<vertex_id_t> new_path(std::move(path), std::move(offset));
+      Path<vertex_id_t, label_id_t> new_path(std::move(path),
+                                             std::move(offset));
       path_set.EmplacePath(std::move(new_path));
     }
     return path_set;

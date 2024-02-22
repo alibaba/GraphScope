@@ -2,7 +2,7 @@
 
 ## Compatibility with TinkerPop
 GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
-and provides a Gremlin Websockets server that supports TinkerPop version 3.4.
+and provides a Gremlin WebSockets server that supports TinkerPop version 3.4.
 In addition to the original Gremlin queries, we further introduce some syntactic sugars to allow
 more succinct expression. However, because of the distributed nature and practical considerations, it is worth to notice the following limitations of our implementations of Gremlin.
 
@@ -131,7 +131,14 @@ For example, in the LDBC schema, we define the property ID as the primary key fo
 ```scss
 g.V().hasLabel('PERSON').has('id', propertyIdValue)
 ```
-Where 'id' is the property ID, and 'propertyIdValue' is the value of the property key. By directly using the primary key index, query performance can be significantly improved, avoiding full table scans and property value filtering, thereby optimizing query performance.
+Where 'id' is the property ID, and 'propertyIdValue' is the value of the property key. 
+
+Moreover, we support the `within` operator to query multiple values of the same property key, which can also be optimized by the primary key index. For example:
+```scss
+g.V().hasLabel('PERSON').has('id', within(propertyIdValue1, propertyIdValue2))
+```
+
+By directly using the primary key index, query performance can be significantly improved, avoiding full table scans and property value filtering, thereby optimizing query performance.
 
 ## How to use subgraph in GIE Gremlin ?
 

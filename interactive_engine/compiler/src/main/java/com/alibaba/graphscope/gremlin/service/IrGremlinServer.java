@@ -16,11 +16,14 @@
 
 package com.alibaba.graphscope.gremlin.service;
 
+import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
+import com.alibaba.graphscope.common.manager.RateLimitExecutor;
 import com.alibaba.graphscope.gremlin.Utils;
 import com.alibaba.graphscope.gremlin.auth.AuthManager;
 import com.alibaba.graphscope.gremlin.auth.AuthManagerReference;
@@ -36,14 +39,17 @@ import org.apache.tinkerpop.gremlin.server.GremlinServer;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.AbstractOpProcessor;
 import org.apache.tinkerpop.gremlin.server.util.ServerGremlinExecutor;
+import org.apache.tinkerpop.gremlin.server.util.ThreadFactoryUtil;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.tinkergraph.structure.TinkerFactory;
 
 import java.io.InputStream;
+import java.util.concurrent.*;
 
 public class IrGremlinServer implements AutoCloseable {
     private final Configs configs;
-    private final GraphPlanner graphPlanner;
+    private final QueryCache queryCache;
+    private final ExecutionClient executionClient;
     private final ChannelFetcher channelFetcher;
     private final IrMetaQueryCallback metaQueryCallback;
     private final GraphProperties testGraph;
@@ -53,14 +59,20 @@ public class IrGremlinServer implements AutoCloseable {
     private final Graph graph;
     private final GraphTraversalSource g;
 
+    private final QueryIdGenerator idGenerator;
+
     public IrGremlinServer(
             Configs configs,
-            GraphPlanner graphPlanner,
+            QueryIdGenerator idGenerator,
+            QueryCache queryCache,
+            ExecutionClient executionClient,
             ChannelFetcher channelFetcher,
             IrMetaQueryCallback metaQueryCallback,
             GraphProperties testGraph) {
         this.configs = configs;
-        this.graphPlanner = graphPlanner;
+        this.idGenerator = idGenerator;
+        this.queryCache = queryCache;
+        this.executionClient = executionClient;
         this.channelFetcher = channelFetcher;
         this.metaQueryCallback = metaQueryCallback;
         this.testGraph = testGraph;
@@ -80,12 +92,21 @@ public class IrGremlinServer implements AutoCloseable {
     public void start() throws Exception {
         AbstractOpProcessor standardProcessor =
                 new IrStandardOpProcessor(
-                        configs, graphPlanner, channelFetcher, metaQueryCallback, graph, g);
+                        configs,
+                        idGenerator,
+                        queryCache,
+                        executionClient,
+                        channelFetcher,
+                        metaQueryCallback,
+                        graph,
+                        g);
         IrOpLoader.addProcessor(standardProcessor.getName(), standardProcessor);
         AbstractOpProcessor testProcessor =
                 new IrTestOpProcessor(
                         configs,
-                        graphPlanner,
+                        idGenerator,
+                        queryCache,
+                        executionClient,
                         channelFetcher,
                         metaQueryCallback,
                         graph,
@@ -96,7 +117,7 @@ public class IrGremlinServer implements AutoCloseable {
         AuthManager authManager = new DefaultAuthManager(configs);
         AuthManagerReference.setAuthManager(authManager);
 
-        this.gremlinServer = new GremlinServer(settings);
+        this.gremlinServer = new GremlinServer(settings, createRateLimitExecutor());
         ServerGremlinExecutor serverGremlinExecutor =
                 Utils.getFieldValue(
                         GremlinServer.class, this.gremlinServer, "serverGremlinExecutor");
@@ -104,6 +125,23 @@ public class IrGremlinServer implements AutoCloseable {
         serverGremlinExecutor.getGraphManager().putTraversalSource("g", graph.traversal());
 
         this.gremlinServer.start().join();
+    }
+
+    private ExecutorService createRateLimitExecutor() {
+        if (settings.gremlinPool == 0) {
+            settings.gremlinPool = Runtime.getRuntime().availableProcessors();
+        }
+        ThreadFactory threadFactoryGremlin = ThreadFactoryUtil.create("exec-%d");
+        BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(settings.maxWorkQueueSize);
+        return new RateLimitExecutor(
+                configs,
+                settings.gremlinPool,
+                settings.gremlinPool,
+                0L,
+                TimeUnit.MILLISECONDS,
+                queue,
+                threadFactoryGremlin,
+                new ThreadPoolExecutor.AbortPolicy());
     }
 
     @Override

@@ -23,21 +23,29 @@ limitations under the License.
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
 #include "flex/codegen/src/hqps/hqps_expr_builder.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
+
+#include <boost/format.hpp>
 
 namespace gs {
+
+// can be multiple when then exprs
+static constexpr const char* CASE_WHEN_EXPR_TEMPLATE_STR =
+    "if (%1%){\n"
+    "   return %2%;\n"
+    "}\n";
+
+static constexpr const char* ELSE_EXPR_TEMPLATE_STR = "return %1%;\n";
 
 class CaseWhenBuilder : public ExprBuilder {
  public:
   using base_t = ExprBuilder;
   using ret_t = std::tuple<std::string, std::vector<codegen::ParamConst>,
                            std::vector<std::pair<int32_t, std::string>>,
-                           std::string, common::DataType>;
-  CaseWhenBuilder(BuildingContext& ctx)
-      : base_t(ctx),
-        ret_type_(common::DataType::DataType_INT_MIN_SENTINEL_DO_NOT_USE_) {
+                           std::string, std::vector<common::DataType>>;
+  CaseWhenBuilder(BuildingContext& ctx) : base_t(ctx) {
     VLOG(10) << "try to build: " << base_t::class_name_;
   }
 
@@ -46,7 +54,7 @@ class CaseWhenBuilder : public ExprBuilder {
           when_expr) {
     VLOG(10) << "Got when then exprs of size: " << when_expr.size();
 
-    // Basiclly, each when_then is a if then.
+    // Basically, each when_then is a if then.
     for (auto& when_then_expr : when_expr) {
       auto& when_val = when_then_expr.when_expression();
       auto& the_result_expr = when_then_expr.then_result_expression();
@@ -63,28 +71,28 @@ class CaseWhenBuilder : public ExprBuilder {
     if (else_exr.operators_size() == 0) {
       throw std::runtime_error("else expression is empty");
     }
+    VLOG(10) << "Building else expr of size: " << else_exr.DebugString();
 
     {
       auto& else_oprs = else_exr.operators();
-      auto expr_code = build_sub_expr(else_oprs);
 
-      std::stringstream ss;
-      ss << "return (";
-      ss << expr_code;
-      ss << ");" << std::endl;
-      else_code_ = ss.str();  // assign to member.
+      auto expr_code = build_sub_expr(else_oprs, true);
+
+      boost::format formater(ELSE_EXPR_TEMPLATE_STR);
+      formater % expr_code;
+      else_code_ = formater.str();
     }
     VLOG(10) << "Finish else expr: " << else_code_;
     return *this;
   }
 
   CaseWhenBuilder& return_type(common::DataType ret_type) {
-    ret_type_ = ret_type;
+    res_data_type_.emplace_back(ret_type);
     return *this;
   }
 
   ret_t Build() const override {
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ctx_.AddParameterVar(construct_params_[i]);
     }
 
@@ -97,70 +105,62 @@ class CaseWhenBuilder : public ExprBuilder {
     func_call_template_typename_str = get_func_call_typename_str();
 
     func_call_params_str = get_func_call_params_str();
-    // the func_call impl is overrided
+    // the func_call impl is overridden
     func_call_impl_str = get_func_call_impl_str();
     private_filed_str = get_private_filed_str();
 
     boost::format formater(EXPR_BUILDER_TEMPLATE_STR);
-    formater % class_name_ % constructor_param_str % field_init_code_str %
-        func_call_template_typename_str % func_call_params_str %
-        func_call_impl_str % private_filed_str;
+    auto ret_type_str = common_data_type_pb_2_str(res_data_type_);
+    formater % class_name_ % ret_type_str % constructor_param_str %
+        field_init_code_str % func_call_template_typename_str % "auto" %
+        func_call_params_str % func_call_impl_str % private_filed_str;
 
     std::string str = formater.str();
 
     return std::make_tuple(
         class_name_, construct_params_, tag_selectors_, str,
-        common::DataType::DataType_INT_MIN_SENTINEL_DO_NOT_USE_);
+        std::vector{common::DataType::DataType_INT_MIN_SENTINEL_DO_NOT_USE_});
   }
 
  protected:
+  bool try_to_find_none(
+      const google::protobuf::RepeatedPtrField<common::ExprOpr>& oprs) {
+    for (auto& opr : oprs) {
+      if (opr.item_case() == common::ExprOpr::kConst) {
+        auto& const_pb = opr.const_();
+        if (const_pb.item_case() == common::Value::kNone) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   void when_then_expr_impl_general(const common::Expression& when_val,
                                    const common::Expression& the_result_expr) {
-    if (when_val.operators_size() != 1) {
-      throw std::runtime_error("when expression can only one");
-    }
-    // can only be var or dynamic param
-    auto& when_opr = when_val.operators(0);
-    if (when_opr.item_case() != common::ExprOpr::kConst &&
-        when_opr.item_case() != common::ExprOpr::kParam) {
-      throw std::runtime_error("when expression can only be const or param");
-    }
-
-    std::string when_key;
+    // build when expr from sub_expr
+    std::string when_key_code;
     {
-      if (when_opr.item_case() == common::ExprOpr::kConst) {
-        auto& const_val = when_opr.const_();
-        when_key = value_pb_to_str(const_val);
-      } else {
-        auto& param = when_opr.param();
-        auto param_node_type = when_opr.node_type();
-        auto param_const =
-            param_const_pb_to_param_const(param, param_node_type);
-        VLOG(10) << "receive param const: " << param.DebugString();
-        when_key = param_const.var_name + "_";  // TODO: fix hack
-        construct_params_.push_back(param_const);
-      }
+      auto& when_oprs = when_val.operators();
+      when_key_code = build_sub_expr(when_oprs, false);
     }
 
     // then result expression
     std::string then_result_expr_code;
     {
       auto& else_oprs = the_result_expr.operators();
-      auto expr_code = build_sub_expr(else_oprs);
-      std::stringstream ss;
-      ss << "return (";
-      ss << expr_code;
-      ss << ");" << std::endl;
-      then_result_expr_code = ss.str();
+      if (try_to_find_none(else_oprs) && else_oprs.size() == 1) {
+        then_result_expr_code = "NullRecordCreator<result_t>::GetNull()";
+      } else {
+        then_result_expr_code = build_sub_expr(else_oprs, false);
+      }
     }
 
     // concatenate case when into a if else.
     {
-      std::stringstream ss;
-      ss << "if (" << when_key << ") {" << std::endl;
-      ss << then_result_expr_code;
-      ss << "}" << std::endl;
-      auto tmp_res = ss.str();
+      boost::format formater(CASE_WHEN_EXPR_TEMPLATE_STR);
+      formater % when_key_code % then_result_expr_code;
+      auto tmp_res = formater.str();
       VLOG(10) << "WhenThen expr: " << tmp_res;
       when_then_codes_.emplace_back(std::move(tmp_res));
     }
@@ -168,7 +168,7 @@ class CaseWhenBuilder : public ExprBuilder {
 
   std::string get_func_call_impl_str() const override {
     std::stringstream ss;
-    for (int i = 0; i < when_then_codes_.size(); ++i) {
+    for (size_t i = 0; i < when_then_codes_.size(); ++i) {
       ss << when_then_codes_[i] << std::endl;
     }
     ss << else_code_ << std::endl;
@@ -176,9 +176,11 @@ class CaseWhenBuilder : public ExprBuilder {
   }
 
   // For each when then expr, we need to build a sub expr.
+  // if set_ret_type is true, add return data types to res_data_types
   std::string build_sub_expr(
-      const google::protobuf::RepeatedPtrField<common::ExprOpr>& oprs) {
-    ExprBuilder expr_builder(ctx_, cur_var_id_, true);
+      const google::protobuf::RepeatedPtrField<common::ExprOpr>& oprs,
+      bool set_ret_type) {
+    ExprBuilder expr_builder(ctx_, true);
     expr_builder.AddAllExprOpr(oprs);
     auto& expr_nodes = expr_builder.GetExprNodes();
     auto& tag_props = expr_builder.GetTagSelectors();
@@ -191,12 +193,38 @@ class CaseWhenBuilder : public ExprBuilder {
     for (auto param_const : param_consts) {
       construct_params_.push_back(param_const);
     }
+    if (set_ret_type) {
+      for (int32_t i = 0; i < oprs.size(); ++i) {
+        auto cur_opr = oprs[i];
+        auto node_type = cur_opr.node_type();
+        if (node_type.type_case() == common::IrDataType::kDataType) {
+          auto data_type = node_type.data_type();
+          res_data_type_.emplace_back(data_type);
+        } else if (node_type.type_case() == common::IrDataType::TYPE_NOT_SET) {
+          // if node_type is not set, try to find all expr_opr's node type and
+          // emplace_back to res_data_type_
+          if (cur_opr.item_case() == common::ExprOpr::kVars) {
+            auto& vars = cur_opr.vars();
+            for (auto j = 0; j < vars.keys_size(); ++j) {
+              auto var = vars.keys(j);
+              auto var_node_type = var.node_type();
+              CHECK(var_node_type.type_case() == common::IrDataType::kDataType);
+              res_data_type_.emplace_back(var_node_type.data_type());
+            }
+          } else if (cur_opr.item_case() == common::ExprOpr::kConst) {
+            auto const_pb = cur_opr.const_();
+            res_data_type_.emplace_back(common_value_2_data_type(const_pb));
+          } else {
+            LOG(FATAL) << "Only support vars now" << cur_opr.DebugString();
+          }
+        } else {
+          LOG(FATAL) << "Can only accept data type" << node_type.DebugString();
+        }
+      }
+    }
     for (auto func_call_var : func_call_vars) {
       func_call_vars_.push_back(func_call_var);
     }
-    VLOG(10) << "Inc var id from " << cur_var_id_ << " to "
-             << expr_builder.GetCurVarId();
-    cur_var_id_ = expr_builder.GetCurVarId();
 
     std::stringstream ss;
     for (auto& expr_node : expr_nodes) {
@@ -209,7 +237,6 @@ class CaseWhenBuilder : public ExprBuilder {
 
   std::vector<std::string> when_then_codes_;
   std::string else_code_;
-  common::DataType ret_type_;
 };
 
 }  // namespace gs

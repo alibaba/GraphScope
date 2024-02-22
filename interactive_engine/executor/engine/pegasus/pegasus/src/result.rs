@@ -52,8 +52,10 @@ impl<T: 'static> ResultSink<T> {
         if is_canceled {
             match &mut self.kind {
                 ResultSinkKind::Customized(tx) => {
+                    info_worker!("Job is canceled");
                     let msg = "Job is canceled".to_string();
                     let err = JobExecError::from(msg);
+                    warn_worker!("Job is canceled");
                     tx.on_error(Box::new(err));
                 }
                 _ => (),

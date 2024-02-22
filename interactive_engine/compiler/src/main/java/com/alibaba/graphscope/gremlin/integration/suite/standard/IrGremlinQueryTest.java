@@ -70,6 +70,49 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_a_b_by_label_id();
 
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_outE_hasLabel_inV_elementMap();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_limit_elementMap();
+
+    public abstract Traversal<Vertex, String> get_g_V_limit_label();
+
+    public abstract Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_by_elementMap();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_sum();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_max();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_min();
+
+    public abstract Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_mean();
+
+    public abstract Traversal<Vertex, Vertex> get_g_V_sample_by_2();
+
+    public abstract Traversal<Vertex, Vertex> get_g_V_sample_by_7();
+
+    public abstract Traversal<Vertex, Vertex> get_g_V_coin_by_ratio();
+
+    public abstract Traversal<Vertex, Vertex> get_g_V_coin_by_ratio_1();
+
+    public abstract Traversal<Vertex, Object> get_g_V_identity_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_haslabel_as_identity_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_has_union_identity_out_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_fold_unfold_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_fold_a_unfold_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_fold_a_unfold_select_a_unfold_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_has_select_unfold_values();
+
+    public abstract Traversal<Vertex, Object>
+            get_g_V_has_fold_select_as_unfold_select_unfold_values();
+
+    public abstract Traversal<Vertex, Object> get_g_V_has_fold_select_as_unfold_values();
+
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_group_by_by_dedup_count_test() {
@@ -267,6 +310,342 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals("{a=person, b=lop}", traversal.next().toString());
     }
 
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_outE_hasLabel_inV_elementMap() {
+        final Traversal<Vertex, Map<Object, Object>> traversal =
+                get_g_V_outE_hasLabel_inV_elementMap();
+        printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            Map values = traversal.next();
+            Assert.assertTrue(values.containsKey(T.id));
+            String name = (String) values.get("name");
+            if (name.equals("vadas")) {
+                Assert.assertEquals(27, values.get("age"));
+                Assert.assertEquals("person", values.get(T.label));
+            } else if (name.equals("josh")) {
+                Assert.assertEquals(32, values.get("age"));
+                Assert.assertEquals("person", values.get(T.label));
+            } else {
+                throw new IllegalStateException("It is not possible to reach here: " + values);
+            }
+            ++counter;
+        }
+        Assert.assertEquals(2, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_limit_elementMap() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_limit_elementMap();
+        printTraversalForm(traversal);
+        Map values = traversal.next();
+        Assert.assertTrue(values.containsKey(T.id));
+        String name = (String) values.get("name");
+        if (name.equals("marko")) {
+            Assert.assertEquals(29, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("josh")) {
+            Assert.assertEquals(32, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("peter")) {
+            Assert.assertEquals(35, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("vadas")) {
+            Assert.assertEquals(27, values.get("age"));
+            Assert.assertEquals("person", values.get(T.label));
+        } else if (name.equals("lop")) {
+            Assert.assertEquals("java", values.get("lang"));
+            Assert.assertEquals("software", values.get(T.label));
+        } else {
+            if (!name.equals("ripple")) {
+                throw new IllegalStateException("It is not possible to reach here: " + values);
+            }
+
+            Assert.assertEquals("java", values.get("lang"));
+            Assert.assertEquals("software", values.get(T.label));
+        }
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_limit_label() {
+        final Traversal<Vertex, String> traversal = get_g_V_limit_label();
+        printTraversalForm(traversal);
+        String value = traversal.next();
+        Assert.assertTrue(value.equals("person") || value.equals("software"));
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_a_out_b_select_by_elementMap() {
+        final Traversal<Vertex, Map<String, Object>> traversal =
+                get_g_V_a_out_b_select_by_elementMap();
+        printTraversalForm(traversal);
+
+        Map<String, Object> values = traversal.next();
+
+        Map value1 = (Map) values.get("a");
+        Assert.assertTrue(value1.containsKey(T.id));
+        Assert.assertEquals("marko", value1.get("name"));
+        Assert.assertEquals(29, value1.get("age"));
+        Assert.assertEquals("person", value1.get(T.label));
+
+        Map value2 = (Map) values.get("b");
+        Assert.assertTrue(value2.containsKey(T.id));
+        Assert.assertEquals("josh", value2.get("name"));
+        Assert.assertEquals(32, value2.get("age"));
+        Assert.assertEquals("person", value2.get(T.label));
+
+        Assert.assertTrue(!traversal.hasNext());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_sum() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_sum();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_max() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_max();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_min() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_min();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_group_by_by_mean() {
+        final Traversal<Vertex, Map<Object, Object>> traversal = get_g_V_group_by_by_mean();
+        printTraversalForm(traversal);
+        Map<Object, Object> result = traversal.next();
+        Assert.assertEquals(4, result.size());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_sample_by_2() {
+        final Traversal<Vertex, Vertex> traversal = get_g_V_sample_by_2();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            traversal.next();
+            ++counter;
+        }
+        Assert.assertEquals(2, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_sample_by_7() {
+        final Traversal<Vertex, Vertex> traversal = get_g_V_sample_by_7();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            traversal.next();
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_coin_by_ratio() {
+        final Traversal<Vertex, Vertex> traversal = get_g_V_coin_by_ratio();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            traversal.next();
+            ++counter;
+        }
+        Assert.assertTrue(counter < 6);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_coin_by_ratio_1() {
+        final Traversal<Vertex, Vertex> traversal = get_g_V_coin_by_ratio_1();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+        while (traversal.hasNext()) {
+            traversal.next();
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_haslabel_identity() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_identity_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4", "5", "6");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_haslabel_as_identity_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_haslabel_as_identity_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "4", "6");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(4, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_haslabel_union_identity_out_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_has_union_identity_out_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(4, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_fold_unfold_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_fold_unfold_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4", "5", "6");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_fold_a_unfold_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_fold_a_unfold_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4", "5", "6");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(6, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_fold_a_unfold_select_a_unfold_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_fold_a_unfold_select_a_unfold_values();
+        this.printTraversalForm(traversal);
+
+        List<String> expected = Arrays.asList("1", "2", "3", "4", "5", "6");
+        int counter[] = {6, 6, 6, 6, 6, 6};
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            int index = Integer.valueOf(result.toString());
+            counter[index - 1] -= 1;
+        }
+        for (int i = 0; i < 6; ++i) {
+            Assert.assertEquals(counter[i], 0);
+        }
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_has_select_unfold_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_has_select_unfold_values();
+        this.printTraversalForm(traversal);
+        int counter = 0;
+
+        List<String> expected = Arrays.asList("1");
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(1, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_has_fold_select_as_unfold_select_unfold_values() {
+        Traversal<Vertex, Object> traversal =
+                this.get_g_V_has_fold_select_as_unfold_select_unfold_values();
+        this.printTraversalForm(traversal);
+
+        List<String> expected = Arrays.asList("1");
+        int counter = 0;
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(1, counter);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_has_fold_select_as_unfold_values() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_has_fold_select_as_unfold_values();
+        this.printTraversalForm(traversal);
+
+        List<String> expected = Arrays.asList("1");
+        int counter = 0;
+
+        while (traversal.hasNext()) {
+            Object result = traversal.next();
+            Assert.assertTrue(expected.contains(result.toString()));
+            ++counter;
+        }
+        Assert.assertEquals(1, counter);
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         @Override
@@ -358,6 +737,131 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .select("a", "b")
                     .by(label())
                     .by("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_outE_hasLabel_inV_elementMap() {
+            return g.V().outE().hasLabel("knows").inV().elementMap();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_limit_elementMap() {
+            return g.V().limit(1).elementMap();
+        }
+
+        @Override
+        public Traversal<Vertex, String> get_g_V_limit_label() {
+            return g.V().limit(1).label();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>> get_g_V_a_out_b_select_by_elementMap() {
+            return g.V().has("name", "marko")
+                    .as("a")
+                    .out()
+                    .has("name", "josh")
+                    .as("b")
+                    .select("a", "b")
+                    .by(elementMap());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_sum() {
+            return g.V().group().by().by(values("age").sum());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_max() {
+            return g.V().group().by().by(values("age").max());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_min() {
+            return g.V().group().by().by(values("age").min());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Object>> get_g_V_group_by_by_mean() {
+            return g.V().group().by().by(values("age").mean());
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_sample_by_2() {
+            return g.V().sample(2);
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_sample_by_7() {
+            return g.V().sample(7);
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_coin_by_ratio() {
+            return g.V().coin(0.1);
+        }
+
+        @Override
+        public Traversal<Vertex, Vertex> get_g_V_coin_by_ratio_1() {
+            return g.V().coin(1.0);
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_identity_values() {
+            return g.V().identity().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_haslabel_as_identity_values() {
+            return g.V().hasLabel("person").as("a").identity().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_has_union_identity_out_values() {
+            return g.V().has("name", "marko").union(identity(), out()).values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_fold_unfold_values() {
+            return g.V().fold().unfold().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_fold_a_unfold_values() {
+            return g.V().fold().as("a").unfold().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_fold_a_unfold_select_a_unfold_values() {
+            return g.V().fold().as("a").unfold().select("a").unfold().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_has_select_unfold_values() {
+            return g.V().has("name", "marko").fold().as("a").select("a").unfold().values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_has_fold_select_as_unfold_select_unfold_values() {
+            return g.V().has("name", "marko")
+                    .fold()
+                    .as("a")
+                    .select("a")
+                    .as("b")
+                    .unfold()
+                    .select("b")
+                    .unfold()
+                    .values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_has_fold_select_as_unfold_values() {
+            return g.V().has("name", "marko")
+                    .fold()
+                    .as("a")
+                    .select("a")
+                    .as("b")
+                    .unfold()
+                    .values("id");
         }
     }
 }

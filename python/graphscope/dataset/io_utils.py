@@ -30,7 +30,7 @@ from urllib.request import urlretrieve
 
 from tqdm import tqdm
 
-from graphscope.config import GSConfig as gs_config
+from graphscope.config import gs_config
 
 logger = logging.getLogger("graphscope")
 
@@ -250,7 +250,7 @@ def download_file(  # noqa: C901
                 ProgressTracker.progbar = None
                 ProgressTracker.record_downloaded = None
 
-        max_retries = gs_config.dataset_download_retries
+        max_retries = gs_config.hosts_launcher.dataset_download_retries
         error_msg_tpl = "URL fetch failure on {}:{} -- {}"
         try:
             for retry in range(max_retries):

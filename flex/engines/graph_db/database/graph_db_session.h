@@ -17,25 +17,35 @@
 #define GRAPHSCOPE_DATABASE_GRAPH_DB_SESSION_H_
 
 #include "flex/engines/graph_db/app/app_base.h"
+#include "flex/engines/graph_db/database/compact_transaction.h"
 #include "flex/engines/graph_db/database/insert_transaction.h"
 #include "flex/engines/graph_db/database/read_transaction.h"
 #include "flex/engines/graph_db/database/single_edge_insert_transaction.h"
 #include "flex/engines/graph_db/database/single_vertex_insert_transaction.h"
+#include "flex/engines/graph_db/database/transaction_utils.h"
 #include "flex/engines/graph_db/database/update_transaction.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
 #include "flex/utils/property/column.h"
+#include "flex/utils/result.h"
 
 namespace gs {
 
 class GraphDB;
 class WalWriter;
-class ArenaAllocator;
 
 class GraphDBSession {
  public:
-  GraphDBSession(GraphDB& db, ArenaAllocator& alloc, WalWriter& logger,
-                 int thread_id)
-      : db_(db), alloc_(alloc), logger_(logger), thread_id_(thread_id) {
+  static constexpr int32_t MAX_RETRY = 3;
+  static constexpr int32_t MAX_PLUGIN_NUM = 256;  // 2^(sizeof(uint8_t)*8)
+  GraphDBSession(GraphDB& db, Allocator& alloc, WalWriter& logger,
+                 const std::string& work_dir, int thread_id)
+      : db_(db),
+        alloc_(alloc),
+        logger_(logger),
+        work_dir_(work_dir),
+        thread_id_(thread_id),
+        eval_duration_(0),
+        query_num_(0) {
     for (auto& app : apps_) {
       app = nullptr;
     }
@@ -52,6 +62,10 @@ class GraphDBSession {
 
   UpdateTransaction GetUpdateTransaction();
 
+  CompactTransaction GetCompactTransaction();
+
+  bool BatchUpdate(UpdateBatch& batch);
+
   const MutablePropertyFragment& graph() const;
   MutablePropertyFragment& graph();
 
@@ -63,20 +77,35 @@ class GraphDBSession {
   // Get vertex id column.
   std::shared_ptr<RefColumnBase> get_vertex_id_column(uint8_t label) const;
 
-  std::vector<char> Eval(const std::string& input);
+  Result<std::vector<char>> Eval(const std::string& input);
 
   void GetAppInfo(Encoder& result);
 
   int SessionId() const;
 
+  bool Compact();
+
+  double eval_duration() const;
+
+  const AppMetric& GetAppMetric(int idx) const;
+
+  int64_t query_num() const;
+
+  AppBase* GetApp(int idx);
+
  private:
   GraphDB& db_;
-  ArenaAllocator& alloc_;
+  Allocator& alloc_;
   WalWriter& logger_;
+  std::string work_dir_;
   int thread_id_;
 
-  std::array<AppWrapper, 256> app_wrappers_;
-  std::array<AppBase*, 256> apps_;
+  std::array<AppWrapper, MAX_PLUGIN_NUM> app_wrappers_;
+  std::array<AppBase*, MAX_PLUGIN_NUM> apps_;
+  std::array<AppMetric, MAX_PLUGIN_NUM> app_metrics_;
+
+  std::atomic<int64_t> eval_duration_;
+  std::atomic<int64_t> query_num_;
 };
 
 }  // namespace gs

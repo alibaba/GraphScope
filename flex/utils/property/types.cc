@@ -20,131 +20,152 @@
 
 namespace gs {
 
-inline void ParseInt32(const std::string_view& str, int& val) {
-  sscanf(str.data(), "%d", &val);
-}
+const PropertyType PropertyType::kEmpty =
+    PropertyType(impl::PropertyTypeImpl::kEmpty);
+const PropertyType PropertyType::kBool =
+    PropertyType(impl::PropertyTypeImpl::kBool);
+const PropertyType PropertyType::kUInt8 =
+    PropertyType(impl::PropertyTypeImpl::kUInt8);
+const PropertyType PropertyType::kUInt16 =
+    PropertyType(impl::PropertyTypeImpl::kUInt16);
+const PropertyType PropertyType::kInt32 =
+    PropertyType(impl::PropertyTypeImpl::kInt32);
+const PropertyType PropertyType::kUInt32 =
+    PropertyType(impl::PropertyTypeImpl::kUInt32);
+const PropertyType PropertyType::kFloat =
+    PropertyType(impl::PropertyTypeImpl::kFloat);
+const PropertyType PropertyType::kInt64 =
+    PropertyType(impl::PropertyTypeImpl::kInt64);
+const PropertyType PropertyType::kUInt64 =
+    PropertyType(impl::PropertyTypeImpl::kUInt64);
+const PropertyType PropertyType::kDouble =
+    PropertyType(impl::PropertyTypeImpl::kDouble);
+const PropertyType PropertyType::kDate =
+    PropertyType(impl::PropertyTypeImpl::kDate);
+const PropertyType PropertyType::kDay =
+    PropertyType(impl::PropertyTypeImpl::kDay);
+const PropertyType PropertyType::kString =
+    PropertyType(impl::PropertyTypeImpl::kString);
+const PropertyType PropertyType::kStringMap =
+    PropertyType(impl::PropertyTypeImpl::kStringMap);
 
-inline void ParseInt64(const std::string_view& str, int64_t& val) {
-#ifdef __APPLE__
-  sscanf(str.data(), "%lld", &val);
-#else
-  sscanf(str.data(), "%" SCNd64, &val);
-#endif
-}
-
-inline void ParseDate(const std::string_view& str, Date& date) {
-  date.reset(str.data());
-}
-
-inline void ParseString(const std::string_view& str, std::string_view& val) {
-  val = str;
-}
-
-inline void ParseDouble(const std::string_view& str, double& val) {
-  sscanf(str.data(), "%lf", &val);
-}
-
-void ParseRecord(const char* line, std::vector<Any>& rec) {
-  const char* cur = line;
-  for (auto& item : rec) {
-    const char* ptr = cur;
-    while (*ptr != '\0' && *ptr != '|') {
-      ++ptr;
-    }
-    std::string_view sv(cur, ptr - cur);
-    if (item.type == PropertyType::kInt32) {
-      ParseInt32(sv, item.value.i);
-    } else if (item.type == PropertyType::kInt64) {
-      ParseInt64(sv, item.value.l);
-    } else if (item.type == PropertyType::kDate) {
-      ParseDate(sv, item.value.d);
-    } else if (item.type == PropertyType::kString) {
-      ParseString(sv, item.value.s);
-    } else if (item.type == PropertyType::kDouble) {
-      ParseDouble(sv, item.value.db);
-    }
-    cur = ptr + 1;
+bool PropertyType::operator==(const PropertyType& other) const {
+  if (type_enum == impl::PropertyTypeImpl::kVarChar &&
+      other.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    return additional_type_info.max_length ==
+           other.additional_type_info.max_length;
   }
-}
-
-void ParseRecord(const char* line, int64_t& id, std::vector<Any>& rec) {
-  const char* cur = line;
-  {
-    const char* ptr = cur;
-    while (*ptr != '\0' && *ptr != '|') {
-      ++ptr;
-    }
-    std::string_view sv(cur, ptr - cur);
-    ParseInt64(sv, id);
-    cur = ptr + 1;
+  if ((type_enum == impl::PropertyTypeImpl::kString &&
+       other.type_enum == impl::PropertyTypeImpl::kVarChar) ||
+      (type_enum == impl::PropertyTypeImpl::kVarChar &&
+       other.type_enum == impl::PropertyTypeImpl::kString)) {
+    return true;
   }
-  ParseRecord(cur, rec);
+  return type_enum == other.type_enum;
 }
 
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int& prop) {
-#ifdef __APPLE__
-  sscanf(line, "%lld|%lld|%d", &src, &dst, &prop);
-#else
-  sscanf(line, "%" SCNd64 "|%" SCNd64 "|%d", &src, &dst, &prop);
-#endif
+bool PropertyType::operator!=(const PropertyType& other) const {
+  return !(*this == other);
 }
 
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, Date& prop) {
-#ifdef __APPLE__
-  sscanf(line, "%lld|%lld", &src, &dst);
-#else
-  sscanf(line, "%" SCNd64 "|%" SCNd64 "", &src, &dst);
-#endif
-  const char* ptr = strrchr(line, '|') + 1;
-  prop.reset(ptr);
+bool PropertyType::IsVarchar() const {
+  return type_enum == impl::PropertyTypeImpl::kVarChar;
 }
 
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst,
-                  grape::EmptyType& prop) {
-#ifdef __APPLE__
-  sscanf(line, "%lld|%lld", &src, &dst);
-#else
-  sscanf(line, "%" SCNd64 "|%" SCNd64 "", &src, &dst);
-#endif
+/////////////////////////////// Get Type Instance
+//////////////////////////////////
+PropertyType PropertyType::Empty() {
+  return PropertyType(impl::PropertyTypeImpl::kEmpty);
+}
+PropertyType PropertyType::Bool() {
+  return PropertyType(impl::PropertyTypeImpl::kBool);
+}
+PropertyType PropertyType::UInt8() {
+  return PropertyType(impl::PropertyTypeImpl::kUInt8);
+}
+PropertyType PropertyType::UInt16() {
+  return PropertyType(impl::PropertyTypeImpl::kUInt16);
+}
+PropertyType PropertyType::Int32() {
+  return PropertyType(impl::PropertyTypeImpl::kInt32);
+}
+PropertyType PropertyType::UInt32() {
+  return PropertyType(impl::PropertyTypeImpl::kUInt32);
+}
+PropertyType PropertyType::Float() {
+  return PropertyType(impl::PropertyTypeImpl::kFloat);
+}
+PropertyType PropertyType::Int64() {
+  return PropertyType(impl::PropertyTypeImpl::kInt64);
+}
+PropertyType PropertyType::UInt64() {
+  return PropertyType(impl::PropertyTypeImpl::kUInt64);
+}
+PropertyType PropertyType::Double() {
+  return PropertyType(impl::PropertyTypeImpl::kDouble);
+}
+PropertyType PropertyType::Date() {
+  return PropertyType(impl::PropertyTypeImpl::kDate);
+}
+PropertyType PropertyType::Day() {
+  return PropertyType(impl::PropertyTypeImpl::kDay);
+}
+PropertyType PropertyType::String() {
+  return PropertyType(impl::PropertyTypeImpl::kString);
+}
+PropertyType PropertyType::StringMap() {
+  return PropertyType(impl::PropertyTypeImpl::kStringMap);
+}
+PropertyType PropertyType::Varchar(uint16_t max_length) {
+  return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, double& prop) {
-#ifdef __APPLE__
-  sscanf(line, "%lld|%lld|%lf", &src, &dst, &prop);
-#else
-  sscanf(line, "%" SCNd64 "|%" SCNd64 "|%lf", &src, &dst, &prop);
-#endif
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const PropertyType& value) {
+  in_archive << value.type_enum;
+  if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    in_archive << value.additional_type_info.max_length;
+  }
+  return in_archive;
 }
-
-void ParseRecordX(const char* line, int64_t& src, int64_t& dst, int64_t& prop) {
-#ifdef __APPLE__
-  // parseRecordX for edge with int64 property
-  sscanf(line, "%lld|%lld|%lld", &src, &dst, &prop);
-#else
-  sscanf(line, "%" SCNd64 "|%" SCNd64 "|%" SCNd64 "", &src, &dst, &prop);
-#endif
+grape::OutArchive& operator>>(grape::OutArchive& out_archive,
+                              PropertyType& value) {
+  out_archive >> value.type_enum;
+  if (value.type_enum == impl::PropertyTypeImpl::kVarChar) {
+    out_archive >> value.additional_type_info.max_length;
+  }
+  return out_archive;
 }
 
 grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
-  switch (value.type) {
-  case PropertyType::kInt32:
+  if (value.type == PropertyType::Empty()) {
+    in_archive << value.type;
+  } else if (value.type == PropertyType::Bool()) {
+    in_archive << value.type << value.value.b;
+  } else if (value.type == PropertyType::UInt8()) {
+    in_archive << value.type << value.value.u8;
+  } else if (value.type == PropertyType::UInt16()) {
+    in_archive << value.type << value.value.u16;
+  } else if (value.type == PropertyType::Int32()) {
     in_archive << value.type << value.value.i;
-    break;
-  case PropertyType::kInt64:
+  } else if (value.type == PropertyType::UInt32()) {
+    in_archive << value.type << value.value.ui;
+  } else if (value.type == PropertyType::Float()) {
+    in_archive << value.type << value.value.f;
+  } else if (value.type == PropertyType::Int64()) {
     in_archive << value.type << value.value.l;
-    break;
-  case PropertyType::kDate:
-    in_archive << value.type << value.value.d.milli_second;
-    break;
-  case PropertyType::kString:
-    in_archive << value.type << value.value.s;
-    break;
-  case PropertyType::kDouble:
+  } else if (value.type == PropertyType::UInt64()) {
+    in_archive << value.type << value.value.ul;
+  } else if (value.type == PropertyType::Double()) {
     in_archive << value.type << value.value.db;
-    break;
-  default:
+  } else if (value.type == PropertyType::Date()) {
+    in_archive << value.type << value.value.d.milli_second;
+  } else if (value.type == PropertyType::Day()) {
+    in_archive << value.type << value.value.day.to_u32();
+  } else if (value.type == PropertyType::String()) {
+    in_archive << value.type << value.value.s;
+  } else {
     in_archive << PropertyType::kEmpty;
-    break;
   }
 
   return in_archive;
@@ -152,24 +173,37 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
 
 grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
   out_archive >> value.type;
-  switch (value.type) {
-  case PropertyType::kInt32:
+  if (value.type == PropertyType::Empty()) {
+  } else if (value.type == PropertyType::Bool()) {
+    out_archive >> value.value.b;
+  } else if (value.type == PropertyType::UInt8()) {
+    out_archive >> value.value.u8;
+  } else if (value.type == PropertyType::UInt16()) {
+    out_archive >> value.value.u16;
+  } else if (value.type == PropertyType::Int32()) {
     out_archive >> value.value.i;
-    break;
-  case PropertyType::kInt64:
+  } else if (value.type == PropertyType::UInt32()) {
+    out_archive >> value.value.ui;
+  } else if (value.type == PropertyType::Float()) {
+    out_archive >> value.value.f;
+  } else if (value.type == PropertyType::Int64()) {
     out_archive >> value.value.l;
-    break;
-  case PropertyType::kDate:
-    out_archive >> value.value.d.milli_second;
-    break;
-  case PropertyType::kString:
-    out_archive >> value.value.s;
-    break;
-  case PropertyType::kDouble:
+  } else if (value.type == PropertyType::UInt64()) {
+    out_archive >> value.value.ul;
+  } else if (value.type == PropertyType::Double()) {
     out_archive >> value.value.db;
-    break;
-  default:
-    break;
+  } else if (value.type == PropertyType::Date()) {
+    int64_t date_val;
+    out_archive >> date_val;
+    value.value.d.milli_second = date_val;
+  } else if (value.type == PropertyType::Day()) {
+    uint32_t val;
+    out_archive >> val;
+    value.value.day.from_u32(val);
+  } else if (value.type == PropertyType::String()) {
+    out_archive >> value.value.s;
+  } else {
+    value.type = PropertyType::kEmpty;
   }
 
   return out_archive;
@@ -191,68 +225,28 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
   return out_archive;
 }
 
-// date format:
-// YYYY-MM-DD'T'hh:mm:ss.SSSZZZZ
-// 2010-04-25T05:45:11.772+0000
-
-inline static uint32_t char_to_digit(char c) { return (c - '0'); }
-
-inline static uint32_t str_4_to_number(const char* str) {
-  return char_to_digit(str[0]) * 1000u + char_to_digit(str[1]) * 100u +
-         char_to_digit(str[2]) * 10u + char_to_digit(str[3]);
-}
-
-inline static uint32_t str_3_to_number(const char* str) {
-  return char_to_digit(str[0]) * 100u + char_to_digit(str[1]) * 10u +
-         char_to_digit(str[2]);
-}
-
-inline static uint32_t str_2_to_number(const char* str) {
-  return char_to_digit(str[0]) * 10u + char_to_digit(str[1]);
-}
-
 Date::Date(int64_t x) : milli_second(x) {}
-Date::Date(const char* str) { reset(str); }
-
-void Date::reset(const char* str) {
-  if (str[4] == '-') {
-    struct tm v;
-    memset(&v, 0, sizeof(v));
-    v.tm_year = str_4_to_number(str) - 1900;
-    v.tm_mon = str_2_to_number(&str[5]) - 1;
-    v.tm_mday = str_2_to_number(&str[8]);
-    if (str[10] == '|') {
-      milli_second = mktime(&v);
-      milli_second *= 1000l;
-      milli_second += 8 * 60 * 60 * 1000l;
-      return;
-    }
-    v.tm_hour = str_2_to_number(&str[11]);
-    v.tm_min = str_2_to_number(&str[14]);
-    v.tm_sec = str_2_to_number(&str[17]);
-
-    milli_second = (mktime(&v));
-
-    milli_second *= 1000l;
-    milli_second += str_3_to_number(&str[20]);
-    bool zone_flag = (str[23] == '+') ? 1u : 0u;
-    uint32_t zone_hour = str_2_to_number(&str[24]);
-    uint32_t zone_minute = str_2_to_number(&str[26]);
-    milli_second += 8 * 60 * 60 * 1000l;
-    if (zone_flag) {
-      milli_second += (zone_hour * 60 * 60l + zone_minute * 60l) * 1000l;
-    } else {
-      milli_second -= (zone_hour * 60 * 60l + zone_minute * 60l) * 1000l;
-    }
-  } else {
-#ifdef __APPLE__
-    sscanf(str, "%lld", &milli_second);
-#else
-    sscanf(str, "%" SCNd64, &milli_second);
-#endif
-  }
-}
 
 std::string Date::to_string() const { return std::to_string(milli_second); }
+
+Day::Day(int64_t ts) { from_timestamp(ts); }
+
+std::string Day::to_string() const {
+  return std::to_string(static_cast<int>(year())) + "-" +
+         std::to_string(static_cast<int>(month())) + "-" +
+         std::to_string(static_cast<int>(day()));
+}
+
+uint32_t Day::to_u32() const { return value.integer; }
+
+void Day::from_u32(uint32_t val) { value.integer = val; }
+
+int Day::year() const { return value.internal.year; }
+
+int Day::month() const { return value.internal.month; }
+
+int Day::day() const { return value.internal.day; }
+
+int Day::hour() const { return value.internal.hour; }
 
 }  // namespace gs

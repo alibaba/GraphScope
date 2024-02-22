@@ -22,9 +22,9 @@ limitations under the License.
 #include "flex/codegen/src/building_context.h"
 #include "flex/codegen/src/codegen_utils.h"
 #include "flex/codegen/src/graph_types.h"
-#include "proto_generated_gie/algebra.pb.h"
-#include "proto_generated_gie/common.pb.h"
-#include "proto_generated_gie/expr.pb.h"
+#include "flex/proto_generated_gie/algebra.pb.h"
+#include "flex/proto_generated_gie/common.pb.h"
+#include "flex/proto_generated_gie/expr.pb.h"
 
 #include <boost/format.hpp>
 
@@ -49,6 +49,9 @@ static constexpr const char* EXPR_BUILDER_TEMPLATE_STR =
     "    %9%\n"
     "};\n";
 
+static constexpr const char* EXTRACT_TEMPLATE_STR =
+    "gs::DateTimeExtractor<%1%>::extract(%2%)";
+
 // The input variable can have property or not, if property is not present, we
 // take that as a IdKey
 static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
@@ -59,9 +62,19 @@ static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
   }
   int real_tag_ind = ctx.GetTagInd(tag_id);
   if (var.has_property()) {
-    std::string prop_name = var.property().key().name();
-    std::string prop_type = data_type_2_string(
-        common_data_type_pb_2_data_type(var.node_type().data_type()));
+    auto var_property = var.property();
+    std::string prop_name, prop_type;
+    if (var_property.has_label()) {
+      prop_name = "label";
+      prop_type = data_type_2_string(codegen::DataType::kLabelId);
+    } else if (var_property.has_key()) {
+      prop_name = var.property().key().name();
+      prop_type = data_type_2_string(
+          common_data_type_pb_2_data_type(var.node_type().data_type()));
+    } else {
+      LOG(FATAL) << "Unexpected property type: " << var.DebugString();
+    }
+
     boost::format formater(PROPERTY_SELECTOR);
     formater % prop_type % prop_name;
 
@@ -107,6 +120,8 @@ static std::string logical_to_str(const common::Logical& logical) {
     return "<=";
   case common::Logical::WITHIN:
     return "< WithIn > ";
+  case common::Logical::ISNULL:
+    return "NONE ==";  // Convert
   default:
     throw std::runtime_error("unknown logical");
   }
@@ -158,7 +173,7 @@ static std::string value_pb_to_str(const common::Value& value) {
   case common::Value::kI64Array:
     return i64_array_pb_to_str(value.i64_array());
   case common::Value::kNone:
-    return NONE_LITERAL;
+    return "gs::NONE";
   default:
     throw std::runtime_error("unknown value type" + value.DebugString());
   }
@@ -166,27 +181,78 @@ static std::string value_pb_to_str(const common::Value& value) {
 
 bool constains_vertex_id(const std::vector<codegen::ParamConst>& params) {
   for (auto& param : params) {
-    if (param.type == codegen::DataType::kVertexId) {
+    if (param.type == codegen::DataType::kVertexId ||
+        param.type == codegen::DataType::kEdgeId) {
       return true;
     }
   }
   return false;
 }
 
-// Simlutate the calculation of expression, return the result data type.
+// Evaluate expression and return the result data type.
+static common::DataType eval_expr_return_type(const common::Expression& expr) {
+  std::stack<common::ExprOpr> operator_stack;
+  std::stack<common::ExprOpr> tmp_stack;
+  for (auto& opr : expr.operators()) {
+    auto item_case = opr.item_case();
+    VLOG(10) << "got opr: " << opr.DebugString();
+    if (item_case == common::ExprOpr::kBrace) {
+      auto brace = opr.brace();
+      if (brace == common::ExprOpr::Brace::ExprOpr_Brace_LEFT_BRACE) {
+        operator_stack.push(opr);
+      } else {
+        while (!operator_stack.empty() &&
+               operator_stack.top().item_case() != common::ExprOpr::kBrace) {
+          tmp_stack.push(operator_stack.top());
+          operator_stack.pop();
+        }
+        CHECK(!operator_stack.empty() &&
+              operator_stack.top().item_case() == common::ExprOpr::kBrace &&
+              operator_stack.top().brace() ==
+                  common::ExprOpr::Brace::ExprOpr_Brace_LEFT_BRACE)
+            << "no left brace found";
+        operator_stack.pop();
+      }
+    } else if (item_case == common::ExprOpr::kLogical ||
+               item_case == common::ExprOpr::kArith) {
+      operator_stack.push(opr);
+    } else if (item_case == common::ExprOpr::kConst ||
+               item_case == common::ExprOpr::kVar ||
+               item_case == common::ExprOpr::kVars ||
+               item_case == common::ExprOpr::kVarMap ||
+               item_case == common::ExprOpr::kParam) {
+      tmp_stack.push(opr);
+    } else {
+      LOG(WARNING) << "not recognized expr opr: " << opr.DebugString();
+      throw std::runtime_error("not recognized expr opr");
+    }
+  }
+  while (!operator_stack.empty()) {
+    tmp_stack.push(operator_stack.top());
+    operator_stack.pop();
+  }
+  {
+    // print tmp_stack
+    std::stack<common::ExprOpr> tmp_stack_copy = tmp_stack;
+    std::stringstream ss;
+    while (!tmp_stack_copy.empty()) {
+      ss << tmp_stack_copy.top().DebugString() << std::endl;
+      tmp_stack_copy.pop();
+    }
+    VLOG(10) << "tmp_stack: " << ss.str();
+  }
+
+  return tmp_stack.top().node_type().data_type();
+}
+
+// Simulate the calculation of expression, return the result data type.
 // convert to prefix expression
 
 /*Build a expression struct from expression*/
 class ExprBuilder {
- protected:
-  static constexpr const char* EXPR_OPERATOR_CALL_VAR_NAME = "var";
-
  public:
   ExprBuilder(BuildingContext& ctx, int var_id = 0, bool no_build = false)
-      : ctx_(ctx),
-        cur_var_id_(var_id),
-        res_data_type_(
-            common::DataType::DataType_INT_MIN_SENTINEL_DO_NOT_USE_) {
+      : ctx_(ctx) {
     if (!no_build) {
       // no build indicates whether we will use this builder as a helper.
       // If set to true, we will not let queryClassName and next_expr_name
@@ -196,7 +262,11 @@ class ExprBuilder {
   }
 
   void set_return_type(common::DataType data_type) {
-    res_data_type_ = data_type;
+    res_data_type_.emplace_back(data_type);
+  }
+
+  void add_return_type(common::DataType data_type) {
+    res_data_type_.emplace_back(data_type);
   }
 
   void AddAllExprOpr(
@@ -205,26 +275,18 @@ class ExprBuilder {
     // If we meet label keys just ignore.
     auto size = expr_ops.size();
     VLOG(10) << "Adding expr of size: " << size;
-    for (auto i = 0; i < size;) {
+    for (int32_t i = 0; i < size;) {
       auto expr = expr_ops[i];
-      if (expr.has_var() && expr.var().property().has_label()) {
-        VLOG(10) << "Found label in expr, skip this check";
-        int j = i;
-        for (; j < size; ++j) {
-          if (expr_ops[j].item_case() == common::ExprOpr::kBrace &&
-              expr_ops[j].brace() ==
-                  common::ExprOpr::Brace::ExprOpr_Brace_RIGHT_BRACE) {
-            VLOG(10) << "Found right brace at ind: " << j
-                     << ", started at: " << i;
-            AddExprOpr(std::string("true"));
-            AddExprOpr(expr_ops[j]);
-            i = j + 1;
-            break;
-          }
-        }
-        if (j == size) {
-          LOG(WARNING) << "no right brace found" << j << "size: " << size;
-          i = j;
+      if (expr.has_extract()) {
+        // special case for extract
+        auto extract = expr.extract();
+        if (i + 1 >= size) {
+          throw std::runtime_error("extract must have a following var/expr");
+        } else if (expr_ops[i + 1].item_case() != common::ExprOpr::kVar) {
+          throw std::runtime_error("extract must have a following var/expr");
+        } else {
+          AddExtractOpr(extract, expr_ops[i + 1]);
+          i += 2;
         }
       } else {
         AddExprOpr(expr_ops[i]);
@@ -265,9 +327,9 @@ class ExprBuilder {
       auto param_const = variable_to_param_const(var, ctx_);
       // for each variable, we need add the variable to func_call_vars_.
       // and also set a expr node for it. which is unique.
+      make_var_name_unique(param_const);
       func_call_vars_.push_back(param_const);
-      expr_nodes_.emplace_back(std::string(EXPR_OPERATOR_CALL_VAR_NAME) +
-                               std::to_string(cur_var_id_++));
+      expr_nodes_.emplace_back(param_const.var_name);
 
       // expr_nodes_.emplace_back(param_const.var_name);
       // convert a variable to a tag property,
@@ -293,6 +355,7 @@ class ExprBuilder {
       auto param_const =
           param_const_pb_to_param_const(param_const_pb, param_node_type);
       VLOG(10) << "receive param const: " << param_const_pb.DebugString();
+      make_var_name_unique(param_const);
       construct_params_.push_back(param_const);
       expr_nodes_.emplace_back(param_const.var_name + "_");
       break;
@@ -306,10 +369,65 @@ class ExprBuilder {
       break;
     }
 
+    case common::ExprOpr::kVars: {
+      // When receiving vars, we are to make tuple from these vars.
+      auto vars = opr.vars();
+      std::stringstream ss;
+      ss << "std::tuple{";
+      for (int32_t i = 0; i < (int32_t) vars.keys_size(); ++i) {
+        auto cur_var = vars.keys(i);
+        auto param_const = variable_to_param_const(cur_var, ctx_);
+        make_var_name_unique(param_const);
+        // for each variable, we need add the variable to func_call_vars_.
+        // and also set a expr node for it. which is unique.
+        func_call_vars_.push_back(param_const);
+        ss << param_const.var_name;
+        if (i < vars.keys_size() - 1) {
+          ss << ",";
+        }
+
+        // expr_nodes_.emplace_back(param_const.var_name);
+        // convert a variable to a tag property,
+        // gs::NamedProperty<gs::Int64>{"prop1"}, saved for later use.
+        tag_selectors_.emplace_back(
+            variable_to_tag_id_property_selector(ctx_, cur_var));
+      }
+      ss << "};";
+      expr_nodes_.emplace_back(ss.str());
+      break;
+    }
+
+    case common::ExprOpr::kExtract: {
+      LOG(FATAL) << "Should not reach here, Extract op should be handled "
+                    "separately";
+    }
+
     default:
       LOG(WARNING) << "not recognized expr opr: " << opr.DebugString();
       throw std::runtime_error("not recognized expr opr");
     }
+  }
+
+  // Add extract operator with var. Currently not support extract on a complicated
+  // expression.
+  void AddExtractOpr(const common::Extract& extract_opr,
+                     const common::ExprOpr& expr_opr) {
+    CHECK(expr_opr.item_case() == common::ExprOpr::kVar)
+        << "Currently only support var in extract";
+    auto interval = extract_opr.interval();
+    auto expr_var = expr_opr.var();
+    auto param_const = variable_to_param_const(expr_var, ctx_);
+    make_var_name_unique(param_const);
+    func_call_vars_.push_back(param_const);
+
+    boost::format formater(EXTRACT_TEMPLATE_STR);
+    formater % interval_to_str(interval) % param_const.var_name;
+    auto extract_node_str = formater.str();
+    expr_nodes_.emplace_back(extract_node_str);
+
+    tag_selectors_.emplace_back(
+        variable_to_tag_id_property_selector(ctx_, expr_var));
+    VLOG(10) << "extract opr: " << extract_node_str;
   }
 
   // get expr nodes
@@ -330,8 +448,6 @@ class ExprBuilder {
     return construct_params_;
   }
 
-  int32_t GetCurVarId() const { return cur_var_id_; }
-
   // 0: function name
   // 1: function call params,
   // 2: tag_property
@@ -339,10 +455,10 @@ class ExprBuilder {
   // 4. return type
   virtual std::tuple<std::string, std::vector<codegen::ParamConst>,
                      std::vector<std::pair<int32_t, std::string>>, std::string,
-                     common::DataType>
+                     std::vector<common::DataType>>
   Build() const {
     // Insert param vars to context.
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ctx_.AddParameterVar(construct_params_[i]);
     }
 
@@ -375,13 +491,10 @@ class ExprBuilder {
   // return the concatenated string of constructor's input params
   std::string get_constructor_params_str() const {
     std::stringstream ss;
-    if (!construct_params_.empty()) {
-      ss << ":";
-    }
-    for (int i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name;
-      if (i != construct_params_.size() - 1) {
+      if (i + 1 != construct_params_.size()) {
         ss << ",";
       }
     }
@@ -390,7 +503,10 @@ class ExprBuilder {
 
   std::string get_field_init_code_str() const {
     std::stringstream ss;
-    for (int i = 0; i < construct_params_.size(); ++i) {
+    if (!construct_params_.empty()) {
+      ss << ":";
+    }
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << construct_params_[i].var_name << "_"
          << "(" << construct_params_[i].var_name << ")";
       if (i != construct_params_.size() - 1) {
@@ -410,9 +526,9 @@ class ExprBuilder {
 
   std::string get_func_call_params_str() const {
     std::stringstream ss;
-    for (int i = 0; i < func_call_vars_.size(); ++i) {
+    for (size_t i = 0; i < func_call_vars_.size(); ++i) {
       ss << data_type_2_string(func_call_vars_[i].type) << " "
-         << EXPR_OPERATOR_CALL_VAR_NAME << i;
+         << func_call_vars_[i].var_name;
       if (i != func_call_vars_.size() - 1) {
         ss << ",";
       }
@@ -423,7 +539,7 @@ class ExprBuilder {
   virtual std::string get_func_call_impl_str() const {
     std::stringstream ss;
     ss << "return ";
-    for (auto i = 0; i < expr_nodes_.size(); ++i) {
+    for (size_t i = 0; i < expr_nodes_.size(); ++i) {
       ss << expr_nodes_[i] << " ";
     }
     ss << ";";
@@ -432,11 +548,33 @@ class ExprBuilder {
 
   std::string get_private_filed_str() const {
     std::stringstream ss;
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name << "_;" << std::endl;
     }
     return ss.str();
+  }
+
+  void make_var_name_unique(codegen::ParamConst& param_const) {
+    std::unordered_set<std::string> var_names;
+    for (auto& param : construct_params_) {
+      auto res = var_names.insert(param.var_name);
+      CHECK(res.second) << "var name: " << param.var_name
+                        << " already exists, illegal state";
+    }
+    for (auto& param : func_call_vars_) {
+      auto res = var_names.insert(param.var_name);
+      CHECK(res.second) << "var name: " << param.var_name
+                        << " already exists, illegal state";
+    }
+    auto cur_var_name = param_const.var_name;
+    int i = 0;
+    while (var_names.find(cur_var_name) != var_names.end()) {
+      cur_var_name = param_const.var_name + "_" + std::to_string(i);
+      ++i;
+    }
+    param_const.var_name = cur_var_name;
+    VLOG(10) << "make var name unique: " << param_const.var_name;
   }
 
   // this corresponding to the input params.
@@ -449,8 +587,8 @@ class ExprBuilder {
   // component of expression
   std::vector<std::string> expr_nodes_;
   BuildingContext& ctx_;
-  int cur_var_id_;
-  common::DataType res_data_type_;
+  // int cur_var_id_;
+  std::vector<common::DataType> res_data_type_;
 
   std::string class_name_;
 };

@@ -3,10 +3,8 @@ find_package(Boost REQUIRED COMPONENTS system filesystem
     context program_options regex thread)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
-add_executable(gen_code_from_plan gen_code_from_plan.cc)
-target_link_libraries(gen_code_from_plan hqps_plan_proto ${GLOG_LIBRARIES} ${GFLAGS_LIBRARIES}  ${Boost_LIBRARIES})
-
-install(TARGETS gen_code_from_plan
-    RUNTIME DESTINATION bin
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib)
+if (BUILD_HQPS)
+    add_executable(gen_code_from_plan gen_code_from_plan.cc)
+    target_link_libraries(gen_code_from_plan hqps_plan_proto ${GLOG_LIBRARIES}  ${Boost_LIBRARIES})
+    install_flex_target(gen_code_from_plan)
+endif()

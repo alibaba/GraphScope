@@ -19,7 +19,7 @@ import com.alibaba.graphscope.proto.groot.DdlRequestBatchPb;
 
 public class SchemaWriter {
 
-    private RoleClients<SchemaClient> schemaClients;
+    private final RoleClients<SchemaClient> schemaClients;
 
     public SchemaWriter(RoleClients<SchemaClient> schemaClients) {
         this.schemaClients = schemaClients;

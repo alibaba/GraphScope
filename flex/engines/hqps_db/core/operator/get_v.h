@@ -23,8 +23,8 @@ limitations under the License.
 #include "flex/engines/hqps_db/structures/multi_vertex_set/multi_label_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/row_vertex_set.h"
 #include "flex/engines/hqps_db/structures/multi_vertex_set/two_label_vertex_set.h"
-
 #include "flex/storages/rt_mutable_graph/types.h"
+
 #include "grape/utils/bitset.h"
 
 namespace gs {
@@ -54,31 +54,35 @@ class GetVertex {
   template <
       typename SET_T, typename LabelT, size_t num_labels, typename EXPRESSION,
       typename std::enable_if<(SET_T::is_edge_set &&
-                               !SET_T::is_multi_dst_label)>::type* = nullptr,
-      typename RES_T = std::pair<default_vertex_set_t, std::vector<offset_t>>>
-  static RES_T GetNoPropVFromEdgeSet(
+                               !SET_T::is_multi_dst_label)>::type* = nullptr>
+  static auto GetNoPropVFromEdgeSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
     VLOG(10) << "[Get no PropertyV from edge set]" << set.Size();
-    return GetNoPropVSetFromSingleDstEdgeSet<RES_T>(graph, set,
-                                                    std::move(get_v_opt));
+    return GetNoPropVSetFromSingleDstEdgeSet(graph, set, std::move(get_v_opt));
   }
 
-  // get no propv from two label dst edge set
+  // get no prop v from PathSet.
   template <typename SET_T, typename LabelT, size_t num_labels,
             typename EXPRESSION,
-            typename std::enable_if<(SET_T::is_edge_set &&
-                                     SET_T::is_multi_dst_label &&
-                                     num_labels == 2)>::type* = nullptr,
-            typename RES_T = std::pair<
-                TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>,
-                std::vector<offset_t>>>
-  static RES_T GetNoPropVFromEdgeSet(
+            typename std::enable_if<(SET_T::is_path_set)>::type* = nullptr>
+  static auto GetNoPropVFromPathSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
-    VLOG(10) << "[Get no PropertyV from mutlti dst edge set]" << set.Size();
-    return GetNoPropVSetFromMutliDstEdgeSet<RES_T>(graph, set,
-                                                   std::move(get_v_opt));
+    VLOG(10) << "Get no PropertyV from path set, size: " << set.Size();
+    return GetNoPropVFromPathSetImpl(graph, set, get_v_opt.v_opt_,
+                                     get_v_opt.v_labels_, get_v_opt.filter_);
+  }
+
+  // get no prop v from untyped edge set, with no predicate.
+  template <typename LabelT, size_t num_labels>
+  static auto GetNoPropVFromEdgeSet(
+      const GRAPH_INTERFACE& graph,
+      const UnTypedEdgeSet<typename GRAPH_INTERFACE::vertex_id_t, LabelT,
+                           typename GRAPH_INTERFACE::sub_graph_t>& set,
+      GetVOpt<LabelT, num_labels, Filter<TruePredicate>>&& get_v_opt) {
+    VLOG(10) << "[Get no PropertyV from unkeyed dst edge set]" << set.Size();
+    return set.GetVertices(get_v_opt);
   }
 
   // Result is multilabelVertexset.
@@ -182,7 +186,7 @@ class GetVertex {
     using res_set_t = vertex_set_t<T...>;
     static constexpr size_t num_labels = SET_T::num_labels;
     std::array<std::vector<std::tuple<T...>>, num_labels> res_data_tuples;
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       auto& cur_set = multi_set.GetSet(i);
       VLOG(10) << "set: " << i << ", size: " << cur_set.Size();
       res_data_tuples[i] = graph.template GetVertexPropsFromVid<T...>(
@@ -203,38 +207,70 @@ class GetVertex {
   static RES_T GetNoPropVSetFromVertexSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, Filter<EXPRESSION, SELECTOR...>>& get_v_opt) {
-    auto v_opt = get_v_opt.v_opt_;
     auto filter = get_v_opt.filter_;
     return do_project(graph, get_v_opt.v_labels_, filter, set);
   }
 
   // get single label from single dst edge label.
-  template <typename RES_T, typename LabelT, size_t num_labels, typename SET_T,
+  template <typename LabelT, size_t num_labels, typename SET_T,
             typename EXPRESSION>
-  static RES_T GetNoPropVSetFromSingleDstEdgeSet(
+  static auto GetNoPropVSetFromSingleDstEdgeSet(
       const GRAPH_INTERFACE& graph, const SET_T& set,
       GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
-    auto v_opt = get_v_opt.v_opt_;
-    auto v_label = get_v_opt.v_labels_[0];
     auto expr = get_v_opt.filter_.expr_;
     return set.GetVertices(get_v_opt.v_opt_, get_v_opt.v_labels_, expr);
   }
 
-  // get multiple label dst edge label. returns two label set.
-  template <typename RES_T, typename LabelT, size_t num_labels,
-            typename EXPRESSION,
-            typename std::enable_if<num_labels == 2>::type* = nullptr>
-  static RES_T GetNoPropVSetFromMutliDstEdgeSet(
+ private:
+  // get no prop v from path set.
+  template <size_t num_labels, typename EXPRESSION, typename... SELECTOR>
+  static auto GetNoPropVFromPathSetImpl(
       const GRAPH_INTERFACE& graph,
-      const MultiLabelDstEdgeSet<num_labels, GRAPH_INTERFACE, grape::EmptyType>&
-          set,
-      GetVOpt<LabelT, num_labels, EXPRESSION>&& get_v_opt) {
-    auto v_opt = get_v_opt.v_opt_;
-    auto expr = get_v_opt.expr_;
-    return set.GetVertices(get_v_opt.v_opt_, get_v_opt.v_labels_, expr);
+      const CompressedPathSet<vertex_id_t, label_id_t>& set, VOpt v_opt,
+      std::array<label_id_t, num_labels>& req_labels,
+      Filter<EXPRESSION, SELECTOR...>& filter) {
+    auto req_label_vec = array_to_vec(req_labels);
+    std::vector<label_id_t> labels = set.GetLabels(v_opt);
+
+    // remove duplicate from labels
+    std::sort(labels.begin(), labels.end());
+    labels.erase(std::unique(labels.begin(), labels.end()), labels.end());
+    // Can only be one label.
+    CHECK(labels.size() == 1);
+    // if req_labels is empty, then use the label from path set.
+    if (req_label_vec.empty()) {
+      req_label_vec.push_back(labels[0]);
+    }
+    // check if the label is in v_labels.
+    auto label = labels[0];
+    auto it = std::find(labels.begin(), labels.end(), label);
+    if (it == labels.end()) {
+      LOG(WARNING) << "Label: " << label << " is not in path labels";
+      // create an empty row vertex set.
+      auto res_set =
+          make_default_row_vertex_set<vertex_id_t, label_id_t>({}, label);
+      // create offsets.
+      auto offsets = std::vector<offset_t>(set.Size() + 1);
+      for (size_t i = 0; i < offsets.size(); ++i) {
+        offsets[i] = 0;
+      }
+      return std::make_pair(std::move(res_set), std::move(offsets));
+    }
+    auto property_getters_array =
+        get_prop_getters_from_selectors(graph, labels, filter.selectors_);
+    return set.GetVertices(v_opt, filter.expr_, property_getters_array);
   }
 
- private:
+  // get no prop v from path set.
+  template <size_t num_labels, typename EXPRESSION, typename... SELECTOR>
+  static auto GetNoPropVFromPathSetImpl(
+      const GRAPH_INTERFACE& graph, const PathSet<vertex_id_t, label_id_t>& set,
+      VOpt v_opt, std::array<label_id_t, num_labels>& req_labels,
+      Filter<EXPRESSION, SELECTOR...>& filter) {
+    auto req_label_vec = array_to_vec(req_labels);
+    return set.GetVertices(v_opt, req_label_vec);
+  }
+
   // User-defined expression
   // for vertex set with multiple labels, i.e. two_label or general vertex set.
   // do project.

@@ -1164,4 +1164,9 @@ public class PositiveEvalTest {
         Assert.assertEquals(
                 g.V().has("age", P.outside(20, 30)), eval("g.V().has(\"age\", P.outside(20, 30))"));
     }
+
+    @Test
+    public void g_V_identity() {
+        Assert.assertEquals(g.V().identity(), eval("g.V().identity()"));
+    }
 }

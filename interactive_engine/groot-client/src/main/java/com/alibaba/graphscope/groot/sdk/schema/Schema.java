@@ -3,8 +3,7 @@ package com.alibaba.graphscope.groot.sdk.schema;
 import com.alibaba.graphscope.proto.groot.*;
 import com.alibaba.graphscope.proto.groot.BatchSubmitRequest.DDLRequest;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class Schema {
     List<VertexLabel> vertexLabels;
@@ -22,6 +21,80 @@ public class Schema {
         this.edgeLabels = edgeLabels;
         this.vertexLabelsToDrop = vertexLabelsToDrop;
         this.edgeLabelsToDrop = edgeLabelsToDrop;
+    }
+
+    public Schema() {}
+
+    /**
+     * Get vertex label by label name.
+     * @param name
+     * @return The corresponding vertex label class if exists.
+     */
+    public VertexLabel getVertexLabel(String name) {
+        for (VertexLabel label : vertexLabels) {
+            if (label.getLabel().equals(name)) {
+                return label;
+            }
+        }
+        return null;
+    }
+    /**
+     * Get edge label by label name.
+     * @param name
+     * @return The corresponding edge label class if exists.
+     */
+    public EdgeLabel getEdgeLabel(String name) {
+        for (EdgeLabel label : edgeLabels) {
+            if (label.getLabel().equals(name)) {
+                return label;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get all vertex labels.
+     * @return list of vertex labels
+     */
+    public List<VertexLabel> getVertexLabels() {
+        return vertexLabels;
+    }
+
+    /**
+     * Get all edge labels.
+     * @return list of vertex labels
+     */
+    public List<EdgeLabel> getEdgeLabels() {
+        return edgeLabels;
+    }
+
+    public static Schema fromGraphDef(GraphDefPb proto) {
+        Builder builder = newBuilder();
+
+        for (TypeDefPb typeDefPb : proto.getTypeDefsList()) {
+            if (typeDefPb.getTypeEnum() == TypeEnumPb.VERTEX) {
+                builder.addVertexLabel(VertexLabel.fromProto(typeDefPb));
+            } else {
+                builder.addEdgeLabel(EdgeLabel.fromProto(typeDefPb, proto.getEdgeKindsList()));
+            }
+        }
+
+        return builder.build();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Graph Schema:");
+        for (VertexLabel label : vertexLabels) {
+            builder.append("\n");
+            builder.append(label.toString());
+        }
+        for (EdgeLabel label : edgeLabels) {
+            builder.append("\n");
+            builder.append(label.toString());
+        }
+        return builder.toString();
     }
 
     public static Builder newBuilder() {

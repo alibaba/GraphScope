@@ -25,8 +25,8 @@ use ir_common::generated::physical as pb;
 use ir_common::generated::physical::physical_opr::operator::OpKind;
 use pegasus::api::function::*;
 use pegasus::api::{
-    Collect, CorrelatedSubTask, Count, Dedup, EmitKind, Filter, Fold, FoldByKey, HasAny, IterCondition,
-    Iteration, Join, KeyBy, Limit, Map, Merge, PartitionByKey, Sink, SortBy, SortLimitBy,
+    Collect, CorrelatedSubTask, Count, Dedup, Filter, Fold, FoldByKey, HasAny, IterCondition, Iteration,
+    Join, KeyBy, Limit, Map, Merge, Sink, SortBy, SortLimitBy,
 };
 use pegasus::stream::Stream;
 use pegasus::{BuildJobError, Worker};
@@ -37,6 +37,7 @@ use prost::Message;
 use crate::error::{FnExecError, FnGenError, FnGenResult};
 use crate::process::functions::{ApplyGen, CompareFunction, FoldGen, GroupGen, JoinKeyGen, KeyFunction};
 use crate::process::operator::accum::accumulator::Accumulator;
+use crate::process::operator::accum::{SampleAccum, SampleAccumFactoryGen};
 use crate::process::operator::filter::FilterFuncGen;
 use crate::process::operator::flatmap::FlatMapFuncGen;
 use crate::process::operator::keyed::KeyFunctionGen;
@@ -158,6 +159,18 @@ impl<P: PartitionInfo, C: ClusterInfo> FnGenerator<P, C> {
         Ok(opr.gen_map()?)
     }
 
+    fn gen_path_condition(&self, opr: pb::PathExpand) -> FnGenResult<RecordFilter> {
+        Ok(opr.gen_filter()?)
+    }
+
+    fn gen_coin(&self, opr: algebra_pb::Sample) -> FnGenResult<RecordFilter> {
+        Ok(opr.gen_filter()?)
+    }
+
+    fn gen_sample(&self, opr: algebra_pb::Sample) -> FnGenResult<SampleAccum> {
+        Ok(opr.gen_accum()?)
+    }
+
     fn gen_sink(&self, opr: pb::PhysicalOpr) -> FnGenResult<Sinker> {
         Ok(opr.gen_sink()?)
     }
@@ -177,17 +190,16 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
     fn install(
         &self, mut stream: Stream<Record>, plan: &[pb::PhysicalOpr],
     ) -> Result<Stream<Record>, BuildJobError> {
-        let mut prev_op_kind = pb::physical_opr::operator::OpKind::Root(pb::RootScan {});
+        let mut prev_op_kind = pb::physical_opr::operator::OpKind::Root(pb::Root {});
         for op in &plan[..] {
             let op_kind = op.try_into().map_err(|e| FnGenError::from(e))?;
             match op_kind {
                 OpKind::Repartition(repartition) => {
-                    let repartition_strategy = repartition
-                        .strategy
-                        .as_ref()
-                        .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
+                    let repartition_strategy = repartition.strategy.as_ref().ok_or_else(|| {
+                        FnGenError::from(ParsePbError::EmptyFieldError(
                             "Empty repartition strategy".to_string(),
-                        )))?;
+                        ))
+                    })?;
                     match repartition_strategy {
                         pb::repartition::Strategy::ToAnother(shuffle) => {
                             let router = self.udf_gen.gen_shuffle(shuffle)?;
@@ -209,11 +221,9 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     stream = stream.flat_map_with_name("Unfold", move |input| func.exec(input))?;
                 }
                 OpKind::Limit(limit) => {
-                    let range = limit
-                        .range
-                        .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
-                            "pb::Limit::range".to_string(),
-                        )))?;
+                    let range = limit.range.ok_or_else(|| {
+                        FnGenError::from(ParsePbError::EmptyFieldError("pb::Limit::range".to_string()))
+                    })?;
                     // e.g., `limit(10)` would be translate as `Range{lower=0, upper=10}`
                     if range.upper <= range.lower || range.lower != 0 {
                         Err(FnGenError::from(ParsePbError::ParseError(format!(
@@ -248,6 +258,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 .map(move |cnt| fold_map.exec(cnt))?
                                 .into_stream()?;
                         } else {
+                            // TODO: optimize this by fold_partition + fold
                             let fold_accum = fold.gen_fold_accum()?;
                             stream = stream
                                 .fold(fold_accum, || {
@@ -267,7 +278,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         let group_map = group.gen_group_map()?;
                         stream = stream
                             .key_by(move |record| group_key.get_kv(record))?
-                            .fold_by_key(group_accum, || {
+                            .fold_partition_by_key(group_accum, || {
                                 |mut accumulator, next| {
                                     accumulator.accum(next)?;
                                     Ok(accumulator)
@@ -309,10 +320,9 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         let apply_gen = self.udf_gen.gen_apply(apply.clone())?;
                         let join_kind = apply_gen.get_join_kind();
                         let join_func = apply_gen.gen_left_join_func()?;
-                        let sub_task = apply
-                            .sub_plan
-                            .as_ref()
-                            .ok_or(BuildJobError::Unsupported("Task is missing in Apply".to_string()))?;
+                        let sub_task = apply.sub_plan.as_ref().ok_or_else(|| {
+                            BuildJobError::Unsupported("Task is missing in Apply".to_string())
+                        })?;
                         stream = match join_kind {
                             JoinKind::Semi => stream
                                 .apply(|sub_start| {
@@ -372,22 +382,18 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     let left_task = join
                         .left_plan
                         .as_ref()
-                        .ok_or("left_task is missing in merge")?;
+                        .ok_or_else(|| FnGenError::ParseError("left_task is missing in merge".into()))?;
                     let right_task = join
                         .right_plan
                         .as_ref()
-                        .ok_or("right_task is missing in merge")?;
+                        .ok_or_else(|| FnGenError::ParseError("right_task is missing in merge".into()))?;
                     let (left_stream, right_stream) = stream.copied()?;
                     let left_stream = self
                         .install(left_stream, &left_task.plan[..])?
-                        .key_by(move |record| left_key_selector.get_kv(record))?
-                        // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
-                        .partition_by_key();
+                        .key_by(move |record| left_key_selector.get_kv(record))?;
                     let right_stream = self
                         .install(right_stream, &right_task.plan[..])?
-                        .key_by(move |record| right_key_selector.get_kv(record))?
-                        // TODO(bingqing): remove this when new keyed-join in gaia-x is ready;
-                        .partition_by_key();
+                        .key_by(move |record| right_key_selector.get_kv(record))?;
                     stream = match join_kind {
                         JoinKind::Inner => left_stream
                             .inner_join(right_stream)?
@@ -396,9 +402,11 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                             left_stream
                                 .left_outer_join(right_stream)?
                                 .map(|(left, right)| {
-                                    let left = left.ok_or(FnExecError::unexpected_data_error(
-                                        "left is None in left outer join",
-                                    ))?;
+                                    let left = left.ok_or_else(|| {
+                                        FnExecError::unexpected_data_error(
+                                            "left is None in left outer join",
+                                        )
+                                    })?;
                                     if let Some(right) = right {
                                         // TODO(bingqing): Specify HeadJoinOpt if necessary
                                         Ok(left.value.join(right.value, None))
@@ -410,9 +418,9 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                         JoinKind::RightOuter => left_stream
                             .right_outer_join(right_stream)?
                             .map(|(left, right)| {
-                                let right = right.ok_or(FnExecError::unexpected_data_error(
-                                    "right is None in right outer join",
-                                ))?;
+                                let right = right.ok_or_else(|| {
+                                    FnExecError::unexpected_data_error("right is None in right outer join")
+                                })?;
                                 if let Some(left) = left {
                                     Ok(left.value.join(right.value, None))
                                 } else {
@@ -458,13 +466,11 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 subplan,
                             )))?
                         }
-                        let last_op =
-                            subplan
-                                .plan
-                                .pop()
-                                .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
-                                    "subplan in pb::Intersect::plan".to_string(),
-                                )))?;
+                        let last_op = subplan.plan.pop().ok_or_else(|| {
+                            FnGenError::from(ParsePbError::EmptyFieldError(
+                                "subplan in pb::Intersect::plan".to_string(),
+                            ))
+                        })?;
                         let last_op_kind = last_op
                             .try_into()
                             .map_err(|e| FnGenError::from(e))?;
@@ -526,18 +532,14 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     stream = stream.flat_map_with_name("EdgeExpand", move |input| func.exec(input))?;
                 }
                 OpKind::Path(path) => {
-                    let mut base =
-                        path.base
-                            .clone()
-                            .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
-                                "pb::PathExpand::base".to_string(),
-                            )))?;
-                    let range =
-                        path.hop_range
-                            .as_ref()
-                            .ok_or(FnGenError::from(ParsePbError::EmptyFieldError(
-                                "pb::PathExpand::hop_range".to_string(),
-                            )))?;
+                    let mut base = path.base.clone().ok_or_else(|| {
+                        FnGenError::from(ParsePbError::EmptyFieldError("pb::PathExpand::base".to_string()))
+                    })?;
+                    let range = path.hop_range.as_ref().ok_or_else(|| {
+                        FnGenError::from(ParsePbError::EmptyFieldError(
+                            "pb::PathExpand::hop_range".to_string(),
+                        ))
+                    })?;
                     if range.upper <= range.lower || range.lower < 0 || range.upper <= 0 {
                         Err(FnGenError::from(ParsePbError::ParseError(format!(
                             "range {:?} in PathExpand Operator",
@@ -598,19 +600,22 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     }
                     let times = range.upper - range.lower - 1;
                     if times > 0 {
-                        let mut until = IterCondition::max_iters(times as u32);
-                        if let Some(condition) = path.condition.as_ref() {
-                            let func = self
-                                .udf_gen
-                                .gen_filter(algebra_pb::Select { predicate: Some(condition.clone()) })?;
+                        if path.condition.is_some() {
+                            let mut until = IterCondition::max_iters(times as u32);
+                            let func = self.udf_gen.gen_path_condition(path.clone())?;
                             until.set_until(func);
                             // Notice that if UNTIL condition set, we expand path without `Emit`
                             stream = stream
                                 .iterate_until(until, |start| self.install(start, &base_expand_plan[..]))?;
                         } else {
-                            stream = stream.iterate_emit_until(until, EmitKind::Before, |start| {
-                                self.install(start, &base_expand_plan[..])
-                            })?;
+                            let (mut hop_stream, copied_stream) = stream.copied()?;
+                            stream = copied_stream;
+                            for _ in 0..times {
+                                hop_stream = self.install(hop_stream, &base_expand_plan[..])?;
+                                let copied = hop_stream.copied()?;
+                                hop_stream = copied.0;
+                                stream = stream.merge(copied.1)?;
+                            }
                         }
                     }
                     // path end to add path_alias if exists
@@ -622,16 +627,60 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                 OpKind::Scan(scan) => {
                     let udf_gen = self.udf_gen.clone();
                     stream = stream.flat_map(move |_| {
-                        let scan_iter = udf_gen.gen_source(scan.clone().into()).unwrap();
-                        Ok(scan_iter)
+                        let scan_iter = udf_gen.gen_source(scan.clone().into());
+                        Ok(scan_iter?)
                     })?;
                 }
+                OpKind::Sample(sample) => {
+                    if let Some(sample_weight) = &sample.sample_weight {
+                        if sample_weight.tag.is_some() || sample_weight.property.is_some() {
+                            return Err(FnGenError::from(ParsePbError::ParseError(
+                                "sample_weight is not supported yet".to_string(),
+                            )))?;
+                        }
+                    }
+                    if let Some(sample_type) = &sample.sample_type {
+                        match &sample_type.inner {
+                            // the case of Coin
+                            Some(algebra_pb::sample::sample_type::Inner::SampleByRatio(_)) => {
+                                let func = self.udf_gen.gen_coin(sample)?;
+                                stream = stream.filter(move |input| func.test(input))?;
+                            }
+                            // the case of Sample
+                            Some(algebra_pb::sample::sample_type::Inner::SampleByNum(_)) => {
+                                let partial_sample_accum = self.udf_gen.gen_sample(sample)?;
+                                let sample_accum = partial_sample_accum.clone();
+                                stream = stream
+                                    .fold_partition(partial_sample_accum, move || {
+                                        move |mut sample_accum, next| {
+                                            sample_accum.accum(next)?;
+                                            Ok(sample_accum)
+                                        }
+                                    })?
+                                    .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
+                                    .fold(sample_accum, move || {
+                                        move |mut sample_accum, next| {
+                                            sample_accum.accum(next)?;
+                                            Ok(sample_accum)
+                                        }
+                                    })?
+                                    .unfold(move |mut sample_accum| Ok(sample_accum.finalize()?))?
+                            }
+                            None => Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                                "pb::Sample::sample_type.inner".to_string(),
+                            )))?,
+                        }
+                    } else {
+                        Err(FnGenError::from(ParsePbError::EmptyFieldError(
+                            "pb::Sample::sample_type".to_string(),
+                        )))?;
+                    }
+                }
                 OpKind::Root(_) => {
-                    // this would be processed in assemble, and can not be reached when install.
-                    Err(FnGenError::unsupported_error("unreachable root in install"))?
+                    // do nothing, as it is a dummy node
                 }
                 OpKind::Sink(_) => {
-                    // this would be processed in assemble, and can not be reached when install.
+                    // this would be processed in assemble, and cannot be reached when install.
                     Err(FnGenError::unsupported_error("unreachable sink in install"))?
                 }
             }
@@ -646,21 +695,16 @@ impl<P: PartitionInfo, C: ClusterInfo> JobAssembly<Record> for IRJobAssembly<P, 
     fn assemble(&self, plan: &JobDesc, worker: &mut Worker<Record, Vec<u8>>) -> Result<(), BuildJobError> {
         worker.dataflow(move |input, output| {
             let physical_plan = decode::<pb::PhysicalPlan>(&plan.plan)?;
-            let source_opr = physical_plan
-                .plan
-                .first()
-                .ok_or(FnGenError::from(ParsePbError::EmptyFieldError("empty job plan".to_string())))?;
-            let source_iter = self.udf_gen.gen_source(source_opr.clone())?;
-            let source = input.input_from(source_iter)?;
             if log_enabled!(log::Level::Debug) && pegasus::get_current_worker().index == 0 {
                 debug!("{:#?}", physical_plan);
             }
+            // input from a dummy record to trigger the computation
+            let source = input.input_from(vec![Record::default()])?;
             let plan_len = physical_plan.plan.len();
-            let stream = self.install(source, &physical_plan.plan[1..plan_len - 1])?;
-            let sink_opr = physical_plan
-                .plan
-                .last()
-                .ok_or(FnGenError::from(ParsePbError::EmptyFieldError("empty job plan".to_string())))?;
+            let stream = self.install(source, &physical_plan.plan[0..plan_len - 1])?;
+            let sink_opr = physical_plan.plan.last().ok_or_else(|| {
+                FnGenError::from(ParsePbError::EmptyFieldError("empty job plan".to_string()))
+            })?;
             let ec = self.udf_gen.gen_sink(sink_opr.clone())?;
             match ec {
                 Sinker::DefaultSinker(default_sinker) => stream

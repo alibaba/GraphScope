@@ -65,7 +65,7 @@ impl From<pb::edge_expand::Direction> for Direction {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct QueryParams {
     pub labels: Vec<LabelId>,
     pub limit: Option<usize>,
@@ -173,5 +173,17 @@ impl QueryParams {
         } else {
             None
         }
+    }
+
+    pub fn has_labels(&self) -> bool {
+        !self.labels.is_empty()
+    }
+
+    pub fn has_predicates(&self) -> bool {
+        self.filter.is_some()
+    }
+
+    pub fn has_columns(&self) -> bool {
+        self.columns.is_some()
     }
 }

@@ -16,6 +16,8 @@ package com.alibaba.graphscope.groot.operation;
 import com.alibaba.graphscope.proto.groot.OperationPb;
 import com.google.protobuf.ByteString;
 
+import java.util.Objects;
+
 public class OperationBlob {
     public static final OperationBlob MARKER_OPERATION_BLOB = new MarkerOperation().toBlob();
 
@@ -61,6 +63,6 @@ public class OperationBlob {
 
         if (partitionKey != that.partitionKey) return false;
         if (operationType != that.operationType) return false;
-        return dataBytes != null ? dataBytes.equals(that.dataBytes) : that.dataBytes == null;
+        return Objects.equals(dataBytes, that.dataBytes);
     }
 }
