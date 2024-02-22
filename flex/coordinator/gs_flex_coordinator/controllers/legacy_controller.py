@@ -22,11 +22,11 @@ def get_groot_schema(graph_name):  # noqa: E501
 
     :rtype: Union[GrootSchema, Tuple[GrootSchema, int], Tuple[GrootSchema, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.get_groot_schema(graph_name)
 
 
 @handle_api_exception()
-def import_schema(graph_name, groot_schema):  # noqa: E501
+def import_groot_schema(graph_name, groot_schema):  # noqa: E501
     """import_schema
 
     Import schema to groot graph # noqa: E501
@@ -40,7 +40,7 @@ def import_schema(graph_name, groot_schema):  # noqa: E501
     """
     if connexion.request.is_json:
         groot_schema = GrootSchema.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.import_groot_schema(graph_name, groot_schema)
 
 
 @handle_api_exception()

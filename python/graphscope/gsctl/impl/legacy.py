@@ -20,6 +20,7 @@ from typing import List
 
 import graphscope.flex.rest
 from graphscope.flex.rest import GrootGraph
+from graphscope.flex.rest import GrootSchema
 from graphscope.gsctl.config import get_current_context
 
 
@@ -30,3 +31,14 @@ def list_groot_graph() -> List[GrootGraph]:
     ) as api_client:
         api_instance = graphscope.flex.rest.LegacyApi(api_client)
         return api_instance.list_groot_graph()
+
+
+def import_groot_schema(graph_name: str, schema: dict) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.LegacyApi(api_client)
+        return api_instance.import_groot_schema(
+            graph_name, GrootSchema.from_dict(schema)
+        )

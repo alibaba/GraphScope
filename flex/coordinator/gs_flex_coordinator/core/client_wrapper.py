@@ -23,23 +23,36 @@ import os
 import pickle
 import socket
 import threading
-from typing import List, Union
+from typing import List
+from typing import Union
 
 import psutil
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
-                                             COORDINATOR_STARTING_TIME,
-                                             DATASET_WORKSPACE, INSTANCE_NAME,
-                                             SOLUTION, WORKSPACE)
+from gs_flex_coordinator.core.config import CLUSTER_TYPE
+from gs_flex_coordinator.core.config import COORDINATOR_STARTING_TIME
+from gs_flex_coordinator.core.config import DATASET_WORKSPACE
+from gs_flex_coordinator.core.config import INSTANCE_NAME
+from gs_flex_coordinator.core.config import SOLUTION
+from gs_flex_coordinator.core.config import WORKSPACE
 from gs_flex_coordinator.core.insight import init_groot_client
 from gs_flex_coordinator.core.interactive import init_hqps_client
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
-                                            encode_datetime, get_current_time)
-from gs_flex_coordinator.models import (DeploymentInfo, EdgeType, Graph,
-                                        GrootGraph, JobStatus, ModelSchema,
-                                        NodeStatus, Procedure, SchemaMapping,
-                                        ServiceStatus, StartServiceRequest,
-                                        VertexType)
+from gs_flex_coordinator.core.utils import GraphInfo
+from gs_flex_coordinator.core.utils import decode_datetimestr
+from gs_flex_coordinator.core.utils import encode_datetime
+from gs_flex_coordinator.core.utils import get_current_time
+from gs_flex_coordinator.models import DeploymentInfo
+from gs_flex_coordinator.models import EdgeType
+from gs_flex_coordinator.models import Graph
+from gs_flex_coordinator.models import GrootGraph
+from gs_flex_coordinator.models import GrootSchema
+from gs_flex_coordinator.models import JobStatus
+from gs_flex_coordinator.models import ModelSchema
+from gs_flex_coordinator.models import NodeStatus
+from gs_flex_coordinator.models import Procedure
+from gs_flex_coordinator.models import SchemaMapping
+from gs_flex_coordinator.models import ServiceStatus
+from gs_flex_coordinator.models import StartServiceRequest
+from gs_flex_coordinator.models import VertexType
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -109,6 +122,12 @@ class ClientWrapper(object):
         # transfer
         rlt = ModelSchema.from_dict(schema.to_dict())
         return rlt
+
+    def get_groot_schema(self, graph_name: str) -> GrootSchema:
+        return GrootSchema.from_dict(self._client.get_groot_schema(graph_name))
+
+    def import_groot_schema(self, graph_name: str, schema: GrootSchema) -> str:
+        return self._client.import_groot_schema(graph_name, schema.to_dict())
 
     def create_graph(self, graph: Graph) -> str:
         # there are some tricks here, since schema is a keyword of openapi

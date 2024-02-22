@@ -31,7 +31,7 @@ class GrootClient(object):
         self._graph = get_groot_graph()
         print(self._graph.to_dict())
 
-    def list_groot_graph(self) -> dict:
+    def list_groot_graph(self) -> list:
         rlts = [self._graph.to_dict()]
         return rlts
 
@@ -54,6 +54,14 @@ class GrootClient(object):
         return self._graph.delete_edge_type(
             graph_name, edge_type, source_vertex_type, destination_vertex_type
         )
+
+    def get_groot_schema(self, graph_name: str) -> dict:
+        if graph_name == self._graph.name:
+            raise RuntimeError(f"Graph {graph_name} not exists")
+        return self._graph.schema
+
+    def import_groot_schema(self, graph_name: str, schema: dict) -> str:
+        return self._graph.import_schema(schema)
 
 
 def init_groot_client():

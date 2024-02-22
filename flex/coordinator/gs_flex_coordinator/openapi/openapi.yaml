@@ -758,7 +758,7 @@ paths:
       x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
     post:
       description: Import schema to groot graph
-      operationId: import_schema
+      operationId: import_groot_schema
       parameters:
       - explode: false
         in: path

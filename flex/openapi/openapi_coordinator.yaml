@@ -249,7 +249,7 @@ paths:
       tags:
         - legacy
       description: Import schema to groot graph
-      operationId: import_schema
+      operationId: import_groot_schema
       parameters:
         - name: graph_name
           in: path

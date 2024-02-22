@@ -32,7 +32,6 @@ from graphscope.gsctl.impl import disconnect_coordinator
 from graphscope.gsctl.impl import get_deployment_info
 from graphscope.gsctl.impl import get_job_by_id
 from graphscope.gsctl.impl import get_node_status
-from graphscope.gsctl.impl import get_schema_by_name
 from graphscope.gsctl.impl import get_service_status
 from graphscope.gsctl.impl import list_alert_messages
 from graphscope.gsctl.impl import list_alert_receivers

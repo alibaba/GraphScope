@@ -297,7 +297,7 @@ class LegacyApi:
 
 
     @validate_call
-    def import_schema(
+    def import_groot_schema(
         self,
         graph_name: StrictStr,
         groot_schema: GrootSchema,
@@ -314,7 +314,7 @@ class LegacyApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> str:
-        """import_schema
+        """import_groot_schema
 
         Import schema to groot graph
 
@@ -344,7 +344,7 @@ class LegacyApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._import_schema_serialize(
+        _param = self._import_groot_schema_serialize(
             graph_name=graph_name,
             groot_schema=groot_schema,
             _request_auth=_request_auth,
@@ -368,7 +368,7 @@ class LegacyApi:
 
 
     @validate_call
-    def import_schema_with_http_info(
+    def import_groot_schema_with_http_info(
         self,
         graph_name: StrictStr,
         groot_schema: GrootSchema,
@@ -385,7 +385,7 @@ class LegacyApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[str]:
-        """import_schema
+        """import_groot_schema
 
         Import schema to groot graph
 
@@ -415,7 +415,7 @@ class LegacyApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._import_schema_serialize(
+        _param = self._import_groot_schema_serialize(
             graph_name=graph_name,
             groot_schema=groot_schema,
             _request_auth=_request_auth,
@@ -439,7 +439,7 @@ class LegacyApi:
 
 
     @validate_call
-    def import_schema_without_preload_content(
+    def import_groot_schema_without_preload_content(
         self,
         graph_name: StrictStr,
         groot_schema: GrootSchema,
@@ -456,7 +456,7 @@ class LegacyApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """import_schema
+        """import_groot_schema
 
         Import schema to groot graph
 
@@ -486,7 +486,7 @@ class LegacyApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._import_schema_serialize(
+        _param = self._import_groot_schema_serialize(
             graph_name=graph_name,
             groot_schema=groot_schema,
             _request_auth=_request_auth,
@@ -505,7 +505,7 @@ class LegacyApi:
         return response_data.response
 
 
-    def _import_schema_serialize(
+    def _import_groot_schema_serialize(
         self,
         graph_name,
         groot_schema,

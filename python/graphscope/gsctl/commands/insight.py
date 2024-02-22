@@ -18,11 +18,16 @@
 
 import click
 import yaml
-from graphscope.gsctl.impl import (create_edge_type, create_vertex_type,
-                                   delete_edge_type, delete_vertex_type,
-                                   list_groot_graph)
-from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
-                                    terminal_display)
+
+from graphscope.gsctl.impl import create_edge_type
+from graphscope.gsctl.impl import create_vertex_type
+from graphscope.gsctl.impl import delete_edge_type
+from graphscope.gsctl.impl import delete_vertex_type
+from graphscope.gsctl.impl import import_groot_schema
+from graphscope.gsctl.impl import list_groot_graph
+from graphscope.gsctl.utils import is_valid_file_path
+from graphscope.gsctl.utils import read_yaml_file
+from graphscope.gsctl.utils import terminal_display
 
 
 @click.group()
@@ -115,6 +120,28 @@ def graph(graph_name):  # noqa: F811
                 break
         if graph_name is not None and not specific_graph_exist:
             click.secho('graph "{0}" not found.'.format(graph_name), fg="blue")
+
+
+@create.command
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to create a schema",
+)
+def schema(filename):  # noqa: F811
+    """Import schema to database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        schema = read_yaml_file(filename)
+        # only one graph supported int groot
+        import_groot_schema("placeholder", schema)
+    except Exception as e:
+        click.secho(f"Failed to import schema: {str(e)}", fg="red")
+    else:
+        click.secho("Import schema successfully.", fg="green")
 
 
 @create.command

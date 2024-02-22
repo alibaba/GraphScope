@@ -19,26 +19,33 @@
 import logging
 import os
 import time
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta
+from abc import abstractmethod
 
-import graphscope
 from dateutil import tz
-from graphscope.deploy.kubernetes.utils import (get_service_endpoints,
-                                                resolve_api_client)
 from gremlin_python.driver.client import Client
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
-                                             COORDINATOR_STARTING_TIME,
-                                             ENABLE_DNS, GROOT_GREMLIN_PORT,
-                                             GROOT_GRPC_PORT, GROOT_PASSWORD,
-                                             GROOT_USERNAME, INSTANCE_NAME,
-                                             NAMESPACE, WORKSPACE)
+from gs_flex_coordinator.core.config import CLUSTER_TYPE
+from gs_flex_coordinator.core.config import COORDINATOR_STARTING_TIME
+from gs_flex_coordinator.core.config import ENABLE_DNS
+from gs_flex_coordinator.core.config import GROOT_GREMLIN_PORT
+from gs_flex_coordinator.core.config import GROOT_GRPC_PORT
+from gs_flex_coordinator.core.config import GROOT_PASSWORD
+from gs_flex_coordinator.core.config import GROOT_USERNAME
+from gs_flex_coordinator.core.config import INSTANCE_NAME
+from gs_flex_coordinator.core.config import NAMESPACE
+from gs_flex_coordinator.core.config import WORKSPACE
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import (data_type_to_groot,
-                                            encode_datetime, get_internal_ip,
-                                            get_public_ip)
+from gs_flex_coordinator.core.utils import data_type_to_groot
+from gs_flex_coordinator.core.utils import encode_datetime
+from gs_flex_coordinator.core.utils import get_internal_ip
+from gs_flex_coordinator.core.utils import get_public_ip
 from gs_flex_coordinator.version import __version__
 from kubernetes import client as kube_client
 from kubernetes import config as kube_config
+
+import graphscope
+from graphscope.deploy.kubernetes.utils import get_service_endpoints
+from graphscope.deploy.kubernetes.utils import resolve_api_client
 
 logger = logging.getLogger("graphscope")
 
@@ -217,7 +224,7 @@ class GrootGraph(Graph):
                         return True
         return False
 
-    def create_schema(self, data: dict):
+    def import_schema(self, data: dict):
         schema = self._g.schema()
         schema.from_dict(data)
         schema.update()

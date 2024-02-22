@@ -41,6 +41,7 @@ from graphscope.gsctl.impl.job import create_dataloading_job
 from graphscope.gsctl.impl.job import delete_job_by_id
 from graphscope.gsctl.impl.job import get_job_by_id
 from graphscope.gsctl.impl.job import list_jobs
+from graphscope.gsctl.impl.legacy import import_groot_schema
 from graphscope.gsctl.impl.legacy import list_groot_graph
 from graphscope.gsctl.impl.procedure import create_procedure
 from graphscope.gsctl.impl.procedure import delete_procedure_by_name
