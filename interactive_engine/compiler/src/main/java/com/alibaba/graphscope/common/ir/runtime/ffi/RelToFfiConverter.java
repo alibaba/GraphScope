@@ -127,7 +127,8 @@ public class RelToFfiConverter implements GraphRelShuttle {
         GraphLogicalExpand fusedExpand = physicalExpand.getFusedExpand();
         Pointer ptrPhysicalExpand =
                 LIB.initEdgexpdOperator(
-                        Utils.ffiPhysicalExpandOpt(physicalExpand.getPhysicalOpt()), Utils.ffiDirection(fusedExpand.getOpt()));
+                        Utils.ffiPhysicalExpandOpt(physicalExpand.getPhysicalOpt()),
+                        Utils.ffiDirection(fusedExpand.getOpt()));
         checkFfiResult(LIB.setEdgexpdParams(ptrPhysicalExpand, ffiQueryParams(fusedExpand)));
         if (physicalExpand.getAliasId() != AliasInference.DEFAULT_ID) {
             checkFfiResult(
