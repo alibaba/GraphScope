@@ -12,18 +12,18 @@ use crate::db::common::bytes::util::parse_pb;
 use crate::db::common::str::parse_str;
 use crate::db::proto::model::DataLoadTargetPb;
 use crate::db::proto::schema_common::EdgeKindPb;
-use crate::db::storage::ExternalStorage;
+use crate::db::storage::rocksdb::RocksDB;
 use crate::db::util::lock::GraphMutexLock;
 
 const META_TABLE_ID: TableId = i64::min_value();
 
 pub struct Meta {
-    store: Arc<dyn ExternalStorage>,
+    store: Arc<RocksDB>,
     graph_def_lock: GraphMutexLock<GraphDef>,
 }
 
 impl Meta {
-    pub fn new(store: Arc<dyn ExternalStorage>) -> Self {
+    pub fn new(store: Arc<RocksDB>) -> Self {
         Meta { store, graph_def_lock: GraphMutexLock::new(GraphDef::default()) }
     }
 
@@ -769,7 +769,7 @@ impl ItemCommon for RemoveEdgeKindItem {
     }
 }
 
-fn get_items<I: ItemCommon>(store: &dyn ExternalStorage) -> GraphResult<Vec<I>> {
+fn get_items<I: ItemCommon>(store: &RocksDB) -> GraphResult<Vec<I>> {
     let mut ret = Vec::new();
     let mut prefix = Vec::new();
     let table_prefix = transform::i64_to_arr(META_TABLE_ID.to_be());
@@ -832,7 +832,9 @@ mod tests {
         let path = "test_meta_normal";
         fs::rmr(path).unwrap();
         {
-            let db = RocksDB::open(&HashMap::new(), path).unwrap();
+            let mut config = HashMap::new();
+            config.insert("store.data.path".to_owned(), path.to_owned());
+            let db = RocksDB::open(&config).unwrap();
             let store = Arc::new(db);
             let meta = Meta::new(store.clone());
             let mut schema_version = 1;

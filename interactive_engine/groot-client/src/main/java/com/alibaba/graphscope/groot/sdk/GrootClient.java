@@ -399,6 +399,18 @@ public class GrootClient implements Writer {
         this.clientStub.ingestData(builder.build());
     }
 
+    public boolean compactDB() {
+        CompactDBRequest request = CompactDBRequest.newBuilder().build();
+        CompactDBResponse response = this.clientStub.compactDB(request);
+        return response.getSuccess();
+    }
+
+    public boolean reopenSecondary() {
+        ReopenSecondaryRequest request = ReopenSecondaryRequest.newBuilder().build();
+        ReopenSecondaryResponse response = this.clientStub.reopenSecondary(request);
+        return response.getSuccess();
+    }
+
     public String loadJsonSchema(Path jsonFile) throws IOException {
         String json = new String(Files.readAllBytes(jsonFile), StandardCharsets.UTF_8);
         return loadJsonSchema(json);
