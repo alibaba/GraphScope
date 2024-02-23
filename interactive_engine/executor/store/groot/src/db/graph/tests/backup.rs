@@ -85,6 +85,7 @@ pub fn test_backup_engine<G: MultiVersionGraph>(graph: G, test_dir: &str) {
 fn open_graph(path: &str) -> GraphStore {
     let mut builder = GraphConfigBuilder::new();
     builder.set_storage_engine("rocksdb");
+    builder.add_storage_option("store.data.path", path);
     let config = builder.build();
-    GraphStore::open(&config, path).unwrap()
+    GraphStore::open(&config).unwrap()
 }

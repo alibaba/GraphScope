@@ -53,7 +53,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public class StoreService implements MetricsAgent {
@@ -69,9 +68,12 @@ public class StoreService implements MetricsAgent {
     private ExecutorService writeExecutor;
     private ExecutorService ingestExecutor;
     private ExecutorService garbageCollectExecutor;
+    private ExecutorService compactExecutor;
+
     private ThreadPoolExecutor downloadExecutor;
     private final boolean enableGc;
     private volatile boolean shouldStop = true;
+    private final boolean isSecondary;
 
     private volatile long lastUpdateTime;
     private Map<Integer, AvgMetric> partitionToMetric;
@@ -83,6 +85,7 @@ public class StoreService implements MetricsAgent {
         this.enableGc = StoreConfig.STORE_GC_ENABLE.get(storeConfigs);
         this.writeThreadCount = StoreConfig.STORE_WRITE_THREAD_COUNT.get(storeConfigs);
         this.metaService = metaService;
+        this.isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(storeConfigs);
         metricsCollector.register(this, () -> updateMetrics());
     }
 
@@ -118,6 +121,15 @@ public class StoreService implements MetricsAgent {
                         new LinkedBlockingQueue<>(1),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "store-ingest", logger));
+        this.compactExecutor =
+                new ThreadPoolExecutor(
+                        1,
+                        1,
+                        0L,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>(1),
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "store-compact", logger));
         this.garbageCollectExecutor =
                 new ThreadPoolExecutor(
                         1,
@@ -190,37 +202,6 @@ public class StoreService implements MetricsAgent {
             }
             this.writeExecutor = null;
         }
-    }
-
-    /**
-     * recover data from disk
-     *
-     * @return snapshotId of recovered data.
-     */
-    public long recover() throws InterruptedException, IOException {
-        AtomicLong snapshotId = new AtomicLong(Long.MAX_VALUE);
-        CountDownLatch latch = new CountDownLatch(this.idToPartition.size());
-        for (GraphPartition partition : this.idToPartition.values()) {
-            this.writeExecutor.execute(
-                    () -> {
-                        try {
-                            long partitionSnapshotId = partition.recover();
-                            snapshotId.updateAndGet(x -> Math.min(x, partitionSnapshotId));
-                        } catch (Exception e) {
-                            logger.error("partition #[] recover failed");
-                            snapshotId.set(-1L);
-                        } finally {
-                            latch.countDown();
-                        }
-                    });
-        }
-        latch.await();
-        long recoveredSnapshotId = snapshotId.get();
-        if (recoveredSnapshotId == -1L) {
-            throw new IOException("recover data failed");
-        }
-        logger.info("store data recovered, snapshotId [" + recoveredSnapshotId + "]");
-        return recoveredSnapshotId;
     }
 
     public boolean batchWrite(StoreDataBatch storeDataBatch)
@@ -311,7 +292,10 @@ public class StoreService implements MetricsAgent {
     public void ingestData(
             String path, Map<String, String> config, CompletionCallback<Void> callback) {
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
-        String downloadPath = Paths.get(dataRoot, "download").toString();
+        String downloadPath = StoreConfig.STORE_DATA_DOWNLOAD_PATH.get(storeConfigs);
+        if (downloadPath.isEmpty()) {
+            downloadPath = Paths.get(dataRoot, "download").toString();
+        }
         String[] items = path.split("/");
         // Get the  unique path  (uuid)
         String unique_path = items[items.length - 1];
@@ -373,21 +357,24 @@ public class StoreService implements MetricsAgent {
         }
     }
 
-    public void clearIngest(String dataPath) throws IOException {
-        if (dataPath == null || dataPath.isEmpty()) {
+    public void clearIngest(String uniquePath) throws IOException {
+        if (uniquePath == null || uniquePath.isEmpty()) {
             logger.warn("Must set a sub-path for clearing.");
             return;
         }
         String dataRoot = StoreConfig.STORE_DATA_PATH.get(storeConfigs);
-        Path downloadPath = Paths.get(dataRoot, "download", dataPath);
+        String downloadPath = StoreConfig.STORE_DATA_DOWNLOAD_PATH.get(storeConfigs);
+        if (downloadPath.isEmpty()) {
+            downloadPath = Paths.get(dataRoot, "download").toString();
+        }
+        downloadPath = Paths.get(downloadPath, uniquePath).toString();
         try {
             logger.info("Clearing directory {}", downloadPath);
-            FileUtils.forceDelete(downloadPath.toFile());
+            FileUtils.forceDelete(new File(downloadPath));
         } catch (FileNotFoundException e) {
             // Ignore
         }
         logger.info("cleared directory {}", downloadPath);
-        // Files.createDirectories(downloadPath);
     }
 
     public void garbageCollect(long snapshotId, CompletionCallback<Void> callback) {
@@ -412,6 +399,53 @@ public class StoreService implements MetricsAgent {
         for (Map.Entry<Integer, GraphPartition> entry : this.idToPartition.entrySet()) {
             GraphPartition partition = entry.getValue();
             partition.garbageCollect(snapshotId);
+        }
+    }
+
+    public void compactDB(CompletionCallback<Void> callback) {
+        if (isSecondary) {
+            callback.onCompleted(null);
+            return;
+        }
+        this.compactExecutor.execute(
+                () -> {
+                    logger.info("compact DB");
+                    try {
+                        for (GraphPartition partition : this.idToPartition.values()) {
+                            partition.compact();
+                            logger.info("Compaction {} partition finished", partition.getId());
+                        }
+                        logger.info("compact DB finished");
+                        callback.onCompleted(null);
+                    } catch (Exception e) {
+                        logger.error("compact DB failed", e);
+                        callback.onError(e);
+                    }
+                });
+    }
+
+    public void tryCatchUpWithPrimary() throws IOException {
+        if (!isSecondary) {
+            return;
+        }
+        for (GraphPartition partition : this.idToPartition.values()) {
+            partition.tryCatchUpWithPrimary();
+        }
+    }
+
+    public void reopenPartition(long wait_sec, CompletionCallback<Void> callback) {
+        if (!isSecondary) {
+            callback.onCompleted(null);
+            return;
+        }
+        try {
+            for (GraphPartition partition : this.idToPartition.values()) {
+                partition.reopenSecondary(wait_sec);
+            }
+            callback.onCompleted(null);
+        } catch (Exception e) {
+            logger.error("reopen secondary failed", e);
+            callback.onError(e);
         }
     }
 

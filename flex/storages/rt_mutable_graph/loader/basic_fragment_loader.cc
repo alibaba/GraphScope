@@ -119,8 +119,12 @@ void BasicFragmentLoader::AddVertexBatch(
   }
 }
 
-const LFIndexer<vid_t>& BasicFragmentLoader::GetLFIndexer(
-    label_t v_label) const {
+const IndexerType& BasicFragmentLoader::GetLFIndexer(label_t v_label) const {
+  CHECK(v_label < vertex_label_num_);
+  return lf_indexers_[v_label];
+}
+
+IndexerType& BasicFragmentLoader::GetLFIndexer(label_t v_label) {
   CHECK(v_label < vertex_label_num_);
   return lf_indexers_[v_label];
 }

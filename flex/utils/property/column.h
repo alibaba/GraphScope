@@ -555,6 +555,80 @@ void StringMapColumn<INDEX_T>::set_value(size_t idx,
 std::shared_ptr<ColumnBase> CreateColumn(
     PropertyType type, StorageStrategy strategy = StorageStrategy::kMem);
 
+#ifdef USE_PTHASH
+template <typename EDATA_T>
+class ConcatColumn : public ColumnBase {
+ public:
+  ~ConcatColumn() {}
+
+  ConcatColumn(const TypedColumn<EDATA_T>& basic_column,
+               const TypedColumn<EDATA_T>& extra_column)
+      : basic_column_(basic_column),
+        extra_column_(extra_column),
+        basic_size_(basic_column.size()) {}
+
+  void open(const std::string& name, const std::string& snapshot_dir,
+            const std::string& work_dir) {
+    LOG(FATAL) << "not implemented";
+  }
+
+  void open_in_memory(const std::string& name) {
+    LOG(FATAL) << "not implemented";
+  }
+
+  void open_with_hugepages(const std::string& name, bool force) {
+    LOG(FATAL) << "not implemented";
+  }
+
+  void close() { LOG(FATAL) << "not implemented"; }
+
+  EDATA_T get_view(size_t index) const {
+    return index < basic_size_ ? basic_column_.get(index)
+                               : extra_column_.get(index - basic_size_);
+  }
+
+  void touch(const std::string& filename) { LOG(FATAL) << "not implemented"; }
+
+  virtual void dump(const std::string& filename) {
+    LOG(FATAL) << "not implemented";
+  }
+
+  size_t size() const { return basic_size_ + extra_column_.size(); }
+
+  void copy_to_tmp(const std::string& cur_path, const std::string& tmp_path) {
+    LOG(FATAL) << "not implemented";
+  }
+  void resize(size_t size) { LOG(FATAL) << "not implemented"; }
+
+  PropertyType type() const { return AnyConverter<EDATA_T>::type(); }
+
+  void set_any(size_t index, const Any& value) {
+    LOG(FATAL) << "not implemented";
+  }
+
+  Any get(size_t index) const {
+    if (index < basic_size_) {
+      return basic_column_.get(index);
+    } else {
+      return extra_column_.get(index - basic_size_);
+    }
+  }
+
+  void ingest(uint32_t index, grape::OutArchive& arc) {
+    LOG(FATAL) << "not implemented";
+  }
+
+  StorageStrategy storage_strategy() const {
+    return basic_column_.storage_strategy();
+  }
+
+ private:
+  const TypedColumn<EDATA_T>& basic_column_;
+  const TypedColumn<EDATA_T>& extra_column_;
+  size_t basic_size_;
+};
+#endif
+
 /// Create RefColumn for ease of usage for hqps
 class RefColumnBase {
  public:

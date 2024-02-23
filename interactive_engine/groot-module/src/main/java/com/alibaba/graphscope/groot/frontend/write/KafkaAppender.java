@@ -234,7 +234,7 @@ public class KafkaAppender {
 
         logger.info("replay DML records of from offset [{}], ts [{}]", offset, timestamp);
 
-        long batchSnapshotId = this.ingestSnapshotId.get();
+        long batchSnapshotId = 0;
         int replayCount = 0;
 
         try (LogWriter logWriter = this.logService.createWriter()) {
@@ -249,7 +249,8 @@ public class KafkaAppender {
                         if (batch.getOperationCount() == 0) {
                             continue;
                         }
-                        logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
+                        batchSnapshotId = this.ingestSnapshotId.get();
+                        logWriter.appendAsync(storeId, new LogEntry(batchSnapshotId, batch));
                         replayCount++;
                     }
                 }
