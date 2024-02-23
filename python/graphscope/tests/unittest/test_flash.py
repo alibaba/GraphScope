@@ -72,3 +72,9 @@ def test_flash_cc_on_projected_graph(ldbc_graph):
         by=["id"]
     )
     print(df)
+
+
+def test_flash_cc_on_string_id_graph(p2p_project_directed_graph_string):
+    ctx = flash.pagerank(p2p_project_directed_graph_string)
+    df = ctx.to_dataframe({"id": "v.id", "cc": "r"}).sort_values(by=["id"])
+    print(df)
