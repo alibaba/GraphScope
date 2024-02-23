@@ -17,6 +17,9 @@ public class StoreConfig {
     public static final Config<String> STORE_DATA_PATH =
             Config.stringConfig("store.data.path", "./data");
 
+    public static final Config<String> STORE_DATA_DOWNLOAD_PATH =
+            Config.stringConfig("store.data.download.path", "");
+
     public static final Config<Integer> STORE_WRITE_THREAD_COUNT =
             Config.intConfig("store.write.thread.count", 1);
 
@@ -35,9 +38,15 @@ public class StoreConfig {
     public static final Config<Long> STORE_GC_INTERVAL_MS =
             Config.longConfig("store.gc.interval.ms", 5000L);
 
+    public static final Config<Long> STORE_CATCHUP_INTERVAL_MS =
+            Config.longConfig("store.catchup.interval.ms", 30000L);
+
     // set by IS_SECONDARY_INSTANCE, used in graph.rs
     public static final Config<String> STORE_STORAGE_ENGINE =
             Config.stringConfig("store.storage.engine", "rocksdb");
     public static final Config<String> STORE_SECONDARY_DATA_PATH =
             Config.stringConfig("store.data.secondary.path", "./data_secondary");
+
+    public static final Config<String> STORE_WAL_DIR =
+            Config.stringConfig("store.rocksdb.wal.dir", "");
 }

@@ -70,7 +70,7 @@ public abstract class ExternalStorage {
                 if (i == maxRetry - 1) {
                     throw e;
                 } else {
-                    logger.error("Failed to download data, retrying...", e);
+                    logger.error("Failed to download " + srcPath + ", retrying...", e);
                 }
             }
         }

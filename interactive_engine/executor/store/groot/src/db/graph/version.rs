@@ -100,8 +100,7 @@ impl VersionManager {
             let cur_si = self.slots[idx].get_si();
             let _data = self.slots[idx].get_data();
             if cur_si == 0 {
-                let msg =
-                    format!("A bug found! Something wrong with the VersionManager. Maybe thread unsafe");
+                let msg = format!("cur_si should not be 0! Maybe thread unsafe");
                 let err = gen_graph_err!(GraphErrorCode::GraphStoreBug, msg, gc, si);
                 return Err(err);
             }
