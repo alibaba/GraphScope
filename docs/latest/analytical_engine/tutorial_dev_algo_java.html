@@ -700,7 +700,7 @@ In this tutorial, you will first try to explore GraphScope JavaSDK with some exa
 <span class="c1"># turn on this line to enable log verbose</span>
 <span class="c1"># graphscope.set_option(show_log=True) </span>
 
-<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Or launch session in k8s cluster&quot;&quot;&quot;</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span> 
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>    
@@ -840,11 +840,11 @@ parameters.</p>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;host&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;id&#39;</span><span class="p">]},</span> <span class="n">edges</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;connect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;dist&quot;</span><span class="p">]})</span>
 <span class="c1"># you can also use your own graph, refer to graphscope load graph tutorial.</span>
-<span class="c1"># But remember project to singel property graph before running algorithms.</span>
+<span class="c1"># But remember project to single property graph before running algorithms.</span>
 
 <span class="n">app</span><span class="o">=</span><span class="n">JavaApp</span><span class="p">(</span>
     <span class="n">full_jar_path</span><span class="o">=</span><span class="s2">&quot;{full/path/to/your/packed/jar}&quot;</span><span class="p">,</span> <span class="c1"># *-shaded.jar</span>
-    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;{fullly/qualified/class/name/of/your/app}&quot;</span><span class="p">,</span> <span class="c1"># com.a.b.c</span>
+    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;{fully/qualified/class/name/of/your/app}&quot;</span><span class="p">,</span> <span class="c1"># com.a.b.c</span>
 <span class="p">)</span>
 <span class="n">ctx</span><span class="o">=</span><span class="n">app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;{param string}&quot;</span><span class="p">)</span> <span class="c1"># a=b,c=d</span>
 </pre></div>
@@ -853,7 +853,7 @@ parameters.</p>
 </section>
 </section>
 <section id="graphscope-javasdk-with-github-template">
-<h2>GraphScope JavaSDK with Github Template<a class="headerlink" href="#graphscope-javasdk-with-github-template" title="Permalink to this heading">#</a></h2>
+<h2>GraphScope JavaSDK with GitHub Template<a class="headerlink" href="#graphscope-javasdk-with-github-template" title="Permalink to this heading">#</a></h2>
 <p>If you don’t bother creating new project to try <code class="docutils literal notranslate"><span class="pre">GRAPE-jdk</span></code>, we provide a template project <a class="reference external" href="https://github.com/zhanglei1949/GraphScope-Java-template">GraphScope-Java-template</a>. By click <strong>Use this template</strong>, you can create a new repository with same files and structure of the template repository. You can then try developing your own algorithms in this project.</p>
 </section>
 </section>
@@ -924,7 +924,7 @@ parameters.</p>
 <li><a class="reference internal" href="#submit-to-graphscope">Submit to GraphScope</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#graphscope-javasdk-with-github-template">GraphScope JavaSDK with Github Template</a></li>
+<li><a class="reference internal" href="#graphscope-javasdk-with-github-template">GraphScope JavaSDK with GitHub Template</a></li>
 </ul>
 </li>
 </ul>

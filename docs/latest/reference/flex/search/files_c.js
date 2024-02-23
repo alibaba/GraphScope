@@ -1,7 +1,5 @@
 var searchData=
 [
-  ['read_5ftransaction_2ecc_1481',['read_transaction.cc',['../read__transaction_8cc.html',1,'']]],
-  ['read_5ftransaction_2eh_1482',['read_transaction.h',['../read__transaction_8h.html',1,'']]],
-  ['result_2ecc_1483',['result.cc',['../result_8cc.html',1,'']]],
-  ['result_2eh_1484',['result.h',['../result_8h.html',1,'']]]
+  ['odps_5ffragment_5floader_2ecc_1491',['odps_fragment_loader.cc',['../odps__fragment__loader_8cc.html',1,'']]],
+  ['odps_5ffragment_5floader_2eh_1492',['odps_fragment_loader.h',['../odps__fragment__loader_8h.html',1,'']]]
 ];

@@ -1421,7 +1421,7 @@ g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1
 <span class="c1"># vertices and edges can be duplicated, and all vertices and edges along the path should be kept</span>
 g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1..10&quot;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;PATH_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;ARBITRARY&#39;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;RESULT_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;ALL_V_E&#39;</span><span class="o">)</span>
 <span class="c1"># expand hops within the range of [1, 10) along the outgoing edges,</span>
-<span class="c1"># vertices can not be duplicated and all vertices should be kept</span>
+<span class="c1"># vertices cannot be duplicated and all vertices should be kept</span>
 g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1..10&quot;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;PATH_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;SIMPLE&#39;</span><span class="o">)</span>.with<span class="o">(</span><span class="s1">&#39;RESULT_OPT&#39;</span>,<span class="w"> </span><span class="s1">&#39;ALL_V&#39;</span><span class="o">)</span>
 <span class="c1"># = g.V().out(&quot;1..10&quot;).with(&#39;PATH_OPT&#39;, &#39;ARBITRARY&#39;).with(&#39;RESULT_OPT&#39;, &#39;END_V&#39;)</span>
 g.V<span class="o">()</span>.out<span class="o">(</span><span class="s2">&quot;1..10&quot;</span><span class="o">)</span>

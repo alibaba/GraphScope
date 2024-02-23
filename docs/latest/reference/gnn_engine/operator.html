@@ -714,7 +714,7 @@ context. It is usually made up of some <strong>scalar</strong>
 “sampling strategy”. <code class="docutils literal notranslate"><span class="pre">tensors_</span></code> is the body of the context. It usually
 takes data <strong>vectors</strong>. For example, sampling one-hop neighbors for a
 batch of node ids, in which the ids should be put in <code class="docutils literal notranslate"><span class="pre">tensors_</span></code>.</p>
-<p>In distributed mode, the graph data will be partitioned into serveral
+<p>In distributed mode, the graph data will be partitioned into several
 servers. When a server receives an operator execution request, part of
 the request may be <strong>redirected</strong> to other servers. The data that needs
 to be partitioned should be placed into <code class="docutils literal notranslate"><span class="pre">tensors_</span></code>, and rewrite the
@@ -788,7 +788,7 @@ for details.</p>
 <span class="n">make</span> <span class="n">test</span>
 </pre></div>
 </div>
-<p>Usually, writting a C++ test is the fast way to check errors. After
+<p>Usually, writing a C++ test is the fast way to check errors. After
 that, you can make the python package and install it.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">python</span>
 <span class="n">pip</span> <span class="n">install</span> <span class="n">dist</span><span class="o">/</span><span class="n">your_wheel_name</span><span class="o">.</span><span class="n">whl</span> <span class="o">-</span><span class="n">U</span>

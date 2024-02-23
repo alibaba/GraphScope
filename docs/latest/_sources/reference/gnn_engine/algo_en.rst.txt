@@ -225,7 +225,7 @@ Next, we use ``LocalTFTrainer`` to train on a single-machine.
        return GCN(graph,
                   config['class_num'],
                   config['features_num'],
-                  config['batch_szie'],
+                  config['batch_size'],
                   ...)
      trainer = gl.LocalTFTrainer(model_fn, epoch=200)
      trainer.train()

@@ -63,7 +63,7 @@ only one such result is needed.
 
 ### Pattern Matching
 Different from the imperative traversal query, the `match()` step provides a
-declarative way of expressing the pattern matching queries. In other words, users only need to describe what the pattern is using using `match()`, and the engine will automatically derive the best-possible execution
+declarative way of expressing the pattern matching queries. In other words, users only need to describe what the pattern is using `match()`, and the engine will automatically derive the best-possible execution
 plans based on both algorithmic heuristics and cost estimation.
 
 :::{figure-md}

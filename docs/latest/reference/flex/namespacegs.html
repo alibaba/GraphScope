@@ -260,7 +260,7 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoaderFactory.html">LoaderFactory</a></td></tr>
-<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classgs_1_1LoaderFactory.html" title="LoaderFactory is a factory class to create IFragmentLoader. Support Using dynamicly built library as ...">LoaderFactory</a> is a factory class to create <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a>. Support Using dynamicly built library as plugin.  <a href="classgs_1_1LoaderFactory.html#details">More...</a><br /></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="classgs_1_1LoaderFactory.html" title="LoaderFactory is a factory class to create IFragmentLoader. Support Using dynamically built library a...">LoaderFactory</a> is a factory class to create <a class="el" href="classgs_1_1IFragmentLoader.html">IFragmentLoader</a>. Support Using dynamically built library as plugin.  <a href="classgs_1_1LoaderFactory.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -426,6 +426,11 @@ Typedefs</h2></td></tr>
 <tr class="separator:aec1a06c47ba9c4b2c5ece79caa510cb2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58247954262b7c6086b6d4fe84698f38"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a58247954262b7c6086b6d4fe84698f38">Allocator</a> = <a class="el" href="classgs_1_1ArenaAllocator.html">ArenaAllocator</a></td></tr>
 <tr class="separator:a58247954262b7c6086b6d4fe84698f38"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9d5077894799f55f9e42e173bf1e1bf5"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> = <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt;</td></tr>
+<tr class="separator:a9d5077894799f55f9e42e173bf1e1bf5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a06124c81fb0cc4e466e61ca2303e553f"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
+<tr class="memitem:a06124c81fb0cc4e466e61ca2303e553f"><td class="memTemplItemLeft" align="right" valign="top">using&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#a06124c81fb0cc4e466e61ca2303e553f">IndexerBuilderType</a> = <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt;</td></tr>
+<tr class="separator:a06124c81fb0cc4e466e61ca2303e553f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8ef628511d251bb752f19f3768662dac"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a8ef628511d251bb752f19f3768662dac">IntEmptyColumn</a> = <a class="el" href="classgs_1_1TypedEmptyColumn.html">TypedEmptyColumn</a>&lt; int32_t &gt;</td></tr>
 <tr class="separator:a8ef628511d251bb752f19f3768662dac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abbf16c3a7d35a47ad73e3fa546deaa8f"><td class="memItemLeft" align="right" valign="top">using&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#abbf16c3a7d35a47ad73e3fa546deaa8f">UIntEmptyColumn</a> = <a class="el" href="classgs_1_1TypedEmptyColumn.html">TypedEmptyColumn</a>&lt; uint32_t &gt;</td></tr>
@@ -567,9 +572,12 @@ Functions</h2></td></tr>
 <tr class="memitem:a7a9ee78a4264a78cedc11424321eea3b"><td class="memTemplParams" colspan="2">template&lt;typename COL_T &gt; </td></tr>
 <tr class="memitem:a7a9ee78a4264a78cedc11424321eea3b"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#a7a9ee78a4264a78cedc11424321eea3b">set_single_vertex_column</a> (<a class="el" href="classgs_1_1ColumnBase.html">gs::ColumnBase</a> *col, std::shared_ptr&lt; arrow::ChunkedArray &gt; array, const std::vector&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;vids)</td></tr>
 <tr class="separator:a7a9ee78a4264a78cedc11424321eea3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1dbadcd107150d1b8750e3cbbe0f0448"><td class="memTemplParams" colspan="2">template&lt;typename PK_T , typename EDATA_T &gt; </td></tr>
-<tr class="memitem:a1dbadcd107150d1b8750e3cbbe0f0448"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#a1dbadcd107150d1b8750e3cbbe0f0448">append_edges</a> (std::shared_ptr&lt; arrow::Array &gt; src_col, std::shared_ptr&lt; arrow::Array &gt; dst_col, const <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;src_indexer, const <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;dst_indexer, std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;edata_cols, const <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;edge_prop, std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;parsed_edges, std::vector&lt; int32_t &gt; &amp;ie_degree, std::vector&lt; int32_t &gt; &amp;oe_degree)</td></tr>
-<tr class="separator:a1dbadcd107150d1b8750e3cbbe0f0448"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a065d15473c906e99b2ac7a6203128018"><td class="memTemplParams" colspan="2">template&lt;typename PK_T , typename EDATA_T &gt; </td></tr>
+<tr class="memitem:a065d15473c906e99b2ac7a6203128018"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#a065d15473c906e99b2ac7a6203128018">_append</a> (bool is_dst, size_t cur_ind, std::shared_ptr&lt; arrow::Array &gt; col, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;indexer, std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;parsed_edges, std::vector&lt; int32_t &gt; &amp;degree)</td></tr>
+<tr class="separator:a065d15473c906e99b2ac7a6203128018"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4a41505fa95defd247fbe27bfe9eadbc"><td class="memTemplParams" colspan="2">template&lt;typename SRC_PK_T , typename DST_PK_T , typename EDATA_T &gt; </td></tr>
+<tr class="memitem:a4a41505fa95defd247fbe27bfe9eadbc"><td class="memTemplItemLeft" align="right" valign="top">static void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#a4a41505fa95defd247fbe27bfe9eadbc">append_edges</a> (std::shared_ptr&lt; arrow::Array &gt; src_col, std::shared_ptr&lt; arrow::Array &gt; dst_col, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;src_indexer, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;dst_indexer, std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;edata_cols, const <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;edge_prop, std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;parsed_edges, std::vector&lt; int32_t &gt; &amp;ie_degree, std::vector&lt; int32_t &gt; &amp;oe_degree)</td></tr>
+<tr class="separator:a4a41505fa95defd247fbe27bfe9eadbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af49fc41c77e505cec5a0a7736daa1157"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:af49fc41c77e505cec5a0a7736daa1157"><td class="memTemplItemLeft" align="right" valign="top"><a class="el" href="classgs_1_1TypedMutableCsrBase.html">TypedMutableCsrBase</a>&lt; EDATA_T &gt; *&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#af49fc41c77e505cec5a0a7736daa1157">create_typed_csr</a> (<a class="el" href="namespacegs.html#a1638c3d7a6e943eb0b6f287ac05f8db8">EdgeStrategy</a> es, <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> edge_property)</td></tr>
 <tr class="separator:af49fc41c77e505cec5a0a7736daa1157"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -848,6 +856,36 @@ Variables</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">using <a class="el" href="namespacegs.html#a6c9f600c366c6bd434bf66704ebe2fcf">gs::FloatEmptyColumn</a> = typedef <a class="el" href="classgs_1_1TypedEmptyColumn.html">TypedEmptyColumn</a>&lt;float&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a06124c81fb0cc4e466e61ca2303e553f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a06124c81fb0cc4e466e61ca2303e553f">&#9670;&nbsp;</a></span>IndexerBuilderType</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename KEY_T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="namespacegs.html#a06124c81fb0cc4e466e61ca2303e553f">gs::IndexerBuilderType</a> = typedef <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt;KEY_T, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&gt;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9d5077894799f55f9e42e173bf1e1bf5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9d5077894799f55f9e42e173bf1e1bf5">&#9670;&nbsp;</a></span>IndexerType</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">gs::IndexerType</a> = typedef <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt;<a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>&gt;</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1178,6 +1216,60 @@ template&lt;&gt; </div>
 
 </div>
 </div>
+<a id="a065d15473c906e99b2ac7a6203128018"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a065d15473c906e99b2ac7a6203128018">&#9670;&nbsp;</a></span>_append()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename PK_T , typename EDATA_T &gt; </div>
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::_append </td>
+          <td>(</td>
+          <td class="paramtype">bool&#160;</td>
+          <td class="paramname"><em>is_dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">size_t&#160;</td>
+          <td class="paramname"><em>cur_ind</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::shared_ptr&lt; arrow::Array &gt;&#160;</td>
+          <td class="paramname"><em>col</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;&#160;</td>
+          <td class="paramname"><em>indexer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>parsed_edges</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; int32_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8fadc8b9bbda22feb5c74509c51023f2"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8fadc8b9bbda22feb5c74509c51023f2">&#9670;&nbsp;</a></span>allocator_dir()</h2>
 
@@ -1204,13 +1296,13 @@ template&lt;&gt; </div>
 
 </div>
 </div>
-<a id="a1dbadcd107150d1b8750e3cbbe0f0448"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1dbadcd107150d1b8750e3cbbe0f0448">&#9670;&nbsp;</a></span>append_edges()</h2>
+<a id="a4a41505fa95defd247fbe27bfe9eadbc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4a41505fa95defd247fbe27bfe9eadbc">&#9670;&nbsp;</a></span>append_edges()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;typename PK_T , typename EDATA_T &gt; </div>
+template&lt;typename SRC_PK_T , typename DST_PK_T , typename EDATA_T &gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
@@ -1230,13 +1322,13 @@ template&lt;typename PK_T , typename EDATA_T &gt; </div>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;&#160;</td>
           <td class="paramname"><em>src_indexer</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a> &gt; &amp;&#160;</td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;&#160;</td>
           <td class="paramname"><em>dst_indexer</em>, </td>
         </tr>
         <tr>

@@ -696,9 +696,9 @@ identifying key functions and important code, and building and testing the analy
 </div>
 <p>Alternatively, you can also manually install all dependencies on your local machine.
 Please refer to <a class="reference internal" href="../development/dev_guide.html#dev-environment"><span class="std std-ref">Dev Environment</span></a> to find more options to get a dev environment.</p>
-<p>After the environment is prepared, clone the repository and enter the <code class="docutils literal notranslate"><span class="pre">analatical_engine</span></code> directory of the repository.</p>
+<p>After the environment is prepared, clone the repository and enter the <code class="docutils literal notranslate"><span class="pre">analytical_engine</span></code> directory of the repository.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/GraphScope.git
-<span class="nb">cd</span><span class="w"> </span>analatical_engine
+<span class="nb">cd</span><span class="w"> </span>analytical_engine
 </pre></div>
 </div>
 </section>
@@ -707,7 +707,7 @@ Please refer to <a class="reference internal" href="../development/dev_guide.htm
 <p>Since the analytical engine inherits from GRAPE, it requires libgrape-lite as a dependency.
 Please note that the core functionalities of libgrape-lite, such as graph structures, graph partitioners, workers,
 communication between workers, and applications, are heavily reused in the analytical engine of GraphScope.</p>
-<p>If you want to fully understand the analytcial engine, it is highly recommaned that you start from libgrape-lite.</p>
+<p>If you want to fully understand the analytical engine, it is highly recommended that you start from libgrape-lite.</p>
 <p>The code located in the <code class="docutils literal notranslate"><span class="pre">analytical_engine</span></code> directory functions like extensions to libgrape-lite, thereby making it full-fledged with the following enhancements:</p>
 <ul class="simple">
 <li><p>K8s support to enable management by the GraphScope coordinator;</p></li>

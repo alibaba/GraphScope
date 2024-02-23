@@ -1,8 +1,7 @@
 var searchData=
 [
-  ['table_2ecc_1496',['table.cc',['../table_8cc.html',1,'']]],
-  ['table_2eh_1497',['table.h',['../table_8h.html',1,'']]],
-  ['transaction_5futils_2eh_1498',['transaction_utils.h',['../transaction__utils_8h.html',1,'']]],
-  ['types_2ecc_1499',['types.cc',['../types_8cc.html',1,'']]],
-  ['types_2eh_1500',['types.h',['../storages_2rt__mutable__graph_2types_8h.html',1,'(Global Namespace)'],['../utils_2property_2types_8h.html',1,'(Global Namespace)']]]
+  ['read_5ftransaction_2ecc_1494',['read_transaction.cc',['../read__transaction_8cc.html',1,'']]],
+  ['read_5ftransaction_2eh_1495',['read_transaction.h',['../read__transaction_8h.html',1,'']]],
+  ['result_2ecc_1496',['result.cc',['../result_8cc.html',1,'']]],
+  ['result_2eh_1497',['result.h',['../result_8h.html',1,'']]]
 ];

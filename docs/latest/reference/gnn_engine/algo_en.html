@@ -885,7 +885,7 @@ iterator and a loss function.</p>
     <span class="k">return</span> <span class="n">GCN</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;class_num&#39;</span><span class="p">],</span>
                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;features_num&#39;</span><span class="p">],</span>
-               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;batch_szie&#39;</span><span class="p">],</span>
+               <span class="n">config</span><span class="p">[</span><span class="s1">&#39;batch_size&#39;</span><span class="p">],</span>
                <span class="o">...</span><span class="p">)</span>
   <span class="n">trainer</span> <span class="o">=</span> <span class="n">gl</span><span class="o">.</span><span class="n">LocalTFTrainer</span><span class="p">(</span><span class="n">model_fn</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
   <span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>

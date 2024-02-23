@@ -700,7 +700,7 @@ GraphScope图分析引擎上运行这些示例算法。</p>
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">JavaApp</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Or launch session in k8s cluster&quot;&quot;&quot;</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span>
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
@@ -733,7 +733,7 @@ GraphScope图分析引擎上运行这些示例算法。</p>
 </pre></div>
 </div>
 <p>用户在开发自己算法的过程中，可能会用到其他的第三方jar包。为了解决依赖jar包的版本问题，用户需要使用确保自己生成的jar包包含所有依赖的jar包。
-例如，用户可以使用maven插件 <cite>maven-shade-pluging</cite>.</p>
+例如，用户可以使用maven插件 <cite>maven-shade-plugin</cite>.</p>
 <div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="nt">&lt;plugin&gt;</span>
 <span class="w">    </span><span class="nt">&lt;groupId&gt;</span>org.apache.maven.plugins<span class="nt">&lt;/groupId&gt;</span>
 <span class="w">    </span><span class="nt">&lt;artifactId&gt;</span>maven-shade-plugin<span class="nt">&lt;/artifactId&gt;</span>
@@ -834,7 +834,7 @@ python3<span class="w"> </span>java-app-runner.py<span class="w"> </span>--app<s
 <span class="kn">from</span> <span class="nn">graphscope</span> <span class="kn">import</span> <span class="n">JavaApp</span>
 <span class="kn">from</span> <span class="nn">graphscope.dataset</span> <span class="kn">import</span> <span class="n">load_p2p_network</span>
 
-<span class="sd">&quot;&quot;&quot;Or lauch session in k8s cluster&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Or launch session in k8s cluster&quot;&quot;&quot;</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s1">&#39;hosts&#39;</span><span class="p">)</span>
 
 <span class="n">graph</span> <span class="o">=</span> <span class="n">load_p2p_network</span><span class="p">(</span><span class="n">sess</span><span class="p">)</span>
@@ -842,7 +842,7 @@ python3<span class="w"> </span>java-app-runner.py<span class="w"> </span>--app<s
 
 <span class="n">app</span><span class="o">=</span><span class="n">JavaApp</span><span class="p">(</span>
     <span class="n">full_jar_path</span><span class="o">=</span><span class="s2">&quot;{full/path/to/your/packed/jar}&quot;</span><span class="p">,</span>
-    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;{fullly/qualified/class/name/of/your/app}&quot;</span><span class="p">,</span>
+    <span class="n">java_app_class</span><span class="o">=</span><span class="s2">&quot;{fully/qualified/class/name/of/your/app}&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="n">ctx</span><span class="o">=</span><span class="n">app</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="s2">&quot;${param string}&quot;</span><span class="p">)</span>
 </pre></div>

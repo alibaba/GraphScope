@@ -11,7 +11,7 @@
 
     - CentOS 7+
     - Ubuntu 18.04+
-    - MacOS 12 (Intel/Apple Silicon)
+    - macOS 12 (Intel/Apple Silicon)
 
     对于分布式部署，需要用户拥有一个 Kubernetes 集群，GraphScope 在 **Kubernetes version >= v1.12.0+** 的环境上测试通过。
 

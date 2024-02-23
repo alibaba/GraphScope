@@ -847,7 +847,7 @@ curl -X GET  -H "Content-Type: application/json" "http://[host]/v1/graph/{graph_
 
 #### Description
 
-Update a procedure's metadata, enable/disable status, description. The procedure's name can not be modified.
+Update a procedure's metadata, enable/disable status, description. The procedure's name cannot be modified.
 
 
 #### HTTP Request

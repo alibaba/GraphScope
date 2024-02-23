@@ -829,7 +829,7 @@ To process such graphs, you can increase the number of workers, as well as the C
 </section>
 <section id="provide-a-kubeconfig-file-other-than-default">
 <h4>Provide a <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file other than default<a class="headerlink" href="#provide-a-kubeconfig-file-other-than-default" title="Permalink to this heading">#</a></h4>
-<p>If you want to deploy on a pre-existing cluster with a <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file located in a non-default location,
+<p>If you want to deploy on a preexisting cluster with a <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file located in a non-default location,
 they can manually specify the path to the <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_client_config</span><span class="o">=</span><span class="s1">&#39;/path/to/config&#39;</span><span class="p">)</span>
 </pre></div>

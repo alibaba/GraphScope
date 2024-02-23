@@ -128,6 +128,9 @@ Protected Member Functions</h2></td></tr>
 <tr class="memitem:a5968f8c95ecccfbea4cdc00f5d394f61"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T &gt; </td></tr>
 <tr class="memitem:a5968f8c95ecccfbea4cdc00f5d394f61"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a5968f8c95ecccfbea4cdc00f5d394f61">addVertexRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> v_label_id, const std::vector&lt; std::string &gt; &amp;v_files, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
 <tr class="separator:a5968f8c95ecccfbea4cdc00f5d394f61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae19540d2cf9a4f0570be8df9b2d861a4"><td class="memTemplParams" colspan="2">template&lt;typename SRC_PK_T , typename EDATA_T &gt; </td></tr>
+<tr class="memitem:ae19540d2cf9a4f0570be8df9b2d861a4"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#ae19540d2cf9a4f0570be8df9b2d861a4">_append_edges</a> (std::shared_ptr&lt; arrow::Array &gt; src_col, std::shared_ptr&lt; arrow::Array &gt; dst_col, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;src_indexer, const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;dst_indexer, std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;property_cols, const <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;edge_property, std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;parsed_edges, std::vector&lt; int32_t &gt; &amp;ie_degree, std::vector&lt; int32_t &gt; &amp;oe_degree)</td></tr>
+<tr class="separator:ae19540d2cf9a4f0570be8df9b2d861a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a663a7c186690b6eb1c3a13f23c04e634"><td class="memTemplParams" colspan="2">template&lt;typename EDATA_T &gt; </td></tr>
 <tr class="memitem:a663a7c186690b6eb1c3a13f23c04e634"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="classgs_1_1AbstractArrowFragmentLoader.html#a663a7c186690b6eb1c3a13f23c04e634">addEdgesRecordBatchImpl</a> (<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> src_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> dst_label_id, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a> e_label_id, const std::vector&lt; std::string &gt; &amp;e_files, std::function&lt; std::shared_ptr&lt; <a class="el" href="classgs_1_1IRecordBatchSupplier.html">IRecordBatchSupplier</a> &gt;(<a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, <a class="el" href="namespacegs.html#aec1a06c47ba9c4b2c5ece79caa510cb2">label_t</a>, const std::string &amp;, const <a class="el" href="classgs_1_1LoadingConfig.html">LoadingConfig</a> &amp;)&gt; supplier_creator)</td></tr>
 <tr class="separator:a663a7c186690b6eb1c3a13f23c04e634"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -222,6 +225,86 @@ Protected Attributes</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="ae19540d2cf9a4f0570be8df9b2d861a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae19540d2cf9a4f0570be8df9b2d861a4">&#9670;&nbsp;</a></span>_append_edges()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<div class="memtemplate">
+template&lt;typename SRC_PK_T , typename EDATA_T &gt; </div>
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void gs::AbstractArrowFragmentLoader::_append_edges </td>
+          <td>(</td>
+          <td class="paramtype">std::shared_ptr&lt; arrow::Array &gt;&#160;</td>
+          <td class="paramname"><em>src_col</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::shared_ptr&lt; arrow::Array &gt;&#160;</td>
+          <td class="paramname"><em>dst_col</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;&#160;</td>
+          <td class="paramname"><em>src_indexer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="namespacegs.html#a9d5077894799f55f9e42e173bf1e1bf5">IndexerType</a> &amp;&#160;</td>
+          <td class="paramname"><em>dst_indexer</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::shared_ptr&lt; arrow::Array &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>property_cols</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> &amp;&#160;</td>
+          <td class="paramname"><em>edge_property</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; std::tuple&lt; <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, <a class="el" href="namespacegs.html#a964c2419ecf69b632a1287e8761bba0c">vid_t</a>, EDATA_T &gt;&gt; &amp;&#160;</td>
+          <td class="paramname"><em>parsed_edges</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; int32_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>ie_degree</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::vector&lt; int32_t &gt; &amp;&#160;</td>
+          <td class="paramname"><em>oe_degree</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8368cd9a962c3479375db5be88378d1f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8368cd9a962c3479375db5be88378d1f">&#9670;&nbsp;</a></span>AddEdgesRecordBatch()</h2>
 

@@ -486,7 +486,7 @@ MathJax = {
 </section>
 <section id="gremlin-tinkerpop">
 <h2>Gremlin兼容性（对比TinkerPop）<a class="headerlink" href="#gremlin-tinkerpop" title="Permalink to this heading">#</a></h2>
-<p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>Websockets</em> 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
+<p>GIE支持Apache TinkerPop定义的属性图模型和Gremlin遍历查询，且实现了一个与TinkerPop 3.3和3.4版本兼容的 <em>WebSockets</em> 服务接口。除此之外，我们扩展了一些语法糖来进一步引入一些简洁明了的expression表示。下面我们列出当前实现和Apache TinkerPop规范的主要差一点（其中一些差异会有机会消除、另一些是目前GraphScope定位的场景差异造成的不同设计选择）。</p>
 <section id="id11">
 <h3>属性图模型约束<a class="headerlink" href="#id11" title="Permalink to this heading">#</a></h3>
 <p>目前的 GAIA 技术预览版利用了 <a class="reference external" href="https://github.com/v6d-io/v6d">Vineyard</a> 项目提供的分布式内存存储作为输入图，它支持一次载入 <em>不可修改</em> 的图模型数据，和图分片存储在分布式集群。当前设计有下面的一些限制：</p>
@@ -601,7 +601,7 @@ g.V().has(&quot;attrName&quot;, TextP.notEndingWith(&quot;substr&quot;))
 <li><p>Map（映射），如：</p></li>
 </ul>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="c1">//constant</span>
-<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">contant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">g</span><span class="p">.</span><span class="na">V</span><span class="p">().</span><span class="na">out</span><span class="p">().</span><span class="na">constant</span><span class="p">(</span><span class="s">&quot;aaa&quot;</span><span class="p">)</span>
 
 <span class="c1">//id</span>

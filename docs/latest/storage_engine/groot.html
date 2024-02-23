@@ -693,7 +693,7 @@ MathJax = {
 </section>
 <section id="known-limitation">
 <h2>Known Limitation<a class="headerlink" href="#known-limitation" title="Permalink to this heading">#</a></h2>
-<p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going foward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p>
+<p>Initially, the new persistent store is provided as a separate option from Vineyard, and it can accept Gremlin queries for data access. Going forward we hope to evolve them into an integrated hybrid graph store suitable for all kinds of workloads.</p>
 </section>
 <section id="deploy-groot">
 <h2>Deploy Groot<a class="headerlink" href="#deploy-groot" title="Permalink to this heading">#</a></h2>
@@ -1095,7 +1095,7 @@ helm<span class="w"> </span>install<span class="w"> </span>demo<span class="w"> 
 </pre></div>
 </div>
 <p>The first line of the data file is a header that describes the key of each field. The header is not required. If there is no header in the data file, you need to set skip.header to true in the data building process (For details, see params description in “Building a partitioned graph”).</p>
-<p>The rest lines are the data records. Each line represents one record. Data fields are seperated by a custom seperator (“|” in the example above). In the vertex data file person.csv, id field and name field are the primary-key and the property of the vertex type person respectively. In the edge data file person_knows_person.csv, person_id field is the primary-key of the source vertex, person_id_1 field is the primary-key of the destination vertex, date is the property of the edge type knows.</p>
+<p>The rest lines are the data records. Each line represents one record. Data fields are separated by a custom separator (“|” in the example above). In the vertex data file person.csv, id field and name field are the primary-key and the property of the vertex type person respectively. In the edge data file person_knows_person.csv, person_id field is the primary-key of the source vertex, person_id_1 field is the primary-key of the destination vertex, date is the property of the edge type knows.</p>
 <p>All the data fields will be parsed according to the data-type defined in the graph schema. If the input data field cannot be parsed correctly, data building process would be failed with corresponding errors.</p>
 </section>
 <section id="loading-process">
@@ -1232,7 +1232,7 @@ Else, please proceed to ingest and commit.</p>
 <span class="c1"># Update one vertex to new properties</span>
 <span class="k">def</span> <span class="nf">update_vertex_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">,</span> <span class="n">properties</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-<span class="c1"># Delele one vertex</span>
+<span class="c1"># Delete one vertex</span>
 <span class="k">def</span> <span class="nf">delete_vertex</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertex_pk</span><span class="p">:</span> <span class="n">VertexRecordKey</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
 <span class="c1"># Delete a list of vertices</span>
@@ -1253,7 +1253,7 @@ Else, please proceed to ingest and commit.</p>
 <span class="c1"># Delete a list of edges</span>
 <span class="k">def</span> <span class="nf">delete_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edge_pks</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span> <span class="k">pass</span>
 
-<span class="c1"># Make sure the snapshot is avaiable</span>
+<span class="c1"># Make sure the snapshot is available</span>
 <span class="k">def</span> <span class="nf">remote_flush</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span> <span class="k">pass</span>
 </pre></div>
 </div>
