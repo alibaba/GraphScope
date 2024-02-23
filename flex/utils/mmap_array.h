@@ -71,9 +71,13 @@ class mmap_array {
         size_(0),
         mmap_size_(0),
         sync_to_file_(false),
-        hugepage_prefered_(false)
-  {
+        hugepage_prefered_(false) {}
+
+  mmap_array(const mmap_array<T>& rhs) : fd_(-1) {
+    resize(rhs.size_);
+    memcpy(data_, rhs.data_, size_ * sizeof(T));
   }
+
   mmap_array(mmap_array&& rhs) : mmap_array() { swap(rhs); }
   ~mmap_array() {}
 
@@ -169,7 +173,7 @@ class mmap_array {
         if (data_ != MAP_FAILED) {
           FILE* fin = fopen(filename.c_str(), "rb");
           CHECK_EQ(fread(data_, sizeof(T), size_, fin), size_);
-	  fclose(fin);
+          fclose(fin);
         } else {
           LOG(ERROR) << "allocating hugepage failed, " << strerror(errno)
                      << ", try with normal pages";

@@ -48,4 +48,12 @@ public class StoreIngestClients extends RoleClients<StoreIngestClient> {
     public void clearIngest(int storeId, String path, CompletionCallback<Void> callback) {
         this.getClient(storeId).storeClearIngest(path, callback);
     }
+
+    public void compactDB(int storeId, CompletionCallback<Void> callback) {
+        this.getClient(storeId).storeCompact(callback);
+    }
+
+    public void reopenSecondary(int storeId, CompletionCallback<Void> callback) {
+        this.getClient(storeId).reopenSecondary(callback);
+    }
 }

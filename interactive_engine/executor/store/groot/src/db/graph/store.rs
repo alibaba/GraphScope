@@ -25,8 +25,8 @@ use crate::db::common::bytes::transform;
 use crate::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
 use crate::db::graph::table_manager::Table;
-use crate::db::storage::rocksdb::RocksDB;
-use crate::db::storage::{ExternalStorage, ExternalStorageBackup, RawBytes};
+use crate::db::storage::rocksdb::{RocksDB, RocksDBBackupEngine};
+use crate::db::storage::RawBytes;
 use crate::db::util::lock::GraphMutexLock;
 
 pub struct GraphStore {
@@ -34,15 +34,16 @@ pub struct GraphStore {
     meta: Meta,
     vertex_manager: VertexTypeManager,
     edge_manager: EdgeTypeManager,
-    storage: Arc<dyn ExternalStorage>,
+    storage: Arc<RocksDB>,
     data_root: String,
+    data_download_root: String,
     // ensure all modification to graph is in ascending order of snapshot id
     si_guard: AtomicIsize,
     lock: GraphMutexLock<()>,
 }
 
 pub struct GraphBackupEngine {
-    engine: Box<dyn ExternalStorageBackup>,
+    engine: Box<RocksDBBackupEngine>,
 }
 
 impl GraphBackup for GraphBackupEngine {
@@ -562,13 +563,13 @@ impl MultiVersionGraph for GraphStore {
     fn gc(&self, si: i64) -> GraphResult<()> {
         let vertex_tables = self.vertex_manager.gc(si)?;
         for vt in vertex_tables {
-            info!("gc vertex table {}", vt);
+            info!("garbage collect vertex table {}", vt);
             let table_prefix = vertex_table_prefix(vt);
             self.delete_table_by_prefix(table_prefix, true)?;
         }
         let edge_tables = self.edge_manager.gc(si)?;
         for et in edge_tables {
-            info!("gc edge table {}", et);
+            info!("garbage collect edge table {}", et);
             let out_table_prefix = edge_table_prefix(et, EdgeDirection::Out);
             self.delete_table_by_prefix(out_table_prefix, false)?;
         }
@@ -599,7 +600,6 @@ impl MultiVersionGraph for GraphStore {
         &self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32,
         unique_path: &str,
     ) -> GraphResult<bool> {
-        info!("committing data load from path {}", unique_path);
         let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -608,7 +608,9 @@ impl MultiVersionGraph for GraphStore {
         self.meta
             .commit_data_load(si, schema_version, target, table_id)?;
         let data_file_path =
-            format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
+            format!("{}/{}/part-r-{:0>5}.sst", self.data_download_root, unique_path, partition_id);
+        info!("committing data load from path {}", data_file_path);
+
         if Path::new(data_file_path.as_str()).exists() {
             if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
                 let size = metadata.len();
@@ -642,25 +644,24 @@ impl MultiVersionGraph for GraphStore {
 }
 
 impl GraphStore {
-    pub fn open(config: &GraphConfig, path: &str) -> GraphResult<Self> {
+    pub fn open(config: &GraphConfig) -> GraphResult<Self> {
+        let path = config
+            .get_storage_option("store.data.path")
+            .expect("invalid config, missing store.data.path");
         info!("open graph store at {} with config {:?}", path, config);
         match config.get_storage_engine() {
             "rocksdb" => {
-                let res = RocksDB::open(config.get_storage_options(), path).and_then(|db| {
+                let res = RocksDB::open(config.get_storage_options()).and_then(|db| {
                     let storage = Arc::new(db);
                     Self::init(config, storage, path)
                 });
                 res_unwrap!(res, open, config, path)
             }
             "rocksdb_as_secondary" => {
-                let secondary_path = config
-                    .get_storage_option("store.data.secondary.path")
-                    .expect("invalid config, missing store.data.secondary.path");
-                let res = RocksDB::open_as_secondary(config.get_storage_options(), path, secondary_path)
-                    .and_then(|db| {
-                        let storage = Arc::new(db);
-                        Self::init(config, storage, path)
-                    });
+                let res = RocksDB::open_as_secondary(config.get_storage_options()).and_then(|db| {
+                    let storage = Arc::new(db);
+                    Self::init(config, storage, path)
+                });
                 res_unwrap!(res, open, config, path)
             }
             unknown => {
@@ -675,16 +676,35 @@ impl GraphStore {
         self.storage.try_catch_up_with_primary()
     }
 
-    fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>, path: &str) -> GraphResult<Self> {
+    pub fn compact(&self) -> GraphResult<()> {
+        self.storage.compact()
+    }
+
+    pub fn reopen(&self, wait_sec: u64) -> GraphResult<()> {
+        self.storage.reopen(wait_sec)
+    }
+
+    fn init(config: &GraphConfig, storage: Arc<RocksDB>, path: &str) -> GraphResult<Self> {
         let meta = Meta::new(storage.clone());
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;
+        let data_root = path.to_string();
+        let mut download_root = "".to_string();
+        download_root = config
+            .get_storage_option("store.data.download.path")
+            .unwrap_or(&download_root)
+            .clone();
+        if download_root.is_empty() {
+            download_root = format!("{}/../{}", data_root, "download");
+        }
+
         let ret = GraphStore {
             config: config.clone(),
             meta,
             vertex_manager,
             edge_manager,
             storage,
-            data_root: path.to_string(),
+            data_root: data_root,
+            data_download_root: download_root,
             si_guard: AtomicIsize::new(0),
             lock: GraphMutexLock::new(()),
         };
@@ -1119,8 +1139,9 @@ mod tests {
     pub fn create_empty_graph(path: &str) -> GraphStore {
         let mut builder = GraphConfigBuilder::new();
         builder.set_storage_engine("rocksdb");
+        builder.add_storage_option("store.data.path", path);
         let config = builder.build();
-        GraphStore::open(&config, path).unwrap()
+        GraphStore::open(&config).unwrap()
     }
 }
 
@@ -1155,7 +1176,8 @@ mod bench {
     pub fn create_empty_graph(path: &str) -> GraphStore {
         let mut builder = GraphConfigBuilder::new();
         builder.set_storage_engine("rocksdb");
+        builder.add_storage_option("store.data.path", path);
         let config = builder.build();
-        GraphStore::open(&config, path).unwrap()
+        GraphStore::open(&config).unwrap()
     }
 }
