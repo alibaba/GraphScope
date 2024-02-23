@@ -58,6 +58,7 @@ run:
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
 	  -Dgremlin.script.language.name=${gremlin.script.language.name} \
+	  -Dphysical.opt.config=${physical.opt.config} \
 	  com.alibaba.graphscope.GraphServer ${config.path}
 
 # make physical_plan config.path='<path to the config file>'

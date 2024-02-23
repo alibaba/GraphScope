@@ -18,8 +18,8 @@ package com.alibaba.graphscope.common.ir.planner.rules;
 
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpandDegree;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -48,11 +48,13 @@ public abstract class DegreeFusionRule<C extends RelRule.Config> extends RelRule
     protected RelNode transform(
             GraphLogicalAggregate count, GraphLogicalExpand expand, GraphBuilder builder) {
         RelNode expandDegree =
-                GraphLogicalExpandDegree.create(
+                GraphPhysicalExpand.create(
                         (GraphOptCluster) expand.getCluster(),
                         ImmutableList.of(),
                         expand.getInput(0),
                         expand,
+                        null,
+                        GraphOpt.PhysicalExpandOpt.DEGREE,
                         null);
         builder.push(expandDegree);
         Preconditions.checkArgument(
