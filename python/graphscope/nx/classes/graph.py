@@ -224,7 +224,7 @@ class Graph(_GraphBase):
     Create a graph with GraphScope graph object. First we init a GraphScope graph
     with two node labels: person and comment`
 
-    >>> g = graphscope.g(directed=False).add_vertice("persion.csv", label="person").add_vertice("comment.csv", label="comment")
+    >>> g = graphscope.g(directed=False).add_vertice("person.csv", label="person").add_vertice("comment.csv", label="comment")
 
     create a graph with g, set default_label to 'person'
 
