@@ -129,11 +129,11 @@ public class Pattern {
                 } else {
                     consideredGroup.add(srcVertexOrder);
                 }
-                if (!srcPatternVertex.isDistinct()) {
+                if (srcPatternVertex.getVertexTypeIds().size() != 1) {
                     throw new UnsupportedOperationException(
                             "In ExtendStep, srcPatternVertex "
                                     + srcPatternVertex
-                                    + " is not supported");
+                                    + " is of basic type");
                 }
                 Integer srcVertexType = srcPatternVertex.getVertexTypeIds().get(0);
                 // Get all adjacent edges from srcVertex to targetVertex

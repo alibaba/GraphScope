@@ -50,11 +50,6 @@ public class FuzzyPatternEdge extends PatternEdge {
     }
 
     @Override
-    public boolean isDistinct() {
-        return false;
-    }
-
-    @Override
     public String toString() {
         return getSrcVertex().getId()
                 + "->"

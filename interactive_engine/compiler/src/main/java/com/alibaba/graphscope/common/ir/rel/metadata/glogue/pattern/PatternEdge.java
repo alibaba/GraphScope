@@ -24,8 +24,6 @@ public abstract class PatternEdge {
 
     public abstract List<EdgeTypeId> getEdgeTypeIds();
 
-    public abstract boolean isDistinct();
-
     public boolean isBoth() {
         return this.isBoth;
     }

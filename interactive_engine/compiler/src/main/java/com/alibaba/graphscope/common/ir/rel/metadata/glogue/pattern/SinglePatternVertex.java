@@ -32,9 +32,4 @@ public class SinglePatternVertex extends PatternVertex {
     public Integer getId() {
         return id;
     }
-
-    @Override
-    public boolean isDistinct() {
-        return true;
-    }
 }

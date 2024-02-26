@@ -30,9 +30,4 @@ public class FuzzyPatternVertex extends PatternVertex {
     public List<Integer> getVertexTypeIds() {
         return vertexTypeIds;
     }
-
-    @Override
-    public boolean isDistinct() {
-        return false;
-    }
 }

@@ -15,9 +15,6 @@ public abstract class PatternVertex {
 
     public abstract List<Integer> getVertexTypeIds();
 
-    /// whether this vertex is distinct, i.e., single-typed vertex without any other constraints
-    public abstract boolean isDistinct();
-
     public IsomorphismChecker getIsomorphismChecker() {
         return isomorphismChecker;
     }

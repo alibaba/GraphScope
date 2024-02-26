@@ -31,11 +31,11 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
         for (Pattern pattern : roots) {
             // single vertex pattern
             PatternVertex singleVertexPattern = pattern.getVertexSet().iterator().next();
-            if (!singleVertexPattern.isDistinct()) {
+            if (singleVertexPattern.getVertexTypeIds().size() != 1) {
                 throw new UnsupportedOperationException(
                         "In GlogueBasicCardinalityEstimationImpl creation, singleVertexPattern "
                                 + singleVertexPattern
-                                + " is not distinct.");
+                                + " is not of basic type.");
             }
             Integer vertexTypeId = singleVertexPattern.getVertexTypeIds().get(0);
             Double singleVertexPatternCount = schema.getVertexTypeCardinality(vertexTypeId);

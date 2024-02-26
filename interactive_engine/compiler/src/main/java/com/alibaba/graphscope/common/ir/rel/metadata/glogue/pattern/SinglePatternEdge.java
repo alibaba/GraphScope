@@ -52,9 +52,4 @@ public class SinglePatternEdge extends PatternEdge {
     public Integer getId() {
         return id;
     }
-
-    @Override
-    public boolean isDistinct() {
-        return true;
-    }
 }
