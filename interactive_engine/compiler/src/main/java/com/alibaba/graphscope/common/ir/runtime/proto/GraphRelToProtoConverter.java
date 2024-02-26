@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalAggregate;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalDedupBy;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
@@ -66,6 +67,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     private final RexBuilder rexBuilder;
     private final Configs graphConfig;
     private GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder;
+    private final boolean isPartitioned;
 
     public GraphRelToProtoConverter(
             boolean isColumnId,
@@ -75,6 +77,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         this.rexBuilder = GraphPlanner.rexBuilderFactory.apply(configs);
         this.graphConfig = configs;
         this.physicalBuilder = physicalBuilder;
+        this.isPartitioned =
+                !(PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length == 1
+                        && PegasusConfig.PEGASUS_WORKER_NUM.get(configs) == 1);
     }
 
     @Override
@@ -108,6 +113,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(expand.getRowType(), isColumnId));
+        if (isPartitioned) {
+            addRepartitionToAnother(expand.getStartAlias().getAliasId());
+        }
         physicalBuilder.addPlan(oprBuilder.build());
         return expand;
     }
@@ -165,6 +173,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             .setVertex(auxiliaBuilder));
             auxiliaOprBuilder.addAllMetaData(
                     Utils.physicalProtoRowType(getV.getRowType(), isColumnId));
+            if (isPartitioned) {
+                addRepartitionToAnother(getV.getAliasId());
+            }
             physicalBuilder.addPlan(auxiliaOprBuilder.build());
             return getV;
         }
@@ -226,7 +237,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         }
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setPath(pathExpandBuilder));
-
+        if (isPartitioned) {
+            addRepartitionToAnother(pxd.getStartAlias().getAliasId());
+        }
         physicalBuilder.addPlan(oprBuilder.build());
         return pxd;
     }
@@ -241,6 +254,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setEdge(edgeExpand));
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(physicalExpand.getRowType(), isColumnId));
+        if (isPartitioned) {
+            addRepartitionToAnother(physicalExpand.getStartAlias().getAliasId());
+        }
         physicalBuilder.addPlan(oprBuilder.build());
         return physicalExpand;
     }
@@ -255,6 +271,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(auxilia));
         oprBuilder.addAllMetaData(
                 Utils.physicalProtoRowType(physicalGetV.getRowType(), isColumnId));
+        if (isPartitioned) {
+            addRepartitionToAnother(physicalGetV.getStartAlias().getAliasId());
+        }
         physicalBuilder.addPlan(oprBuilder.build());
         return physicalGetV;
     }
@@ -672,6 +691,16 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         addQueryTables(paramsBuilder, getGraphLabels(tableScan).getLabelsEntry());
         addQueryFilters(paramsBuilder, tableScan.getFilters());
         return paramsBuilder;
+    }
+
+    private void addRepartitionToAnother(int reaprtitionKey) {
+        GraphAlgebraPhysical.PhysicalOpr.Builder repartitionOprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.Repartition repartition =
+                Utils.protoShuffleRepartition(reaprtitionKey);
+        repartitionOprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setRepartition(repartition));
+        physicalBuilder.addPlan(repartitionOprBuilder.build());
     }
 
     @Override

@@ -27,6 +27,7 @@ import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
+import com.alibaba.graphscope.gaia.proto.GraphAlgebra.GroupBy.AggFunc.Aggregate;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
@@ -619,5 +620,14 @@ public abstract class Utils {
                                 + rowType.getSqlTypeName()
                                 + " to List<MetaData> is unsupported");
         }
+    }
+
+    public static GraphAlgebraPhysical.Repartition protoShuffleRepartition(int keyId) {
+        com.google.protobuf.Int32Value shuffleKey = asAliasId(keyId);
+        GraphAlgebraPhysical.Repartition.Shuffle shuffle =
+                GraphAlgebraPhysical.Repartition.Shuffle.newBuilder()
+                        .setShuffleKey(shuffleKey)
+                        .build();
+        return GraphAlgebraPhysical.Repartition.newBuilder().setToAnother(shuffle).build();
     }
 }
