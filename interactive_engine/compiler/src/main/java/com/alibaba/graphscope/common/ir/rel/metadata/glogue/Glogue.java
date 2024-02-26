@@ -4,7 +4,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternMapping;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.PatternVertex;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatternVertex;
-import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 import org.javatuples.Pair;
@@ -32,11 +31,6 @@ public class Glogue {
         this.glogueGraph = new DirectedPseudograph<Pattern, GlogueEdge>(GlogueEdge.class);
         this.roots = new ArrayList<>();
         this.maxPatternId = 0;
-    }
-
-    // Construct NewGlogue from a graph schema with default max pattern size = 3
-    public Glogue create(GlogueSchema schema) {
-        return this.create(schema, 3);
     }
 
     // Construct NewGlogue from a graph schema with given max pattern size
@@ -109,8 +103,8 @@ public class Glogue {
         if (vertex.isPresent()) {
             return getGlogueOutEdges(vertex.get());
         } else {
-            throw new RuntimeException(
-                    "pattern not found in glogue graph. queries pattern " + pattern);
+            logger.warn("pattern not found in glogue graph. queries pattern " + pattern);
+            return new HashSet<>();
         }
     }
 
@@ -119,8 +113,8 @@ public class Glogue {
         if (vertex.isPresent()) {
             return getGlogueInEdges(vertex.get());
         } else {
-            throw new RuntimeException(
-                    "pattern not found in glogue graph. queries pattern " + pattern);
+            logger.warn("pattern not found in glogue graph. queries pattern " + pattern);
+            return new HashSet<>();
         }
     }
 
@@ -180,10 +174,9 @@ public class Glogue {
     }
 
     /// Compute the mapping from src pattern to dst pattern.
-    /// The mapping preserves srcPatternVertexOrder -> dstPatternVertexOrder.
+    /// The mapping preserves srcPatternVertexOrder -> dstPatternVertexOrder,
+    /// and the target vertex order will be assigned.
     /// Notice that, the dstPattern should be extended from srcPattern.
-    /// Besides, during the mapping computation, the target vertex order will be
-    /// assigned.
     private Map<Integer, Integer> computePatternMapping(
             Pattern srcPattern, Pattern dstPattern, ExtendStep extendStep) {
         Map<Integer, Integer> srcToDstPatternMapping = new HashMap<>();
@@ -202,7 +195,6 @@ public class Glogue {
         return srcToDstPatternMapping;
     }
 
-    // TODO: implements interface in Calcite
     public Double getRowCount(Pattern pattern) {
         return this.glogueCardinalityEstimation.getCardinality(pattern);
     }
@@ -226,50 +218,5 @@ public class Glogue {
             s += this.glogueCardinalityEstimation.toString();
         }
         return s;
-    }
-
-    public static void main(String[] args) {
-        GlogueSchema g = new GlogueSchema().DefaultGraphSchema();
-        Glogue gl = new Glogue().create(g, 3);
-        Pattern p = new Pattern();
-
-        // p1 -> s0 <- p2 + p1 -> p2
-        PatternVertex v0 = new SinglePatternVertex(1, 0);
-        PatternVertex v1 = new SinglePatternVertex(0, 1);
-        PatternVertex v2 = new SinglePatternVertex(0, 2);
-        // p -> s
-        EdgeTypeId e = new EdgeTypeId(0, 1, 1);
-        // p -> p
-        EdgeTypeId e1 = new EdgeTypeId(0, 0, 0);
-        p.addVertex(v0);
-        p.addVertex(v1);
-        p.addVertex(v2);
-        p.addEdge(v1, v0, e);
-        p.addEdge(v2, v0, e);
-        p.addEdge(v1, v2, e1);
-        p.reordering();
-
-        // p0 -> s2 <- p1 + p0 -> p1
-        Pattern p2 = new Pattern();
-        PatternVertex v00 = new SinglePatternVertex(0, 0);
-        PatternVertex v11 = new SinglePatternVertex(0, 1);
-        PatternVertex v22 = new SinglePatternVertex(1, 2);
-        p2.addVertex(v00);
-        p2.addVertex(v11);
-        p2.addVertex(v22);
-        p2.addEdge(v00, v22, e);
-        p2.addEdge(v11, v22, e);
-        p2.addEdge(v00, v11, e1);
-        p2.reordering();
-
-        System.out.println("Pattern: " + p);
-
-        Double count = gl.getRowCount(p);
-        System.out.println("estimated count: " + count);
-
-        System.out.println("Pattern2: " + p2);
-
-        Double count2 = gl.getRowCount(p2);
-        System.out.println("estimated count: " + count2);
     }
 }

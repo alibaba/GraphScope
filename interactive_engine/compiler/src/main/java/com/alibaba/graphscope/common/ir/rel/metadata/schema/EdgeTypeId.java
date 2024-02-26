@@ -10,10 +10,6 @@ public class EdgeTypeId {
         this.edgeType = new Triplet<>(srcLabelId, dstLabelId, edgeLabelId);
     }
 
-    public EdgeTypeId(VertexTypeId srcLabelId, VertexTypeId dstLabelId, int edgeLabelId) {
-        this.edgeType = new Triplet<>(srcLabelId.vertexType, dstLabelId.vertexType, edgeLabelId);
-    }
-
     public Integer getSrcLabelId() {
         return edgeType.getValue0();
     }
@@ -28,10 +24,6 @@ public class EdgeTypeId {
 
     public Triplet<Integer, Integer, Integer> getEdgeType() {
         return edgeType;
-    }
-
-    public static EdgeTypeId of(VertexTypeId sourceType, VertexTypeId targetType, int labelId) {
-        return new EdgeTypeId(sourceType, targetType, labelId);
     }
 
     @Override

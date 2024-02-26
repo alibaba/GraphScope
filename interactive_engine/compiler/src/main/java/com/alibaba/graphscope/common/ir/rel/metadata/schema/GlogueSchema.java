@@ -17,8 +17,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.rmi.server.ExportException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,16 +67,22 @@ public class GlogueSchema {
         return List.copyOf(this.schemaGraph.getAllEdges(source, target));
     }
 
-    public Graph<Integer, EdgeTypeId> getSchemaGraph() {
-        return this.schemaGraph;
-    }
-
     public Double getVertexTypeCardinality(Integer vertexType) {
-        return this.vertexTypeCardinality.get(vertexType);
+        Double cardinality = this.vertexTypeCardinality.get(vertexType);
+        if (cardinality == null) {
+            return 0.0;
+        } else {
+            return cardinality;
+        }
     }
 
     public Double getEdgeTypeCardinality(EdgeTypeId edgeType) {
-        return this.edgeTypeCardinality.get(edgeType);
+        Double cardinality = this.edgeTypeCardinality.get(edgeType);
+        if (cardinality == null) {
+            return 0.0;
+        } else {
+            return cardinality;
+        }
     }
 
     // modern graph schema
@@ -176,24 +180,5 @@ public class GlogueSchema {
                 new DefaultGraphSchema(vertexList, edgeList, Maps.newHashMap());
         GlogueSchema g = new GlogueSchema(graphSchema, vertexTypeCardinality, edgeTypeCardinality);
         return g;
-    }
-
-    public static void main(String[] args) throws URISyntaxException, ExportException {
-        GlogueSchema g =
-                new GlogueSchema()
-                        .SchemaFromFile(
-                                "/workspaces/GraphScope/interactive_engine/compiler/src/main/java/com/alibaba/graphscope/common/ir/rel/metadata/schema/resource/ldbc1_statistics.txt");
-        for (Integer vertexType : g.getVertexTypes()) {
-            System.out.println(
-                    "cardinality of " + vertexType + ": " + g.getVertexTypeCardinality(vertexType));
-        }
-        for (EdgeTypeId edgeType : g.getEdgeTypes()) {
-            System.out.println(
-                    "cardinality of " + edgeType + ": " + g.getEdgeTypeCardinality(edgeType));
-        }
-        System.out.println("edges of place");
-        g.getAdjEdgeTypes(0).forEach(System.out::println);
-        System.out.println("edges of person");
-        g.getAdjEdgeTypes(1).forEach(System.out::println);
     }
 }
