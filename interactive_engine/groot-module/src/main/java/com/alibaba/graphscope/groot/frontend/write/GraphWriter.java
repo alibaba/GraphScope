@@ -196,7 +196,6 @@ public class GraphWriter implements MetricsAgent {
     }
 
     public List<Long> replayWALFrom(long offset, long timestamp) throws IOException {
-        List<Long> allIds = new ArrayList<>();
         return kafkaAppender.replayDMLRecordsFrom(offset, timestamp);
     }
 
