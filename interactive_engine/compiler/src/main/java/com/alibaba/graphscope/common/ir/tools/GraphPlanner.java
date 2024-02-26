@@ -23,6 +23,7 @@ import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
+import com.alibaba.graphscope.common.ir.planner.GraphHepPlanner;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
@@ -235,7 +236,7 @@ public class GraphPlanner {
                                 hepBuilder.addRuleInstance(
                                         k.withRelBuilderFactory(graphBuilderFactory).toRule());
                             });
-                    return new HepPlanner(hepBuilder.build());
+                    return new GraphHepPlanner(hepBuilder.build());
                 case CBO:
                 default:
                     throw new UnsupportedOperationException(

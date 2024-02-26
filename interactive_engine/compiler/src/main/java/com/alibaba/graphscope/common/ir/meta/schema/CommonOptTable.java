@@ -43,7 +43,7 @@ public class CommonOptTable implements RelOptTable {
 
     @Override
     public List<String> getQualifiedName() {
-        return ImmutableList.of("common#" + this.common.getId());
+        return ImmutableList.of("common#" + this.common.getRelDigest().hashCode());
     }
 
     public RelNode getCommon() {

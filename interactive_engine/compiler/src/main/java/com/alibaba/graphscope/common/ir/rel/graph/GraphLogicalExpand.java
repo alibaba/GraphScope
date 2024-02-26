@@ -64,7 +64,7 @@ public class GraphLogicalExpand extends AbstractBindableTableScan {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("opt", getOpt());
+        return super.explainTerms(pw).item("opt", getOpt().name());
     }
 
     @Override

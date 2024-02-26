@@ -61,7 +61,7 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw)
-                .item("opt", getOpt())
+                .item("opt", getOpt().name())
                 .itemIf("uniqueKeyFilters", uniqueKeyFilters, uniqueKeyFilters != null);
     }
 

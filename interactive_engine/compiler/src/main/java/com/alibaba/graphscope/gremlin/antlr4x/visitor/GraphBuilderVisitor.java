@@ -674,6 +674,26 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         return builder;
     }
 
+    @Override
+    public GraphBuilder visitTraversalMethod_union(
+            GremlinGSParser.TraversalMethod_unionContext ctx) {
+        GremlinGSParser.NestedTraversalExprContext exprCtx = ctx.nestedTraversalExpr();
+        NestedTraversalRelVisitor visitor = new NestedTraversalRelVisitor(builder);
+        List<RelNode> branches = Lists.newArrayList();
+        for (int i = 0; i < exprCtx.getChildCount(); ++i) {
+            if (!(exprCtx.getChild(i) instanceof GremlinGSParser.NestedTraversalContext)) continue;
+            GremlinGSParser.NestedTraversalContext nestedCtx =
+                    (GremlinGSParser.NestedTraversalContext) exprCtx.getChild(i);
+            branches.add(visitor.visitNestedTraversal(nestedCtx));
+        }
+        Preconditions.checkArgument(branches.size() > 0, "union should have at least one branch");
+        builder.build();
+        for (RelNode branch : branches) {
+            builder.push(branch);
+        }
+        return (GraphBuilder) builder.union(true, branches.size());
+    }
+
     private GremlinGSParser.NestedTraversalContext getAntiContext(
             GremlinGSParser.NestedTraversalContext ctx) {
         GremlinGSParser.ChainedTraversalContext chainedCtx = ctx.chainedTraversal();
