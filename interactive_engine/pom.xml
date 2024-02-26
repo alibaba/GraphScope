@@ -79,7 +79,6 @@
         <module>executor</module>
         <module>groot-module</module>
         <module>groot-server</module>
-        <module>lgraph</module>
         <module>groot-client</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
