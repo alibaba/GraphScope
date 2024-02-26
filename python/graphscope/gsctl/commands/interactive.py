@@ -720,7 +720,6 @@ def alertreceiver(filename):  # noqa: F811
         return
     try:
         receiver = read_yaml_file(filename)
-        print(receiver)
         register_receiver(receiver)
     except Exception as e:
         click.secho(f"Failed to create alert receiver: {str(e)}", fg="red")

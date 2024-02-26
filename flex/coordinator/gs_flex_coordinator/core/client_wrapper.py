@@ -72,6 +72,12 @@ class ClientWrapper(object):
         self._pickle_path = os.path.join(WORKSPACE, "graphs_info.pickle")
         # recover
         self._try_to_recover_from_disk()
+        # sync graphs info every 60s
+        self._sync_graphs_info_job = (
+            schedule.every(60)
+            .seconds.do(self._sync_graphs_info_impl)
+            .tag("sync", "graphs info")
+        )
 
     def _try_to_recover_from_disk(self):
         try:
@@ -82,17 +88,7 @@ class ClientWrapper(object):
         except Exception as e:
             logger.warn("Failed to recover graphs info: %s", str(e))
         # set default graph info
-        self._set_default_graph_info()
-
-    def _set_default_graph_info(self):
-        if SOLUTION == "INTERACTIVE":
-            for g in self.list_graphs():
-                if g.name not in self._graphs_info:
-                    self._graphs_info[g.name] = GraphInfo(
-                        name=g.name, creation_time=COORDINATOR_STARTING_TIME
-                    )
-        elif SOLUTION == "GRAPHSCOPE_INSIGHT":
-            pass
+        self._sync_graphs_info_impl()
 
     def _pickle_graphs_info_impl(self):
         try:
@@ -100,6 +96,20 @@ class ClientWrapper(object):
                 pickle.dump(self._graphs_info, f)
         except Exception as e:
             logger.warn("Failed to dump graphs info: %s", str(e))
+
+    def _sync_graphs_info_impl(self):
+        if SOLUTION == "INTERACTIVE":
+            rlts = {}
+            for g in self.list_graphs():
+                if g.name in self._graphs_info:
+                    rlts[g.name] = self._graphs_info[g.name]
+                else:
+                    rlts[g.name] = GraphInfo(
+                        name=g.name, creation_time=COORDINATOR_STARTING_TIME
+                    )
+            self._graphs_info = rlts
+        elif SOLUTION == "GRAPHSCOPE_INSIGHT":
+            pass
 
     def _initialize_client(self):
         service_initializer = {
