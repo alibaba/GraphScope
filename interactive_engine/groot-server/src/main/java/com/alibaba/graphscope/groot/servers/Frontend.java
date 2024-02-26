@@ -106,8 +106,6 @@ public class Frontend extends NodeBase {
 
         BatchDdlClient batchDdlClient =
                 new BatchDdlClient(new DdlExecutors(), snapshotCache, schemaWriter);
-        StoreStateClients storeStateClients =
-                new StoreStateClients(this.channelManager, RoleType.STORE, StoreStateClient::new);
 
         this.metaService = new DefaultMetaService(configs);
 
@@ -117,8 +115,7 @@ public class Frontend extends NodeBase {
                         metricsAggregator,
                         storeIngestClients,
                         this.metaService,
-                        batchDdlClient,
-                        storeStateClients);
+                        batchDdlClient);
 
         FrontendSnapshotService frontendSnapshotService =
                 new FrontendSnapshotService(snapshotCache);
