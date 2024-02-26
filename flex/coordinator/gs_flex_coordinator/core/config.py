@@ -89,8 +89,16 @@ CLUSTER_TYPE = os.environ.get("CLUSTER_TYPE", "HOSTS")
 HQPS_ADMIN_SERVICE_PORT = os.environ.get("HIACTOR_ADMIN_SERVICE_PORT", 7777)
 
 
-# coordinator starting time
-COORDINATOR_STARTING_TIME = datetime.datetime.now()
+# creation time
+CREATION_TIME_PATH = os.path.join(WORKSPACE, "creation_time")
+if os.path.exists(CREATION_TIME_PATH):
+    with open(CREATION_TIME_PATH, "r") as f:
+        time_str = f.readline()
+        CREATION_TIME = datetime.datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+else:
+    CREATION_TIME = datetime.datetime.now()
+    with open(CREATION_TIME_PATH, "w") as f:
+        f.write(CREATION_TIME.strftime("%Y-%m-%d %H:%M:%S"))
 
 
 # kubernetes

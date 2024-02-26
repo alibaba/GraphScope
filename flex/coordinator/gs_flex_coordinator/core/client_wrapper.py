@@ -23,36 +23,23 @@ import os
 import pickle
 import socket
 import threading
-from typing import List
-from typing import Union
+from typing import List, Union
 
 import psutil
-from gs_flex_coordinator.core.config import CLUSTER_TYPE
-from gs_flex_coordinator.core.config import COORDINATOR_STARTING_TIME
-from gs_flex_coordinator.core.config import DATASET_WORKSPACE
-from gs_flex_coordinator.core.config import INSTANCE_NAME
-from gs_flex_coordinator.core.config import SOLUTION
-from gs_flex_coordinator.core.config import WORKSPACE
+
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
+                                             DATASET_WORKSPACE, INSTANCE_NAME,
+                                             SOLUTION, WORKSPACE)
 from gs_flex_coordinator.core.insight import init_groot_client
 from gs_flex_coordinator.core.interactive import init_hqps_client
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import GraphInfo
-from gs_flex_coordinator.core.utils import decode_datetimestr
-from gs_flex_coordinator.core.utils import encode_datetime
-from gs_flex_coordinator.core.utils import get_current_time
-from gs_flex_coordinator.models import DeploymentInfo
-from gs_flex_coordinator.models import EdgeType
-from gs_flex_coordinator.models import Graph
-from gs_flex_coordinator.models import GrootGraph
-from gs_flex_coordinator.models import GrootSchema
-from gs_flex_coordinator.models import JobStatus
-from gs_flex_coordinator.models import ModelSchema
-from gs_flex_coordinator.models import NodeStatus
-from gs_flex_coordinator.models import Procedure
-from gs_flex_coordinator.models import SchemaMapping
-from gs_flex_coordinator.models import ServiceStatus
-from gs_flex_coordinator.models import StartServiceRequest
-from gs_flex_coordinator.models import VertexType
+from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
+                                            encode_datetime, get_current_time)
+from gs_flex_coordinator.models import (DeploymentInfo, EdgeType, Graph,
+                                        GrootGraph, GrootSchema, JobStatus,
+                                        ModelSchema, NodeStatus, Procedure,
+                                        SchemaMapping, ServiceStatus,
+                                        StartServiceRequest, VertexType)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -104,9 +91,7 @@ class ClientWrapper(object):
                 if g.name in self._graphs_info:
                     rlts[g.name] = self._graphs_info[g.name]
                 else:
-                    rlts[g.name] = GraphInfo(
-                        name=g.name, creation_time=COORDINATOR_STARTING_TIME
-                    )
+                    rlts[g.name] = GraphInfo(name=g.name, creation_time=CREATION_TIME)
             self._graphs_info = rlts
         elif SOLUTION == "GRAPHSCOPE_INSIGHT":
             pass
@@ -231,6 +216,7 @@ class ClientWrapper(object):
             "cluster_type": CLUSTER_TYPE,
             "version": __version__,
             "solution": SOLUTION,
+            "creation_time": encode_datetime(CREATION_TIME),
             "graphs_info": graphs_info,
         }
         return DeploymentInfo.from_dict(info)

@@ -1032,6 +1032,8 @@ components:
           enum:
             - INTERACTIVE
             - GRAPHSCOPE_INSIGHT
+        creation_time:
+          type: string
         graphs_info:
           type: object
           additionalProperties:

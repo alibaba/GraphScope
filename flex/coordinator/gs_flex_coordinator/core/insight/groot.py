@@ -17,6 +17,7 @@
 #
 
 import logging
+from typing import List
 
 from gs_flex_coordinator.core.config import CLUSTER_TYPE
 from gs_flex_coordinator.core.insight.graph import get_groot_graph
@@ -62,6 +63,9 @@ class GrootClient(object):
 
     def import_groot_schema(self, graph_name: str, schema: dict) -> str:
         return self._graph.import_schema(schema)
+
+    def list_jobs(self) -> List[dict]:
+        return []
 
 
 def init_groot_client():

@@ -1312,6 +1312,7 @@ components:
       x-body-name: procedure
     DeploymentInfo:
       example:
+        creation_time: creation_time
         graphs_info:
           key:
             creation_time: creation_time
@@ -1340,6 +1341,9 @@ components:
           - INTERACTIVE
           - GRAPHSCOPE_INSIGHT
           title: solution
+          type: string
+        creation_time:
+          title: creation_time
           type: string
         graphs_info:
           additionalProperties:
