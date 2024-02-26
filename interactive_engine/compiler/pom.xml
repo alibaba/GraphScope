@@ -147,6 +147,9 @@
     <profiles>
         <profile>
             <id>procedure-generator</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
             <build>
                 <resources>
                     <resource>
