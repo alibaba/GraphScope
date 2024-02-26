@@ -271,9 +271,9 @@ class Cache:
         self.succ_attr_cache = ()
         self.pred_cache = ()
         self.pred_attr_cache = ()
-        self.node_attr_align = (
-            self.succ_align
-        ) = self.succ_attr_align = self.pred_align = self.pred_attr_align = False
+        self.node_attr_align = self.succ_align = self.succ_attr_align = (
+            self.pred_align
+        ) = self.pred_attr_align = False
         self.get_node_attr.cache_clear()
         self.get_successors.cache_clear()
         self.get_succ_attr.cache_clear()
