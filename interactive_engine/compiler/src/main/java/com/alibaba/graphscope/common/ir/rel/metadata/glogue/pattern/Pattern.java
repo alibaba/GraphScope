@@ -23,7 +23,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 
 import org.jgrapht.Graph;
-import org.jgrapht.GraphMapping;
 import org.jgrapht.alg.connectivity.ConnectivityInspector;
 import org.jgrapht.alg.isomorphism.VF2GraphIsomorphismInspector;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -231,13 +230,11 @@ public class Pattern {
             PatternVertex srcVertex = newPattern.getVertexByOrder(srcVertexOrder);
             EdgeTypeId edgeTypeId = extendEdge.getEdgeTypeId();
             if (dir.equals(PatternDirection.OUT)) {
-                logger.debug("To extend: " + srcVertex + " -> " + targetVertex + " " + edgeTypeId);
                 PatternEdge edge =
                         new SinglePatternEdge(
                                 srcVertex, targetVertex, edgeTypeId, newPattern.maxEdgeId);
                 newPattern.addEdge(srcVertex, targetVertex, edge);
             } else {
-                logger.debug("To extend: " + targetVertex + " -> " + srcVertex + " " + edgeTypeId);
                 PatternEdge edge =
                         new SinglePatternEdge(
                                 targetVertex, srcVertex, edgeTypeId, newPattern.maxEdgeId);
@@ -275,7 +272,7 @@ public class Pattern {
     /**
      * Remove a vertex with its adjacent edges from pattern, and return the connected components of the remaining pattern.
      * @param vertex
-     * @return
+     * @return the connected components of the remaining pattern
      */
     public List<Set<PatternVertex>> removeVertex(PatternVertex vertex) {
         boolean removed = this.patternGraph.removeVertex(vertex);
@@ -319,6 +316,11 @@ public class Pattern {
         return added;
     }
 
+    /**
+     * Get the vertex with the given vertex id
+     * @param vertexId
+     * @return the vertex with the given vertex id
+     */
     public PatternVertex getVertexById(Integer vertexId) {
         for (PatternVertex vertex : this.patternGraph.vertexSet()) {
             if (vertex.getId().equals(vertexId)) {
@@ -328,14 +330,29 @@ public class Pattern {
         return null;
     }
 
+    /**
+     * Get the vertex with the given vertex order
+     * @param vertexId
+     * @return the vertex with the given vertex order
+     */
     public PatternVertex getVertexByOrder(int vertexId) {
         return this.patternOrder.getVertexByOrder(vertexId);
     }
 
+    /**
+     * Get the vertex order of the given vertex
+     * @param vertex
+     * @return the vertex order of the given vertex
+     */
     public Integer getVertexOrder(PatternVertex vertex) {
         return this.patternOrder.getVertexOrder(vertex);
     }
 
+    /**
+     * Get the vertex group of the given vertex
+     * @param vertex
+     * @return the vertex group of the given vertex
+     */
     public Integer getVertexGroup(PatternVertex vertex) {
         return this.patternOrder.getVertexGroup(vertex);
     }
@@ -387,30 +404,14 @@ public class Pattern {
         } else if (!this.preCheck(other)) {
             return false;
         } else {
-            Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings =
-                    getIsomorphicMappings(other, vertexComparator, edgeComparator);
-            return mappings.hasNext();
+            VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector =
+                    new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
+                            this.patternGraph,
+                            other.patternGraph,
+                            vertexComparator,
+                            edgeComparator);
+            return isomorphismInspector.isomorphismExists();
         }
-    }
-
-    public Optional<PatternMapping> getIsomorphicMapping(Pattern other) {
-        Iterator<GraphMapping<PatternVertex, PatternEdge>> mappings =
-                getIsomorphicMappings(other, vertexTypeComparator, edgeTypeComparator);
-        if (mappings.hasNext()) {
-            return Optional.of(new PatternMapping(mappings.next()));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    private Iterator<GraphMapping<PatternVertex, PatternEdge>> getIsomorphicMappings(
-            Pattern other,
-            Comparator<PatternVertex> vertexComparator,
-            Comparator<PatternEdge> edgeComparator) {
-        VF2GraphIsomorphismInspector<PatternVertex, PatternEdge> isomorphismInspector =
-                new VF2GraphIsomorphismInspector<PatternVertex, PatternEdge>(
-                        this.patternGraph, other.patternGraph, vertexComparator, edgeComparator);
-        return isomorphismInspector.getMappings();
     }
 
     @Override
@@ -422,7 +423,6 @@ public class Pattern {
         return false;
     }
 
-    // TODO: fix this, it is not correct to use hashCode to compare two patterns.
     @Override
     public int hashCode() {
         return this.patternGraph.hashCode();

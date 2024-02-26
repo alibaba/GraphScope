@@ -37,11 +37,12 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
     private static Logger logger =
             LoggerFactory.getLogger(GlogueBasicCardinalityEstimationImpl.class);
 
-    public GlogueBasicCardinalityEstimationImpl() {
+    public GlogueBasicCardinalityEstimationImpl(Glogue glogue, GlogueSchema schema) {
         this.patternCardinality = new HashMap<Pattern, Double>();
+        create(glogue, schema);
     }
 
-    public GlogueBasicCardinalityEstimationImpl create(Glogue glogue, GlogueSchema schema) {
+    private GlogueBasicCardinalityEstimationImpl create(Glogue glogue, GlogueSchema schema) {
         Deque<Pattern> patternQueue = new ArrayDeque<>();
         List<Pattern> roots = glogue.getRoots();
         for (Pattern pattern : roots) {
@@ -56,7 +57,6 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
             Integer vertexTypeId = singleVertexPattern.getVertexTypeIds().get(0);
             Double singleVertexPatternCount = schema.getVertexTypeCardinality(vertexTypeId);
             this.patternCardinality.put(pattern, singleVertexPatternCount);
-            logger.debug("root vertex pattern: " + pattern + ": " + singleVertexPatternCount);
             patternQueue.add(pattern);
         }
 
@@ -71,24 +71,16 @@ public class GlogueBasicCardinalityEstimationImpl implements GlogueCardinalityEs
                 if (this.containsPattern(newPattern)) {
                     // if the cardinality of the pattern is already computed previously, compute the
                     // pattern extension cost.
-                    logger.debug("pattern already computed: " + newPattern);
-                    // sort extend edges based on weights
                     Double extendStepWeight = estimateExtendWeight(schema, extendStep);
                     extendStep.setWeight(extendStepWeight);
                 } else {
                     // otherwise, compute the cardinality of the pattern, together with the pattern
                     // extension cost.
-                    logger.debug("extend step: " + extendStep.toString());
                     Pair<Double, Double> patternCountWithWeight =
                             estimatePatternCountWithExtendWeight(schema, patternCount, extendStep);
                     this.patternCardinality.put(newPattern, patternCountWithWeight.getValue0());
                     extendStep.setWeight(patternCountWithWeight.getValue1());
                     patternQueue.add(newPattern);
-                    logger.debug(
-                            "new pattern: "
-                                    + newPattern
-                                    + ": "
-                                    + patternCountWithWeight.getValue0());
                 }
             }
         }

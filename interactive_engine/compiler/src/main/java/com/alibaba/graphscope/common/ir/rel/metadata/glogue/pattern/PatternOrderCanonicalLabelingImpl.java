@@ -221,7 +221,6 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
                 }
             }
         }
-        // TODO: more filtering conditions?
         return true;
     }
 }
