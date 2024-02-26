@@ -195,3 +195,32 @@ message GetStoreStateResponse {
     map<int32, PartitionStatePb> partitionStates = 1;
 }
 
+message IngestDataRequest {
+  string dataPath = 1;
+  map<string, string> config = 2;
+}
+
+message IngestDataResponse {
+}
+
+message ClearIngestRequest {
+  string dataPath = 1;
+}
+
+message ClearIngestResponse {
+  bool success = 1;
+}
+
+message CompactDBRequest {
+}
+
+message CompactDBResponse {
+  bool success = 1;
+}
+
+message ReopenSecondaryRequest {
+}
+
+message ReopenSecondaryResponse {
+  bool success = 1;
+}

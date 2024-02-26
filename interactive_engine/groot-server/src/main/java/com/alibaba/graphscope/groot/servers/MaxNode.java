@@ -33,7 +33,6 @@ public class MaxNode extends NodeBase {
     private KafkaTestCluster kafkaTestCluster;
     private final NodeBase coordinator;
     private final List<NodeBase> frontends = new ArrayList<>();
-    private final List<NodeBase> ingestors = new ArrayList<>();
     private final List<NodeBase> stores = new ArrayList<>();
 
     public MaxNode(Configs configs) throws Exception {
@@ -49,7 +48,6 @@ public class MaxNode extends NodeBase {
         }
 
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
-        int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
 
         Configs baseConfigs =
@@ -71,14 +69,6 @@ public class MaxNode extends NodeBase {
                             .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
                             .build();
             this.frontends.add(new Frontend(frontendConfigs));
-        }
-        for (int i = 0; i < ingestorCount; i++) {
-            Configs ingestConfigs =
-                    Configs.newBuilder(baseConfigs)
-                            .put(CommonConfig.ROLE_NAME.getKey(), RoleType.INGESTOR.getName())
-                            .put(CommonConfig.NODE_IDX.getKey(), String.valueOf(i))
-                            .build();
-            this.ingestors.add(new Ingestor(ingestConfigs));
         }
         for (int i = 0; i < storeCount; i++) {
             Configs storeConfigs =
@@ -115,14 +105,6 @@ public class MaxNode extends NodeBase {
                                 logger.info("[" + frontend.getName() + "] started");
                             }));
         }
-        for (NodeBase ingestor : this.ingestors) {
-            startThreads.add(
-                    new Thread(
-                            () -> {
-                                ingestor.start();
-                                logger.info("[" + ingestor.getName() + "] started");
-                            }));
-        }
 
         for (Thread startThread : startThreads) {
             startThread.start();
@@ -139,9 +121,6 @@ public class MaxNode extends NodeBase {
 
     @Override
     public void close() throws IOException {
-        for (NodeBase ingestor : this.ingestors) {
-            ingestor.close();
-        }
         for (NodeBase frontend : this.frontends) {
             frontend.close();
         }

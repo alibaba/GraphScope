@@ -3,7 +3,7 @@
  */
 
 /**
- * Guildelines for exception handling
+ * Guidelines for exception handling
  * 1. How to throw
  *    APSARA_THROW(the_exception_to_show, description_string)
  *    e.g. APSARA_THROW(ParameterInvalidException, "Cannot be empty string");
@@ -20,7 +20,7 @@
  * details. By default, it returns the description string when you construct the
  * exception. GetStackTrace(): call stack when the exception is thrown.
  *    ToString(): return a string describing:
- *        a) where the exception is thown (if available)
+ *        a) where the exception is thrown (if available)
  *        b) the exception class name
  *        c) the content of GetMessage
  *        d) stack trace

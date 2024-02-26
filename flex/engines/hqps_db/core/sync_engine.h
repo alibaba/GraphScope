@@ -318,7 +318,7 @@ class SyncEngine : public BaseEngine {
       size_t limit = INT_MAX) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
-    // Modifiy offsets.
+    // Modify offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandE<T...>(
         graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
@@ -327,7 +327,7 @@ class SyncEngine : public BaseEngine {
     // create new context node, update offsets.
     return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), alias_to_use);
-    // old context will be abondon here.
+    // old context will be abandoned here.
   }
 
   /// @brief //////// Edge Expand to Edge, with multiple dst vertex labels.
@@ -358,7 +358,7 @@ class SyncEngine : public BaseEngine {
       size_t limit = INT_MAX) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
-    // Modifiy offsets.
+    // Modify offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::template EdgeExpandE<T...>(
         graph, select_node, edge_expand_opt.dir_, edge_expand_opt.edge_label_,
@@ -367,7 +367,7 @@ class SyncEngine : public BaseEngine {
     // create new context node, update offsets.
     return ctx.template AddNode<append_opt>(
         std::move(pair.first), std::move(pair.second), alias_to_use);
-    // old context will be abondon here.
+    // old context will be abandoned here.
   }
 
   template <AppendOpt opt, int alias_to_use, typename CTX_HEAD_T, int cur_alias,
@@ -380,7 +380,7 @@ class SyncEngine : public BaseEngine {
           edge_expand_opt) {
     // Unwrap params here.
     auto& select_node = gs::Get<alias_to_use>(ctx);
-    // Modifiy offsets.
+    // Modify offsets.
     // pass select node by reference.
     auto pair = EdgeExpand<GRAPH_INTERFACE>::EdgeExpandV(
         graph, select_node, edge_expand_opt.direction_,
@@ -390,7 +390,28 @@ class SyncEngine : public BaseEngine {
     // create new context node, update offsets.
     return ctx.template AddNode<opt>(std::move(pair.first),
                                      std::move(pair.second), alias_to_use);
-    // old context will be abondon here.
+    // old context will be abandoned here.
+  }
+
+  template <AppendOpt opt, int alias_to_use, typename CTX_HEAD_T, int cur_alias,
+            int base_tag, typename... CTX_PREV, typename LabelT,
+            typename EDGE_FILTER_T>
+  static auto EdgeExpandV(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
+      EdgeExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T>&& edge_expand_opt) {
+    // Unwrap params here.
+    auto& select_node = gs::Get<alias_to_use>(ctx);
+    // Modify offsets.
+    // pass select node by reference.
+    auto pair = EdgeExpand<GRAPH_INTERFACE>::EdgeExpandV(
+        graph, select_node, edge_expand_opt.direction_,
+        edge_expand_opt.edge_label_triplets_,
+        std::move(edge_expand_opt.edge_filter_));
+    // create new context node, update offsets.
+    return ctx.template AddNode<opt>(std::move(pair.first),
+                                     std::move(pair.second), alias_to_use);
+    // old context will be abandoned here.
   }
 
   //////////////////////////////////////Path Expand/////////////////////////
@@ -499,6 +520,32 @@ class SyncEngine : public BaseEngine {
     // old context will be abandon here.
   }
 
+  /// Expand to Path
+  template <AppendOpt opt, int alias_to_use, typename CTX_HEAD_T, int cur_alias,
+            int base_tag, typename... CTX_PREV, typename LabelT,
+            typename EDGE_FILTER_T, size_t get_v_num_labels,
+            typename VERTEX_FILTER_T>
+  static auto PathExpandP(
+      const GRAPH_INTERFACE& graph,
+      Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
+      PathExpandVMultiTripletOpt<LabelT, EDGE_FILTER_T, get_v_num_labels,
+                                 VERTEX_FILTER_T>&& path_expand_opt) {
+    if (path_expand_opt.path_opt_ != PathOpt::Arbitrary) {
+      LOG(FATAL) << "Only support Arbitrary path now";
+    }
+    if (path_expand_opt.result_opt_ != ResultOpt::EndV) {
+      LOG(FATAL) << "Only support EndV now";
+    }
+    auto& select_node = gs::Get<alias_to_use>(ctx);
+    auto pair = PathExpand<GRAPH_INTERFACE>::PathExpandP(
+        graph, select_node, std::move(path_expand_opt));
+
+    // create new context node, update offsets.
+    return ctx.template AddNode<opt>(std::move(pair.first),
+                                     std::move(pair.second), alias_to_use);
+    // old context will be abandon here.
+  }
+
   // get no props, just filter
   template <
       AppendOpt opt, int alias_to_use, typename CTX_HEAD_T, int cur_alias,
@@ -571,7 +618,7 @@ class SyncEngine : public BaseEngine {
 
   //////////////////////////////////////Project/////////////////////////
   // Project current relations to new columns, append or not.
-  // TODO: add type infere back:
+  // TODO: add type inference back:
   //      typename RES_T = typename ProjectResT<
   // is_append, Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>,
   // PROJECT_OPT>::result_t
@@ -760,7 +807,7 @@ class SyncEngine : public BaseEngine {
 
   //////////////////////////////////////Select/Filter/////////////////////////
   // Select with head node. The type doesn't change
-  // select can possiblely applied on multiple tags
+  // select can possibly applied on multiple tags
   // (!CTX_HEAD_T::is_row_vertex_set) && (!CTX_HEAD_T::is_two_label_set) &&
   template <
       int... in_col_id, typename CTX_HEAD_T, int cur_alias, int base_tag,
@@ -826,7 +873,7 @@ class SyncEngine : public BaseEngine {
   }
 
   //////////////////////////////////////Group/////////////////////////
-  // We currently support group with one key, and possiblely multiple values.
+  // We currently support group with one key, and possibly multiple values.
   // create a brand new context type.
   // group count is included in this implementation.
   template <typename CTX_HEAD_T, int cur_alias, int base_tag,

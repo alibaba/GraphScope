@@ -1,6 +1,7 @@
 """
 Tests for closeness centrality.
 """
+
 import pytest
 from networkx.testing import almost_equal
 

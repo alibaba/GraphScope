@@ -46,19 +46,19 @@ public class ClientService extends ClientGrpc.ClientImplBase {
 
     private final SnapshotCache snapshotCache;
     private final MetricsAggregator metricsAggregator;
-    private final StoreIngestor storeIngestor;
+    private final StoreIngestClients storeIngestor;
     private final MetaService metaService;
     private final BatchDdlClient batchDdlClient;
 
-    private final StoreStateFetcher storeStateFetcher;
+    private final StoreStateClients storeStateFetcher;
 
     public ClientService(
             SnapshotCache snapshotCache,
             MetricsAggregator metricsAggregator,
-            StoreIngestor storeIngestor,
+            StoreIngestClients storeIngestor,
             MetaService metaService,
             BatchDdlClient batchDdlClient,
-            StoreStateFetcher storeStateFetcher) {
+            StoreStateClients storeStateFetcher) {
         this.snapshotCache = snapshotCache;
         this.metricsAggregator = metricsAggregator;
         this.storeIngestor = storeIngestor;
@@ -426,6 +426,93 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                 responseObserver.onError(t);
                             } else {
                                 responseObserver.onNext(ClearIngestResponse.newBuilder().build());
+                                responseObserver.onCompleted();
+                            }
+                        }
+                    });
+        }
+    }
+
+    @Override
+    public void reopenSecondary(
+            ReopenSecondaryRequest request,
+            StreamObserver<ReopenSecondaryResponse> responseObserver) {
+        logger.info("Reopen secondary");
+        int storeCount = this.metaService.getStoreCount();
+        AtomicInteger counter = new AtomicInteger(storeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (int i = 0; i < storeCount; i++) {
+            this.storeIngestor.reopenSecondary(
+                    i,
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                finish(null);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error("failed reopen secondary", t);
+                            finish(t);
+                        }
+
+                        private void finish(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            logger.info("reopen secondary finished. Error [" + t + "]");
+                            if (t != null) {
+                                responseObserver.onError(t);
+                            } else {
+                                ReopenSecondaryResponse res =
+                                        ReopenSecondaryResponse.newBuilder()
+                                                .setSuccess(true)
+                                                .build();
+                                responseObserver.onNext(res);
+                                responseObserver.onCompleted();
+                            }
+                        }
+                    });
+        }
+    }
+
+    @Override
+    public void compactDB(
+            CompactDBRequest request, StreamObserver<CompactDBResponse> responseObserver) {
+        logger.info("Compact DB");
+        int storeCount = this.metaService.getStoreCount();
+        AtomicInteger counter = new AtomicInteger(storeCount);
+        AtomicBoolean finished = new AtomicBoolean(false);
+        for (int i = 0; i < storeCount; i++) {
+            this.storeIngestor.compactDB(
+                    i,
+                    new CompletionCallback<Void>() {
+                        @Override
+                        public void onCompleted(Void res) {
+                            if (!finished.get() && counter.decrementAndGet() == 0) {
+                                finish(null);
+                            }
+                        }
+
+                        @Override
+                        public void onError(Throwable t) {
+                            logger.error("failed compact", t);
+                            finish(t);
+                        }
+
+                        private void finish(Throwable t) {
+                            if (finished.getAndSet(true)) {
+                                return;
+                            }
+                            logger.info("compact finished. Error [" + t + "]");
+                            if (t != null) {
+                                responseObserver.onError(t);
+                            } else {
+                                CompactDBResponse res =
+                                        CompactDBResponse.newBuilder().setSuccess(true).build();
+                                responseObserver.onNext(res);
                                 responseObserver.onCompleted();
                             }
                         }

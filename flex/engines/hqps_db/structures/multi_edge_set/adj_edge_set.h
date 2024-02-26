@@ -174,8 +174,9 @@ class AdjEdgeSetIter<GI, VID_T, grape::EmptyType> {
  public:
   using self_type_t = AdjEdgeSetIter<GI, VID_T, grape::EmptyType>;
   using adj_t = typename GI::template adj_t<>;
-  using adj_list_array_t = typename GI::template adj_list_array_t<>;
-  using adj_list_t = typename GI::template adj_list_t<>;
+  using adj_list_array_t =
+      typename GI::template adj_list_array_t<grape::EmptyType>;
+  using adj_list_t = typename GI::template adj_list_t<grape::EmptyType>;
   using adj_list_iter_t = typename adj_list_t::iterator;
   using ele_tuple_t = std::tuple<VID_T, VID_T, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, VID_T, grape::EmptyType>;
@@ -368,7 +369,7 @@ class AdjEdgeSet {
     LOG(WARNING) << "No implemented";
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         PropNameArray<PropT...>& prop_names) {
@@ -398,8 +399,9 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
   using self_type_t = AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType>;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   using flat_t = FlatEdgeSet<VID_T, LabelT, grape::EmptyType>;
-  using adj_list_array_t = typename GI::template adj_list_array_t<>;
-  using adj_list_t = typename GI::template adj_list_t<>;
+  using adj_list_array_t =
+      typename GI::template adj_list_array_t<grape::EmptyType>;
+  using adj_list_t = typename GI::template adj_list_t<grape::EmptyType>;
   using adj_list_iter_t = typename adj_list_t::iterator;
   using ele_tuple_t = std::tuple<VID_T, adj_list_iter_t>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, adj_list_iter_t>;
@@ -485,7 +487,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
     LOG(WARNING) << "No implemented";
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         PropNameArray<PropT...>& prop_names) {

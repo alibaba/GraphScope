@@ -195,48 +195,6 @@ frontend:
   ##
   schedulerName: ""
 
-## GraphScope Ingestor parameters
-##
-ingestor:
-  replicaCount: 2
-  ## GraphScope store container's resource requests and limits
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  ##
-  resources: {}
-
-  ## GraphScope store Service parameters
-  ##
-  service:
-    type: ClusterIP
-    port: 55555
-    annotations: {}
-
-  ## @param hostAliases pods host aliases
-  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-  ##
-  hostAliases: []
-  ## @param hostNetwork Specify if host network should be enabled for pods
-  ##
-  hostNetwork: false
-  ## @param hostIPC Specify if host IPC should be enabled for pods
-  ##
-  hostIPC: false
-  ## @param podLabels Extra labels for pods
-  ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-  ##
-  podLabels: {}
-  ## @param podAnnotations Extra annotations for pods
-  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  ##
-  podAnnotations: {}
-  ## @param podAffinityPreset Pod affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ##
-
-  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
-  ##
-  schedulerName: ""
-
 ## GraphScope Coordinator parameters
 ##
 coordinator:
@@ -498,11 +456,6 @@ javaOpts: ""
 rpcMaxBytesMb: 20
 
 discoveryMode: "file"
-
-## Ingestor Config
-ingestorQueueBufferMaxCount: 102400
-ingestorSenderBufferMaxCount: 102400
-ingestorSenderOperationMaxCount: 102400
 
 ## Coordinator Config
 snapshotIncreaseIntervalMs: 1000

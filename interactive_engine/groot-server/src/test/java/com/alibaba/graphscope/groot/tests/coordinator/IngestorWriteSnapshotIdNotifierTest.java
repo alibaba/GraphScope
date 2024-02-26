@@ -28,7 +28,7 @@ public class IngestorWriteSnapshotIdNotifierTest {
     @Test
     void testNotifier() {
         Configs configs =
-                Configs.newBuilder().put(CommonConfig.INGESTOR_NODE_COUNT.getKey(), "1").build();
+                Configs.newBuilder().put(CommonConfig.FRONTEND_NODE_COUNT.getKey(), "1").build();
         RoleClients<IngestorSnapshotClient> roleClients = mock(RoleClients.class);
         IngestorSnapshotClient ingestorSnapshotClient = mock(IngestorSnapshotClient.class);
         when(roleClients.getClient(0)).thenReturn(ingestorSnapshotClient);

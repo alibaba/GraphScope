@@ -383,7 +383,7 @@ impl<D, F: BufferFactory<D>> Drop for BufferPool<D, F> {
 }
 
 impl<D, F: BufferFactory<D>> BufferFactory<D> for BufferPool<D, F> {
-    fn create(&mut self, batch_size: usize) -> Option<Buffer<D>> {
+    fn create(&mut self, _batch_size: usize) -> Option<Buffer<D>> {
         // This method is only called by BufferPool, batch_size and self.batch_size are always same
         // assert_eq!(batch_size, self.batch_size);
         if let Some(inner) = self.fetch() {

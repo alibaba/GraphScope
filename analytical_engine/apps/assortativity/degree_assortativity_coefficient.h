@@ -145,7 +145,7 @@ class DegreeAssortativity
    * @brief get the degree of vertex
    *
    * @param frag
-   * @param veretx
+   * @param vertex
    * @param type IN or OUT
    * @param ctx
    */

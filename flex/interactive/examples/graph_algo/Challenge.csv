@@ -1,5 +1,5 @@
 id|challenge
-0|Load Balance
-1|Communication Overhead
-2|Parallelism
+0|Parallelism
+1|Load Balance
+2|Communication Overhead
 3|Bandwidth

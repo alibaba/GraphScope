@@ -16,7 +16,10 @@ package com.alibaba.graphscope.groot.wal.readonly;
 import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogWriter;
 
+import org.apache.kafka.clients.producer.RecordMetadata;
+
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 public class ReadOnlyLogWriter implements LogWriter {
     private long offset = 0;
@@ -25,8 +28,16 @@ public class ReadOnlyLogWriter implements LogWriter {
 
     @Override
     public long append(LogEntry logEntry) throws IOException {
+        return append(0, logEntry);
+    }
+
+    public long append(int partition, LogEntry logEntry) throws IOException {
         offset += 1;
         return offset;
+    }
+
+    public Future<RecordMetadata> appendAsync(int partition, LogEntry logEntry) throws IOException {
+        return null;
     }
 
     @Override

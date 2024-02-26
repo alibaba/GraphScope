@@ -1,4 +1,4 @@
-name: Build GraphScope Wheels on MacOS
+name: Build GraphScope Wheels on macOS
 
 # on: [push, pull_request]
 on:
@@ -185,7 +185,7 @@ jobs:
       run: |
         . ~/.graphscope_env
         python3 -m pip install libclang
-        git clone --single-branch -b v0.20.2 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
+        git clone --single-branch -b v0.20.3 --depth=1 https://github.com/v6d-io/v6d.git /tmp/v6d
         cd /tmp/v6d
         git submodule update --init
         cmake .  -DCMAKE_INSTALL_PREFIX=/usr/local \
@@ -245,7 +245,7 @@ jobs:
       env:
         PYTHON: ${{ matrix.python-version }}
       run: |
-        # move wheels into one floder to upload to PyPI
+        # move wheels into one folder to upload to PyPI
         mkdir ${GITHUB_WORKSPACE}/upload_pypi
 
         cd ${GITHUB_WORKSPACE}/artifacts

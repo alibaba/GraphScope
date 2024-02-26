@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "flex/engines/hqps_db/core/null_record.h"
-#include "flex/storages/rt_mutable_graph/mutable_csr.h"
+#include "flex/storages/rt_mutable_graph/csr/mutable_csr.h"
 #include "flex/utils/property/types.h"
 
 namespace gs {
@@ -40,7 +40,7 @@ class EdgeIter {
         ptr1_(other.ptr1_),
         prop_names_(other.prop_names_) {}
   EdgeIter(const std::array<LabelT, 3>& label_triplet,
-           std::shared_ptr<MutableCsrConstEdgeIterBase> ptr,
+           std::shared_ptr<CsrConstEdgeIterBase> ptr,
            const std::vector<std::string>* prop_names)
       : label_triplet_(label_triplet), ptr1_(ptr), prop_names_(prop_names) {}
 
@@ -72,19 +72,18 @@ class EdgeIter {
 
  private:
   std::array<LabelT, 3> label_triplet_;
-  std::shared_ptr<MutableCsrConstEdgeIterBase> ptr1_;
+  std::shared_ptr<CsrConstEdgeIterBase> ptr1_;
   const std::vector<std::string>* prop_names_;
 };
 
 // A subGraph is a view of a simple graph, with one src label and one dst label.
-// Cound be empty.
+// Could be empty.
 template <typename LabelT, typename VID_T>
 class SubGraph {
  public:
   using iterator = EdgeIter<LabelT>;
   using label_id_t = LabelT;
-  SubGraph(const MutableCsrBase* first,
-           const std::array<label_id_t, 3>& label_triplet,
+  SubGraph(const CsrBase* first, const std::array<label_id_t, 3>& label_triplet,
            const std::vector<std::string>& prop_names)
       : first_(first), label_triplet_(label_triplet), prop_names_(prop_names) {}
 
@@ -103,7 +102,7 @@ class SubGraph {
   const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
  private:
-  const MutableCsrBase* first_;
+  const CsrBase* first_;
   // We assume first is out edge, second is in edge.
   std::array<label_id_t, 3> label_triplet_;
   std::vector<std::string> prop_names_;
@@ -325,7 +324,7 @@ class AdjList<T> {
   // copy constructor
   AdjList(const AdjList<T>& adj_list)
       : slice0_(adj_list.slice0_), slice1_(adj_list.slice1_) {}
-  // with sinle slice provided.
+  // with single slice provided.
   AdjList(const slice_t& slice0) : slice0_(slice0), slice1_() {}
   AdjList(const slice_t& slice0, const slice_t& slice1)
       : slice0_(slice0), slice1_(slice1) {}
@@ -477,8 +476,9 @@ class AdjListArray {};
 template <typename T>
 class AdjListArray<T> {
  public:
-  using csr_base_t = MutableCsrBase;
+  using csr_base_t = CsrBase;
   using typed_csr_base_t = MutableCsr<T>;
+  using single_typed_csr_base_t = SingleMutableCsr<T>;
   using slice_t = MutableNbrSlice<T>;
   AdjListArray() = default;
   AdjListArray(const csr_base_t* csr, const std::vector<vid_t>& vids)
@@ -492,9 +492,19 @@ class AdjListArray<T> {
             std::make_pair(casted_csr->get_edges(v), slice_t()));
       }
     } else {
-      LOG(WARNING) << "csr is null";
-      for (size_t i = 0; i < vids.size(); ++i) {
-        slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
+      LOG(WARNING) << "cast to MutableCSR failed, try single csr";
+      const single_typed_csr_base_t* casted_single_csr =
+          dynamic_cast<const single_typed_csr_base_t*>(csr);
+      if (casted_single_csr) {
+        for (auto v : vids) {
+          slices_.emplace_back(
+              std::make_pair(casted_single_csr->get_edges(v), slice_t()));
+        }
+      } else {
+        LOG(WARNING) << "No such edge, since csr is null";
+        for (size_t i = 0; i < vids.size(); ++i) {
+          slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
+        }
       }
     }
   }
@@ -534,6 +544,9 @@ class AdjListArray<T> {
 
   size_t size() const { return slices_.size(); }
 
+  bool get_flag() const { return flag_; }
+  void set_flag(bool flag) { flag_ = flag; }
+
   AdjList<T> get(size_t i) const {
     if (flag_) {
       return AdjList<T>(slices_[i].first, slices_[i].second);
@@ -557,25 +570,39 @@ class AdjListArray<T> {
 template <>
 class AdjListArray<grape::EmptyType> {
  public:
-  using csr_base_t = MutableCsrBase;
+  // MutableCSR.
+  using csr_base_t = CsrBase;
   using typed_csr_base_t = MutableCsr<grape::EmptyType>;
+  using single_typed_csr_base_t = SingleMutableCsr<grape::EmptyType>;
   using slice_t = MutableNbrSlice<grape::EmptyType>;
   AdjListArray() = default;
   AdjListArray(const csr_base_t* csr, const std::vector<vid_t>& vids)
       : flag_(false) {
+    if (!csr) {
+      LOG(ERROR) << "csr is null before cast ";
+    }
     slices_.reserve(vids.size());
     const typed_csr_base_t* casted_csr =
         dynamic_cast<const typed_csr_base_t*>(csr);
     if (casted_csr) {
       for (auto v : vids) {
-        auto edges = casted_csr->get_edges(v);
         slices_.emplace_back(
             std::make_pair(casted_csr->get_edges(v), slice_t()));
       }
     } else {
-      LOG(ERROR) << "csr is null";
-      for (size_t i = 0; i < vids.size(); ++i) {
-        slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
+      VLOG(10) << "casted to MutableCSR Failed, try single csr";
+      const single_typed_csr_base_t* casted_single_csr =
+          dynamic_cast<const single_typed_csr_base_t*>(csr);
+      if (casted_single_csr) {
+        for (auto v : vids) {
+          slices_.emplace_back(
+              std::make_pair(casted_single_csr->get_edges(v), slice_t()));
+        }
+      } else {
+        LOG(WARNING) << "No such edge, since csr is null";
+        for (size_t i = 0; i < vids.size(); ++i) {
+          slices_.emplace_back(std::make_pair(slice_t(), slice_t()));
+        }
       }
     }
   }
@@ -611,6 +638,9 @@ class AdjListArray<grape::EmptyType> {
   size_t size() const { return slices_.size(); }
 
   void resize(size_t new_size) { slices_.resize(new_size); }
+
+  bool get_flag() const { return flag_; }
+  void set_flag(bool flag) { flag_ = flag; }
 
   void set(size_t i, const AdjList<grape::EmptyType>& slice) {
     slices_[i] = std::make_pair(slice.slice0(), slice.slice1());

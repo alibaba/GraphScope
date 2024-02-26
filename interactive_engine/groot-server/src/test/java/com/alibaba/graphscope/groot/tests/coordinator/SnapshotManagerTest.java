@@ -43,10 +43,8 @@ public class SnapshotManagerTest {
     void testSnapshotManager() throws IOException, InterruptedException {
         Configs configs =
                 Configs.newBuilder()
-                        .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
                         .put(CommonConfig.STORE_NODE_COUNT.getKey(), "2")
                         .put(CommonConfig.FRONTEND_NODE_COUNT.getKey(), "1")
-                        .put(CommonConfig.INGESTOR_NODE_COUNT.getKey(), "1")
                         .put(CoordinatorConfig.SNAPSHOT_INCREASE_INTERVAL_MS.getKey(), "1000")
                         .put(CoordinatorConfig.OFFSETS_PERSIST_INTERVAL_MS.getKey(), "1000")
                         .build();

@@ -56,7 +56,7 @@ int ReadTransaction::vertex_iterator::FieldNum() const {
 
 ReadTransaction::edge_iterator::edge_iterator(
     label_t neighbor_label, label_t edge_label,
-    std::shared_ptr<MutableCsrConstEdgeIterBase> iter)
+    std::shared_ptr<CsrConstEdgeIterBase> iter)
     : neighbor_label_(neighbor_label),
       edge_label_(edge_label),
       iter_(std::move(iter)) {}

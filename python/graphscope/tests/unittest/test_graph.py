@@ -654,11 +654,11 @@ def test_add_column(ldbc_graph, arrow_modern_graph):
     g3 = sub_graph_2.add_column(ret, selector={"pr": "r"})
     assert g3.schema.get_vertex_properties("person")[8].id == 8
     assert g3.schema.get_vertex_properties("person")[8].name == "pr"
-    # the ret can not add to sub_graph_3
+    # the ret cannot add to sub_graph_3
     with pytest.raises(AnalyticalEngineInternalError):
         g4 = sub_graph_3.add_column(ret, selector={"pr": "r"})
         print(g4.schema)
-    # the ret can not add to sub_graph_4
+    # the ret cannot add to sub_graph_4
     with pytest.raises(AnalyticalEngineInternalError):
         g5 = sub_graph_4.add_column(ret, selector={"pr": "r"})
         print(g4.schema)

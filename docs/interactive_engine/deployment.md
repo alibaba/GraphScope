@@ -1,6 +1,6 @@
 # Standalone Deployment for GIE
 
-We have demonstrated [how to execute interactive queries](./getting_started.md) easily by installing Graphscope via `pip` on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, Graphscope can be deployed on a cluster, such as a [self-managed k8s cluster](../deploy_graphscope_on_self_managed_k8s.md), for processing large-scale graphs. But you may wonder, "what if I only need the GIE engine and not the whole package of GraphScope?" This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.
+We have demonstrated [how to execute interactive queries](./getting_started.md) easily by installing GraphScope via `pip` on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, GraphScope can be deployed on a cluster, such as a [self-managed k8s cluster](../deploy_graphscope_on_self_managed_k8s.md), for processing large-scale graphs. But you may wonder, "what if I only need the GIE engine and not the whole package of GraphScope?" This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.
 
 Throughout the tutorial, we assume all machines are running Linux system.
 We do not guarantee that it works as smoothly as Linux on the other platform.
@@ -194,3 +194,4 @@ We've listed useful configuration keys in the following:
 | pegasusBatchSize            | the maximum size of streaming records can be output for an operator   |              1024               |
 | pegasusOutputCapacity       | the maximum number of streaming records can be output for an operator |               16                |
 | frontendQueryPerSecondLimit | the maximum qps can be handled by frontend service                    | 2147483647 (without limitation) |
+| gremlinScriptLanguageName | the option allows you to choose different Gremlin compilations based on different IR layer, either Traversal-based ('antlr_gremlin_traversal') or Calcite-based ('antlr_gremlin_calcite') | antlr_gremlin_traversal |

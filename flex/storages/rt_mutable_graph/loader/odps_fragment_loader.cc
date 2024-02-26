@@ -152,7 +152,7 @@ void ODPSReadClient::getReadSessionStatus(
 void ODPSReadClient::producerRoutine(
     const std::string& session_id, const TableIdentifier& table_identifier,
     std::vector<std::vector<std::shared_ptr<arrow::RecordBatch>>>& all_batches,
-    const std::vector<int>& indices) const {
+    std::vector<int>&& indices) const {
   for (int i : indices) {
     for (size_t j = 0; j < MAX_RETRY; ++j) {
       bool st = readRows(session_id, table_identifier, all_batches[i], i);
@@ -219,7 +219,7 @@ std::shared_ptr<arrow::Table> ODPSReadClient::ReadTable(
               << " splits of " << split_count << " splits";
     producers.emplace_back(std::thread(
         &ODPSReadClient::producerRoutine, this, std::cref(session_id),
-        std::cref(table_id), std::ref(all_batches), std::cref(indices)));
+        std::cref(table_id), std::ref(all_batches), std::move(indices)));
     // sleep for 1 second
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
@@ -253,8 +253,7 @@ ODPSStreamRecordBatchSupplier::ODPSStreamRecordBatchSupplier(
     label_t label_id, const std::string& file_path,
     const ODPSReadClient& odps_table_reader, const std::string& session_id,
     int split_count, TableIdentifier table_identifier)
-    : label_id_(label_id),
-      file_path_(file_path),
+    : file_path_(file_path),
       odps_read_client_(odps_table_reader),
       session_id_(session_id),
       split_count_(split_count),
@@ -282,6 +281,8 @@ ODPSStreamRecordBatchSupplier::GetNextBatch() {
                    << cur_batch_reader_->GetErrorMessage() << ", "
                    << cur_batch_reader_->GetStatus()
                    << ", split id: " << cur_split_index_;
+        cur_batch_reader_ =
+            odps_read_client_.GetArrowClient()->ReadRows(read_rows_req_);
       } else {
         VLOG(1) << "Read split " << cur_split_index_ << " finished";
         // move to next split
@@ -309,11 +310,9 @@ ODPSTableRecordBatchSupplier::ODPSTableRecordBatchSupplier(
     label_t label_id, const std::string& file_path,
     const ODPSReadClient& odps_table_reader, const std::string& session_id,
     int split_count, TableIdentifier table_identifier, int thread_num)
-    : label_id_(label_id),
-      file_path_(file_path),
+    : file_path_(file_path),
       odps_read_client_(odps_table_reader),
       session_id_(session_id),
-      split_count_(split_count),
       table_identifier_(table_identifier) {
   // Read the table.
   table_ = odps_read_client_.ReadTable(session_id, split_count,

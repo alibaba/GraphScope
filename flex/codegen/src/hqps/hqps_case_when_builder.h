@@ -54,7 +54,7 @@ class CaseWhenBuilder : public ExprBuilder {
           when_expr) {
     VLOG(10) << "Got when then exprs of size: " << when_expr.size();
 
-    // Basiclly, each when_then is a if then.
+    // Basically, each when_then is a if then.
     for (auto& when_then_expr : when_expr) {
       auto& when_val = when_then_expr.when_expression();
       auto& the_result_expr = when_then_expr.then_result_expression();
@@ -105,7 +105,7 @@ class CaseWhenBuilder : public ExprBuilder {
     func_call_template_typename_str = get_func_call_typename_str();
 
     func_call_params_str = get_func_call_params_str();
-    // the func_call impl is overrided
+    // the func_call impl is overridden
     func_call_impl_str = get_func_call_impl_str();
     private_filed_str = get_private_filed_str();
 

@@ -14,16 +14,16 @@ option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
-option(MONITOR_SESSIONS "Whether monitor sessions" OFF)
-option(ENABLE_HUGEPAGE "Whether to use hugepages when open mmap array in memory" OFF)
+
+option(USE_PTHASH "Whether to use pthash" OFF)
 
 #print options
 message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")
 message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
-message(STATUS "Monitor sessions: ${MONITOR_SESSIONS}")
-message(STATUS "Enable hugepage: ${ENABLE_HUGEPAGE}")
+
+message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 # ------------------------------------------------------------------------------
 # cmake configs
@@ -44,16 +44,10 @@ if (BUILD_HQPS)
     add_definitions(-DBUILD_HQPS)
 endif ()
 
-if (MONITOR_SESSIONS)
-    message("Monitor sessions is enabled")
-    add_definitions(-DMONITOR_SESSIONS)
-endif ()
-
-
-if (ENABLE_HUGEPAGE)
-    message("Hugepage is enabled")
-    add_definitions(-DHUGEPAGE)
-endif ()
+if(USE_PTHASH)
+    message("Use PTHash")
+    add_definitions(-DUSE_PTHASH)
+endif()
 
 execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
 string(STRIP ${LINUX_KERNEL_VERSION} LINUX_KERNEL_VERSION)
@@ -64,6 +58,11 @@ if(LINUX_KERNEL_VERSION VERSION_GREATER_EQUAL "4.5")
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
+
+if(USE_PTHASH)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pthash)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/murmurhash)
+endif()
 
 set(DEFAULT_BUILD_TYPE "Release")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -80,13 +79,14 @@ if (APPLE)
     set(CMAKE_MACOSX_RPATH ON)
 else ()
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Wl,-rpath,$ORIGIN -lopen-pal")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lopen-pal")
     else ()
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -Wl,-rpath,$ORIGIN")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath,$ORIGIN")
     endif ()
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -std=c++17 -Wall -fPIC -march=native")
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 
@@ -239,5 +239,15 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
+
+if(USE_PTHASH)
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash
+                      ${PROJECT_SOURCE_DIR}/third_party/pthash
+            DESTINATION include
+            FILES_MATCHING
+            PATTERN "*.h"
+            PATTERN "*.hpp"
+    )
+endif()
 
 include(CPack)

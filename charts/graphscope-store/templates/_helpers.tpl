@@ -31,10 +31,6 @@ If release name contains chart name it will be used as a full name.
 {{- printf "%s-%s" (include "graphscope-store.fullname" .) "frontend" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
-{{- define "graphscope-store.ingestor.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-store.fullname" .) "ingestor" | trunc 63 | trimSuffix "-" -}}
-{{- end -}}
-
 {{- define "graphscope-store.store.fullname" -}}
 {{- printf "%s-%s" (include "graphscope-store.fullname" .) "store" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}

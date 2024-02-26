@@ -121,7 +121,7 @@ struct PropertyType {
   bool operator!=(const PropertyType& other) const;
 };
 
-struct Date {
+struct __attribute__((packed)) Date {
   Date() = default;
   ~Date() = default;
   Date(int64_t x);
@@ -911,7 +911,7 @@ struct AnyConverter<double> {
   }
 };
 
-// specilization for float
+// specialization for float
 template <>
 struct AnyConverter<float> {
   static PropertyType type() { return PropertyType::kFloat; }

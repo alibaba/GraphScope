@@ -30,9 +30,7 @@ class TypedEmptyColumn : public ColumnBase {
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
   void open_in_memory(const std::string& name) override {}
-#ifdef HUGEPAGE
-  void open_with_hugepages(const std::string& name) override {}
-#endif
+  void open_with_hugepages(const std::string& name, bool force) override {}
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
   void copy_to_tmp(const std::string& cur_path,
@@ -64,16 +62,14 @@ class TypedEmptyColumn : public ColumnBase {
 template <>
 class TypedEmptyColumn<std::string_view> : public ColumnBase {
  public:
-  TypedEmptyColumn(int32_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH)
-      : max_length_(max_length) {}
+  TypedEmptyColumn(
+      int32_t max_length = PropertyType::STRING_DEFAULT_MAX_LENGTH) {}
   ~TypedEmptyColumn() {}
 
   void open(const std::string& name, const std::string& snapshot_dir,
             const std::string& work_dir) override {}
   void open_in_memory(const std::string& name) override {}
-#ifdef HUGEPAGE
-  void open_with_hugepages(const std::string& name) override {}
-#endif
+  void open_with_hugepages(const std::string& name, bool force) override {}
   void touch(const std::string& filename) override {}
   void dump(const std::string& filename) override {}
   void copy_to_tmp(const std::string& cur_path,
@@ -100,9 +96,6 @@ class TypedEmptyColumn<std::string_view> : public ColumnBase {
   StorageStrategy storage_strategy() const override {
     return StorageStrategy::kNone;
   }
-
- private:
-  int32_t max_length_;
 };
 
 using IntEmptyColumn = TypedEmptyColumn<int32_t>;

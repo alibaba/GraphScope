@@ -48,7 +48,6 @@ public abstract class NodeBase implements Closeable {
         System.setProperty(
                 "io.grpc.netty.shaded.io.netty.eventLoopThreads", String.valueOf(nettyThreadCount));
         int storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
-        int ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         return Configs.newBuilder(configs)
                 .put(
                         String.format(CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_RPC.getName()),
@@ -57,7 +56,6 @@ public abstract class NodeBase implements Closeable {
                         String.format(
                                 CommonConfig.NODE_COUNT_FORMAT, RoleType.GAIA_ENGINE.getName()),
                         String.valueOf(storeCount))
-                .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), String.valueOf(ingestorCount))
                 .put(CommonConfig.ROLE_NAME.getKey(), this.roleType.getName())
                 .build();
     }
