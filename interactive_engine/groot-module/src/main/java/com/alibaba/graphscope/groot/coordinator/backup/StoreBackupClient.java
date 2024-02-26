@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.coordinator;
+package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
 import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 public class StoreBackupClient extends RpcClient {
-    private StoreBackupGrpc.StoreBackupStub stub;
+    private final StoreBackupGrpc.StoreBackupStub stub;
 
     public StoreBackupClient(ManagedChannel channel) {
         super(channel);

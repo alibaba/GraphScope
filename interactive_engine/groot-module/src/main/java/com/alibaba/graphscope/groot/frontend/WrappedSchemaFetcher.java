@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.servers;
+package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.SnapshotWithSchema;
@@ -27,12 +27,10 @@ import java.util.Map;
 public class WrappedSchemaFetcher implements SchemaFetcher {
     private static final Logger logger = LoggerFactory.getLogger(WrappedSchemaFetcher.class);
 
-    private SnapshotCache snapshotCache;
-    private MetaService metaService;
+    private final SnapshotCache snapshotCache;
+    private final MetaService metaService;
     // If this is a secondary instance, then always use the latest snapshot ID.
-    private boolean isSecondary;
-
-    private long MAX_SNAPSHOT_ID = Long.MAX_VALUE - 1;
+    private final boolean isSecondary;
 
     public WrappedSchemaFetcher(
             SnapshotCache snapshotCache, MetaService metaService, boolean isSecondary) {
@@ -44,6 +42,8 @@ public class WrappedSchemaFetcher implements SchemaFetcher {
     @Override
     public Map<Long, GraphSchema> getSchemaSnapshotPair() {
         SnapshotWithSchema snapshotSchema = this.snapshotCache.getSnapshotWithSchema();
+        long MAX_SNAPSHOT_ID = Long.MAX_VALUE - 1;
+        // Always retrieve the latest result in secondary instance
         long snapshotId = isSecondary ? MAX_SNAPSHOT_ID : snapshotSchema.getSnapshotId();
         GraphSchema schema = snapshotSchema.getGraphDef();
         return Map.of(snapshotId, schema);

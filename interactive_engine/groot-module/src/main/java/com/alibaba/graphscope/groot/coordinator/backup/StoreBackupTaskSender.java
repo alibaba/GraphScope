@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.coordinator;
+package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
-import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
 
 import java.util.List;
 import java.util.Map;

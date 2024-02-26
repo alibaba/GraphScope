@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.coordinator;
+package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
@@ -23,10 +23,13 @@ import com.alibaba.graphscope.groot.common.exception.BackupException;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.util.BackupInfo;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.groot.coordinator.QuerySnapshotListener;
+import com.alibaba.graphscope.groot.coordinator.SchemaManager;
+import com.alibaba.graphscope.groot.coordinator.SnapshotManager;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.meta.MetaStore;
-import com.alibaba.graphscope.groot.store.StoreBackupId;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

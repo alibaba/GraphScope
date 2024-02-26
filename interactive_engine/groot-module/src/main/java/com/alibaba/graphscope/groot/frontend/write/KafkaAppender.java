@@ -9,7 +9,6 @@ import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
-import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;

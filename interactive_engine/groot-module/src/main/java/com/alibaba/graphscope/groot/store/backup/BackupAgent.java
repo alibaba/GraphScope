@@ -11,7 +11,7 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.store;
+package com.alibaba.graphscope.groot.store.backup;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.common.config.BackupConfig;
@@ -19,6 +19,8 @@ import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.exception.BackupException;
 import com.alibaba.graphscope.groot.common.util.ThreadFactoryUtils;
+import com.alibaba.graphscope.groot.store.GraphPartition;
+import com.alibaba.graphscope.groot.store.StoreService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

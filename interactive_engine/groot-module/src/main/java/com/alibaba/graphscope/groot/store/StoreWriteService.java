@@ -26,7 +26,7 @@ import java.util.List;
 
 public class StoreWriteService extends StoreWriteGrpc.StoreWriteImplBase {
 
-    private WriterAgent writerAgent;
+    private final WriterAgent writerAgent;
 
     public StoreWriteService(WriterAgent writerAgent) {
         this.writerAgent = writerAgent;

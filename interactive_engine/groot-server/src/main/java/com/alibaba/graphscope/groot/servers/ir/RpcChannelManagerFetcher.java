@@ -25,9 +25,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class RpcChannelManagerFetcher implements ChannelFetcher<RpcChannel> {
-    private ChannelManager manager;
-    private int nodeCount;
-    private RoleType targetRole;
+    private final ChannelManager manager;
+    private final int nodeCount;
+    private final RoleType targetRole;
 
     public RpcChannelManagerFetcher(ChannelManager manager, int nodeCount, RoleType targetRole) {
         this.manager = manager;

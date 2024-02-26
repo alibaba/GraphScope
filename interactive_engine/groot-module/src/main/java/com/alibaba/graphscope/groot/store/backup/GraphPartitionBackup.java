@@ -11,8 +11,22 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.coordinator;
+package com.alibaba.graphscope.groot.store.backup;
 
-public interface WriteSnapshotIdNotifier {
-    void notifyWriteSnapshotIdChanged(long snapshotId);
+import java.io.Closeable;
+import java.io.IOException;
+import java.util.List;
+
+public interface GraphPartitionBackup extends Closeable {
+
+    int createNewPartitionBackup() throws IOException;
+
+    void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath)
+            throws IOException;
+
+    void verifyPartitionBackup(int partitionBackupId) throws IOException;
+
+    void partitionBackupGc(List<Integer> readyPartitionBackupIds) throws IOException;
+
+    int getId();
 }

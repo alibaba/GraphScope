@@ -11,22 +11,10 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.store;
+package com.alibaba.graphscope.groot.frontend.write;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.util.List;
+public interface IngestCallback {
+    void onSuccess(long snapshotId);
 
-public interface GraphPartitionBackup extends Closeable {
-
-    int createNewPartitionBackup() throws IOException;
-
-    void restoreFromPartitionBackup(int partitionBackupId, String PartitionRestorePath)
-            throws IOException;
-
-    void verifyPartitionBackup(int partitionBackupId) throws IOException;
-
-    void partitionBackupGc(List<Integer> readyPartitionBackupIds) throws IOException;
-
-    int getId();
+    void onFailure(Exception e);
 }

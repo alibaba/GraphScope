@@ -11,10 +11,12 @@
  * express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alibaba.graphscope.groot.coordinator;
+package com.alibaba.graphscope.groot.coordinator.backup;
 
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
+import com.alibaba.graphscope.groot.coordinator.QuerySnapshotListener;
+import com.alibaba.graphscope.groot.coordinator.SchemaManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -21,9 +21,9 @@ import com.google.protobuf.ByteString;
 
 public class DropEdgeTypeOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private LabelId labelId;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final LabelId labelId;
 
     public DropEdgeTypeOperation(int partitionId, long schemaVersion, LabelId labelId) {
         super(OperationType.DROP_EDGE_TYPE);

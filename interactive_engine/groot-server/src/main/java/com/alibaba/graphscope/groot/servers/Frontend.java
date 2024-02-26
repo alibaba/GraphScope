@@ -42,9 +42,9 @@ import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
 import com.alibaba.graphscope.groot.schema.ddl.DdlExecutors;
+import com.alibaba.graphscope.groot.servers.ir.IrServiceProducer;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogServiceFactory;
-import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.BindableService;
 import io.grpc.NameResolver;
@@ -137,9 +137,7 @@ public class Frontend extends NodeBase {
                         metricsCollector,
                         kafkaAppender,
                         configs);
-        WriteSessionGenerator writeSessionGenerator = new WriteSessionGenerator(configs);
-        ClientWriteService clientWriteService =
-                new ClientWriteService(writeSessionGenerator, graphWriter);
+        ClientWriteService clientWriteService = new ClientWriteService(graphWriter);
 
         RoleClients<BackupClient> backupClients =
                 new RoleClients<>(this.channelManager, RoleType.COORDINATOR, BackupClient::new);
@@ -168,7 +166,7 @@ public class Frontend extends NodeBase {
         boolean isSecondary = CommonConfig.SECONDARY_INSTANCE_ENABLED.get(configs);
         WrappedSchemaFetcher wrappedSchemaFetcher =
                 new WrappedSchemaFetcher(snapshotCache, metaService, isSecondary);
-        ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
+        IrServiceProducer serviceProducer = new IrServiceProducer(configs);
         this.graphService = serviceProducer.makeGraphService(wrappedSchemaFetcher, channelManager);
     }
 
@@ -241,10 +239,5 @@ public class Frontend extends NodeBase {
         Frontend frontend = new Frontend(conf);
         NodeLauncher nodeLauncher = new NodeLauncher(frontend);
         nodeLauncher.start();
-    }
-
-    @VisibleForTesting
-    public ClientService getClientService() {
-        return this.clientService;
     }
 }

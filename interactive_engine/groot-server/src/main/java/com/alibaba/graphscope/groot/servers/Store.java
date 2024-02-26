@@ -23,7 +23,10 @@ import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
+import com.alibaba.graphscope.groot.servers.ir.IrServiceProducer;
 import com.alibaba.graphscope.groot.store.*;
+import com.alibaba.graphscope.groot.store.backup.BackupAgent;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupService;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 import com.google.common.annotations.VisibleForTesting;
@@ -85,7 +88,7 @@ public class Store extends NodeBase {
                         storeIngestService,
                         storeSnapshotService,
                         metricsCollectService);
-        ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
+        IrServiceProducer serviceProducer = new IrServiceProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
         this.partitionService = new PartitionService(configs, storeService);

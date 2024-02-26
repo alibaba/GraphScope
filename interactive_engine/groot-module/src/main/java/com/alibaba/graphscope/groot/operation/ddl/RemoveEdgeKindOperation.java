@@ -21,9 +21,9 @@ import com.google.protobuf.ByteString;
 
 public class RemoveEdgeKindOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private EdgeKind edgeKind;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final EdgeKind edgeKind;
 
     public RemoveEdgeKindOperation(int partitionId, long schemaVersion, EdgeKind edgeKind) {
         super(OperationType.REMOVE_EDGE_KIND);

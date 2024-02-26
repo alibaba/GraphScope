@@ -22,6 +22,10 @@ import com.alibaba.graphscope.groot.common.config.CoordinatorConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.coordinator.*;
 import com.alibaba.graphscope.groot.coordinator.IngestorWriteClient;
+import com.alibaba.graphscope.groot.coordinator.backup.BackupManager;
+import com.alibaba.graphscope.groot.coordinator.backup.BackupService;
+import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupClient;
+import com.alibaba.graphscope.groot.coordinator.backup.StoreBackupTaskSender;
 import com.alibaba.graphscope.groot.discovery.*;
 import com.alibaba.graphscope.groot.meta.DefaultMetaService;
 import com.alibaba.graphscope.groot.meta.FileMetaStore;
@@ -80,7 +84,7 @@ public class Coordinator extends NodeBase {
         RoleClients<IngestorSnapshotClient> ingestorSnapshotClients =
                 new RoleClients<>(
                         this.channelManager, RoleType.FRONTEND, IngestorSnapshotClient::new);
-        WriteSnapshotIdNotifier writeSnapshotIdNotifier =
+        IngestorWriteSnapshotIdNotifier writeSnapshotIdNotifier =
                 new IngestorWriteSnapshotIdNotifier(configs, ingestorSnapshotClients);
 
         LogService logService = LogServiceFactory.makeLogService(configs);
