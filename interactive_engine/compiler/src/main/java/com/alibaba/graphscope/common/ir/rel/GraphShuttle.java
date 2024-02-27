@@ -16,7 +16,12 @@
 
 package com.alibaba.graphscope.common.ir.rel;
 
-import com.alibaba.graphscope.common.ir.rel.graph.*;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
+import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 
@@ -24,19 +29,15 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttleImpl;
 
 /**
- * the class is used to visit a graph relation tree
+ * this class provides new visit method for graph rel node
  */
-public abstract class GraphRelVisitor extends RelShuttleImpl {
+public abstract class GraphShuttle extends RelShuttleImpl {
     public RelNode visit(GraphLogicalSource source) {
         return source;
     }
 
     public RelNode visit(GraphLogicalExpand expand) {
         return visitChildren(expand);
-    }
-
-    public RelNode visit(GraphLogicalExpandDegree degree) {
-        return visitChildren(degree);
     }
 
     public RelNode visit(GraphLogicalGetV getV) {
@@ -55,15 +56,31 @@ public abstract class GraphRelVisitor extends RelShuttleImpl {
         return match;
     }
 
-    public RelNode visit(GraphLogicalAggregate aggregate) {
-        return visitChildren(aggregate);
-    }
-
     public RelNode visit(GraphLogicalProject project) {
         return visitChildren(project);
     }
 
+    public RelNode visit(GraphLogicalAggregate aggregate) {
+        return visitChildren(aggregate);
+    }
+
     public RelNode visit(GraphLogicalSort sort) {
         return visitChildren(sort);
+    }
+
+    public RelNode visit(GraphPhysicalExpand physicalExpand) {
+        return visitChildren(physicalExpand);
+    }
+
+    public RelNode visit(GraphPhysicalGetV physicalGetV) {
+        return visitChildren(physicalGetV);
+    }
+
+    public RelNode visit(GraphLogicalDedupBy dedupBy) {
+        return visitChildren(dedupBy);
+    }
+
+    public RelNode visit(CommonTableScan tableScan) {
+        return tableScan;
     }
 }

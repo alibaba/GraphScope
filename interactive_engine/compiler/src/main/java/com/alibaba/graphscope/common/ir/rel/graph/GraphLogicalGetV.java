@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
-import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
+import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.AliasNameWithId;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -64,7 +64,7 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
 
     @Override
     public RelWriter explainTerms(RelWriter pw) {
-        return super.explainTerms(pw).item("opt", getOpt());
+        return super.explainTerms(pw).item("opt", getOpt().name());
     }
 
     @Override
@@ -86,8 +86,8 @@ public class GraphLogicalGetV extends AbstractBindableTableScan {
 
     @Override
     public RelNode accept(RelShuttle shuttle) {
-        if (shuttle instanceof GraphRelVisitor) {
-            return ((GraphRelVisitor) shuttle).visit(this);
+        if (shuttle instanceof GraphShuttle) {
+            return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
     }

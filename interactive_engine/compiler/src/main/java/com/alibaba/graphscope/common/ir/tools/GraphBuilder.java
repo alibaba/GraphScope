@@ -1690,8 +1690,122 @@ public class GraphBuilder extends RelBuilder {
      * @return
      */
     @Override
-    public RelBuilder convert(RelDataType castRowType, boolean rename) {
+    public GraphBuilder convert(RelDataType castRowType, boolean rename) {
         // do nothing
+        return this;
+    }
+
+    /**
+     * assign a new alias to the top node, we implement the function specifically to support the gremlin's `as` step
+     * @param alias
+     * @return
+     */
+    @Override
+    public GraphBuilder as(String alias) {
+        RelNode top = requireNonNull(peek(), "frame stack is empty");
+        RelDataType rowType = top.getRowType();
+        // we can assign the alias only if the top node has only one field, otherwise we skip the
+        // operation
+        if (rowType.getFieldList().size() != 1) {
+            return this;
+        }
+        // skip intermediate operations which make no changes to the row type, i.e.
+        // filter/limit/dedup...
+        while (!top.getInputs().isEmpty() && top.getInput(0).getRowType() == top.getRowType()) {
+            top = top.getInput(0);
+        }
+        RelNode aliasTop = null;
+        if (top instanceof GraphLogicalSource) {
+            GraphLogicalSource source = (GraphLogicalSource) top;
+            aliasTop =
+                    GraphLogicalSource.create(
+                            (GraphOptCluster) source.getCluster(),
+                            source.getHints(),
+                            source.getOpt(),
+                            source.getTableConfig(),
+                            alias);
+            if (source.getUniqueKeyFilters() != null) {
+                ((GraphLogicalSource) aliasTop).setUniqueKeyFilters(source.getUniqueKeyFilters());
+            }
+            if (ObjectUtils.isNotEmpty(source.getFilters())) {
+                ((GraphLogicalSource) aliasTop).setFilters(source.getFilters());
+            }
+        } else if (top instanceof GraphLogicalExpand) {
+            GraphLogicalExpand expand = (GraphLogicalExpand) top;
+            aliasTop =
+                    GraphLogicalExpand.create(
+                            (GraphOptCluster) expand.getCluster(),
+                            expand.getHints(),
+                            top.getInput(0),
+                            expand.getOpt(),
+                            expand.getTableConfig(),
+                            alias,
+                            expand.getStartAlias());
+            if (ObjectUtils.isNotEmpty(expand.getFilters())) {
+                ((GraphLogicalExpand) aliasTop).setFilters(expand.getFilters());
+            }
+        } else if (top instanceof GraphLogicalGetV) {
+            GraphLogicalGetV getV = (GraphLogicalGetV) top;
+            aliasTop =
+                    GraphLogicalGetV.create(
+                            (GraphOptCluster) getV.getCluster(),
+                            getV.getHints(),
+                            top.getInput(0),
+                            getV.getOpt(),
+                            getV.getTableConfig(),
+                            alias,
+                            getV.getStartAlias());
+            if (ObjectUtils.isNotEmpty(getV.getFilters())) {
+                ((GraphLogicalGetV) aliasTop).setFilters(getV.getFilters());
+            }
+        } else if (top instanceof GraphLogicalPathExpand) {
+            GraphLogicalPathExpand pxdExpand = (GraphLogicalPathExpand) top;
+            aliasTop =
+                    GraphLogicalPathExpand.create(
+                            (GraphOptCluster) pxdExpand.getCluster(),
+                            ImmutableList.of(),
+                            top.getInput(0),
+                            pxdExpand.getExpand(),
+                            pxdExpand.getGetV(),
+                            pxdExpand.getOffset(),
+                            pxdExpand.getFetch(),
+                            pxdExpand.getResultOpt(),
+                            pxdExpand.getPathOpt(),
+                            alias,
+                            pxdExpand.getStartAlias());
+        } else if (top instanceof GraphLogicalProject) {
+            GraphLogicalProject project = (GraphLogicalProject) top;
+            aliasTop =
+                    GraphLogicalProject.create(
+                            (GraphOptCluster) project.getCluster(),
+                            project.getHints(),
+                            top.getInput(0),
+                            project.getProjects(),
+                            deriveType(
+                                    project.getProjects(),
+                                    ImmutableList.of(alias),
+                                    null,
+                                    project.isAppend()),
+                            project.isAppend());
+        } else if (top instanceof GraphLogicalAggregate) {
+            GraphLogicalAggregate aggregate = (GraphLogicalAggregate) top;
+            // if group key is empty, we can assign the alias to the single aggregated value in
+            // group
+            if (aggregate.getGroupKey().groupKeyCount() == 0
+                    && aggregate.getAggCalls().size() == 1) {
+                GraphAggCall aggCall = aggregate.getAggCalls().get(0);
+                aliasTop =
+                        GraphLogicalAggregate.create(
+                                (GraphOptCluster) aggregate.getCluster(),
+                                aggregate.getHints(),
+                                top.getInput(0),
+                                aggregate.getGroupKey(),
+                                ImmutableList.of(aggCall.as(alias)));
+            }
+        }
+        if (aliasTop != null) {
+            replaceTop(aliasTop);
+        }
         return this;
     }
 }

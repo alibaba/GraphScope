@@ -51,6 +51,18 @@ public abstract class Utils {
         }
     }
 
+    public static final FfiExpandOpt ffiPhysicalExpandOpt(GraphOpt.PhysicalExpandOpt opt) {
+        switch (opt) {
+            case DEGREE:
+                return FfiExpandOpt.Degree;
+            case EDGE:
+                return FfiExpandOpt.Edge;
+            case VERTEX:
+            default:
+                return FfiExpandOpt.Vertex;
+        }
+    }
+
     public static final FfiVOpt ffiVOpt(GraphOpt.GetV opt) {
         switch (opt) {
             case START:

@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
+import static java.util.Objects.requireNonNull;
+
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
@@ -29,12 +31,15 @@ import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.RexNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class NestedTraversalVisitor extends GremlinGSBaseVisitor<RexNode> {
+/**
+ * convert sub traversal nested in {@code NestedTraversalContext} to RexNode
+ */
+public class NestedTraversalRexVisitor extends GremlinGSBaseVisitor<RexNode> {
     private final GraphBuilder parentBuilder;
     private final GraphBuilder nestedBuilder;
     private final @Nullable String tag;
 
-    public NestedTraversalVisitor(GraphBuilder parentBuilder, @Nullable String tag) {
+    public NestedTraversalRexVisitor(GraphBuilder parentBuilder, @Nullable String tag) {
         this.parentBuilder = parentBuilder;
         this.nestedBuilder =
                 GraphBuilder.create(
@@ -46,8 +51,8 @@ public class NestedTraversalVisitor extends GremlinGSBaseVisitor<RexNode> {
 
     @Override
     public RexNode visitNestedTraversal(GremlinGSParser.NestedTraversalContext ctx) {
-        Preconditions.checkArgument(parentBuilder.size() > 0, "parent builder should not be empty");
-        RelNode commonRel = parentBuilder.peek();
+        RelNode commonRel =
+                requireNonNull(parentBuilder.peek(), "parent builder should not be empty");
         nestedBuilder.push(commonRel);
         if (tag != null) {
             nestedBuilder.project(

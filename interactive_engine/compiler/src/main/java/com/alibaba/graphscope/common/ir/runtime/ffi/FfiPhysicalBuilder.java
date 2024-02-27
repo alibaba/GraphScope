@@ -93,7 +93,7 @@ public class FfiPhysicalBuilder extends RegularPhysicalBuilder<Pointer> {
             checkFfiResult(
                     LIB.appendScanOperator(ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
         } else if (original instanceof GraphLogicalExpand
-                || original instanceof GraphLogicalExpandDegree) {
+                || original instanceof GraphPhysicalExpand) {
             checkFfiResult(
                     LIB.appendEdgexpdOperator(ptrPlan, node.getNode(), oprIdx.getValue(), oprIdx));
         } else if (original instanceof GraphLogicalGetV) {

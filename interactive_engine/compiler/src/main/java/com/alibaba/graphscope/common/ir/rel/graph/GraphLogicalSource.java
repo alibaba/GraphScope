@@ -16,7 +16,7 @@
 
 package com.alibaba.graphscope.common.ir.rel.graph;
 
-import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
+import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.type.TableConfig;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 
@@ -61,14 +61,14 @@ public class GraphLogicalSource extends AbstractBindableTableScan {
     @Override
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw)
-                .item("opt", getOpt())
+                .item("opt", getOpt().name())
                 .itemIf("uniqueKeyFilters", uniqueKeyFilters, uniqueKeyFilters != null);
     }
 
     @Override
     public RelNode accept(RelShuttle shuttle) {
-        if (shuttle instanceof GraphRelVisitor) {
-            return ((GraphRelVisitor) shuttle).visit(this);
+        if (shuttle instanceof GraphShuttle) {
+            return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
     }
