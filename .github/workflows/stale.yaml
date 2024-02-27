@@ -82,6 +82,8 @@ jobs:
               message="$message Thanks!"
             fi
 
-            echo "Commenting on stale issue/pr $N, assignees: $assignees, message: $message"
-            gh issue comment $N -R $REPO -b "$message"
+            echo -e "$message" > message-$N
+            message_content=$(cat message-$N)
+            echo "Commenting on stale issue/pr $N, assignees: $assignees, message: $message_content"
+            gh issue comment $N -R $REPO -b "$message_content"
           done
