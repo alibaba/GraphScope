@@ -16,7 +16,7 @@ pub struct QueryApi {
         conf: JobConf,
         graph: &'static CsrDB<usize, usize>,
         graph_index: &'static GraphIndex,
-        input_params: Vec<String>,
+        input_params: HashMap<String, String>,
     ) -> Box<dyn Fn(&mut Source<i32>, ResultSink<Vec<u8>>) -> Result<(), BuildJobError>>,
 }
 

@@ -11,6 +11,7 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use codegen_benchmark::queries;
+use codegen_benchmark::queries::graph;
 use codegen_benchmark::queries::register::{PrecomputeApi, QueryApi};
 use dlopen::wrapper::{Container, WrapperApi};
 use graph_index::types::{ArrayData, DataType as IndexDataType, Item};
@@ -28,7 +29,6 @@ use pegasus_network::config::ServerAddr;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{self};
 use structopt::StructOpt;
-use codegen_benchmark::queries::graph;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
@@ -243,10 +243,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for query in queries {
             let split = query.trim().split("|").collect::<Vec<&str>>();
             let query_name = split[0].to_string();
-            let mut input_params = vec![];
+            let mut input_params = HashMap::new();
             println!("Split len is {}", split.len());
             for i in 1..split.len() {
-                input_params.push(split[i].to_string());
+                input_params.insert("i".to_string(), split[i].to_string());
             }
             println!("Start run query {}", query_name);
             let mut conf = JobConf::new(query_name.clone().to_owned() + "-" + &index.to_string());

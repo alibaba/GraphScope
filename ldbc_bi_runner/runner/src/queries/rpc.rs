@@ -237,7 +237,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
 
     async fn submit(&self, req: Request<pb::BiJobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
-        let pb::BiJobRequest { job_name, params } = req.into_inner();
+        let pb::BiJobRequest { job_name, arguments } = req.into_inner();
 
         let mut conf = JobConf::new(job_name.clone().to_owned());
         conf.set_workers(self.workers);
@@ -247,10 +247,9 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let rpc_sink = RpcSink::new(job_id, tx);
         let sink = ResultSink::<Vec<u8>>::with(rpc_sink);
 
-        let mut input_params = vec![];
-        let split = params.trim().split("|").collect::<Vec<&str>>();
-        for i in 1..split.len() {
-            input_params.push(split[i].to_string());
+        let mut input_params = HashMap::new();
+        for i in arguments {
+            input_params.insert(i.param_name, i.value);
         }
         if let Some(libc) = self.query_register.get_query(&job_name) {
             let conf_temp = conf.clone();
