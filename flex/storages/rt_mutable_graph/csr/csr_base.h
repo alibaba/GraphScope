@@ -82,7 +82,7 @@ class CsrBase {
   }
 
   virtual void dump(const std::string& name,
-                    const std::string& new_spanshot_dir) = 0;
+                    const std::string& new_snapshot_dir) = 0;
 
   virtual void warmup(int thread_num) const = 0;
 
