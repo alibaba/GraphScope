@@ -39,6 +39,14 @@
     }]
   }, {
     "opr": {
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 0
+        }
+      }
+    }
+  }, {
+    "opr": {
       "dedup": {
         "keys": [{
           "tag": {

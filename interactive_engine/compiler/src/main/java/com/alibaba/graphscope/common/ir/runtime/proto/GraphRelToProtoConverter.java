@@ -35,6 +35,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt.PhysicalGetVOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
@@ -52,10 +53,12 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -290,6 +293,10 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         selectBuilder.setPredicate(exprProto);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setSelect(selectBuilder));
+        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(filter.getRowType(), isColumnId));
+        if (isPartitioned) {
+            lazyPropertyFetching(ImmutableList.of(filter.getCondition()), false);
+        }
         physicalBuilder.addPlan(oprBuilder.build());
         return filter;
     }
@@ -320,6 +327,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setProject(projectBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(project.getRowType(), isColumnId));
+        if (isPartitioned) {
+            lazyPropertyFetching(project.getProjects(), false);
+        }
         physicalBuilder.addPlan(oprBuilder.build());
         return project;
     }
@@ -383,6 +393,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphAlgebraPhysical.PhysicalOpr.newBuilder();
             dedupOprBuilder.setOpr(
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
+            if (isPartitioned) {
+                lazyPropertyFetching(keys.getVariables());
+            }
             physicalBuilder.addPlan(projectOprBuilder.build());
             physicalBuilder.addPlan(dedupOprBuilder.build());
         } else {
@@ -415,27 +428,28 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 if (operands.isEmpty()) {
                     throw new IllegalArgumentException(
                             "operands in aggregate call should not be empty");
-                } else if (operands.size() > 1) {
-                    throw new UnsupportedOperationException(
-                            "aggregate on multiple variables is unsupported yet");
+                }
+
+                GraphAlgebraPhysical.GroupBy.AggFunc.Builder aggFnAliasBuilder =
+                        GraphAlgebraPhysical.GroupBy.AggFunc.newBuilder();
+                for (RexNode operand : operands) {
+                    Preconditions.checkArgument(
+                            operand instanceof RexGraphVariable,
+                            "each expression in aggregate call should be type %s, but is %s",
+                            RexGraphVariable.class,
+                            operand.getClass());
+                    OuterExpression.Variable var =
+                            operand.accept(
+                                            new RexToProtoConverter(
+                                                    true, isColumnId, this.rexBuilder))
+                                    .getOperators(0)
+                                    .getVar();
+                    aggFnAliasBuilder.addVars(var);
                 }
                 GraphAlgebraPhysical.GroupBy.AggFunc.Aggregate aggOpt =
                         Utils.protoAggOpt(groupCalls.get(i));
-                int aliasId = fields.get(i + keys.groupKeyCount()).getIndex();
-                Preconditions.checkArgument(
-                        operands.get(0) instanceof RexGraphVariable,
-                        "each expression in aggregate call should be type %s, but is %s",
-                        RexGraphVariable.class,
-                        operands.get(0).getClass());
-                OuterExpression.Variable var =
-                        operands.get(0)
-                                .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder))
-                                .getOperators(0)
-                                .getVar();
-                GraphAlgebraPhysical.GroupBy.AggFunc.Builder aggFnAliasBuilder =
-                        GraphAlgebraPhysical.GroupBy.AggFunc.newBuilder();
                 aggFnAliasBuilder.setAggregate(aggOpt);
-                aggFnAliasBuilder.addVars(var);
+                int aliasId = fields.get(i + keys.groupKeyCount()).getIndex();
                 if (aliasId != AliasInference.DEFAULT_ID) {
                     aggFnAliasBuilder.setAlias(Utils.asAliasId(aliasId));
                 }
@@ -446,6 +460,15 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             .setGroupBy(groupByBuilder));
             oprBuilder.addAllMetaData(
                     Utils.physicalProtoRowType(aggregate.getRowType(), isColumnId));
+            if (isPartitioned) {
+                List<RexNode> keysAndAggs = Lists.newArrayList();
+                keysAndAggs.addAll(keys.getVariables());
+                keysAndAggs.addAll(
+                        groupCalls.stream()
+                                .map(k -> k.getOperands().get(0))
+                                .collect(Collectors.toList()));
+                lazyPropertyFetching(keysAndAggs);
+            }
             physicalBuilder.addPlan(oprBuilder.build());
         }
         return aggregate;
@@ -471,6 +494,10 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         }
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
+        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(dedupBy.getRowType(), isColumnId));
+        if (isPartitioned) {
+            lazyPropertyFetching(dedupBy.getDedupByKeys(), false);
+        }
         physicalBuilder.addPlan(oprBuilder.build());
         return dedupBy;
     }
@@ -502,6 +529,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             oprBuilder.setOpr(
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
                             .setOrderBy(orderByBuilder));
+            if (isPartitioned) {
+                lazyPropertyFetching(
+                        collations.stream()
+                                .map(k -> ((GraphFieldCollation) k).getVariable())
+                                .collect(Collectors.toList()));
+            }
         } else {
             GraphAlgebra.Limit.Builder limitBuilder = GraphAlgebra.Limit.newBuilder();
             limitBuilder.setRange(buildRange(sort.offset, sort.fetch));
@@ -523,8 +556,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 "join condition in ir core should be 'AND' of equal conditions, each equal"
                         + " condition has two variables as operands";
         Preconditions.checkArgument(!conditions.isEmpty(), errorMessage);
+        List<RexNode> leftKeys = Lists.newArrayList();
+        List<RexNode> rightKeys = Lists.newArrayList();
         for (RexNode condition : conditions) {
             List<RexGraphVariable> leftRightVars = getLeftRightVariables(condition);
+            leftKeys.add(leftRightVars.get(0));
+            rightKeys.add(leftRightVars.get(1));
             Preconditions.checkArgument(leftRightVars.size() == 2, errorMessage);
             OuterExpression.Variable leftVar =
                     leftRightVars
@@ -551,6 +588,10 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         left.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, leftPlanBuilder));
         RelNode right = join.getRight();
         right.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, rightPlanBuilder));
+        if (isPartitioned) {
+            lazyPropertyFetching(leftPlanBuilder, leftKeys, true);
+            lazyPropertyFetching(rightPlanBuilder, rightKeys, true);
+        }
         joinBuilder.setLeftPlan(leftPlanBuilder);
         joinBuilder.setRightPlan(rightPlanBuilder);
         oprBuilder.setOpr(
@@ -660,7 +701,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     private GraphAlgebra.QueryParams.Builder defaultQueryParams() {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
-        // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
+        // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as
+        // default.
         paramsBuilder.setSampleRatio(1.0);
         return paramsBuilder;
     }
@@ -686,6 +728,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         }
     }
 
+    private void addQueryColumns(
+            GraphAlgebra.QueryParams.Builder paramsBuilder, List<GraphNameOrId> properties) {
+        for (GraphNameOrId property : properties) {
+            paramsBuilder.addColumns(Utils.protoNameOrId(property));
+        }
+    }
+
     private GraphAlgebra.QueryParams.Builder buildQueryParams(AbstractBindableTableScan tableScan) {
         GraphAlgebra.QueryParams.Builder paramsBuilder = defaultQueryParams();
         addQueryTables(paramsBuilder, getGraphLabels(tableScan).getLabelsEntry());
@@ -693,14 +742,98 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         return paramsBuilder;
     }
 
-    private void addRepartitionToAnother(int reaprtitionKey) {
+    private void addRepartitionToAnother(int repartitionKey) {
+        addRepartitionToAnother(physicalBuilder, repartitionKey);
+    }
+
+    private void addRepartitionToAnother(
+            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder, int repartitionKey) {
         GraphAlgebraPhysical.PhysicalOpr.Builder repartitionOprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebraPhysical.Repartition repartition =
-                Utils.protoShuffleRepartition(reaprtitionKey);
+                Utils.protoShuffleRepartition(repartitionKey);
         repartitionOprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setRepartition(repartition));
         physicalBuilder.addPlan(repartitionOprBuilder.build());
+    }
+
+    private void addAuxilia(
+            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
+            Integer tag,
+            List<GraphNameOrId> properties) {
+        GraphAlgebraPhysical.PhysicalOpr.Builder auxiliaOprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
+        GraphAlgebraPhysical.GetV.Builder vertexBuilder = GraphAlgebraPhysical.GetV.newBuilder();
+        vertexBuilder.setOpt(Utils.protoGetVOpt(PhysicalGetVOpt.ITSELF));
+        GraphAlgebra.QueryParams.Builder paramsBuilder = defaultQueryParams();
+        addQueryColumns(paramsBuilder, properties);
+        vertexBuilder.setParams(paramsBuilder);
+        if (tag != AliasInference.DEFAULT_ID) {
+            vertexBuilder.setTag(Utils.asAliasId(tag));
+            vertexBuilder.setAlias(Utils.asAliasId(tag));
+        }
+        auxiliaOprBuilder.setOpr(
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setVertex(vertexBuilder));
+        physicalBuilder.addPlan(auxiliaOprBuilder.build());
+    }
+
+    // extract columns from List<RexNode>, e.g., the return result {a.{name, age},
+    // b.{weight}}}
+    private Map<Integer, List<GraphNameOrId>> extractColumns(List<RexNode> exprs) {
+        List<Pair<Integer, GraphNameOrId>> listResult =
+                exprs.stream()
+                        .map(
+                                k -> {
+                                    if (k instanceof RexGraphVariable) {
+                                        RexGraphVariable var = (RexGraphVariable) k;
+                                        if (var.getProperty() != null) {
+                                            Pair<Integer, GraphNameOrId> result =
+                                                    Pair.with(
+                                                            var.getAliasId(),
+                                                            var.getProperty().getKey());
+                                            return result;
+                                        } else return null;
+                                    } else return null;
+                                })
+                        .filter(k -> k != null)
+                        .collect(Collectors.toList());
+
+        Map<Integer, List<GraphNameOrId>> groupedResult =
+                listResult.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        pair -> pair.getValue0(),
+                                        Collectors.mapping(
+                                                pair -> pair.getValue1(), Collectors.toList())));
+        return groupedResult;
+    }
+
+    private void lazyPropertyFetching(List<RexNode> exprs) {
+        // by default, we need to cache the property;
+        // sometimes we can also do an optimization to avoid caching the property, for example,
+        // project, filter.
+        lazyPropertyFetching(physicalBuilder, exprs, true);
+    }
+
+    private void lazyPropertyFetching(List<RexNode> exprs, boolean needsToCache) {
+        lazyPropertyFetching(physicalBuilder, exprs, needsToCache);
+    }
+
+    private void lazyPropertyFetching(
+            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
+            List<RexNode> exprs,
+            boolean needsToCache) {
+        Map<Integer, List<GraphNameOrId>> columns = extractColumns(exprs);
+        if (columns.isEmpty()) {
+            return;
+        } else if (columns.size() == 1 && !needsToCache) {
+            addRepartitionToAnother(physicalBuilder, columns.keySet().iterator().next());
+        } else {
+            for (Map.Entry<Integer, List<GraphNameOrId>> entry : columns.entrySet()) {
+                addRepartitionToAnother(physicalBuilder, entry.getKey());
+                addAuxilia(physicalBuilder, entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     @Override

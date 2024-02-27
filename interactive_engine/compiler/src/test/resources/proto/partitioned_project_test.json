@@ -39,47 +39,45 @@
     }]
   }, {
     "opr": {
-      "dedup": {
-        "keys": [{
-          "tag": {
-            "id": 0
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 0
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "project": {
+        "mappings": [{
+          "expr": {
+            "operators": [{
+              "var": {
+                "tag": {
+                  "id": 0
+                },
+                "property": {
+                  "key": {
+                    "name": "name"
+                  }
+                },
+                "nodeType": {
+                  "dataType": "STRING"
+                }
+              },
+              "nodeType": {
+                "dataType": "STRING"
+              }
+            }]
           },
-          "property": {
-            "key": {
-              "name": "name"
-            }
-          },
-          "nodeType": {
-            "dataType": "STRING"
-          }
+          "alias": 1
         }]
       }
     },
     "metaData": [{
       "type": {
-        "graphType": {
-          "graphDataType": [{
-            "label": {
-            },
-            "props": [{
-              "propId": {
-                "name": "id"
-              },
-              "type": "INT64"
-            }, {
-              "propId": {
-                "name": "name"
-              },
-              "type": "STRING"
-            }, {
-              "propId": {
-                "name": "age"
-              },
-              "type": "INT32"
-            }]
-          }]
-        }
-      }
+        "dataType": "STRING"
+      },
+      "alias": 1
     }]
   }, {
     "opr": {
