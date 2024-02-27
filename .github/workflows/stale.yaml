@@ -42,9 +42,9 @@ jobs:
           days-before-pr-stale: ${{ env.DAYS_BEFORE_PR_STALE }}
           stale-issue-label: stale
           stale-pr-label: stale
-          exempt-pr-labels: work-in-progress,requires-further-info
-          exempt-issue-labels: requires-further-info,wontfix,newcomers
-          labels-to-remove-when-unstale: stale,requires-further-info
+          exempt-pr-labels: work-in-progress,requires-further-info,requires-further-discussion
+          exempt-issue-labels: work-in-progress,requires-further-info,requires-further-discussion,wontfix,newcomers
+          labels-to-remove-when-unstale: stale,requires-further-info,requires-further-discussion
           exempt-draft-pr: true
 
       - name: Notify assignees
@@ -70,11 +70,16 @@ jobs:
               for assignee in $assignees; do
                 message="$message @$assignee"
               done
-              message="$message, this issus/pr has had no activity for for a long time, could you folks help to review the status ?"
-              message="$message </br>"
-              message="$message If this issue/pr is waiting for further response from the reporter/author, please help to add the label \`requires-further-info\` to suppress further notification."
-              message="$message </br>"
-              message="$message If this issue/pr is not in your queue, please unassign yourself from it to avoid been notified again."
+              message="$message, this issus/pr has had no activity for for a long time, could you folks help to review the status ? \n"
+              message="$message To suppress further notifications,\n"
+              message="$message - for issues, \n"
+              message="$message   - if it is waiting for further response from the reporter/author, please help to add the label \`requires-further-info\`, \n"
+              message="$message   - if you have already started working on it, please add the label \`work-in-progress\` to the issue, \n"
+              message="$message   - if this issue requires further designing discussion and not in current plan, or won't be fixed, please add the label \`requires-further-discussion\` or \`wontfix\` to the issue, \n"
+              message="$message - for pull requests, \n"
+              message="$message   - if you are still working on it and it is not ready for reviewing, please convert this pull request as draft PR, \n"
+              message="$message   - if you have decided to hold this development on, please add the \`requires-further-discussion\` label to the pull request. \n"
+              message="$message Thanks!"
             fi
 
             echo "Commenting on stale issue/pr $N, assignees: $assignees, message: $message"
