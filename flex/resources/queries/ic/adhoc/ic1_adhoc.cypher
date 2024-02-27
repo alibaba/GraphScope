@@ -11,8 +11,8 @@ WITH
     CASE
         WHEN company is null Then null
         ELSE [company.name, workAt.workFrom, country.name]
-    END as companys
-WITH f, collect(companys) as company_info, distance
+    END as companies
+WITH f, collect(companies) as company_info, distance
 
 OPTIONAL MATCH (f: PERSON)-[studyAt:STUDYAT]->(university)-[:ISLOCATEDIN]->(universityCity:PLACE)
 WITH

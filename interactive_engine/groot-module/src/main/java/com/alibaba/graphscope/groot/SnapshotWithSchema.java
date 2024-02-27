@@ -17,8 +17,8 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 
 public class SnapshotWithSchema {
 
-    private long snapshotId;
-    private GraphDef graphDef;
+    private final long snapshotId;
+    private final GraphDef graphDef;
 
     public SnapshotWithSchema(long snapshotId, GraphDef graphDef) {
         this.snapshotId = snapshotId;

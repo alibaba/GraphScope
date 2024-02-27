@@ -48,7 +48,7 @@ public class KafkaLogService implements LogService {
     public KafkaLogService(Configs configs) {
         this.configs = configs;
         this.servers = KafkaConfig.KAFKA_SERVERS.get(configs);
-        this.topic = KafkaConfig.KAKFA_TOPIC.get(configs);
+        this.topic = KafkaConfig.KAFKA_TOPIC.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.replicationFactor = KafkaConfig.KAFKA_REPLICATION_FACTOR.get(configs);
         this.maxMessageMb = KafkaConfig.KAFKA_MAX_MESSAGE_MB.get(configs);

@@ -21,7 +21,7 @@ public class GarbageCollectManager {
     private final ConcurrentHashMap<Integer, Long> hashMap;
     private final RoleClients<CoordinatorSnapshotClient> clients;
     private ScheduledExecutorService updateScheduler;
-    private long interval;
+    private final long interval;
 
     public GarbageCollectManager(Configs configs, RoleClients<CoordinatorSnapshotClient> clients) {
         this.configs = configs;
@@ -58,7 +58,7 @@ public class GarbageCollectManager {
                                 e.getMessage());
                     }
                 },
-                5000L,
+                interval,
                 interval,
                 TimeUnit.MILLISECONDS);
     }

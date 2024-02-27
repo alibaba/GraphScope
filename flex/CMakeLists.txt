@@ -15,11 +15,15 @@ option(BUILD_TEST "Whether to build test" ON)
 option(BUILD_DOC "Whether to build doc" ON)
 option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
 
+option(USE_PTHASH "Whether to use pthash" OFF)
+
 #print options
 message(STATUS "Build HighQPS Engine: ${BUILD_HQPS}")
 message(STATUS "Build test: ${BUILD_TEST}")
 message(STATUS "Build doc: ${BUILD_DOC}")
 message(STATUS "Build odps fragment loader: ${BUILD_ODPS_FRAGMENT_LOADER}")
+
+message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 # ------------------------------------------------------------------------------
 # cmake configs
@@ -40,6 +44,11 @@ if (BUILD_HQPS)
     add_definitions(-DBUILD_HQPS)
 endif ()
 
+if(USE_PTHASH)
+    message("Use PTHash")
+    add_definitions(-DUSE_PTHASH)
+endif()
+
 execute_process(COMMAND uname -r OUTPUT_VARIABLE LINUX_KERNEL_VERSION)
 string(STRIP ${LINUX_KERNEL_VERSION} LINUX_KERNEL_VERSION)
 message(${LINUX_KERNEL_VERSION})
@@ -49,6 +58,11 @@ if(LINUX_KERNEL_VERSION VERSION_GREATER_EQUAL "4.5")
 endif()
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../)
+
+if(USE_PTHASH)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/pthash)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/murmurhash)
+endif()
 
 set(DEFAULT_BUILD_TYPE "Release")
 if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -71,7 +85,8 @@ else ()
     endif ()
 endif ()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -std=c++17 -Wall -fPIC")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -Werror -std=c++17 -Wall -fPIC -march=native")
+
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -g")
 
@@ -198,8 +213,8 @@ file(GLOB_RECURSE FILES_NEED_LINT
         "storages/*.cc"
         "test/*.h"
         "test/*.cc"
-        "third_pary/*.h"
-        "third_pary/*.cc" EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
+        "third_party/*.h"
+        "third_party/*.cc" EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
 list(FILTER FILES_NEED_LINT EXCLUDE REGEX ".*\.act.h$|.*\.actg.h$|.*\.autogen.h$|.*\.autogen.cc$")
 # gsa_clformat
 add_custom_target(flex_clformat
@@ -224,5 +239,15 @@ set(CPACK_DEB_COMPONENT_INSTALL YES)
 
 #install CMakeLists.txt.template to resources/
 install(FILES resources/hqps/CMakeLists.txt.template DESTINATION lib/flex/)
+
+if(USE_PTHASH)
+    install(DIRECTORY ${PROJECT_SOURCE_DIR}/third_party/murmurhash
+                      ${PROJECT_SOURCE_DIR}/third_party/pthash
+            DESTINATION include
+            FILES_MATCHING
+            PATTERN "*.h"
+            PATTERN "*.hpp"
+    )
+endif()
 
 include(CPack)

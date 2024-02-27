@@ -143,8 +143,9 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
     std::string v_label_name = schema_.get_vertex_label_name(i);
 
     if (memory_level == 0) {
-      lf_indexers_[i].open(vertex_map_prefix(v_label_name), snapshot_dir,
-                           tmp_dir_path);
+      lf_indexers_[i].open(
+          IndexerType::prefix() + "_" + vertex_map_prefix(v_label_name),
+          snapshot_dir, tmp_dir_path);
       vertex_data_[i].open(vertex_table_prefix(v_label_name), snapshot_dir,
                            tmp_dir_path, schema_.get_vertex_property_names(i),
                            schema_.get_vertex_properties(i),
@@ -155,6 +156,7 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
       }
     } else if (memory_level == 1) {
       lf_indexers_[i].open_in_memory(snapshot_dir + "/" +
+                                     IndexerType::prefix() + "_" +
                                      vertex_map_prefix(v_label_name));
       vertex_data_[i].open_in_memory(
           vertex_table_prefix(v_label_name), snapshot_dir,
@@ -162,8 +164,10 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
           schema_.get_vertex_properties(i),
           schema_.get_vertex_storage_strategies(v_label_name));
     } else if (memory_level == 2) {
-      lf_indexers_[i].open_with_hugepages(
-          snapshot_dir + "/" + vertex_map_prefix(v_label_name), false);
+      lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
+                                              IndexerType::prefix() + "_" +
+                                              vertex_map_prefix(v_label_name),
+                                          false);
       vertex_data_[i].open_with_hugepages(
           vertex_table_prefix(v_label_name), snapshot_dir,
           schema_.get_vertex_property_names(i),
@@ -171,8 +175,10 @@ void MutablePropertyFragment::Open(const std::string& work_dir,
           schema_.get_vertex_storage_strategies(v_label_name), false);
     } else {
       assert(memory_level == 3);
-      lf_indexers_[i].open_with_hugepages(
-          snapshot_dir + "/" + vertex_map_prefix(v_label_name), true);
+      lf_indexers_[i].open_with_hugepages(snapshot_dir + "/" +
+                                              IndexerType::prefix() + "_" +
+                                              vertex_map_prefix(v_label_name),
+                                          true);
       vertex_data_[i].open_with_hugepages(
           vertex_table_prefix(v_label_name), snapshot_dir,
           schema_.get_vertex_property_names(i),
@@ -288,8 +294,10 @@ void MutablePropertyFragment::Dump(const std::string& work_dir,
   std::vector<size_t> vertex_num(vertex_label_num_, 0);
   for (size_t i = 0; i < vertex_label_num_; ++i) {
     vertex_num[i] = lf_indexers_[i].size();
-    lf_indexers_[i].dump(vertex_map_prefix(schema_.get_vertex_label_name(i)),
-                         snapshot_dir_path);
+    lf_indexers_[i].dump(
+        IndexerType::prefix() + "_" +
+            vertex_map_prefix(schema_.get_vertex_label_name(i)),
+        snapshot_dir_path);
     vertex_data_[i].resize(vertex_num[i]);
     vertex_data_[i].dump(vertex_table_prefix(schema_.get_vertex_label_name(i)),
                          snapshot_dir_path);

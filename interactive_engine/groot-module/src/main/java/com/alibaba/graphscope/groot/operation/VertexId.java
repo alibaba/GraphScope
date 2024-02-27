@@ -16,7 +16,7 @@ package com.alibaba.graphscope.groot.operation;
 import com.alibaba.graphscope.proto.groot.VertexIdPb;
 
 public class VertexId {
-    private long id;
+    private final long id;
 
     public VertexId(long id) {
         this.id = id;

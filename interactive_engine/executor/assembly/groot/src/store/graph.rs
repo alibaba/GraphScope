@@ -2,8 +2,7 @@
 
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
-use std::str;
-use std::sync::{Arc, Once};
+use std::sync::Once;
 
 use groot_store::db::api::multi_version_graph::MultiVersionGraph;
 use groot_store::db::api::PropertyMap;
@@ -18,36 +17,16 @@ use groot_store::db::proto::model::{
 };
 use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
 use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
-use groot_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 
 use crate::store::jna_response::JnaResponse;
 
 pub type GraphHandle = *const c_void;
-pub type PartitionGraphHandle = *const c_void;
-pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
 use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
 static INIT: Once = Once::new();
-
-#[no_mangle]
-pub extern "C" fn createWrapperPartitionGraph(handle: GraphHandle) -> PartitionGraphHandle {
-    trace!("createWrapperPartitionGraph");
-    let graph_store = unsafe { Arc::from_raw(handle as *const GraphStore) };
-    let partition_graph = WrapperPartitionGraph::new(graph_store);
-    Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
-}
-
-#[no_mangle]
-pub extern "C" fn deleteWrapperPartitionGraph(handle: PartitionGraphHandle) {
-    trace!("deleteWrapperPartitionGraph");
-    let ptr = handle as *mut FfiPartitionGraph;
-    unsafe {
-        drop(Box::from_raw(ptr));
-    }
-}
 
 #[no_mangle]
 pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHandle {
@@ -63,9 +42,6 @@ pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHa
     config_builder.set_storage_engine(engine);
     config_builder.set_storage_options(proto.get_configs().clone());
     let config = config_builder.build();
-    let path = config
-        .get_storage_option("store.data.path")
-        .expect("invalid config, missing store.data.path");
     INIT.call_once(|| {
         if let Some(config_file) = config.get_storage_option("log4rs.config") {
             log4rs::init_file(config_file, Default::default()).expect("init log4rs failed");
@@ -74,14 +50,14 @@ pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHa
             println!("No valid log4rs.config, rust won't print logs");
         }
     });
-    let handle = Box::new(GraphStore::open(&config, path).unwrap());
+    let handle = Box::new(GraphStore::open(&config).unwrap());
     let ret = Box::into_raw(handle);
     ret as GraphHandle
 }
 
 #[no_mangle]
 pub extern "C" fn closeGraphStore(handle: GraphHandle) -> bool {
-    trace!("closeGraphStore");
+    info!("closeGraphStore");
     let graph_store_ptr = handle as *mut GraphStore;
     unsafe {
         drop(Box::from_raw(graph_store_ptr));
@@ -118,7 +94,7 @@ pub extern "C" fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaRe
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         let slice = CStr::from_ptr(path).to_bytes();
-        let path_str = str::from_utf8(slice).unwrap();
+        let path_str = std::str::from_utf8(slice).unwrap();
         match graph_store_ptr.ingest(path_str) {
             Ok(_) => JnaResponse::new_success(),
             Err(e) => {
@@ -134,22 +110,21 @@ pub extern "C" fn writeBatch(
     ptr: GraphHandle, snapshot_id: i64, data: *const u8, len: usize,
 ) -> Box<JnaResponse> {
     trace!("writeBatch");
-    unsafe {
-        let graph_store_ptr = &*(ptr as *const GraphStore);
-        let buf = ::std::slice::from_raw_parts(data, len);
-        let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
-            Ok(has_ddl) => {
-                let mut response = JnaResponse::new_success();
-                response.has_ddl(has_ddl);
-                response
-            }
-            Err(e) => {
-                let err_msg = format!("{:?}", e);
-                JnaResponse::new_error(&err_msg)
-            }
-        };
-        return ret;
-    }
+
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    let buf = unsafe { ::std::slice::from_raw_parts(data, len) };
+    let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
+        Ok(has_ddl) => {
+            let mut response = JnaResponse::new_success();
+            response.has_ddl(has_ddl);
+            response
+        }
+        Err(e) => {
+            let err_msg = format!("{:?}", e);
+            JnaResponse::new_error(&err_msg)
+        }
+    };
+    return ret;
 }
 
 fn do_write_batch<G: MultiVersionGraph>(
@@ -160,7 +135,7 @@ fn do_write_batch<G: MultiVersionGraph>(
     let mut has_ddl = false;
     let operations = proto.get_operations();
     if operations.is_empty() {
-        return Ok(false);
+        return Ok(has_ddl);
     }
     for op in operations {
         match op.get_opType() {
@@ -442,19 +417,64 @@ fn delete_edge<G: MultiVersionGraph>(graph: &G, snapshot_id: i64, op: &Operation
 }
 
 #[no_mangle]
+pub extern "C" fn reopenSecondary(ptr: GraphHandle, wait_sec: i64) -> Box<JnaResponse> {
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    match graph_store_ptr.reopen(wait_sec as u64) {
+        Ok(_) => {
+            info!("Reopened store");
+            JnaResponse::new_success()
+        }
+        Err(e) => {
+            let msg = format!("Reopen failed: {:?}", e);
+            error!("{}", msg);
+            JnaResponse::new_error(&msg)
+        }
+    }
+}
+
+#[no_mangle]
 pub extern "C" fn garbageCollectSnapshot(ptr: GraphHandle, snapshot_id: i64) -> Box<JnaResponse> {
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    // if snapshot_id % 60 != 0 {
+    //     return JnaResponse::new_success();
+    // }
+    debug!("garbageCollectSnapshot si {}", snapshot_id);
+    match graph_store_ptr.gc(snapshot_id) {
+        Ok(_) => JnaResponse::new_success(),
+        Err(e) => {
+            let msg = format!("{:?}", e);
+            JnaResponse::new_error(&msg)
+        }
+    }
+}
 
+#[no_mangle]
+pub extern "C" fn tryCatchUpWithPrimary(ptr: GraphHandle) -> Box<JnaResponse> {
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
     match graph_store_ptr.try_catch_up_with_primary() {
-        Ok(_) => (),
+        Ok(_) => JnaResponse::new_success(),
         Err(e) => {
             error!("Error during catch up primary {:?}", e);
+            // sleep 2 min for the underlying storage catch latest changes.
+            match graph_store_ptr.reopen(120) {
+                Ok(_) => {
+                    info!("Reopened store");
+                    JnaResponse::new_success()
+                }
+                Err(e) => {
+                    let msg = format!("Reopen failed: {:?}", e);
+                    error!("{}", msg);
+                    JnaResponse::new_error(&msg)
+                }
+            }
         }
-    };
-    if snapshot_id % 3600 != 0 {
-        return JnaResponse::new_success();
     }
-    match graph_store_ptr.gc(snapshot_id) {
+}
+
+#[no_mangle]
+pub extern "C" fn compact(ptr: GraphHandle) -> Box<JnaResponse> {
+    let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
+    match graph_store_ptr.compact() {
         Ok(_) => JnaResponse::new_success(),
         Err(e) => {
             let msg = format!("{:?}", e);
