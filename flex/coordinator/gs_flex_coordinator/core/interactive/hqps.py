@@ -19,29 +19,18 @@
 import datetime
 import logging
 import os
+import pickle
 from typing import List, Union
 
 import hqps_client
-from hqps_client import (
-    Graph,
-    JobResponse,
-    JobStatus,
-    ModelSchema,
-    Procedure,
-    SchemaMapping,
-    Service,
-)
+from hqps_client import (Graph, JobResponse, JobStatus, ModelSchema, Procedure,
+                         SchemaMapping, Service)
 
-from gs_flex_coordinator.core.config import (
-    CLUSTER_TYPE,
-    HQPS_ADMIN_SERVICE_PORT,
-    WORKSPACE,
-)
-from gs_flex_coordinator.core.utils import (
-    encode_datetime,
-    get_internal_ip,
-    get_public_ip,
-)
+from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
+                                             HQPS_ADMIN_SERVICE_PORT,
+                                             WORKSPACE)
+from gs_flex_coordinator.core.utils import (encode_datetime, get_internal_ip,
+                                            get_public_ip)
 from gs_flex_coordinator.models import StartServiceRequest
 
 logger = logging.getLogger("graphscope")
@@ -56,6 +45,30 @@ class HQPSClient(object):
         # workspace
         self._workspace = os.path.join(WORKSPACE, "interactive")
         os.makedirs(self._workspace, exist_ok=True)
+        # dataloading config
+        self._dataloading_config = {}
+        # pickle path
+        self._pickle_path = os.path.join(self._workspace, "dataloading_config")
+        # recover
+        self._try_to_recover_from_disk()
+
+    def _try_to_recover_from_disk(self):
+        try:
+            if os.path.exists(self._pickle_path):
+                logger.info(
+                    "Recover dataloading configs from file %s", self._pickle_path
+                )
+                with open(self._pickle_path, "rb") as f:
+                    self._dataloading_config = pickle.load(f)
+        except Exception as e:
+            logger.warn("Failed to recover dataloading configs: %s", str(e))
+
+    def _pickle_dataloading_config_impl(self):
+        try:
+            with open(self._pickle_path, "wb") as f:
+                pickle.dump(self._dataloading_config, f)
+        except Exception as e:
+            logger.warn("Failed to dump dataloading configs: %s", str(e))
 
     def _get_hqps_service_endpoints(self):
         if CLUSTER_TYPE == "HOSTS":
@@ -87,7 +100,11 @@ class HQPSClient(object):
             hqps_client.Configuration(self._hqps_endpoint)
         ) as api_client:
             api_instance = hqps_client.GraphApi(api_client)
-            return api_instance.delete_graph(graph_name)
+            rlt = api_instance.delete_graph(graph_name)
+            # unbind datasource
+            del self._dataloading_config[graph_name]
+            self._pickle_dataloading_config_impl()
+            return rlt
 
     def create_procedure(self, graph_name: str, procedure: dict) -> str:
         with hqps_client.ApiClient(
@@ -150,7 +167,8 @@ class HQPSClient(object):
                     "status": response.status,
                     "graph_name": response.graph_name,
                     "sdk_endpoints": {
-                        "cypher": f"neo4j://{host}:{response.bolt_port}",
+                        "cypher": f"neo4j://{host}:7688",
+                        # "cypher": f"neo4j://{host}:{response.bolt_port}",
                         "hqps": f"http://{host}:{response.hqps_port}",
                     },
                 }
@@ -221,6 +239,9 @@ class HQPSClient(object):
     def create_dataloading_job(
         self, graph_name: str, schema_mapping: dict
     ) -> JobResponse:
+        # dataloading
+        self._dataloading_config[graph_name] = schema_mapping
+        self._pickle_dataloading_config_impl()
         with hqps_client.ApiClient(
             hqps_client.Configuration(self._hqps_endpoint)
         ) as api_client:
@@ -229,6 +250,9 @@ class HQPSClient(object):
                 graph_name, SchemaMapping.from_dict(schema_mapping)
             )
             return response.job_id
+
+    def get_dataloading_config(self, graph_name: str) -> dict:
+        return self._dataloading_config.get(graph_name, {})
 
 
 def init_hqps_client():

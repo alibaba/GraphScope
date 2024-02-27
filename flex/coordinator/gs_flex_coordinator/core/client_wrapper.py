@@ -262,6 +262,16 @@ class ClientWrapper(object):
         job_id = self._client.create_dataloading_job(graph_name, schema_mapping_dict)
         return job_id
 
+    def get_dataloading_config(self, graph_name: str) -> SchemaMapping:
+        config = self._client.get_dataloading_config(graph_name)
+        print(SchemaMapping().to_dict())
+        if not config:
+            # construct an empty config
+            schema_mapping = SchemaMapping()
+        else:
+            schema_mapping = SchemaMapping.from_dict(config)
+        return schema_mapping
+
     def upload_file(self, filestorage) -> str:
         if CLUSTER_TYPE == "HOSTS":
             filepath = os.path.join(DATASET_WORKSPACE, filestorage.filename)

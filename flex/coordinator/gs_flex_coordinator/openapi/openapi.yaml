@@ -455,6 +455,277 @@ paths:
       tags:
       - job
       x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/graph/{graph_name}/dataloading/config:
+    get:
+      description: get dataloading configuration
+      operationId: get_dataloading_config
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/SchemaMapping'
+                type: array
+          description: Successful operation
+      tags:
+      - job
+      x-openapi-router-controller: gs_flex_coordinator.controllers.job_controller
+  /api/v1/graph/{graph_name}/datasource:
+    get:
+      description: List data source on graph
+      operationId: get_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataSource'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+    post:
+      description: Import data source in batch
+      operationId: import_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataSource'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/edge_datasource:
+    post:
+      description: Bind data source on edge type
+      operationId: bind_edge_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EdgeDataSource'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/edge_datasource/{type_name}:
+    delete:
+      description: Unbind datasource on an edge type
+      operationId: unbind_edge_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+    get:
+      description: Get edge data source
+      operationId: get_edge_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: source_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: destination_vertex_type
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EdgeDataSource'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/vertex_datasource:
+    post:
+      description: Bind data source on vertex type
+      operationId: bind_vertex_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VertexDataSource'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+  /api/v1/graph/{graph_name}/datasource/vertex_datasource/{type_name}:
+    delete:
+      description: Unbind datasource on a vertex type
+      operationId: unbind_vertex_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
+    get:
+      description: Get vertex data source
+      operationId: get_vertex_datasource
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: type_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VertexDataSource'
+          description: Successful operation
+      tags:
+      - datasource
+      x-openapi-router-controller: gs_flex_coordinator.controllers.datasource_controller
   /api/v1/graph/{graph_name}/procedure:
     get:
       description: List stored procedures on a certain graph
@@ -1867,6 +2138,130 @@ components:
       title: JobStatus
       type: object
       x-body-name: job_status
+    VertexDataSource:
+      example:
+        type_name: type_name
+        property_mapping:
+          key: ""
+        location: location
+        data_source: ODPS
+      properties:
+        data_source:
+          enum:
+          - ODPS
+          - FILE
+          title: data_source
+          type: string
+        type_name:
+          title: type_name
+          type: string
+        location:
+          title: location
+          type: string
+        property_mapping:
+          additionalProperties: true
+          title: property_mapping
+          type: object
+      title: VertexDataSource
+      type: object
+      x-body-name: vertex_datasource
+    EdgeDataSource:
+      example:
+        source_pk_column_map:
+          key: ""
+        type_name: type_name
+        destination_pk_column_map:
+          key: ""
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+        property_mapping:
+          key: ""
+        location: location
+        data_source: ODPS
+      properties:
+        data_source:
+          enum:
+          - ODPS
+          - FILE
+          title: data_source
+          type: string
+        type_name:
+          title: type_name
+          type: string
+        source_vertex:
+          title: source_vertex
+          type: string
+        destination_vertex:
+          title: destination_vertex
+          type: string
+        location:
+          title: location
+          type: string
+        source_pk_column_map:
+          additionalProperties: true
+          title: source_pk_column_map
+          type: object
+        destination_pk_column_map:
+          additionalProperties: true
+          title: destination_pk_column_map
+          type: object
+        property_mapping:
+          additionalProperties: true
+          title: property_mapping
+          type: object
+      title: EdgeDataSource
+      type: object
+      x-body-name: edge_datasource
+    DataSource:
+      example:
+        edges_datasource:
+        - source_pk_column_map:
+            key: ""
+          type_name: type_name
+          destination_pk_column_map:
+            key: ""
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+        - source_pk_column_map:
+            key: ""
+          type_name: type_name
+          destination_pk_column_map:
+            key: ""
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+        vertices_datasource:
+        - type_name: type_name
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+        - type_name: type_name
+          property_mapping:
+            key: ""
+          location: location
+          data_source: ODPS
+      properties:
+        vertices_datasource:
+          items:
+            $ref: '#/components/schemas/VertexDataSource'
+          title: vertices_datasource
+          type: array
+        edges_datasource:
+          items:
+            $ref: '#/components/schemas/EdgeDataSource'
+          title: edges_datasource
+          type: array
+      title: DataSource
+      type: object
+      x-body-name: datasource
     GrootGraph:
       example:
         creation_time: creation_time

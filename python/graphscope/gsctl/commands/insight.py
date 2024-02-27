@@ -18,16 +18,11 @@
 
 import click
 import yaml
-
-from graphscope.gsctl.impl import create_edge_type
-from graphscope.gsctl.impl import create_vertex_type
-from graphscope.gsctl.impl import delete_edge_type
-from graphscope.gsctl.impl import delete_vertex_type
-from graphscope.gsctl.impl import import_groot_schema
-from graphscope.gsctl.impl import list_groot_graph
-from graphscope.gsctl.utils import is_valid_file_path
-from graphscope.gsctl.utils import read_yaml_file
-from graphscope.gsctl.utils import terminal_display
+from graphscope.gsctl.impl import (create_edge_type, create_vertex_type,
+                                   delete_edge_type, delete_vertex_type,
+                                   import_groot_schema, list_groot_graph)
+from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
+                                    terminal_display)
 
 
 @click.group()
@@ -56,6 +51,12 @@ def describe():
 @cli.group()
 def get():
     """Display a specific resource or group of resources"""
+    pass
+
+
+@cli.group()
+def bind():
+    """"""
     pass
 
 

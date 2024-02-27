@@ -21,9 +21,11 @@ from graphscope.flex.rest.models.alert_rule import AlertRule
 from graphscope.flex.rest.models.column_mapping import ColumnMapping
 from graphscope.flex.rest.models.connection import Connection
 from graphscope.flex.rest.models.connection_status import ConnectionStatus
+from graphscope.flex.rest.models.data_source import DataSource
 from graphscope.flex.rest.models.deployment_info import DeploymentInfo
 from graphscope.flex.rest.models.deployment_info_graphs_info_value import DeploymentInfoGraphsInfoValue
 from graphscope.flex.rest.models.deployment_status import DeploymentStatus
+from graphscope.flex.rest.models.edge_data_source import EdgeDataSource
 from graphscope.flex.rest.models.edge_mapping import EdgeMapping
 from graphscope.flex.rest.models.edge_mapping_destination_vertex_mappings_inner import EdgeMappingDestinationVertexMappingsInner
 from graphscope.flex.rest.models.edge_mapping_source_vertex_mappings_inner import EdgeMappingSourceVertexMappingsInner
@@ -56,5 +58,6 @@ from graphscope.flex.rest.models.service_status import ServiceStatus
 from graphscope.flex.rest.models.service_status_sdk_endpoints import ServiceStatusSdkEndpoints
 from graphscope.flex.rest.models.start_service_request import StartServiceRequest
 from graphscope.flex.rest.models.update_alert_messages_request import UpdateAlertMessagesRequest
+from graphscope.flex.rest.models.vertex_data_source import VertexDataSource
 from graphscope.flex.rest.models.vertex_mapping import VertexMapping
 from graphscope.flex.rest.models.vertex_type import VertexType
