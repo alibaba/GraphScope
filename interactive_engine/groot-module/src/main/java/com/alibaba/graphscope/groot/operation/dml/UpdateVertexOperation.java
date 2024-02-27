@@ -25,9 +25,9 @@ import java.util.Map;
 
 public class UpdateVertexOperation extends Operation {
 
-    private VertexId vertexId;
-    private LabelId labelId;
-    private Map<Integer, PropertyValue> properties;
+    private final VertexId vertexId;
+    private final LabelId labelId;
+    private final Map<Integer, PropertyValue> properties;
 
     public UpdateVertexOperation(
             VertexId vertexId, LabelId labelId, Map<Integer, PropertyValue> properties) {

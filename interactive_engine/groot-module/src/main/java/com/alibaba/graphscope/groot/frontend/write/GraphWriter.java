@@ -14,7 +14,6 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.common.util.*;
-import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;

@@ -21,7 +21,7 @@ import java.net.URI;
 
 public class GrootNameResolverFactory extends NameResolver.Factory {
 
-    private NodeDiscovery discovery;
+    private final NodeDiscovery discovery;
 
     public GrootNameResolverFactory(NodeDiscovery discovery) {
         this.discovery = discovery;

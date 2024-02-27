@@ -15,7 +15,7 @@ package com.alibaba.graphscope.groot.operation;
 
 public class BatchId {
 
-    private long snapshotId;
+    private final long snapshotId;
 
     public BatchId(long snapshotId) {
         this.snapshotId = snapshotId;

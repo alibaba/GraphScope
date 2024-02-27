@@ -23,9 +23,9 @@ import com.google.protobuf.ByteString;
 
 public class DeleteEdgeOperation extends Operation {
 
-    private EdgeId edgeId;
-    private EdgeKind edgeKind;
-    private boolean forward;
+    private final EdgeId edgeId;
+    private final EdgeKind edgeKind;
+    private final boolean forward;
 
     public DeleteEdgeOperation(EdgeId edgeId, EdgeKind edgeKind, boolean forward) {
         super(OperationType.DELETE_EDGE);

@@ -13,8 +13,8 @@
  */
 package com.alibaba.graphscope.groot.frontend;
 
+import com.alibaba.graphscope.groot.frontend.write.IngestCallback;
 import com.alibaba.graphscope.groot.frontend.write.KafkaAppender;
-import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.proto.groot.*;
 

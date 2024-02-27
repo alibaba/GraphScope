@@ -25,14 +25,14 @@ import com.alibaba.graphscope.groot.store.StoreService;
 
 public class GaiaService implements AbstractService {
 
-    private Configs configs;
-    private ExecutorEngine engine;
-    private StoreService storeService;
-    private MetaService metaService;
+    private final Configs configs;
+    private final GaiaEngine engine;
+    private final StoreService storeService;
+    private final MetaService metaService;
 
     public GaiaService(
             Configs configs,
-            ExecutorEngine engine,
+            GaiaEngine engine,
             StoreService storeService,
             MetaService metaService) {
         this.configs = configs;

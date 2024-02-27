@@ -21,9 +21,9 @@ import java.util.Objects;
 public class OperationBlob {
     public static final OperationBlob MARKER_OPERATION_BLOB = new MarkerOperation().toBlob();
 
-    private long partitionKey;
-    private OperationType operationType;
-    private ByteString dataBytes;
+    private final long partitionKey;
+    private final OperationType operationType;
+    private final ByteString dataBytes;
 
     public OperationBlob(long partitionKey, OperationType operationType, ByteString dataBytes) {
         this.partitionKey = partitionKey;

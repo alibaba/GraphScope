@@ -32,11 +32,11 @@ public class FrontendQueryManager extends IrMetaQueryCallback {
     private static final int QUEUE_SIZE = 1024 * 1024;
 
     // manage queries <snapshotId, is_done>
-    private BlockingQueue<QueryStatus> queryQueue;
-    private SnapshotUpdateCommitter committer;
+    private final BlockingQueue<QueryStatus> queryQueue;
+    private final SnapshotUpdateCommitter committer;
     private ScheduledExecutorService updateExecutor;
     private long oldSnapshotId = Long.MIN_VALUE;
-    private int frontendId;
+    private final int frontendId;
 
     public FrontendQueryManager(
             IrMetaFetcher fetcher, int frontendId, SnapshotUpdateCommitter committer) {
