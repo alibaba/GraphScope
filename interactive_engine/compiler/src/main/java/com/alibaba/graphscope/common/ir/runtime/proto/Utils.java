@@ -16,9 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
-import static com.alibaba.graphscope.gaia.proto.GraphAlgebra.GroupBy.AggFunc.Aggregate;
-
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
@@ -623,11 +622,11 @@ public abstract class Utils {
     }
 
     public static GraphAlgebraPhysical.Repartition protoShuffleRepartition(int keyId) {
-        com.google.protobuf.Int32Value shuffleKey = asAliasId(keyId);
-        GraphAlgebraPhysical.Repartition.Shuffle shuffle =
-                GraphAlgebraPhysical.Repartition.Shuffle.newBuilder()
-                        .setShuffleKey(shuffleKey)
-                        .build();
-        return GraphAlgebraPhysical.Repartition.newBuilder().setToAnother(shuffle).build();
+        GraphAlgebraPhysical.Repartition.Shuffle.Builder shuffleBuilder =
+                GraphAlgebraPhysical.Repartition.Shuffle.newBuilder();
+        if (keyId != AliasInference.DEFAULT_ID) {
+            shuffleBuilder.setShuffleKey(asAliasId(keyId));
+        }
+        return GraphAlgebraPhysical.Repartition.newBuilder().setToAnother(shuffleBuilder).build();
     }
 }

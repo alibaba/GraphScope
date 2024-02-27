@@ -47,6 +47,20 @@
     }
   }, {
     "opr": {
+      "vertex": {
+        "tag": 0,
+        "opt": "ITSELF",
+        "params": {
+          "columns": [{
+            "name": "name"
+          }],
+          "sampleRatio": 1.0
+        },
+        "alias": 0
+      }
+    }
+  }, {
+    "opr": {
       "dedup": {
         "keys": [{
           "tag": {

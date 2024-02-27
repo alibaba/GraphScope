@@ -19,6 +19,8 @@ package com.alibaba.graphscope.common.ir.runtime.proto;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
+import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.gaia.proto.Common;
 import com.alibaba.graphscope.gaia.proto.DataType;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
@@ -29,7 +31,9 @@ import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.util.Sarg;
+import org.javatuples.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,11 +42,13 @@ import java.util.List;
 public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expression> {
     private final boolean isColumnId;
     private final RexBuilder rexBuilder;
+    private List<Pair<Integer, GraphNameOrId>> extractedTagColumns;
 
     public RexToProtoConverter(boolean deep, boolean isColumnId, RexBuilder rexBuilder) {
         super(deep);
         this.isColumnId = isColumnId;
         this.rexBuilder = rexBuilder;
+        this.extractedTagColumns = new ArrayList<>();
     }
 
     @Override
@@ -98,6 +104,16 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                                     "component type of 'ARRAY_VALUE_CONSTRUCTOR' should be"
                                             + " 'variable' in ir core structure");
                             varsBuilder.addKeys(operand.accept(this).getOperators(0).getVar());
+                            RexGraphVariable var = (RexGraphVariable) operand;
+                            if (var.getProperty() != null) {
+                                if (GraphProperty.Opt.ALL.equals(var.getProperty().getOpt())
+                                        || GraphProperty.Opt.KEY.equals(
+                                                var.getProperty().getOpt())) {
+                                    extractedTagColumns.add(
+                                            Pair.with(
+                                                    var.getAliasId(), var.getProperty().getKey()));
+                                }
+                            }
                         });
         return OuterExpression.Expression.newBuilder()
                 .addOperators(
@@ -127,6 +143,14 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                             .setKey(key.accept(this).getOperators(0).getConst())
                             .setValue(value.accept(this).getOperators(0).getVar())
                             .build());
+            RexGraphVariable var = (RexGraphVariable) value;
+            if (var.getProperty() != null) {
+                if (GraphProperty.Opt.ALL.equals(var.getProperty().getOpt())
+                        || GraphProperty.Opt.KEY.equals(var.getProperty().getOpt())) {
+                    extractedTagColumns.add(
+                            Pair.with(var.getAliasId(), var.getProperty().getKey()));
+                }
+            }
         }
         return OuterExpression.Expression.newBuilder()
                 .addOperators(
@@ -316,6 +340,13 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                             .setVar(varBuilder.build())
                             .setNodeType(varDataType)
                             .build());
+            if (var.getProperty() != null) {
+                if (GraphProperty.Opt.ALL.equals(var.getProperty().getOpt())
+                        || GraphProperty.Opt.KEY.equals(var.getProperty().getOpt())) {
+                    extractedTagColumns.add(
+                            Pair.with(var.getAliasId(), var.getProperty().getKey()));
+                }
+            }
         }
         return builder.build();
     }
@@ -353,5 +384,9 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
     public OuterExpression.Expression visitSubQuery(RexSubQuery subQuery) {
         throw new UnsupportedOperationException(
                 "conversion from subQuery to ir core structure is unsupported yet");
+    }
+
+    public List<Pair<Integer, GraphNameOrId>> getExtractedTagColumns() {
+        return extractedTagColumns;
     }
 }

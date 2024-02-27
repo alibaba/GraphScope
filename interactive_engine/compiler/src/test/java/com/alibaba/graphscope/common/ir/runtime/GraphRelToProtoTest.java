@@ -409,6 +409,53 @@ public class GraphRelToProtoTest {
     }
 
     @Test
+    public void filter_test_2() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RelNode filter =
+                builder.source(
+                                new SourceConfig(
+                                        GraphOpt.Source.VERTEX,
+                                        new LabelConfig(false).addLabel("person"),
+                                        "x"))
+                        .expand(
+                                new ExpandConfig(
+                                        GraphOpt.Expand.OUT,
+                                        new LabelConfig(false).addLabel("knows"),
+                                        "y"))
+                        .filter(
+                                builder.call(
+                                        GraphStdOperatorTable.GREATER_THAN,
+                                        builder.variable("x", "age"),
+                                        builder.variable("y", "weight")))
+                        .build();
+        Assert.assertEquals(
+                "LogicalFilter(condition=[>(x.age, y.weight)])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[y],"
+                    + " opt=[OUT])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                    + " alias=[x], opt=[VERTEX])",
+                filter.explain().trim());
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockGraphConfig(), Utils.schemaMeta, new LogicalPlan(filter))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/filter_test_2.json"),
+                    plan.explain().trim());
+        }
+        try (PhysicalBuilder protoBuilder =
+                new GraphRelProtoPhysicalBuilder(
+                        getMockPartitionedGraphConfig(),
+                        Utils.schemaMeta,
+                        new LogicalPlan(filter))) {
+            PhysicalPlan plan = protoBuilder.build();
+            Assert.assertEquals(
+                    FileUtils.readJsonFromResource("proto/partitioned_filter_test_2.json"),
+                    plan.explain().trim());
+        }
+    }
+
+    @Test
     public void aggregate_test() throws Exception {
         GraphBuilder builder = Utils.mockGraphBuilder();
         RelNode aggregate =

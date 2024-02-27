@@ -41,7 +41,6 @@
     "opr": {
       "repartition": {
         "toAnother": {
-          "shuffleKey": -1
         }
       }
     }
@@ -93,9 +92,9 @@
         "opt": "ITSELF",
         "params": {
           "columns": [{
-            "name": "name"
-          }, {
             "name": "age"
+          }, {
+            "name": "name"
           }],
           "sampleRatio": 1.0
         },

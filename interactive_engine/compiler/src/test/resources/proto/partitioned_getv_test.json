@@ -41,7 +41,6 @@
     "opr": {
       "repartition": {
         "toAnother": {
-          "shuffleKey": -1
         }
       }
     }
