@@ -82,8 +82,10 @@ public class HttpClient {
                 resultMsg = EntityUtils.toString(response.getEntity(), "UTF-8");
             } else {
                 throw new Exception(
-                        "调用http-get方法返回失败code=" + response.getStatusLine().getStatusCode() + ",msg=" + response
-                                .getStatusLine().getReasonPhrase());
+                        "调用http-get方法返回失败code="
+                                + response.getStatusLine().getStatusCode()
+                                + ",msg="
+                                + response.getStatusLine().getReasonPhrase());
             }
         } catch (Exception e) {
             throw new Exception("调用http-get方法异常", e);

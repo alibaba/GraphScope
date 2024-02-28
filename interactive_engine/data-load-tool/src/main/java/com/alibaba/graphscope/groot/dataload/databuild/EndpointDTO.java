@@ -30,5 +30,4 @@ public class EndpointDTO {
     public void setPort(int port) {
         this.port = port;
     }
-
 }

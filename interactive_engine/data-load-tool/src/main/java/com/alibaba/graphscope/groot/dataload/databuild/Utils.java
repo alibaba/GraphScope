@@ -13,6 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,9 +25,11 @@ public class Utils {
 
     private static final Logger logger = LoggerFactory.getLogger(Utils.class);
 
-    public static final String VIP_SERVER_HOST_URL = "http://jmenv.tbsite.net:8080/vipserver/serverlist";
+    public static final String VIP_SERVER_HOST_URL =
+            "http://jmenv.tbsite.net:8080/vipserver/serverlist";
 
-    public static final String VIP_SERVER_GET_DOMAIN_ENDPOINT_URL = "http://%s:80/vipserver/api/srvIPXT?dom=%s&qps=0&clientIP=127.0.0.1&udpPort=55963&encoding=GBK&";
+    public static final String VIP_SERVER_GET_DOMAIN_ENDPOINT_URL =
+            "http://%s:80/vipserver/api/srvIPXT?dom=%s&qps=0&clientIP=127.0.0.1&udpPort=55963&encoding=GBK&";
 
     // For Main Job
     static List<DataLoadTargetPb> getDataLoadTargets(
@@ -251,7 +254,7 @@ public class Utils {
                     }
                     return endpoints;
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 // continue
             }
         }
@@ -269,7 +272,7 @@ public class Utils {
         try {
             Date date = dateFormat.parse(dateStr);
             return date.getTime();
-        }catch (java.text.ParseException e) {
+        } catch (java.text.ParseException e) {
             return null;
         }
     }

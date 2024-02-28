@@ -19,7 +19,6 @@ import com.alibaba.graphscope.groot.common.schema.mapper.GraphSchemaMapper;
 import com.alibaba.graphscope.groot.common.schema.wrapper.GraphDef;
 import com.alibaba.graphscope.groot.common.util.JSON;
 import com.alibaba.graphscope.groot.common.util.UuidUtils;
-import com.alibaba.graphscope.groot.dataload.LoadTool;
 import com.alibaba.graphscope.groot.dataload.util.OSSFS;
 import com.alibaba.graphscope.groot.dataload.util.VolumeFS;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
@@ -72,12 +71,15 @@ public class OfflineBuildOdps {
                 Long.parseLong(
                         properties.getProperty(DataLoadConfig.WAIT_TIME_BEFORE_REPLAY, "-1"));
 
-        String primaryVipServerDomain = properties.getProperty(DataLoadConfig.PRIMARY_VIP_SERVER_DOMAIN, "");
-        String secondaryVipServerDomain = properties.getProperty(DataLoadConfig.SECONDARY_VIP_SERVER_DOMAIN, "");
+        String primaryVipServerDomain =
+                properties.getProperty(DataLoadConfig.PRIMARY_VIP_SERVER_DOMAIN, "");
+        String secondaryVipServerDomain =
+                properties.getProperty(DataLoadConfig.SECONDARY_VIP_SERVER_DOMAIN, "");
         if (!"".equals(primaryVipServerDomain)) {
             // if vipserver domain is not blank, get vipserver ip:port replace graphEndpoint param
             try {
-                List<EndpointDTO> vipServerEndpoints = Utils.getEndpointFromVipServerDomain(primaryVipServerDomain);
+                List<EndpointDTO> vipServerEndpoints =
+                        Utils.getEndpointFromVipServerDomain(primaryVipServerDomain);
                 logger.info("vipServerEndpoint is {}", vipServerEndpoints);
                 if (vipServerEndpoints.size() > 0) {
                     graphEndpoint = vipServerEndpoints.get(0).toAddress();
@@ -87,8 +89,12 @@ public class OfflineBuildOdps {
             }
         }
 
-        boolean compactAfterCommit = Boolean.parseBoolean(properties.getProperty(DataLoadConfig.COMPACT_AFTER_COMMIT, "false"));
-        boolean reopenAfterCommit = Boolean.parseBoolean(properties.getProperty(DataLoadConfig.REOPEN_AFTER_COMMIT, "false"));
+        boolean compactAfterCommit =
+                Boolean.parseBoolean(
+                        properties.getProperty(DataLoadConfig.COMPACT_AFTER_COMMIT, "false"));
+        boolean reopenAfterCommit =
+                Boolean.parseBoolean(
+                        properties.getProperty(DataLoadConfig.REOPEN_AFTER_COMMIT, "false"));
         Long replayTimeStamp = getReplayTimeStampFromArgs(args);
         logger.info("replayTimeStamp is {}", replayTimeStamp);
 
@@ -238,7 +244,8 @@ public class OfflineBuildOdps {
         if (reopenAfterCommit) {
             if (!"".equals(secondaryVipServerDomain)) {
                 try {
-                    List<EndpointDTO> secondaryVipServerEndpoints = Utils.getEndpointFromVipServerDomain(secondaryVipServerDomain);
+                    List<EndpointDTO> secondaryVipServerEndpoints =
+                            Utils.getEndpointFromVipServerDomain(secondaryVipServerDomain);
                     for (EndpointDTO secondaryVipServerEndpoint : secondaryVipServerEndpoints) {
                         String address = secondaryVipServerEndpoint.getIp() + ":55556";
                         logger.info("endpoint: {}, reopen start.", address);
