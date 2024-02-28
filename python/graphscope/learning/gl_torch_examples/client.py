@@ -219,19 +219,19 @@ if __name__ == '__main__':
     parser.add_argument(
         "--training_pg_master_port",
         type=int,
-        default=11111,
+        default=9997,
         help="The port used for PyTorch's process group initialization across all training processes.",
     )
     parser.add_argument(
         "--train_loader_master_port",
         type=int,
-        default=11112,
+        default=9998,
         help="The port used for RPC initialization across all sampling workers of training loader.",
     )
     parser.add_argument(
         "--test_loader_master_port",
         type=int,
-        default=11113,
+        default=9999,
         help="The port used for RPC initialization across all sampling workers of testing loader.",
     )
     args = parser.parse_args()

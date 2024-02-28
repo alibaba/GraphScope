@@ -25,7 +25,7 @@ gs.set_option(show_log=True)
 # load the ogbn_arxiv graph as an example.
 sess = gs.session(cluster_type="hosts", num_workers=2)
 g = load_ogbn_arxiv(sess=sess)
-print(f"here {g.fragments}, {g.vineyard_id}")
+
 glt_graph = gs.graphlearn_torch(
     g,
     edges=[

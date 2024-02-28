@@ -317,7 +317,7 @@ class LocalLauncher(AbstractLauncher):
 
         server_client_master_port = get_free_port("localhost")
         handle["server_client_master_port"] = server_client_master_port
-
+        handle["master_addr"] = "localhost"
         server_list = [f"localhost:{server_client_master_port}"]
         # for train, val and test
         for _ in range(3):

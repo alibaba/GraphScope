@@ -1446,7 +1446,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
         return server_list
 
     def create_learning_instance(self, object_id, handle, config, learning_backend):
-        logger.info(learning_backend)
         if learning_backend == message_pb2.LearningBackend.GRAPHLEARN:
             pod_name_list, _, pod_host_ip_list = self._allocate_graphlearn_engine(object_id)
             if not pod_name_list or not pod_host_ip_list:
