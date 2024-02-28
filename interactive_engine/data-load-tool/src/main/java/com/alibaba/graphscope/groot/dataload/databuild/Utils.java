@@ -3,6 +3,7 @@ package com.alibaba.graphscope.groot.dataload.databuild;
 import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.*;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
+import com.alibaba.graphscope.groot.dataload.util.HttpClient;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
 import com.aliyun.odps.Odps;
@@ -10,13 +11,23 @@ import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.TableInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Utils {
+
+    private static final Logger logger = LoggerFactory.getLogger(Utils.class);
+
+    public static final String VIP_SERVER_HOST_URL = "http://jmenv.tbsite.net:8080/vipserver/serverlist";
+
+    public static final String VIP_SERVER_GET_DOMAIN_ENDPOINT_URL = "http://%s:80/vipserver/api/srvIPXT?dom=%s&qps=0&clientIP=127.0.0.1&udpPort=55963&encoding=GBK&";
+
     // For Main Job
     static List<DataLoadTargetPb> getDataLoadTargets(
             Map<String, FileColumnMapping> columnMappingConfig) {
@@ -213,6 +224,53 @@ public class Utils {
             return DST_FMT.format(SRC_FMT.parse(input));
         } catch (ParseException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static List<EndpointDTO> getEndpointFromVipServerDomain(String domain) throws Exception {
+        String srvResponse = HttpClient.doGet(VIP_SERVER_HOST_URL, null);
+        String[] srvList = srvResponse.split("\n");
+        List<EndpointDTO> endpoints = new ArrayList<>();
+        for (String srv : srvList) {
+            String url = String.format(VIP_SERVER_GET_DOMAIN_ENDPOINT_URL, srv, domain);
+            logger.info("url is {}", url);
+            try {
+                String endpointResponse = HttpClient.doGet(url, null);
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode endpointResponseJson = mapper.readTree(endpointResponse);
+                JsonNode endpointJsonArray = endpointResponseJson.get("hosts");
+                if (endpointJsonArray.isArray()) {
+                    for (int i = 0; i < endpointJsonArray.size(); i++) {
+                        JsonNode endpointJson = endpointJsonArray.get(i);
+                        boolean isValid = endpointJson.get("valid").asBoolean();
+                        if (isValid) {
+                            String ip = endpointJson.get("ip").asText();
+                            int port = endpointJson.get("port").asInt();
+                            endpoints.add(new EndpointDTO(ip, port));
+                        }
+                    }
+                    return endpoints;
+                }
+            }catch (Exception e) {
+                // continue
+            }
+        }
+        return endpoints;
+    }
+
+    /**
+     *
+     * @param dateStr
+     * @param dateFormatStr eg. yyyyMMdd
+     * @return
+     */
+    public static Long transferDateToTimeStamp(String dateStr, String dateFormatStr) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatStr);
+        try {
+            Date date = dateFormat.parse(dateStr);
+            return date.getTime();
+        }catch (java.text.ParseException e) {
+            return null;
         }
     }
 }

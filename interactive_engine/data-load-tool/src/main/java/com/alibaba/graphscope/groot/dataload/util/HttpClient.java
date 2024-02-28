@@ -1,13 +1,18 @@
 package com.alibaba.graphscope.groot.dataload.util;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
-import java.net.Authenticator;
-import java.net.HttpURLConnection;
-import java.net.PasswordAuthentication;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 /**
  * Simple HTTPClient which refer from <a href="https://github.com/eugenp/tutorials/blob/master/core-java-modules/core-java-networking-2/src/main/java/com/baeldung/url/auth/HttpClient.java">...</a>
@@ -57,6 +62,41 @@ public class HttpClient {
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         return connection;
+    }
+
+    public static String doGet(String url, Map<String, String> param) throws Exception {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        String resultMsg = "";
+        CloseableHttpResponse response = null;
+        try {
+            URIBuilder builder = new URIBuilder(url);
+            if (param != null) {
+                for (String key : param.keySet()) {
+                    builder.addParameter(key, param.get(key));
+                }
+            }
+            URI uri = builder.build();
+            HttpGet httpGet = new HttpGet(uri);
+            response = httpClient.execute(httpGet);
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_OK) {
+                resultMsg = EntityUtils.toString(response.getEntity(), "UTF-8");
+            } else {
+                throw new Exception(
+                        "调用http-get方法返回失败code=" + response.getStatusLine().getStatusCode() + ",msg=" + response
+                                .getStatusLine().getReasonPhrase());
+            }
+        } catch (Exception e) {
+            throw new Exception("调用http-get方法异常", e);
+        } finally {
+            try {
+                if (response != null) {
+                    response.close();
+                }
+                httpClient.close();
+            } catch (IOException e) {
+            }
+        }
+        return resultMsg;
     }
 
     private String createBasicAuthHeaderValue() {
