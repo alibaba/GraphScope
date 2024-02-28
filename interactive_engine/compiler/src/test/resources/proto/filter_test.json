@@ -1,0 +1,79 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 0,
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "predicate": {
+            "operators": [{
+              "var": {
+                "property": {
+                  "key": {
+                    "name": "name"
+                  }
+                },
+                "nodeType": {
+                  "dataType": "STRING"
+                }
+              },
+              "nodeType": {
+                "dataType": "STRING"
+              }
+            }, {
+              "logical": "EQ",
+              "nodeType": {
+                "dataType": "BOOLEAN"
+              }
+            }, {
+              "const": {
+                "str": "marko"
+              },
+              "nodeType": {
+                "dataType": "STRING"
+              }
+            }]
+          },
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
+            }]
+          }]
+        }
+      }
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}
