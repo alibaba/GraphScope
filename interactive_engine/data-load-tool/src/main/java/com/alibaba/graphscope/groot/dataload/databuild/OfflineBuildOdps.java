@@ -217,7 +217,12 @@ public class OfflineBuildOdps {
         reopenDb(reopenAfterCommit, secondaryVipServerDomain, username, password);
     }
 
-    private static void reopenDb(boolean reopenAfterCommit, String secondaryVipServerDomain, String username, String password) throws Exception {
+    private static void reopenDb(
+            boolean reopenAfterCommit,
+            String secondaryVipServerDomain,
+            String username,
+            String password)
+            throws Exception {
         if (reopenAfterCommit) {
             if (!"".equals(secondaryVipServerDomain)) {
                 try {
@@ -238,7 +243,8 @@ public class OfflineBuildOdps {
         }
     }
 
-    private static void compactDb(boolean compactAfterCommit, GrootClient client, String graphEndpoint) {
+    private static void compactDb(
+            boolean compactAfterCommit, GrootClient client, String graphEndpoint) {
         if (compactAfterCommit) {
             logger.info("endpoint {} compact start:", graphEndpoint);
             boolean compactSuccess = client.compactDB();
@@ -246,7 +252,8 @@ public class OfflineBuildOdps {
         }
     }
 
-    private static void replayRecords(Long replayTimeStamp, long waitTimeBeforeReplay, GrootClient client) {
+    private static void replayRecords(
+            Long replayTimeStamp, long waitTimeBeforeReplay, GrootClient client) {
         if (replayTimeStamp != null) {
             if (waitTimeBeforeReplay > 0) {
                 long waitStartTime = System.currentTimeMillis();
