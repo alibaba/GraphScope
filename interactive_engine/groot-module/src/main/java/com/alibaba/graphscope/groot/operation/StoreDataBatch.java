@@ -23,12 +23,12 @@ import java.util.List;
 import java.util.Map;
 
 public class StoreDataBatch {
-    private String requestId;
-    private int queueId;
-    private long snapshotId;
-    private long offset;
+    private final String requestId;
+    private final int queueId;
+    private final long snapshotId;
+    private final long offset;
     // List [ partition -> OperationBatch ]
-    private List<Map<Integer, OperationBatch>> dataBatch;
+    private final List<Map<Integer, OperationBatch>> dataBatch;
     private int size;
 
     private StoreDataBatch(

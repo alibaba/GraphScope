@@ -32,14 +32,6 @@
             <outputDirectory>native</outputDirectory>
         </fileSet>
         <fileSet>
-            <directory>${project.parent.basedir}/lgraph/build/install</directory>
-            <excludes>
-                <exclude>include/*</exclude>
-                <exclude>lib*/libgroot_ffi*</exclude>
-            </excludes>
-            <outputDirectory>native</outputDirectory>
-        </fileSet>
-        <fileSet>
             <directory>${project.basedir}/src/bin/groot/</directory>
             <outputDirectory>bin</outputDirectory>
             <fileMode>0755</fileMode>

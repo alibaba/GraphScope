@@ -596,7 +596,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     using cur_prop = std::tuple_element_t<My_Is, std::tuple<T...>>;
     if constexpr (std::is_same_v<cur_prop, EDATA_T>) {
       if (prop_names.size() == 1 && prop_names[0] == prop_names_[My_Is]) {
-        VLOG(10) << "Found builin property" << prop_names[0];
+        VLOG(10) << "Found built-in property" << prop_names[0];
         CHECK(repeat_array.size() == Size());
         size_t cur_ind = 0;
         size_t iter_ind = 0;

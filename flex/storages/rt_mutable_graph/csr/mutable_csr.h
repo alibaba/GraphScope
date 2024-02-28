@@ -295,13 +295,13 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
   }
 
   void dump(const std::string& name,
-            const std::string& new_spanshot_dir) override {
+            const std::string& new_snapshot_dir) override {
     size_t vnum = adj_lists_.size();
     bool reuse_nbr_list = true;
-    dump_meta(new_spanshot_dir + "/" + name);
+    dump_meta(new_snapshot_dir + "/" + name);
     mmap_array<int> degree_list;
     std::vector<int> cap_list;
-    degree_list.open(new_spanshot_dir + "/" + name + ".deg", true);
+    degree_list.open(new_snapshot_dir + "/" + name + ".deg", true);
     degree_list.resize(vnum);
     cap_list.resize(vnum);
     bool need_cap_list = false;
@@ -324,7 +324,7 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
 
     if (need_cap_list) {
       FILE* fcap_out =
-          fopen((new_spanshot_dir + "/" + name + ".cap").c_str(), "wb");
+          fopen((new_snapshot_dir + "/" + name + ".cap").c_str(), "wb");
       CHECK_EQ(fwrite(cap_list.data(), sizeof(int), cap_list.size(), fcap_out),
                cap_list.size());
       fflush(fcap_out);
@@ -334,10 +334,10 @@ class MutableCsr : public TypedMutableCsrBase<EDATA_T> {
     if (reuse_nbr_list && !nbr_list_.filename().empty() &&
         std::filesystem::exists(nbr_list_.filename())) {
       std::filesystem::create_hard_link(nbr_list_.filename(),
-                                        new_spanshot_dir + "/" + name + ".nbr");
+                                        new_snapshot_dir + "/" + name + ".nbr");
     } else {
       FILE* fout =
-          fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
+          fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
         CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
                         adj_lists_[i].capacity(), fout),
@@ -532,11 +532,11 @@ class MutableCsr<std::string_view>
   }
 
   void dump(const std::string& name,
-            const std::string& new_spanshot_dir) override {
+            const std::string& new_snapshot_dir) override {
     size_t vnum = adj_lists_.size();
     bool reuse_nbr_list = true;
     mmap_array<int> degree_list;
-    degree_list.open(new_spanshot_dir + "/" + name + ".deg", true);
+    degree_list.open(new_snapshot_dir + "/" + name + ".deg", true);
     degree_list.resize(vnum);
     size_t offset = 0;
     for (size_t i = 0; i < vnum; ++i) {
@@ -553,10 +553,10 @@ class MutableCsr<std::string_view>
     if (reuse_nbr_list && !nbr_list_.filename().empty() &&
         std::filesystem::exists(nbr_list_.filename())) {
       std::filesystem::create_hard_link(nbr_list_.filename(),
-                                        new_spanshot_dir + "/" + name + ".nbr");
+                                        new_snapshot_dir + "/" + name + ".nbr");
     } else {
       FILE* fout =
-          fopen((new_spanshot_dir + "/" + name + ".nbr").c_str(), "wb");
+          fopen((new_snapshot_dir + "/" + name + ".nbr").c_str(), "wb");
       for (size_t i = 0; i < vnum; ++i) {
         CHECK_EQ(fwrite(adj_lists_[i].data(), sizeof(nbr_t),
                         adj_lists_[i].size(), fout),
@@ -1020,7 +1020,7 @@ class EmptyCsr : public TypedMutableCsrBase<EDATA_T> {
   void open_with_hugepages(const std::string& prefix, size_t v_cap) override {}
 
   void dump(const std::string& name,
-            const std::string& new_spanshot_dir) override {}
+            const std::string& new_snapshot_dir) override {}
 
   void warmup(int thread_num) const override {}
 
@@ -1076,7 +1076,7 @@ class EmptyCsr<std::string_view>
   void open_in_memory(const std::string& prefix, size_t v_cap) override {}
 
   void dump(const std::string& name,
-            const std::string& new_spanshot_dir) override {}
+            const std::string& new_snapshot_dir) override {}
 
   void warmup(int thread_num) const override {}
 

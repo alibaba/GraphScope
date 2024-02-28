@@ -41,8 +41,6 @@ public enum RoleType {
         for (RoleType role : RoleType.values()) {
             lookup.put(role.getName(), role);
         }
-        lookup.put("store-gaia", STORE);
-        lookup.put("frontend-gaia", FRONTEND);
     }
 
     public static RoleType fromName(String roleName) {

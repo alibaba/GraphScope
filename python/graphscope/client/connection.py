@@ -186,13 +186,6 @@ class Connection:
         )
         return response.snapshot_id
 
-    def get_store_state(self):
-        request = model_pb2.GetStoreStateRequest()
-        response = self._client_service_stub.getStoreState(
-            request, metadata=self._metadata
-        )
-        return response.partitionStates
-
     def compact_db(self):
         request = model_pb2.CompactDBRequest()
         response = self._client_service_stub.compactDB(request, metadata=self._metadata)

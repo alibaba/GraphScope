@@ -42,7 +42,4 @@ public class ZkConfig {
 
     public static final Config<String> ZK_AUTH_PASSWORD =
             Config.stringConfig("zk.auth.password", "");
-
-    public static final Config<String> ZK_ENDPOINT_NODE =
-            Config.stringConfig("zk.endpoint.node", "/endpoint");
 }

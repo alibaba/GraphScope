@@ -21,9 +21,9 @@ import com.google.protobuf.ByteString;
 
 public class CreateEdgeTypeOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private TypeDef typeDef;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final TypeDef typeDef;
 
     public CreateEdgeTypeOperation(int partitionId, long schemaVersion, TypeDef typeDef) {
         super(OperationType.CREATE_EDGE_TYPE);

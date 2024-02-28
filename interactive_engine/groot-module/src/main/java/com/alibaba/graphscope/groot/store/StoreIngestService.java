@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class StoreIngestService extends StoreIngestGrpc.StoreIngestImplBase {
 
-    private StoreService storeService;
+    private final StoreService storeService;
 
     public StoreIngestService(StoreService storeService) {
         this.storeService = storeService;

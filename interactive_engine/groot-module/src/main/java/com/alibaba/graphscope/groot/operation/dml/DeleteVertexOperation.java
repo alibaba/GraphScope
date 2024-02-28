@@ -22,8 +22,8 @@ import com.google.protobuf.ByteString;
 
 public class DeleteVertexOperation extends Operation {
 
-    private VertexId vertexId;
-    private LabelId labelId;
+    private final VertexId vertexId;
+    private final LabelId labelId;
 
     public DeleteVertexOperation(VertexId vertexId, LabelId labelId) {
         super(OperationType.DELETE_VERTEX);

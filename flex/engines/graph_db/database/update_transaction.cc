@@ -343,8 +343,8 @@ UpdateTransaction::vertex_iterator UpdateTransaction::GetVertexIterator(
 }
 
 UpdateTransaction::edge_iterator UpdateTransaction::GetOutEdgeIterator(
-    label_t label, vid_t u, label_t neighnor_label, label_t edge_label) {
-  size_t csr_index = get_out_csr_index(label, neighnor_label, edge_label);
+    label_t label, vid_t u, label_t neighbor_label, label_t edge_label) {
+  size_t csr_index = get_out_csr_index(label, neighbor_label, edge_label);
   const vid_t* begin = nullptr;
   const vid_t* end = nullptr;
   auto iter = added_edges_[csr_index].find(u);
@@ -355,17 +355,17 @@ UpdateTransaction::edge_iterator UpdateTransaction::GetOutEdgeIterator(
   return {true,
           label,
           u,
-          neighnor_label,
+          neighbor_label,
           edge_label,
           begin,
           end,
-          graph_.get_outgoing_edges(label, u, neighnor_label, edge_label),
+          graph_.get_outgoing_edges(label, u, neighbor_label, edge_label),
           this};
 }
 
 UpdateTransaction::edge_iterator UpdateTransaction::GetInEdgeIterator(
-    label_t label, vid_t u, label_t neighnor_label, label_t edge_label) {
-  size_t csr_index = get_in_csr_index(label, neighnor_label, edge_label);
+    label_t label, vid_t u, label_t neighbor_label, label_t edge_label) {
+  size_t csr_index = get_in_csr_index(label, neighbor_label, edge_label);
   const vid_t* begin = nullptr;
   const vid_t* end = nullptr;
   auto iter = added_edges_[csr_index].find(u);
@@ -376,11 +376,11 @@ UpdateTransaction::edge_iterator UpdateTransaction::GetInEdgeIterator(
   return {false,
           label,
           u,
-          neighnor_label,
+          neighbor_label,
           edge_label,
           begin,
           end,
-          graph_.get_incoming_edges(label, u, neighnor_label, edge_label),
+          graph_.get_incoming_edges(label, u, neighbor_label, edge_label),
           this};
 }
 

@@ -50,21 +50,17 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     private final MetaService metaService;
     private final BatchDdlClient batchDdlClient;
 
-    private final StoreStateClients storeStateFetcher;
-
     public ClientService(
             SnapshotCache snapshotCache,
             MetricsAggregator metricsAggregator,
             StoreIngestClients storeIngestor,
             MetaService metaService,
-            BatchDdlClient batchDdlClient,
-            StoreStateClients storeStateFetcher) {
+            BatchDdlClient batchDdlClient) {
         this.snapshotCache = snapshotCache;
         this.metricsAggregator = metricsAggregator;
         this.storeIngestor = storeIngestor;
         this.metaService = metaService;
         this.batchDdlClient = batchDdlClient;
-        this.storeStateFetcher = storeStateFetcher;
     }
 
     @Override
@@ -74,20 +70,6 @@ public class ClientService extends ClientGrpc.ClientImplBase {
         int partitionCount = metaService.getPartitionCount();
         responseObserver.onNext(
                 GetPartitionNumResponse.newBuilder().setPartitionNum(partitionCount).build());
-        responseObserver.onCompleted();
-    }
-
-    @Override
-    public void getStoreState(
-            GetStoreStateRequest request, StreamObserver<GetStoreStateResponse> responseObserver) {
-        GetStoreStateResponse.Builder response = GetStoreStateResponse.newBuilder();
-        logger.info("getStoreState");
-        int storeCount = this.metaService.getStoreCount();
-        for (int i = 0; i < storeCount; i++) {
-            GetStoreStateResponse curResponse = this.storeStateFetcher.getDiskState(i);
-            response.mergeFrom(curResponse);
-        }
-        responseObserver.onNext(response.build());
         responseObserver.onCompleted();
     }
 

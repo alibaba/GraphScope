@@ -19,20 +19,17 @@ import java.util.List;
 public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientWriteService.class);
 
-    private final WriteSessionGenerator writeSessionGenerator;
     private final GraphWriter graphWriter;
 
-    public ClientWriteService(
-            WriteSessionGenerator writeSessionGenerator, GraphWriter graphWriter) {
-        this.writeSessionGenerator = writeSessionGenerator;
+    public ClientWriteService(GraphWriter graphWriter) {
         this.graphWriter = graphWriter;
     }
 
     @Override
     public void getClientId(
             GetClientIdRequest request, StreamObserver<GetClientIdResponse> responseObserver) {
-        String writeSession = writeSessionGenerator.newWriteSession();
-        responseObserver.onNext(GetClientIdResponse.newBuilder().setClientId(writeSession).build());
+        responseObserver.onNext(
+                GetClientIdResponse.newBuilder().setClientId("placeholder").build());
         responseObserver.onCompleted();
     }
 
