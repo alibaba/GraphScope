@@ -76,7 +76,7 @@ class ShortestPathOp {
     int8_t src_dep = 0, dst_dep = 0;
     std::queue<vertex_id_t> src_q, dst_q;
     std::queue<vertex_id_t> tmp_q;
-    std::vector<vertex_id_t> meet_vertices;  // store the vertices meet.
+    std::vector<vertex_id_t> met_vertices;  // store the vertices met.
     src_vid_dist[src_vid] = 0;
     dst_vid_dist[dst_vid] = 0;
     src_q.push(src_vid);
@@ -90,8 +90,8 @@ class ShortestPathOp {
 
         expand_from_queue(graph, vertex_label, edge_label, direction_str,
                           src_dep, src_q, tmp_q, src_vid_dist, dst_vid_dist,
-                          meet_vertices);
-        if (!meet_vertices.empty()) {
+                          met_vertices);
+        if (!met_vertices.empty()) {
           break;
         }
         std::swap(src_q, tmp_q);
@@ -100,8 +100,8 @@ class ShortestPathOp {
         ++dst_dep;
         expand_from_queue(graph, vertex_label, edge_label, direction_str,
                           dst_dep, dst_q, tmp_q, dst_vid_dist, src_vid_dist,
-                          meet_vertices);
-        if (!meet_vertices.empty()) {
+                          met_vertices);
+        if (!met_vertices.empty()) {
           break;
         }
         std::swap(dst_q, tmp_q);
@@ -111,14 +111,14 @@ class ShortestPathOp {
       }
     }
 
-    if (meet_vertices.empty()) {
+    if (met_vertices.empty()) {
       VLOG(10) << "no meet vertices found";
       return make_empty_path_set<vertex_id_t, LabelT>({vertex_label});
     }
 
     // to find the path.
     return find_paths(graph, vertex_label, edge_label, direction_str,
-                      meet_vertices, src_vid, dst_vid, src_vid_dist,
+                      met_vertices, src_vid, dst_vid, src_vid_dist,
                       dst_vid_dist);
   }
 
@@ -129,7 +129,7 @@ class ShortestPathOp {
       std::queue<vertex_id_t>& src_q, std::queue<vertex_id_t>& tmp_q,
       std::unordered_map<vertex_id_t, int8_t>& cur_vid_dist,
       std::unordered_map<vertex_id_t, int8_t>& other_vid_dist,
-      std::vector<vertex_id_t>& meeted_vertices) {
+      std::vector<vertex_id_t>& met_vertices) {
     std::vector<vertex_id_t> ids_to_query;
     ids_to_query.reserve(src_q.size());
     while (!src_q.empty()) {
@@ -146,13 +146,13 @@ class ShortestPathOp {
           cur_vid_dist[v] = depth;
           tmp_q.push(v);
           if (other_vid_dist.find(v) != other_vid_dist.end()) {
-            meeted_vertices.push_back(v);
+            met_vertices.push_back(v);
           }
         }
       }
     }
     VLOG(10) << "push " << tmp_q.size() << " ele to new queue"
-             << ", meeted vertices: " << meeted_vertices.size();
+             << ", met vertices: " << met_vertices.size();
   }
 
   static void dfs(
@@ -191,7 +191,7 @@ class ShortestPathOp {
   template <typename LabelT>
   static PathSet<vertex_id_t, LabelT> find_paths(
       const GRAPH_INTERFACE& graph, LabelT v_label, LabelT edge_label,
-      const std::string& direction, std::vector<vertex_id_t>& meet_vertices,
+      const std::string& direction, std::vector<vertex_id_t>& met_vertices,
       vertex_id_t src_vid, vertex_id_t dst_vid,
       std::unordered_map<vertex_id_t, int8_t>& src_vid_dist,
       std::unordered_map<vertex_id_t, int8_t>& dst_vid_dist) {
@@ -200,7 +200,7 @@ class ShortestPathOp {
                        std::vector<typename GRAPH_INTERFACE::nbr_t>>
         vid_to_nbr_list;
     std::queue<vertex_id_t> q;
-    for (auto v : meet_vertices) {
+    for (auto v : met_vertices) {
       vertex_set.insert(v);
       q.push(v);
     }

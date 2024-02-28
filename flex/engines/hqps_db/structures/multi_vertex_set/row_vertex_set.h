@@ -44,7 +44,7 @@ void fillBuiltinPropsImpl(
            << ", eq: " << gs::to_string(std::is_same_v<cur_prop, my_prop>);
   if constexpr (std::is_same_v<cur_prop, my_prop>) {
     if (prop_name == set_prop_names[My_Is]) {
-      VLOG(10) << "Found builin property " << prop_name;
+      VLOG(10) << "Found built-in property " << prop_name;
       CHECK(repeat_array.size() == datas.size());
       size_t ind = 0;
       for (size_t i = 0; i < repeat_array.size(); ++i) {
@@ -1409,13 +1409,13 @@ class RowVertexSetImpl<LabelT, VID_T, grape::EmptyType> {
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names,
                         const std::vector<offset_t>& repeat_array) const {
-    VLOG(10) << "Skip filling bulitin props for empty prop row vertex set";
+    VLOG(10) << "Skip filling built-in props for empty prop row vertex set";
   }
 
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         const PropNameArray<PropT...>& prop_names) const {
-    VLOG(10) << "Skip filling bulitin props for empty prop row vertex set";
+    VLOG(10) << "Skip filling built-in props for empty prop row vertex set";
   }
 
   // In places

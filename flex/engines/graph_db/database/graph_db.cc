@@ -134,7 +134,7 @@ Result<bool> GraphDB::Open(const GraphDBConfig& config) {
     graph_.Warmup(thread_num_);
   }
 
-  if (config.enable_monitering) {
+  if (config.enable_monitoring) {
     if (monitor_thread_running_) {
       monitor_thread_running_ = false;
       monitor_thread_.join();

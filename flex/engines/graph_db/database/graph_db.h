@@ -47,7 +47,7 @@ struct GraphDBConfig {
         data_dir(data_dir_),
         thread_num(thread_num_),
         warmup(false),
-        enable_monitering(false),
+        enable_monitoring(false),
         enable_auto_compaction(false),
         memory_level(1) {}
 
@@ -55,13 +55,13 @@ struct GraphDBConfig {
   std::string data_dir;
   int thread_num;
   bool warmup;
-  bool enable_monitering;
+  bool enable_monitoring;
   bool enable_auto_compaction;
 
   /*
     0 - sync with disk;
     1 - mmap virtual memory;
-    2 - prefering hugepages;
+    2 - preferring hugepages;
     3 - force hugepages;
   */
   int memory_level;
