@@ -19,8 +19,11 @@ package com.alibaba.graphscope.common.ir.rex;
 import com.google.common.base.Preconditions;
 
 import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexDynamicParam;
 import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexSubQuery;
 import org.apache.calcite.rex.RexVisitorImpl;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -50,7 +53,10 @@ public class RexGraphVariablesExtractor extends RexVisitorImpl<List<RexGraphVari
         } else if (operator.getKind() == SqlKind.MAP_VALUE_CONSTRUCTOR) {
             return visitMapValueConstructor(call);
         } else {
-            return super.visitCall(call);
+            for (RexNode operand : call.getOperands()) {
+                operand.accept(this);
+            }
+            return extractedGraphVariables;
         }
     }
 
@@ -81,10 +87,25 @@ public class RexGraphVariablesExtractor extends RexVisitorImpl<List<RexGraphVari
     }
 
     @Override
+    public List<RexGraphVariable> visitLiteral(RexLiteral literal) {
+        return extractedGraphVariables;
+    }
+
+    @Override
+    public List<RexGraphVariable> visitDynamicParam(RexDynamicParam dynamicParam) {
+        return extractedGraphVariables;
+    }
+
+    @Override
     public List<RexGraphVariable> visitInputRef(RexInputRef inputRef) {
         if (inputRef instanceof RexGraphVariable) {
             extractedGraphVariables.add((RexGraphVariable) inputRef);
         }
+        return extractedGraphVariables;
+    }
+
+    @Override
+    public List<RexGraphVariable> visitSubQuery(RexSubQuery subQuery) {
         return extractedGraphVariables;
     }
 }
