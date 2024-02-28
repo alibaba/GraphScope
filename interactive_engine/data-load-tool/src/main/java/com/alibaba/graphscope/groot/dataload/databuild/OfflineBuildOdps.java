@@ -212,7 +212,41 @@ public class OfflineBuildOdps {
                 }
             }
         }
+        replayRecords(replayTimeStamp, waitTimeBeforeReplay, client);
+        compactDb(compactAfterCommit, client, graphEndpoint);
+        reopenDb(reopenAfterCommit, secondaryVipServerDomain, username, password);
+    }
 
+    private static void reopenDb(boolean reopenAfterCommit, String secondaryVipServerDomain, String username, String password) throws Exception {
+        if (reopenAfterCommit) {
+            if (!"".equals(secondaryVipServerDomain)) {
+                try {
+                    List<EndpointDTO> secondaryVipServerEndpoints =
+                            Utils.getEndpointFromVipServerDomain(secondaryVipServerDomain);
+                    for (EndpointDTO secondaryVipServerEndpoint : secondaryVipServerEndpoints) {
+                        String address = secondaryVipServerEndpoint.getIp() + ":55556";
+                        logger.info("endpoint: {}, reopen start.", address);
+                        GrootClient secondaryClient = Utils.getClient(address, username, password);
+                        boolean reopenSuccess = secondaryClient.reopenSecondary();
+                        logger.info("endpoint: {}, reopen result:{}", address, reopenSuccess);
+                    }
+                } catch (Exception e) {
+                    logger.error("Get secondary vipserver domain endpoint has error.", e);
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private static void compactDb(boolean compactAfterCommit, GrootClient client, String graphEndpoint) {
+        if (compactAfterCommit) {
+            logger.info("endpoint {} compact start:", graphEndpoint);
+            boolean compactSuccess = client.compactDB();
+            logger.info("compact result:" + compactSuccess);
+        }
+    }
+
+    private static void replayRecords(Long replayTimeStamp, long waitTimeBeforeReplay, GrootClient client) {
         if (replayTimeStamp != null) {
             if (waitTimeBeforeReplay > 0) {
                 long waitStartTime = System.currentTimeMillis();
@@ -233,31 +267,6 @@ public class OfflineBuildOdps {
             }
             long replayEndTime = System.currentTimeMillis();
             logger.info("replay records end: " + replayEndTime);
-        }
-
-        if (compactAfterCommit) {
-            logger.info("endpoint {} compact start:", graphEndpoint);
-            boolean compactSuccess = client.compactDB();
-            logger.info("compact result:" + compactSuccess);
-        }
-
-        if (reopenAfterCommit) {
-            if (!"".equals(secondaryVipServerDomain)) {
-                try {
-                    List<EndpointDTO> secondaryVipServerEndpoints =
-                            Utils.getEndpointFromVipServerDomain(secondaryVipServerDomain);
-                    for (EndpointDTO secondaryVipServerEndpoint : secondaryVipServerEndpoints) {
-                        String address = secondaryVipServerEndpoint.getIp() + ":55556";
-                        logger.info("endpoint: {}, reopen start.", address);
-                        GrootClient secondaryClient = Utils.getClient(address, username, password);
-                        boolean reopenSuccess = secondaryClient.reopenSecondary();
-                        logger.info("endpoint: {}, reopen result:{}", address, reopenSuccess);
-                    }
-                } catch (Exception e) {
-                    logger.error("Get secondary vipserver domain endpoint has error.", e);
-                    throw e;
-                }
-            }
         }
     }
 
