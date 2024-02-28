@@ -37,7 +37,6 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt.PhysicalGetVOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
-import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
@@ -55,7 +54,6 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
-import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -785,31 +783,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         physicalBuilder.addPlan(auxiliaOprBuilder.build());
     }
 
-    // extract columns from a list of RexNode, and return e.g., {a.{name, age}, b.{weight}}}
-    private Map<Integer, Set<GraphNameOrId>> extractTagColumnsFromVariables(
-            List<? extends RexNode> exprs) {
-        return exprs.stream()
-                .map(
-                        k -> {
-                            if (k instanceof RexGraphVariable) {
-                                RexGraphVariable var = (RexGraphVariable) k;
-                                if (var.getProperty() != null
-                                        && (GraphProperty.Opt.ALL.equals(var.getProperty().getOpt())
-                                                || GraphProperty.Opt.KEY.equals(
-                                                        var.getProperty().getOpt()))) {
-                                    Pair<Integer, GraphNameOrId> result =
-                                            Pair.with(var.getAliasId(), var.getProperty().getKey());
-                                    return result;
-                                } else return null;
-                            } else return null;
-                        })
-                .filter(k -> k != null)
-                .collect(
-                        Collectors.groupingBy(
-                                pair -> pair.getValue0(),
-                                Collectors.mapping(pair -> pair.getValue1(), Collectors.toSet())));
-    }
-
     private void lazyPropertyFetching(List<? extends RexNode> vars) {
         // by default, we cache the result of the tagColumns, i.e., the optimizedNoCaching is false
         lazyPropertyFetching(vars, false);
@@ -823,7 +796,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
             List<? extends RexNode> vars,
             boolean optimizedNoCaching) {
-        Map<Integer, Set<GraphNameOrId>> columns = extractTagColumnsFromVariables(vars);
+        Map<Integer, Set<GraphNameOrId>> columns = Utils.extractTagColumnsFromVariables(vars);
         if (columns.isEmpty()) {
             return;
         } else if (columns.size() == 1 && optimizedNoCaching) {

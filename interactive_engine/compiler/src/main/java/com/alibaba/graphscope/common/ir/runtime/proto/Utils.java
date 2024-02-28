@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
@@ -37,14 +38,18 @@ import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexLiteral;
+import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Sarg;
+import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -628,5 +633,30 @@ public abstract class Utils {
             shuffleBuilder.setShuffleKey(asAliasId(keyId));
         }
         return GraphAlgebraPhysical.Repartition.newBuilder().setToAnother(shuffleBuilder).build();
+    }
+
+    // extract columns from a list of RexNode, and return e.g., {a.{name, age}, b.{weight}}}
+    public static Map<Integer, Set<GraphNameOrId>> extractTagColumnsFromVariables(
+            List<? extends RexNode> exprs) {
+        return exprs.stream()
+                .map(
+                        k -> {
+                            if (k instanceof RexGraphVariable) {
+                                RexGraphVariable var = (RexGraphVariable) k;
+                                if (var.getProperty() != null
+                                        && (GraphProperty.Opt.ALL.equals(var.getProperty().getOpt())
+                                                || GraphProperty.Opt.KEY.equals(
+                                                        var.getProperty().getOpt()))) {
+                                    Pair<Integer, GraphNameOrId> result =
+                                            Pair.with(var.getAliasId(), var.getProperty().getKey());
+                                    return result;
+                                } else return null;
+                            } else return null;
+                        })
+                .filter(k -> k != null)
+                .collect(
+                        Collectors.groupingBy(
+                                pair -> pair.getValue0(),
+                                Collectors.mapping(pair -> pair.getValue1(), Collectors.toSet())));
     }
 }
