@@ -127,6 +127,15 @@ jobs:
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
 
+    - name: Build USE_PTHASH
+      env:
+        HOME: /home/graphscope/
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        rm -r build
+        mkdir build && cd build
+        cmake .. -DBUILD_DOC=OFF -DUSE_PTHASH=ON && sudo make -j$(nproc)
+
     - name: Test GRIN on mutable csr 
       run: |
         git submodule update --init
