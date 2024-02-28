@@ -74,13 +74,13 @@ void deserialize_plan_and_gen_hqps(const std::string& input_file_path,
                                    const std::string& output_file_path) {
   LOG(INFO) << "Start deserializing from: " << input_file_path;
   std::string content_str = read_binary_str_from_path(input_file_path);
-  LOG(INFO) << "Deserilized plan size : " << content_str.size() << ", from "
+  LOG(INFO) << "Deserialized plan size : " << content_str.size() << ", from "
             << input_file_path;
   physical::PhysicalPlan plan_pb;
   auto stream = std::istringstream(content_str);
   CHECK(plan_pb.ParseFromArray(content_str.data(), content_str.size()));
-  LOG(INFO) << "deserilized plan size : " << plan_pb.ByteSizeLong();
-  VLOG(1) << "deserilized plan : " << plan_pb.DebugString();
+  LOG(INFO) << "deserialized plan size : " << plan_pb.ByteSizeLong();
+  VLOG(1) << "deserialized plan : " << plan_pb.DebugString();
   BuildingContext context;
   QueryGenerator<uint8_t> query_generator(context, plan_pb);
   auto res = query_generator.GenerateQuery();
