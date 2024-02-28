@@ -1,0 +1,89 @@
+name: 'Check stale issues and pull requests'
+
+on:
+  schedule:
+    - cron: '0 0 12 * *'
+  workflow_dispatch:
+
+env:
+  DEFAULT_ASSIGNEE: yecol sighingnow
+  DAYS_BEFORE_ISSUE_CLOSE: -1
+  DAYS_BEFORE_PR_CLOSE: -1
+  DAYS_BEFORE_ISSUE_STALE: 7
+  DAYS_BEFORE_PR_STALE: 14
+
+jobs:
+  stale:
+    permissions:
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        run: |
+          # install jq
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+          # install gh cli
+          type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+          && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+          && sudo apt update \
+          && sudo apt install gh -y
+
+      - uses: actions/stale@v9
+        id: stale
+        with:
+          days-before-issue-close: ${{ env.DAYS_BEFORE_ISSUE_CLOSE }}
+          days-before-pr-close: ${{ env.DAYS_BEFORE_PR_CLOSE }}
+          days-before-issue-stale: ${{ env.DAYS_BEFORE_ISSUE_STALE }}
+          days-before-pr-stale: ${{ env.DAYS_BEFORE_PR_STALE }}
+          stale-issue-label: stale
+          stale-pr-label: stale
+          exempt-pr-labels: work-in-progress,requires-further-info,requires-further-discussion
+          exempt-issue-labels: work-in-progress,requires-further-info,requires-further-discussion,wontfix,newcomers
+          labels-to-remove-when-unstale: stale,requires-further-info,requires-further-discussion
+          exempt-draft-pr: true
+
+      - name: Notify assignees
+        env:
+          REPO: ${{ github.repository }}
+          STALED: ${{ steps.stale.outputs.staled-issues-prs }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for N in $(echo "$STALED" | jq -r ".[].number");
+          do
+            assignees=$(echo $(gh issue view $N -R $REPO --json assignees) | jq -r ".assignees[].login")
+            echo "Processing stale issue/pr $N, assignees: $assignees"
+
+            message=""
+            if [ -z "$assignees" ]; then
+              message="/cc"
+              for assignee in $DEFAULT_ASSIGNEE; do
+                message="$message @$assignee"
+              done
+              message="$message, this issus/pr has had no activity for a long time, please help to review the status and assign people to work on it."
+            else
+              message="/cc"
+              for assignee in $assignees; do
+                message="$message @$assignee"
+              done
+              message="$message, this issus/pr has had no activity for for a long time, could you folks help to review the status ? \n"
+              message="$message To suppress further notifications,\n"
+              message="$message - for issues, \n"
+              message="$message   - if it is waiting for further response from the reporter/author, please help to add the label \`requires-further-info\`, \n"
+              message="$message   - if you have already started working on it, please add the label \`work-in-progress\` to the issue, \n"
+              message="$message   - if this issue requires further designing discussion and not in current plan, or won't be fixed, please add the label \`requires-further-discussion\` or \`wontfix\` to the issue, \n"
+              message="$message - for pull requests, \n"
+              message="$message   - if you are still working on it and it is not ready for reviewing, please convert this pull request as draft PR, \n"
+              message="$message   - if you have decided to hold this development on, please add the \`requires-further-discussion\` label to the pull request. \n"
+              message="$message Thanks!"
+            fi
+
+            echo -e "$message" > message-$N
+            message_content=$(cat message-$N)
+            echo "Commenting on stale issue/pr $N, assignees: $assignees, message: $message_content"
+            gh issue comment $N -R $REPO -b "$message_content"
+          done

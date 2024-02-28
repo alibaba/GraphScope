@@ -113,7 +113,7 @@ public class SnapshotManager {
 
     private final MetaStore metaStore;
     private final LogService logService;
-    private final WriteSnapshotIdNotifier writeSnapshotIdNotifier;
+    private final IngestorWriteSnapshotIdNotifier writeSnapshotIdNotifier;
 
     private final int storeCount;
     private final long snapshotIncreaseIntervalMs;
@@ -143,7 +143,7 @@ public class SnapshotManager {
             Configs configs,
             MetaStore metaStore,
             LogService logService,
-            WriteSnapshotIdNotifier writeSnapshotIdNotifier) {
+            IngestorWriteSnapshotIdNotifier writeSnapshotIdNotifier) {
         this.metaStore = metaStore;
         this.logService = logService;
         this.writeSnapshotIdNotifier = writeSnapshotIdNotifier;

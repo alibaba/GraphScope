@@ -180,7 +180,7 @@ class PathExpandOpBuilder {
         }
       }
       VLOG(10) << "get vertex labels:" << gs::to_string(dst_vertex_labels_);
-      CHECK(!get_v_pb.params().has_predicate()) << "currently don't suppport "
+      CHECK(!get_v_pb.params().has_predicate()) << "currently don't support "
                                                    "getv with condition";
       // std::tie(get_v_expr_call_code, get_v_opt, getv_opt_) =
       // BuildGetVOpt(ctx_, get_v_pb);
@@ -194,7 +194,7 @@ class PathExpandOpBuilder {
       // build edge_expand_opt
       auto& params = edge_expand_pb.params();
       auto expand_opt = edge_expand_pb.expand_opt();
-      CHECK(dst_vertex_labels_.size() > 0) << "no dst lables found";
+      CHECK(dst_vertex_labels_.size() > 0) << "no dst labels found";
 
       if (params.tables().size() < 1) {
         throw std::runtime_error("no edge labels found");
@@ -292,7 +292,7 @@ class PathExpandOpBuilder {
   }
 
   PathExpandOpBuilder& condition(const common::Expression& condition_pb) {
-    LOG(WARNING) << "Skiped for path expand with condition";
+    LOG(WARNING) << "Skipped for path expand with condition";
     return *this;
   }
 

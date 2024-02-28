@@ -32,10 +32,10 @@ import java.util.Map;
 public class NodeNameResolver extends NameResolver implements NodeDiscovery.Listener {
     private static final Logger logger = LoggerFactory.getLogger(NodeNameResolver.class);
 
-    private NodeDiscovery discovery;
-    private URI uri;
-    private RoleType roleType;
-    private int idx;
+    private final NodeDiscovery discovery;
+    private final URI uri;
+    private final RoleType roleType;
+    private final int idx;
 
     private Listener2 listener;
 

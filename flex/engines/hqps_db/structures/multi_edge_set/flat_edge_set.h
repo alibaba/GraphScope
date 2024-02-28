@@ -242,7 +242,7 @@ class FlatEdgeSet {
       }
     }
 
-    VLOG(10) << "Found builin property" << prop_names[0];
+    VLOG(10) << "Found built-in property" << prop_names[0];
     CHECK(repeat_array.size() == Size());
     size_t cur_ind = 0;
     for (size_t i = 0; i < vec_.size(); ++i) {
@@ -603,7 +603,7 @@ class SingleLabelEdgeSet {
     CHECK(prop_names_.size() == 1);
     // Make sure this is correct.
     if (prop_names[0] == prop_names_[0]) {
-      VLOG(10) << "Found builin property" << prop_names[0];
+      VLOG(10) << "Found built-in property" << prop_names[0];
       CHECK(repeat_array.size() == Size());
       size_t cur_ind = 0;
       for (size_t i = 0; i < vec_.size(); ++i) {
