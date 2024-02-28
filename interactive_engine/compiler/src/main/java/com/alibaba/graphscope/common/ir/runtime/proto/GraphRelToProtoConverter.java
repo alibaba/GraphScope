@@ -289,18 +289,16 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
                 GraphAlgebraPhysical.PhysicalOpr.newBuilder();
         GraphAlgebra.Select.Builder selectBuilder = GraphAlgebra.Select.newBuilder();
-        RexToProtoConverter rexToProtoConverter =
-                new RexToProtoConverter(true, isColumnId, this.rexBuilder);
-        OuterExpression.Expression exprProto = filter.getCondition().accept(rexToProtoConverter);
+        OuterExpression.Expression exprProto =
+                filter.getCondition()
+                        .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
         selectBuilder.setPredicate(exprProto);
         oprBuilder.setOpr(
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setSelect(selectBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(filter.getRowType(), isColumnId));
         if (isPartitioned) {
             lazyPropertyFetching(
-                    physicalBuilder,
-                    filter.getCondition().accept(new RexGraphVariablesExtractor(true)),
-                    true);
+                    filter.getCondition().accept(new RexGraphVariablesExtractor(true)), true);
         }
         physicalBuilder.addPlan(oprBuilder.build());
         return filter;
@@ -338,7 +336,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setProject(projectBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(project.getRowType(), isColumnId));
         if (isPartitioned) {
-            lazyPropertyFetching(physicalBuilder, allVariables, true);
+            lazyPropertyFetching(allVariables, true);
         }
         physicalBuilder.addPlan(oprBuilder.build());
         return project;
@@ -404,7 +402,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             dedupOprBuilder.setOpr(
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
             if (isPartitioned) {
-                lazyPropertyFetching(physicalBuilder, keys.getVariables());
+                lazyPropertyFetching(keys.getVariables());
             }
             physicalBuilder.addPlan(projectOprBuilder.build());
             physicalBuilder.addPlan(dedupOprBuilder.build());
@@ -477,7 +475,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                         groupCalls.stream()
                                 .flatMap(k -> k.getOperands().stream())
                                 .collect(Collectors.toList()));
-                lazyPropertyFetching(physicalBuilder, keysAndAggs);
+                lazyPropertyFetching(keysAndAggs);
             }
             physicalBuilder.addPlan(oprBuilder.build());
         }
@@ -506,7 +504,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(dedupBy.getRowType(), isColumnId));
         if (isPartitioned) {
-            lazyPropertyFetching(physicalBuilder, dedupBy.getDedupByKeys());
+            lazyPropertyFetching(dedupBy.getDedupByKeys());
         }
         physicalBuilder.addPlan(oprBuilder.build());
         return dedupBy;
@@ -541,7 +539,6 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             .setOrderBy(orderByBuilder));
             if (isPartitioned) {
                 lazyPropertyFetching(
-                        physicalBuilder,
                         collations.stream()
                                 .map(k -> ((GraphFieldCollation) k).getVariable())
                                 .collect(Collectors.toList()));
@@ -601,8 +598,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         RelNode right = join.getRight();
         right.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, rightPlanBuilder));
         if (isPartitioned) {
-            lazyPropertyFetching(leftPlanBuilder, leftKeys);
-            lazyPropertyFetching(rightPlanBuilder, rightKeys);
+            lazyPropertyFetching(leftPlanBuilder, leftKeys, false);
+            lazyPropertyFetching(rightPlanBuilder, rightKeys, false);
         }
         joinBuilder.setLeftPlan(leftPlanBuilder);
         joinBuilder.setRightPlan(rightPlanBuilder);
@@ -713,8 +710,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
 
     private GraphAlgebra.QueryParams.Builder defaultQueryParams() {
         GraphAlgebra.QueryParams.Builder paramsBuilder = GraphAlgebra.QueryParams.newBuilder();
-        // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as
-        // default.
+        // TODO: currently no sample rate fused into tableScan, so directly set 1.0 as default.
         paramsBuilder.setSampleRatio(1.0);
         return paramsBuilder;
     }
@@ -814,11 +810,13 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                                 Collectors.mapping(pair -> pair.getValue1(), Collectors.toSet())));
     }
 
-    private void lazyPropertyFetching(
-            GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
-            List<? extends RexNode> vars) {
-        // by default, we cache the result of the tagColumns
-        lazyPropertyFetching(physicalBuilder, vars, false);
+    private void lazyPropertyFetching(List<? extends RexNode> vars) {
+        // by default, we cache the result of the tagColumns, i.e., the optimizedNoCaching is false
+        lazyPropertyFetching(vars, false);
+    }
+
+    private void lazyPropertyFetching(List<? extends RexNode> vars, boolean optimizedNoCaching) {
+        lazyPropertyFetching(physicalBuilder, vars, optimizedNoCaching);
     }
 
     private void lazyPropertyFetching(
