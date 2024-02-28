@@ -17,12 +17,14 @@
 package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.meta.schema.IrGraphSchema;
 import com.alibaba.graphscope.common.ir.planner.rules.DegreeFusionRule;
+import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FieldTrimRule;
 import com.alibaba.graphscope.common.ir.planner.rules.FilterMatchRule;
 import com.alibaba.graphscope.common.ir.planner.rules.NotMatchToAntiJoinRule;
@@ -30,6 +32,7 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -39,7 +42,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.apache.calcite.plan.*;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
@@ -139,11 +144,23 @@ public class GraphPlanner {
             if (logicalPlan.isReturnEmpty()) {
                 return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getRegularQuery() != null) {
-                try (PhysicalBuilder physicalBuilder =
-                        new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
-                    return physicalBuilder.build();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                String physicalOpt = FrontendConfig.PHYSICAL_OPT_CONFIG.get(graphConfig);
+                if ("proto".equals(physicalOpt.toLowerCase())) {
+                    logger.info("physical type is proto");
+                    try (GraphRelProtoPhysicalBuilder physicalBuilder =
+                            new GraphRelProtoPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    logger.info("physical type is ffi");
+                    try (PhysicalBuilder physicalBuilder =
+                            new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             } else {
                 return new ProcedurePhysicalBuilder(logicalPlan).build();
@@ -180,6 +197,7 @@ public class GraphPlanner {
                             .getRules()
                             .forEach(
                                     k -> {
+                                        // logical rules
                                         if (k.equals(
                                                 FilterJoinRule.FilterIntoJoinRule.class
                                                         .getSimpleName())) {
@@ -198,6 +216,17 @@ public class GraphPlanner {
                                             ruleConfigs.add(
                                                     DegreeFusionRule.ExpandGetVDegreeFusionRule
                                                             .Config.DEFAULT);
+                                        }
+                                        // physical rules
+                                        else if (k.equals(
+                                                ExpandGetVFusionRule.class.getSimpleName())) {
+                                            ruleConfigs.add(
+                                                    ExpandGetVFusionRule.BasicExpandGetVFusionRule
+                                                            .Config.DEFAULT);
+                                            ruleConfigs.add(
+                                                    ExpandGetVFusionRule
+                                                            .PathBaseExpandGetVFusionRule.Config
+                                                            .DEFAULT);
                                         }
                                     });
                     HepProgramBuilder hepBuilder = HepProgram.builder();
