@@ -96,6 +96,7 @@ public class HttpClient {
                 }
                 httpClient.close();
             } catch (IOException e) {
+                throw new Exception("httpClient close异常", e);
             }
         }
         return resultMsg;
