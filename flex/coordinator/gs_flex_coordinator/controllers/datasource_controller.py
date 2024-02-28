@@ -3,12 +3,15 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
+from gs_flex_coordinator.core import client_wrapper
+from gs_flex_coordinator.core import handle_api_exception
 from gs_flex_coordinator.models.data_source import DataSource  # noqa: E501
 from gs_flex_coordinator.models.edge_data_source import EdgeDataSource  # noqa: E501
 from gs_flex_coordinator.models.vertex_data_source import VertexDataSource  # noqa: E501
 from gs_flex_coordinator import util
 
 
+@handle_api_exception()
 def bind_edge_datasource(graph_name, edge_data_source):  # noqa: E501
     """bind_edge_datasource
 
@@ -26,6 +29,7 @@ def bind_edge_datasource(graph_name, edge_data_source):  # noqa: E501
     return 'do some magic!'
 
 
+@handle_api_exception()
 def bind_vertex_datasource(graph_name, vertex_data_source):  # noqa: E501
     """bind_vertex_datasource
 
@@ -43,6 +47,7 @@ def bind_vertex_datasource(graph_name, vertex_data_source):  # noqa: E501
     return 'do some magic!'
 
 
+@handle_api_exception()
 def get_datasource(graph_name):  # noqa: E501
     """get_datasource
 
@@ -53,9 +58,10 @@ def get_datasource(graph_name):  # noqa: E501
 
     :rtype: Union[DataSource, Tuple[DataSource, int], Tuple[DataSource, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.get_datasource(graph_name)
 
 
+@handle_api_exception()
 def get_edge_datasource(graph_name, type_name, source_vertex_type, destination_vertex_type):  # noqa: E501
     """get_edge_datasource
 
@@ -75,6 +81,7 @@ def get_edge_datasource(graph_name, type_name, source_vertex_type, destination_v
     return 'do some magic!'
 
 
+@handle_api_exception()
 def get_vertex_datasource(graph_name, type_name):  # noqa: E501
     """get_vertex_datasource
 
@@ -90,6 +97,7 @@ def get_vertex_datasource(graph_name, type_name):  # noqa: E501
     return 'do some magic!'
 
 
+@handle_api_exception()
 def import_datasource(graph_name, data_source):  # noqa: E501
     """import_datasource
 
@@ -104,9 +112,10 @@ def import_datasource(graph_name, data_source):  # noqa: E501
     """
     if connexion.request.is_json:
         data_source = DataSource.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.import_datasource(graph_name, data_source)
 
 
+@handle_api_exception()
 def unbind_edge_datasource(graph_name, type_name, source_vertex_type, destination_vertex_type):  # noqa: E501
     """unbind_edge_datasource
 
@@ -123,9 +132,15 @@ def unbind_edge_datasource(graph_name, type_name, source_vertex_type, destinatio
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.unbind_edge_datasource(
+        graph_name,
+        type_name,
+        source_vertex_type,
+        destination_vertex_type
+    )
 
 
+@handle_api_exception()
 def unbind_vertex_datasource(graph_name, type_name):  # noqa: E501
     """unbind_vertex_datasource
 
@@ -138,4 +153,4 @@ def unbind_vertex_datasource(graph_name, type_name):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.unbind_vertex_datasource(graph_name, type_name)

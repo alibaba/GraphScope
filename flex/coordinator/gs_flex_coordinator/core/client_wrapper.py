@@ -35,11 +35,12 @@ from gs_flex_coordinator.core.interactive import init_hqps_client
 from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
                                             encode_datetime, get_current_time)
-from gs_flex_coordinator.models import (DeploymentInfo, EdgeType, Graph,
-                                        GrootGraph, GrootSchema, JobStatus,
-                                        ModelSchema, NodeStatus, Procedure,
-                                        SchemaMapping, ServiceStatus,
-                                        StartServiceRequest, VertexType)
+from gs_flex_coordinator.models import (DataSource, DeploymentInfo, EdgeType,
+                                        Graph, GrootGraph, GrootSchema,
+                                        JobStatus, ModelSchema, NodeStatus,
+                                        Procedure, SchemaMapping,
+                                        ServiceStatus, StartServiceRequest,
+                                        VertexType)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -264,7 +265,6 @@ class ClientWrapper(object):
 
     def get_dataloading_config(self, graph_name: str) -> SchemaMapping:
         config = self._client.get_dataloading_config(graph_name)
-        print(SchemaMapping().to_dict())
         if not config:
             # construct an empty config
             schema_mapping = SchemaMapping()
@@ -283,6 +283,26 @@ class ClientWrapper(object):
         # transfer
         rlts = [GrootGraph.from_dict(g) for g in graphs]
         return rlts
+
+    def import_datasource(self, graph_name: str, data_source: DataSource) -> str:
+        return self._client.import_datasource(graph_name, data_source.to_dict())
+
+    def get_datasource(self, graph_name: str) -> DataSource:
+        return DataSource.from_dict(self._client.get_datasource(graph_name))
+
+    def unbind_vertex_datasource(self, graph_name: str, vertex_type: str) -> str:
+        return self._client.unbind_vertex_datasource(graph_name, vertex_type)
+
+    def unbind_edge_datasource(
+        self,
+        graph_name: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ) -> str:
+        return self._client.unbind_edge_datasource(
+            graph_name, edge_type, source_vertex_type, destination_vertex_type
+        )
 
 
 client_wrapper = ClientWrapper()

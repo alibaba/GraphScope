@@ -1571,7 +1571,7 @@ components:
           type: object
           additionalProperties: true
     VertexDataSource:
-      x-body-name: vertex_datasource
+      x-body-name: vertex_data_source
       type: object
       properties:
         data_source:
@@ -1587,7 +1587,7 @@ components:
           type: object
           additionalProperties: true
     EdgeDataSource:
-      x-body-name: edge_datasource
+      x-body-name: edge_data_source
       type: object
       properties:
         data_source:
@@ -1613,7 +1613,7 @@ components:
           type: object
           additionalProperties: true
     DataSource:
-      x-body-name: datasource
+      x-body-name: data_source
       type: object
       properties:
         vertices_datasource:

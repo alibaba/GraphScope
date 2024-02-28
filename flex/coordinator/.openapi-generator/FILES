@@ -57,7 +57,6 @@ gs_flex_coordinator/models/vertex_mapping.py
 gs_flex_coordinator/models/vertex_type.py
 gs_flex_coordinator/openapi/openapi.yaml
 gs_flex_coordinator/test/__init__.py
-gs_flex_coordinator/test/test_datasource_controller.py
 gs_flex_coordinator/typing_utils.py
 gs_flex_coordinator/util.py
 test-requirements.txt

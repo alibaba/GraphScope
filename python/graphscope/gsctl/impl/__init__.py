@@ -27,6 +27,10 @@ from graphscope.gsctl.impl.alert import update_alert_receiver_by_id
 from graphscope.gsctl.impl.alert import update_alert_rule
 from graphscope.gsctl.impl.common import connect_coordinator
 from graphscope.gsctl.impl.common import disconnect_coordinator
+from graphscope.gsctl.impl.datasource import get_datasource
+from graphscope.gsctl.impl.datasource import import_datasource
+from graphscope.gsctl.impl.datasource import unbind_edge_datasource
+from graphscope.gsctl.impl.datasource import unbind_vertex_datasource
 from graphscope.gsctl.impl.deployment import get_deployment_info
 from graphscope.gsctl.impl.deployment import get_node_status
 from graphscope.gsctl.impl.graph import create_edge_type

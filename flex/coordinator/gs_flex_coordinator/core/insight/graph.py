@@ -125,19 +125,6 @@ class GrootGraph(Graph):
         # defaults true
         self._directed = True
 
-        # data source
-        self._data_source = {}
-        self._data_source_pickle_file = os.path.join(
-            WORKSPACE, "{0}_data_source.pickle".format(self._name)
-        )
-        # recover data source from disk
-        if os.path.exists(self._data_source_pickle_file):
-            with open(self._data_source_pickle_file, "rb") as f:
-                self._data_source = pickle.load(f)
-            # replace the gremlin info with the latest
-            for _, ds in self._data_source.items():
-                ds._gremlin_interface = self._gremlin_interface
-
         # update the endpoints when frontend node restart
         self._fetch_endpoints_job = (
             schedule.every(30)
@@ -202,21 +189,6 @@ class GrootGraph(Graph):
                 }
                 logger.info(f"Update frontend endpoints: {str(endpoints)}")
 
-    def _check_label_exists(self, type, label):
-        if type == "VERTEX":
-            for v in self._schema["vertices"]:
-                if label == v["label"]:
-                    return True
-        elif type == "EDGE":
-            for e in self._schema["edges"]:
-                for relation in e["relations"]:
-                    elabel = "{0}_{1}_{2}".format(
-                        relation["src_label"], e["label"], relation["dst_label"]
-                    )
-                    if label == elabel:
-                        return True
-        return False
-
     def import_schema(self, data: dict):
         schema = self._g.schema()
         schema.from_dict(data)
@@ -271,11 +243,6 @@ class GrootGraph(Graph):
         schema.drop(vertex_type)
         schema.update()
         self._schema = self._g.schema().to_dict()
-        # unbind datasource
-        if vertex_type in self._data_source:
-            del self._data_source[vertex_type]
-            with open(self._data_source_pickle_file, "wb") as f:
-                pickle.dump(self._data_source, f)
 
     def delete_edge_type(
         self,
@@ -289,51 +256,6 @@ class GrootGraph(Graph):
         schema.drop(edge_type)
         schema.update()
         self._schema = self._g.schema().to_dict()
-        # unbind datasource
-        elabel = "{0}_{1}_{2}".format(
-            source_vertex_type, edge_type, destination_vertex_type
-        )
-        if elabel in self._data_source:
-            del self._data_source[elabel]
-            with open(self._data_source_pickle_file, "wb") as f:
-                pickle.dump(self._data_source, f)
-
-    def bind_data_source(self, data: dict):
-        print("[DEBUG]: bind data source: ", data)
-        # regex validation
-        path_regex = re.compile(r"^odps://([^/]+)/([\s\S]+)$")
-        rlt = path_regex.search(data["location"])
-        if rlt is None:
-            raise RuntimeError(
-                "Regex parse faild, location: {0}".format(data["location"])
-            )
-
-    def get_data_source_by_label(self, type, label):
-        """Get data source by label.
-
-        Args:
-            type: "VERTEX" or "EDGE"
-            label: vertex or edge label. "<srcLabel>_<elabel>_<dstLabel>" for edge label.
-        """
-        if not self._check_label_exists(type, label):
-            raise RuntimeError(
-                "{0} label '{1}' not exists in graph '{2}'".format(
-                    type, label, self._name
-                )
-            )
-        if label not in self._data_source:
-            raise RuntimeError(
-                "data source not exists for label '{0}' in graph '{1}'".format(
-                    label, self._name
-                )
-            )
-        return self._data_source[label]
-
-    def get_storage_usage(self):
-        """
-        Return (dict): { 0: {"totalSpace": xxx, "usableSpace": xxx} }
-        """
-        return self._conn.get_store_state()
 
 
 def get_groot_graph_from_local():
@@ -349,6 +271,12 @@ def get_groot_graph_from_local():
             client.submit(
                 "g.with('evaluationTimeout', 5000).V().limit(1)"
             ).all().result()
+            print(
+                "DEBUG: ",
+                client.submit("g.with('evaluationTimeout', 5000).E().limit(10)")
+                .all()
+                .result(),
+            )
         except Exception as e:
             pass
         else:

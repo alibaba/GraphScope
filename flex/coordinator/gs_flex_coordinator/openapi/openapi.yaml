@@ -2164,7 +2164,7 @@ components:
           type: object
       title: VertexDataSource
       type: object
-      x-body-name: vertex_datasource
+      x-body-name: vertex_data_source
     EdgeDataSource:
       example:
         source_pk_column_map:
@@ -2211,7 +2211,7 @@ components:
           type: object
       title: EdgeDataSource
       type: object
-      x-body-name: edge_datasource
+      x-body-name: edge_data_source
     DataSource:
       example:
         edges_datasource:
@@ -2261,7 +2261,7 @@ components:
           type: array
       title: DataSource
       type: object
-      x-body-name: datasource
+      x-body-name: data_source
     GrootGraph:
       example:
         creation_time: creation_time

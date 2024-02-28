@@ -17,9 +17,11 @@
 #
 
 import logging
+import os
+import pickle
 from typing import List
 
-from gs_flex_coordinator.core.config import CLUSTER_TYPE
+from gs_flex_coordinator.core.config import CLUSTER_TYPE, WORKSPACE
 from gs_flex_coordinator.core.insight.graph import get_groot_graph
 
 logger = logging.getLogger("graphscope")
@@ -30,7 +32,36 @@ class GrootClient(object):
 
     def __init__(self):
         self._graph = get_groot_graph()
-        print(self._graph.to_dict())
+        # workspace
+        self._workspace = os.path.join(WORKSPACE, "groot")
+        os.makedirs(self._workspace, exist_ok=True)
+        # data source
+        self._data_source = {"vertices_datasource": {}, "edges_datasource": {}}
+        # pickle path
+        self._pickle_path = os.path.join(self._workspace, "datasource.pickle")
+        # recover
+        self._try_to_recover_from_disk()
+
+    def _try_to_recover_from_disk(self):
+        try:
+            if os.path.exists(self._pickle_path):
+                logger.info("Recover data source from file %s", self._pickle_path)
+                with open(self._pickle_path, "rb") as f:
+                    self._data_source = pickle.load(f)
+        except Exception as e:
+            logger.warn("Failed to recover data source: %s", str(e))
+
+    def _pickle_datasource_impl(self):
+        try:
+            with open(self._pickle_path, "wb") as f:
+                pickle.dump(self._data_source, f)
+        except Exception as e:
+            logger.warn("Failed to dump data source: %s", str(e))
+
+    def get_edge_full_label(
+        self, type_name: str, source_vertex_type: str, destination_vertex_type: str
+    ) -> str:
+        return f"{source_vertex_type}_{type_name}_{destination_vertex_type}"
 
     def list_groot_graph(self) -> list:
         rlts = [self._graph.to_dict()]
@@ -43,7 +74,12 @@ class GrootClient(object):
         return self._graph.create_edge_type(etype_dict)
 
     def delete_vertex_type(self, graph_name: str, vertex_type: str) -> str:
-        return self._graph.delete_vertex_type(graph_name, vertex_type)
+        rlt = self._graph.delete_vertex_type(graph_name, vertex_type)
+        # unbind data source
+        if vertex_type in self._data_source["vertices_datasource"]:
+            del self._data_source["vertices_datasource"][vertex_type]
+            self._pickle_datasource_impl()
+        return rlt
 
     def delete_edge_type(
         self,
@@ -52,13 +88,19 @@ class GrootClient(object):
         source_vertex_type: str,
         destination_vertex_type: str,
     ) -> str:
-        return self._graph.delete_edge_type(
+        rlt = self._graph.delete_edge_type(
             graph_name, edge_type, source_vertex_type, destination_vertex_type
         )
+        # unbind data source
+        edge_label = self.get_edge_full_label(
+            edge_type, source_vertex_type, destination_vertex_type
+        )
+        if edge_label in self._data_source["edges_datasource"]:
+            del self._data_source["edges_datasource"][edge_label]
+            self._pickle_datasource_impl()
+        return rlt
 
     def get_groot_schema(self, graph_name: str) -> dict:
-        if graph_name == self._graph.name:
-            raise RuntimeError(f"Graph {graph_name} not exists")
         return self._graph.schema
 
     def import_groot_schema(self, graph_name: str, schema: dict) -> str:
@@ -66,6 +108,74 @@ class GrootClient(object):
 
     def list_jobs(self) -> List[dict]:
         return []
+
+    def import_datasource(self, graph_name: str, data_source: dict) -> str:
+        for v_datasource in data_source["vertices_datasource"]:
+            self._data_source["vertices_datasource"][
+                v_datasource["type_name"]
+            ] = v_datasource
+        for e_datasource in data_source["edges_datasource"]:
+            edge_label = self.get_edge_full_label(
+                e_datasource["type_name"],
+                e_datasource["source_vertex"],
+                e_datasource["destination_vertex"],
+            )
+            self._data_source["edges_datasource"][edge_label] = e_datasource
+        self._pickle_datasource_impl()
+
+    def get_datasource(self, graph_name: str) -> dict:
+        rlts = {"vertices_datasource": [], "edges_datasource": []}
+        for _, v in self._data_source["vertices_datasource"].items():
+            rlts["vertices_datasource"].append(v)
+        for _, e in self._data_source["edges_datasource"].items():
+            rlts["edges_datasource"].append(e)
+        return rlts
+
+    def unbind_vertex_datasource(self, graph_name: str, vertex_type: str) -> str:
+        # check
+        vertex_type_exists = False
+        schema = self._graph.schema
+        for v in schema["vertices"]:
+            if vertex_type == v["label"]:
+                vertex_type_exists = True
+                break
+        if not vertex_type_exists:
+            raise RuntimeError(f"Vertex type {vertex_type} not exists")
+        if vertex_type in self._data_source["vertices_datasource"]:
+            del self._data_source["vertices_datasource"][vertex_type]
+            self._pickle_datasource_impl()
+        return "unbind data source successfully"
+
+    def unbind_edge_datasource(
+        self,
+        graph_name: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ) -> str:
+        # check
+        edge_type_exists = False
+        schema = self._graph.schema
+        for e in schema["edges"]:
+            for relation in e["relations"]:
+                if (
+                    edge_type == e["label"]
+                    and source_vertex_type == relation["src_label"]
+                    and destination_vertex_type == relation["dst_label"]
+                ):
+                    edge_type_exists = True
+                    break
+        if not edge_type_exists:
+            raise RuntimeError(
+                f"Edge type ({source_vertex_type})-[{edge_type}]->({destination_vertex_type}) not exists"
+            )
+        edge_label = self.get_edge_full_label(
+            edge_type, source_vertex_type, destination_vertex_type
+        )
+        if edge_label in self._data_source["edges_datasource"]:
+            del self._data_source["edges_datasource"][edge_label]
+            self._pickle_datasource_impl()
+            return "unbind data source successfully"
 
 
 def init_groot_client():

@@ -20,7 +20,10 @@ import click
 import yaml
 from graphscope.gsctl.impl import (create_edge_type, create_vertex_type,
                                    delete_edge_type, delete_vertex_type,
-                                   import_groot_schema, list_groot_graph)
+                                   get_datasource, import_datasource,
+                                   import_groot_schema, list_groot_graph,
+                                   unbind_edge_datasource,
+                                   unbind_vertex_datasource)
 from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
                                     terminal_display)
 
@@ -51,12 +54,6 @@ def describe():
 @cli.group()
 def get():
     """Display a specific resource or group of resources"""
-    pass
-
-
-@cli.group()
-def bind():
-    """"""
     pass
 
 
@@ -99,7 +96,7 @@ def graph():
 
 
 @describe.command()
-@click.argument("graph_name", required=True)
+@click.argument("graph_name", required=False)
 def graph(graph_name):  # noqa: F811
     """Show details of graphs"""
     try:
@@ -131,7 +128,7 @@ def graph(graph_name):  # noqa: F811
     help="Path of yaml file to use to create a schema",
 )
 def schema(filename):  # noqa: F811
-    """Import schema to database"""
+    """Batch import schema into database"""
     if not is_valid_file_path(filename):
         click.secho("Invalid file: {0}".format(filename), fg="blue")
         return
@@ -236,6 +233,143 @@ def etype(filename):  # noqa: F811
         click.secho(f"Failed to create edge type: {str(e)}", fg="red")
     else:
         click.secho(f"Create edge type {etype['type_name']} successfully.", fg="green")
+
+
+@create.command
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to bind data source to the graph",
+)
+def datasource(filename):  # noqa: F811
+    """Bind data source to the graph"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        datasource = read_yaml_file(filename)
+        # only one graph supported int groot
+        import_datasource("placeholder", datasource)
+    except Exception as e:
+        click.secho(f"Failed to import data source: {str(e)}", fg="red")
+    else:
+        click.secho("Import data source successfully.", fg="green")
+
+
+@get.command()
+def datasource():
+    """Display data source on graph"""
+
+    def _construct_and_display_data(datasource):
+        if not datasource.vertices_datasource and not datasource.edges_datasource:
+            click.secho("no data source bound on the graph.", fg="blue")
+            return
+
+        head = [
+            "TYPE NAME",
+            "SOURCE VERTEX TYPE",
+            "DESTINATION VERTEX TYPE",
+            "DATA SOURCE TYPE",
+            "LOCATION",
+        ]
+        data = [head]
+        if datasource.vertices_datasource:
+            for v_datasource in datasource.vertices_datasource:
+                data.append(
+                    [
+                        v_datasource.type_name,
+                        "-",
+                        "-",
+                        v_datasource.data_source,
+                        v_datasource.location,
+                    ]
+                )
+        if datasource.edges_datasource:
+            for e_datasource in datasource.edges_datasource:
+                data.append(
+                    [
+                        e_datasource.type_name,
+                        e_datasource.source_vertex,
+                        e_datasource.destination_vertex,
+                        e_datasource.data_source,
+                        e_datasource.location,
+                    ]
+                )
+
+        terminal_display(data)
+
+    try:
+        # only one graph supported int groot
+        datasource = get_datasource("placeholder")
+    except Exception as e:
+        click.secho(f"Failed to list data source: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(datasource)
+
+
+@describe.command()
+def datasource():  # noqa: F811
+    """Show details of data source"""
+    try:
+        # only one graph supported int groot
+        datasource = get_datasource("placeholder")
+    except Exception as e:
+        click.secho(f"Failed to get data source: {str(e)}", fg="red")
+    else:
+        if not datasource.vertices_datasource and not datasource.edges_datasource:
+            click.secho("no data source bound on the graph.", fg="blue")
+            return
+        click.secho(yaml.dump(datasource.to_dict()))
+
+
+@delete.command()
+@click.argument("vertex_type", required=True)
+def vdatasource(vertex_type):  # noqa: F811
+    """Unbind data source on vertex type"""
+    try:
+        unbind_vertex_datasource("placeholder", vertex_type)
+    except Exception as e:
+        click.secho(
+            f"Failed to unbind data source on {vertex_type}: {str(e)}", fg="red"
+        )
+    else:
+        click.secho(f"Unbind data source on {vertex_type} successfully.", fg="green")
+
+
+@delete.command()
+@click.argument("edge_type", required=True)
+@click.option(
+    "-s",
+    "--source_vertex_type",
+    required=True,
+    help="Source vertex type of the edge",
+)
+@click.option(
+    "-d",
+    "--destination_vertex_type",
+    required=True,
+    help="Destination vertex type of the edge",
+)
+def edatasource(edge_type, source_vertex_type, destination_vertex_type):  # noqa: F811
+    """Unbind data source on edge type"""
+    try:
+        etype_full_name = (
+            f"({source_vertex_type})-[{edge_type}]->({destination_vertex_type})"
+        )
+        unbind_edge_datasource(
+            "placeholder", edge_type, source_vertex_type, destination_vertex_type
+        )
+    except Exception as e:
+        click.secho(
+            f"Failed to unbind data source on {etype_full_name}: {str(e)}",
+            fg="red",
+        )
+    else:
+        click.secho(
+            f"Unbind data source on {etype_full_name} successfully.",
+            fg="green",
+        )
 
 
 if __name__ == "__main__":
