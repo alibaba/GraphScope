@@ -41,7 +41,7 @@ emph(){
 # source: https://github.com/mrbaseman/parse_yaml.git
 #
 ###############################################################################
-# Parses a YAML file and outputs variable assigments.  Can optionally accept a 
+# Parses a YAML file and outputs variable assignments.  Can optionally accept a 
 # variable name prefix and a variable name separator
 #
 # Usage:
@@ -241,7 +241,7 @@ DOCKER_DB_COMPILER_BIN="com.alibaba.graphscope.GraphServer"
 DOCKER_DB_GEN_BIN="${DOCKER_DB_GRAPHSCOPE_HOME}/bin/load_plan_and_gen.sh"
 HOST_DB_TMP_DIR="/tmp/"
 
-#################### DEFINE DEFAULT CONSTATNS ####################
+#################### DEFINE DEFAULT CONSTANTS ####################
 DATABASE_VERSION="v0.0.3"
 DATABASE_DEFAULT_GRAPH_NAME="gs_interactive_default_graph"
 DATABASE_CURRENT_GRAPH_NAME=${DATABASE_DEFAULT_GRAPH_NAME}
@@ -638,23 +638,23 @@ function compile_usage(){
 EOF
 }
 
-## .enable and .disable file contols the stored procedure enable/disable
+## .enable and .disable file controls the stored procedure enable/disable
 
 function enable_proc_usage(){
   cat << EOF
-    gs_interactive procedure enable -g[--graph] <graph_name> -n[--name] <library names,seprated by ','> 
+    gs_interactive procedure enable -g[--graph] <graph_name> -n[--name] <library names,separated by ','>
                                  -c[--config] <stored_procedures.yaml>
                 Enable the stored procedure in the given graph, with the provided library.
-                stored_procedures.yaml contains the the stored procedure names at each line.
+                stored_procedures.yaml contains the stored procedure names at each line.
 EOF
 }
 
 function disable_proc_usage(){
   cat << EOF
-    gs_interactive procedure disable -g[--graph] <graph_name> -n[--name] <library names,seprated by ','>
+    gs_interactive procedure disable -g[--graph] <graph_name> -n[--name] <library names,separated by ','>
                                   -c[--config] <stored_procedures.yaml>
                 Disable the stored procedure in the given graph, with the provided library.
-                stored_procedures.yaml contains the the stored procedure names at each line.
+                stored_procedures.yaml contains the stored procedure names at each line.
 EOF
 }
 
@@ -835,7 +835,7 @@ function update_graph_yaml_with_procedure_enabling(){
   
   # copy graph0.yaml to container
   docker cp "${HOST_DB_TMP_DIR}/graph0.yaml" "${GIE_DB_CONTAINER_NAME}:${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
-  info "Finish update graph yaml with procedure enabling, add stored proc.edures of size ${#ENABLED_ARRAY[@]}."
+  info "Finish update graph yaml with procedure enabling, add stored procedures of size ${#ENABLED_ARRAY[@]}."
 }
 
 
@@ -855,7 +855,7 @@ function do_init(){
   # check running containers and exit
   check_running_containers_and_exit
   info "Ok, no running instance found, start init database..."
-  # if no containers running, procede to init
+  # if no containers running, proceed to init
 
 #  check args num 1, and get the first args as CONFIG_FILE
   if [ $# -eq 0 ]; then
@@ -902,7 +902,7 @@ function do_init(){
   # put docker_workspace into env
   echo "export DATABASE_WORKSPACE=${DATABASE_WORKSPACE}" >> ${HOST_DB_ENV_FILE}
   echo "export DATABASE_DATA_DIR_NAME=${DATABASE_DATA_DIR_NAME}" >> ${HOST_DB_ENV_FILE}
-  info "Found databse version: ${DATABASE_VERSION}"
+  info "Found database version: ${DATABASE_VERSION}"
 
   #2. Found mounting volumes from yaml file
   mount_cmd=""
@@ -992,7 +992,7 @@ function do_init(){
     err "Fail to import default graph"
     exit 1
   fi
-  info "Successfuly create and import default graph: [${DATABASE_DEFAULT_GRAPH_NAME}]"
+  info "Successfully create and import default graph: [${DATABASE_DEFAULT_GRAPH_NAME}]"
 }
 
 
@@ -1038,10 +1038,10 @@ function do_create(){
   fi
   check_file_exists "${schema_file}"
   amplify_schema_file="${HOST_DB_TMP_DIR}/graph0.yaml"
-  # add some default settings and non-user-awared settings to schema file.
+  # add some default settings and non-user-aware settings to schema file.
   amplify_graph_schema ${schema_file} ${amplify_schema_file}
   # check graph is running inside docker
-  check_graph_not_running ${graph_name} || (err "Can not create graph ${graph_name}, since a graph with same nameing running." && exit 1)
+  check_graph_not_running ${graph_name} || (err "Can not create graph ${graph_name}, since a graph with same naming running." && exit 1)
   # create the graph directory in the docker's workspace
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
@@ -1058,7 +1058,7 @@ function do_create(){
   # copy the schema file to the docker's workspace
   docker cp "${amplify_schema_file}" "${GIE_DB_CONTAINER_NAME}:${docker_graph_schema_file}" || exit 1
   docker cp "${amplify_schema_file}" "${GIE_DB_CONTAINER_NAME}:${docker_graph_schema_file_back}" || exit 1
-  info "Successfuly create graph [${graph_name}]"
+  info "Successfully create graph [${graph_name}]"
   #TODO: support creating an empty graph
 }
 
@@ -1093,7 +1093,7 @@ function do_remove(){
   fi
   # check graph is running inside docker
   if ! check_graph_not_running ${graph_name}; then
-    err "Can not remove graph ${graph_name}, since a graph with same nameing running!"
+    err "Can not remove graph ${graph_name}, since a graph with same naming running!"
     exit 1;
   fi
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
@@ -1110,7 +1110,7 @@ function do_remove(){
 
   # rm -rf the graph directory in the docker's workspace
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "rm -rf ${docker_graph_dir}" || ( echo "Fail to delete graph ${graph_name}" && exit 1)
-  info "Successfuly remove graph [${graph_name}]"
+  info "Successfully remove graph [${graph_name}]"
   # if graph_name is current graph, set current graph to .running 
   if [ "${DATABASE_CURRENT_GRAPH_NAME}" = "${graph_name}" ]; then
     info "Remove current graph [${graph_name}], set current graph to default_graph: ${DATABASE_DEFAULT_GRAPH_NAME}"
@@ -1190,7 +1190,7 @@ function do_import(){
     err "Fail to import graph [${graph_name}]"
     exit 1
   fi
-  info "Successfuly import data to graph [${graph_name}]"
+  info "Successfully import data to graph [${graph_name}]"
 }
 
 ####################  List Graph ####################
@@ -1225,10 +1225,10 @@ function do_destroy() {
     exit 0
   fi
   # check if the GraphServer and SyncServer are running, if running, echo "Service is running, please stop it first" and exit
-  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "GraphServer" "Service is running, please stop it first: ./bin/gs_interactive service stop"; then
     exit 1
   fi
-  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "interactive_server" "Service is running, please stop it first: ./bin/gs_interacitve service stop"; then
+  if ! check_process_not_running_in_container ${GIE_DB_CONTAINER_NAME} "interactive_server" "Service is running, please stop it first: ./bin/gs_interactive service stop"; then
     exit 1
   fi
 
@@ -1403,11 +1403,11 @@ function do_start(){
   # regenerate graph.yaml from graph0.yaml and override graph.yaml with stored procedure enable and disable
   update_graph_yaml_with_procedure_enabling ${graph_name}
 
-  # the bulk_load_file shoud place inside ${DATABASE_WORKSPACE}. and should use relative path
+  # the bulk_load_file should place inside ${DATABASE_WORKSPACE}. and should use relative path
   if [ -f "${HOST_DB_RUNNING_FILE}" ]; then
       . ${HOST_DB_ENV_FILE}
   fi
-  info "In start datebase, received graph_name = ${graph_name}, engine_config_file = ${engine_config_file}"
+  info "In start database, received graph_name = ${graph_name}, engine_config_file = ${engine_config_file}"
   docker_server_log_path="${DATABASE_WORKSPACE}/logs/server.log"
   graph_schema_file="${DATABASE_WORKSPACE}/data/${graph_name}/graph.yaml"
   csr_data_dir="${DATABASE_WORKSPACE}/data/${graph_name}/indices"
@@ -1421,7 +1421,7 @@ function do_start(){
   sleep 4
   # check whether the process is running
   check_process_running_in_container ${GIE_DB_CONTAINER_NAME} ${DOCKER_DB_SERVER_BIN} ", use gs_interactive service get_log -o [dir] to see get logs"
-  info "Successfuly start server"
+  info "Successfully start server"
 
   # start compiler
   docker_compiler_log_path="${DATABASE_WORKSPACE}/logs/compiler.log"
@@ -1437,7 +1437,7 @@ function do_start(){
   eval ${cmd}
   sleep 6
   check_process_running_in_container ${GIE_DB_CONTAINER_NAME} ${DOCKER_DB_COMPILER_BIN} ", use gs_interactive service get_log -o [dir] to see more details"
-  info "Successfuly start compiler"
+  info "Successfully start compiler"
   # get cypher port from engine config file
   # bolt_connector_port=$(parse_yaml "${engine_config_file}" | grep "compiler_endpoint_bolt_connector_port" | awk -F "=" '{print $2}')
   emph "DataBase service is running, port is open on :${DATABASE_COMPILER_BOLT_PORT}"
@@ -1464,7 +1464,7 @@ function do_stop(){
     local graph_name=$(sed -n '1p' ${HOST_DB_RUNNING_FILE} | cut -d '=' -f 2)
     docker_graph_lock_file="${DATABASE_WORKSPACE}/data/${graph_name}/.lock"
     docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "rm -f ${docker_graph_lock_file}" || exit 1
-    info "Successfuly remove ${docker_graph_lock_file} file"
+    info "Successfully remove ${docker_graph_lock_file} file"
   else
     info "No graph is running"
   fi
@@ -1473,7 +1473,7 @@ function do_stop(){
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "pkill -f ${DOCKER_DB_SERVER_BIN}" 
   docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "pkill -f ${DOCKER_DB_COMPILER_BIN}"
   sleep 6
-  info "Successfuly stop database"
+  info "Successfully stop database"
 }
 
 
@@ -1544,7 +1544,7 @@ function do_restart() {
     esac
   done
   do_stop
-  info "Successfuly stop database"
+  info "Successfully stop database"
   do_start -g ${GRAPH_NAME} -c ${ENGINE_CONFIG_FILE}
   info "Finish restarting database..."
 }
@@ -1583,11 +1583,11 @@ function do_log(){
   # docker cp
   docker cp "${GIE_DB_CONTAINER_NAME}:${docker_compiler_log}" "${directory}/compiler.log" || exit 1
   docker cp "${GIE_DB_CONTAINER_NAME}:${docker_server_log}" "${directory}/server.log" || exit 1
-  info "Successfuly get log to ${directory}, please check compiler.log and server.log"
+  info "Successfully get log to ${directory}, please check compiler.log and server.log"
 }
 
 # the compiled dynamic libs will be placed at data/${graph_name}/plugins/
-# after compilation, the user need to write the cooresponding yaml, telling the compiler about 
+# after compilation, the user need to write the corresponding yaml, telling the compiler about 
 # the input and output of the stored procedure
 function do_compile() {
   ensure_container_running
@@ -1711,15 +1711,15 @@ function do_compile() {
   fi
 
   container_output_dir="${DATABASE_WORKSPACE}/data/${graph_name}/plugins"
-  cotainer_input_path="${HOST_DB_TMP_DIR}/${file_name}"
+  container_input_path="${HOST_DB_TMP_DIR}/${file_name}"
   # docker cp file to container
-  cmd="docker cp ${real_file_path} ${GIE_DB_CONTAINER_NAME}:${cotainer_input_path}"
+  cmd="docker cp ${real_file_path} ${GIE_DB_CONTAINER_NAME}:${container_input_path}"
   eval ${cmd} || exit 1
 
   cmd="docker exec ${GIE_DB_CONTAINER_NAME} bash -c '"
   cmd=${cmd}" ${DOCKER_DB_GEN_BIN}"
   cmd=${cmd}" --engine_type=hqps"
-  cmd=${cmd}" --input=${cotainer_input_path}"
+  cmd=${cmd}" --input=${container_input_path}"
   cmd=${cmd}" --work_dir=/tmp/codegen/"
   cmd=${cmd}" --ir_conf=${docker_engine_config}"
   cmd=${cmd}" --graph_schema_path=${docker_graph_schema}"
@@ -1842,7 +1842,7 @@ function do_enable(){
   # copy the .enable file back to container
   docker cp "${HOST_DB_TMP_DIR}/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
   new_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
-  info "Successfuly enable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
+  info "Successfully enable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
 }
 
 function do_disable(){
@@ -1915,7 +1915,7 @@ function do_disable(){
     # clear the .enable file
     info "disable all stored_procedures for graph [${graph_name}]"
     docker exec "${GIE_DB_CONTAINER_NAME}" bash -c "(rm \"\" > ${docker_graph_enable_file}) || exit 0" || exit 1
-    info "Successfuly disable all stored_procedures for graph [${graph_name}]"
+    info "Successfully disable all stored_procedures for graph [${graph_name}]"
     exit 0
   fi
 
@@ -1939,7 +1939,7 @@ function do_disable(){
   # copy the .enable file back to container
   docker cp "${HOST_DB_TMP_DIR}/.enable" "${GIE_DB_CONTAINER_NAME}:${docker_graph_enable_file}" || exit 1
   new_line_num=$(wc -l < ${HOST_DB_TMP_DIR}/.enable)
-  info "Successfuly disable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
+  info "Successfully disable stored_procedures ${stored_procedure_names} for graph [${graph_name}], ${old_line_num} -> ${new_line_num}"
 }
 
 function do_show(){

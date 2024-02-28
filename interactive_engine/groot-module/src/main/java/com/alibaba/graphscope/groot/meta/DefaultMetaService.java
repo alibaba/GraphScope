@@ -34,10 +34,10 @@ public class DefaultMetaService implements MetaService {
 
     public DefaultMetaService(Configs configs) {
         this.partitionCount = CommonConfig.PARTITION_COUNT.get(configs);
-        this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
+        this.queueCount = 1;
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.kafkaServers = KafkaConfig.KAFKA_SERVERS.get(configs);
-        this.kafkaTopicName = KafkaConfig.KAKFA_TOPIC.get(configs);
+        this.kafkaTopicName = KafkaConfig.KAFKA_TOPIC.get(configs);
     }
 
     @Override
@@ -93,16 +93,6 @@ public class DefaultMetaService implements MetaService {
     @Override
     public int getQueueCount() {
         return this.queueCount;
-    }
-
-    @Override
-    public List<Integer> getQueueIdsForIngestor(int ingestorId) {
-        return List.of(ingestorId);
-    }
-
-    @Override
-    public int getIngestorIdForQueue(int queueId) {
-        return queueId;
     }
 
     @Override

@@ -140,6 +140,51 @@ struct AppendProperty<std::string> {
 };
 
 template <>
+struct AppendProperty<arrow::Date32Type> {
+  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(dynamic_cast<arrow::Date32Builder*>(builder)->Append(pp.int_value));
+  }
+};
+
+template <>
+struct AppendProperty<arrow::Date64Type> {
+  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(dynamic_cast<arrow::Date64Builder*>(builder)->Append(pp.long_value));
+  }
+};
+
+template <>
+struct AppendProperty<arrow::Time32Type> {
+  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(dynamic_cast<arrow::Time32Builder*>(builder)->Append(pp.int_value));
+  }
+};
+
+template <>
+struct AppendProperty<arrow::Time64Type> {
+  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(dynamic_cast<arrow::Time64Builder*>(builder)->Append(pp.long_value));
+  }
+};
+
+template <>
+struct AppendProperty<arrow::TimestampType> {
+  static void append(arrow::ArrayBuilder* builder, Property const* prop) {
+    vineyard::htap::htap_types::PodProperties pp;
+    pp.long_value = prop->len;
+    CHECK_ARROW_ERROR(dynamic_cast<arrow::TimestampBuilder*>(builder)->Append(pp.long_value));
+  }
+};
+
+template <>
 struct AppendProperty<void> {
   static void append(arrow::ArrayBuilder* builder, Property const* prop) {
     CHECK_ARROW_ERROR(
@@ -210,7 +255,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       auto stream_id = StreamBuilder<RecordBatchStream>::Make(client, params);
       s->vertex_stream_ = client.GetObject<RecordBatchStream>(stream_id);
 
-      client.Persist(s->vertex_stream_->id());
+      VINEYARD_DISCARD(client.Persist(s->vertex_stream_->id()));
       // Don't "OpenWriter" when creating, it will be "Get and Construct" again
       // VINEYARD_CHECK_OK(s->vertex_stream_->OpenWriter(client, s->vertex_writer_));
     }
@@ -221,7 +266,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
       auto stream_id = StreamBuilder<RecordBatchStream>::Make(client, params);
       s->edge_stream_ = client.GetObject<RecordBatchStream>(stream_id);
 
-      client.Persist(s->edge_stream_->id());
+      VINEYARD_DISCARD(client.Persist(s->edge_stream_->id()));
       // Don't "OpenWriter" when creating, it will be "Get and Construct" again
       // VINEYARD_CHECK_OK(s->edge_stream_->OpenWriter(client, s->edge_writer_));
     }
@@ -311,7 +356,7 @@ class PropertyGraphOutStream : public Registered<PropertyGraphOutStream> {
 
   std::map<LabelId, std::unique_ptr<arrow::RecordBatchBuilder>>
       vertex_builders_;
-  // vertex label id to its primary key column (assuming only signle column key) ordinal mapping
+  // vertex label id to its primary key column (assuming only single column key) ordinal mapping
   // -1 means no primary key column
   static constexpr size_t kNoPrimaryKeyColumn = static_cast<size_t>(-1);
   std::map<LabelId, size_t> vertex_primary_key_column_;

@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
@@ -61,7 +60,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
@@ -73,12 +71,8 @@ public class GraphPlanner {
     private final PlannerConfig plannerConfig;
     private final RelOptPlanner optPlanner;
     private final RexBuilder rexBuilder;
-    private final AtomicLong idGenerator;
     private final LogicalPlanFactory logicalPlanFactory;
 
-    public static final RelBuilderFactory relBuilderFactory =
-            (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
-                    GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
 
@@ -86,24 +80,15 @@ public class GraphPlanner {
         this.graphConfig = graphConfig;
         this.plannerConfig = PlannerConfig.create(this.graphConfig);
         logger.debug("planner config: " + this.plannerConfig);
-        this.optPlanner = createRelOptPlanner(this.plannerConfig);
+        this.optPlanner =
+                createRelOptPlanner(this.plannerConfig, new GraphBuilderFactory(this.graphConfig));
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);
-        this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
         this.logicalPlanFactory = logicalPlanFactory;
     }
 
     public PlannerInstance instance(String query, IrMeta irMeta) {
         GraphOptCluster optCluster = GraphOptCluster.create(this.optPlanner, this.rexBuilder);
         return new PlannerInstance(query, optCluster, irMeta);
-    }
-
-    public long generateUniqueId() {
-        long delta = FrontendConfig.FRONTEND_SERVER_NUM.get(graphConfig);
-        return idGenerator.getAndAdd(delta);
-    }
-
-    public String generateUniqueName(long uniqueId) {
-        return "ir_plan_" + uniqueId;
     }
 
     public class PlannerInstance {
@@ -118,10 +103,8 @@ public class GraphPlanner {
         }
 
         public Summary plan() {
-            long jobId = generateUniqueId();
             LogicalPlan logicalPlan = planLogical();
-            return new Summary(
-                    jobId, generateUniqueName(jobId), logicalPlan, planPhysical(logicalPlan));
+            return new Summary(logicalPlan, planPhysical(logicalPlan));
         }
 
         public LogicalPlan planLogical() {
@@ -129,7 +112,9 @@ public class GraphPlanner {
             IrGraphSchema schema = irMeta.getSchema();
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
-                            null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
+                            graphConfig,
+                            this.optCluster,
+                            new GraphOptSchema(this.optCluster, schema));
 
             LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
 
@@ -167,24 +152,12 @@ public class GraphPlanner {
     }
 
     public static class Summary {
-        private final long id;
-        private final String name;
         private final LogicalPlan logicalPlan;
         private final PhysicalPlan physicalPlan;
 
-        public Summary(long id, String name, LogicalPlan logicalPlan, PhysicalPlan physicalPlan) {
-            this.id = id;
-            this.name = name;
+        public Summary(LogicalPlan logicalPlan, PhysicalPlan physicalPlan) {
             this.logicalPlan = Objects.requireNonNull(logicalPlan);
             this.physicalPlan = Objects.requireNonNull(physicalPlan);
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
         }
 
         public LogicalPlan getLogicalPlan() {
@@ -196,7 +169,8 @@ public class GraphPlanner {
         }
     }
 
-    private RelOptPlanner createRelOptPlanner(PlannerConfig plannerConfig) {
+    private RelOptPlanner createRelOptPlanner(
+            PlannerConfig plannerConfig, RelBuilderFactory graphBuilderFactory) {
         if (plannerConfig.isOn()) {
             PlannerConfig.Opt opt = plannerConfig.getOpt();
             switch (opt) {
@@ -230,7 +204,7 @@ public class GraphPlanner {
                     ruleConfigs.forEach(
                             k -> {
                                 hepBuilder.addRuleInstance(
-                                        k.withRelBuilderFactory(relBuilderFactory).toRule());
+                                        k.withRelBuilderFactory(graphBuilderFactory).toRule());
                             });
                     return new HepPlanner(hepBuilder.build());
                 case CBO:

@@ -32,10 +32,10 @@ import java.util.Map;
 public class NodeNameResolver extends NameResolver implements NodeDiscovery.Listener {
     private static final Logger logger = LoggerFactory.getLogger(NodeNameResolver.class);
 
-    private NodeDiscovery discovery;
-    private URI uri;
-    private RoleType roleType;
-    private int idx;
+    private final NodeDiscovery discovery;
+    private final URI uri;
+    private final RoleType roleType;
+    private final int idx;
 
     private Listener2 listener;
 
@@ -43,7 +43,7 @@ public class NodeNameResolver extends NameResolver implements NodeDiscovery.List
         this.discovery = discovery;
         this.uri = uri;
         this.roleType = RoleType.fromName(uri.getAuthority());
-        this.idx = Integer.valueOf(uri.getPath().substring(1));
+        this.idx = Integer.parseInt(uri.getPath().substring(1));
     }
 
     @Override
@@ -53,7 +53,7 @@ public class NodeNameResolver extends NameResolver implements NodeDiscovery.List
 
     @Override
     public void start(Listener2 listener) {
-        logger.info("starting resolver for role [" + roleType + "] #[" + idx + "]");
+        logger.debug("starting resolver for role [{}] #[{}]", roleType, idx);
         this.listener = listener;
         this.discovery.addListener(this);
     }
@@ -65,13 +65,7 @@ public class NodeNameResolver extends NameResolver implements NodeDiscovery.List
 
     @Override
     public void nodesJoin(RoleType role, Map<Integer, GrootNode> nodes) {
-        logger.debug(
-                "Add nodes "
-                        + nodes
-                        + " for role "
-                        + role
-                        + " with current role type "
-                        + this.roleType);
+        logger.debug("Add nodes {} for role {}, roleType {}", nodes, role, roleType);
         if (role != this.roleType) {
             return;
         }

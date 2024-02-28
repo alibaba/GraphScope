@@ -61,10 +61,13 @@ impl DataflowBuilder {
         &self.config
     }
 
-    pub fn get_operator(&self, index: usize) -> OperatorRef {
+    pub fn get_operator(&self, index: usize) -> Option<OperatorRef> {
         let operators = self.operators.clone();
-        assert!(index < operators.borrow().len(), "invalid operator index;");
-        OperatorRef::new(index, operators, self.config.clone())
+        if index < operators.borrow().len() {
+            Some(OperatorRef::new(index, operators, self.config.clone()))
+        } else {
+            None
+        }
     }
 
     #[inline]

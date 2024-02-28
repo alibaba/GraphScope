@@ -15,7 +15,10 @@
  */
 package com.alibaba.graphscope.groot.wal;
 
+import org.apache.kafka.clients.producer.RecordMetadata;
+
 import java.io.IOException;
+import java.util.concurrent.Future;
 
 /**
  * A LogWriter can append data to a queue in the LogService.
@@ -28,6 +31,10 @@ public interface LogWriter extends AutoCloseable {
      * @return
      */
     long append(LogEntry logEntry) throws IOException;
+
+    long append(int partition, LogEntry logEntry) throws IOException;
+
+    public Future<RecordMetadata> appendAsync(int partition, LogEntry logEntry) throws IOException;
 
     void close() throws IOException;
 }

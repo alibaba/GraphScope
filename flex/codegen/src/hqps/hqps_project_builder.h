@@ -42,9 +42,6 @@ static constexpr const char* PROJECT_OP_TEMPLATE_STR =
 
 // to check the output type of case when is the same.
 bool sanity_check(const common::Case& expr_case) {
-  auto& when_exprs = expr_case.when_then_expressions();
-  auto& else_expr = expr_case.else_result_expression();
-
   // TODO: implement this check
   return true;
 }
@@ -56,7 +53,7 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
   std::string in_col_ids, expr_constructor_param_str, expr_selector_str;
   {
     std::stringstream ss;
-    for (auto i = 0; i < expr_selectors.size(); ++i) {
+    for (size_t i = 0; i < expr_selectors.size(); ++i) {
       ss << expr_selectors[i].first;
       if (i != expr_selectors.size() - 1) {
         ss << ", ";
@@ -69,7 +66,7 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
     if (func_construct_param_const.size() > 0) {
       ss << ", ";
     }
-    for (auto i = 0; i < func_construct_param_const.size(); ++i) {
+    for (size_t i = 0; i < func_construct_param_const.size(); ++i) {
       ss << func_construct_param_const[i].var_name;
       if (i != func_construct_param_const.size() - 1) {
         ss << ", ";
@@ -82,7 +79,7 @@ std::tuple<std::string, std::string, std::string> concatenate_expr_built_result(
     if (expr_selectors.size() > 0) {
       ss << ", ";
     }
-    for (auto i = 0; i < expr_selectors.size(); ++i) {
+    for (size_t i = 0; i < expr_selectors.size(); ++i) {
       ss << expr_selectors[i].second;
       if (i != expr_selectors.size() - 1) {
         ss << ", ";
@@ -237,7 +234,7 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
     // project properties to a list.
     auto& vars =
         expr_op.has_vars() ? expr_op.vars().keys() : expr_op.var_map().keys();
-    for (auto i = 0; i < vars.size(); ++i) {
+    for (int32_t i = 0; i < vars.size(); ++i) {
       auto& var = vars[i];
       if (in_tag_id == -2) {
         in_tag_id = var.tag().id();
@@ -300,7 +297,7 @@ std::string project_mapping_to_string(
     BuildingContext& ctx, const physical::Project::ExprAlias& mapping,
     TagIndMapping& new_tag_ind_map) {
   int32_t res_alias = mapping.alias().value();
-  // TODO: Currenly we assume each expr_alias contains only property for that
+  // TODO: Currently we assume each expr_alias contains only property for that
   // input tag
 
   auto real_res_alias = new_tag_ind_map.CreateOrGetTagInd(res_alias);
@@ -344,7 +341,7 @@ class ProjectOpBuilder {
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
     std::stringstream ss;
-    for (int i = 0; i < mappings_.size(); ++i) {
+    for (size_t i = 0; i < mappings_.size(); ++i) {
       ss << project_mapping_to_string(ctx_, mappings_[i], new_tag_id_mapping);
       if (i != mappings_.size() - 1) {
         ss << ", ";
@@ -372,7 +369,7 @@ static std::string BuildProjectOp(
   ProjectOpBuilder builder(ctx);
   builder.is_append(project_pb.is_append());
   auto& mappings = project_pb.mappings();
-  for (auto i = 0; i < mappings.size(); ++i) {
+  for (int32_t i = 0; i < mappings.size(); ++i) {
     builder.add_mapping(mappings[i]);
   }
   return builder.Build();

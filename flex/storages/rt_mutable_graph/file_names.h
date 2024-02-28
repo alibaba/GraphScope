@@ -15,6 +15,7 @@
 #ifndef GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 #define GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 
+#include <assert.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -22,6 +23,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <filesystem>
+
 #include "glog/logging.h"
 
 namespace gs {
@@ -81,12 +83,12 @@ inline void copy_file(const std::string& src, const std::string& dst) {
   }
 #if USE_COPY_FILE_RANGE
   size_t len = std::filesystem::file_size(src);
-  int src_fd = open(src.c_str(), O_RDONLY);
+  int src_fd = open(src.c_str(), O_RDONLY, 0777);
   bool creat = false;
   if (!std::filesystem::exists(dst)) {
     creat = true;
   }
-  int dst_fd = open(dst.c_str(), O_WRONLY | O_CREAT);
+  int dst_fd = open(dst.c_str(), O_WRONLY | O_CREAT, 0777);
   if (creat) {
     std::filesystem::perms readWritePermission =
         std::filesystem::perms::owner_read |
@@ -104,7 +106,7 @@ inline void copy_file(const std::string& src, const std::string& dst) {
     // error, one possible cause of the error could be that the
     // file's metadata has not yet been flushed to the file system.
     close(dst_fd);
-    dst_fd = open(dst.c_str(), O_WRONLY);
+    dst_fd = open(dst.c_str(), O_WRONLY, 0777);
   }
   ssize_t ret;
   do {
@@ -162,7 +164,7 @@ inline std::string get_latest_snapshot(const std::string& work_dir) {
   uint32_t version;
   {
     FILE* fin = fopen((snapshots_dir + "/VERSION").c_str(), "r");
-    fread(&version, sizeof(uint32_t), 1, fin);
+    CHECK_EQ(fread(&version, sizeof(uint32_t), 1, fin), 1);
   }
   return snapshots_dir + "/" + std::to_string(version);
 }
@@ -171,7 +173,7 @@ inline uint32_t get_snapshot_version(const std::string& work_dir) {
   std::string version_path = snapshot_version_path(work_dir);
   FILE* version_file = fopen(version_path.c_str(), "rb");
   uint32_t version = 0;
-  fread(&version, sizeof(uint32_t), 1, version_file);
+  CHECK_EQ(fread(&version, sizeof(uint32_t), 1, version_file), 1);
   fclose(version_file);
   return version;
 }
@@ -180,7 +182,7 @@ inline void set_snapshot_version(const std::string& work_dir,
                                  uint32_t version) {
   std::string version_path = snapshot_version_path(work_dir);
   FILE* version_file = fopen(version_path.c_str(), "wb");
-  fwrite(&version, sizeof(uint32_t), 1, version_file);
+  CHECK_EQ(fwrite(&version, sizeof(uint32_t), 1, version_file), 1);
   fflush(version_file);
   fclose(version_file);
 }
@@ -208,6 +210,20 @@ inline std::string allocator_dir(const std::string& work_dir) {
 
 inline std::string tmp_dir(const std::string& work_dir) {
   return runtime_dir(work_dir) + "tmp/";
+}
+
+inline void clear_tmp(const std::string& work_dir) {
+  std::string tmp_dir_str = tmp_dir(work_dir);
+  if (std::filesystem::exists(tmp_dir_str)) {
+    assert(std::filesystem::is_directory(tmp_dir_str));
+    if (std::filesystem::directory_iterator(tmp_dir_str) !=
+        std::filesystem::directory_iterator()) {
+      for (const auto& entry :
+           std::filesystem::directory_iterator(tmp_dir_str)) {
+        std::filesystem::remove_all(entry.path());
+      }
+    }
+  }
 }
 
 inline std::string vertex_map_prefix(const std::string& label) {

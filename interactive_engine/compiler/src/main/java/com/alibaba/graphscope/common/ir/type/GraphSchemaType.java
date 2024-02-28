@@ -61,7 +61,14 @@ public class GraphSchemaType extends RelRecordType {
             GraphLabelType labelType,
             List<RelDataTypeField> fields,
             boolean isNullable) {
-        this(scanOpt, labelType, fields, ImmutableList.of(), isNullable);
+        super(StructKind.NONE, fields, isNullable);
+        this.scanOpt = scanOpt;
+        Preconditions.checkArgument(
+                labelType.getLabelsEntry().size() == 1,
+                "can not use label=%s to init GraphSchemaType with single label",
+                labelType);
+        this.labelType = labelType;
+        this.fuzzySchemaTypes = ImmutableList.of();
     }
 
     protected GraphSchemaType(
@@ -143,8 +150,9 @@ public class GraphSchemaType extends RelRecordType {
     @Override
     protected void generateTypeString(StringBuilder sb, boolean withDetail) {
         sb.append("Graph_Schema_Type");
-
         sb.append("(");
+        sb.append("labels=" + labelType);
+        sb.append(", properties=[");
         Iterator var3 =
                 Ord.zip((List) Objects.requireNonNull(this.fieldList, "fieldList")).iterator();
 
@@ -164,6 +172,7 @@ public class GraphSchemaType extends RelRecordType {
             sb.append(" ");
             sb.append(field.getName());
         }
+        sb.append("]");
 
         sb.append(")");
     }

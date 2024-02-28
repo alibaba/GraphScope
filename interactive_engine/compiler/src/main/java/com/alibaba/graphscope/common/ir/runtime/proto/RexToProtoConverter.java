@@ -220,7 +220,7 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     private OuterExpression.Expression visitBinaryOperator(RexCall call) {
         if (call.getOperator().getKind() == SqlKind.SEARCH) {
-            // ir core can not support continuous ranges in a search operator, here expand it to
+            // ir core cannot support continuous ranges in a search operator, here expand it to
             // compositions of 'and' or 'or',
             // i.e. a.age SEARCH [[1, 10]] -> a.age >= 1 and a.age <= 10
             RexNode left = call.getOperands().get(0);

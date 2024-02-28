@@ -34,7 +34,7 @@ service CoordinatorService {
   // Closes a session.
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse);
 
-  // Distribute the specified libary to servers
+  // Distribute the specified library to servers
   rpc AddLib(AddLibRequest) returns (AddLibResponse);
 
   rpc CreateAnalyticalInstance (CreateAnalyticalInstanceRequest) returns (CreateAnalyticalInstanceResponse);
@@ -48,7 +48,4 @@ service CoordinatorService {
   rpc CloseInteractiveInstance (CloseInteractiveInstanceRequest) returns (CloseInteractiveInstanceResponse);
 
   rpc CloseLearningInstance (CloseLearningInstanceRequest) returns (CloseLearningInstanceResponse);
-
-  // service functions under FLEX architecture
-  rpc Connect(ConnectRequest) returns (ConnectResponse);
 }

@@ -118,7 +118,7 @@ class GetVOpBuilder {
       input_type = ctx_.GetHeadType();
       CHECK(input_type.first == 0);
       if (!vertex_labels_.empty()) {
-        for (auto i = 0; i < input_type.second.size(); ++i) {
+        for (size_t i = 0; i < input_type.second.size(); ++i) {
           if (std::find(vertex_labels_.begin(), vertex_labels_.end(),
                         input_type.second[i]) == vertex_labels_.end()) {
             VLOG(10) << "Can not find label " << input_type.second.size();
@@ -135,7 +135,7 @@ class GetVOpBuilder {
       }
       CHECK(input_type.first == 0);
       if (!vertex_labels_.empty()) {
-        for (auto i = 0; i < input_type.second.size(); ++i) {
+        for (size_t i = 0; i < input_type.second.size(); ++i) {
           if (std::find(vertex_labels_.begin(), vertex_labels_.end(),
                         input_type.second[i]) == vertex_labels_.end()) {
             VLOG(10) << "Can not find label " << input_type.second.size();
@@ -330,7 +330,7 @@ class GetVOpBuilder {
 
   std::string generate_label_string() const {
     std::stringstream labels_ss;
-    for (auto i = 0; i < vertex_labels_.size(); i++) {
+    for (size_t i = 0; i < vertex_labels_.size(); i++) {
       labels_ss << vertex_labels_[i];
       if (i != vertex_labels_.size() - 1) {
         labels_ss << ",";
@@ -354,7 +354,7 @@ class GetVOpBuilder {
         "result.push(i%1%);\n"
         "}\n");
     std::string vars_code;
-    for (auto i = 0; i < var_names_.size(); ++i) {
+    for (size_t i = 0; i < var_names_.size(); ++i) {
       boost::format var_fmter("let %1% = %2%[vertex_id];\n");
       std::string prop_name =
           get_vertex_prop_column_name(properties_[i].var_name, label_id);

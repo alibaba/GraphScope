@@ -1,4 +1,4 @@
-# This file is used to find librdkafka library in CMake script, modifeid from the
+# This file is used to find librdkafka library in CMake script, modified from the
 # code from
 #
 #   https://github.com/BVLC/caffe/blob/master/cmake/Modules/FindGlog.cmake

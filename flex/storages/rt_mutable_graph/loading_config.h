@@ -60,13 +60,13 @@ static const std::unordered_set<std::string> CSV_META_KEY_WORDS = {
 class LoadingConfig;
 
 namespace config_parsing {
-static bool parse_bulk_load_config_file(const std::string& config_file,
-                                        const Schema& schema,
-                                        LoadingConfig& load_config);
+bool parse_bulk_load_config_file(const std::string& config_file,
+                                 const Schema& schema,
+                                 LoadingConfig& load_config);
 
-static bool parse_bulk_load_config_yaml(const YAML::Node& yaml_node,
-                                        const Schema& schema,
-                                        LoadingConfig& load_config);
+bool parse_bulk_load_config_yaml(const YAML::Node& yaml_node,
+                                 const Schema& schema,
+                                 LoadingConfig& load_config);
 }  // namespace config_parsing
 
 // Provide meta info about bulk loading.

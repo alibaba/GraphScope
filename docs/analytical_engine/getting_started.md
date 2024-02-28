@@ -59,4 +59,4 @@ Next, you may want to learn more about the following topics:
 
 - [Design of the analytical engine of GraphScope and its technical details](analytical_engine/design_of_gae)
 - [Disaggregated deployment of GraphScope on a k8s cluster for large-scale graph analysis](analytical_engine/deployment)
-- [A set of examples with advanced usage, including customized algorithms, NetworkX/Giraph/GraphX compatibility, etc.](analytical_engine/guide_and_exmaples)
+- [A set of examples with advanced usage, including customized algorithms, NetworkX/Giraph/GraphX compatibility, etc.](analytical_engine/guide_and_examples)

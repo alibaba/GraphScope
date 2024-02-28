@@ -13,11 +13,7 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.DataType;
 import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
-import com.alibaba.graphscope.groot.common.util.EdgeRecordKey;
-import com.alibaba.graphscope.groot.common.util.PkHashUtils;
-import com.alibaba.graphscope.groot.common.util.VertexRecordKey;
-import com.alibaba.graphscope.groot.common.util.WriteSessionUtil;
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
+import com.alibaba.graphscope.groot.common.util.*;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
@@ -26,20 +22,18 @@ import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationType;
 import com.alibaba.graphscope.groot.operation.VertexId;
 import com.alibaba.graphscope.groot.operation.dml.*;
-import com.alibaba.graphscope.groot.rpc.RoleClients;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class GraphWriter implements MetricsAgent {
+    private static final Logger logger = LoggerFactory.getLogger(GraphWriter.class);
 
     public static final String WRITE_REQUESTS_TOTAL = "write.requests.total";
     public static final String WRITE_REQUESTS_PER_SECOND = "write.requests.per.second";
@@ -63,26 +57,56 @@ public class GraphWriter implements MetricsAgent {
     private SnapshotCache snapshotCache;
     private EdgeIdGenerator edgeIdGenerator;
     private MetaService metaService;
-    private RoleClients<IngestorWriteClient> ingestWriteClients;
     private AtomicLong lastWrittenSnapshotId = new AtomicLong(0L);
 
-    private static final Logger logger = LoggerFactory.getLogger(GraphWriter.class);
+    private final KafkaAppender kafkaAppender;
+    private ScheduledExecutorService scheduler;
 
     public GraphWriter(
             SnapshotCache snapshotCache,
             EdgeIdGenerator edgeIdGenerator,
             MetaService metaService,
-            RoleClients<IngestorWriteClient> ingestWriteClients,
             MetricsCollector metricsCollector,
+            KafkaAppender appender,
             Configs configs) {
         this.snapshotCache = snapshotCache;
         this.edgeIdGenerator = edgeIdGenerator;
         this.metaService = metaService;
-        this.ingestWriteClients = ingestWriteClients;
         initMetrics();
         metricsCollector.register(this, this::updateMetrics);
         // default for increment eid generate
         this.enableHashEid = FrontendConfig.ENABLE_HASH_GENERATE_EID.get(configs);
+
+        this.kafkaAppender = appender;
+    }
+
+    public void start() {
+        this.scheduler =
+                Executors.newSingleThreadScheduledExecutor(
+                        ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
+                                "kafka-appender-try-start", logger));
+
+        this.scheduler.scheduleWithFixedDelay(
+                this::tryStartProcessors, 0, 2000, TimeUnit.MILLISECONDS);
+    }
+
+    public void stop() {
+        if (this.scheduler != null) {
+            this.scheduler.shutdown();
+            try {
+                this.scheduler.awaitTermination(3000L, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                // Ignore
+            }
+            this.scheduler = null;
+        }
+        kafkaAppender.stop();
+    }
+
+    private void tryStartProcessors() {
+        if (!kafkaAppender.isStarted()) {
+            kafkaAppender.start();
+        }
     }
 
     public long writeBatch(
@@ -152,49 +176,26 @@ public class GraphWriter implements MetricsAgent {
             }
         }
         OperationBatch operationBatch = batchBuilder.build();
-        int writeQueueId = getWriteQueueId(writeSession);
-        int ingestorId = this.metaService.getIngestorIdForQueue(writeQueueId);
-        long startTimeNano = System.nanoTime();
-        this.ingestWriteClients
-                .getClient(ingestorId)
-                .writeIngestorAsync(
-                        requestId,
-                        writeQueueId,
-                        operationBatch,
-                        new CompletionCallback<Long>() {
-                            @Override
-                            public void onCompleted(Long res) {
-                                long writeSnapshotId = res;
-                                lastWrittenSnapshotId.updateAndGet(
-                                        x -> Math.max(x, writeSnapshotId));
-                                writeRequestsTotal.addAndGet(writeRequests.size());
-                                finish();
-                                callback.onCompleted(res);
-                            }
+        this.kafkaAppender.ingestBatch(
+                requestId,
+                operationBatch,
+                new IngestCallback() {
+                    @Override
+                    public void onSuccess(long snapshotId) {
+                        lastWrittenSnapshotId.updateAndGet(x -> Math.max(x, snapshotId));
+                        writeRequestsTotal.addAndGet(writeRequests.size());
+                        callback.onCompleted(snapshotId);
+                    }
 
-                            @Override
-                            public void onError(Throwable t) {
-                                finish();
-                                callback.onError(t);
-                            }
-
-                            void finish() {
-                                long ingestorCompleteTimeNano = System.nanoTime();
-                                ingestorBlockTimeNano.addAndGet(
-                                        ingestorCompleteTimeNano - startTimeNano);
-                                pendingWriteCount.decrementAndGet();
-                            }
-                        });
+                    @Override
+                    public void onFailure(Exception e) {
+                        callback.onError(e);
+                    }
+                });
     }
 
-    public List<Long> replayWALFrom(long offset, long timestamp) {
-        List<Long> allIds = new ArrayList<>();
-        for (int queue = 0; queue < metaService.getQueueCount(); ++queue) {
-            int id = metaService.getIngestorIdForQueue(queue);
-            List<Long> ids = ingestWriteClients.getClient(id).replayWALFrom(offset, timestamp);
-            allIds.addAll(ids);
-        }
-        return allIds;
+    public List<Long> replayWALFrom(long offset, long timestamp) throws IOException {
+        return kafkaAppender.replayDMLRecordsFrom(offset, timestamp);
     }
 
     public boolean flushSnapshot(long snapshotId, long waitTimeMs) throws InterruptedException {
@@ -206,15 +207,6 @@ public class GraphWriter implements MetricsAgent {
     public boolean flushLastSnapshot(long waitTimeMs) throws InterruptedException {
         long snapshotId = this.lastWrittenSnapshotId.get();
         return this.flushSnapshot(snapshotId, waitTimeMs);
-    }
-
-    private int getWriteQueueId(String session) {
-        int queueCount = this.metaService.getQueueCount();
-        if (queueCount <= 1) {
-            throw new IllegalStateException("expect queueCount > 1, but was [" + queueCount + "]");
-        }
-        long clientIdx = WriteSessionUtil.getClientIdx(session);
-        return (int) (clientIdx % (queueCount - 1)) + 1;
     }
 
     private void addDeleteEdgeOperation(

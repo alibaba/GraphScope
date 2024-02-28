@@ -171,7 +171,7 @@ class ScanOpBuilder {
         "}\n");
 
     std::string vars_code;
-    for (auto i = 0; i < var_names.size(); i++) {
+    for (size_t i = 0; i < var_names.size(); i++) {
       std::string var_name = var_names[i];
       std::string prop_name = properties[i].var_name;
       std::string prop_column_name =

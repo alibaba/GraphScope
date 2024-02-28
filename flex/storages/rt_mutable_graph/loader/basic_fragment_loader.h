@@ -55,7 +55,7 @@ class BasicFragmentLoader {
     CHECK(col_ind < dst_columns.size());
     dst_columns[col_ind]->set_any(vid, prop);
   }
-
+#ifndef USE_PTHASH
   template <typename KEY_T>
   void FinishAddingVertex(label_t v_label,
                           const IdIndexer<KEY_T, vid_t>& indexer) {
@@ -65,10 +65,22 @@ class BasicFragmentLoader {
     auto primary_keys = schema_.get_vertex_primary_key(v_label);
     auto type = std::get<0>(primary_keys[0]);
 
-    build_lf_indexer<KEY_T, vid_t>(indexer, filename, lf_indexers_[v_label],
-                                   snapshot_dir(work_dir_, 0),
-                                   tmp_dir(work_dir_), type);
+    build_lf_indexer<KEY_T, vid_t>(
+        indexer, LFIndexer<vid_t>::prefix() + "_" + filename,
+        lf_indexers_[v_label], snapshot_dir(work_dir_, 0), tmp_dir(work_dir_),
+        type);
   }
+#else
+  template <typename KEY_T>
+  void FinishAddingVertex(label_t v_label,
+                          PTIndexerBuilder<KEY_T, vid_t>& indexer_builder) {
+    CHECK(v_label < vertex_label_num_);
+    std::string filename =
+        vertex_map_prefix(schema_.get_vertex_label_name(v_label));
+    indexer_builder.finish(PTIndexer<vid_t>::prefix() + "_" + filename,
+                           snapshot_dir(work_dir_, 0), lf_indexers_[v_label]);
+  }
+#endif
 
   template <typename EDATA_T>
   void AddNoPropEdgeBatch(label_t src_label_id, label_t dst_label_id,
@@ -90,7 +102,12 @@ class BasicFragmentLoader {
       dual_csr_list_[index] = new DualCsr<std::string_view>(
           oe_strategy, ie_strategy, prop[0].additional_type_info.max_length);
     } else {
-      dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+      bool oe_mutable = schema_.outgoing_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      bool ie_mutable = schema_.incoming_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      dual_csr_list_[index] = new DualCsr<EDATA_T>(oe_strategy, ie_strategy,
+                                                   oe_mutable, ie_mutable);
     }
     ie_[index] = dual_csr_list_[index]->GetInCsr();
     oe_[index] = dual_csr_list_[index]->GetOutCsr();
@@ -120,7 +137,6 @@ class BasicFragmentLoader {
         src_label_name, dst_label_name, edge_label_name);
     EdgeStrategy ie_strategy = schema_.get_incoming_edge_strategy(
         src_label_name, dst_label_name, edge_label_name);
-
     if constexpr (std::is_same_v<EDATA_T, std::string_view>) {
       const auto& prop = schema_.get_edge_properties(src_label_id, dst_label_id,
                                                      edge_label_id);
@@ -142,7 +158,13 @@ class BasicFragmentLoader {
       }
 
     } else {
-      auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy);
+      bool oe_mutable = schema_.outgoing_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+      bool ie_mutable = schema_.incoming_edge_mutable(
+          src_label_name, dst_label_name, edge_label_name);
+
+      auto dual_csr = new DualCsr<EDATA_T>(oe_strategy, ie_strategy, oe_mutable,
+                                           ie_mutable);
 
       dual_csr_list_[index] = dual_csr;
       ie_[index] = dual_csr_list_[index]->GetInCsr();
@@ -168,15 +190,16 @@ class BasicFragmentLoader {
   }
 
   // get lf_indexer
-  const LFIndexer<vid_t>& GetLFIndexer(label_t v_label) const;
+  const IndexerType& GetLFIndexer(label_t v_label) const;
+  IndexerType& GetLFIndexer(label_t v_label);
 
  private:
   void init_vertex_data();
   const Schema& schema_;
   std::string work_dir_;
   size_t vertex_label_num_, edge_label_num_;
-  std::vector<LFIndexer<vid_t>> lf_indexers_;
-  std::vector<MutableCsrBase*> ie_, oe_;
+  std::vector<IndexerType> lf_indexers_;
+  std::vector<CsrBase*> ie_, oe_;
   std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
 };

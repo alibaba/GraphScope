@@ -23,7 +23,7 @@ import io.grpc.ManagedChannel;
 
 public class StoreSchemaClient extends RpcClient {
 
-    private StoreSchemaGrpc.StoreSchemaBlockingStub stub;
+    private final StoreSchemaGrpc.StoreSchemaBlockingStub stub;
 
     public StoreSchemaClient(ManagedChannel channel) {
         super(channel);
@@ -38,7 +38,6 @@ public class StoreSchemaClient extends RpcClient {
     public GraphDef fetchSchema() {
         FetchSchemaResponse response =
                 this.stub.fetchSchema(FetchSchemaRequest.newBuilder().build());
-        GraphDef graphDef = GraphDef.parseProto(response.getGraphDef());
-        return graphDef;
+        return GraphDef.parseProto(response.getGraphDef());
     }
 }

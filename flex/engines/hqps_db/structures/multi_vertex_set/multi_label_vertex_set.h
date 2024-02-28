@@ -46,7 +46,7 @@ class MultiLabelVertexSetIter {
         cur_label_(0),
         limit_(offset_array_[0].size() - 1),
         safe_eles(0) {
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       local_ind_[i] = 0;
     }
     probe_for_next();
@@ -193,7 +193,7 @@ class MultiLabelVertexSet {
 
   std::array<label_id_t, N> GetLabels() const {
     std::array<label_id_t, N> labels;
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       labels[i] = set_array_[i].GetLabel();
     }
     return labels;
@@ -205,7 +205,7 @@ class MultiLabelVertexSet {
     std::vector<std::vector<offset_t>> local_offsets(N);
     size_t cur_cnt = 0;
     size_t select_indices_ind = 0;
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       local_offsets[i].emplace_back(0);
     }
     for (auto iter : *this) {
@@ -226,23 +226,23 @@ class MultiLabelVertexSet {
       cur_cnt += 1;
     }
 
-    // for (auto i = 0; i < N; ++i) {
+    // for (size_t i = 0;i < N; ++i) {
     //   VLOG(10) << "sub set: " << i
     //            << ", offset: " << gs::to_string(local_offsets[i]);
     //   VLOG(10) << "sub set: " << i
     //            << ", indices: " << gs::to_string(indices_vec[i]);
     // }
     // regard offset array
-    for (auto i = 0; i < N; ++i) {
-      for (auto j = 0; j < offset_array_[i].size(); ++j) {
+    for (size_t i = 0; i < N; ++i) {
+      for (size_t j = 0; j < offset_array_[i].size(); ++j) {
         local_offsets[i][j] = local_offsets[i][offset_array_[i][j]];
       }
     }
-    // for (auto i = 0; i < N; ++i) {
+    // for (size_t i = 0;i < N; ++i) {
     //   VLOG(10) << "sub set: " << i
     //            << ", res offset: " << gs::to_string(local_offsets[i]);
     // }
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       set_array_[i].SubSetWithIndices(indices_vec[i]);
       offset_array_[i].swap(local_offsets[i]);
     }
@@ -256,8 +256,7 @@ class MultiLabelVertexSet {
     std::vector<std::vector<offset_t>> indices_vec(N);
     std::array<std::vector<offset_t>, N> local_offsets;
 
-    size_t cur_cnt = 0;
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       local_offsets[i].emplace_back(0);
     }
 
@@ -267,11 +266,11 @@ class MultiLabelVertexSet {
       auto set_ind = iter.GetCurInd();
       auto set_inner_ind = iter.GetCurSetInnerInd();
       if (repeat_array[cur_ind] > 0) {
-        for (auto j = 0; j < repeat_array[cur_ind]; ++j) {
+        for (size_t j = 0; j < repeat_array[cur_ind]; ++j) {
           indices_vec[set_ind].emplace_back(set_inner_ind);
           // local_offsets[set_ind].emplace_back(indices_vec[set_ind].size());
         }
-        for (auto j = 0; j < N; ++j) {
+        for (size_t j = 0; j < N; ++j) {
           local_offsets[j].emplace_back(indices_vec[j].size());
         }
       }
@@ -290,17 +289,17 @@ class MultiLabelVertexSet {
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) {
     //<label_t, <ind_, vid_t>>
     std::array<std::vector<size_t>, N> indices;
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       offset_array_[i].clear();
     }
 
     // update offsets.
     std::array<size_t, N> local_ind;
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       local_ind[i] = 0;
       offset_array_[i].emplace_back(local_ind[i]);
     }
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_index_ele = std::get<col_ind>(index_ele_tuple[i]);
       VLOG(10) << "MultiLabel: got index ele: " << gs::to_string(cur_index_ele);
       auto label = std::get<0>(cur_index_ele);
@@ -308,25 +307,25 @@ class MultiLabelVertexSet {
       local_ind[label] += 1;
 
       indices[label].emplace_back(inner_ind);
-      for (auto i = 0; i < N; ++i) {
+      for (size_t i = 0; i < N; ++i) {
         offset_array_[i].emplace_back(local_ind[i]);
       }
     }
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       set_array_[i].SubSetWithIndices(indices[i]);
       // array_[i].second.emplace_back(local_ind[i]++);
       VLOG(10) << "offset for: " << i << ",is"
                << gs::to_string(offset_array_[i]);
     }
 
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       VLOG(10) << "Multi label finish flat: " << local_ind[i];
     }
     VLOG(10) << "size: " << Size();
     return std::move(*this);
   }
 
-  // Filter vertex sets with expresion and labels.
+  // Filter vertex sets with expression and labels.
   template <typename LabelT, typename EXPRESSION, size_t num_labels,
             typename ELE_TUPLE,
             typename RES_SET_T = MultiLabelVertexSet<VERTEX_SET_T, N>,
@@ -347,7 +346,7 @@ class MultiLabelVertexSet {
     std::vector<std::vector<offset_t>> local_offsets(N);
     size_t cur_cnt = 0;
     global_offset.emplace_back(0);
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       local_offsets[i].emplace_back(0);
     }
     for (auto iter : *this) {
@@ -367,9 +366,9 @@ class MultiLabelVertexSet {
     // build global offset from local offset.
 
     std::array<std::vector<offset_t>, N> new_offset;
-    for (auto i = 0; i < N; ++i) {
+    for (size_t i = 0; i < N; ++i) {
       new_offset[i].reserve(offset_array_[i].size());
-      for (auto j = 0; j < offset_array_[i].size(); ++j) {
+      for (size_t j = 0; j < offset_array_[i].size(); ++j) {
         new_offset[i].emplace_back(local_offsets[i][offset_array_[i][j]]);
         // local_offsets[i][j] = local_offsets[i][offset_array_[i][j]];
       }

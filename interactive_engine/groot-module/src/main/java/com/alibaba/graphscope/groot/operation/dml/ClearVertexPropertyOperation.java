@@ -24,9 +24,9 @@ import java.util.List;
 
 public class ClearVertexPropertyOperation extends Operation {
 
-    private VertexId vertexId;
-    private LabelId labelId;
-    private List<Integer> properties;
+    private final VertexId vertexId;
+    private final LabelId labelId;
+    private final List<Integer> properties;
 
     public ClearVertexPropertyOperation(
             VertexId vertexId, LabelId labelId, List<Integer> properties) {

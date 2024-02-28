@@ -95,15 +95,13 @@ $ cat /home/graphscope/graphlearn.INFO
 
 ## Find logs for Groot
 
-It is common to find the logs of Frontend and Store roles. When debugging, it is often necessary to find the logs of Coordinator and Ingestor as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. You can find the logs of each Pod using the [kubectl command](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands) `kubectl logs ${POD_NAME}`. For example,
+It is common to find the logs of Frontend and Store roles. When debugging, it is often necessary to find the logs of Coordinator as well. The logs of Frontend include the logs of the Compiler that generates the logical query plan, while the logs of Store include the logs of the query engine execution. You can find the logs of each Pod using the [kubectl command](https://kubernetes.io/docs/reference/generated/kubectl/kubectl-commands) `kubectl logs ${POD_NAME}`. For example,
 
 ```bash
 $ kubectl get pod
 NAME                                              READY   STATUS    RESTARTS      AGE
 demo-graphscope-store-coordinator-0               1/1     Running   0             33d
 demo-graphscope-store-frontend-0                  1/1     Running   0             33d
-demo-graphscope-store-ingestor-0                  1/1     Running   0             33d
-demo-graphscope-store-ingestor-1                  1/1     Running   0             33d
 demo-graphscope-store-store-0                     1/1     Running   0             33d
 demo-graphscope-store-store-1                     1/1     Running   0             33d
 
@@ -115,7 +113,7 @@ Additionally, if you can access into the pod, you can find all logs in `/var/log
 
 ```bash
 # frontend
-$ kubetl exec -it demo-graphscope-store-frontend-0 -- /bin/bash
+$ kubectl exec -it demo-graphscope-store-frontend-0 -- /bin/bash
 $ cd /var/log/graphscope && ls
 graphscope-store.2023-03-11.0.log  graphscope-store.2023-03-19.0.log  graphscope-store.log ...
 ```

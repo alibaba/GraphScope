@@ -18,7 +18,7 @@
 //!
 //! We instruct how to use these apis as follows.
 //!
-//! First of all, call `cbindgen` to generate the header of apis for C-binded caller, as:
+//! First of all, call `cbindgen` to generate the header of apis for C-bound caller, as:
 //! `cbindgen --crate ir_core --output /path/to/c-caller/ir_core.h`
 //!
 //! Secondly, build the dynamic ir_core library, as: `cargo build --release`,

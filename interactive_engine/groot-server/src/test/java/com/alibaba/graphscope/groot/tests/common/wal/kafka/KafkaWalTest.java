@@ -45,8 +45,8 @@ public class KafkaWalTest {
                         .put(
                                 KafkaConfig.KAFKA_SERVERS.getKey(),
                                 sharedKafkaTestResource.getKafkaConnectString())
-                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_destroy")
-                        .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
+                        .put(KafkaConfig.KAFKA_TOPIC.getKey(), "test_double_destroy")
+                        .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
                         .build();
         LogService logService = new KafkaLogService(configs);
         logService.init();
@@ -61,8 +61,8 @@ public class KafkaWalTest {
                         .put(
                                 KafkaConfig.KAFKA_SERVERS.getKey(),
                                 sharedKafkaTestResource.getKafkaConnectString())
-                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_init")
-                        .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
+                        .put(KafkaConfig.KAFKA_TOPIC.getKey(), "test_double_init")
+                        .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
                         .build();
         LogService logService = new KafkaLogService(configs);
         logService.init();
@@ -77,21 +77,21 @@ public class KafkaWalTest {
                         .put(
                                 KafkaConfig.KAFKA_SERVERS.getKey(),
                                 sharedKafkaTestResource.getKafkaConnectString())
-                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_logservice")
-                        .put(CommonConfig.INGESTOR_QUEUE_COUNT.getKey(), "1")
+                        .put(KafkaConfig.KAFKA_TOPIC.getKey(), "test_logservice")
+                        .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
                         .build();
         LogService logService = new KafkaLogService(configs);
         logService.init();
         int queueId = 0;
         long snapshotId = 1L;
-        LogWriter writer = logService.createWriter(queueId);
+        LogWriter writer = logService.createWriter();
         LogEntry logEntry =
                 new LogEntry(
                         snapshotId,
                         OperationBatch.newBuilder()
                                 .addOperationBlob(OperationBlob.MARKER_OPERATION_BLOB)
                                 .build());
-        assertEquals(writer.append(logEntry), 0);
+        assertEquals(writer.append(queueId, logEntry), 0);
 
         LogReader reader = logService.createReader(queueId, 0);
         ReadLogEntry readLogEntry = reader.readNext();
@@ -105,9 +105,9 @@ public class KafkaWalTest {
         assertEquals(operationBatch.getOperationCount(), 1);
         assertEquals(operationBatch.getOperationBlob(0), OperationBlob.MARKER_OPERATION_BLOB);
 
-        assertEquals(writer.append(logEntry), 1);
-        assertEquals(writer.append(logEntry), 2);
-        assertEquals(writer.append(logEntry), 3);
+        assertEquals(writer.append(queueId, logEntry), 1);
+        assertEquals(writer.append(queueId, logEntry), 2);
+        assertEquals(writer.append(queueId, logEntry), 3);
 
         LogReader readerTail = logService.createReader(queueId, 4);
         assertNull(readerTail.readNext());

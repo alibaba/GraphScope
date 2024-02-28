@@ -16,7 +16,8 @@ pandas<=2.0.3
 protobuf>=4
 psutil
 pyarrow>=10
-pysimdjson;python_version<"3.11"
+pysimdjson<6;python_version<"3.11"
+pysimdjson>=6;python_version>="3.11"
 ujson;python_version>="3.11"
 PyYAML
 rich
@@ -24,3 +25,4 @@ tqdm
 click
 vineyard>=0.16.3;sys_platform!="win32"
 simple-parsing
+graphscope-flex>=0.27.0

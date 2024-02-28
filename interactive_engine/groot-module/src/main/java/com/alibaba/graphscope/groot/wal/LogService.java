@@ -30,10 +30,9 @@ public interface LogService {
 
     /**
      * Create a writer that can append data to a specific queue of LogService.
-     * @param queueId
      * @return
      */
-    LogWriter createWriter(int queueId);
+    LogWriter createWriter();
 
     /**
      * Create a reader can read data of specific queue from certain offset.

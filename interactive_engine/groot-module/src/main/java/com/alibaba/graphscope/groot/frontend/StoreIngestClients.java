@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class StoreIngestClients extends RoleClients<StoreIngestClient> implements StoreIngestor {
+public class StoreIngestClients extends RoleClients<StoreIngestClient> {
 
     public StoreIngestClients(
             ChannelManager channelManager,
@@ -33,12 +33,10 @@ public class StoreIngestClients extends RoleClients<StoreIngestClient> implement
         super(channelManager, targetRole, clientBuilder);
     }
 
-    @Override
     public void ingest(int storeId, String path, CompletionCallback<Void> callback) {
         this.ingest(storeId, path, new HashMap<String, String>(), callback);
     }
 
-    @Override
     public void ingest(
             int storeId,
             String path,
@@ -47,8 +45,15 @@ public class StoreIngestClients extends RoleClients<StoreIngestClient> implement
         this.getClient(storeId).storeIngest(path, config, callback);
     }
 
-    @Override
     public void clearIngest(int storeId, String path, CompletionCallback<Void> callback) {
         this.getClient(storeId).storeClearIngest(path, callback);
+    }
+
+    public void compactDB(int storeId, CompletionCallback<Void> callback) {
+        this.getClient(storeId).storeCompact(callback);
+    }
+
+    public void reopenSecondary(int storeId, CompletionCallback<Void> callback) {
+        this.getClient(storeId).reopenSecondary(callback);
     }
 }

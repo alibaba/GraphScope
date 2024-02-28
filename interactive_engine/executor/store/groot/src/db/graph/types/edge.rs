@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 use std::collections::hash_map::Values;
 use std::collections::HashMap;
-use std::ops::Deref;
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -9,6 +8,7 @@ use std::sync::MutexGuard;
 
 use ::crossbeam_epoch as epoch;
 use ::crossbeam_epoch::{Atomic, Guard, Owned};
+use epoch::Shared;
 
 use super::super::codec::*;
 use super::super::table_manager::Table;
@@ -60,6 +60,7 @@ impl EdgeKindInfo {
     }
 }
 
+/*
 pub struct EdgeKindInfoRef {
     inner: &'static EdgeKindInfo,
     _guard: Guard,
@@ -78,6 +79,7 @@ impl Deref for EdgeKindInfoRef {
         self.inner
     }
 }
+*/
 
 #[derive(Clone)]
 pub struct EdgeInfo {
@@ -119,11 +121,16 @@ impl EdgeInfo {
         self.lifetime.is_alive_at(si)
     }
 
+    pub fn get_label(&self) -> LabelId {
+        self.label
+    }
+
     pub fn lock(&self) -> LockedEdgeInfoKinds<'_> {
         LockedEdgeInfoKinds { kinds: self.kinds.lock().unwrap() }
     }
 }
 
+/*
 pub struct EdgeInfoRef {
     si: SnapshotId,
     inner: &'static EdgeInfo,
@@ -175,6 +182,19 @@ impl EdgeInfoIter {
         EdgeInfoIter { si, inner: iter, guard }
     }
 }
+*/
+
+pub fn next_edge_info<'a>(
+    si: SnapshotId, iter: &mut Values<'a, LabelId, Arc<EdgeInfo>>,
+) -> Option<Arc<EdgeInfo>> {
+    debug!("next_edge_info");
+    loop {
+        let info = iter.next()?;
+        if info.is_alive_at(si) {
+            return Some(info.clone());
+        }
+    }
+}
 
 type EdgeInfoMap = HashMap<LabelId, Arc<EdgeInfo>>;
 type EdgeKindMap = HashMap<EdgeKind, Vec<Arc<EdgeKindInfo>>>;
@@ -197,31 +217,26 @@ impl EdgeTypeManager {
         EdgeTypeManager { inner: Atomic::new(EdgeManagerInner::new()) }
     }
 
-    pub fn get_edge_kind(&self, si: SnapshotId, kind: &EdgeKind) -> GraphResult<EdgeKindInfoRef> {
+    pub fn get_edge_kind(&self, si: SnapshotId, kind: &EdgeKind) -> GraphResult<Arc<EdgeKindInfo>> {
         let guard = epoch::pin();
         let inner = self.get_inner(&guard);
-        let info = res_unwrap!(inner.get_edge_kind(si, kind), get_edge_kind, si, kind)?;
-        let ret = EdgeKindInfoRef::new(info, guard);
-        Ok(ret)
-    }
+        let edge_mgr = unsafe { inner.deref() };
+        let ret = res_unwrap!(edge_mgr.get_edge_kind(si, kind), get_edge_kind, si, kind)?;
 
-    pub fn get_edge(&self, si: SnapshotId, label: LabelId) -> GraphResult<EdgeInfoRef> {
-        debug!("EdgeTypeManager::get_edge");
-        let guard = epoch::pin();
-        let inner = self.get_inner(&guard);
-        let info = res_unwrap!(inner.get_edge(si, label), get_edge, si, label)?;
-        let ret = EdgeInfoRef::new(si, info, guard);
         Ok(ret)
     }
 
     pub fn get_edge_info(&self, si: SnapshotId, label: LabelId) -> GraphResult<Arc<EdgeInfo>> {
         debug!("EdgeTypeManager::get_edge_info");
-        let guard = &epoch::pin();
-        let inner = self.get_inner(guard);
-        let ret = res_unwrap!(inner.get_edge_info(si, label), get_edge, si, label)?;
+        let guard = epoch::pin();
+        let inner = self.get_inner(&guard);
+        let edge_mgr = unsafe { inner.deref() };
+        let ret = res_unwrap!(edge_mgr.get_edge_info(si, label), get_edge_info, si, label)?;
+
         Ok(ret)
     }
 
+    /*
     pub fn get_all_edges(&self, si: SnapshotId) -> EdgeInfoIter {
         debug!("EdgeTypeManager::get_all_edges");
         let guard = epoch::pin();
@@ -230,17 +245,24 @@ impl EdgeTypeManager {
         let ret = EdgeInfoIter::new(si, iter, guard);
         ret
     }
+    */
 
     pub fn contains_edge(&self, label: LabelId) -> bool {
         let guard = &epoch::pin();
         let inner = self.get_inner(guard);
-        inner.contains_edge(label)
+        if let Some(map) = unsafe { inner.as_ref() } {
+            map.contains_edge(label)
+        } else {
+            false
+        }
     }
 
     pub fn contains_edge_kind(&self, si: SnapshotId, kind: &EdgeKind) -> bool {
         let guard = &epoch::pin();
         let inner = self.get_inner(guard);
-        inner.contains_edge_kind(si, kind)
+        let edge_mgr = unsafe { inner.deref() };
+
+        edge_mgr.contains_edge_kind(si, kind)
     }
 
     pub fn create_edge_type(&self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
@@ -262,29 +284,36 @@ impl EdgeTypeManager {
     }
 
     pub fn gc(&self, si: SnapshotId) -> GraphResult<Vec<TableId>> {
-        self.modify(|inner| inner.gc(si))
+        let guard = &epoch::pin();
+        let inner = self.inner.load(Ordering::Relaxed, guard);
+        let mut clone = unsafe { inner.deref() }.clone();
+        let res = clone.gc(si)?;
+        if !res.is_empty() {
+            self.inner
+                .store(Owned::new(clone).into_shared(guard), Ordering::Relaxed);
+            unsafe {
+                guard.defer_destroy(inner);
+            }
+        }
+
+        Ok(res)
+    }
+
+    pub(crate) fn get_inner<'a>(&'a self, guard: &'a Guard) -> Shared<'a, EdgeManagerInner> {
+        self.inner.load(Ordering::Relaxed, guard)
     }
 
     fn modify<E, F: Fn(&mut EdgeManagerInner) -> E>(&self, f: F) -> E {
         let guard = &epoch::pin();
         let inner = self.inner.load(Ordering::Relaxed, guard);
-        let mut inner_clone = unsafe { inner.deref() }.clone();
-        let res = f(&mut inner_clone);
+        let mut clone = unsafe { inner.deref() }.clone();
+        let res = f(&mut clone);
         self.inner
-            .store(Owned::new(inner_clone).into_shared(guard), Ordering::Relaxed);
+            .store(Owned::new(clone).into_shared(guard), Ordering::Relaxed);
         unsafe {
             guard.defer_destroy(inner);
         }
         res
-    }
-
-    fn get_inner(&self, guard: &Guard) -> &'static EdgeManagerInner {
-        unsafe {
-            &*self
-                .inner
-                .load(Ordering::Relaxed, guard)
-                .as_raw()
-        }
     }
 }
 
@@ -326,7 +355,7 @@ impl EdgeManagerBuilder {
 }
 
 #[derive(Clone)]
-struct EdgeManagerInner {
+pub(crate) struct EdgeManagerInner {
     info_map: EdgeInfoMap,
     type_map: EdgeKindMap,
 }
@@ -336,11 +365,11 @@ impl EdgeManagerInner {
         EdgeManagerInner { info_map: EdgeInfoMap::new(), type_map: EdgeKindMap::new() }
     }
 
-    fn get_edge_kind(&self, si: SnapshotId, kind: &EdgeKind) -> GraphResult<&EdgeKindInfo> {
+    fn get_edge_kind(&self, si: SnapshotId, kind: &EdgeKind) -> GraphResult<Arc<EdgeKindInfo>> {
         if let Some(list) = self.type_map.get(kind) {
             for info in list {
                 if info.lifetime.is_alive_at(si) {
-                    return Ok(info.as_ref());
+                    return Ok(info.clone());
                 }
             }
             let msg = format!("no {:?} is alive at {}", kind, si);
@@ -349,21 +378,6 @@ impl EdgeManagerInner {
         }
         let msg = format!("edge {:?} not found", kind);
         let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge_kind, si, kind);
-        Err(err)
-    }
-
-    fn get_edge(&self, si: SnapshotId, label: LabelId) -> GraphResult<&EdgeInfo> {
-        debug!("EdgeManagerInner::get_edge {:?}", label);
-        if let Some(info) = self.info_map.get(&label) {
-            if info.lifetime.is_alive_at(si) {
-                return Ok(info.as_ref());
-            }
-            let msg = format!("edge#{} is not alive at {}", label, si);
-            let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge, si, label);
-            return Err(err);
-        }
-        let msg = format!("edge#{} not found", label);
-        let err = gen_graph_err!(GraphErrorCode::TypeNotFound, msg, get_edge, si, label);
         Err(err)
     }
 
@@ -395,11 +409,6 @@ impl EdgeManagerInner {
             }
         }
         false
-    }
-
-    fn get_all_edges(&self) -> Values<LabelId, Arc<EdgeInfo>> {
-        debug!("EdgeManagerInner::get_all_edges");
-        self.info_map.values()
     }
 
     fn create_edge_type(&mut self, si: SnapshotId, label: LabelId, type_def: &TypeDef) -> GraphResult<()> {
@@ -493,5 +502,10 @@ impl EdgeManagerInner {
             self.type_map.remove(&t);
         }
         Ok(table_ids)
+    }
+
+    pub(crate) fn get_all_edges(&self) -> Values<LabelId, Arc<EdgeInfo>> {
+        debug!("EdgeManagerInner::get_all_edges");
+        self.info_map.values()
     }
 }

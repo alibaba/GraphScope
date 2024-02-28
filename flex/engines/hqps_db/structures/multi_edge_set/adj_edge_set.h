@@ -174,8 +174,9 @@ class AdjEdgeSetIter<GI, VID_T, grape::EmptyType> {
  public:
   using self_type_t = AdjEdgeSetIter<GI, VID_T, grape::EmptyType>;
   using adj_t = typename GI::template adj_t<>;
-  using adj_list_array_t = typename GI::template adj_list_array_t<>;
-  using adj_list_t = typename GI::template adj_list_t<>;
+  using adj_list_array_t =
+      typename GI::template adj_list_array_t<grape::EmptyType>;
+  using adj_list_t = typename GI::template adj_list_t<grape::EmptyType>;
   using adj_list_iter_t = typename adj_list_t::iterator;
   using ele_tuple_t = std::tuple<VID_T, VID_T, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, VID_T, grape::EmptyType>;
@@ -297,7 +298,7 @@ class AdjEdgeSet {
         prop_names_(prop_names),
         dir_(dir) {
     size_ = 0;
-    for (auto i = 0; i < adj_lists_.size(); ++i) {
+    for (size_t i = 0; i < adj_lists_.size(); ++i) {
       size_ += adj_lists_.get(i).size();
     }
   }
@@ -347,7 +348,7 @@ class AdjEdgeSet {
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
     std::vector<std::tuple<VID_T, VID_T, std::tuple<EDATA_T...>>> res;
     res.reserve(index_ele_tuple.size());
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto nbr = std::get<2>(cur_ind_ele);
       // auto ele = std::get<2>(cur_ind_ele);
@@ -368,7 +369,7 @@ class AdjEdgeSet {
     LOG(WARNING) << "No implemented";
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         PropNameArray<PropT...>& prop_names) {
@@ -398,8 +399,9 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
   using self_type_t = AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType>;
   using data_tuple_t = std::tuple<grape::EmptyType>;
   using flat_t = FlatEdgeSet<VID_T, LabelT, grape::EmptyType>;
-  using adj_list_array_t = typename GI::template adj_list_array_t<>;
-  using adj_list_t = typename GI::template adj_list_t<>;
+  using adj_list_array_t =
+      typename GI::template adj_list_array_t<grape::EmptyType>;
+  using adj_list_t = typename GI::template adj_list_t<grape::EmptyType>;
   using adj_list_iter_t = typename adj_list_t::iterator;
   using ele_tuple_t = std::tuple<VID_T, adj_list_iter_t>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, adj_list_iter_t>;
@@ -419,7 +421,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
         dst_label_(dst_label),
         dir_(dir) {
     size_ = 0;
-    for (auto i = 0; i < adj_lists_.size(); ++i) {
+    for (size_t i = 0; i < adj_lists_.size(); ++i) {
       size_ += adj_lists_.get(i).size();
     }
   }
@@ -468,7 +470,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
       std::vector<std::tuple<index_ele_tuple_t_...>>& index_ele_tuple) const {
     std::vector<std::tuple<VID_T, VID_T, grape::EmptyType>> res;
     res.reserve(index_ele_tuple.size());
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto iter = std::get<2>(cur_ind_ele);
       auto src = std::get<1>(cur_ind_ele);
@@ -485,7 +487,7 @@ class AdjEdgeSet<GI, VID_T, LabelT, grape::EmptyType> {
     LOG(WARNING) << "No implemented";
   }
 
-  // fill builtin props withour repeat array.
+  // fill builtin props without repeat array.
   template <typename... PropT>
   void fillBuiltinProps(std::vector<std::tuple<PropT...>>& tuples,
                         PropNameArray<PropT...>& prop_names) {

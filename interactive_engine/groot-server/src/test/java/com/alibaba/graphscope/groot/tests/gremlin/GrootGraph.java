@@ -17,7 +17,7 @@ import com.alibaba.graphscope.gremlin.integration.graph.RemoteTestGraph;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSource;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.GremlinConfig;
+import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.sdk.GrootClient;
 import com.alibaba.graphscope.groot.sdk.schema.Edge;
@@ -72,7 +72,7 @@ public class GrootGraph extends RemoteTestGraph {
             // This is to ensure the frontend can communicate some RPC after start, to make the
             // graphdef not null anymore, in snapshotCache.
             Thread.sleep(3000);
-            int port = GremlinConfig.GREMLIN_PORT.get(configs);
+            int port = FrontendConfig.GREMLIN_SERVER_PORT.get(configs);
             this.cluster = createCluster("localhost", port);
             this.ddlClient = GrootClient.newBuilder().addHost("localhost", 55556).build();
             this.remoteConnection = DriverRemoteConnection.using(cluster);

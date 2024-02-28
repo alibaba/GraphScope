@@ -413,7 +413,7 @@ RES_T keyed_row_project_vertices_impl(
     label_ind = 0;  // neq -1
   } else {
     // FIXME: no repeated labels.
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       if (cur_label == labels[i])
         label_ind = i;
     }
@@ -422,12 +422,12 @@ RES_T keyed_row_project_vertices_impl(
     VLOG(10) << "No label found in query params";
     // for current set, we don't need.
     auto size = lids.size();
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       offsets.emplace_back(cnt);
     }
   } else {
     VLOG(10) << "Found label in query params";
-    for (auto i = 0; i < lids.size(); ++i) {
+    for (size_t i = 0; i < lids.size(); ++i) {
       offsets.emplace_back(cnt);
       if (expr(eles[i])) {
         new_keys.emplace_back(keys[i]);
@@ -461,13 +461,13 @@ RES_T keyed_row_project_vertices_impl(
     label_ind = 0;  // neq -1
   } else {
     // FIXME: no repeated labels.
-    for (auto i = 0; i < num_labels; ++i) {
+    for (size_t i = 0; i < num_labels; ++i) {
       if (cur_label == labels[i])
         label_ind = i;
     }
   }
   // FIXME: no repeated labels.
-  for (auto i = 0; i < num_labels; ++i) {
+  for (size_t i = 0; i < num_labels; ++i) {
     if (cur_label == labels[i])
       label_ind = i;
   }
@@ -475,12 +475,12 @@ RES_T keyed_row_project_vertices_impl(
     VLOG(10) << "No label found in query params";
     // for current set, we don't need.
     auto size = lids.size();
-    for (auto i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       offsets.emplace_back(cnt);
     }
   } else {
     VLOG(10) << "Found label in query params";
-    for (auto i = 0; i < lids.size(); ++i) {
+    for (size_t i = 0; i < lids.size(); ++i) {
       offsets.emplace_back(cnt);
       if (expr(eles[i])) {
         new_keys.emplace_back(keys[i]);
@@ -573,7 +573,7 @@ class KeyedRowVertexSetImpl {
     std::vector<LabelKey> res;
     // fill res with vertex labels
     res.reserve(vids_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       res.emplace_back(v_label_);
     }
     return res;
@@ -676,8 +676,8 @@ class KeyedRowVertexSetImpl {
     std::vector<lid_t> new_vids;
     std::vector<data_tuple_t> new_datas;
 
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         new_keys.push_back(keys_[i]);
         new_vids.push_back(vids_[i]);
         new_datas.push_back(datas_[i]);
@@ -782,7 +782,7 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
     std::vector<LabelKey> res;
     // fill res with vertex labels
     res.reserve(vids_.size());
-    for (auto i = 0; i < vids_.size(); ++i) {
+    for (size_t i = 0; i < vids_.size(); ++i) {
       res.emplace_back(v_label_);
     }
     return res;
@@ -871,8 +871,8 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
     std::vector<key_t> new_keys;
     std::vector<lid_t> new_vids;
 
-    for (auto i = 0; i < repeat_array.size(); ++i) {
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         new_keys.push_back(keys_[i]);
         new_vids.push_back(vids_[i]);
       }

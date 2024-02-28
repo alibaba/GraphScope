@@ -31,7 +31,6 @@ public class DefaultMetaServiceTest {
         Configs configs =
                 Configs.newBuilder()
                         .put("partition.count", "10")
-                        .put("ingestor.queue.count", "3")
                         .put("store.node.count", "4")
                         .build();
         /**
@@ -49,10 +48,7 @@ public class DefaultMetaServiceTest {
                 () -> assertEquals(metaService.getStoreIdByPartition(6), 2),
                 () -> assertEquals(metaService.getStoreIdByPartition(8), 3),
                 () -> assertEquals(metaService.getPartitionsByStoreId(2), Arrays.asList(6, 7)),
-                () -> assertEquals(metaService.getQueueCount(), 3),
-                () -> assertEquals(metaService.getQueueIdsForIngestor(2), Arrays.asList(2)),
-                () -> assertEquals(metaService.getIngestorIdForQueue(1), 1));
-
+                () -> assertEquals(metaService.getQueueCount(), 4));
         metaService.stop();
     }
 }

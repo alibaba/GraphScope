@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A main class demostrate the usage of GraphScopeAppScanner.
+ * A main class demonstrate the usage of GraphScopeAppScanner.
  */
 public class Main {
 

@@ -32,7 +32,6 @@ import com.alibaba.graphscope.groot.frontend.SnapshotUpdateCommitter;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.servers.AbstractService;
-import com.alibaba.graphscope.groot.servers.ComputeServiceProducer;
 import com.alibaba.graphscope.groot.store.StoreService;
 
 import org.slf4j.Logger;
@@ -41,7 +40,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-public class IrServiceProducer implements ComputeServiceProducer {
+public class IrServiceProducer {
     private static final Logger logger = LoggerFactory.getLogger(IrServiceProducer.class);
     private final Configs configs;
 
@@ -49,7 +48,6 @@ public class IrServiceProducer implements ComputeServiceProducer {
         this.configs = configs;
     }
 
-    @Override
     public AbstractService makeGraphService(
             SchemaFetcher schemaFetcher, ChannelManager channelManager) {
         int executorCount = CommonConfig.STORE_NODE_COUNT.get(configs);
@@ -64,7 +62,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
                 new FrontendQueryManager(irMetaFetcher, frontendId, updateCommitter);
 
         return new AbstractService() {
-            private GraphServer graphServer =
+            private final GraphServer graphServer =
                     new GraphServer(
                             irConfigs, channelFetcher, queryManager, TestGraphFactory.GROOT);
 
@@ -81,9 +79,7 @@ public class IrServiceProducer implements ComputeServiceProducer {
             @Override
             public void stop() {
                 try {
-                    if (this.graphServer != null) {
-                        this.graphServer.close();
-                    }
+                    this.graphServer.close(); // graphServer is always not null
                     queryManager.stop();
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -92,10 +88,9 @@ public class IrServiceProducer implements ComputeServiceProducer {
         };
     }
 
-    @Override
     public AbstractService makeExecutorService(
             StoreService storeService, MetaService metaService, DiscoveryFactory discoveryFactory) {
-        ExecutorEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
+        GaiaEngine executorEngine = new GaiaEngine(configs, discoveryFactory);
         return new GaiaService(configs, executorEngine, storeService, metaService);
     }
 

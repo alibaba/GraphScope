@@ -13,7 +13,7 @@ Learn more: [Paper on ICDE2023](#), [Doc](https://graphscope.io/docs/latest/anal
 
 #### GRAPE
 
-the code name of analytical engine in GraphScope. It was first indroduced in the SIGMOD2017 paper, represents <u>GRA</u>ph <u>P</u>arallel processing <u>E</u>ngine. The analytical engine inherits the design proposed in this paper.
+the code name of analytical engine in GraphScope. It was first introduced in the SIGMOD2017 paper, represents <u>GRA</u>ph <u>P</u>arallel processing <u>E</u>ngine. The analytical engine inherits the design proposed in this paper.
 
 The core part of GRAPE is opensourced at https://github.com/alibaba/libgrape-lite, which is a dependency and serves as the analytical engine in GraphScope.
 

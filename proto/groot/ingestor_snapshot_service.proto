@@ -34,30 +34,8 @@ message AdvanceIngestSnapshotIdResponse {
 }
 
 
-service IngestProgress {
-  rpc getTailOffsets(GetTailOffsetsRequest) returns(GetTailOffsetsResponse);
-}
-
-message GetTailOffsetsRequest {
-  repeated int32 queueId = 1;
-}
-
-message GetTailOffsetsResponse {
-  repeated int64 offsets = 1;
-}
-
 service IngestorWrite {
   rpc writeIngestor(WriteIngestorRequest) returns (WriteIngestorResponse);
-  rpc replayWAL(ReplayWALRequest) returns (ReplayWALResponse);
-}
-
-message ReplayWALRequest {
-  int64 offset = 1;
-  int64 timestamp = 2;
-}
-
-message ReplayWALResponse {
-  repeated int64 snapshotId = 1;
 }
 
 

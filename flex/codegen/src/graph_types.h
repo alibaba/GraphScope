@@ -127,7 +127,7 @@ static std::string common_data_type_pb_2_str(
     return single_common_data_type_pb_2_str(data_types[0]);
   }
   ss << "std::tuple<";
-  for (auto i = 0; i < data_types.size(); ++i) {
+  for (size_t i = 0; i < data_types.size(); ++i) {
     ss << single_common_data_type_pb_2_str(data_types[i]);
     if (i + 1 < data_types.size()) {
       ss << ", ";

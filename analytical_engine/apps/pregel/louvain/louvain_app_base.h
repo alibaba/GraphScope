@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 #define ANALYTICAL_ENGINE_APPS_PREGEL_LOUVAIN_LOUVAIN_APP_BASE_H_
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -170,7 +171,7 @@ class LouvainAppBase
       std::vector<std::vector<std::vector<md_t>>> buffer(
           thrd_num, std::vector<std::vector<md_t>>(thrd_num));
       messages.ParallelProcess<md_t>(
-          thrd_num, [&thrd_num, &buffer](int tid, md_t const& msg) {
+          thrd_num, [&thrd_num, &buffer](int tid, md_t& msg) {
             buffer[tid][msg.dst_id % thrd_num].emplace_back(std::move(msg));
           });
       {
@@ -179,7 +180,7 @@ class LouvainAppBase
           threads[tid] = std::thread(
               [&frag, &ctx, &thrd_num, &buffer](uint32_t tid) {
                 for (uint32_t index = 0; index < thrd_num; ++index) {
-                  for (auto const& msg : buffer[index][tid]) {
+                  for (auto& msg : buffer[index][tid]) {
                     vertex_t v;
                     frag.InnerVertexGid2Vertex(msg.dst_id, v);
                     ctx.compute_context().messages_in()[v].emplace_back(
@@ -224,7 +225,9 @@ class LouvainAppBase
               actual_quality_aggregator);
       // after one pass if already decided halt, that means the pass yield no
       // changes, so we halt computation.
-      if (current_super_step <= 14 || actual_quality <= ctx.prev_quality()) {
+      if (current_super_step <= 14 ||
+          std::fabs(actual_quality - ctx.prev_quality()) <
+              min_quality_improvement) {
         // turn to sync community result
         ctx.compute_context().set_superstep(sync_result_step);
         syncCommunity(frag, ctx, messages);
@@ -273,13 +276,6 @@ class LouvainAppBase
       } else if (ctx.compute_context().superstep() == compress_community_step) {
         ctx.GetVertexState(v).is_alived_community = false;
       }
-
-      if (!ctx.compute_context().active(v)) {
-        std::vector<std::pair<vid_t, edata_t>> tmp_edges;
-        ctx.GetVertexState(v).fake_edges.swap(tmp_edges);
-        std::vector<vid_t> tmp_nodes;
-        ctx.GetVertexState(v).nodes_in_community.swap(tmp_nodes);
-      }
     });
 
     {
@@ -321,7 +317,7 @@ class LouvainAppBase
                                 int tid, vertex_t v) {
       const auto& member_list = ctx.vertex_state()[v].nodes_in_community;
       if (!member_list.empty()) {
-        auto community_id = frag.Gid2Oid(member_list.front());
+        auto community_id = frag.Gid2Oid(ctx.vertex_state()[v].community);
         // send community id to members
         for (const auto& member_gid : member_list) {
           auto fid = vid_parser.GetFid(member_gid);

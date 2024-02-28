@@ -268,8 +268,8 @@ public class HepPlannerTest {
                     + "    GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[OTHER])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[b], opt=[BOTH])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
+                    + " opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",
@@ -282,8 +282,8 @@ public class HepPlannerTest {
                     + "  GraphLogicalSingleMatch(input=[null],"
                     + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[c], opt=[OTHER])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[b], opt=[BOTH])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[b],"
+                    + " opt=[BOTH])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                     + " alias=[a], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]], opt=[VERTEX])\n"
                     + "], matchOpt=[INNER])",

@@ -5,6 +5,8 @@ name: Build GraphScope Development and Wheel Images
 # 2) graphscope-dev: including all dependencies for graphscope's development env.
 # 3) vineyard-dev: including all vineyard-related dependencies that could compile graphscope analytical engine.
 # 4) vineyard-runtime: including all vineyard-related running dependencies.
+# Note that:
+#   Due to security considerations, we cannot use self-hosts runner(aarch64) when we configured the secret on github.
 on:
   workflow_dispatch:
     inputs:
@@ -73,14 +75,15 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # dev-wheel image
-        sudo docker tag graphscope/graphscope-dev:wheel-${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
+        sudo docker tag graphscope/graphscope-dev:wheel-${tag}-${arch} ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag}
 
   build-wheel-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.pull_request == 'pull_request')
+    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_wheel == 'true') || (github.pull_request == 'pull_request')
+    if: false
 
     steps:
     - uses: actions/checkout@v3
@@ -125,9 +128,10 @@ jobs:
         sudo docker rmi -f graphscope/graphscope-dev:wheel-${tag} || true
         sudo docker rmi -f ${{ env.REGISTRY }}/graphscope/graphscope-dev:wheel-${tag} || true
 
-  manifesh-push-wheel-image:
+  manifest-push-wheel-image:
     runs-on: ubuntu-20.04
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_wheel == 'true' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_wheel == 'true' }}
+    if: false
 
     needs: [build-wheel-image-x86-64, build-wheel-image-aarch64]
     steps:
@@ -177,14 +181,15 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # graphscope-dev image
-        sudo docker tag graphscope/graphscope-dev:${tag} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
+        sudo docker tag graphscope/graphscope-dev:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/graphscope-dev:${tag}
 
   build-graphscope-dev-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.pull_request == 'pull_request')
+    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.pull_request == 'pull_request')
+    if: false
 
     steps:
     - uses: actions/checkout@v3
@@ -231,7 +236,8 @@ jobs:
 
   manifest-push-graphscope-dev-image:
     runs-on: ubuntu-20.04
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_graphscope_dev == 'true' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_graphscope_dev == 'true' }}
+    if: false
 
     needs: [build-graphscope-dev-image-x86-64, build-graphscope-dev-image-aarch64]
     steps:
@@ -281,14 +287,15 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # vineyard-dev image
-        sudo docker tag graphscope/vineyard-dev:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
+        sudo docker tag graphscope/vineyard-dev:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-dev:${tag}
 
   build-vineyard-dev-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
-    if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.pull_request == 'pull_request')
+    # if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.pull_request == 'pull_request')
+    if: false
 
     steps:
     - uses: actions/checkout@v3
@@ -335,7 +342,8 @@ jobs:
 
   manifest-push-vineyard-dev-image:
     runs-on: ubuntu-20.04
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    if: false
 
     needs: [build-vineyard-dev-image-x86-64, build-vineyard-dev-image-aarch64]
     steps:
@@ -387,16 +395,17 @@ jobs:
         # x86_64
         arch=$(uname -m)
         # image tag
-        tag=${{ github.event.inputs.v6d_version }}-${arch}
+        tag=${{ github.event.inputs.v6d_version }}
         # vineyard-runtime image
-        sudo docker tag graphscope/vineyard-runtime:${tag} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
+        sudo docker tag graphscope/vineyard-runtime:${tag}-${arch} ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
         sudo docker push ${{ env.REGISTRY }}/graphscope/vineyard-runtime:${tag}
 
   build-vineyard-runtime-image-aarch64:
     runs-on: [self-hosted, Linux, ARM64]
     # only trigger this step in 'workflow_dispatch' event,
     # since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    if: false
 
     needs: [manifest-push-vineyard-dev-image]
     steps:
@@ -443,7 +452,8 @@ jobs:
 
   manifest-push-vineyard-runtime-image:
     runs-on: ubuntu-20.04
-    if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    # if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }}
+    if: false
 
     needs: [build-vineyard-runtime-image-x86-64, build-vineyard-runtime-image-aarch64]
     steps:

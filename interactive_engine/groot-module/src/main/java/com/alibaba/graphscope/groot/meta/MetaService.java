@@ -28,10 +28,6 @@ public interface MetaService {
 
     int getQueueCount();
 
-    List<Integer> getQueueIdsForIngestor(int ingestorId);
-
-    int getIngestorIdForQueue(int queueId);
-
     int getStoreCount();
 
     String getLoggerServers();

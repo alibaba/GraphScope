@@ -1,10 +1,12 @@
 #![allow(dead_code)]
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fs;
 use std::path::Path;
 use std::sync::atomic::{AtomicIsize, Ordering};
 use std::sync::Arc;
 
+use ::crossbeam_epoch as epoch;
 use protobuf::Message;
 
 use super::bin::*;
@@ -23,8 +25,8 @@ use crate::db::common::bytes::transform;
 use crate::db::graph::entity::{RocksEdgeImpl, RocksVertexImpl};
 use crate::db::graph::iter::{EdgeTypeScan, VertexTypeScan};
 use crate::db::graph::table_manager::Table;
-use crate::db::storage::rocksdb::RocksDB;
-use crate::db::storage::{ExternalStorage, ExternalStorageBackup, RawBytes};
+use crate::db::storage::rocksdb::{RocksDB, RocksDBBackupEngine};
+use crate::db::storage::RawBytes;
 use crate::db::util::lock::GraphMutexLock;
 
 pub struct GraphStore {
@@ -32,15 +34,16 @@ pub struct GraphStore {
     meta: Meta,
     vertex_manager: VertexTypeManager,
     edge_manager: EdgeTypeManager,
-    storage: Arc<dyn ExternalStorage>,
+    storage: Arc<RocksDB>,
     data_root: String,
+    data_download_root: String,
     // ensure all modification to graph is in ascending order of snapshot id
     si_guard: AtomicIsize,
     lock: GraphMutexLock<()>,
 }
 
 pub struct GraphBackupEngine {
-    engine: Box<dyn ExternalStorageBackup>,
+    engine: Box<RocksDBBackupEngine>,
 }
 
 impl GraphBackup for GraphBackupEngine {
@@ -78,8 +81,11 @@ impl MultiVersionGraph for GraphStore {
         if let Some(label_id) = label_id {
             self.get_vertex_from_label(si, vertex_id, label_id, property_ids)
         } else {
-            let mut iter = self.vertex_manager.get_all(si as i64);
-            while let Some(info) = iter.next() {
+            let guard = epoch::pin();
+            let map = self.vertex_manager.get_map(&guard);
+            let map_ref = unsafe { map.deref() };
+            let mut iter = map_ref.values();
+            while let Some(info) = next_vertex_type_info(si, &mut iter) {
                 if let Some(vertex) =
                     self.get_vertex_from_label(si, vertex_id, info.get_label() as LabelId, property_ids)?
                 {
@@ -98,18 +104,23 @@ impl MultiVersionGraph for GraphStore {
         if let Some(relation) = edge_relation {
             self.get_edge_from_relation(si, edge_id, relation, property_ids)
         } else {
-            let mut iter = self.edge_manager.get_all_edges(si as i64);
-            while let Some(info) = iter.next() {
+            let guard = epoch::pin();
+            let inner = self.edge_manager.get_inner(&guard);
+            let edge_mgr = unsafe { inner.deref() };
+            let mut iter = edge_mgr.get_all_edges();
+            while let Some(info) = next_edge_info(si, &mut iter) {
                 let edge_kinds = info.lock();
                 let mut edge_kind_iter = edge_kinds.iter_kinds();
                 while let Some(edge_kind_info) = edge_kind_iter.next() {
-                    if let Some(edge) = self.get_edge_from_relation(
-                        si,
-                        edge_id,
-                        &edge_kind_info.get_type().into(),
-                        property_ids,
-                    )? {
-                        return Ok(Some(edge));
+                    if edge_kind_info.is_alive_at(si) {
+                        if let Some(edge) = self.get_edge_from_relation(
+                            si,
+                            edge_id,
+                            &edge_kind_info.get_type().into(),
+                            property_ids,
+                        )? {
+                            return Ok(Some(edge));
+                        }
                     }
                 }
             }
@@ -144,9 +155,12 @@ impl MultiVersionGraph for GraphStore {
                 }
             }
             None => {
-                let mut vertex_type_info_iter = self.vertex_manager.get_all(si as i64);
+                let guard = epoch::pin();
+                let map = self.vertex_manager.get_map(&guard);
+                let map_ref = unsafe { map.deref() };
+                let mut iter = map_ref.values();
                 let mut res: Records<Self::V> = Box::new(::std::iter::empty());
-                while let Some(info) = vertex_type_info_iter.next_info() {
+                while let Some(info) = next_vertex_type_info(si, &mut iter) {
                     let label_iter =
                         VertexTypeScan::new(self.storage.clone(), si, info, with_prop).into_iter();
                     res = Box::new(res.chain(label_iter));
@@ -357,13 +371,15 @@ impl MultiVersionGraph for GraphStore {
     fn insert_overwrite_vertex(
         &self, si: SnapshotId, id: VertexId, label: LabelId, properties: &dyn PropertyMap,
     ) -> GraphResult<()> {
-        debug!("insert_overwrite_vertex");
+        debug!("si {:?}, id {:?}, insert_overwrite_vertex", si, id);
+
         self.check_si_guard(si)?;
         let res = self
             .vertex_manager
             .get_type(si, label)
-            .and_then(|info| self.do_insert_vertex_data(si, info, id, properties))
+            .and_then(|info| self.do_insert_vertex_data(si, info.as_ref(), id, properties))
             .map(|_| self.update_si_guard(si));
+
         res_unwrap!(res, insert_overwrite_vertex, si, id, label)
     }
 
@@ -373,7 +389,8 @@ impl MultiVersionGraph for GraphStore {
         debug!("insert_update_vertex");
         self.check_si_guard(si)?;
         let info = res_unwrap!(self.vertex_manager.get_type(si, label), si, id, label)?;
-        match res_unwrap!(self.get_vertex_data(si, id, &info), insert_update_vertex, si, id, label)? {
+        match res_unwrap!(self.get_vertex_data(si, id, info.as_ref()), insert_update_vertex, si, id, label)?
+        {
             Some(data) => {
                 let data = data.as_slice();
                 let version = get_codec_version(data);
@@ -381,13 +398,13 @@ impl MultiVersionGraph for GraphStore {
                 let mut old = decoder.decode_all(data);
                 merge_updates(&mut old, properties);
                 let res = self
-                    .do_insert_vertex_data(si, info, id, &old)
+                    .do_insert_vertex_data(si, info.as_ref(), id, &old)
                     .map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_vertex, si, id, label)
             }
             None => {
                 let res = self
-                    .do_insert_vertex_data(si, info, id, properties)
+                    .do_insert_vertex_data(si, info.as_ref(), id, properties)
                     .map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_vertex, si, id, label)
             }
@@ -407,7 +424,7 @@ impl MultiVersionGraph for GraphStore {
             let mut old = decoder.decode_all(data);
             clear_props(&mut old, prop_ids);
             let res = self
-                .do_insert_vertex_data(si, info, id, &old)
+                .do_insert_vertex_data(si, info.as_ref(), id, &old)
                 .map(|_| self.update_si_guard(si));
             return res_unwrap!(res, clear_vertex_properties, si, id, label);
         }
@@ -437,7 +454,7 @@ impl MultiVersionGraph for GraphStore {
         let res = self
             .edge_manager
             .get_edge_kind(si, edge_kind)
-            .and_then(|info| self.do_insert_edge_data(si, id, info, direction, properties))
+            .and_then(|info| self.do_insert_edge_data(si, id, &info, direction, properties))
             .map(|_| self.update_si_guard(si));
         res_unwrap!(res, insert_overwrite_edge, si, id, edge_kind)
     }
@@ -469,13 +486,13 @@ impl MultiVersionGraph for GraphStore {
                 let mut old = decoder.decode_all(data);
                 merge_updates(&mut old, properties);
                 let res = self
-                    .do_insert_edge_data(si, id, info, direction, &old)
+                    .do_insert_edge_data(si, id, &info, direction, &old)
                     .map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_edge, si, id, edge_kind)
             }
             None => {
                 let res = self
-                    .do_insert_edge_data(si, id, info, direction, properties)
+                    .do_insert_edge_data(si, id, &info, direction, properties)
                     .map(|_| self.update_si_guard(si));
                 res_unwrap!(res, insert_update_edge, si, id, edge_kind)
             }
@@ -517,7 +534,7 @@ impl MultiVersionGraph for GraphStore {
             let mut old = decoder.decode_all(data);
             clear_props(&mut old, prop_ids);
             let res = self
-                .do_insert_edge_data(si, complete_id, info, direction, &old)
+                .do_insert_edge_data(si, complete_id, &info, direction, &old)
                 .map(|_| self.update_si_guard(si));
             return res_unwrap!(res, clear_edge_properties, si, complete_id, edge_kind);
         }
@@ -546,13 +563,13 @@ impl MultiVersionGraph for GraphStore {
     fn gc(&self, si: i64) -> GraphResult<()> {
         let vertex_tables = self.vertex_manager.gc(si)?;
         for vt in vertex_tables {
-            info!("gc vertex table {}", vt);
+            info!("garbage collect vertex table {}", vt);
             let table_prefix = vertex_table_prefix(vt);
             self.delete_table_by_prefix(table_prefix, true)?;
         }
         let edge_tables = self.edge_manager.gc(si)?;
         for et in edge_tables {
-            info!("gc edge table {}", et);
+            info!("garbage collect edge table {}", et);
             let out_table_prefix = edge_table_prefix(et, EdgeDirection::Out);
             self.delete_table_by_prefix(out_table_prefix, false)?;
         }
@@ -583,7 +600,6 @@ impl MultiVersionGraph for GraphStore {
         &self, si: i64, schema_version: i64, target: &DataLoadTarget, table_id: i64, partition_id: i32,
         unique_path: &str,
     ) -> GraphResult<bool> {
-        info!("committing data load from path {}", unique_path);
         let _guard = res_unwrap!(self.lock.lock(), prepare_data_load)?;
         self.check_si_guard(si)?;
         if let Err(_) = self.meta.check_version(schema_version) {
@@ -592,8 +608,14 @@ impl MultiVersionGraph for GraphStore {
         self.meta
             .commit_data_load(si, schema_version, target, table_id)?;
         let data_file_path =
-            format!("{}/../{}/{}/part-r-{:0>5}.sst", self.data_root, "download", unique_path, partition_id);
+            format!("{}/{}/part-r-{:0>5}.sst", self.data_download_root, unique_path, partition_id);
+        info!("committing data load from path {}", data_file_path);
+
         if Path::new(data_file_path.as_str()).exists() {
+            if let Ok(metadata) = fs::metadata(data_file_path.clone()) {
+                let size = metadata.len();
+                println!("Ingesting file: {} with size: {} bytes", data_file_path, size);
+            }
             self.ingest(data_file_path.as_str())?
         }
         if target.src_label_id > 0 {
@@ -622,11 +644,21 @@ impl MultiVersionGraph for GraphStore {
 }
 
 impl GraphStore {
-    pub fn open(config: &GraphConfig, path: &str) -> GraphResult<Self> {
-        info!("open graph store at {}, with config: {:?}", path, config);
+    pub fn open(config: &GraphConfig) -> GraphResult<Self> {
+        let path = config
+            .get_storage_option("store.data.path")
+            .expect("invalid config, missing store.data.path");
+        info!("open graph store at {} with config {:?}", path, config);
         match config.get_storage_engine() {
             "rocksdb" => {
-                let res = RocksDB::open(config.get_storage_options(), path).and_then(|db| {
+                let res = RocksDB::open(config.get_storage_options()).and_then(|db| {
+                    let storage = Arc::new(db);
+                    Self::init(config, storage, path)
+                });
+                res_unwrap!(res, open, config, path)
+            }
+            "rocksdb_as_secondary" => {
+                let res = RocksDB::open_as_secondary(config.get_storage_options()).and_then(|db| {
                     let storage = Arc::new(db);
                     Self::init(config, storage, path)
                 });
@@ -640,16 +672,39 @@ impl GraphStore {
         }
     }
 
-    fn init(config: &GraphConfig, storage: Arc<dyn ExternalStorage>, path: &str) -> GraphResult<Self> {
+    pub fn try_catch_up_with_primary(&self) -> GraphResult<()> {
+        self.storage.try_catch_up_with_primary()
+    }
+
+    pub fn compact(&self) -> GraphResult<()> {
+        self.storage.compact()
+    }
+
+    pub fn reopen(&self, wait_sec: u64) -> GraphResult<()> {
+        self.storage.reopen(wait_sec)
+    }
+
+    fn init(config: &GraphConfig, storage: Arc<RocksDB>, path: &str) -> GraphResult<Self> {
         let meta = Meta::new(storage.clone());
         let (vertex_manager, edge_manager) = res_unwrap!(meta.recover(), init)?;
+        let data_root = path.to_string();
+        let mut download_root = "".to_string();
+        download_root = config
+            .get_storage_option("store.data.download.path")
+            .unwrap_or(&download_root)
+            .clone();
+        if download_root.is_empty() {
+            download_root = format!("{}/../{}", data_root, "download");
+        }
+
         let ret = GraphStore {
             config: config.clone(),
             meta,
             vertex_manager,
             edge_manager,
             storage,
-            data_root: path.to_string(),
+            data_root: data_root,
+            data_download_root: download_root,
             si_guard: AtomicIsize::new(0),
             lock: GraphMutexLock::new(()),
         };
@@ -657,7 +712,7 @@ impl GraphStore {
     }
 
     fn get_vertex_data(
-        &self, si: SnapshotId, id: VertexId, info: &VertexTypeInfoRef,
+        &self, si: SnapshotId, id: VertexId, info: &VertexTypeInfo,
     ) -> GraphResult<Option<Vec<u8>>> {
         debug!("get_vertex_data");
         if let Some(table) = info.get_table(si) {
@@ -674,7 +729,7 @@ impl GraphStore {
     }
 
     fn get_edge_data(
-        &self, si: SnapshotId, id: EdgeId, info: &EdgeKindInfoRef, direction: EdgeDirection,
+        &self, si: SnapshotId, id: EdgeId, info: &EdgeKindInfo, direction: EdgeDirection,
     ) -> GraphResult<Option<Vec<u8>>> {
         debug!("get_edge_data");
         if let Some(table) = info.get_table(si) {
@@ -692,9 +747,10 @@ impl GraphStore {
     }
 
     fn do_insert_vertex_data(
-        &self, si: SnapshotId, info: VertexTypeInfoRef, id: VertexId, properties: &dyn PropertyMap,
+        &self, si: SnapshotId, info: &VertexTypeInfo, id: VertexId, properties: &dyn PropertyMap,
     ) -> GraphResult<()> {
-        debug!("do_insert_vertex_data");
+        debug!("si {:?}, id {:?}, do_insert_vertex_data", si, id);
+
         if let Some(table) = info.get_table(si) {
             let encoder = res_unwrap!(info.get_encoder(si), do_insert_vertex_data)?;
             let mut buf = Vec::new();
@@ -712,7 +768,7 @@ impl GraphStore {
     }
 
     fn do_insert_edge_data(
-        &self, si: SnapshotId, edge_id: EdgeId, info: EdgeKindInfoRef, direction: EdgeDirection,
+        &self, si: SnapshotId, edge_id: EdgeId, info: &EdgeKindInfo, direction: EdgeDirection,
         properties: &dyn PropertyMap,
     ) -> GraphResult<()> {
         debug!("do_insert_edge_data {:?} {:?}", edge_id, direction);
@@ -852,9 +908,12 @@ impl GraphStore {
                 }
             }
             None => {
-                let mut edge_info_iter = self.edge_manager.get_all_edges(si as i64);
+                let guard = epoch::pin();
+                let inner = self.edge_manager.get_inner(&guard);
+                let edge_mgr = unsafe { inner.deref() };
+                let mut iter = edge_mgr.get_all_edges();
                 let mut res: Records<RocksEdgeImpl> = Box::new(::std::iter::empty());
-                while let Some(info) = edge_info_iter.next_info() {
+                while let Some(info) = next_edge_info(si, &mut iter) {
                     let label_iter =
                         EdgeTypeScan::new(self.storage.clone(), si, info, vertex_id, direction, with_prop)
                             .into_iter();
@@ -1080,8 +1139,9 @@ mod tests {
     pub fn create_empty_graph(path: &str) -> GraphStore {
         let mut builder = GraphConfigBuilder::new();
         builder.set_storage_engine("rocksdb");
+        builder.add_storage_option("store.data.path", path);
         let config = builder.build();
-        GraphStore::open(&config, path).unwrap()
+        GraphStore::open(&config).unwrap()
     }
 }
 
@@ -1116,7 +1176,8 @@ mod bench {
     pub fn create_empty_graph(path: &str) -> GraphStore {
         let mut builder = GraphConfigBuilder::new();
         builder.set_storage_engine("rocksdb");
+        builder.add_storage_option("store.data.path", path);
         let config = builder.build();
-        GraphStore::open(&config, path).unwrap()
+        GraphStore::open(&config).unwrap()
     }
 }

@@ -43,22 +43,22 @@ schema:
             primitive_type: DT_STRING
       primary_keys:
         - id
-    - type_name: Algorithm
+    - type_name: Task
       properties:
         - property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
-        - property_name: algorithm
+        - property_name: task
           property_type:
             primitive_type: DT_STRING
       primary_keys:
         - id
-    - type_name: Strategy
+    - type_name: Solution
       properties:
         - property_name: id
           property_type:
             primitive_type: DT_SIGNED_INT64
-        - property_name: strategy
+        - property_name: solution
           property_type:
             primitive_type: DT_STRING
       primary_keys:
@@ -77,7 +77,7 @@ schema:
     - type_name: WorkOn
       vertex_type_pair_relations:
         - source_vertex: Paper
-          destination_vertex: Algorithm
+          destination_vertex: Task
           relation: MANY_TO_ONE
     - type_name: Resolve
       vertex_type_pair_relations:
@@ -86,7 +86,7 @@ schema:
           relation: MANY_TO_MANY
     - type_name: Target
       vertex_type_pair_relations:
-        - source_vertex: Algorithm
+        - source_vertex: Task
           destination_vertex: Challenge
           relation: MANY_TO_MANY
       properties:
@@ -95,17 +95,17 @@ schema:
             primitive_type: DT_SIGNED_INT32
     - type_name: Belong
       vertex_type_pair_relations:
-        - source_vertex: Algorithm
+        - source_vertex: Task
           destination_vertex: Topic
           relation: MANY_TO_ONE
     - type_name: Use
       vertex_type_pair_relations:
         - source_vertex: Paper
-          destination_vertex: Strategy
+          destination_vertex: Solution
           relation: MANY_TO_MANY
     - type_name: ApplyOn
       vertex_type_pair_relations:
-        - source_vertex: Strategy
+        - source_vertex: Solution
           destination_vertex: Challenge
           relation: MANY_TO_ONE
     - type_name: HasField

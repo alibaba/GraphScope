@@ -13,7 +13,7 @@ Newcomers to GraphScope
 For newcomers to GraphScope, you could find instructions about how to build
 and run applications using GraphScope in [README][2].
 
-GraphScope is hosted on Github, and use Github issues as the bug tracker.
+GraphScope is hosted on GitHub, and use GitHub issues as the bug tracker.
 you can [file an issue][3] when you meets trouble when working with GraphScope.
 
 Before creating a new bug entry, we recommend you first [search][4] among existing
@@ -72,7 +72,7 @@ or `[FEATURE-2345] Support loading empty graphs`.
 ### Git workflow for newcomers
 
 You generally do NOT need to rebase your pull requests unless there are merge
-conflicts with the main. When Github complaining that "Can’t automatically merge"
+conflicts with the main. When GitHub complaining that "Can’t automatically merge"
 on your pull request, you'll be asked to rebase your pull request on top of
 the latest main branch, using the following commands:
 

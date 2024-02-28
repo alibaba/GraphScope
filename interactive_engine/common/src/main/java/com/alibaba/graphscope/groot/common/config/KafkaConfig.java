@@ -17,7 +17,7 @@ public class KafkaConfig {
     public static final Config<String> KAFKA_SERVERS =
             Config.stringConfig("kafka.servers", "localhost:9092");
 
-    public static final Config<String> KAKFA_TOPIC =
+    public static final Config<String> KAFKA_TOPIC =
             Config.stringConfig("kafka.topic", "graphscope");
 
     public static final Config<Short> KAFKA_REPLICATION_FACTOR =

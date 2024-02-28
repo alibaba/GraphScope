@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.result.processor;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
+import com.alibaba.graphscope.gremlin.result.GroupResultParser;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 
@@ -67,7 +68,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
         RequestMessage msg = writeResult.getRequestMessage();
         Settings settings = writeResult.getSettings();
         // init batch size from resultIterationBatchSize in conf/gremlin-server.yaml,
-        // or args in RequestMessage which is originate from gremlin client
+        // or args in RequestMessage which is originated from gremlin client
         this.resultCollectorsBatchSize =
                 (Integer)
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
@@ -82,7 +83,8 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             if (isContextWritable) {
                 // send back a page of results if batch size is met and then reset the
                 // resultCollectors
-                if (this.resultCollectors.size() >= this.resultCollectorsBatchSize) {
+                if (this.resultCollectors.size() >= this.resultCollectorsBatchSize
+                        && !(resultParser instanceof GroupResultParser)) {
                     aggregateResults();
                     writeResultList(
                             writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);

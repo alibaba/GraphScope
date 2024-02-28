@@ -22,6 +22,7 @@ import shutil
 import site
 import subprocess
 import sys
+import tempfile
 from distutils.cmd import Command
 
 from setuptools import Extension
@@ -88,6 +89,51 @@ class BuildProto(Command):
         subprocess.check_call(
             cmd,
             env=os.environ.copy(),
+        )
+
+
+class GenerateFlexSDK(Command):
+    description = "generate flex client sdk from openapi specification file"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        # remove
+        tempdir = os.path.join("/", tempfile.gettempprefix(), "flex_client")
+        if os.path.exists(tempdir):
+            shutil.rmtree(tempdir)
+        targetdir = os.path.join(pkg_root, "graphscope", "flex", "rest")
+        if os.path.exists(targetdir):
+            shutil.rmtree(targetdir)
+        # generate
+        specification = os.path.join(
+            pkg_root, "..", "flex", "openapi", "openapi_coordinator.yaml"
+        )
+        cmd = [
+            "openapi-generator-cli",
+            "generate",
+            "-g",
+            "python",
+            "-i",
+            str(specification),
+            "-o",
+            str(tempdir),
+            "--package-name",
+            "graphscope.flex.rest",
+        ]
+        print(" ".join(cmd))
+        subprocess.check_call(
+            cmd,
+            env=os.environ.copy(),
+        )
+        # cp
+        subprocess.run(
+            ["cp", "-r", os.path.join(tempdir, "graphscope", "flex", "rest"), targetdir]
         )
 
 
@@ -237,7 +283,7 @@ def find_graphscope_packages():
     packages = []
 
     # add graphscope
-    for pkg in find_packages("."):
+    for pkg in find_packages(".", exclude=["graphscope.flex.*"]):
         packages.append(pkg)
 
     return packages
@@ -411,6 +457,7 @@ setup(
         "build_gltorch_ext": BuildGLTorchExt,
         "build_proto": BuildProto,
         "build_py": CustomBuildPy,
+        "generate_flex_sdk": GenerateFlexSDK,
         "bdist_wheel": CustomBDistWheel,
         "sdist": CustomSDist,
         "develop": CustomDevelop,

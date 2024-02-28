@@ -197,6 +197,10 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
       // ensure all fragments get deleted
       MPI_Barrier(comm_spec_.comm());
       VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true));
+      // trim vineyardd's shared memory
+      bool trimmed = false;
+      MPI_Barrier(comm_spec_.comm());
+      VINEYARD_SUPPRESS(client_->MemoryTrim(trimmed));
     }
   }
   VLOG(1) << "Unloading Graph " << graph_name;

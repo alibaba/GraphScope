@@ -22,10 +22,10 @@ import com.google.protobuf.ByteString;
 
 public class PrepareDataLoadOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private DataLoadTarget target;
-    private long tableIdx;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final DataLoadTarget target;
+    private final long tableIdx;
 
     public PrepareDataLoadOperation(
             int partitionId, long schemaVersion, DataLoadTarget target, long tableIdx) {

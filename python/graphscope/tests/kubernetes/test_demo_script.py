@@ -606,6 +606,7 @@ def create_namespace(name):
         logger.error("Exception when calling CoreV1Api->create_namespace: %s\n" % e)
 
 
+@pytest.mark.skip("FIXME: maybe requires further fix from the vineyard")
 def test_store_and_restore_graphs(
     modern_graph_data_dir,
 ):
@@ -724,6 +725,7 @@ def test_store_and_restore_graphs(
     assert sub_graph_knows_count == new_sub_graph_knows_count
 
 
+@pytest.mark.skip("FIXME: maybe requires further fix from the vineyard")
 def test_serialize_roundtrip(gs_session_distributed, p2p_property_dir):
     graph = gs_session_distributed.g(generate_eid=False, retain_oid=True)
     graph = graph.add_vertices(f"{p2p_property_dir}/p2p-31_property_v_0", "person")
@@ -817,7 +819,7 @@ def test_helm_installation(data_dir, modern_graph_data_dir):
     sub_graph.add_column(pr_result, {"Ranking": "r"})
 
 
-def test_modualize():
+def test_modularize():
     sess = graphscope.session(
         num_workers=1,
         k8s_image_registry=get_gs_registry_on_ci_env(),

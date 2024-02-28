@@ -775,7 +775,7 @@ def test_error_with_method_signature():
                 pass
 
             @staticmethod
-            def Compute(v, context):  # misssing message
+            def Compute(v, context):  # missing message
                 pass
 
     with pytest.raises(AssertionError, match="The number of parameters does not match"):

@@ -15,6 +15,9 @@
  */
 package com.alibaba.graphscope.groot.wal;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+
 import java.io.IOException;
 
 /**
@@ -27,6 +30,10 @@ public interface LogReader extends AutoCloseable {
      * @return
      */
     ReadLogEntry readNext();
+
+    public ConsumerRecord<LogEntry, LogEntry> readNextRecord();
+
+    ConsumerRecords<LogEntry, LogEntry> getLatestUpdates();
 
     void close() throws IOException;
 }

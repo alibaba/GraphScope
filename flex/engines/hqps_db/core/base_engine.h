@@ -160,7 +160,7 @@ class BaseEngine {
     copied_ctx.set_sub_task_start_tag(start_tag);
 
     auto inner_ctx = func(std::move(copied_ctx));
-    // We shall obtain the active indcies in res_ctx via csr offset
+    // We shall obtain the active indices in res_ctx via csr offset
     // arrays.
 
     std::vector<offset_t> tmp_vec = inner_ctx.ObtainOffsetFromTag(start_tag);
@@ -484,9 +484,6 @@ class BaseEngine {
           ctx_x,
       const Context<CTX_HEAD_T_Y, cur_alias_y, base_tag_y, CTX_PREV_Y...>&
           ctx_y) {
-    using CTX_X = Context<CTX_HEAD_T_X, cur_alias_x, base_tag_x, CTX_PREV_X...>;
-    using CTX_Y = Context<CTX_HEAD_T_Y, cur_alias_y, base_tag_y, CTX_PREV_Y...>;
-
     auto ctx_x_builder_tuple = ctx_x.CreateSetBuilder();
     auto ctx_y_builder_tuple = ctx_y.CreateSetBuilder();
     auto concated_builder_tuple = BuilderConcate<real_x_ind, real_y_ind>(
@@ -500,8 +497,6 @@ class BaseEngine {
   static auto create_builder_tuple(
       const Context<CTX_HEAD_T_X, cur_alias_x, base_tag_x, CTX_PREV_X...>&
           ctx_x) {
-    using CTX_X = Context<CTX_HEAD_T_X, cur_alias_x, base_tag_x, CTX_PREV_X...>;
-
     auto ctx_x_builder_tuple = ctx_x.CreateSetBuilder();
     return std::make_pair(remove_nth_element<real_x_ind>(ctx_x_builder_tuple),
                           std::get<real_x_ind>(ctx_x_builder_tuple));
@@ -518,8 +513,6 @@ class BaseEngine {
           ctx_y) {
     static_assert(sizeof...(CTX_PREV_Y) ==
                   1);  // expect ctx_y has only two columns
-    using CTX_X = Context<CTX_HEAD_T_X, cur_alias_x, base_tag_x, CTX_PREV_X...>;
-    using CTX_Y = Context<CTX_HEAD_T_Y, cur_alias_y, base_tag_y, CTX_PREV_Y...>;
 
     auto ctx_x_builder_tuple = ctx_x.CreateSetBuilder();
     return ctx_x_builder_tuple;
@@ -528,7 +521,7 @@ class BaseEngine {
   // InnerJoin
   // for example, join (a,b,c) with (b,c,d) we got (a,b,c,d);
   // prob: the mapping of tag_id to tag_inds may change.
-  // prob: builing new columns.
+  // prob: building new columns.
   template <int alias_x, int alias_y, JoinKind join_kind, typename CTX_X,
             typename CTX_Y,
             typename std::enable_if<join_kind == JoinKind::InnerJoin>::type* =
@@ -541,8 +534,6 @@ class BaseEngine {
     using ctx_y_iter_t = typename CTX_Y::iterator;
     using ctx_x_all_ele_t = std::remove_reference_t<decltype(
         std::declval<ctx_x_iter_t>().GetAllElement())>;
-    using ctx_x_all_data_t = std::remove_reference_t<decltype(
-        std::declval<ctx_x_iter_t>().GetAllData())>;
     using ctx_y_all_ele_t = std::remove_reference_t<decltype(
         std::declval<ctx_y_iter_t>().GetAllElement())>;
     using ctx_y_all_data_t = std::remove_reference_t<decltype(
@@ -571,7 +562,6 @@ class BaseEngine {
     auto y_builder_tuple = remove_nth_element<real_y_ind>(y_builder_tuple_init);
     auto all_builder = std::tuple_cat(x_builder_tuple_init, y_builder_tuple);
 
-    double t0 = -grape::GetCurrentTime();
     std::unordered_map<
         ctx_x_ele_t, std::vector<std::tuple<ctx_y_res_ele_t, ctx_y_res_data_t>>>
         join_key_map;
@@ -669,7 +659,6 @@ class BaseEngine {
                                            real_y_ind0, real_y_ind1>(ctx_x,
                                                                      ctx_y);
 
-    double t0 = -grape::GetCurrentTime();
     std::unordered_map<ctx_x_ele_t, int, boost::hash<ctx_x_ele_t>> join_key_map;
     {
       for (auto iter : ctx_x) {
@@ -692,8 +681,6 @@ class BaseEngine {
       }
     }
     LOG(INFO) << "total entry size in map: " << join_key_map.size();
-
-    t0 += grape::GetCurrentTime();
 
     for (auto iter : ctx_x) {
       auto eles = iter.GetAllElement();
@@ -890,7 +877,7 @@ class BaseEngine {
   static auto Intersect(CTX_X&& ctx_x, CTX_Y&& ctx_y) {
     using ctx_x_iter_t = typename CTX_X::iterator;
     using ctx_y_iter_t = typename CTX_Y::iterator;
-    // the prev column (the last column in prev_tuple shoud be the same.)
+    // the prev column (the last column in prev_tuple should be the same.)
     using ctx_x_all_ele_t = std::remove_reference_t<decltype(
         std::declval<ctx_x_iter_t>().GetAllElement())>;
     using ctx_y_all_ele_t = std::remove_reference_t<decltype(
@@ -906,12 +893,7 @@ class BaseEngine {
     static_assert(real_alias_x > 0 && real_alias_y > 0);
     static_assert(real_alias_x == real_alias_y);
     static_assert(real_alias_x == x_ele_num - 1);
-    using x_head_ele_t =
-        std::tuple_element_t<std::tuple_size_v<ctx_x_all_ele_t> - 1,
-                             ctx_x_all_ele_t>;
-    using y_head_ele_t =
-        std::tuple_element_t<std::tuple_size_v<ctx_y_all_ele_t> - 1,
-                             ctx_y_all_ele_t>;
+
     auto& head_x = ctx_x.GetMutableHead();
     auto& head_y = ctx_y.GetMutableHead();
     auto left_repeat_array = ctx_x.ObtainOffsetFromTag(real_alias_x - 1);
@@ -956,7 +938,7 @@ class BaseEngine {
     grape::Bitset bitset;
     bitset.init(max_vid + 1);
     CHECK(left_repeat_array.size() == right_repeat_array.size());
-    for (auto i = 0; i + 1 < left_repeat_array.size(); ++i) {
+    for (size_t i = 0; i + 1 < left_repeat_array.size(); ++i) {
       auto x_start = left_repeat_array[i];
       auto x_end = left_repeat_array[i + 1];
       auto y_start = right_repeat_array[i];
@@ -998,7 +980,6 @@ class BaseEngine {
     new_offsets.emplace_back(0);
 
     size_t ind_x = 0;
-    size_t ind_x_limit = head_x.Size();
     auto x_iter = head_x.begin();
     auto x_end = head_x.end();
     auto y_iter = head_y.begin();
@@ -1021,7 +1002,7 @@ class BaseEngine {
     } else {
       auto& vertices = head_y.GetVertices();
       auto& bitset = head_y.GetBitset();
-      for (auto i = 0; i + 1 < left_repeat_array.size(); ++i) {
+      for (size_t i = 0; i + 1 < left_repeat_array.size(); ++i) {
         auto left_min = left_repeat_array[i];
         auto left_max = left_repeat_array[i + 1];
         auto right_min = right_repeat_array[i];

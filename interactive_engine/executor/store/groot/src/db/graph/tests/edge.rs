@@ -648,7 +648,6 @@ mod tester {
             insert_helper.init_data_of_label(40, 4);
             insert_helper.init_data_of_label(50, 5);
             std::mem::drop(insert_helper);
-            println!("init data success");
 
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             // at si 1-10, no labels exists
@@ -781,13 +780,11 @@ mod tester {
                     .insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter())
                     .unwrap();
             }
-            println!("init data of label#{} success", label1);
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in si..si + 3 {
                 check_helper.check_all_data_of_labels(si, vec![label1]);
             }
             std::mem::drop(check_helper);
-            println!("check data of label#{} success", label1);
 
             let si = 20;
             let label2 = 2;
@@ -804,13 +801,11 @@ mod tester {
                     .insert_edge(si, &edge_kind, data_gen.edge_ids(&edge_kind).into_iter())
                     .unwrap();
             }
-            println!("init data of label#{} success", label2);
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in si..si + 3 {
                 check_helper.check_all_data_of_labels(si, vec![label1, label2]);
             }
             std::mem::drop(check_helper);
-            println!("check data of label#{} success", label2);
 
             let mut label1_edge_kinds = data_gen.edge_kinds(label1);
             let mut label2_edge_kinds = data_gen.edge_kinds(label2);
@@ -823,7 +818,6 @@ mod tester {
             helper
                 .remove_edge_kind(25, schema_version, &label2_removed_edge_kind)
                 .unwrap();
-            println!("remove edge type success");
 
             let check_helper = EdgeCheckHelper::new(&helper, &data_gen);
             for si in 10..30 {

@@ -83,7 +83,7 @@ pub trait Encode {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()>;
 }
 
-/// The deserialize interface used for decoding tryped structures from binary stream;
+/// The deserialize interface used for decoding typed structures from binary stream;
 ///
 /// # Examples
 /// ```
