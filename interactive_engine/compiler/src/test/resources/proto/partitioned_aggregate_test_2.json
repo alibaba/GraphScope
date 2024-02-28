@@ -92,8 +92,6 @@
         "opt": "ITSELF",
         "params": {
           "columns": [{
-            "name": "age"
-          }, {
             "name": "name"
           }],
           "sampleRatio": 1.0
@@ -164,11 +162,11 @@
             },
             "property": {
               "key": {
-                "name": "age"
+                "name": "name"
               }
             },
             "nodeType": {
-              "dataType": "INT32"
+              "dataType": "STRING"
             }
           }, {
             "tag": {

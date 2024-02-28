@@ -111,11 +111,11 @@
             },
             "property": {
               "key": {
-                "name": "age"
+                "name": "name"
               }
             },
             "nodeType": {
-              "dataType": "INT32"
+              "dataType": "STRING"
             }
           }, {
             "tag": {

@@ -92,8 +92,6 @@
         "opt": "ITSELF",
         "params": {
           "columns": [{
-            "name": "age"
-          }, {
             "name": "name"
           }],
           "sampleRatio": 1.0
@@ -153,28 +151,6 @@
             "operators": [{
               "var": {
                 "tag": {
-                  "id": 0
-                },
-                "property": {
-                  "key": {
-                    "name": "age"
-                  }
-                },
-                "nodeType": {
-                  "dataType": "INT32"
-                }
-              },
-              "nodeType": {
-                "dataType": "INT32"
-              }
-            }]
-          },
-          "alias": 3
-        }, {
-          "expr": {
-            "operators": [{
-              "var": {
-                "tag": {
                   "id": 1
                 },
                 "property": {
@@ -191,7 +167,7 @@
               }
             }]
           },
-          "alias": 4
+          "alias": 3
         }]
       }
     },
@@ -202,14 +178,9 @@
       "alias": 2
     }, {
       "type": {
-        "dataType": "INT32"
-      },
-      "alias": 3
-    }, {
-      "type": {
         "dataType": "DOUBLE"
       },
-      "alias": 4
+      "alias": 3
     }]
   }, {
     "opr": {

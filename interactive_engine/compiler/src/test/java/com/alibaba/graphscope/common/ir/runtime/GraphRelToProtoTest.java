@@ -347,12 +347,11 @@ public class GraphRelToProtoTest {
                         .project(
                                 ImmutableList.of(
                                         builder.variable("x", "name"),
-                                        builder.variable("x", "age"),
                                         builder.variable("y", "weight")),
                                 ImmutableList.of("name"))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalProject(name=[x.name], age=[x.age], weight=[y.weight],"
+                "GraphLogicalProject(name=[x.name], weight=[y.weight],"
                         + " isAppend=[false])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[y], opt=[OUT])\n"
@@ -515,12 +514,12 @@ public class GraphRelToProtoTest {
                                         builder.variable("y", "weight")),
                                 builder.collect(
                                         ImmutableList.of(
-                                                builder.variable("x", "age"),
+                                                builder.variable("x", "name"),
                                                 builder.variable("y", "weight"))))
                         .build();
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[x.name, y.weight], aliases=[name,"
-                    + " weight]}], values=[[{operands=[x.age, y.weight], aggFunction=COLLECT,"
+                    + " weight]}], values=[[{operands=[x.name, y.weight], aggFunction=COLLECT,"
                     + " alias='$f2', distinct=false}]])\n"
                     + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[y],"
                     + " opt=[OUT])\n"

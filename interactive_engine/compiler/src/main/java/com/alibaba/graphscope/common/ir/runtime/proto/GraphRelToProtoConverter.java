@@ -30,6 +30,7 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariablesExtractor;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -297,7 +298,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(filter.getRowType(), isColumnId));
         if (isPartitioned) {
             lazyPropertyFetching(
-                    physicalBuilder, rexToProtoConverter.getExtractedTagColumns(), true);
+                    physicalBuilder,
+                    filter.getCondition().accept(new RexGraphVariablesExtractor(true)),
+                    true);
         }
         physicalBuilder.addPlan(oprBuilder.build());
         return filter;
@@ -312,14 +315,15 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.Project.newBuilder();
         projectBuilder.setIsAppend(project.isAppend());
         List<RelDataTypeField> fields = project.getRowType().getFieldList();
-        List<Pair<Integer, GraphNameOrId>> allTagColumns = Lists.newArrayList();
+        List<RexGraphVariable> allVariables = Lists.newArrayList();
         for (int i = 0; i < project.getProjects().size(); ++i) {
-            RexToProtoConverter rexToProtoConverter =
-                    new RexToProtoConverter(true, isColumnId, this.rexBuilder);
             OuterExpression.Expression expression =
-                    project.getProjects().get(i).accept(rexToProtoConverter);
+                    project.getProjects()
+                            .get(i)
+                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             if (isPartitioned) {
-                allTagColumns.addAll(rexToProtoConverter.getExtractedTagColumns());
+                allVariables.addAll(
+                        project.getProjects().get(i).accept(new RexGraphVariablesExtractor(true)));
             }
             int aliasId = fields.get(i).getIndex();
             GraphAlgebraPhysical.Project.ExprAlias.Builder projectExprAliasBuilder =
@@ -334,7 +338,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setProject(projectBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(project.getRowType(), isColumnId));
         if (isPartitioned) {
-            lazyPropertyFetching(physicalBuilder, allTagColumns, true);
+            lazyPropertyFetching(physicalBuilder, allVariables, true);
         }
         physicalBuilder.addPlan(oprBuilder.build());
         return project;
@@ -400,8 +404,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             dedupOprBuilder.setOpr(
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
             if (isPartitioned) {
-                lazyPropertyFetching(
-                        physicalBuilder, extractTagColumnsFromVariables(keys.getVariables()));
+                lazyPropertyFetching(physicalBuilder, keys.getVariables());
             }
             physicalBuilder.addPlan(projectOprBuilder.build());
             physicalBuilder.addPlan(dedupOprBuilder.build());
@@ -474,7 +477,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                         groupCalls.stream()
                                 .flatMap(k -> k.getOperands().stream())
                                 .collect(Collectors.toList()));
-                lazyPropertyFetching(physicalBuilder, extractTagColumnsFromVariables(keysAndAggs));
+                lazyPropertyFetching(physicalBuilder, keysAndAggs);
             }
             physicalBuilder.addPlan(oprBuilder.build());
         }
@@ -503,8 +506,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(dedupBy.getRowType(), isColumnId));
         if (isPartitioned) {
-            lazyPropertyFetching(
-                    physicalBuilder, extractTagColumnsFromVariables(dedupBy.getDedupByKeys()));
+            lazyPropertyFetching(physicalBuilder, dedupBy.getDedupByKeys());
         }
         physicalBuilder.addPlan(oprBuilder.build());
         return dedupBy;
@@ -540,10 +542,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
             if (isPartitioned) {
                 lazyPropertyFetching(
                         physicalBuilder,
-                        extractTagColumnsFromVariables(
-                                collations.stream()
-                                        .map(k -> ((GraphFieldCollation) k).getVariable())
-                                        .collect(Collectors.toList())));
+                        collations.stream()
+                                .map(k -> ((GraphFieldCollation) k).getVariable())
+                                .collect(Collectors.toList()));
             }
         } else {
             GraphAlgebra.Limit.Builder limitBuilder = GraphAlgebra.Limit.newBuilder();
@@ -600,8 +601,8 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         RelNode right = join.getRight();
         right.accept(new GraphRelToProtoConverter(isColumnId, graphConfig, rightPlanBuilder));
         if (isPartitioned) {
-            lazyPropertyFetching(leftPlanBuilder, extractTagColumnsFromVariables(leftKeys));
-            lazyPropertyFetching(rightPlanBuilder, extractTagColumnsFromVariables(rightKeys));
+            lazyPropertyFetching(leftPlanBuilder, leftKeys);
+            lazyPropertyFetching(rightPlanBuilder, rightKeys);
         }
         joinBuilder.setLeftPlan(leftPlanBuilder);
         joinBuilder.setRightPlan(rightPlanBuilder);
@@ -788,8 +789,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         physicalBuilder.addPlan(auxiliaOprBuilder.build());
     }
 
-    // extract columns from List<RexNode>, return e.g., {a.{name, age}, b.{weight}}}
-    private List<Pair<Integer, GraphNameOrId>> extractTagColumnsFromVariables(List<RexNode> exprs) {
+    // extract columns from a list of RexNode, and return e.g., {a.{name, age}, b.{weight}}}
+    private Map<Integer, Set<GraphNameOrId>> extractTagColumnsFromVariables(
+            List<? extends RexNode> exprs) {
         return exprs.stream()
                 .map(
                         k -> {
@@ -806,27 +808,24 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             } else return null;
                         })
                 .filter(k -> k != null)
-                .collect(Collectors.toList());
+                .collect(
+                        Collectors.groupingBy(
+                                pair -> pair.getValue0(),
+                                Collectors.mapping(pair -> pair.getValue1(), Collectors.toSet())));
     }
 
     private void lazyPropertyFetching(
             GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
-            List<Pair<Integer, GraphNameOrId>> tagColumns) {
+            List<? extends RexNode> vars) {
         // by default, we cache the result of the tagColumns
-        lazyPropertyFetching(physicalBuilder, tagColumns, false);
+        lazyPropertyFetching(physicalBuilder, vars, false);
     }
 
     private void lazyPropertyFetching(
             GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder,
-            List<Pair<Integer, GraphNameOrId>> tagColumns,
+            List<? extends RexNode> vars,
             boolean optimizedNoCaching) {
-        Map<Integer, Set<GraphNameOrId>> columns =
-                tagColumns.stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        pair -> pair.getValue0(),
-                                        Collectors.mapping(
-                                                pair -> pair.getValue1(), Collectors.toSet())));
+        Map<Integer, Set<GraphNameOrId>> columns = extractTagColumnsFromVariables(vars);
         if (columns.isEmpty()) {
             return;
         } else if (columns.size() == 1 && optimizedNoCaching) {
