@@ -30,7 +30,7 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.rex.RexGraphVariablesExtractor;
+import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -296,7 +296,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(filter.getRowType(), isColumnId));
         if (isPartitioned) {
             lazyPropertyFetching(
-                    filter.getCondition().accept(new RexGraphVariablesExtractor(true)), true);
+                    filter.getCondition()
+                            .accept(new RexVariableAliasCollector<RexGraphVariable>(true, k -> k)),
+                    true);
         }
         physicalBuilder.addPlan(oprBuilder.build());
         return filter;
@@ -319,7 +321,11 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
             if (isPartitioned) {
                 allVariables.addAll(
-                        project.getProjects().get(i).accept(new RexGraphVariablesExtractor(true)));
+                        project.getProjects()
+                                .get(i)
+                                .accept(
+                                        new RexVariableAliasCollector<RexGraphVariable>(
+                                                true, k -> k)));
             }
             int aliasId = fields.get(i).getIndex();
             GraphAlgebraPhysical.Project.ExprAlias.Builder projectExprAliasBuilder =
