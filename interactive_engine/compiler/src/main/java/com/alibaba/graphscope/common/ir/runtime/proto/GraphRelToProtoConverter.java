@@ -45,7 +45,10 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rel.type.RelRecordType;
+import org.apache.calcite.rel.type.StructKind;
 import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.commons.lang3.ObjectUtils;
@@ -274,47 +277,114 @@ public class GraphRelToProtoConverter extends GraphShuttle {
     @Override
     public RelNode visit(LogicalFilter filter) {
         visitChildren(filter);
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebra.Select.Builder selectBuilder = GraphAlgebra.Select.newBuilder();
-        OuterExpression.Expression exprProto =
-                filter.getCondition()
-                        .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
-        selectBuilder.setPredicate(exprProto);
-        oprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setSelect(selectBuilder));
-        physicalBuilder.addPlan(oprBuilder.build());
+        RexNode condition = filter.getCondition();
+        GraphAlgebraPhysical.PhysicalOpr.Operator.Builder oprBuilder =
+                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder();
+        if (isSubQueryOfExistsKind(condition)) {
+            oprBuilder.setApply(
+                    buildApply(
+                            (RexSubQuery) condition,
+                            GraphAlgebraPhysical.Join.JoinKind.SEMI,
+                            AliasInference.DEFAULT_ID));
+        } else if (isSubQueryOfNotExistsKind(condition)) {
+            oprBuilder.setApply(
+                    buildApply(
+                            (RexSubQuery) ((RexCall) condition).getOperands().get(0),
+                            GraphAlgebraPhysical.Join.JoinKind.ANTI,
+                            AliasInference.DEFAULT_ID));
+        } else {
+            OuterExpression.Expression exprProto =
+                    condition.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
+            oprBuilder.setSelect(GraphAlgebra.Select.newBuilder().setPredicate(exprProto));
+        }
+        physicalBuilder.addPlan(GraphAlgebraPhysical.PhysicalOpr.newBuilder().setOpr(oprBuilder));
         return filter;
+    }
+
+    private boolean isSubQueryOfExistsKind(RexNode condition) {
+        return (condition instanceof RexSubQuery) && condition.getKind() == SqlKind.EXISTS;
+    }
+
+    private boolean isSubQueryOfNotExistsKind(RexNode condition) {
+        return condition.getKind() == SqlKind.NOT
+                && isSubQueryOfExistsKind(((RexCall) condition).getOperands().get(0));
     }
 
     @Override
     public RelNode visit(GraphLogicalProject project) {
         visitChildren(project);
-        GraphAlgebraPhysical.PhysicalOpr.Builder oprBuilder =
-                GraphAlgebraPhysical.PhysicalOpr.newBuilder();
-        GraphAlgebraPhysical.Project.Builder projectBuilder =
-                GraphAlgebraPhysical.Project.newBuilder();
-        projectBuilder.setIsAppend(project.isAppend());
+        List<GraphAlgebraPhysical.Apply.Builder> applyBuilders = Lists.newArrayList();
+        List<GraphAlgebraPhysical.Project.ExprAlias.Builder> exprAliasBuilders =
+                Lists.newArrayList();
+        List<RelDataTypeField> exprFields = Lists.newArrayList();
         List<RelDataTypeField> fields = project.getRowType().getFieldList();
         for (int i = 0; i < project.getProjects().size(); ++i) {
-            OuterExpression.Expression expression =
-                    project.getProjects()
-                            .get(i)
-                            .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
+            RexNode expr = project.getProjects().get(i);
             int aliasId = fields.get(i).getIndex();
-            GraphAlgebraPhysical.Project.ExprAlias.Builder projectExprAliasBuilder =
-                    GraphAlgebraPhysical.Project.ExprAlias.newBuilder();
-            projectExprAliasBuilder.setExpr(expression);
-            if (aliasId != AliasInference.DEFAULT_ID) {
-                projectExprAliasBuilder.setAlias(Utils.asAliasId(aliasId));
+            if (expr instanceof RexSubQuery) {
+                // convert sub query to apply
+                applyBuilders.add(
+                        buildApply(
+                                (RexSubQuery) expr,
+                                GraphAlgebraPhysical.Join.JoinKind.INNER,
+                                aliasId));
+            } else {
+                OuterExpression.Expression expression =
+                        expr.accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
+                GraphAlgebraPhysical.Project.ExprAlias.Builder projectExprAliasBuilder =
+                        GraphAlgebraPhysical.Project.ExprAlias.newBuilder();
+                projectExprAliasBuilder.setExpr(expression);
+                if (aliasId != AliasInference.DEFAULT_ID) {
+                    projectExprAliasBuilder.setAlias(Utils.asAliasId(aliasId));
+                }
+                exprAliasBuilders.add(projectExprAliasBuilder);
+                exprFields.add(fields.get(i));
             }
-            projectBuilder.addMappings(projectExprAliasBuilder.build());
         }
-        oprBuilder.setOpr(
-                GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setProject(projectBuilder));
-        oprBuilder.addAllMetaData(Utils.physicalProtoRowType(project.getRowType(), isColumnId));
-        physicalBuilder.addPlan(oprBuilder.build());
+        applyBuilders.forEach(
+                k -> {
+                    physicalBuilder.addPlan(
+                            GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                                    .setOpr(
+                                            GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                                    .setApply(k))
+                                    .build());
+                });
+        if (!exprAliasBuilders.isEmpty()) {
+            GraphAlgebraPhysical.Project.Builder projectBuilder =
+                    GraphAlgebraPhysical.Project.newBuilder().setIsAppend(project.isAppend());
+            exprAliasBuilders.forEach(k -> projectBuilder.addMappings(k));
+            RelDataType projectType = project.getRowType();
+            if (exprFields.size() < project.getRowType().getFieldList().size()) {
+                projectType = new RelRecordType(StructKind.FULLY_QUALIFIED, exprFields);
+            }
+            physicalBuilder.addPlan(
+                    GraphAlgebraPhysical.PhysicalOpr.newBuilder()
+                            .setOpr(
+                                    GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder()
+                                            .setProject(projectBuilder)
+                                            .build())
+                            .addAllMetaData(Utils.physicalProtoRowType(projectType, isColumnId))
+                            .build());
+        }
         return project;
+    }
+
+    private GraphAlgebraPhysical.Apply.Builder buildApply(
+            RexSubQuery query, GraphAlgebraPhysical.Join.JoinKind joinKind, int aliasId) {
+        GraphAlgebraPhysical.PhysicalPlan.Builder applyPlanBuilder =
+                GraphAlgebraPhysical.PhysicalPlan.newBuilder();
+        query.rel.accept(
+                new GraphRelToProtoConverter(
+                        isColumnId, graphConfig, applyPlanBuilder, this.relToCommons, depth + 1));
+        GraphAlgebraPhysical.Apply.Builder applyBuilder =
+                GraphAlgebraPhysical.Apply.newBuilder()
+                        .setSubPlan(applyPlanBuilder)
+                        .setJoinKind(joinKind);
+        if (aliasId != AliasInference.DEFAULT_ID) {
+            applyBuilder.setAlias(Utils.asAliasId(aliasId));
+        }
+        return applyBuilder;
     }
 
     @Override

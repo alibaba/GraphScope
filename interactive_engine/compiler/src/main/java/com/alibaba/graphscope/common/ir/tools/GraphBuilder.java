@@ -558,13 +558,25 @@ public class GraphBuilder extends RelBuilder {
                 RelNode cur = inputQueue.remove(0);
                 List<RelDataTypeField> fields = cur.getRowType().getFieldList();
                 // to support `head` in gremlin
-                if (nodeIdx++ == 0 && alias == AliasInference.DEFAULT_NAME && fields.size() == 1) {
-                    return new ColumnField(
-                            AliasInference.DEFAULT_COLUMN_ID,
-                            new RelDataTypeFieldImpl(
-                                    AliasInference.DEFAULT_NAME,
-                                    AliasInference.DEFAULT_ID,
-                                    fields.get(0).getType()));
+                if (nodeIdx++ == 0 && alias == AliasInference.DEFAULT_NAME) {
+                    if (fields.size() == 1) {
+                        return new ColumnField(
+                                AliasInference.DEFAULT_COLUMN_ID,
+                                new RelDataTypeFieldImpl(
+                                        AliasInference.DEFAULT_NAME,
+                                        AliasInference.DEFAULT_ID,
+                                        fields.get(0).getType()));
+                    } else if (cur
+                            instanceof
+                            CommonTableScan) { // specific implementation for gremlin, to get `head`
+                        // in nested traversal
+                        return new ColumnField(
+                                AliasInference.DEFAULT_COLUMN_ID,
+                                new RelDataTypeFieldImpl(
+                                        AliasInference.DEFAULT_NAME,
+                                        AliasInference.DEFAULT_ID,
+                                        fields.get(fields.size() - 1).getType()));
+                    }
                 }
                 for (RelDataTypeField field : fields) {
                     if (alias != AliasInference.DEFAULT_NAME && field.getName().equals(alias)) {
@@ -746,9 +758,9 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public GraphBuilder filter(Iterable<? extends RexNode> conditions) {
         RexVisitor propertyChecker = new RexPropertyChecker(true, this);
-        // make sure all conditions have the Boolean return type
         for (RexNode condition : conditions) {
             RelDataType type = condition.getType();
+            // make sure all conditions have the Boolean return type
             if (!(type instanceof BasicSqlType) || type.getSqlTypeName() != SqlTypeName.BOOLEAN) {
                 throw new IllegalArgumentException(
                         "filter condition "
@@ -758,6 +770,44 @@ public class GraphBuilder extends RelBuilder {
             }
             // check property existence for specific label
             condition.accept(propertyChecker);
+        }
+
+        // specific implementation for gremlin, project will change the 'head' before the current
+        // filter, which need to be recovered later
+        RelDataTypeField recoverHead = null;
+
+        RexSubQueryPreComputer preComputer = new RexSubQueryPreComputer(this);
+        List<RexNode> newConditions = Lists.newArrayList();
+        for (RexNode condition : conditions) {
+            // if the condition has subquery as its operand, i.e. where(out().out().count() > 2),
+            // subquery(out().out().count()) needs to be precomputed in advance, the condition also
+            // needs to be adapted
+            newConditions.add(preComputer.precompute(condition));
+        }
+        // project subquery in advance
+        if (!preComputer.getSubQueryNodes().isEmpty()) {
+            RelNode input = requireNonNull(peek(), "frame stack is empty");
+            if (input.getRowType().getFieldList().size() == 1) {
+                RelDataTypeField field = input.getRowType().getFieldList().get(0);
+                // give a non-default alias to the head, so that it can be recovered later
+                if (field.getName() == AliasInference.DEFAULT_NAME) {
+                    Set<String> uniqueAliases = AliasInference.getUniqueAliasList(input, true);
+                    uniqueAliases.addAll(preComputer.getSubQueryAliases());
+                    String nonDefault = AliasInference.inferAliasWithPrefix("$f", uniqueAliases);
+                    // set the non default alias to the input
+                    as(nonDefault);
+                    recoverHead =
+                            new RelDataTypeFieldImpl(
+                                    nonDefault, generateAliasId(nonDefault), field.getType());
+                } else {
+                    recoverHead = field;
+                }
+            }
+            project(preComputer.getSubQueryNodes(), preComputer.getSubQueryAliases(), true);
+            conditions =
+                    newConditions.stream()
+                            .map(k -> k.accept(new RexTmpVariableConverter(true, this)))
+                            .collect(Collectors.toList());
         }
         super.filter(ImmutableSet.of(), conditions);
         // fuse filter with the previous table scan if meets the conditions
@@ -801,6 +851,9 @@ public class GraphBuilder extends RelBuilder {
                     }
                 }
             }
+        }
+        if (recoverHead != null) {
+            project(ImmutableList.of(variable(recoverHead.getName())), ImmutableList.of(), true);
         }
         return this;
     }
@@ -1100,6 +1153,24 @@ public class GraphBuilder extends RelBuilder {
             for (int i = 0; i < nodeList.size(); i++) {
                 nodeList.set(i, simplifier.simplifyPreservingType(nodeList.get(i)));
             }
+        }
+
+        RexSubQueryPreComputer preComputer = new RexSubQueryPreComputer(this);
+        List<RexNode> newNodeList = Lists.newArrayList();
+        for (RexNode node : nodeList) {
+            // if the node has subquery as its operand, i.e. select('a').by(out().out().count()),
+            // subquery(out().out().count()) needs to be precomputed in advance, the node also needs
+            // to be adapted
+            newNodeList.add(preComputer.precompute(node));
+        }
+        // project subquery in advance
+        if (!preComputer.getSubQueryNodes().isEmpty()) {
+            project(preComputer.getSubQueryNodes(), preComputer.getSubQueryAliases(), true);
+            nodeList =
+                    newNodeList.stream()
+                            .map(k -> k.accept(new RexTmpVariableConverter(true, this)))
+                            .collect(Collectors.toList());
+            input = requireNonNull(peek(), "frame stack is empty");
         }
 
         PREPARE_PROJECT_ARGS:
@@ -1428,13 +1499,32 @@ public class GraphBuilder extends RelBuilder {
 
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
-        List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
+        // specific implementation for gremlin, project will change the 'head' before the current
+        // order, which need to be recovered later
+        // the operation has no side effect to the cypher
+        RelDataTypeField recoverHead = null;
 
         Registrar registrar = new Registrar(this, input, true);
         List<RexNode> registerNodes = registrar.registerExpressions(ImmutableList.copyOf(nodes));
 
         // expressions need to be projected in advance
         if (!registrar.getExtraNodes().isEmpty()) {
+            if (input.getRowType().getFieldList().size() == 1) {
+                RelDataTypeField field = input.getRowType().getFieldList().get(0);
+                // give a non-default alias to the head, so that it can be recovered later
+                if (field.getName() == AliasInference.DEFAULT_NAME) {
+                    Set<String> uniqueAliases = AliasInference.getUniqueAliasList(input, true);
+                    uniqueAliases.addAll(registrar.getExtraAliases());
+                    String nonDefault = AliasInference.inferAliasWithPrefix("$f", uniqueAliases);
+                    // set the non default alias to the input
+                    as(nonDefault);
+                    recoverHead =
+                            new RelDataTypeFieldImpl(
+                                    nonDefault, generateAliasId(nonDefault), field.getType());
+                } else {
+                    recoverHead = field;
+                }
+            }
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
             RexTmpVariableConverter converter = new RexTmpVariableConverter(true, this);
             registerNodes =
@@ -1497,15 +1587,8 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalSort.create(
                         input, GraphRelCollations.of(fieldCollations), offsetNode, fetchNode);
         replaceTop(sort);
-        // to remove the extra columns we have added
-        if (!registrar.getExtraAliases().isEmpty()) {
-            List<RexNode> originalExprs = new ArrayList<>();
-            List<String> originalAliases = new ArrayList<>();
-            for (RelDataTypeField field : originalFields) {
-                originalExprs.add(variable(field.getName()));
-                originalAliases.add(field.getName());
-            }
-            project(originalExprs, originalAliases, false);
+        if (recoverHead != null) {
+            project(ImmutableList.of(variable(recoverHead.getName())), ImmutableList.of(), true);
         }
         return this;
     }
@@ -1513,13 +1596,32 @@ public class GraphBuilder extends RelBuilder {
     public GraphBuilder dedupBy(Iterable<? extends RexNode> nodes) {
         RelNode input = requireNonNull(peek(), "frame stack is empty");
 
-        List<RelDataTypeField> originalFields = input.getRowType().getFieldList();
+        // specific implementation for gremlin, project will change the 'head' before the current
+        // dedupBy, which need to be recovered later
+        // the operation has no side effect to the cypher
+        RelDataTypeField recoverHead = null;
 
         Registrar registrar = new Registrar(this, input, true);
         List<RexNode> registerNodes = registrar.registerExpressions(ImmutableList.copyOf(nodes));
 
         // expressions need to be projected in advance
         if (!registrar.getExtraNodes().isEmpty()) {
+            if (input.getRowType().getFieldList().size() == 1) {
+                RelDataTypeField field = input.getRowType().getFieldList().get(0);
+                // give a non-default alias to the head, so that it can be recovered later
+                if (field.getName() == AliasInference.DEFAULT_NAME) {
+                    Set<String> uniqueAliases = AliasInference.getUniqueAliasList(input, true);
+                    uniqueAliases.addAll(registrar.getExtraAliases());
+                    String nonDefault = AliasInference.inferAliasWithPrefix("$f", uniqueAliases);
+                    // set the non default alias to the input
+                    as(nonDefault);
+                    recoverHead =
+                            new RelDataTypeFieldImpl(
+                                    nonDefault, generateAliasId(nonDefault), field.getType());
+                } else {
+                    recoverHead = field;
+                }
+            }
             project(registrar.getExtraNodes(), registrar.getExtraAliases(), registrar.isAppend());
             RexTmpVariableConverter converter = new RexTmpVariableConverter(true, this);
             registerNodes =
@@ -1537,16 +1639,8 @@ public class GraphBuilder extends RelBuilder {
                 GraphLogicalDedupBy.create(
                         (GraphOptCluster) this.getCluster(), input, registerNodes);
         replaceTop(dedupBy);
-
-        // to remove the extra columns we have added
-        if (!registrar.getExtraAliases().isEmpty()) {
-            List<RexNode> originalExprs = new ArrayList<>();
-            List<String> originalAliases = new ArrayList<>();
-            for (RelDataTypeField field : originalFields) {
-                originalExprs.add(variable(field.getName()));
-                originalAliases.add(field.getName());
-            }
-            project(originalExprs, originalAliases, false);
+        if (recoverHead != null) {
+            project(ImmutableList.of(variable(recoverHead.getName())), ImmutableList.of(), true);
         }
         return this;
     }
@@ -1703,109 +1797,102 @@ public class GraphBuilder extends RelBuilder {
     @Override
     public GraphBuilder as(String alias) {
         RelNode top = requireNonNull(peek(), "frame stack is empty");
-        RelDataType rowType = top.getRowType();
-        // we can assign the alias only if the top node has only one field, otherwise we skip the
-        // operation
-        if (rowType.getFieldList().size() != 1) {
-            return this;
-        }
         // skip intermediate operations which make no changes to the row type, i.e.
         // filter/limit/dedup...
         while (!top.getInputs().isEmpty() && top.getInput(0).getRowType() == top.getRowType()) {
             top = top.getInput(0);
         }
-        RelNode aliasTop = null;
-        if (top instanceof GraphLogicalSource) {
-            GraphLogicalSource source = (GraphLogicalSource) top;
-            aliasTop =
-                    GraphLogicalSource.create(
-                            (GraphOptCluster) source.getCluster(),
-                            source.getHints(),
-                            source.getOpt(),
-                            source.getTableConfig(),
-                            alias);
-            if (source.getUniqueKeyFilters() != null) {
-                ((GraphLogicalSource) aliasTop).setUniqueKeyFilters(source.getUniqueKeyFilters());
+        if (top instanceof AbstractBindableTableScan
+                || top instanceof GraphLogicalPathExpand
+                || top instanceof GraphLogicalProject
+                || top instanceof GraphLogicalAggregate) {
+            RelDataType rowType = top.getRowType();
+            // we can assign the alias only if the top node has only one field, otherwise we skip
+            // the
+            // operation
+            if (rowType.getFieldList().size() != 1) {
+                return this;
             }
-            if (ObjectUtils.isNotEmpty(source.getFilters())) {
-                ((GraphLogicalSource) aliasTop).setFilters(source.getFilters());
+            build();
+            if (!top.getInputs().isEmpty()) {
+                push(top.getInput(0));
             }
-        } else if (top instanceof GraphLogicalExpand) {
-            GraphLogicalExpand expand = (GraphLogicalExpand) top;
-            aliasTop =
-                    GraphLogicalExpand.create(
-                            (GraphOptCluster) expand.getCluster(),
-                            expand.getHints(),
-                            top.getInput(0),
-                            expand.getOpt(),
-                            expand.getTableConfig(),
-                            alias,
-                            expand.getStartAlias());
-            if (ObjectUtils.isNotEmpty(expand.getFilters())) {
-                ((GraphLogicalExpand) aliasTop).setFilters(expand.getFilters());
+            if (top instanceof GraphLogicalSource) {
+                GraphLogicalSource source = (GraphLogicalSource) top;
+                source(
+                        new SourceConfig(
+                                source.getOpt(), getLabelConfig(source.getTableConfig()), alias));
+                if (source.getUniqueKeyFilters() != null) {
+                    filter(source.getUniqueKeyFilters());
+                }
+                if (ObjectUtils.isNotEmpty(source.getFilters())) {
+                    filter(source.getFilters());
+                }
+            } else if (top instanceof GraphLogicalExpand) {
+                GraphLogicalExpand expand = (GraphLogicalExpand) top;
+                expand(
+                        new ExpandConfig(
+                                expand.getOpt(), getLabelConfig(expand.getTableConfig()), alias));
+                if (ObjectUtils.isNotEmpty(expand.getFilters())) {
+                    filter(expand.getFilters());
+                }
+            } else if (top instanceof GraphLogicalGetV) {
+                GraphLogicalGetV getV = (GraphLogicalGetV) top;
+                getV(new GetVConfig(getV.getOpt(), getLabelConfig(getV.getTableConfig()), alias));
+                if (ObjectUtils.isNotEmpty(getV.getFilters())) {
+                    filter(getV.getFilters());
+                }
+            } else if (top instanceof GraphLogicalPathExpand) {
+                GraphLogicalPathExpand pxdExpand = (GraphLogicalPathExpand) top;
+                GraphLogicalExpand expand = (GraphLogicalExpand) pxdExpand.getExpand();
+                GraphLogicalGetV getV = (GraphLogicalGetV) pxdExpand.getGetV();
+                PathExpandConfig.Builder pxdBuilder = PathExpandConfig.newBuilder(this);
+                RexNode offset = pxdExpand.getOffset(), fetch = pxdExpand.getFetch();
+                pxdBuilder
+                        .expand(
+                                new ExpandConfig(
+                                        expand.getOpt(),
+                                        getLabelConfig(expand.getTableConfig()),
+                                        expand.getAliasName()))
+                        .getV(
+                                new GetVConfig(
+                                        getV.getOpt(),
+                                        getLabelConfig(getV.getTableConfig()),
+                                        getV.getAliasName()))
+                        .pathOpt(pxdExpand.getPathOpt())
+                        .resultOpt(pxdExpand.getResultOpt())
+                        .range(
+                                offset == null
+                                        ? 0
+                                        : ((RexLiteral) offset).getValueAs(Integer.class),
+                                fetch == null ? -1 : ((RexLiteral) fetch).getValueAs(Integer.class))
+                        .startAlias(pxdExpand.getStartAlias().getAliasName())
+                        .alias(alias);
+                pathExpand(pxdBuilder.build());
+            } else if (top instanceof GraphLogicalProject) {
+                GraphLogicalProject project = (GraphLogicalProject) top;
+                project(project.getProjects(), Lists.newArrayList(alias), project.isAppend());
+            } else if (top instanceof GraphLogicalAggregate) {
+                GraphLogicalAggregate aggregate = (GraphLogicalAggregate) top;
+                // if group key is empty, we can assign the alias to the single aggregated value in
+                // group
+                if (aggregate.getGroupKey().groupKeyCount() == 0
+                        && aggregate.getAggCalls().size() == 1) {
+                    GraphAggCall aggCall = aggregate.getAggCalls().get(0);
+                    aggregate(aggregate.getGroupKey(), ImmutableList.of(aggCall.as(alias)));
+                }
             }
-        } else if (top instanceof GraphLogicalGetV) {
-            GraphLogicalGetV getV = (GraphLogicalGetV) top;
-            aliasTop =
-                    GraphLogicalGetV.create(
-                            (GraphOptCluster) getV.getCluster(),
-                            getV.getHints(),
-                            top.getInput(0),
-                            getV.getOpt(),
-                            getV.getTableConfig(),
-                            alias,
-                            getV.getStartAlias());
-            if (ObjectUtils.isNotEmpty(getV.getFilters())) {
-                ((GraphLogicalGetV) aliasTop).setFilters(getV.getFilters());
-            }
-        } else if (top instanceof GraphLogicalPathExpand) {
-            GraphLogicalPathExpand pxdExpand = (GraphLogicalPathExpand) top;
-            aliasTop =
-                    GraphLogicalPathExpand.create(
-                            (GraphOptCluster) pxdExpand.getCluster(),
-                            ImmutableList.of(),
-                            top.getInput(0),
-                            pxdExpand.getExpand(),
-                            pxdExpand.getGetV(),
-                            pxdExpand.getOffset(),
-                            pxdExpand.getFetch(),
-                            pxdExpand.getResultOpt(),
-                            pxdExpand.getPathOpt(),
-                            alias,
-                            pxdExpand.getStartAlias());
-        } else if (top instanceof GraphLogicalProject) {
-            GraphLogicalProject project = (GraphLogicalProject) top;
-            aliasTop =
-                    GraphLogicalProject.create(
-                            (GraphOptCluster) project.getCluster(),
-                            project.getHints(),
-                            top.getInput(0),
-                            project.getProjects(),
-                            deriveType(
-                                    project.getProjects(),
-                                    ImmutableList.of(alias),
-                                    null,
-                                    project.isAppend()),
-                            project.isAppend());
-        } else if (top instanceof GraphLogicalAggregate) {
-            GraphLogicalAggregate aggregate = (GraphLogicalAggregate) top;
-            // if group key is empty, we can assign the alias to the single aggregated value in
-            // group
-            if (aggregate.getGroupKey().groupKeyCount() == 0
-                    && aggregate.getAggCalls().size() == 1) {
-                GraphAggCall aggCall = aggregate.getAggCalls().get(0);
-                aliasTop =
-                        GraphLogicalAggregate.create(
-                                (GraphOptCluster) aggregate.getCluster(),
-                                aggregate.getHints(),
-                                top.getInput(0),
-                                aggregate.getGroupKey(),
-                                ImmutableList.of(aggCall.as(alias)));
-            }
-        }
-        if (aliasTop != null) {
-            replaceTop(aliasTop);
         }
         return this;
+    }
+
+    private LabelConfig getLabelConfig(TableConfig tableConfig) {
+        List<String> labels =
+                tableConfig.getTables().stream()
+                        .map(k -> k.getQualifiedName().get(0))
+                        .collect(Collectors.toList());
+        LabelConfig labelConfig = new LabelConfig(tableConfig.isAll());
+        labels.forEach(k -> labelConfig.addLabel(k));
+        return labelConfig;
     }
 }

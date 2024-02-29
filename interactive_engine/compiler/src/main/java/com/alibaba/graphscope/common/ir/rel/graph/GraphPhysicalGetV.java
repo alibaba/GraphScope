@@ -115,8 +115,8 @@ public class GraphPhysicalGetV extends SingleRel {
                         "fusedFilter",
                         fusedGetV.getFilters(),
                         !ObjectUtils.isEmpty(fusedGetV.getFilters()))
-                .item("opt", fusedGetV.getOpt())
-                .item("physicalOpt", getPhysicalOpt());
+                .item("opt", fusedGetV.getOpt().name())
+                .item("physicalOpt", getPhysicalOpt().name());
     }
 
     @Override

@@ -133,16 +133,16 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
                 });
         digestToCommons.forEach(
                 (k, v) -> {
-                    Preconditions.checkArgument(
-                            v.size() > 1, "there should be at least two commons with same digest");
-                    RelNode ancestor = lowestCommonAncestor(top, v, Lists.newArrayList());
-                    Preconditions.checkArgument(
-                            ancestor != null,
-                            "lowest common ancestor of [%s] should not be null",
-                            v);
-                    relToCommons
-                            .computeIfAbsent(ancestor, k1 -> Lists.newArrayList())
-                            .add(v.get(0));
+                    if (v.size() > 1) {
+                        RelNode ancestor = lowestCommonAncestor(top, v, Lists.newArrayList());
+                        Preconditions.checkArgument(
+                                ancestor != null,
+                                "lowest common ancestor of [%s] should not be null",
+                                v);
+                        relToCommons
+                                .computeIfAbsent(ancestor, k1 -> Lists.newArrayList())
+                                .add(v.get(0));
+                    }
                 });
         return relToCommons;
     }

@@ -10,7 +10,11 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.logical.LogicalFilter;
 import org.apache.calcite.rel.logical.LogicalUnion;
+import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.rex.RexShuttle;
+import org.apache.calcite.rex.RexSubQuery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.IdentityHashMap;
@@ -39,11 +43,25 @@ public class GraphHepPlanner extends HepPlanner {
 
     private class PlannerVisitor extends GraphShuttle {
         private final RelNode root;
-        private IdentityHashMap<RelNode, RelNode> commonRelVisitedMap;
+        private final IdentityHashMap<RelNode, RelNode> commonRelVisitedMap;
+        // apply optimization to sub query
+        private final RexShuttle subQueryPlanner;
 
         public PlannerVisitor(RelNode root) {
             this.root = root;
             this.commonRelVisitedMap = new IdentityHashMap<>();
+            this.subQueryPlanner =
+                    new RexShuttle() {
+                        @Override
+                        public RexNode visitSubQuery(RexSubQuery subQuery) {
+                            RelNode subRel = subQuery.rel;
+                            RelNode newSubRel = subRel.accept(new PlannerVisitor(subRel));
+                            if (newSubRel == subRel) {
+                                return subQuery;
+                            }
+                            return subQuery.clone(newSubRel);
+                        }
+                    };
         }
 
         @Override
@@ -107,6 +125,11 @@ public class GraphHepPlanner extends HepPlanner {
         }
 
         @Override
+        public RelNode visit(LogicalFilter filter) {
+            return findBestIfRoot(filter, visitChildren(filter));
+        }
+
+        @Override
         public RelNode visit(CommonTableScan tableScan) {
             RelOptTable optTable = tableScan.getTable();
             if (optTable instanceof CommonOptTable) {
@@ -125,6 +148,7 @@ public class GraphHepPlanner extends HepPlanner {
         }
 
         private RelNode findBestIfRoot(RelNode oldRel, RelNode newRel) {
+            newRel = newRel.accept(this.subQueryPlanner);
             return oldRel == root ? findBestExpOfRoot(newRel) : newRel;
         }
     }

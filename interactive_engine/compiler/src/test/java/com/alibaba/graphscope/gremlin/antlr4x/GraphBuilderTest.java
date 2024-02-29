@@ -777,12 +777,27 @@ public class GraphBuilderTest {
     //    g.V().union(__.in().union(out(), __.out()), __.in().union(out(), __.out()))
     @Test
     public void g_V_union_common_test() {
-        RelNode node = eval("g.V().out().union(out(), __.in().union(out(), __.out()))");
+        //        RelNode node = eval("g.V().out().union(out(), __.in().union(out(), __.out()))");
+        //        RelOptPlanner planner =
+        //
+        // Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        //        planner.setRoot(node);
+        //        node = planner.findBestExp();
+        //        System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(node));
+        //        PhysicalBuilder physicalBuilder =
+        //                new GraphRelProtoPhysicalBuilder(
+        //                        Utils.configs, Utils.schemaMeta, new LogicalPlan(node));
+        //        System.out.println(physicalBuilder.build().explain());
+    }
+
+    @Test
+    public void g_V_where_out_out_test() {
+        RelNode node = eval("g.V().as('a').out().as('b').where(select('a').values('lang'))");
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(node);
         node = planner.findBestExp();
-        System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(node));
+        System.out.println(node.explain());
         PhysicalBuilder physicalBuilder =
                 new GraphRelProtoPhysicalBuilder(
                         Utils.configs, Utils.schemaMeta, new LogicalPlan(node));

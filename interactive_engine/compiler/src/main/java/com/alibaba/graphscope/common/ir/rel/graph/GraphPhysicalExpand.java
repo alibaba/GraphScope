@@ -139,8 +139,8 @@ public class GraphPhysicalExpand extends SingleRel {
                         "fusedFilter",
                         fusedExpand.getFilters(),
                         !ObjectUtils.isEmpty(fusedExpand.getFilters()))
-                .item("opt", fusedExpand.getOpt())
-                .item("physicalOpt", getPhysicalOpt());
+                .item("opt", fusedExpand.getOpt().name())
+                .item("physicalOpt", getPhysicalOpt().name());
     }
 
     @Override
