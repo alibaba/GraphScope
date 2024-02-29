@@ -110,17 +110,17 @@ class GrootClient(object):
         return []
 
     def import_datasource(self, graph_name: str, data_source: dict) -> str:
-        for v_datasource in data_source["vertices_datasource"]:
+        for vertex_data_source in data_source["vertices_datasource"]:
             self._data_source["vertices_datasource"][
-                v_datasource["type_name"]
-            ] = v_datasource
-        for e_datasource in data_source["edges_datasource"]:
+                vertex_data_source["type_name"]
+            ] = vertex_data_source
+        for edge_data_source in data_source["edges_datasource"]:
             edge_label = self.get_edge_full_label(
-                e_datasource["type_name"],
-                e_datasource["source_vertex"],
-                e_datasource["destination_vertex"],
+                edge_data_source["type_name"],
+                edge_data_source["source_vertex"],
+                edge_data_source["destination_vertex"],
             )
-            self._data_source["edges_datasource"][edge_label] = e_datasource
+            self._data_source["edges_datasource"][edge_label] = edge_data_source
         self._pickle_datasource_impl()
 
     def get_datasource(self, graph_name: str) -> dict:
@@ -130,6 +130,42 @@ class GrootClient(object):
         for _, e in self._data_source["edges_datasource"].items():
             rlts["edges_datasource"].append(e)
         return rlts
+
+    def bind_vertex_datasource(self, graph_name: str, vertex_data_source: dict) -> str:
+        self._data_source["vertices_datasource"][
+            vertex_data_source["type_name"]
+        ] = vertex_data_source
+        self._pickle_datasource_impl()
+
+    def bind_edge_datasource(self, graph_name: str, edge_data_source: dict) -> str:
+        edge_label = self.get_edge_full_label(
+            edge_data_source["type_name"],
+            edge_data_source["source_vertex"],
+            edge_data_source["destination_vertex"],
+        )
+        self._data_source["edges_datasource"][edge_label] = edge_data_source
+        self._pickle_datasource_impl()
+
+    def get_vertex_datasource(self, graph_name: str, vertex_type: str) -> dict:
+        if vertex_type not in self._data_source["vertices_datasource"]:
+            raise RuntimeError(
+                f"Vertex type {vertex_type} does not bind any data source"
+            )
+        return self._data_source["vertices_datasource"][vertex_type]
+
+    def get_edge_datasource(
+        self,
+        graph_name: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ) -> dict:
+        edge_label = self.get_edge_full_label(
+            edge_type, source_vertex_type, destination_vertex_type
+        )
+        if edge_label not in self._data_source["edges_datasource"]:
+            raise RuntimeError(f"Edge type {edge_label} does not bind any data source")
+        return self._data_source["edges_datasource"][edge_label]
 
     def unbind_vertex_datasource(self, graph_name: str, vertex_type: str) -> str:
         # check

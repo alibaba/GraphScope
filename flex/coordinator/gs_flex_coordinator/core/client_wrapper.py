@@ -35,11 +35,12 @@ from gs_flex_coordinator.core.interactive import init_hqps_client
 from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
                                             encode_datetime, get_current_time)
-from gs_flex_coordinator.models import (DataSource, DeploymentInfo, EdgeType,
-                                        Graph, GrootGraph, GrootSchema,
-                                        JobStatus, ModelSchema, NodeStatus,
-                                        Procedure, SchemaMapping,
-                                        ServiceStatus, StartServiceRequest,
+from gs_flex_coordinator.models import (DataSource, DeploymentInfo,
+                                        EdgeDataSource, EdgeType, Graph,
+                                        GrootGraph, GrootSchema, JobStatus,
+                                        ModelSchema, NodeStatus, Procedure,
+                                        SchemaMapping, ServiceStatus,
+                                        StartServiceRequest, VertexDataSource,
                                         VertexType)
 from gs_flex_coordinator.version import __version__
 
@@ -289,6 +290,38 @@ class ClientWrapper(object):
 
     def get_datasource(self, graph_name: str) -> DataSource:
         return DataSource.from_dict(self._client.get_datasource(graph_name))
+
+    def bind_vertex_datasource(
+        self, graph_name: str, vertex_data_source: VertexDataSource
+    ) -> str:
+        return self._client.bind_vertex_datasource(
+            graph_name, vertex_data_source.to_dict()
+        )
+
+    def bind_edge_datasource(
+        self, graph_name: str, edge_data_source: EdgeDataSource
+    ) -> str:
+        return self._client.bind_edge_datasource(graph_name, edge_data_source.to_dict())
+
+    def get_vertex_datasource(
+        self, graph_name: str, vertex_type: str
+    ) -> VertexDataSource:
+        return VertexDataSource.from_dict(
+            self._client.get_vertex_datasource(graph_name, vertex_type)
+        )
+
+    def get_edge_datasource(
+        self,
+        graph_name: str,
+        edge_type: str,
+        source_vertex_type: str,
+        destination_vertex_type: str,
+    ) -> EdgeDataSource:
+        return EdgeDataSource.from_dict(
+            self._client.get_edge_datasource(
+                graph_name, edge_type, source_vertex_type, destination_vertex_type
+            )
+        )
 
     def unbind_vertex_datasource(self, graph_name: str, vertex_type: str) -> str:
         return self._client.unbind_vertex_datasource(graph_name, vertex_type)

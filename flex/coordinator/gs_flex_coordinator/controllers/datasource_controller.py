@@ -26,7 +26,7 @@ def bind_edge_datasource(graph_name, edge_data_source):  # noqa: E501
     """
     if connexion.request.is_json:
         edge_data_source = EdgeDataSource.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.bind_edge_datasource(graph_name, edge_data_source)
 
 
 @handle_api_exception()
@@ -44,7 +44,7 @@ def bind_vertex_datasource(graph_name, vertex_data_source):  # noqa: E501
     """
     if connexion.request.is_json:
         vertex_data_source = VertexDataSource.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+    return client_wrapper.bind_vertex_datasource(graph_name, vertex_data_source)
 
 
 @handle_api_exception()
@@ -78,7 +78,12 @@ def get_edge_datasource(graph_name, type_name, source_vertex_type, destination_v
 
     :rtype: Union[EdgeDataSource, Tuple[EdgeDataSource, int], Tuple[EdgeDataSource, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.get_edge_datasource(
+        graph_name,
+        type_name,
+        source_vertex_type,
+        destination_vertex_type
+    )
 
 
 @handle_api_exception()
@@ -94,7 +99,7 @@ def get_vertex_datasource(graph_name, type_name):  # noqa: E501
 
     :rtype: Union[VertexDataSource, Tuple[VertexDataSource, int], Tuple[VertexDataSource, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return client_wrapper.get_vertex_datasource(graph_name, type_name)
 
 
 @handle_api_exception()
