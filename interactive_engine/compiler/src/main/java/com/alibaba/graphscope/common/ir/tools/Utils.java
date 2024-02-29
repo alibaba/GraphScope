@@ -51,6 +51,10 @@ public class Utils {
         List<RelDataTypeField> dedup = Lists.newArrayList();
         for (int i = outputFields.size() - 1; i >= 0; i--) {
             RelDataTypeField field = outputFields.get(i);
+            // specific implementation for gremlin `head`, DEFAULT can only denote the last field
+            if (field.getName() == AliasInference.DEFAULT_NAME && i != outputFields.size() - 1) {
+                continue;
+            }
             if (!uniqueNames.contains(field.getName())) {
                 uniqueNames.add(field.getName());
                 dedup.add(0, field);

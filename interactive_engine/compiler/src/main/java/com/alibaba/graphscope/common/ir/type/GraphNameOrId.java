@@ -45,7 +45,7 @@ public class GraphNameOrId {
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, id, opt);
+        return Objects.hash(name, id, opt.name());
     }
 
     public @Nullable String getName() {
