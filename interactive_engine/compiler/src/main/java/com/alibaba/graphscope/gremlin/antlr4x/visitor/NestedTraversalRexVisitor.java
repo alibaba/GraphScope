@@ -22,6 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
 import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
+import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -30,7 +31,6 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexSubQuery;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Objects;
@@ -86,20 +86,9 @@ public class NestedTraversalRexVisitor extends GremlinGSBaseVisitor<RexNode> {
         }
         RexNode expr;
         if (new SubQueryChecker(commonRel).test(subRel)) {
-            if (parentCtx instanceof GremlinGSParser.TraversalMethod_whereContext) {
-                expr = RexSubQuery.exists(subRel);
-            } else if (parentCtx instanceof GremlinGSParser.TraversalMethod_notContext) {
-                expr = nestedBuilder.not(RexSubQuery.exists(subRel)); // convert to not exist
-            } else if (parentCtx instanceof GremlinGSParser.TraversalMethod_wherebyContext
-                    || parentCtx instanceof GremlinGSParser.TraversalMethod_selectbyContext
-                    || parentCtx instanceof GremlinGSParser.TraversalMethod_dedupbyContext
-                    || parentCtx instanceof GremlinGSParser.TraversalMethod_orderbyContext
-                    || parentCtx instanceof GremlinGSParser.TraversalMethod_group_keybyContext) {
-                expr = RexSubQuery.scalar(subRel);
-            } else {
-                throw new UnsupportedOperationException(
-                        "unsupported nested traversal in parent: " + parentCtx.getText());
-            }
+            // todo: return sub query in RexSubQuery
+            throw new UnsupportedEvalException(
+                    GremlinGSParser.NestedTraversalContext.class, "sub query is unsupported yet");
         } else {
             // convert subRel to expression
             Project project = (Project) subRel;

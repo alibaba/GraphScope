@@ -17,19 +17,6 @@ fi
 
 # restart compiler service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
-cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite &
-sleep 5s
-# run gremlin standard tests to test calcite-based IR layer
-cd ${base_dir} && make gremlin_calcite_test
-exit_code=$?
-# report test result
-if [ $exit_code -ne 0 ]; then
-    echo "ir\(calcite-based\) gremlin integration test on experimental store fail"
-    exit 1
-fi
-
-# restart compiler service
-ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
 cd ${base_dir} && make run gremlin.script.language.name=antlr_gremlin_calcite physical.opt.config=proto &
 sleep 5s
 # run gremlin standard tests to test calcite-based IR layer

@@ -18,10 +18,7 @@ package com.alibaba.graphscope.gremlin.antlr4x;
 
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.planner.rules.ExpandGetVFusionRule;
-import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
-import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
 import com.alibaba.graphscope.gremlin.antlr4x.visitor.GraphBuilderVisitor;
 
@@ -651,74 +648,13 @@ public class GraphBuilderTest {
     }
 
     @Test
-    public void g_V_match_1_test() {
-        RelNode node = eval("g.V().match(as('a').out().as('b'))");
+    public void g_V_identity() {
+        // = g.V().as('a'), `identity()` do nothing
+        RelNode node = eval("g.V().identity().as('a')");
         Assert.assertEquals(
-                "GraphLogicalProject(a=[a], b=[b], isAppend=[false])\n"
-                    + "  GraphLogicalSingleMatch(input=[null],"
-                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], matchOpt=[INNER])",
-                node.explain().trim());
-    }
-
-    @Test
-    public void g_V_match_2_test() {
-        RelNode node =
-                eval(
-                        "g.V().match(as('a').hasLabel('person').both().as('b'),"
-                                + " as('b').hasLabel('software').both().as('c'))");
-        Assert.assertEquals(
-                "GraphLogicalProject(a=[a], b=[b], c=[c], isAppend=[false])\n"
-                        + "  GraphLogicalMultiMatch(input=[null],"
-                        + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=false,"
-                        + " tables=[software]}], alias=[b], opt=[OTHER])\n"
-                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[created]}],"
-                        + " alias=[DEFAULT], opt=[BOTH])\n"
-                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[a], opt=[VERTEX])\n"
-                        + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[c], opt=[OTHER])\n"
-                        + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[created]}],"
-                        + " alias=[DEFAULT], opt=[BOTH])\n"
-                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
-                        + " alias=[b], opt=[VERTEX])\n"
-                        + "]}])",
-                node.explain().trim());
-    }
-
-    @Test
-    public void g_V_match_3_test() {
-        RelNode node =
-                eval(
-                        "g.V().match(as('a').out().as('b'), as('b').out().as('c'),"
-                                + " as('a').out().as('c'))");
-        Assert.assertEquals(
-                "GraphLogicalProject(a=[a], b=[b], c=[c], isAppend=[false])\n"
-                    + "  GraphLogicalMultiMatch(input=[null],"
-                    + " sentences=[{s0=[GraphLogicalGetV(tableConfig=[{isAll=false,"
-                    + " tables=[person]}], alias=[b], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "], s1=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[b], opt=[VERTEX])\n"
-                    + "], s2=[GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[c], opt=[END])\n"
-                    + "  GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
-                    + " alias=[DEFAULT], opt=[OUT])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[a], opt=[VERTEX])\n"
-                    + "]}])",
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -741,66 +677,267 @@ public class GraphBuilderTest {
                     + "        GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[DEFAULT], opt=[VERTEX])",
                 node.explain().trim());
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[DEFAULT], opt=[VERTEX])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[DEFAULT], opt=[VERTEX])",
+                after.explain().trim());
     }
 
     @Test
     public void g_V_union_2_test() {
-        RelNode node = eval("g.V().out().union(out(), in().union(out(), out()))");
-        Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
-                    + "  LogicalUnion(all=[true])\n"
-                    + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
-                    + "      GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
-                    + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
-                    + "        CommonTableScan(table=[[common#770142815]])\n"
-                    + "    LogicalUnion(all=[true])\n"
-                    + "      GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[DEFAULT], opt=[END])\n"
-                    + "        GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
-                    + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
-                    + "          CommonTableScan(table=[[common#-1923653969]])\n"
-                    + "      GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[DEFAULT], opt=[END])\n"
-                    + "        GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
-                    + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
-                    + "          CommonTableScan(table=[[common#-1923653969]])",
-                node.explain().trim());
-    }
-
-    //    g.V().union(out(), __.in())
-    //    g.V().out().union(out(), __.in())
-    //    g.V().union(out(), __.in().union(out(), __.out()))
-    //    g.V().out().union(out(), __.in().union(out(), __.out()))
-    //    g.V().out().union(out().union(out(), __.out()), __.in().union(out(), __.out()))
-    //    g.V().out().union(in().union(out(), __.out()), __.in().union(out(), __.out()))
-    //    g.V().union(__.in().union(out(), __.out()), __.in().union(out(), __.out()))
-    @Test
-    public void g_V_union_common_test() {
-        //        RelNode node = eval("g.V().out().union(out(), __.in().union(out(), __.out()))");
-        //        RelOptPlanner planner =
-        //
-        // Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
-        //        planner.setRoot(node);
-        //        node = planner.findBestExp();
-        //        System.out.println(com.alibaba.graphscope.common.ir.tools.Utils.toString(node));
-        //        PhysicalBuilder physicalBuilder =
-        //                new GraphRelProtoPhysicalBuilder(
-        //                        Utils.configs, Utils.schemaMeta, new LogicalPlan(node));
-        //        System.out.println(physicalBuilder.build().explain());
-    }
-
-    @Test
-    public void g_V_where_out_out_test() {
-        RelNode node = eval("g.V().as('a').out().as('b').where(select('a').values('lang'))");
+        RelNode node = eval("g.V().out().union(out(), in())");
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(node);
-        node = planner.findBestExp();
-        System.out.println(node.explain());
-        PhysicalBuilder physicalBuilder =
-                new GraphRelProtoPhysicalBuilder(
-                        Utils.configs, Utils.schemaMeta, new LogicalPlan(node));
-        System.out.println(physicalBuilder.build().explain());
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#877020040]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#877020040]])\n"
+                    + "common#877020040:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
+
+    @Test
+    public void g_V_union_8_test() {
+        RelNode node = eval("g.V().out().union(out(), in(), in().in())");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#877020040]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#877020040]])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#877020040]])\n"
+                    + "common#877020040:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
+
+    @Test
+    public void g_V_union_3_test() {
+        RelNode node = eval("g.V().union(out(), in().union(out(), out()))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[DEFAULT], opt=[VERTEX])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#874654833]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#874654833]])\n"
+                    + "common#874654833:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
+
+    @Test
+    public void g_V_union_4_test() {
+        RelNode node = eval("g.V().out().union(out(), in().union(out(), out()))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "      CommonTableScan(table=[[common#877020040]])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "common#877020040:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])\n"
+                    + "common#-715486774:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  CommonTableScan(table=[[common#877020040]])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
+
+    @Test
+    public void g_V_union_5_test() {
+        RelNode node =
+                eval("g.V().out().union(out().union(out(), out()), in().union(out(), out()))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-713121567]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-713121567]])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "common#-713121567:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "  CommonTableScan(table=[[common#877020040]])\n"
+                    + "common#877020040:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])\n"
+                    + "common#-715486774:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  CommonTableScan(table=[[common#877020040]])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
+
+    // `g.V().in()` is extracted as the common sub-plan of the root union
+    @Test
+    public void g_V_union_6_test() {
+        RelNode node = eval("g.V().union(in().union(out(), out()), in().union(out(), out()))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#874654833]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#874654833]])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#874654833]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#874654833]])\n"
+                    + "common#874654833:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
+
+    // `g.V().out().in()` is extracted as the common sub-plan of the root union
+    @Test
+    public void g_V_union_7_test() {
+        RelNode node =
+                eval("g.V().out().union(in().union(out(), out()), in().union(out(), out()))");
+        RelOptPlanner planner =
+                Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
+        planner.setRoot(node);
+        RelNode after = planner.findBestExp();
+        Assert.assertEquals(
+                "root:\n"
+                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "  LogicalUnion(all=[true])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "    LogicalUnion(all=[true])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
+                    + " knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "        CommonTableScan(table=[[common#-715486774]])\n"
+                    + "common#-715486774:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[IN], physicalOpt=[VERTEX])\n"
+                    + "  CommonTableScan(table=[[common#877020040]])\n"
+                    + "common#877020040:\n"
+                    + "GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[DEFAULT], opt=[VERTEX])",
+                com.alibaba.graphscope.common.ir.tools.Utils.toString(after).trim());
+    }
+
+    @Test
+    public void g_V_union_identity_test() {
+        RelNode node = eval("g.V().union(identity(), identity())");
+        Assert.assertEquals(
+                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                        + "  LogicalUnion(all=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[DEFAULT], opt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[DEFAULT], opt=[VERTEX])",
+                node.explain().trim());
     }
 }
