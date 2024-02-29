@@ -351,9 +351,7 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
 
     @Override
     public OuterExpression.Expression visitSubQuery(RexSubQuery subQuery) {
-        throw new IllegalArgumentException(
-                "cannot convert sub query ["
-                        + subQuery
-                        + "] to physical expression, please use 'apply' instead");
+        throw new UnsupportedOperationException(
+                "conversion from subQuery to ir core structure is unsupported yet");
     }
 }

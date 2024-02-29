@@ -199,14 +199,4 @@ public abstract class AliasInference {
                 || (node instanceof GraphLogicalProject)
                         && ((GraphLogicalProject) node).isAppend() == false;
     }
-
-    public static final String inferAliasWithPrefix(String prefix, Set<String> uniqueNameList) {
-        int j = 0;
-        String name;
-        do {
-            name = prefix + j;
-            ++j;
-        } while (uniqueNameList.contains(name));
-        return name;
-    }
 }

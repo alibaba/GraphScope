@@ -77,6 +77,11 @@ public class Utils {
         return values;
     }
 
+    /**
+     * print root {@code RelNode} and nested {@code RelNode}s in each {@code CommonTableScan}
+     * @param node
+     * @return
+     */
     public static String toString(RelNode node) {
         return toString("root:", node, Sets.newHashSet());
     }
