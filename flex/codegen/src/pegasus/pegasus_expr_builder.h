@@ -108,7 +108,7 @@ static std::string value_pb_to_str(const common::Value& value) {
   }
 }
 
-bool constains_vertex_id(const std::vector<codegen::ParamConst>& params) {
+bool contains_vertex_id(const std::vector<codegen::ParamConst>& params) {
   for (auto& param : params) {
     if (param.type == codegen::DataType::kVertexId) {
       return true;
@@ -442,7 +442,7 @@ class ExprBuilder {
   void add_func_call(std::stringstream& ss) const {
     // for function call, there can be vertex_id_t as input param, which depends
     // on vertex_id type. so we need to template typename.
-    if (constains_vertex_id(func_call_vars_)) {
+    if (contains_vertex_id(func_call_vars_)) {
       ss << _4_SPACES << "template <typename vertex_id_t>" << std::endl;
     }
     ss << _4_SPACES << "inline auto operator()";

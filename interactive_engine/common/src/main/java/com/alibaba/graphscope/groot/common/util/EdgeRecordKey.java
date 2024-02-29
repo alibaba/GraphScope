@@ -4,10 +4,10 @@ import com.alibaba.graphscope.proto.groot.EdgeRecordKeyPb;
 
 public class EdgeRecordKey {
 
-    private String label;
-    private VertexRecordKey srcVertexRecordKey;
-    private VertexRecordKey dstVertexRecordKey;
-    private long edgeInnerId;
+    private final String label;
+    private final VertexRecordKey srcVertexRecordKey;
+    private final VertexRecordKey dstVertexRecordKey;
+    private final long edgeInnerId;
 
     public EdgeRecordKey(
             String label, VertexRecordKey srcVertexRecordKey, VertexRecordKey dstVertexRecordKey) {

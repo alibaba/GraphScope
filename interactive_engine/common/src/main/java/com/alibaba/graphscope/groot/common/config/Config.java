@@ -41,15 +41,15 @@ public class Config<T> {
     }
 
     public static Config<Short> shortConfig(String key, short defaultVal) {
-        return new Config<>(key, String.valueOf(defaultVal), (s) -> Short.parseShort(s));
+        return new Config<>(key, String.valueOf(defaultVal), Short::parseShort);
     }
 
     public static Config<Integer> intConfig(String key, int defaultVal) {
-        return new Config<>(key, String.valueOf(defaultVal), (s) -> Integer.parseInt(s));
+        return new Config<>(key, String.valueOf(defaultVal), Integer::parseInt);
     }
 
     public static Config<Long> longConfig(String key, long defaultVal) {
-        return new Config<>(key, String.valueOf(defaultVal), (s) -> Long.parseLong(s));
+        return new Config<>(key, String.valueOf(defaultVal), Long::parseLong);
     }
 
     public static Config<String> stringConfig(String key, String defaultVal) {
@@ -57,7 +57,7 @@ public class Config<T> {
     }
 
     public static Config<Boolean> boolConfig(String key, boolean defaultVal) {
-        return new Config<>(key, String.valueOf(defaultVal), (s) -> Boolean.parseBoolean(s));
+        return new Config<>(key, String.valueOf(defaultVal), Boolean::parseBoolean);
     }
 
     public String getKey() {

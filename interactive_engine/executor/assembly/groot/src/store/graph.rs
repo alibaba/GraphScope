@@ -2,9 +2,7 @@
 
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_void};
-use std::sync::{Arc, Once};
-use std::time::Duration;
-use std::{str, thread};
+use std::sync::Once;
 
 use groot_store::db::api::multi_version_graph::MultiVersionGraph;
 use groot_store::db::api::PropertyMap;
@@ -19,36 +17,16 @@ use groot_store::db::proto::model::{
 };
 use groot_store::db::proto::model::{CommitDataLoadPb, PrepareDataLoadPb};
 use groot_store::db::proto::schema_common::{EdgeKindPb, LabelIdPb, TypeDefPb};
-use groot_store::db::wrapper::wrapper_partition_graph::WrapperPartitionGraph;
 
 use crate::store::jna_response::JnaResponse;
 
 pub type GraphHandle = *const c_void;
-pub type PartitionGraphHandle = *const c_void;
-pub type FfiPartitionGraph = WrapperPartitionGraph<GraphStore>;
 use tikv_jemallocator::Jemalloc;
 
 #[global_allocator]
 static GLOBAL: Jemalloc = Jemalloc;
 
 static INIT: Once = Once::new();
-
-#[no_mangle]
-pub extern "C" fn createWrapperPartitionGraph(handle: GraphHandle) -> PartitionGraphHandle {
-    trace!("createWrapperPartitionGraph");
-    let graph_store = unsafe { Arc::from_raw(handle as *const GraphStore) };
-    let partition_graph = WrapperPartitionGraph::new(graph_store);
-    Box::into_raw(Box::new(partition_graph)) as PartitionGraphHandle
-}
-
-#[no_mangle]
-pub extern "C" fn deleteWrapperPartitionGraph(handle: PartitionGraphHandle) {
-    trace!("deleteWrapperPartitionGraph");
-    let ptr = handle as *mut FfiPartitionGraph;
-    unsafe {
-        drop(Box::from_raw(ptr));
-    }
-}
 
 #[no_mangle]
 pub extern "C" fn openGraphStore(config_bytes: *const u8, len: usize) -> GraphHandle {
@@ -116,7 +94,7 @@ pub extern "C" fn ingestData(ptr: GraphHandle, path: *const c_char) -> Box<JnaRe
     unsafe {
         let graph_store_ptr = &*(ptr as *const GraphStore);
         let slice = CStr::from_ptr(path).to_bytes();
-        let path_str = str::from_utf8(slice).unwrap();
+        let path_str = std::str::from_utf8(slice).unwrap();
         match graph_store_ptr.ingest(path_str) {
             Ok(_) => JnaResponse::new_success(),
             Err(e) => {
@@ -136,7 +114,7 @@ pub extern "C" fn writeBatch(
     let graph_store_ptr = unsafe { &*(ptr as *const GraphStore) };
     let buf = unsafe { ::std::slice::from_raw_parts(data, len) };
     let ret = match do_write_batch(graph_store_ptr, snapshot_id, buf) {
-        Ok((has_ddl)) => {
+        Ok(has_ddl) => {
             let mut response = JnaResponse::new_success();
             response.has_ddl(has_ddl);
             response

@@ -922,7 +922,7 @@ void test_topology_adjacent_list(const char* uri_str, GRIN_DIRECTION dir) {
     acnt++;
     grin_get_next_adjacent_list_iter(g, ali);
   }
-#ifdef GRIN_ENABLE_ADJAECENT_LIST_ARRAY
+#ifdef GRIN_ENABLE_ADJACENT_LIST_ARRAY
   assert(acnt == grin_get_adjacent_list_size(g, al));
 #endif
   grin_destroy_adjacent_list_iter(g, ali);

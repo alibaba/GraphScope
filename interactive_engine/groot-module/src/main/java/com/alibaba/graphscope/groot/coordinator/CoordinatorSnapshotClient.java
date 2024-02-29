@@ -18,12 +18,6 @@ public class CoordinatorSnapshotClient extends RpcClient {
         this.stub = CoordinatorSnapshotServiceGrpc.newBlockingStub(channel);
     }
 
-    public CoordinatorSnapshotClient(
-            CoordinatorSnapshotServiceGrpc.CoordinatorSnapshotServiceBlockingStub stub) {
-        super((ManagedChannel) stub.getChannel());
-        this.stub = stub;
-    }
-
     public void synchronizeSnapshot(long snapshotId) throws RuntimeException {
         SynchronizeMinQuerySnapshotIdRequest req =
                 SynchronizeMinQuerySnapshotIdRequest.newBuilder().setSnapshotId(snapshotId).build();

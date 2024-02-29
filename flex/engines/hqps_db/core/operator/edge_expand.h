@@ -86,7 +86,7 @@ struct EdgeExpandEState {
 
 template <typename GRAPH_INTERFACE, typename VERTEX_SET_T, size_t num_labels,
           typename EDGE_FILTER_T, typename... T>
-struct EdgeExpandEMutltiDstState {
+struct EdgeExpandEMultiDstState {
   const GRAPH_INTERFACE& graph_;
   VERTEX_SET_T& cur_vertex_set_;
   Direction direction_;
@@ -96,7 +96,7 @@ struct EdgeExpandEMutltiDstState {
   const EDGE_FILTER_T& edge_filter_;
   size_t limit_;
 
-  EdgeExpandEMutltiDstState(
+  EdgeExpandEMultiDstState(
       const GRAPH_INTERFACE& frag, VERTEX_SET_T& v_set, Direction direction,
       typename GRAPH_INTERFACE::label_id_t edge_label,
       std::array<typename GRAPH_INTERFACE::label_id_t, num_labels> other_label,
@@ -332,7 +332,7 @@ class EdgeExpand {
     VLOG(10) << "edgeExpandV: from label: " << state.cur_vertex_set_.GetLabel()
              << ", other label: " << state.other_label_
              << ",edge label: " << state.edge_label_
-             << ",dire: " << state.direction_ << ", propert name: ";
+             << ",dire: " << state.direction_ << ", property name: ";
     auto selectors = state.edge_filter_.selectors_;
     auto adj_list_array =
         get_adj_list_array_with_filter(state, src_label, dst_label, selectors);

@@ -123,10 +123,10 @@ class UpdateTransaction {
   vertex_iterator GetVertexIterator(label_t label);
 
   edge_iterator GetOutEdgeIterator(label_t label, vid_t u,
-                                   label_t neighnor_label, label_t edge_label);
+                                   label_t neighbor_label, label_t edge_label);
 
   edge_iterator GetInEdgeIterator(label_t label, vid_t u,
-                                  label_t neighnor_label, label_t edge_label);
+                                  label_t neighbor_label, label_t edge_label);
 
   Any GetVertexField(label_t label, vid_t lid, int col_id) const;
 

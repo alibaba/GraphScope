@@ -12,7 +12,7 @@ public class BasicAuth extends CallCredentials {
             Metadata.Key.of("Authorization", Metadata.ASCII_STRING_MARSHALLER);
     public static final String TOKEN_HEAD = "Basic ";
 
-    private String secret;
+    private final String secret;
 
     public BasicAuth(String username, String password) {
         this.secret = Base64.getEncoder().encodeToString((username + ":" + password).getBytes());

@@ -111,7 +111,7 @@ public class ExceptionUtils {
 
         Unknown(9999);
 
-        private int value;
+        private final int value;
 
         ErrorCode(int value) {
             this.value = value;

@@ -90,7 +90,7 @@ class IntersectOpBuilder {
           break;
         }
         default:
-          LOG(FATAL) << "Not supproted in intersect.";
+          LOG(FATAL) << "Not supported in intersect.";
         }
       }
     }

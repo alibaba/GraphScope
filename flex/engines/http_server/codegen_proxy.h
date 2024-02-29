@@ -38,7 +38,7 @@ enum CodegenStatus {
   RUNNING = 0,
   FAILED = 1,
   SUCCESS = 2,
-  UNINITALIZED = 3,
+  UNINITIALIZED = 3,
 };
 
 struct StoredProcedureLibMeta {
