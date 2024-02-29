@@ -1616,49 +1616,45 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_valueMapXname_ageX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.ValueMapTest",
         reason = "results of the valueMap are inconsistent with the official gremlin")
-// @Graph.OptOut(
-//        method = "g_V_matchXb_created_c__a_knows_bX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_out_bX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_created_b__b_0created_aX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_both_b__b_both_cX_dedupXa_bX_byXlabelX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa__a_out_b__notXa_created_bXX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_knows_b__a_created_cX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_knows_b__b_created_cX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_created_b__b_0created_cX_whereXa_neq_cX_selectXa_cX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_knows_b__b_created_c__a_created_cX_dedupXa_b_cX_selectXaX_byXnameX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
-//        reason = "match is unsupported yet")
-// @Graph.OptOut(
-//        method = "g_V_matchXa_in_b__b_out_c__not_c_out_aX",
-//        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
-//        reason = "match is unsupported yet")
 @Graph.OptOut(
-        method = "g_V_out_out_matchXa_0created_b__b_0knows_cX_selectXcX_outXcreatedX_name",
+        method = "g_V_matchXb_created_c__a_knows_bX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_out_bX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_created_b__b_0created_aX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_both_b__b_both_cX_dedupXa_bX_byXlabelX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa__a_out_b__notXa_created_bXX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_knows_b__a_created_cX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_knows_b__b_created_cX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_created_b__b_0created_cX_whereXa_neq_cX_selectXa_cX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_knows_b__b_created_c__a_created_cX_dedupXa_b_cX_selectXaX_byXnameX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.MatchTest",
+        reason = "match is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_matchXa_in_b__b_out_c__not_c_out_aX",
+        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
         reason = "match is unsupported yet")
 @Graph.OptOut(
         method = "g_V_has_fold_select_as_unfold_select_unfold_values",
