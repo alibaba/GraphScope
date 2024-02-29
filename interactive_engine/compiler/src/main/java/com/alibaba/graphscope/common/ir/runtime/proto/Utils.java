@@ -37,6 +37,7 @@ import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.RelFieldCollation;
 import org.apache.calcite.rel.core.JoinRelType;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlOperator;
@@ -47,6 +48,8 @@ import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -635,7 +638,7 @@ public abstract class Utils {
         return GraphAlgebraPhysical.Repartition.newBuilder().setToAnother(shuffleBuilder).build();
     }
 
-    // extract columns from a list of RexNode, and return e.g., {a.{name, age}, b.{weight}}}
+    // extract tagColumns from a list of RexNode, and return e.g., {a.{name, age}, b.{weight}}}
     public static Map<Integer, Set<GraphNameOrId>> extractTagColumnsFromVariables(
             List<? extends RexNode> exprs) {
         return exprs.stream()
@@ -658,5 +661,59 @@ public abstract class Utils {
                         Collectors.groupingBy(
                                 pair -> pair.getValue0(),
                                 Collectors.mapping(pair -> pair.getValue1(), Collectors.toSet())));
+    }
+
+    // extract columns from relDataType, and return e.g., {name, age}
+    public static Set<GraphNameOrId> extractColumnsFromRelDataType(
+            RelDataType relDataType, boolean isColumnId) {
+        List<RelDataTypeField> recordColumns = relDataType.getFieldList();
+        Set<GraphNameOrId> columns = new HashSet<>();
+        for (int i = 0; i < recordColumns.size(); ++i) {
+            RelDataType recordColumnType = recordColumns.get(i).getType();
+            // if current column is a graph schema type, we extract all the fields (i.e., property
+            // types) from it
+            if (recordColumnType instanceof GraphSchemaType) {
+                List<RelDataTypeField> propertyTypes =
+                        ((GraphSchemaType) recordColumnType).getFieldList();
+                for (RelDataTypeField propertyType : propertyTypes) {
+                    if (isColumnId) {
+                        columns.add(new GraphNameOrId(propertyType.getIndex()));
+                    } else {
+                        columns.add(new GraphNameOrId(propertyType.getName()));
+                    }
+                }
+            }
+        }
+        return columns;
+    }
+
+    // remove edge properties from columns by checking if the tags refers to edge type
+    public static void removeEdgeProperties(
+            RelDataType inputDataType, Map<Integer, Set<GraphNameOrId>> tagColumns) {
+        List<RelDataTypeField> fieldTypes = inputDataType.getFieldList();
+        Set<Integer> tags = tagColumns.keySet();
+        // first, process the *HEAD* separately since it is a special case
+        if (tags.contains(AliasInference.DEFAULT_ID)) {
+            RelDataTypeField headFieldType = fieldTypes.get(fieldTypes.size() - 1);
+            if (headFieldType.getType() instanceof GraphSchemaType
+                    && GraphOpt.Source.EDGE.equals(
+                            ((GraphSchemaType) headFieldType.getType()).getScanOpt())) {
+                tags.remove(AliasInference.DEFAULT_ID);
+            }
+        }
+        if (tags.isEmpty()) {
+            return;
+        }
+        // then, process other tags by checking if they are of edge type
+        List<Integer> removeKeys = new ArrayList<>();
+        for (RelDataTypeField fieldType : fieldTypes) {
+            if (tags.contains(fieldType.getIndex())
+                    && fieldType.getType() instanceof GraphSchemaType
+                    && GraphOpt.Source.EDGE.equals(
+                            ((GraphSchemaType) fieldType.getType()).getScanOpt())) {
+                removeKeys.add(fieldType.getIndex());
+            }
+        }
+        tagColumns.keySet().removeAll(removeKeys);
     }
 }
