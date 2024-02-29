@@ -27,8 +27,7 @@ rand = "0.8.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 itertools = "0.10.2"
-mcsr = { path = "../store/mcsr" }
-# bmcsr = { path = "../store/bmcsr" }
+bmcsr = { path = "../store/bmcsr" }
 num = "0.4.1"
 graph_index = { path = "../store/graph_index" }
 

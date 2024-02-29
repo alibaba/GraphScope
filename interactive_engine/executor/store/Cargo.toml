@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "bmcsr",
     "mcsr",
     "global_query",
     "groot",

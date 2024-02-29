@@ -6,23 +6,23 @@ use std::sync::Arc;
 use chrono::offset::{TimeZone, Utc};
 use chrono::DateTime;
 use graph_index::GraphIndex;
-use mcsr::graph_db_impl::{CsrDB, SingleSubGraph, SubGraph};
+use bmcsr::graph_db::GraphDB;
 use pegasus::configure_with_default;
 
 lazy_static! {
-    pub static ref CSR: CsrDB<usize, usize> = _init_csr();
+    pub static ref CSR: GraphDB<usize, usize> = _init_csr();
     pub static ref CSR_PATH: String = configure_with_default!(String, "CSR_PATH", "".to_string());
     pub static ref TRIM_PATH: String = configure_with_default!(String, "TRIM_PATH", "".to_string());
     pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
     pub static ref GRAPH_INDEX: GraphIndex = _init_graph_index();
 }
 
-fn _init_csr() -> CsrDB<usize, usize> {
+fn _init_csr() -> GraphDB<usize, usize> {
     println!("Start load graph");
     if TRIM_PATH.is_empty() {
-        CsrDB::deserialize(&*(CSR_PATH), *PARTITION_ID, None).unwrap()
+        GraphDB::deserialize(&*(CSR_PATH), *PARTITION_ID, None).unwrap()
     } else {
-        CsrDB::deserialize(&*(CSR_PATH), *PARTITION_ID, Some(TRIM_PATH.clone())).unwrap()
+        GraphDB::deserialize(&*(CSR_PATH), *PARTITION_ID, Some(TRIM_PATH.clone())).unwrap()
     }
 }
 

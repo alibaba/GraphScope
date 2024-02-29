@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use dlopen::wrapper::{Container, WrapperApi};
 use graph_index::types::{ArrayData, DataType as IndexDataType};
 use graph_index::GraphIndex;
-use mcsr::graph_db_impl::{CsrDB, SingleSubGraph, SubGraph};
-use mcsr::types::LabelId;
+use bmcsr::graph_db::GraphDB;
+use bmcsr::types::LabelId;
 use pegasus::api::*;
 use pegasus::errors::BuildJobError;
 use pegasus::result::ResultSink;
@@ -14,7 +14,7 @@ use pegasus::{Configuration, JobConf, ServerConf};
 pub struct QueryApi {
     Query: fn(
         conf: JobConf,
-        graph: &'static CsrDB<usize, usize>,
+        graph: &'static GraphDB<usize, usize>,
         graph_index: &'static GraphIndex,
         input_params: HashMap<String, String>,
     ) -> Box<dyn Fn(&mut Source<i32>, ResultSink<Vec<u8>>) -> Result<(), BuildJobError>>,
@@ -24,7 +24,7 @@ pub struct QueryApi {
 pub struct PrecomputeApi {
     Precompute: fn(
         conf: JobConf,
-        graph: &'static CsrDB<usize, usize>,
+        graph: &'static GraphDB<usize, usize>,
         graph_index: &'static GraphIndex,
         index_info: &Vec<(String, IndexDataType)>,
         is_edge: bool,
