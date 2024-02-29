@@ -10,9 +10,9 @@ use std::ops::Add;
 use std::path::PathBuf;
 use std::time::Instant;
 
-use codegen_benchmark::queries;
-use codegen_benchmark::queries::graph;
-use codegen_benchmark::queries::register::{PrecomputeApi, QueryApi};
+use rpc_server::queries;
+use rpc_server::queries::graph;
+use rpc_server::queries::register::{PrecomputeApi, QueryApi};
 use dlopen::wrapper::{Container, WrapperApi};
 use graph_index::types::{ArrayData, DataType as IndexDataType, Item};
 use graph_index::GraphIndex;

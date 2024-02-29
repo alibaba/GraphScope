@@ -1,14 +1,14 @@
 [package]
-name = "codegen-benchmark"
+name = "rpc_server"
 version = "0.1.0"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-pegasus = { path = "../../interactive_engine/executor/engine/pegasus/pegasus" }
-pegasus_common = { path = "../../interactive_engine/executor/engine/pegasus/common" }
-pegasus_network = { path = "../../interactive_engine/executor/engine/pegasus/network" }
+pegasus = { path = "../engine/pegasus/pegasus" }
+pegasus_common = { path = "../engine/pegasus/common" }
+pegasus_network = { path = "../engine/pegasus/network" }
 chrono = "0.4"
 tonic = { version = "0.8" }
 prost = "0.11"
@@ -27,9 +27,10 @@ rand = "0.8.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
 itertools = "0.10.2"
-mcsr = { path = "../../interactive_engine/executor/store/mcsr" }
+mcsr = { path = "../store/mcsr" }
+# bmcsr = { path = "../store/bmcsr" }
 num = "0.4.1"
-graph_index = { path = "../graph_index" }
+graph_index = { path = "../store/graph_index" }
 
 [build-dependencies]
 tonic-build = { version = "0.8" }
@@ -38,10 +39,3 @@ tonic-build = { version = "0.8" }
 default = []
 # set to generate code in place(generated codes are in current codebase);
 gcip = []
-
-[lib]
-name = "codegen_benchmark"
-path = "src/lib.rs"
-
-[[bin]]
-name = "run_ldbc"

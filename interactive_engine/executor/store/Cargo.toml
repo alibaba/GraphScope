@@ -5,6 +5,7 @@ members = [
     "global_query",
     "groot",
     "exp_store"
+    "graph_index",
 ]
 
 [profile.release]
