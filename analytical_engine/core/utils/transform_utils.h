@@ -763,7 +763,8 @@ class TransformUtils<FRAG_T,
     } else if (type->Equals(arrow::float64())) {
       return vertex_property_to_vy_tensor_builder_impl<double>(client, prop_id,
                                                                vertices);
-    } else if (type->Equals(arrow::large_utf8())) {
+    } else if (type->Equals(arrow::utf8()) ||
+               type->Equals(arrow::large_utf8())) {
       return vertex_property_to_vy_tensor_builder_impl<std::string>(
           client, prop_id, vertices);
     } else {
