@@ -9,3 +9,4 @@ mod index;
 pub mod schema;
 mod table_index;
 pub mod types;
+pub mod utils;
