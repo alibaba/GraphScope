@@ -51,6 +51,9 @@
           "tables": [{
             "id": 0
           }],
+          "columns": [{
+            "name": "weight"
+          }],
           "sampleRatio": 1.0
         },
         "expandOpt": "EDGE"

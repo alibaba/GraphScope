@@ -51,6 +51,9 @@
           "tables": [{
             "id": 0
           }],
+          "columns": [{
+            "name": "weight"
+          }],
           "sampleRatio": 1.0
         },
         "alias": 1,
@@ -83,42 +86,6 @@
         "toAnother": {
           "shuffleKey": 0
         }
-      }
-    }
-  }, {
-    "opr": {
-      "vertex": {
-        "tag": 0,
-        "opt": "ITSELF",
-        "params": {
-          "columns": [{
-            "name": "name"
-          }],
-          "sampleRatio": 1.0
-        },
-        "alias": 0
-      }
-    }
-  }, {
-    "opr": {
-      "repartition": {
-        "toAnother": {
-          "shuffleKey": 1
-        }
-      }
-    }
-  }, {
-    "opr": {
-      "vertex": {
-        "tag": 1,
-        "opt": "ITSELF",
-        "params": {
-          "columns": [{
-            "name": "weight"
-          }],
-          "sampleRatio": 1.0
-        },
-        "alias": 1
       }
     }
   }, {
