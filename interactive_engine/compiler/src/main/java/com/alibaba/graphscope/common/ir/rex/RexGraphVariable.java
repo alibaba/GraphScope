@@ -108,7 +108,7 @@ public class RexGraphVariable extends RexInputRef {
 
     @Override
     public int hashCode() {
-        return Objects.hash(aliasId, property);
+        return Objects.hash(super.hashCode(), aliasId, property);
     }
 
     @Override

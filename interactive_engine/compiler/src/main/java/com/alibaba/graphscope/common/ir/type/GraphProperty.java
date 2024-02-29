@@ -49,7 +49,7 @@ public class GraphProperty {
 
     @Override
     public int hashCode() {
-        return Objects.hash(opt.name(), key);
+        return Objects.hash(opt, key);
     }
 
     public Opt getOpt() {
