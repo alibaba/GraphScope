@@ -101,6 +101,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Configuration::singleton()
     };
 
+    let workers = servers_conf.pegasus_config.expect("Could not read pegasus config").worker_num.expect("Could not read worker num");
+
     let mut servers = vec![];
     if let Some(network) = &server_conf.network {
         for i in 0..network.servers_size {
@@ -108,128 +110,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    let queries_config_path = config.queries_config;
-    let file = File::open(queries_config_path).expect("Failed to open precompute config file");
-    let precompute_config: QueriesConfig = serde_yaml::from_reader(file).expect("Could not read values.");
-    let mut index = 0;
-    let workers = servers_conf.pegasus_config.expect("Could not read pegasus config").worker_num.expect("Could not read worker num");
-    for precompute in precompute_config.precompute {
-        let lib_path = precompute.path;
-        let libc: Container<crate::PrecomputeApi> =
-            unsafe { Container::load(lib_path.clone()) }.expect("Could not open library or load symbols");
-        let start = Instant::now();
-        println!("Start run query {}", &precompute.precompute_name);
-        let mut conf =
-            JobConf::new(precompute.precompute_name.clone().to_owned() + "-" + &index.to_string());
-        conf.set_workers(workers);
-        conf.reset_servers(ServerConf::Partial(servers.clone()));
-        let label = precompute.label.edge_label.unwrap() as LabelId;
-        let src_label = Some(precompute.label.src_label.unwrap() as LabelId);
-        let dst_label = Some(precompute.label.dst_label.unwrap() as LabelId);
-        let mut properties_info = vec![];
-        let properties_size = precompute.properties.len();
-        for i in 0..properties_size {
-            let index_name = precompute.properties[i].name.clone();
-            let data_type = graph_index::types::str_to_data_type(&precompute.properties[i].data_type);
-            properties_info.push((index_name, data_type));
-        }
-        {
-            let graph = shared_graph.read().unwrap();
-            let mut graph_index = shared_graph_index.write().unwrap();
-            if precompute.precompute_type == "vertex" {
-                let property_size = graph.get_vertices_num(label);
-                for i in 0..properties_info.len() {
-                    graph_index.init_vertex_index(
-                        properties_info[i].0.clone(),
-                        label,
-                        properties_info[i].1.clone(),
-                        Some(property_size),
-                        Some(Item::Int32(0)),
-                    );
-                }
-            } else {
-                let property_size = graph.get_edges_num(src_label.unwrap(), label, dst_label.unwrap());
-                for i in 0..properties_info.len() {
-                    graph_index.init_edge_index(
-                        properties_info[i].0.clone(),
-                        src_label.unwrap(),
-                        dst_label.unwrap(),
-                        label,
-                        properties_info[i].1.clone(),
-                        Some(property_size),
-                        Some(Item::Int32(0)),
-                    );
-                }
-            }
-        }
-        let result = {
-            pegasus::run(conf.clone(), || {
-                let graph = shared_graph.read().unwrap();
-                let graph_index = shared_graph_index.write().unwrap();
-                libc.Precompute(
-                    conf.clone(),
-                    &graph,
-                    &graph_index,
-                    &properties_info,
-                    true,
-                    label,
-                    src_label,
-                    dst_label,
-                )
-            })
-            .expect("submit precompute failure")
-        };
-        let mut result_vec = vec![];
-        for x in result {
-            result_vec.push(x.unwrap());
-        }
-        {
-            let graph = shared_graph.read().unwrap();
-            let mut graph_index = shared_graph_index.write().unwrap();
-            for (index_set, data_set) in result_vec {
-                if precompute.precompute_type == "edge" {
-                    for i in 0..properties_size {
-                        let graph_index = shared_graph_index.write().unwrap();
-                        graph_index.add_edge_index_batch(
-                            src_label.unwrap(),
-                            label,
-                            dst_label.unwrap(),
-                            &properties_info[i].0,
-                            &index_set,
-                            data_set[i].as_ref(),
-                        )?;
-                    }
-                } else if precompute.precompute_type == "vertex" {
-                    for i in 0..properties_size {
-                        let graph_index = shared_graph_index.write().unwrap();
-                        graph_index.add_vertex_index_batch(
-                            label,
-                            &properties_info[i].0,
-                            &index_set,
-                            data_set[i].as_ref(),
-                        )?;
-                    }
-                }
-            }
-        }
-        println!(
-            "Finished run query {}, time: {}",
-            &precompute.precompute_name,
-            start.elapsed().as_millis()
-        );
-        index += 1;
-    }
-
-    println!("Start load lib");
     let mut query_register = QueryRegister::new();
-    for queries in precompute_config.read_queries {
-        let query_name = queries.queries_name;
-        let lib_path = queries.path;
-        println!("Start load query {}", query_name);
-        let libc: Container<crate::QueryApi> =
-            unsafe { Container::load(lib_path.clone()) }.expect("Could not open library or load symbols");
-        query_register.register(query_name, libc);
-    }
+    println!("Start load lib");
+    query_register.load(&PathBuf::from(config.queries_config));
+    println!("Finished load libs");
 
     let rpc_config = servers_conf.rpc_server.expect("Rpc config not set");
     pegasus::startup(server_conf.clone()).ok();
