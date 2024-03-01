@@ -3,6 +3,7 @@ extern crate dlopen;
 extern crate dlopen_derive;
 extern crate core;
 
+use std::arch::aarch64::vqmovuns_s32;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -21,17 +22,27 @@ use rpc_server::queries::rpc::RPCServerConfig;
 
 use std::fs::File;
 use std::io::BufRead;
+use bmcsr::graph_db::GraphDB;
 
 use bmcsr::types::LabelId;
+use graph_index::GraphIndex;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
-    #[structopt(short = "s", long = "servers_config")]
-    servers_config: PathBuf,
+    #[structopt(short = "g", long = "graph_data")]
+    graph_data: PathBuf,
     #[structopt(short = "q", long = "queries_config", default_value = "")]
     queries_config: String,
     #[structopt(short = "p", long = "parameters", default_value = "")]
     parameters: PathBuf,
+    #[structopt(short = "r", long = "graph_raw_data", default_value = "")]
+    graph_raw: PathBuf,
+    #[structopt(short = "b", long = "batch_update_configs", default_value = "")]
+    batch_update_configs: PathBuf,
+    #[structopt(short = "c", long = "output_dir", default_value = "")]
+    output_dir: PathBuf,
+    #[structopt(short = "w", long = "worker_num", default_value = 8)]
+    worker_num: u32,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -81,46 +92,26 @@ pub struct QueriesConfig {
     read_queries: Vec<QueriesSetting>,
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    pegasus_common::logs::init_log();
-    let config: Config = Config::from_args();
-
-    lazy_static::initialize(&queries::graph::CSR);
-    lazy_static::initialize(&queries::graph::GRAPH_INDEX);
-
-    let servers_config =
-        std::fs::read_to_string(config.servers_config).expect("Failed to read server config");
-
-    let servers_conf: ServerConfig = toml::from_str(servers_config.as_str())?;
-    let mut server_conf = if let Some( servers) = servers_conf.network_config {
-        servers
-    } else {
-        Configuration::singleton()
-    };
-
-    let mut servers = vec![];
-    if let Some(network) = &server_conf.network {
-        for i in 0..network.servers_size {
-            servers.push(i as u64);
-        }
+fn register_precompute(settings: &Vec<PrecomputeSetting>) -> Vec<Container<crate::PrecomputeApi>> {
+    let mut ret = vec![];
+    for precompute in settings.iter() {
+        let lib_path = precompute.path.clone();
+        let libc: Container<crate::PrecomputeApi> = unsafe { Container::load(lib_path) }.unwrap();
+        ret.push(libc);
     }
-
-    let queries_config_path = config.queries_config;
-    let file = File::open(queries_config_path).expect("Failed to open precompute config file");
-    let precompute_config: QueriesConfig = serde_yaml::from_reader(file).expect("Could not read values.");
-    let mut index = 0;
-    let workers = servers_conf.pegasus_config.expect("Could not read pegasus config").worker_num.expect("Could not read worker num");
-
-    for precompute in precompute_config.precompute {
-        let lib_path = precompute.path;
-        let libc: Container<crate::PrecomputeApi> =
-            unsafe { Container::load(lib_path.clone()) }.expect("Could not open library or load symbols");
+    ret
+}
+fn precompute(settings: &Vec<PrecomputeSetting>, libs: &Vec<Container<PrecomputeApi>>, worker_num: u32) {
+    let num = settings.len();
+    for i in 0..num {
+        let index_str = i;
+        let index_str = index_str.to_string();
+        let precompute = &settings[i];
+        let libc = &libs[i];
         let start = Instant::now();
-        println!("Start run query {}", &precompute.precompute_name);
-        let mut conf =
-            JobConf::new(precompute.precompute_name.clone().to_owned() + "-" + &index.to_string());
-        conf.set_workers(workers);
-        conf.reset_servers(ServerConf::Partial(servers.clone()));
+
+        let mut conf = JobConf::new(precompute.precompute_name.clone().to_string() + "-" + &*index_str.clone());
+        conf.set_workers(worker_num);
         let label = precompute.label.edge_label.unwrap() as LabelId;
         let src_label = Some(precompute.label.src_label.unwrap() as LabelId);
         let dst_label = Some(precompute.label.dst_label.unwrap() as LabelId);
@@ -200,9 +191,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             &precompute.precompute_name,
             start.elapsed().as_millis()
         );
-        index += 1;
     }
+}
 
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    pegasus_common::logs::init_log();
+    let config: Config = Config::from_args();
+
+    let worker_num = config.worker_num;
+
+    let graph_data_str = config.graph_data.to_str().unwrap();
+
+    let mut graph = GraphDB::<usize, usize>::deserialize(graph_data_str, 0, None).unwrap();
+    let graph_index = GraphIndex::new(0);
+
+    let queries_config_path = config.queries_config;
+    let file = File::open(queries_config_path).expect("Failed to open precompute config file");
+    let precompute_config: QueriesConfig = serde_yaml::from_reader(file).expect("Could not read values.");
+    let precompute_libs = register_precompute(&precompute_config.precompute);
+
+    precompute(&precompute_config.precompute, &precompute_libs, worker_num);
+
+    let queries_config_path = config.queries_config;
+    let file = File::open(queries_config_path).expect("Failed to open precompute config file");
     println!("Start load lib");
     let mut query_register = QueryRegister::new();
     for queries in precompute_config.read_queries {
