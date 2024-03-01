@@ -86,9 +86,9 @@ public class ConfigurationUtils {
             logger.error("Empty class Path!");
             return new URL[] {};
         }
-        String[] splited = classPath.split(":");
+        String[] split = classPath.split(":");
         List<URL> res =
-                Arrays.stream(splited)
+                Arrays.stream(split)
                         .map(File::new)
                         .map(
                                 file -> {
@@ -104,8 +104,8 @@ public class ConfigurationUtils {
                 "Extracted URL"
                         + String.join(
                                 ":", res.stream().map(URL::toString).collect(Collectors.toList())));
-        URL[] ret = new URL[splited.length];
-        for (int i = 0; i < splited.length; ++i) {
+        URL[] ret = new URL[split.length];
+        for (int i = 0; i < split.length; ++i) {
             ret[i] = res.get(i);
         }
         return ret;

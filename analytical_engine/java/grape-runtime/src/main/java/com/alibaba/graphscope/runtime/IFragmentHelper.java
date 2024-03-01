@@ -39,7 +39,7 @@ public class IFragmentHelper {
             Class<?>[] classes =
                     GenericUtils.getTypeArgumentFromInterface(projectedFragment.getClass());
             if (classes.length != 4) {
-                logger.error("Expected 4 actural type arguments, received: " + classes.length);
+                logger.error("Expected 4 actual type arguments, received: " + classes.length);
                 return null;
             }
             return createArrowProjectedAdaptor(
@@ -50,7 +50,7 @@ public class IFragmentHelper {
             Class<?>[] classes =
                     GenericUtils.getTypeArgumentFromInterface(immutableEdgecutFragment.getClass());
             if (classes.length != 4) {
-                logger.error("Expected 4 actural type arguments, received: " + classes.length);
+                logger.error("Expected 4 actual type arguments, received: " + classes.length);
                 return null;
             }
             return createImmutableFragmentAdaptor(
