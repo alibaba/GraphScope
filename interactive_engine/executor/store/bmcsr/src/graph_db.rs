@@ -164,140 +164,6 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalEdge<'a, G
     }
 }
 
-pub struct GraphDBModification<
-    G: Send + Sync + IndexType = DefaultId,
-    I: Send + Sync + IndexType = InternalId,
-> {
-    pub delete_edges: Vec<Vec<(G, G)>>,
-    pub delete_outgoing_edges: Vec<HashSet<(I, I)>>,
-    pub delete_incoming_edges: Vec<HashSet<(I, I)>>,
-
-    pub delete_vertices: Vec<Vec<G>>,
-
-    pub add_edges: Vec<Vec<(G, G)>>,
-    pub add_edge_prop_tables: HashMap<usize, ColTable>,
-
-    pub vertex_label_num: usize,
-    pub edge_label_num: usize,
-}
-
-impl<G, I> GraphDBModification<G, I>
-where
-    G: Eq + IndexType + Send + Sync,
-    I: Send + Sync + IndexType,
-{
-    pub fn new() -> Self {
-        Self {
-            delete_edges: vec![],
-            delete_outgoing_edges: vec![],
-            delete_incoming_edges: vec![],
-            delete_vertices: vec![],
-
-            add_edges: vec![],
-            add_edge_prop_tables: HashMap::new(),
-
-            vertex_label_num: 0,
-            edge_label_num: 0,
-        }
-    }
-
-    pub fn edge_label_to_index(
-        &self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId,
-    ) -> usize {
-        src_label as usize * self.vertex_label_num * self.edge_label_num
-            + dst_label as usize * self.edge_label_num
-            + edge_label as usize
-    }
-
-    pub fn edge_label_tuple_num(&self) -> usize {
-        self.vertex_label_num * self.vertex_label_num * self.edge_label_num
-    }
-
-    pub fn init(&mut self, graph_schema: &CsrGraphSchema) {
-        self.vertex_label_num = graph_schema.vertex_label_names().len();
-        self.edge_label_num = graph_schema.edge_label_names().len();
-
-        self.delete_edges
-            .resize(self.edge_label_tuple_num(), vec![]);
-        self.delete_outgoing_edges
-            .resize(self.edge_label_tuple_num(), HashSet::new());
-        self.delete_incoming_edges
-            .resize(self.edge_label_tuple_num(), HashSet::new());
-        self.delete_vertices
-            .resize(self.vertex_label_num, vec![]);
-        self.add_edges
-            .resize(self.edge_label_tuple_num(), vec![]);
-
-        for e_label_i in 0..self.edge_label_num {
-            for src_label_i in 0..self.vertex_label_num {
-                for dst_label_i in 0..self.vertex_label_num {
-                    let mut header = vec![];
-                    if let Some(headers) = graph_schema.get_edge_header(
-                        src_label_i as LabelId,
-                        e_label_i as LabelId,
-                        dst_label_i as LabelId,
-                    ) {
-                        for pair in headers {
-                            header.push((pair.1.clone(), pair.0.clone()));
-                        }
-                    }
-                    if !header.is_empty() {
-                        let index = self.edge_label_to_index(
-                            src_label_i as LabelId,
-                            dst_label_i as LabelId,
-                            e_label_i as LabelId,
-                        );
-                        self.add_edge_prop_tables
-                            .insert(index, ColTable::new(header));
-                    }
-                }
-            }
-        }
-    }
-
-    pub fn delete_vertex(&mut self, label: LabelId, id: G) {
-        let index = label as usize;
-        self.delete_vertices[index].push(id);
-    }
-
-    pub fn insert_edge(
-        &mut self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, src: G, dst: G,
-        properties: Option<Vec<Item>>,
-    ) {
-        let index = self.edge_label_to_index(src_label, dst_label, edge_label);
-        self.insert_edge_opt(index, src, dst, properties);
-    }
-
-    pub fn insert_edge_opt(&mut self, index: usize, src: G, dst: G, properties: Option<Vec<Item>>) {
-        self.add_edges[index].push((src, dst));
-        if let Some(properties) = properties {
-            self.add_edge_prop_tables
-                .get_mut(&index)
-                .unwrap()
-                .push(&properties);
-        }
-    }
-
-    pub fn delete_edge(
-        &mut self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, src: G, dst: G,
-    ) {
-        let index = self.edge_label_to_index(src_label, dst_label, edge_label);
-        self.delete_edge_opt(index, src, dst);
-    }
-
-    pub fn delete_edge_opt(&mut self, index: usize, src: G, dst: G) {
-        self.delete_edges[index].push((src, dst));
-    }
-
-    pub fn delete_outgoing_edge_opt(&mut self, index: usize, src: I, dst: I) {
-        self.delete_outgoing_edges[index].insert((src, dst));
-    }
-
-    pub fn delete_incoming_edge_opt(&mut self, index: usize, src: I, dst: I) {
-        self.delete_incoming_edges[index].insert((src, dst));
-    }
-}
-
 pub struct GraphDB<G: Send + Sync + IndexType = DefaultId, I: Send + Sync + IndexType = InternalId> {
     pub partition: usize,
     pub ie: Vec<Box<dyn CsrTrait<I>>>,
@@ -313,8 +179,6 @@ pub struct GraphDB<G: Send + Sync + IndexType = DefaultId, I: Send + Sync + Inde
 
     pub vertex_label_num: usize,
     pub edge_label_num: usize,
-
-    pub modification: GraphDBModification<G, I>,
 }
 
 impl<G, I> GraphDB<G, I>
@@ -556,9 +420,6 @@ where
         let vm_path_str = vm_path.to_str().unwrap().to_string();
         vertex_map.deserialize(&vm_path_str);
 
-        let mut modification = GraphDBModification::new();
-        modification.init(&graph_schema);
-
         Ok(Self {
             partition,
             ie,
@@ -570,7 +431,6 @@ where
             oe_edge_prop_table,
             vertex_label_num,
             edge_label_num,
-            modification,
         })
     }
 

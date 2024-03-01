@@ -5,12 +5,14 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::pin::Pin;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
 use std::time::Duration;
+use bmcsr::graph_db::GraphDB;
 
 use dlopen::wrapper::{Container, WrapperApi};
 use futures::Stream;
+use graph_index::GraphIndex;
 use hyper::server::accept::Accept;
 use hyper::server::conn::{AddrIncoming, AddrStream};
 use pegasus::api::function::FnResult;
@@ -204,18 +206,18 @@ impl RPCServerConfig {
 
 pub async fn start_all(
     rpc_config: RPCServerConfig, server_config: Configuration, query_register: QueryRegister, workers: u32,
-    servers: &Vec<u64>,
+    servers: &Vec<u64>, graph_db: Arc<RwLock<GraphDB<usize, usize>>>, graph_index: Arc<RwLock<GraphIndex>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let server_id = server_config.server_id();
-    start_rpc_sever(server_id, rpc_config, query_register, workers, servers).await?;
+    start_rpc_sever(server_id, rpc_config, query_register, workers, servers, graph_db, graph_index).await?;
     Ok(())
 }
 
 pub async fn start_rpc_sever(
     server_id: u64, rpc_config: RPCServerConfig, query_register: QueryRegister, workers: u32,
-    servers: &Vec<u64>
+    servers: &Vec<u64>, graph_db: Arc<RwLock<GraphDB<usize, usize>>>, graph_index: Arc<RwLock<GraphIndex>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let service = JobServiceImpl { query_register, workers, servers: servers.clone(), report: true };
+    let service = JobServiceImpl { query_register, workers, servers: servers.clone(), report: true, graph_db, graph_index };
     let server = RPCJobServer::new(rpc_config, service);
     server
         .run(server_id, StandaloneServiceListener {})
@@ -229,11 +231,15 @@ pub struct JobServiceImpl {
     workers: u32,
     servers: Vec<u64>,
     report: bool,
+
+    graph_db: Arc<RwLock<GraphDB<usize, usize>>>,
+    graph_index: Arc<RwLock<GraphIndex>>,
 }
 
 #[tonic::async_trait]
 impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
     type SubmitStream = UnboundedReceiverStream<Result<pb::BiJobResponse, Status>>;
+    type BatchStream = UnboundedReceiverStream<Result<pb::BatchUpdateResponse, Status>>;
 
     async fn submit(&self, req: Request<pb::BiJobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
@@ -270,6 +276,10 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         } else {
             Err(Status::unknown(format!("query not found, job name {}", job_name)))
         }
+    }
+
+    async fn submit_batch_insert(&self, req: Request<pb::BiJobRequest>) -> Result<Response<Self::BatchStream>, Status> {
+        return Ok(Response<Self::BatchStream>::new());
     }
 }
 

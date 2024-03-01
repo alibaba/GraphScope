@@ -377,6 +377,7 @@ impl ColTable {
 }
 
 unsafe impl Sync for ColTable {}
+unsafe impl Send for ColTable {}
 
 pub fn parse_properties(
     record: &StringRecord, header: &[(String, DataType)], selected: &[bool],

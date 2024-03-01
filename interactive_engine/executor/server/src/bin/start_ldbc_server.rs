@@ -3,29 +3,21 @@ extern crate dlopen;
 extern crate dlopen_derive;
 extern crate core;
 
-use std::any::TypeId;
-use std::collections::HashMap;
 use std::fs::File;
-use std::io::{self, BufRead, Read};
-use std::ops::Add;
+use std::io::Read;
 use std::path::PathBuf;
+use std::sync::{Arc, RwLock};
 use std::time::Instant;
+use bmcsr::graph_db::GraphDB;
 
 use rpc_server::queries;
-use rpc_server::queries::graph;
 use rpc_server::queries::register::{PrecomputeApi, QueryApi, QueryRegister};
 use dlopen::wrapper::{Container, WrapperApi};
-use graph_index::types::{ArrayData, DataType as IndexDataType, Item};
+use graph_index::types::Item;
 use graph_index::GraphIndex;
 use bmcsr::types::LabelId;
-use itertools::Itertools;
 use pegasus::api::*;
-use pegasus::errors::BuildJobError;
-use pegasus::result::ResultSink;
-use pegasus::result::ResultStream;
 use pegasus::{Configuration, JobConf, ServerConf};
-use pegasus_network::config::ServerAddr;
-use pegasus_network::Server;
 use serde::{Deserialize, Serialize};
 use serde_yaml::{self};
 use structopt::StructOpt;
@@ -34,6 +26,8 @@ use crate::queries::rpc::RPCServerConfig;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
+    #[structopt(short = "g", long = "graph_data")]
+    graph_data: PathBuf,
     #[structopt(short = "s", long = "servers_config")]
     servers_config: PathBuf,
     #[structopt(short = "q", long = "queries_config", default_value = "")]
@@ -92,14 +86,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     pegasus_common::logs::init_log();
     let config: Config = Config::from_args();
 
-    lazy_static::initialize(&queries::graph::CSR);
-    lazy_static::initialize(&queries::graph::GRAPH_INDEX);
+    let graph_data_str = config.graph_data.to_str().unwrap();
+
+    let shared_graph = Arc::new(RwLock::new(GraphDB::<usize, usize>::deserialize(graph_data_str, 0, None).unwrap()));
+    let shared_graph_index = Arc::new(RwLock::new(GraphIndex::new(0)));
 
     let servers_config =
         std::fs::read_to_string(config.servers_config).expect("Failed to read server config");
 
     let servers_conf: ServerConfig = toml::from_str(servers_config.as_str())?;
-    let mut server_conf = if let Some( servers) = servers_conf.network_config {
+    let server_conf = if let Some( servers) = servers_conf.network_config {
         servers
     } else {
         Configuration::singleton()
@@ -137,37 +133,43 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             let data_type = graph_index::types::str_to_data_type(&precompute.properties[i].data_type);
             properties_info.push((index_name, data_type));
         }
-        if precompute.precompute_type == "vertex" {
-            let property_size = graph::CSR.get_vertices_num(label);
-            for i in 0..properties_info.len() {
-                graph::GRAPH_INDEX.init_vertex_index(
-                    properties_info[i].0.clone(),
-                    label,
-                    properties_info[i].1.clone(),
-                    Some(property_size),
-                    Some(Item::Int32(0)),
-                );
-            }
-        } else {
-            let property_size = graph::CSR.get_edges_num(src_label.unwrap(), label, dst_label.unwrap());
-            for i in 0..properties_info.len() {
-                graph::GRAPH_INDEX.init_edge_index(
-                    properties_info[i].0.clone(),
-                    src_label.unwrap(),
-                    dst_label.unwrap(),
-                    label,
-                    properties_info[i].1.clone(),
-                    Some(property_size),
-                    Some(Item::Int32(0)),
-                );
+        {
+            let graph = shared_graph.read().unwrap();
+            let mut graph_index = shared_graph_index.write().unwrap();
+            if precompute.precompute_type == "vertex" {
+                let property_size = graph.get_vertices_num(label);
+                for i in 0..properties_info.len() {
+                    graph_index.init_vertex_index(
+                        properties_info[i].0.clone(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(property_size),
+                        Some(Item::Int32(0)),
+                    );
+                }
+            } else {
+                let property_size = graph.get_edges_num(src_label.unwrap(), label, dst_label.unwrap());
+                for i in 0..properties_info.len() {
+                    graph_index.init_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(property_size),
+                        Some(Item::Int32(0)),
+                    );
+                }
             }
         }
         let result = {
             pegasus::run(conf.clone(), || {
+                let graph = shared_graph.read().unwrap();
+                let graph_index = shared_graph_index.write().unwrap();
                 libc.Precompute(
                     conf.clone(),
-                    &queries::graph::CSR,
-                    &queries::graph::GRAPH_INDEX,
+                    &graph,
+                    &graph_index,
                     &properties_info,
                     true,
                     label,
@@ -177,27 +179,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             })
             .expect("submit precompute failure")
         };
+        let mut result_vec = vec![];
         for x in result {
-            let (index_set, data_set) = x.expect("Fail to get result");
-            if precompute.precompute_type == "edge" {
-                for i in 0..properties_size {
-                    queries::graph::GRAPH_INDEX.add_edge_index_batch(
-                        src_label.unwrap(),
-                        label,
-                        dst_label.unwrap(),
-                        &properties_info[i].0,
-                        &index_set,
-                        data_set[i].as_ref(),
-                    )?;
-                }
-            } else if precompute.precompute_type == "vertex" {
-                for i in 0..properties_size {
-                    queries::graph::GRAPH_INDEX.add_vertex_index_batch(
-                        label,
-                        &properties_info[i].0,
-                        &index_set,
-                        data_set[i].as_ref(),
-                    )?;
+            result_vec.push(x.unwrap());
+        }
+        {
+            let graph = shared_graph.read().unwrap();
+            let mut graph_index = shared_graph_index.write().unwrap();
+            for (index_set, data_set) in result_vec {
+                if precompute.precompute_type == "edge" {
+                    for i in 0..properties_size {
+                        let graph_index = shared_graph_index.write().unwrap();
+                        graph_index.add_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        )?;
+                    }
+                } else if precompute.precompute_type == "vertex" {
+                    for i in 0..properties_size {
+                        let graph_index = shared_graph_index.write().unwrap();
+                        graph_index.add_vertex_index_batch(
+                            label,
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        )?;
+                    }
                 }
             }
         }
@@ -223,7 +234,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rpc_config = servers_conf.rpc_server.expect("Rpc config not set");
     pegasus::startup(server_conf.clone()).ok();
     pegasus::wait_servers_ready(&ServerConf::All);
-    queries::rpc::start_all(rpc_config, server_conf, query_register, workers, &servers).await?;
+    queries::rpc::start_all(rpc_config, server_conf, query_register, workers, &servers, shared_graph, shared_graph_index).await?;
 
     Ok(())
 }

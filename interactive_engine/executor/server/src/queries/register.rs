@@ -14,8 +14,8 @@ use pegasus::{Configuration, JobConf, ServerConf};
 pub struct QueryApi {
     Query: fn(
         conf: JobConf,
-        graph: &'static GraphDB<usize, usize>,
-        graph_index: &'static GraphIndex,
+        graph: &GraphDB<usize, usize>,
+        graph_index: &GraphIndex,
         input_params: HashMap<String, String>,
     ) -> Box<dyn Fn(&mut Source<i32>, ResultSink<Vec<u8>>) -> Result<(), BuildJobError>>,
 }
@@ -24,8 +24,8 @@ pub struct QueryApi {
 pub struct PrecomputeApi {
     Precompute: fn(
         conf: JobConf,
-        graph: &'static GraphDB<usize, usize>,
-        graph_index: &'static GraphIndex,
+        graph: &GraphDB<usize, usize>,
+        graph_index: &GraphIndex,
         index_info: &Vec<(String, IndexDataType)>,
         is_edge: bool,
         label: LabelId,

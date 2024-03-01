@@ -15,17 +15,12 @@
  */
 syntax = "proto3";
 package protocol;
-option java_package = "com.alibaba.pegasus.service.protocol";
-option java_outer_classname = "BIService";
-
-message Argument {
-  string param_name = 1;
-  string value = 2;
-}
+option java_package = "com.alibaba.graphscope.ldbc.workload.proto";
+option java_outer_classname = "BiClient";
 
 message BIJobRequest {
   string job_name = 1;
-  repeated Argument arguments   = 2;
+  string params   = 2;
 }
 
 message BIJobResponse {
@@ -33,6 +28,28 @@ message BIJobResponse {
   bytes  resp   = 2;
 }
 
+message BatchUpdateRequest {
+  string request_json = 1;
+}
+
+message BatchUpdateResponse {
+  bool is_success = 1;
+}
+
+message PrecomputeRequest {
+}
+
+message PrecomputeResponse {
+  bool is_success = 1;
+}
+
 service BIJobService {
   rpc Submit(BIJobRequest) returns(stream BIJobResponse) {}
+
+  rpc SubmitBatchInsert(BatchUpdateRequest) returns(stream BatchUpdateResponse) {}
+
+  rpc SubmitBatchDelete(BatchUpdateRequest) returns(stream BatchUpdateResponse) {}
+
+  rpc SubmitPrecompute(PrecomputeRequest) returns(stream PrecomputeResponse) {}
 }
+
