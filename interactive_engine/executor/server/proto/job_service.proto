@@ -29,7 +29,8 @@ message BIJobResponse {
 }
 
 message BatchUpdateRequest {
-  string request_json = 1;
+  string data_root = 1;
+  string request_json = 2;
 }
 
 message BatchUpdateResponse {

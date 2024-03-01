@@ -10,6 +10,8 @@ use std::task::{Context, Poll};
 use std::time::Duration;
 
 use bmcsr::graph_db::GraphDB;
+use bmcsr::graph_modifier::GraphModifier;
+use bmcsr::schema::InputSchema;
 use dlopen::wrapper::{Container, WrapperApi};
 use futures::Stream;
 use graph_index::GraphIndex;
@@ -288,19 +290,56 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
     async fn submit_batch_insert(
         &self, req: Request<pb::BatchUpdateRequest>,
     ) -> Result<Response<Self::SubmitBatchInsertStream>, Status> {
-        Err(Status::unknown(format!("query not found, job name")))
+        let pb::BatchUpdateRequest {data_root, request_json} = req.into_inner();
+        let data_root_path = PathBuf::from(data_root);
+
+        let mut graph_modifier = GraphModifier::new(&data_root_path);
+
+        graph_modifier.skip_header();
+        let mut graph = self.graph_db.write().unwrap();
+        let insert_schema = InputSchema::from_string(request_json, &graph.graph_schema).unwrap();
+        graph_modifier
+            .insert(&mut graph, &insert_schema)
+            .unwrap();
+
+        let reply = pb::BatchUpdateResponse {
+            is_success: true,
+        };
+        Ok(Response::new(UnboundedReceiverStream::new(reply)))
     }
 
     async fn submit_batch_delete(
         &self, req: Request<pb::BatchUpdateRequest>,
     ) -> Result<Response<Self::SubmitBatchDeleteStream>, Status> {
-        Err(Status::unknown(format!("query not found, job name")))
+        let pb::BatchUpdateRequest {data_root, request_json} = req.into_inner();
+        let data_root_path = PathBuf::from(data_root);
+
+        let mut graph_modifier = GraphModifier::new(&data_root_path);
+
+        graph_modifier.skip_header();
+        let mut graph = self.graph_db.write().unwrap();
+        let delete_schema = InputSchema::from_string(request_json, &graph.graph_schema).unwrap();
+        graph_modifier
+            .delete(&mut graph, &delete_schema)
+            .unwrap();
+
+        let reply = pb::BatchUpdateResponse {
+            is_success: true,
+        };
+        Ok(Response::new(UnboundedReceiverStream::new(reply)))
     }
 
     async fn submit_precompute(
         &self, req: Request<pb::PrecomputeRequest>,
     ) -> Result<Response<Self::SubmitPrecomputeStream>, Status> {
-        Err(Status::unknown(format!("query not found, job name ")))
+        let graph = self.graph_db.read().unwrap();
+        let graph_index = self.graph_index.read().unwrap();
+        self.query_register.run_precomputes(&graph, &graph_index, self.workers);
+
+        let reply = pb::PrecomputeResponse {
+            is_success: true,
+        };
+        Ok(Response::new(UnboundedReceiverStream::new(reply)))
     }
 }
 
