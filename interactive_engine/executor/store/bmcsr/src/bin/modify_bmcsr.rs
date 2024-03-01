@@ -118,7 +118,7 @@ fn main() {
             .insert(&mut graph, &insert_schema)
             .unwrap();
 
-        let mut delete_generator = DeleteGenerator::new(PathBuf::from(&input_dir));
+        let mut delete_generator = DeleteGenerator::new(&PathBuf::from(&input_dir));
         delete_generator.skip_header();
         delete_generator.generate(&mut graph, batch_id.as_str());
 

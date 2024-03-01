@@ -130,7 +130,7 @@ fn main() {
     let cur_out_dir = graph_data_dir.clone();
 
     let handle = std::thread::spawn(move || {
-        let mut loader: GraphLoader<usize, u32> = GraphLoader::<usize, u32>::new(
+        let mut loader: GraphLoader<usize, usize> = GraphLoader::<usize, usize>::new(
             raw_dir,
             cur_out_dir.as_str(),
             input_schema_f,
