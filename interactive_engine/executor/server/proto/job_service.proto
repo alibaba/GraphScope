@@ -47,10 +47,10 @@ message PrecomputeResponse {
 service BIJobService {
   rpc Submit(BIJobRequest) returns(stream BIJobResponse) {}
 
-  rpc SubmitBatchInsert(BatchUpdateRequest) returns(stream BatchUpdateResponse) {}
+  rpc SubmitBatchInsert(BatchUpdateRequest) returns(BatchUpdateResponse) {}
 
-  rpc SubmitBatchDelete(BatchUpdateRequest) returns(stream BatchUpdateResponse) {}
+  rpc SubmitBatchDelete(BatchUpdateRequest) returns(BatchUpdateResponse) {}
 
-  rpc SubmitPrecompute(PrecomputeRequest) returns(stream PrecomputeResponse) {}
+  rpc SubmitPrecompute(PrecomputeRequest) returns(PrecomputeResponse) {}
 }
 

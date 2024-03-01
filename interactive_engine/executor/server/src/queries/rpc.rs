@@ -248,9 +248,6 @@ pub struct JobServiceImpl {
 #[tonic::async_trait]
 impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
     type SubmitStream = UnboundedReceiverStream<Result<pb::BiJobResponse, Status>>;
-    type SubmitBatchInsertStream = UnboundedReceiverStream<Result<pb::BatchUpdateResponse, Status>>;
-    type SubmitBatchDeleteStream = UnboundedReceiverStream<Result<pb::BatchUpdateResponse, Status>>;
-    type SubmitPrecomputeStream = UnboundedReceiverStream<Result<pb::PrecomputeResponse, Status>>;
 
     async fn submit(&self, req: Request<pb::BiJobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
@@ -289,8 +286,8 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
 
     async fn submit_batch_insert(
         &self, req: Request<pb::BatchUpdateRequest>,
-    ) -> Result<Response<Self::SubmitBatchInsertStream>, Status> {
-        let pb::BatchUpdateRequest {data_root, request_json} = req.into_inner();
+    ) -> Result<Response<pb::BatchUpdateResponse>, Status> {
+        let pb::BatchUpdateRequest { data_root, request_json } = req.into_inner();
         let data_root_path = PathBuf::from(data_root);
 
         let mut graph_modifier = GraphModifier::new(&data_root_path);
@@ -305,13 +302,13 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let reply = pb::BatchUpdateResponse {
             is_success: true,
         };
-        Ok(Response::new(UnboundedReceiverStream::new(reply)))
+        Ok(Response::new(reply))
     }
 
     async fn submit_batch_delete(
         &self, req: Request<pb::BatchUpdateRequest>,
-    ) -> Result<Response<Self::SubmitBatchDeleteStream>, Status> {
-        let pb::BatchUpdateRequest {data_root, request_json} = req.into_inner();
+    ) -> Result<Response<pb::BatchUpdateResponse>, Status> {
+        let pb::BatchUpdateRequest { data_root, request_json } = req.into_inner();
         let data_root_path = PathBuf::from(data_root);
 
         let mut graph_modifier = GraphModifier::new(&data_root_path);
@@ -326,12 +323,12 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let reply = pb::BatchUpdateResponse {
             is_success: true,
         };
-        Ok(Response::new(UnboundedReceiverStream::new(reply)))
+        Ok(Response::new(reply))
     }
 
     async fn submit_precompute(
         &self, req: Request<pb::PrecomputeRequest>,
-    ) -> Result<Response<Self::SubmitPrecomputeStream>, Status> {
+    ) -> Result<Response<pb::PrecomputeResponse>, Status> {
         let graph = self.graph_db.read().unwrap();
         let graph_index = self.graph_index.read().unwrap();
         self.query_register.run_precomputes(&graph, &graph_index, self.workers);
@@ -339,7 +336,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let reply = pb::PrecomputeResponse {
             is_success: true,
         };
-        Ok(Response::new(UnboundedReceiverStream::new(reply)))
+        Ok(Response::new(reply))
     }
 }
 
