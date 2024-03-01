@@ -263,13 +263,16 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
 
         let mut input_params = HashMap::new();
         input_params.insert(params.clone(), params.clone());
+        let graph = self.graph_db.read().unwrap();
+        let graph_index = self.graph_index.read().unwrap();
+
         if let Some(libc) = self.query_register.get_query(&job_name) {
             let conf_temp = conf.clone();
             if let Err(e) = pegasus::run_opt(conf, sink, |worker| {
                 worker.dataflow(libc.Query(
                     conf_temp.clone(),
-                    &crate::queries::graph::CSR,
-                    &crate::queries::graph::GRAPH_INDEX,
+                    &graph,
+                    &graph_index,
                     input_params.clone(),
                 ))
             }) {
@@ -330,8 +333,8 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         &self, req: Request<pb::PrecomputeRequest>,
     ) -> Result<Response<pb::PrecomputeResponse>, Status> {
         let graph = self.graph_db.read().unwrap();
-        let graph_index = self.graph_index.read().unwrap();
-        self.query_register.run_precomputes(&graph, &graph_index, self.workers);
+        let mut graph_index = self.graph_index.write().unwrap();
+        self.query_register.run_precomputes(&graph, &mut graph_index, self.workers);
 
         let reply = pb::PrecomputeResponse {
             is_success: true,

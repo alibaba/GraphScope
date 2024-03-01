@@ -89,6 +89,10 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
         self.edge_num
     }
 
+    fn max_edge_offset(&self) -> usize {
+        self.neighbors.len()
+    }
+
     fn degree(&self, u: I) -> usize {
         let u = u.index();
         if u >= self.degree.len() {
@@ -101,16 +105,19 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
     fn serialize(&self, path: &String) {
         let file = File::create(path).unwrap();
         let mut writer = BufWriter::new(file);
+        info!("edge_num = {}", self.edge_num);
         writer
             .write_u64::<LittleEndian>(self.edge_num as u64)
             .unwrap();
 
+        info!("neighbor_size = {}", self.neighbors.len());
         writer
             .write_u64::<LittleEndian>(self.neighbors.len() as u64)
             .unwrap();
         for i in 0..self.neighbors.len() {
             self.neighbors[i].write(&mut writer).unwrap();
         }
+        info!("offset_size = {}", self.offsets.len());
         writer
             .write_u64::<LittleEndian>(self.offsets.len() as u64)
             .unwrap();
@@ -119,6 +126,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
                 .write_u64::<LittleEndian>(self.offsets[i] as u64)
                 .unwrap();
         }
+        info!("degree_size = {}", self.degree.len());
         writer
             .write_u64::<LittleEndian>(self.degree.len() as u64)
             .unwrap();
@@ -135,8 +143,10 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
         let mut reader = BufReader::new(file);
 
         self.edge_num = reader.read_u64::<LittleEndian>().unwrap() as usize;
+        info!("edge_num = {}", self.edge_num);
 
         let neighbor_size = reader.read_u64::<LittleEndian>().unwrap() as usize;
+        info!("neighbor_size = {}", neighbor_size);
         self.neighbors = Vec::with_capacity(neighbor_size);
         for _ in 0..neighbor_size {
             self.neighbors
@@ -144,6 +154,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
         }
 
         let offset_size = reader.read_u64::<LittleEndian>().unwrap() as usize;
+        info!("offset_size = {}", offset_size);
         self.offsets = Vec::with_capacity(offset_size);
         for _ in 0..offset_size {
             self.offsets
@@ -151,6 +162,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
         }
 
         let degree_size = reader.read_u64::<LittleEndian>().unwrap() as usize;
+        info!("degree_size = {}", degree_size);
         self.degree = Vec::with_capacity(degree_size);
         for _ in 0..degree_size {
             self.degree

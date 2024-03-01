@@ -137,6 +137,10 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableSingleCsr<I> {
         self.edge_num
     }
 
+    fn max_edge_offset(&self) -> usize {
+        self.vertex_num
+    }
+
     fn degree(&self, u: I) -> usize {
         (self.nbr_list[u.index()] == <I as IndexType>::max()) as usize
     }

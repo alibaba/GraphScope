@@ -9,27 +9,6 @@ use graph_index::GraphIndex;
 use bmcsr::graph_db::GraphDB;
 use pegasus::configure_with_default;
 
-lazy_static! {
-    pub static ref CSR: GraphDB<usize, usize> = _init_csr();
-    pub static ref CSR_PATH: String = configure_with_default!(String, "CSR_PATH", "".to_string());
-    pub static ref TRIM_PATH: String = configure_with_default!(String, "TRIM_PATH", "".to_string());
-    pub static ref PARTITION_ID: usize = configure_with_default!(usize, "PARTITION_ID", 0);
-    pub static ref GRAPH_INDEX: GraphIndex = _init_graph_index();
-}
-
-fn _init_csr() -> GraphDB<usize, usize> {
-    println!("Start load graph");
-    if TRIM_PATH.is_empty() {
-        GraphDB::deserialize(&*(CSR_PATH), *PARTITION_ID, None).unwrap()
-    } else {
-        GraphDB::deserialize(&*(CSR_PATH), *PARTITION_ID, Some(TRIM_PATH.clone())).unwrap()
-    }
-}
-
-fn _init_graph_index() -> GraphIndex {
-    GraphIndex::new(*PARTITION_ID)
-}
-
 pub fn get_partition(id: &u64, workers: usize, num_servers: usize) -> u64 {
     let id_usize = *id as usize;
     let magic_num = id_usize / num_servers;

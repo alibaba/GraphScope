@@ -22,10 +22,14 @@ use std::io::{BufRead, BufReader};
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
 use bmcsr::schema::InputSchema;
+use bmcsr::graph::Direction;
 
 use bmcsr::types::LabelId;
+use bmcsr::traverse::traverse;
 use graph_index::GraphIndex;
 use lazy_static::lazy_static;
+
+use log::info;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
@@ -39,7 +43,7 @@ pub struct Config {
     graph_raw: PathBuf,
     #[structopt(short = "b", long = "batch_update_configs", default_value = "")]
     batch_update_configs: PathBuf,
-    #[structopt(short = "c", long = "output_dir", default_value = "")]
+    #[structopt(short = "o", long = "output_dir", default_value = "")]
     output_dir: PathBuf,
     #[structopt(short = "w", long = "worker_num", default_value = "8")]
     worker_num: u32,
@@ -93,7 +97,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let output_dir = config.output_dir;
 
     let mut graph = GraphDB::<usize, usize>::deserialize(graph_data_str, 0, None).unwrap();
-    let graph_index = GraphIndex::new(0);
+    let mut graph_index = GraphIndex::new(0);
 
     let mut query_register = QueryRegister::new();
     println!("Start load lib");
@@ -145,7 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let insert_file_name = format!("insert-{}.json", batch_id);
         let insert_schema_file_path = batch_configs.join(insert_file_name);
         let delete_file_name = format!("delete-{}.json", batch_id);
-        let delete_schema_file_path = PathBuf::from(delete_file_name);
+        let delete_schema_file_path = batch_configs.join(delete_file_name);
 
         let mut graph_modifier = GraphModifier::new(&graph_raw);
         graph_modifier.skip_header();
@@ -158,12 +162,132 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         delete_generator.skip_header();
         delete_generator.generate(&mut graph, batch_id.as_str());
 
+        info!("delete schema file: {:?}", delete_schema_file_path);
         let delete_schema = InputSchema::from_json_file(delete_schema_file_path, &graph.graph_schema).unwrap();
         graph_modifier
             .delete(&mut graph, &delete_schema)
             .unwrap();
 
-        query_register.run_precomputes(&graph, &graph_index, worker_num);
+        // let traverse_out = output_dir.clone().join("traverse");
+        // std::fs::create_dir_all(&traverse_out).unwrap();
+        // traverse(&graph, traverse_out.to_str().unwrap());
+
+        println!("before run precomputes...");
+        let precompute_names = query_register.precompute_names();
+        for precompute_name in precompute_names.iter() {
+            let (setting, libc) = query_register.get_precompute(precompute_name).expect("Could not find precompute");
+            let start = Instant::now();
+
+            let mut conf = JobConf::new(precompute_name.clone());
+            conf.set_workers(worker_num);
+            conf.reset_servers(ServerConf::Partial(vec![0]));
+
+            let label = setting.label.edge_label.unwrap() as LabelId;
+            let src_label = Some(setting.label.src_label.unwrap() as LabelId);
+            let dst_label = Some(setting.label.dst_label.unwrap() as LabelId);
+            let mut properties_info = vec![];
+            let properties_size = setting.properties.len();
+            for i in 0..properties_size {
+                let index_name = setting.properties[i].name.clone();
+                let data_type = graph_index::types::str_to_data_type(&setting.properties[i].data_type);
+                properties_info.push((index_name, data_type));
+            }
+            if setting.precompute_type == "vertex" {
+                let property_size = graph.get_vertices_num(label);
+                for i in 0..properties_info.len() {
+                    graph_index.init_vertex_index(
+                        properties_info[i].0.clone(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(property_size),
+                        Some(Item::Int32(0)),
+                    );
+                }
+            } else {
+                let oe_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Outgoing);
+                for i in 0..properties_info.len() {
+                    graph_index.init_outgoing_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(oe_property_size),
+                        Some(Item::Int32(0)),
+                    );
+                }
+                let ie_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Incoming);
+                for i in 0..properties_info.len() {
+                    graph_index.init_incoming_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(ie_property_size),
+                        Some(Item::Int32(0)),
+                    );
+                }
+            }
+
+            let result = {
+                pegasus::run(conf.clone(), || {
+                    libc.Precompute(
+                        conf.clone(),
+                        &graph,
+                        &graph_index,
+                        &properties_info,
+                        true,
+                        label,
+                        src_label,
+                        dst_label,
+                    )
+                })
+                    .expect("submit precompute failure")
+            };
+            let mut result_vec = vec![];
+            for x in result {
+                let (index_set, data_set) = x.expect("Fail to get result");
+                result_vec.push((index_set, data_set));
+            }
+            for (index_set, data_set) in result_vec {
+                if setting.precompute_type == "edge" {
+                    for i in 0..properties_size {
+                        graph_index.add_outgoing_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        ).unwrap();
+                        graph_index.add_incoming_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        ).unwrap();
+                    }
+                } else if setting.precompute_type == "vertex" {
+                    for i in 0..properties_size {
+                        graph_index.add_vertex_index_batch(
+                            label,
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        ).unwrap();
+                    }
+                }
+            }
+            println!(
+                "Finished run query {}, time: {}",
+                &setting.precompute_name,
+                start.elapsed().as_millis()
+            );
+        }
+        println!("after run precomputes...");
 
         println!("Start iterating parameter files: {:?}", config.parameters);
         if config.parameters.is_dir() {
@@ -197,6 +321,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         }
                         let mut conf = JobConf::new(query_name.clone());
                         conf.set_workers(worker_num);
+                        conf.reset_servers(ServerConf::Partial(vec![0]));
                         let result = {
                             pegasus::run(conf.clone(), || {
                                 query.Query(

@@ -49,6 +49,7 @@ impl<'a, I: IndexType> Iterator for NbrOffsetIter<'a, I> {
 
 pub trait CsrTrait<I: IndexType>: Send + Sync {
     fn vertex_num(&self) -> I;
+    fn max_edge_offset(&self) -> usize;
     fn edge_num(&self) -> usize;
     fn degree(&self, u: I) -> usize;
     fn serialize(&self, path: &String);

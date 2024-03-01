@@ -10,8 +10,6 @@ extern crate rand;
 
 pub mod queries;
 
-pub use queries::graph::CSR;
-
 #[cfg(not(feature = "gcip"))]
 mod generated {
     pub mod protocol {

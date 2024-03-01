@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 use std::time::Instant;
+use bmcsr::graph::Direction;
 
 use dlopen::wrapper::{Container, WrapperApi};
 use graph_index::types::{ArrayData, DataType as IndexDataType, Item};
@@ -43,24 +44,24 @@ pub struct PrecomputeApi {
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct PrecomputeLabel {
-    src_label: Option<u32>,
-    dst_label: Option<u32>,
-    edge_label: Option<u32>,
+    pub src_label: Option<u32>,
+    pub dst_label: Option<u32>,
+    pub edge_label: Option<u32>,
     vertex_label: Option<u32>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct PrecomputeProperty {
-    name: String,
-    data_type: String,
+    pub name: String,
+    pub data_type: String,
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct PrecomputeSetting {
-    precompute_name: String,
-    precompute_type: String,
-    label: PrecomputeLabel,
-    properties: Vec<PrecomputeProperty>,
+    pub precompute_name: String,
+    pub precompute_type: String,
+    pub label: PrecomputeLabel,
+    pub properties: Vec<PrecomputeProperty>,
     path: String,
 }
 
@@ -126,14 +127,16 @@ impl QueryRegister {
         self.precompute_map.keys().cloned().collect()
     }
 
-    pub fn run_precomputes(&self, graph: &GraphDB<usize, usize>, graph_index: &GraphIndex, worker_num: u32)
+    pub fn run_precomputes(&self, graph: &GraphDB<usize, usize>, graph_index: &mut GraphIndex, worker_num: u32)
     {
+        /*
         for (i, (name, (setting, libc))) in self.precompute_map.iter().enumerate() {
             let start = Instant::now();
 
             let job_name = format!("{}-{}", name, i);
             let mut conf = JobConf::new(job_name);
             conf.set_workers(worker_num);
+            conf.reset_servers(ServerConf::Partial(vec![0]));
             let label = setting.label.edge_label.unwrap() as LabelId;
             let src_label = Some(setting.label.src_label.unwrap() as LabelId);
             let dst_label = Some(setting.label.dst_label.unwrap() as LabelId);
@@ -156,15 +159,27 @@ impl QueryRegister {
                     );
                 }
             } else {
-                let property_size = graph.get_edges_num(src_label.unwrap(), label, dst_label.unwrap());
+                let oe_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Outgoing);
                 for i in 0..properties_info.len() {
-                    graph_index.init_edge_index(
+                    graph_index.init_outgoing_edge_index(
                         properties_info[i].0.clone(),
                         src_label.unwrap(),
                         dst_label.unwrap(),
                         label,
                         properties_info[i].1.clone(),
-                        Some(property_size),
+                        Some(oe_property_size),
+                        Some(Item::Int32(0)),
+                    );
+                }
+                let ie_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Incoming);
+                for i in 0..properties_info.len() {
+                    graph_index.init_incoming_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(ie_property_size),
                         Some(Item::Int32(0)),
                     );
                 }
@@ -184,11 +199,23 @@ impl QueryRegister {
                 })
                     .expect("submit precompute failure")
             };
+            let mut result_vec = vec![];
             for x in result {
                 let (index_set, data_set) = x.expect("Fail to get result");
+                result_vec.push((index_set, data_set));
+            }
+            for (index_set, data_set) in result_vec {
                 if setting.precompute_type == "edge" {
                     for i in 0..properties_size {
-                        graph_index.add_edge_index_batch(
+                        graph_index.add_outgoing_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        ).unwrap();
+                        graph_index.add_incoming_edge_index_batch(
                             src_label.unwrap(),
                             label,
                             dst_label.unwrap(),
@@ -214,5 +241,6 @@ impl QueryRegister {
                 start.elapsed().as_millis()
             );
         }
+         */
     }
 }

@@ -212,6 +212,14 @@ where
         self.oe[index].edge_num()
     }
 
+    pub fn get_max_edge_offset(&self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, dir: Direction) -> usize {
+        let index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
+match dir {
+    Direction::Incoming => self.ie[index].max_edge_offset(),
+    Direction::Outgoing => self.oe[index].max_edge_offset(),
+}
+    }
+
     pub fn get_global_id(&self, id: I, label: LabelId) -> Option<G> {
         self.vertex_map.get_global_id(label, id)
     }
@@ -438,6 +446,9 @@ where
         &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, dir: Direction,
     ) -> SubGraph<'_, G, I> {
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
+        info!("get_sub_graph: {} - {} - {}, {:?}", self.graph_schema.vertex_label_names()[src_label as usize],
+        self.graph_schema.edge_label_names()[edge_label as usize],
+        self.graph_schema.vertex_label_names()[dst_label as usize], dir);
         match dir {
             Direction::Outgoing => SubGraph::new(
                 &self.oe[index]
@@ -469,6 +480,9 @@ where
     pub fn get_single_sub_graph(
         &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, dir: Direction,
     ) -> SingleSubGraph<'_, G, I> {
+        info!("get_single_sub_graph: {} - {} - {}, {:?}", self.graph_schema.vertex_label_names()[src_label as usize],
+        self.graph_schema.edge_label_names()[edge_label as usize],
+        self.graph_schema.vertex_label_names()[dst_label as usize], dir);
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
         match dir {
             Direction::Outgoing => SingleSubGraph::new(
