@@ -298,7 +298,7 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
                 // the operator precedence of `not` in sql is low, which is the same as `and` or
                 // `or`.
                 // However, the `not` operator is implemented by `!` in c++ or in rust, which
-                // precedence is high,
+                // precedence is high.
                 // To solve the inconsistency, we always add brace for operand of `not` operator.
                 return true;
             default:
