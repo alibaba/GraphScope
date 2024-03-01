@@ -441,6 +441,46 @@ impl InputSchema {
             .get(&(src_label, edge_label, dst_label))
     }
 
+    pub fn from_string(s: String, graph_schema: &CsrGraphSchema) -> std::io::Result<Self> {
+        let input_json: InputSchemaJson = serde_json::from_str(&s)?;
+        let mut vertex_headers = HashMap::new();
+        let mut vertex_files = HashMap::new();
+        for vertex in &input_json.vertex {
+            if let Some(vertex_label) = graph_schema
+                .vertex_type_to_id
+                .get(&vertex.label)
+            {
+                let mut properties = vec![];
+                for column in &vertex.columns {
+                    properties.push((column.name.clone(), column.data_type.clone()));
+                }
+                vertex_headers.insert(*vertex_label, properties);
+                vertex_files.insert(*vertex_label, vertex.files.clone());
+            }
+        }
+        let mut edge_headers = HashMap::new();
+        let mut edge_files = HashMap::new();
+        for edge in &input_json.edge {
+            if let (Some(src_label), Some(edge_label), Some(dst_label)) = (
+                graph_schema
+                    .vertex_type_to_id
+                    .get(&edge.src_label),
+                graph_schema.edge_type_to_id.get(&edge.label),
+                graph_schema
+                    .vertex_type_to_id
+                    .get(&edge.dst_label),
+            ) {
+                let mut properties = vec![];
+                for column in &edge.columns {
+                    properties.push((column.name.clone(), column.data_type.clone()));
+                }
+                edge_headers.insert((*src_label, *edge_label, *dst_label), properties);
+                edge_files.insert((*src_label, *edge_label, *dst_label), edge.files.clone());
+            }
+        }
+        Ok(InputSchema { vertex_headers, edge_headers, vertex_files, edge_files })
+    }
+
     pub fn from_json_file<P: AsRef<Path>>(path: P, graph_schema: &CsrGraphSchema) -> std::io::Result<Self> {
         let file = File::open(path)?;
         let input_json =
