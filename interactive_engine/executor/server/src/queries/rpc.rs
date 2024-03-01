@@ -8,8 +8,8 @@ use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
 use std::time::Duration;
-use bmcsr::graph_db::GraphDB;
 
+use bmcsr::graph_db::GraphDB;
 use dlopen::wrapper::{Container, WrapperApi};
 use futures::Stream;
 use graph_index::GraphIndex;
@@ -115,7 +115,7 @@ impl<S: pb::bi_job_service_server::BiJobService> RPCJobServer<S> {
     pub async fn run(
         self, server_id: u64, mut listener: StandaloneServiceListener,
     ) -> Result<(), Box<dyn std::error::Error>>
-where {
+        where {
         let RPCJobServer { service, mut rpc_config } = self;
         let mut builder = Server::builder();
         if let Some(limit) = rpc_config.rpc_concurrency_limit_per_connection {
@@ -217,7 +217,14 @@ pub async fn start_rpc_sever(
     server_id: u64, rpc_config: RPCServerConfig, query_register: QueryRegister, workers: u32,
     servers: &Vec<u64>, graph_db: Arc<RwLock<GraphDB<usize, usize>>>, graph_index: Arc<RwLock<GraphIndex>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let service = JobServiceImpl { query_register, workers, servers: servers.clone(), report: true, graph_db, graph_index };
+    let service = JobServiceImpl {
+        query_register,
+        workers,
+        servers: servers.clone(),
+        report: true,
+        graph_db,
+        graph_index,
+    };
     let server = RPCJobServer::new(rpc_config, service);
     server
         .run(server_id, StandaloneServiceListener {})
@@ -239,11 +246,13 @@ pub struct JobServiceImpl {
 #[tonic::async_trait]
 impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
     type SubmitStream = UnboundedReceiverStream<Result<pb::BiJobResponse, Status>>;
-    type BatchStream = UnboundedReceiverStream<Result<pb::BatchUpdateResponse, Status>>;
+    type SubmitBatchInsertStream = UnboundedReceiverStream<Result<pb::BatchUpdateResponse, Status>>;
+    type SubmitBatchDeleteStream = UnboundedReceiverStream<Result<pb::BatchUpdateResponse, Status>>;
+    type SubmitPrecomputeStream = UnboundedReceiverStream<Result<pb::PrecomputeResponse, Status>>;
 
     async fn submit(&self, req: Request<pb::BiJobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
-        let pb::BiJobRequest { job_name, arguments } = req.into_inner();
+        let pb::BiJobRequest { job_name, params } = req.into_inner();
 
         let mut conf = JobConf::new(job_name.clone().to_owned());
         conf.set_workers(self.workers);
@@ -254,9 +263,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let sink = ResultSink::<Vec<u8>>::with(rpc_sink);
 
         let mut input_params = HashMap::new();
-        for i in arguments {
-            input_params.insert(i.param_name, i.value);
-        }
+        input_params.insert(params.clone(), params.clone());
         if let Some(libc) = self.query_register.get_query(&job_name) {
             let conf_temp = conf.clone();
             if let Err(e) = pegasus::run_opt(conf, sink, |worker| {
@@ -278,8 +285,22 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         }
     }
 
-    async fn submit_batch_insert(&self, req: Request<pb::BiJobRequest>) -> Result<Response<Self::BatchStream>, Status> {
-        return Ok(Response<Self::BatchStream>::new());
+    async fn submit_batch_insert(
+        &self, req: Request<pb::BatchUpdateRequest>,
+    ) -> Result<Response<Self::SubmitBatchInsertStream>, Status> {
+        Err(Status::unknown(format!("query not found, job name")))
+    }
+
+    async fn submit_batch_delete(
+        &self, req: Request<pb::BatchUpdateRequest>,
+    ) -> Result<Response<Self::SubmitBatchDeleteStream>, Status> {
+        Err(Status::unknown(format!("query not found, job name")))
+    }
+
+    async fn submit_precompute(
+        &self, req: Request<pb::PrecomputeRequest>,
+    ) -> Result<Response<Self::SubmitPrecomputeStream>, Status> {
+        Err(Status::unknown(format!("query not found, job name ")))
     }
 }
 
@@ -303,4 +324,3 @@ impl Stream for TcpIncoming {
         Pin::new(&mut self.inner).poll_accept(cx)
     }
 }
-
