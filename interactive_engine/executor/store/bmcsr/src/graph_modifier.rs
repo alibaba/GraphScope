@@ -34,9 +34,9 @@ pub struct DeleteGenerator<G: FromStr + Send + Sync + IndexType + std::fmt::Disp
 }
 
 impl<G: FromStr + Send + Sync + IndexType + Eq + std::fmt::Display> DeleteGenerator<G> {
-    pub fn new(input_dir: PathBuf) -> DeleteGenerator<G> {
+    pub fn new(input_dir: &PathBuf) -> DeleteGenerator<G> {
         Self {
-            input_dir,
+            input_dir: input_dir.clone(),
             delim: b'|',
             skip_header: false,
 
@@ -509,19 +509,18 @@ impl GraphModifier {
     }
 
     fn apply_deletes<G, I>(
-        &mut self, graph: &mut GraphDB<G, I>, delete_schema_file: &PathBuf,
+        &mut self, graph: &mut GraphDB<G, I>, delete_schema: &InputSchema,
     ) -> GDBResult<()>
     where
         G: FromStr + Send + Sync + IndexType + Eq,
         I: Send + Sync + IndexType,
     {
-        let input_schema = InputSchema::from_json_file(delete_schema_file, &graph.graph_schema).unwrap();
         let vertex_label_num = graph.vertex_label_num;
         let edge_label_num = graph.edge_label_num;
         let mut delete_sets = vec![];
         for v_label_i in 0..vertex_label_num {
             let mut delete_set = HashSet::new();
-            if let Some(vertex_file_strings) = input_schema.get_vertex_file(v_label_i as LabelId) {
+            if let Some(vertex_file_strings) = delete_schema.get_vertex_file(v_label_i as LabelId) {
                 if !vertex_file_strings.is_empty() {
                     info!(
                         "Deleting vertex - {}",
@@ -544,7 +543,7 @@ impl GraphModifier {
                         delete_sets.push(delete_set);
                         continue;
                     }
-                    let input_header = input_schema
+                    let input_header = delete_schema
                         .get_vertex_header(v_label_i as LabelId)
                         .unwrap();
                     let mut id_col = 0;
@@ -630,7 +629,7 @@ impl GraphModifier {
                     {
                         continue;
                     }
-                    if let Some(edge_file_strings) = input_schema.get_edge_file(
+                    if let Some(edge_file_strings) = delete_schema.get_edge_file(
                         src_label_i as LabelId,
                         e_label_i as LabelId,
                         dst_label_i as LabelId,
@@ -644,7 +643,7 @@ impl GraphModifier {
                             graph.graph_schema.edge_label_names()[e_label_i as usize],
                             graph.graph_schema.vertex_label_names()[dst_label_i as usize]
                         );
-                        let input_header = input_schema
+                        let input_header = delete_schema
                             .get_edge_header(
                                 src_label_i as LabelId,
                                 e_label_i as LabelId,
@@ -1168,23 +1167,22 @@ impl GraphModifier {
         Ok(())
     }
 
-    pub fn insert<G, I>(&mut self, graph: &mut GraphDB<G, I>, insert_schema_file: &PathBuf) -> GDBResult<()>
+    pub fn insert<G, I>(&mut self, graph: &mut GraphDB<G, I>, insert_schema: &InputSchema) -> GDBResult<()>
     where
         I: Send + Sync + IndexType,
         G: FromStr + Send + Sync + IndexType + Eq,
     {
-        let input_schema = InputSchema::from_json_file(insert_schema_file, &graph.graph_schema).unwrap();
-        self.apply_vertices_inserts(graph, &input_schema)?;
-        self.apply_edges_inserts(graph, &input_schema)?;
+        self.apply_vertices_inserts(graph, &insert_schema)?;
+        self.apply_edges_inserts(graph, &insert_schema)?;
         Ok(())
     }
 
-    pub fn delete<G, I>(&mut self, graph: &mut GraphDB<G, I>, delete_schema_file: &PathBuf) -> GDBResult<()>
+    pub fn delete<G, I>(&mut self, graph: &mut GraphDB<G, I>, delete_schema: &InputSchema) -> GDBResult<()>
     where
         I: Send + Sync + IndexType,
         G: FromStr + Send + Sync + IndexType + Eq,
     {
-        self.apply_deletes(graph, delete_schema_file)?;
+        self.apply_deletes(graph, &delete_schema)?;
         Ok(())
     }
 }

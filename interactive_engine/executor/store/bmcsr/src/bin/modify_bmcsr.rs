@@ -3,6 +3,7 @@ use std::path::PathBuf;
 
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
+use bmcsr::schema::InputSchema;
 use bmcsr::traverse::traverse;
 use bmcsr::types::{NAME, VERSION};
 
@@ -110,17 +111,20 @@ fn main() {
             PathBuf::from(delete_schema_file.clone() + "-" + batch_id.as_str() + ".json");
 
         let mut graph_modifier = GraphModifier::new(&input_dir);
+        let insert_schema = InputSchema::from_json_file(insert_schema_file_path, &graph.graph_schema).unwrap();
+
         graph_modifier.skip_header();
         graph_modifier
-            .insert(&mut graph, &insert_schema_file_path)
+            .insert(&mut graph, &insert_schema)
             .unwrap();
 
         let mut delete_generator = DeleteGenerator::new(PathBuf::from(&input_dir));
         delete_generator.skip_header();
         delete_generator.generate(&mut graph, batch_id.as_str());
 
+        let delete_schema = InputSchema::from_json_file(delete_schema_file_path, &graph.graph_schema).unwrap();
         graph_modifier
-            .delete(&mut graph, &delete_schema_file_path)
+            .delete(&mut graph, &delete_schema)
             .unwrap();
 
         let modified_output = output_dir.to_string().clone() + "/" + batch_id.as_str();
