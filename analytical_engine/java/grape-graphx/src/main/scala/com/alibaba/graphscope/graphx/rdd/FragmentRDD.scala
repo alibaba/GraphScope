@@ -98,22 +98,22 @@ class FragmentRDD[VD: ClassTag, ED: ClassTag](
     )
     with Logging {
   //objectIds be like d50:id1,d51:id2
-  val objectsSplited: Array[String] = objectIDs.split(",")
+  val objectsSplit: Array[String] = objectIDs.split(",")
 //  val map: mutable.Map[String, (Int, Long)] = mutable.Map[String, (Int, Long)]()
-  val pid2ObjId: Array[Long]        = Array.fill(objectsSplited.length)(0)
-  val pid2Host                      = new Array[String](objectsSplited.length)
-  val pid2ExecutorId: Array[String] = new Array[String](objectsSplited.length)
+  val pid2ObjId: Array[Long]        = Array.fill(objectsSplit.length)(0)
+  val pid2Host                      = new Array[String](objectsSplit.length)
+  val pid2ExecutorId: Array[String] = new Array[String](objectsSplit.length)
   val host2ExecutorIds: mutable.HashMap[String, CircularArray[String]] =
     FragmentRDD.getHost2ExecutorIds(executorId2Host)
   //There can be more executors than object ids.
 //  require(
-//    objectsSplited.length == executorId2Host.size,
+//    objectsSplit.length == executorId2Host.size,
 //    s"executor's host names length not equal to object ids ${executorId2Host.toArray
 //      .mkString("Array(", ", ", ")")}, ${objectIDs}"
 //  )
-  for (str <- objectsSplited) {
+  for (str <- objectsSplit) {
     val tuples = str.split(":")
-    log.info(s"splited host and id ${tuples.mkString(",")}")
+    log.info(s"split host and id ${tuples.mkString(",")}")
     require(tuples.length == 3)
     val host = tuples(0)
     val pid  = tuples(1).toInt
@@ -222,7 +222,7 @@ class FragmentRDD[VD: ClassTag, ED: ClassTag](
 
   /** according to spark code comments, this function will be only executed once. */
   override protected def getPartitions: Array[Partition] = {
-    val array = new Array[Partition](objectsSplited.length)
+    val array = new Array[Partition](objectsSplit.length)
 //    val iter  = executorId2Host.iterator
     for (i <- array.indices) {
 //      val (executorId, executorHost) = iter.next()

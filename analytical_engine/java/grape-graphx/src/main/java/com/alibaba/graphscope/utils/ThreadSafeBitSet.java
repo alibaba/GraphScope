@@ -117,7 +117,7 @@ public class ThreadSafeBitSet {
             set(i);
         }
         long time1 = System.nanoTime();
-        logger.info("Set unitl {} cost {} ms", position, (time1 - time0) / 1000000);
+        logger.info("Set until {} cost {} ms", position, (time1 - time0) / 1000000);
     }
 
     public void clear(int position) {
