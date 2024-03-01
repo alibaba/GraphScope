@@ -81,7 +81,7 @@ public class GrapeTypes {
         } else if (typeString.equals("float")) {
             return Float.class;
         }
-        throw new IllegalStateException("Not supported type stirng" + typeString);
+        throw new IllegalStateException("Not supported type string" + typeString);
     }
 
     public boolean parseFromSimpleFragment(IFragment fragment) {

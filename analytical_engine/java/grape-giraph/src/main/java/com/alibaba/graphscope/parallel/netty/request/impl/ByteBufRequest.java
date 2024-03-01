@@ -108,7 +108,7 @@ public class ByteBufRequest extends WritableRequest {
                         "Error: still bytes available, but not readable: {}", buf.readableBytes());
             }
         } else {
-            throw new IllegalStateException("Not available mesageStore" + messageStore);
+            throw new IllegalStateException("Not available messageStore" + messageStore);
         }
     }
 

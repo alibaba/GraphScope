@@ -98,11 +98,11 @@ object GrapeEdgeRDD extends Logging {
     val locations    = new Array[String](targetLength)
     val partitionIds = new Array[Int](targetLength)
     for (i <- 0 until size) {
-      val splited = globalVMIds.get(i).split(":")
-      require(splited.length == 3)
-      hostNames(i) = splited(0)
+      val split = globalVMIds.get(i).split(":")
+      require(split.length == 3)
+      hostNames(i) = split(0)
       locations(i) = "executor_" + hostNames(i) + "_" + executorInfo(hostNames(i))
-      partitionIds(i) = splited(1).toInt
+      partitionIds(i) = split(1).toInt
     }
 
     var i = size
