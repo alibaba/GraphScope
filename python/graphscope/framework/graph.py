@@ -125,10 +125,12 @@ class GraphInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     def unload(self):
-        warnings.warn(
-            "The Graph.unload() method has been deprecated, please using the `del` operator instead, e.g., `del graph`",
-            DeprecationWarning,
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("always", DeprecationWarning)
+            warnings.warn(
+                "The Graph.unload() method has been deprecated, please using the `del` operator instead, i.e., `del graph`",
+                DeprecationWarning,
+            )
 
     def _from_nx_graph(self, g):
         """Create a gs graph from a nx graph.
