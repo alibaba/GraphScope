@@ -168,183 +168,183 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .delete(&mut graph, &delete_schema)
             .unwrap();
 
-        // let traverse_out = output_dir.clone().join("traverse");
-        // std::fs::create_dir_all(&traverse_out).unwrap();
-        // traverse(&graph, traverse_out.to_str().unwrap());
+        let traverse_out = output_dir.clone().join("traverse");
+        std::fs::create_dir_all(&traverse_out).unwrap();
+        traverse(&graph, traverse_out.to_str().unwrap());
 
-        println!("before run precomputes...");
-        let precompute_names = query_register.precompute_names();
-        for precompute_name in precompute_names.iter() {
-            let (setting, libc) = query_register.get_precompute(precompute_name).expect("Could not find precompute");
-            let start = Instant::now();
+        // println!("before run precomputes...");
+        // let precompute_names = query_register.precompute_names();
+        // for precompute_name in precompute_names.iter() {
+        //     let (setting, libc) = query_register.get_precompute(precompute_name).expect("Could not find precompute");
+        //     let start = Instant::now();
 
-            let mut conf = JobConf::new(precompute_name.clone());
-            conf.set_workers(worker_num);
-            conf.reset_servers(ServerConf::Partial(vec![0]));
+        //     let mut conf = JobConf::new(precompute_name.clone());
+        //     conf.set_workers(worker_num);
+        //     conf.reset_servers(ServerConf::Partial(vec![0]));
 
-            let label = setting.label.edge_label.unwrap() as LabelId;
-            let src_label = Some(setting.label.src_label.unwrap() as LabelId);
-            let dst_label = Some(setting.label.dst_label.unwrap() as LabelId);
-            let mut properties_info = vec![];
-            let properties_size = setting.properties.len();
-            for i in 0..properties_size {
-                let index_name = setting.properties[i].name.clone();
-                let data_type = graph_index::types::str_to_data_type(&setting.properties[i].data_type);
-                properties_info.push((index_name, data_type));
-            }
-            if setting.precompute_type == "vertex" {
-                let property_size = graph.get_vertices_num(label);
-                for i in 0..properties_info.len() {
-                    graph_index.init_vertex_index(
-                        properties_info[i].0.clone(),
-                        label,
-                        properties_info[i].1.clone(),
-                        Some(property_size),
-                        Some(Item::Int32(0)),
-                    );
-                }
-            } else {
-                let oe_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Outgoing);
-                for i in 0..properties_info.len() {
-                    graph_index.init_outgoing_edge_index(
-                        properties_info[i].0.clone(),
-                        src_label.unwrap(),
-                        dst_label.unwrap(),
-                        label,
-                        properties_info[i].1.clone(),
-                        Some(oe_property_size),
-                        Some(Item::Int32(0)),
-                    );
-                }
-                let ie_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Incoming);
-                for i in 0..properties_info.len() {
-                    graph_index.init_incoming_edge_index(
-                        properties_info[i].0.clone(),
-                        src_label.unwrap(),
-                        dst_label.unwrap(),
-                        label,
-                        properties_info[i].1.clone(),
-                        Some(ie_property_size),
-                        Some(Item::Int32(0)),
-                    );
-                }
-            }
+        //     let label = setting.label.edge_label.unwrap() as LabelId;
+        //     let src_label = Some(setting.label.src_label.unwrap() as LabelId);
+        //     let dst_label = Some(setting.label.dst_label.unwrap() as LabelId);
+        //     let mut properties_info = vec![];
+        //     let properties_size = setting.properties.len();
+        //     for i in 0..properties_size {
+        //         let index_name = setting.properties[i].name.clone();
+        //         let data_type = graph_index::types::str_to_data_type(&setting.properties[i].data_type);
+        //         properties_info.push((index_name, data_type));
+        //     }
+        //     if setting.precompute_type == "vertex" {
+        //         let property_size = graph.get_vertices_num(label);
+        //         for i in 0..properties_info.len() {
+        //             graph_index.init_vertex_index(
+        //                 properties_info[i].0.clone(),
+        //                 label,
+        //                 properties_info[i].1.clone(),
+        //                 Some(property_size),
+        //                 Some(Item::Int32(0)),
+        //             );
+        //         }
+        //     } else {
+        //         let oe_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Outgoing);
+        //         for i in 0..properties_info.len() {
+        //             graph_index.init_outgoing_edge_index(
+        //                 properties_info[i].0.clone(),
+        //                 src_label.unwrap(),
+        //                 dst_label.unwrap(),
+        //                 label,
+        //                 properties_info[i].1.clone(),
+        //                 Some(oe_property_size),
+        //                 Some(Item::Int32(0)),
+        //             );
+        //         }
+        //         let ie_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Incoming);
+        //         for i in 0..properties_info.len() {
+        //             graph_index.init_incoming_edge_index(
+        //                 properties_info[i].0.clone(),
+        //                 src_label.unwrap(),
+        //                 dst_label.unwrap(),
+        //                 label,
+        //                 properties_info[i].1.clone(),
+        //                 Some(ie_property_size),
+        //                 Some(Item::Int32(0)),
+        //             );
+        //         }
+        //     }
 
-            let result = {
-                pegasus::run(conf.clone(), || {
-                    libc.Precompute(
-                        conf.clone(),
-                        &graph,
-                        &graph_index,
-                        &properties_info,
-                        true,
-                        label,
-                        src_label,
-                        dst_label,
-                    )
-                })
-                    .expect("submit precompute failure")
-            };
-            let mut result_vec = vec![];
-            for x in result {
-                let (index_set, data_set) = x.expect("Fail to get result");
-                result_vec.push((index_set, data_set));
-            }
-            for (index_set, data_set) in result_vec {
-                if setting.precompute_type == "edge" {
-                    for i in 0..properties_size {
-                        graph_index.add_outgoing_edge_index_batch(
-                            src_label.unwrap(),
-                            label,
-                            dst_label.unwrap(),
-                            &properties_info[i].0,
-                            &index_set,
-                            data_set[i].as_ref(),
-                        ).unwrap();
-                        graph_index.add_incoming_edge_index_batch(
-                            src_label.unwrap(),
-                            label,
-                            dst_label.unwrap(),
-                            &properties_info[i].0,
-                            &index_set,
-                            data_set[i].as_ref(),
-                        ).unwrap();
-                    }
-                } else if setting.precompute_type == "vertex" {
-                    for i in 0..properties_size {
-                        graph_index.add_vertex_index_batch(
-                            label,
-                            &properties_info[i].0,
-                            &index_set,
-                            data_set[i].as_ref(),
-                        ).unwrap();
-                    }
-                }
-            }
-            println!(
-                "Finished run query {}, time: {}",
-                &setting.precompute_name,
-                start.elapsed().as_millis()
-            );
-        }
-        println!("after run precomputes...");
+        //     let result = {
+        //         pegasus::run(conf.clone(), || {
+        //             libc.Precompute(
+        //                 conf.clone(),
+        //                 &graph,
+        //                 &graph_index,
+        //                 &properties_info,
+        //                 true,
+        //                 label,
+        //                 src_label,
+        //                 dst_label,
+        //             )
+        //         })
+        //             .expect("submit precompute failure")
+        //     };
+        //     let mut result_vec = vec![];
+        //     for x in result {
+        //         let (index_set, data_set) = x.expect("Fail to get result");
+        //         result_vec.push((index_set, data_set));
+        //     }
+        //     for (index_set, data_set) in result_vec {
+        //         if setting.precompute_type == "edge" {
+        //             for i in 0..properties_size {
+        //                 graph_index.add_outgoing_edge_index_batch(
+        //                     src_label.unwrap(),
+        //                     label,
+        //                     dst_label.unwrap(),
+        //                     &properties_info[i].0,
+        //                     &index_set,
+        //                     data_set[i].as_ref(),
+        //                 ).unwrap();
+        //                 graph_index.add_incoming_edge_index_batch(
+        //                     src_label.unwrap(),
+        //                     label,
+        //                     dst_label.unwrap(),
+        //                     &properties_info[i].0,
+        //                     &index_set,
+        //                     data_set[i].as_ref(),
+        //                 ).unwrap();
+        //             }
+        //         } else if setting.precompute_type == "vertex" {
+        //             for i in 0..properties_size {
+        //                 graph_index.add_vertex_index_batch(
+        //                     label,
+        //                     &properties_info[i].0,
+        //                     &index_set,
+        //                     data_set[i].as_ref(),
+        //                 ).unwrap();
+        //             }
+        //         }
+        //     }
+        //     println!(
+        //         "Finished run query {}, time: {}",
+        //         &setting.precompute_name,
+        //         start.elapsed().as_millis()
+        //     );
+        // }
+        // println!("after run precomputes...");
 
-        println!("Start iterating parameter files: {:?}", config.parameters);
-        if config.parameters.is_dir() {
-            let start = Instant::now();
-            for pair in PARAMETERS_MAP.iter() {
-                let query_name = pair.0.to_string();
-                let query = query_register.get_query(&query_name).expect("Could not find query");
-                let files = pair.1.clone();
+        // println!("Start iterating parameter files: {:?}", config.parameters);
+        // if config.parameters.is_dir() {
+        //     let start = Instant::now();
+        //     for pair in PARAMETERS_MAP.iter() {
+        //         let query_name = pair.0.to_string();
+        //         let query = query_register.get_query(&query_name).expect("Could not find query");
+        //         let files = pair.1.clone();
 
-                for filename in files.iter() {
-                    let path = config.parameters.clone().join(filename);
-                    if !path.is_file() {
-                        continue;
-                    }
-                    let file = File::open(path).expect("Failed to open query parameter file");
-                    let reader = BufReader::new(file);
-                    let mut keys = Vec::<String>::new();
-                    let mut first_line = true;
-                    for line_result in reader.lines() {
-                        let line = line_result.unwrap();
-                        if first_line {
-                            first_line = false;
-                            keys = line.split('|').map(|s| s.to_string().split(':').next().unwrap().to_string()).collect();
-                            continue;
-                        }
+        //         for filename in files.iter() {
+        //             let path = config.parameters.clone().join(filename);
+        //             if !path.is_file() {
+        //                 continue;
+        //             }
+        //             let file = File::open(path).expect("Failed to open query parameter file");
+        //             let reader = BufReader::new(file);
+        //             let mut keys = Vec::<String>::new();
+        //             let mut first_line = true;
+        //             for line_result in reader.lines() {
+        //                 let line = line_result.unwrap();
+        //                 if first_line {
+        //                     first_line = false;
+        //                     keys = line.split('|').map(|s| s.to_string().split(':').next().unwrap().to_string()).collect();
+        //                     continue;
+        //                 }
 
-                        let params: Vec<String> = line.split('|').map(|s| s.to_string()).collect();
-                        let mut params_map = HashMap::new();
-                        for (index, key) in keys.iter().enumerate() {
-                            params_map.insert(key, params[index].clone());
-                        }
-                        let mut conf = JobConf::new(query_name.clone());
-                        conf.set_workers(worker_num);
-                        conf.reset_servers(ServerConf::Partial(vec![0]));
-                        let result = {
-                            pegasus::run(conf.clone(), || {
-                                query.Query(
-                                    conf.clone(),
-                                    &graph,
-                                    &graph_index,
-                                    HashMap::new(),
-                                )
-                            }).expect("submit query failure")
-                        };
-                        for x in result {
-                            let data_set = x.expect("Fail to get result");
-                        }
-                    }
-                }
+        //                 let params: Vec<String> = line.split('|').map(|s| s.to_string()).collect();
+        //                 let mut params_map = HashMap::new();
+        //                 for (index, key) in keys.iter().enumerate() {
+        //                     params_map.insert(key, params[index].clone());
+        //                 }
+        //                 let mut conf = JobConf::new(query_name.clone());
+        //                 conf.set_workers(worker_num);
+        //                 conf.reset_servers(ServerConf::Partial(vec![0]));
+        //                 let result = {
+        //                     pegasus::run(conf.clone(), || {
+        //                         query.Query(
+        //                             conf.clone(),
+        //                             &graph,
+        //                             &graph_index,
+        //                             HashMap::new(),
+        //                         )
+        //                     }).expect("submit query failure")
+        //                 };
+        //                 for x in result {
+        //                     let data_set = x.expect("Fail to get result");
+        //                 }
+        //             }
+        //         }
 
-            }
-            println!(
-                "Finished run queries, time: {} ms", start.elapsed().as_millis()
-            );
-        } else if config.parameters.is_file() {
-            println!("{:?} is expected to be a directory", config.parameters);
-        }
+        //     }
+        //     println!(
+        //         "Finished run queries, time: {} ms", start.elapsed().as_millis()
+        //     );
+        // } else if config.parameters.is_file() {
+        //     println!("{:?} is expected to be a directory", config.parameters);
+        // }
     }
 
     Ok(())

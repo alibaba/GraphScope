@@ -44,6 +44,15 @@ message PrecomputeResponse {
   bool is_success = 1;
 }
 
+message DeleteGenerationRequest {
+  string raw_data_root = 1;
+  string batch_id = 2;
+}
+
+message DeleteGenerationResponse {
+  bool is_success = 1;
+}
+
 service BIJobService {
   rpc Submit(BIJobRequest) returns(stream BIJobResponse) {}
 
@@ -52,5 +61,7 @@ service BIJobService {
   rpc SubmitBatchDelete(BatchUpdateRequest) returns(BatchUpdateResponse) {}
 
   rpc SubmitPrecompute(PrecomputeRequest) returns(PrecomputeResponse) {}
+
+  rpc SubmitDeleteGeneration(DeleteGenerationRequest) returns(DeleteGenerationResponse) {}
 }
 

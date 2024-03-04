@@ -10,7 +10,7 @@ use std::task::{Context, Poll};
 use std::time::Duration;
 
 use bmcsr::graph_db::GraphDB;
-use bmcsr::graph_modifier::GraphModifier;
+use bmcsr::graph_modifier::{GraphModifier, DeleteGenerator};
 use bmcsr::schema::InputSchema;
 use dlopen::wrapper::{Container, WrapperApi};
 use futures::Stream;
@@ -324,6 +324,21 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
             .unwrap();
 
         let reply = pb::BatchUpdateResponse {
+            is_success: true,
+        };
+        Ok(Response::new(reply))
+    }
+
+    async fn submit_delete_generation(&self, req: Request<pb::DeleteGenerationRequest>) -> Result<Response<pb::DeleteGenerationResponse>, Status> {
+        let pb::DeleteGenerationRequest { raw_data_root, batch_id } = req.into_inner();
+
+        let graph = self.graph_db.read().unwrap();
+        let raw_data_root = PathBuf::from(raw_data_root);
+        let mut delete_generator = DeleteGenerator::new(&raw_data_root);
+        delete_generator.skip_header();
+        delete_generator.generate(&graph, batch_id.as_str());
+
+        let reply = pb::DeleteGenerationResponse {
             is_success: true,
         };
         Ok(Response::new(reply))
