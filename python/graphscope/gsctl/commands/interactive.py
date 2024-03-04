@@ -239,7 +239,7 @@ def job(job_id):  # noqa: F811
     "-f",
     "--filename",
     required=True,
-    help="Path of yaml file to use to create a graph",
+    help="Path of yaml file to use to create a job",
 )
 def job(filename):  # noqa: F811
     """Create a dataloading job in database"""

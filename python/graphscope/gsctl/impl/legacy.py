@@ -21,6 +21,7 @@ from typing import List
 import graphscope.flex.rest
 from graphscope.flex.rest import GrootGraph
 from graphscope.flex.rest import GrootSchema
+from graphscope.flex.rest import GrootDataloadingJobConfig
 from graphscope.gsctl.config import get_current_context
 
 
@@ -42,3 +43,17 @@ def import_groot_schema(graph_name: str, schema: dict) -> str:
         return api_instance.import_groot_schema(
             graph_name, GrootSchema.from_dict(schema)
         )
+
+
+def create_groot_dataloading_job(graph_name: str, job_config: dict) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.LegacyApi(api_client)
+        a = GrootDataloadingJobConfig.from_dict(job_config)
+        print(a)
+        return api_instance.create_groot_dataloading_job(
+            graph_name, GrootDataloadingJobConfig.from_dict(job_config)
+        )
+

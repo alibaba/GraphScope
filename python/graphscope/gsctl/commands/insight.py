@@ -23,7 +23,8 @@ from graphscope.gsctl.impl import (create_edge_type, create_vertex_type,
                                    get_datasource, import_datasource,
                                    import_groot_schema, list_groot_graph,
                                    unbind_edge_datasource,
-                                   unbind_vertex_datasource)
+                                   unbind_vertex_datasource,
+                                   create_groot_dataloading_job)
 from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
                                     terminal_display)
 
@@ -370,6 +371,27 @@ def edatasource(edge_type, source_vertex_type, destination_vertex_type):  # noqa
             f"Unbind data source on {etype_full_name} successfully.",
             fg="green",
         )
+
+
+@create.command()
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to create a job",
+)
+def job(filename):  # noqa: F811
+    """Create a dataloading job in database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        config = read_yaml_file(filename)
+        jobid = create_groot_dataloading_job("placeholder", config)
+    except Exception as e:
+        click.secho(f"Failed to create a job: {str(e)}", fg="red")
+    else:
+        click.secho(f"Create job {jobid} successfully.", fg="green")
 
 
 if __name__ == "__main__":

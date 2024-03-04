@@ -1005,6 +1005,33 @@ paths:
       tags:
       - legacy
       x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
+  /api/v1/groot/graph/{graph_name}/dataloading:
+    post:
+      operationId: create_groot_dataloading_job
+      parameters:
+      - explode: false
+        in: path
+        name: graph_name
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrootDataloadingJobConfig'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+          description: successful operation
+      tags:
+      - legacy
+      x-openapi-router-controller: gs_flex_coordinator.controllers.legacy_controller
   /api/v1/groot/graph/{graph_name}/schema:
     get:
       description: Get graph schema by name
@@ -2501,6 +2528,45 @@ components:
       title: GrootProperty
       type: object
       x-body-name: groot_property
+    GrootDataloadingJobConfig:
+      example:
+        schedule: schedule
+        vertices:
+        - vertices
+        - vertices
+        repeat: once
+        edges:
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+        - type_name: type_name
+          source_vertex: source_vertex
+          destination_vertex: destination_vertex
+      properties:
+        vertices:
+          items:
+            type: string
+          title: vertices
+          type: array
+        edges:
+          items:
+            $ref: '#/components/schemas/GrootDataloadingJobConfig_edges_inner'
+          title: edges
+          type: array
+        schedule:
+          description: format with '2023-02-21 11:56:30'
+          title: schedule
+          type: string
+        repeat:
+          enum:
+          - once
+          - day
+          - week
+          title: repeat
+          type: string
+      title: GrootDataloadingJobConfig
+      type: object
+      x-body-name: groot_dataloading_job_config
     start_service_request:
       properties:
         graph_name:
@@ -2792,4 +2858,21 @@ components:
           title: dst_label
           type: string
       title: GrootEdgeType_relations_inner
+      type: object
+    GrootDataloadingJobConfig_edges_inner:
+      example:
+        type_name: type_name
+        source_vertex: source_vertex
+        destination_vertex: destination_vertex
+      properties:
+        type_name:
+          title: type_name
+          type: string
+        source_vertex:
+          title: source_vertex
+          type: string
+        destination_vertex:
+          title: destination_vertex
+          type: string
+      title: GrootDataloadingJobConfig_edges_inner
       type: object

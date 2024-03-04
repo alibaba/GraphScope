@@ -77,7 +77,7 @@ class Scheduler(metaclass=ABCMeta):
         # time at which this job to schedule
         self._at_time = self._decode_datetimestr(at_time)
         # repeat every day or week, or run job once(no repeat)
-        # optional value "day", "week", "null"
+        # optional value "day", "week", "once"
         self._repeat = repeat
         # job running thread, note that:
         # the last job should be end of execution at the beginning of the next job
@@ -184,7 +184,7 @@ class Scheduler(metaclass=ABCMeta):
         self._running_thread.start()
 
     def submit(self):
-        if not self._run_now and self._repeat not in ["week", "day", "null", None]:
+        if not self._run_now and self._repeat not in ["week", "day", "once", None]:
             raise RuntimeError(
                 "Submit schedule job failed: at_time is '{0}', repeat is '{1}'".format(
                     self._at_time, self._repeat
@@ -213,7 +213,7 @@ class Scheduler(metaclass=ABCMeta):
         if not self._run_now and self._repeat == "day":
             self._job = schedule.every().day.at(self.timestr).do(self.do_run)
 
-        if not self._run_now and self._repeat in ["null", None]:
+        if not self._run_now and self._repeat in ["once", None]:
             self._job = (
                 schedule.every().day.at(self.timestr).do(self.waiting_until_to_run)
             )

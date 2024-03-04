@@ -494,6 +494,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GrootSchema'
+  /api/v1/groot/graph/{graph_name}/dataloading:
+    post:
+      tags:
+        - legacy
+      operationId: create_groot_dataloading_job
+      parameters:
+      - name: graph_name
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GrootDataloadingJobConfig'
+        required: true
+      responses:
+        '200':
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
   /api/v1/job:
     get:
       tags:
@@ -1709,3 +1733,31 @@ components:
             - DOUBLE
         is_primary_key:
           type: boolean
+    GrootDataloadingJobConfig:
+      x-body-name: groot_dataloading_job_config
+      type: object
+      properties:
+        vertices:
+          type: array
+          items:
+            type: string
+        edges:
+          type: array
+          items:
+            type: object
+            properties:
+              type_name:
+                type: string
+              source_vertex:
+                type: string
+              destination_vertex:
+                type: string
+        schedule:
+          type: string
+          description: "format with '2023-02-21 11:56:30'"
+        repeat:
+          type: string
+          enum:
+            - once
+            - day
+            - week

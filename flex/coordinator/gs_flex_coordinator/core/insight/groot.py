@@ -23,6 +23,9 @@ from typing import List
 
 from gs_flex_coordinator.core.config import CLUSTER_TYPE, WORKSPACE
 from gs_flex_coordinator.core.insight.graph import get_groot_graph
+from gs_flex_coordinator.core.insight.job import DataloadingJobScheduler
+from gs_flex_coordinator.core.scheduler import schedule
+from gs_flex_coordinator.models import JobStatus
 
 logger = logging.getLogger("graphscope")
 
@@ -38,25 +41,63 @@ class GrootClient(object):
         # data source
         self._data_source = {"vertices_datasource": {}, "edges_datasource": {}}
         # pickle path
-        self._pickle_path = os.path.join(self._workspace, "datasource.pickle")
+        self._datasource_pickle_path = os.path.join(
+            self._workspace, "datasource.pickle"
+        )
+        # job status
+        self._job_status = {}
+        # pickle path
+        self._job_status_pickle_path = os.path.join(
+            self._workspace, "job_status.pickle"
+        )
         # recover
         self._try_to_recover_from_disk()
+        # dump job status to disk every 10s
+        self._pickle_job_status_job = (
+            schedule.every(10)
+            .seconds.do(self._pickle_job_status_impl)
+            .tag("pickle", "job status")
+        )
 
     def _try_to_recover_from_disk(self):
         try:
-            if os.path.exists(self._pickle_path):
-                logger.info("Recover data source from file %s", self._pickle_path)
-                with open(self._pickle_path, "rb") as f:
+            if os.path.exists(self._datasource_pickle_path):
+                logger.info(
+                    "Recover data source from file %s", self._datasource_pickle_path
+                )
+                with open(self._datasource_pickle_path, "rb") as f:
                     self._data_source = pickle.load(f)
         except Exception as e:
             logger.warn("Failed to recover data source: %s", str(e))
 
+        try:
+            if os.path.exists(self._job_status_pickle_path):
+                logger.info(
+                    "Recover job status from file %s", self._job_status_pickle_path
+                )
+                with open(self._job_status_pickle_path, "rb") as f:
+                    data = pickle.load(f)
+                    for jobid, status in data.items():
+                        self._job_status[jobid] = JobStatus.from_dict(status)
+        except Exception as e:
+            logger.warn("Failed to recover job status: %s", str(e))
+
     def _pickle_datasource_impl(self):
         try:
-            with open(self._pickle_path, "wb") as f:
+            with open(self._datasource_pickle_path, "wb") as f:
                 pickle.dump(self._data_source, f)
         except Exception as e:
             logger.warn("Failed to dump data source: %s", str(e))
+
+    def _pickle_job_status_impl(self):
+        try:
+            rlt = {}
+            for jobid, status in self._job_status.items():
+                rlt[jobid] = status.to_dict()
+            with open(self._job_status_pickle_path, "wb") as f:
+                pickle.dump(rlt, f)
+        except Exception as e:
+            logger.warn("Failed to dump job status: %s", str(e))
 
     def get_edge_full_label(
         self, type_name: str, source_vertex_type: str, destination_vertex_type: str
@@ -107,7 +148,10 @@ class GrootClient(object):
         return self._graph.import_schema(schema)
 
     def list_jobs(self) -> List[dict]:
-        return []
+        rlt = []
+        for jobid, status in self._job_status.items():
+            rlt.append(status.to_dict())
+        return rlt
 
     def import_datasource(self, graph_name: str, data_source: dict) -> str:
         for vertex_data_source in data_source["vertices_datasource"]:
@@ -212,6 +256,14 @@ class GrootClient(object):
             del self._data_source["edges_datasource"][edge_label]
             self._pickle_datasource_impl()
             return "unbind data source successfully"
+
+    def create_groot_dataloading_job(self, graph_name: str, job_config: dict) -> str:
+        dataloading_job_scheduler = DataloadingJobScheduler(
+            job_config=job_config,
+            data_source=self._data_source,
+            job_status=self._job_status,
+        )
+        return dataloading_job_scheduler.schedulerid
 
 
 def init_groot_client():

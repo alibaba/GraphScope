@@ -62,6 +62,8 @@ from graphscope.flex.rest.models.edge_type_vertex_type_pair_relations_inner impo
 from graphscope.flex.rest.models.edge_type_vertex_type_pair_relations_inner_x_csr_params import EdgeTypeVertexTypePairRelationsInnerXCsrParams
 from graphscope.flex.rest.models.graph import Graph
 from graphscope.flex.rest.models.graph_stored_procedures import GraphStoredProcedures
+from graphscope.flex.rest.models.groot_dataloading_job_config import GrootDataloadingJobConfig
+from graphscope.flex.rest.models.groot_dataloading_job_config_edges_inner import GrootDataloadingJobConfigEdgesInner
 from graphscope.flex.rest.models.groot_edge_type import GrootEdgeType
 from graphscope.flex.rest.models.groot_edge_type_relations_inner import GrootEdgeTypeRelationsInner
 from graphscope.flex.rest.models.groot_graph import GrootGraph

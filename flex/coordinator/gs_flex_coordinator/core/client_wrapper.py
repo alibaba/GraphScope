@@ -41,7 +41,7 @@ from gs_flex_coordinator.models import (DataSource, DeploymentInfo,
                                         ModelSchema, NodeStatus, Procedure,
                                         SchemaMapping, ServiceStatus,
                                         StartServiceRequest, VertexDataSource,
-                                        VertexType)
+                                        VertexType, GrootDataloadingJobConfig)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -278,6 +278,12 @@ class ClientWrapper(object):
             filepath = os.path.join(DATASET_WORKSPACE, filestorage.filename)
             filestorage.save(filepath)
             return str(filepath)
+
+    def create_groot_dataloading_job(
+        self, graph_name: str, job_config: GrootDataloadingJobConfig
+    ) -> str:
+        job_id = self._client.create_groot_dataloading_job(graph_name, job_config.to_dict())
+        return job_id
 
     def list_groot_graph(self) -> List[GrootGraph]:
         graphs = self._client.list_groot_graph()
