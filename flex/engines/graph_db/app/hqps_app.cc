@@ -18,8 +18,8 @@
 
 namespace gs {
 
-void put_argment(gs::Encoder& encoder, const query::Argument& argment) {
-  auto& value = argment.value();
+void put_argument(gs::Encoder& encoder, const query::Argument& argument) {
+  auto& value = argument.value();
   auto item_case = value.item_case();
   switch (item_case) {
   case common::Value::kI32:
@@ -85,7 +85,7 @@ bool HQPSProcedureApp::Query(Decoder& input, Encoder& output) {
   gs::Encoder input_encoder(input_buffer);
   auto& args = cur_query.arguments();
   for (int32_t i = 0; i < args.size(); ++i) {
-    put_argment(input_encoder, args[i]);
+    put_argument(input_encoder, args[i]);
   }
   VLOG(10) << "Query name: " << query_name << ", args: " << input_buffer.size()
            << " bytes";

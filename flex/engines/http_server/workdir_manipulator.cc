@@ -117,7 +117,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
   if (!schema_str_res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
-                   "Failt to read schema file: " + schema_file +
+                   "Failed to read schema file: " + schema_file +
                        ", error: " + schema_str_res.status().error_message()));
   } else {
     return gs::Result<seastar::sstring>(schema_str_res.value());
@@ -639,7 +639,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         gs::Status(gs::StatusCode::InternalError,
                    "Fail to parse parameter as json: " + parameters));
   }
-  VLOG(1) << "Successfully parse json paramters: " << json.dump();
+  VLOG(1) << "Successfully parse json parameters: " << json.dump();
   // load plugin_file as yaml
   YAML::Node plugin_node;
   try {

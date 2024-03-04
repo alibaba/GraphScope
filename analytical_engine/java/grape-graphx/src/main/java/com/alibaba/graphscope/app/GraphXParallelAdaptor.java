@@ -39,7 +39,7 @@ public class GraphXParallelAdaptor<VDATA_T, EDATA_T, MSG>
         Object[] objects = SerializationUtils.read(classLoader, serialPath);
         if (objects.length != 10) {
             throw new IllegalStateException(
-                    "Expect 10 deserialzed object, but only got " + objects.length);
+                    "Expect 10 deserialized object, but only got " + objects.length);
         }
         Class<?> vdClass = (Class<?>) objects[0];
         Class<?> edClass = (Class<?>) objects[1];

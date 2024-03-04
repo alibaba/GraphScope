@@ -134,7 +134,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
     private String javaArrowFragmentTemplateName = ArrowFragment.class.getName();
     private String foreignArrowFragmentTemplateName = ARROW_FRAGMENT;
     private String JavaArrowProjectedTemplateName = ArrowProjectedFragment.class.getName();
-    private String foreignArrowProjectedTempalteName = CPP_ARROW_PROJECTED_FRAGMENT;
+    private String foreignArrowProjectedTemplateName = CPP_ARROW_PROJECTED_FRAGMENT;
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
@@ -228,7 +228,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
                         .getMessager()
                         .printMessage(
                                 Diagnostic.Kind.ERROR,
-                                "Duplicalte FFIMirror on "
+                                "Duplicate FFIMirror on "
                                         + foreignType
                                         + ", expected "
                                         + check
@@ -300,7 +300,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
         logger.info("foreign frag type :" + foreignFragType);
         String foreignArrowProjectFragNameConcat =
                 makeParameterizedType(
-                        foreignArrowProjectedTempalteName,
+                        foreignArrowProjectedTemplateName,
                         foreignOidType,
                         "uint64_t",
                         foreignVdataType,
@@ -366,7 +366,7 @@ public class GraphScopeAnnotationProcessor extends javax.annotation.processing.A
             generator.generate();
 
         } else {
-            logger.error("Unrecoginizable");
+            logger.error("Unrecognizable");
         }
         classBuilder.addAnnotation(ffiGenBatchBuilder.build());
     }

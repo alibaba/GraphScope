@@ -126,7 +126,9 @@ spec:
             - name: FRONTEND_QUERY_PER_SECOND_LIMIT
               value: {{ .Values.frontendQueryPerSecondLimit | quote }}
             - name: GREMLIN_SCRIPT_LANGUAGE_NAME
-              value: {{ .Values.gremlinScriptLanguageName }}
+              value: {{ .Values.gremlinScriptLanguageName | quote }}
+            - name: PHYSICAL_OPT_CONFIG
+              value: {{ .Values.physicalOptConfig}}
           ports:
             - name: gremlin
               containerPort: {{ .Values.frontend.service.gremlinPort }}
