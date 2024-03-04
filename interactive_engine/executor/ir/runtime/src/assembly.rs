@@ -497,7 +497,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 };
                                 intersected_expands.push((repartition, expand));
                             }
-                            OpKind::Path(path) => {
+                            OpKind::Path(mut path_expand) => {
                                 let repartition = if let Some(prev) = subplan.plan.last() {
                                     if let OpKind::Repartition(path_expand_repartition) = prev
                                         .try_into()
@@ -524,7 +524,6 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 //    do the filtering after intersection.
                                 // TODO: there might be a bug here:
                                 // if path_expand has an alias which indicates that the path would be referred later, it may not as expected.
-                                let mut path_expand = path.clone();
                                 let path_expand_base = path_expand.base.as_ref().ok_or_else(|| {
                                     FnGenError::ParseError("PathExpand::base in Pattern is empty".into())
                                 })?;
@@ -558,11 +557,15 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                     // optimized Path(1..2) to as EdgeExpand
                                     let mut edge_expand = base_edge_expand.clone();
                                     edge_expand.v_tag = path_expand.start_tag;
+                                    edge_expand.alias = path_expand.alias;
                                     intersected_expands.push((repartition, edge_expand));
                                 } else {
                                     // translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
                                     let mut edge_expand = base_edge_expand.clone();
                                     edge_expand.v_tag = None;
+                                    // edge expand should carry the path alias, which is the intersect key.
+                                    edge_expand.alias = path_expand.alias.clone();
+                                    path_expand.alias.take();
                                     hop_range.lower -= 1;
                                     hop_range.upper -= 1;
                                     let mut end_v = pb::GetV::default();
