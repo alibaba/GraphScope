@@ -12,6 +12,7 @@ use std::time::Duration;
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{GraphModifier, DeleteGenerator};
 use bmcsr::schema::InputSchema;
+use bmcsr::traverse::traverse;
 use dlopen::wrapper::{Container, WrapperApi};
 use futures::Stream;
 use graph_index::GraphIndex;
@@ -352,6 +353,18 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         self.query_register.run_precomputes(&graph, &mut graph_index, self.workers);
 
         let reply = pb::PrecomputeResponse {
+            is_success: true,
+        };
+        Ok(Response::new(reply))
+    }
+
+    async fn submit_traverse(&self, req: Request<pb::TraverseRequest>) -> Result<Response<pb::TraverseResponse>, Status> {
+        let pb::TraverseRequest { output_dir } = req.into_inner();
+        std::fs::create_dir_all(&output_dir).unwrap();
+        let graph = self.graph_db.read().unwrap();
+        traverse(&graph, &output_dir);
+
+        let reply = pb::TraverseResponse {
             is_success: true,
         };
         Ok(Response::new(reply))

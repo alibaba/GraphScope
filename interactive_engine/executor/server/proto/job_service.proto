@@ -53,6 +53,14 @@ message DeleteGenerationResponse {
   bool is_success = 1;
 }
 
+message TraverseRequest {
+  string output_dir = 1;
+}
+
+message TraverseResponse {
+  bool is_success = 1;
+}
+
 service BIJobService {
   rpc Submit(BIJobRequest) returns(stream BIJobResponse) {}
 
@@ -63,5 +71,7 @@ service BIJobService {
   rpc SubmitPrecompute(PrecomputeRequest) returns(PrecomputeResponse) {}
 
   rpc SubmitDeleteGeneration(DeleteGenerationRequest) returns(DeleteGenerationResponse) {}
+
+  rpc SubmitTraverse(TraverseRequest) returns(TraverseResponse) {}
 }
 
