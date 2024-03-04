@@ -25,54 +25,19 @@ from distutils.cmd import Command
 
 from setuptools import find_packages, setup
 
-NAME = "gs_flex_coordinator"
+NAME = "gs_flex_interactive"
 VERSION = "1.0.0"
 
 pkg_root = os.path.dirname(os.path.abspath(__file__))
 
 
-def parsed_reqs():
-    with open(os.path.join(pkg_root, "requirements.txt"), "r", encoding="utf-8") as fp:
-        return fp.read().splitlines()
-
-
-class GenerateFlexServer(Command):
-    description = "generate flex server from openapi specification file"
-    user_options = []
-
-    def initialize_options(self):
-        pass
-
-    def finalize_options(self):
-        pass
-
-    def run(self):
-        # generate server code, note that controllers are not included here,
-        # see from .openapi-generator-ignore
-        specification = os.path.join(
-            pkg_root, "..", "openapi", "openapi_coordinator.yaml"
-        )
-        cmd = [
-            "openapi-generator-cli",
-            "generate",
-            "-g",
-            "python-flask",
-            "-i",
-            str(specification),
-            "-o",
-            str(pkg_root),
-            "--package-name",
-            "gs_flex_coordinator",
-        ]
-        print(" ".join(cmd))
-        subprocess.check_call(
-            cmd,
-            env=os.environ.copy(),
-        )
+# def parsed_reqs():
+#     with open(os.path.join(pkg_root, "requirements.txt"), "r", encoding="utf-8") as fp:
+#         return fp.read().splitlines()
 
 
 class GenerateInteractiveSDK(Command):
-    description = "generate interactive client sdk from openapi specification file"
+    description = "Generate GraphScope Interactive python sdk from openapi specification file"
     user_options = []
 
     def initialize_options(self):
@@ -87,13 +52,13 @@ class GenerateInteractiveSDK(Command):
         if os.path.exists(tempdir):
             shutil.rmtree(tempdir)
         targetdir = os.path.join(
-            pkg_root, "gs_flex_coordinator", "core", "interactive", "interactive_sdk"
+            pkg_root, "interactive_sdk"
         )
         if os.path.exists(targetdir):
             shutil.rmtree(targetdir)
         # generate
         specification = os.path.join(
-            pkg_root, "..", "openapi", "openapi_interactive.yaml"
+            pkg_root, "..", "..", "..", "openapi", "openapi_interactive.yaml"
         )
         cmd = [
             "openapi-generator-cli",
@@ -119,22 +84,23 @@ class GenerateInteractiveSDK(Command):
 setup(
     name=NAME,
     version=VERSION,
-    description="GraphScope FLEX HTTP SERVICE API",
+    description="GraphScope Flex Interactive Python SDK",
     author_email="graphscope@alibaba-inc.com",
     url="",
-    keywords=["OpenAPI", "GraphScope FLEX HTTP SERVICE API"],
-    install_requires=parsed_reqs(),
+    keywords=["OpenAPI", "GraphScope Flex Interactive Python SDK"],
+    # install_requires=parsed_reqs(),
     packages=find_packages(),
     package_data={"": ["openapi/openapi.yaml"]},
     cmdclass={
-        "generate_flex_server": GenerateFlexServer,
         "generate_interactive_sdk": GenerateInteractiveSDK,
     },
+    classifiers=[
+        'Programming Language :: Python :: 3',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: OS Independent',
+    ],
     include_package_data=True,
-    entry_points={
-        "console_scripts": ["gs_flex_coordinator=gs_flex_coordinator.__main__:main"]
-    },
     long_description="""\
-    This is a specification for GraphScope FLEX HTTP service based on the OpenAPI 3.0 specification. You can find out more details about specification at [doc](https://swagger.io/specification/v3/).  Some useful links: - [GraphScope Repository](https://github.com/alibaba/GraphScope) - [The Source API definition for GraphScope Interactive](https://github.com/GraphScope/portal/tree/main/httpservice)
+    GraphScope Flex Interactive Python SDK
     """,
 )
