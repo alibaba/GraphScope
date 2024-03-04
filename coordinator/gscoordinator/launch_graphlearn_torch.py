@@ -77,15 +77,15 @@ def launch_graphlearn_torch_server(handle, config, server_rank):
         # vineyard_id=str(handle["vineyard_id"]),
         vineyard_id=str(handle["fragments"][server_rank]),
         vineyard_socket=handle["vineyard_socket"],
-        id2idx=glt.data.VineyardGid2Lid(
-            sock=str(handle["vineyard_socket"]),
-            fid=str(handle["fragments"][server_rank]),
-            v_label_name="paper",
-        ),
+        # id2idx=glt.data.VineyardGid2Lid(
+        #     sock=str(handle["vineyard_socket"]),
+        #     fid=str(handle["fragments"][server_rank]),
+        #     v_label_name="paper",
+        # ),
         **config,
     )
     if random_node_split is not None:
-        dataset.random_node_split(**random_node_split, id_filter=glt.data.v6d_id_filter)
+        dataset.random_node_split(**random_node_split)
     logger.info(f"-- [Server {server_rank}] Running server ...")
 
     torch.multiprocessing.spawn(

@@ -107,7 +107,6 @@ def run_client_proc(
             master_port=train_loader_master_port,
             glt_graph=glt_graph,
             workload_type="train",
-            id_select=glt.data.v6d_id_select
         ),
     )
 
@@ -131,7 +130,6 @@ def run_client_proc(
             master_port=test_loader_master_port,
             glt_graph=glt_graph,
             workload_type="test",
-            id_select=glt.data.v6d_id_select
         ),
     )
 
@@ -189,7 +187,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--num_server_nodes",
         type=int,
-        default=2,
+        default=3,
         help="Number of server nodes for remote sampling.",
     )
     parser.add_argument(
