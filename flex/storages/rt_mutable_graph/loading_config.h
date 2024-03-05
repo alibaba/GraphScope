@@ -19,7 +19,9 @@
 #include <boost/functional/hash.hpp>
 
 #include <filesystem>
+#include <iostream>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include "arrow/api.h"
@@ -60,14 +62,16 @@ static const std::unordered_set<std::string> CSV_META_KEY_WORDS = {
 class LoadingConfig;
 
 namespace config_parsing {
-bool parse_bulk_load_config_file(const std::string& config_file,
-                                 const Schema& schema,
-                                 LoadingConfig& load_config);
+Status parse_bulk_load_config_file(const std::string& config_file,
+                                   const Schema& schema,
+                                   LoadingConfig& load_config);
 
-bool parse_bulk_load_config_yaml(const YAML::Node& yaml_node,
-                                 const Schema& schema,
-                                 LoadingConfig& load_config);
+Status parse_bulk_load_config_yaml(const YAML::Node& yaml_node,
+                                   const Schema& schema,
+                                   LoadingConfig& load_config);
 }  // namespace config_parsing
+
+enum class BulkLoadMethod { kInit = 0, kOverwrite = 1 };
 
 // Provide meta info about bulk loading.
 class LoadingConfig {
@@ -78,36 +82,37 @@ class LoadingConfig {
                  schema_label_type>;  // src_label_t, dst_label_t, edge_label_t
 
   // Check whether loading config file is consistent with schema
-  static LoadingConfig ParseFromYamlFile(const Schema& schema,
-                                         const std::string& yaml_file);
+  static gs::Result<LoadingConfig> ParseFromYamlFile(
+      const Schema& schema, const std::string& yaml_file);
   static gs::Result<LoadingConfig> ParseFromYamlNode(
       const Schema& schema, const YAML::Node& yaml_node);
 
   LoadingConfig(const Schema& schema);
 
   LoadingConfig(const Schema& schema, const std::string& data_source,
-                const std::string& delimiter, const std::string& method,
+                const std::string& delimiter, const BulkLoadMethod& method,
                 const std::string& format);
 
   // Add source files for vertex label. Each label can have multiple files.
-  bool AddVertexSources(const std::string& label, const std::string& file_path);
+  Status AddVertexSources(const std::string& label,
+                          const std::string& file_path);
 
   // Add source files for edge triplet. Each label can have multiple files.
   // When adding edge source files, src_id and dst_id column also need to be
   // specified.
-  bool AddEdgeSources(const std::string& src_label,
-                      const std::string& dst_label,
-                      const std::string& edge_label, size_t src_pri_key_ind,
-                      size_t dst_pri_key_ind, const std::string& file_path);
+  Status AddEdgeSources(const std::string& src_label,
+                        const std::string& dst_label,
+                        const std::string& edge_label, size_t src_pri_key_ind,
+                        size_t dst_pri_key_ind, const std::string& file_path);
 
   void SetScheme(const std::string& data_source);
   void SetDelimiter(const char& delimiter);
-  void SetMethod(const std::string& method);
+  void SetMethod(const BulkLoadMethod& method);
 
   // getters
   const std::string& GetScheme() const;
   const std::string& GetDelimiter() const;
-  const std::string& GetMethod() const;
+  const BulkLoadMethod& GetMethod() const;
   const std::string& GetFormat() const;
   bool GetHasHeaderRow() const;
   const std::string& GetEscapeChar() const;
@@ -143,9 +148,9 @@ class LoadingConfig {
 
  private:
   const Schema& schema_;
-  std::string scheme_;  // "file", "hdfs", "oss", "s3"
-  std::string method_;  // init, append, overwrite
-  std::string format_;  // csv, tsv, json, parquet
+  std::string scheme_;     // "file", "hdfs", "oss", "s3"
+  BulkLoadMethod method_;  // init, append, overwrite
+  std::string format_;     // csv, tsv, json, parquet
 
   // meta_data, stores all the meta info about loading
   std::unordered_map<std::string, std::string> metadata_;
@@ -183,14 +188,32 @@ class LoadingConfig {
                      boost::hash<edge_triplet_type>>
       edge_src_dst_col_;
 
-  friend bool config_parsing::parse_bulk_load_config_file(
+  friend Status config_parsing::parse_bulk_load_config_file(
       const std::string& config_file, const Schema& schema,
       LoadingConfig& load_config);
 
-  friend bool config_parsing::parse_bulk_load_config_yaml(
+  friend Status config_parsing::parse_bulk_load_config_yaml(
       const YAML::Node& root, const Schema& schema, LoadingConfig& load_config);
 };
 
 }  // namespace gs
+
+namespace std {
+// BulkLoadMethod << operator
+inline ostream& operator<<(ostream& os, const gs::BulkLoadMethod& method) {
+  switch (method) {
+  case gs::BulkLoadMethod::kInit:
+    os << "init";
+    break;
+  case gs::BulkLoadMethod::kOverwrite:
+    os << "overwrite";
+    break;
+  default:
+    os << "unknown";
+    break;
+  }
+  return os;
+}
+}  // namespace std
 
 #endif  // STORAGE_RT_MUTABLE_GRAPH_LOADING_CONFIG_H_

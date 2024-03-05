@@ -175,11 +175,11 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/bin
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/get_person_name.cypher -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
-          --graph_schema_path=../interactive/examples/modern_graph/modern_graph.yaml
+          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/count_vertex_num.cypher -w=/tmp/codegen \
           --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/engine_config_test.yaml \
-          --graph_schema_path=../interactive/examples/modern_graph/modern_graph.yaml
+          --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
     - name: Run End-to-End cypher adhoc ldbc query test
       env:

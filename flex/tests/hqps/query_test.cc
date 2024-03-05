@@ -30,8 +30,13 @@ int main(int argc, char** argv) {
   auto data_dir = std::string(argv[2]);
 
   auto& db = gs::GraphDB::get();
-  auto schema = gs::Schema::LoadFromYaml(graph_schema);
-  db.Open(schema, data_dir, 1);
+  auto schema_res = gs::Schema::LoadFromYaml(graph_schema);
+  if (!schema_res.ok()) {
+    LOG(ERROR) << "Fail to load graph schema file: "
+               << schema_res.status().error_message();
+    return -1;
+  }
+  db.Open(schema_res.value(), data_dir, 1);
   auto& sess = gs::GraphDB::get().GetSession(0);
 
   {
