@@ -424,7 +424,7 @@ paths:
     put:
       tags:
         - procedure
-      description:  Update srored procedure on a certain graph
+      description:  Update stored procedure on a certain graph
       operationId: update_procedure
       parameters:
       - name: graph_name
@@ -803,7 +803,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
         '404':
-          description: Reveiver not found
+          description: Receiver not found
     delete:
       tags:
         - alert
@@ -822,7 +822,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
         '404':
-          description: Reveiver not found
+          description: Receiver not found
   /api/v1/file/uploading:
     post:
       tags:
@@ -1134,7 +1134,7 @@ components:
           enum:
             - node
             - service
-        conditions_desription:
+        conditions_description:
           type: string
         frequency:
           type: integer

@@ -12,7 +12,7 @@ class AlertRule(Model):
     Do not edit the class manually.
     """
 
-    def __init__(self, name=None, severity=None, metric_type=None, conditions_desription=None, frequency=None, enable=None):  # noqa: E501
+    def __init__(self, name=None, severity=None, metric_type=None, conditions_description=None, frequency=None, enable=None):  # noqa: E501
         """AlertRule - a model defined in OpenAPI
 
         :param name: The name of this AlertRule.  # noqa: E501
@@ -21,8 +21,8 @@ class AlertRule(Model):
         :type severity: str
         :param metric_type: The metric_type of this AlertRule.  # noqa: E501
         :type metric_type: str
-        :param conditions_desription: The conditions_desription of this AlertRule.  # noqa: E501
-        :type conditions_desription: str
+        :param conditions_description: The conditions_description of this AlertRule.  # noqa: E501
+        :type conditions_description: str
         :param frequency: The frequency of this AlertRule.  # noqa: E501
         :type frequency: int
         :param enable: The enable of this AlertRule.  # noqa: E501
@@ -32,7 +32,7 @@ class AlertRule(Model):
             'name': str,
             'severity': str,
             'metric_type': str,
-            'conditions_desription': str,
+            'conditions_description': str,
             'frequency': int,
             'enable': bool
         }
@@ -41,7 +41,7 @@ class AlertRule(Model):
             'name': 'name',
             'severity': 'severity',
             'metric_type': 'metric_type',
-            'conditions_desription': 'conditions_desription',
+            'conditions_description': 'conditions_description',
             'frequency': 'frequency',
             'enable': 'enable'
         }
@@ -49,7 +49,7 @@ class AlertRule(Model):
         self._name = name
         self._severity = severity
         self._metric_type = metric_type
-        self._conditions_desription = conditions_desription
+        self._conditions_description = conditions_description
         self._frequency = frequency
         self._enable = enable
 
@@ -140,25 +140,25 @@ class AlertRule(Model):
         self._metric_type = metric_type
 
     @property
-    def conditions_desription(self) -> str:
-        """Gets the conditions_desription of this AlertRule.
+    def conditions_description(self) -> str:
+        """Gets the conditions_description of this AlertRule.
 
 
-        :return: The conditions_desription of this AlertRule.
+        :return: The conditions_description of this AlertRule.
         :rtype: str
         """
-        return self._conditions_desription
+        return self._conditions_description
 
-    @conditions_desription.setter
-    def conditions_desription(self, conditions_desription: str):
-        """Sets the conditions_desription of this AlertRule.
+    @conditions_description.setter
+    def conditions_description(self, conditions_description: str):
+        """Sets the conditions_description of this AlertRule.
 
 
-        :param conditions_desription: The conditions_desription of this AlertRule.
-        :type conditions_desription: str
+        :param conditions_description: The conditions_description of this AlertRule.
+        :type conditions_description: str
         """
 
-        self._conditions_desription = conditions_desription
+        self._conditions_description = conditions_description
 
     @property
     def frequency(self) -> int:

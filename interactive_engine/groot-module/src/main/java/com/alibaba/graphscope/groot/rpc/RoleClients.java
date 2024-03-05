@@ -28,11 +28,11 @@ import java.util.function.Function;
  */
 public class RoleClients<T extends RpcClient> {
 
-    private ChannelManager channelManager;
-    private RoleType targetRole;
+    private final ChannelManager channelManager;
+    private final RoleType targetRole;
 
-    private Map<Integer, T> clients;
-    private Function<ManagedChannel, T> clientBuilder;
+    private final Map<Integer, T> clients;
+    private final Function<ManagedChannel, T> clientBuilder;
 
     public RoleClients(
             ChannelManager channelManager,

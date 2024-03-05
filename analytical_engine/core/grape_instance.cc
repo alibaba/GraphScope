@@ -192,11 +192,19 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
 
       // delete the fragment group first
       if (comm_spec_.worker_id() == 0) {
+#if defined(VINEYARD_VERSION) && VINEYARD_VERSION >= 21003
+        VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true, true));
+#else
         VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true));
+#endif
       }
       // ensure all fragments get deleted
       MPI_Barrier(comm_spec_.comm());
+#if defined(VINEYARD_VERSION) && VINEYARD_VERSION >= 21003
+      VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true, true));
+#else
       VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true));
+#endif
     }
   }
   VLOG(1) << "Unloading Graph " << graph_name;

@@ -13,7 +13,7 @@
  */
 package com.alibaba.graphscope.groot.store.jna;
 
-import com.alibaba.graphscope.groot.store.GraphPartitionBackup;
+import com.alibaba.graphscope.groot.store.backup.GraphPartitionBackup;
 import com.sun.jna.Pointer;
 
 import org.slf4j.Logger;

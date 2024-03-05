@@ -819,7 +819,7 @@ def test_helm_installation(data_dir, modern_graph_data_dir):
     sub_graph.add_column(pr_result, {"Ranking": "r"})
 
 
-def test_modualize():
+def test_modularize():
     sess = graphscope.session(
         num_workers=1,
         k8s_image_registry=get_gs_registry_on_ci_env(),

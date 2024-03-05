@@ -21,7 +21,7 @@ import threading
 
 class StoppableThread(threading.Thread):
     """
-    This is one of the simplest mechaisms for a stoppable thread to
+    This is one of the simplest mechanisms for a stoppable thread to
     hold an 'exit_request' flag that each thread checks on a regular
     interval to see if it is time for it to exit.
     """

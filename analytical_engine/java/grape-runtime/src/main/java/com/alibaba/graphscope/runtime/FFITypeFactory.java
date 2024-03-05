@@ -75,9 +75,9 @@ public class FFITypeFactory {
     }
 
     static void loadFFIProperties(
-            ClassLoader classLoader, String proptiesFileName, Map<String, Object> results) {
+            ClassLoader classLoader, String propertiesFileName, Map<String, Object> results) {
         try {
-            Enumeration<URL> urls = classLoader.getResources(proptiesFileName);
+            Enumeration<URL> urls = classLoader.getResources(propertiesFileName);
             while (urls.hasMoreElements()) {
                 URL propFileURL = urls.nextElement();
                 if (propFileURL != null) {
@@ -87,7 +87,7 @@ public class FFITypeFactory {
                         for (Map.Entry<Object, Object> entry : prop.entrySet()) {
                             if (entry.getKey() == null || entry.getValue() == null) {
                                 throw new IllegalStateException(
-                                        "Malformed properties file: " + proptiesFileName);
+                                        "Malformed properties file: " + propertiesFileName);
                             }
                             // A generated class name (i.e., the key) is unique
                             // while a foreign type name (i.e., the value) is not unique.
@@ -117,14 +117,14 @@ public class FFITypeFactory {
                         }
                     } catch (IOException e) {
                         throw new IllegalStateException(
-                                "Cannot load resource from properties file: " + proptiesFileName);
+                                "Cannot load resource from properties file: " + propertiesFileName);
                     }
                 } else {
-                    System.out.println("No properties file: " + proptiesFileName);
+                    System.out.println("No properties file: " + propertiesFileName);
                 }
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Cannot search for " + proptiesFileName);
+            throw new IllegalStateException("Cannot search for " + propertiesFileName);
         }
     }
 

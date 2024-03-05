@@ -185,7 +185,7 @@ class UnionOpBuilder {
         break;
       }
       default:
-        LOG(FATAL) << "Not supproted in union.";
+        LOG(FATAL) << "Not supported in union.";
       }
     }
     union_fmter % operator_index_ % index % sub_plan_code_ss.str();

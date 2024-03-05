@@ -20,6 +20,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.RelWriter;
 import org.apache.calcite.rel.SingleRel;
 import org.apache.calcite.rex.RexNode;
@@ -59,5 +60,13 @@ public class GraphLogicalDedupBy extends SingleRel {
     public RelNode copy(RelTraitSet traitSet, List<RelNode> inputs) {
         return new GraphLogicalDedupBy(
                 this.getCluster(), traitSet, inputs.get(0), this.dedupByKeys);
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphShuttle) {
+            return ((GraphShuttle) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
     }
 }

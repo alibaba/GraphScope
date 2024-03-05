@@ -345,11 +345,11 @@ class ReadTransaction {
   Any GetVertexId(label_t label, vid_t index) const;
 
   edge_iterator GetOutEdgeIterator(label_t label, vid_t u,
-                                   label_t neighnor_label,
+                                   label_t neighbor_label,
                                    label_t edge_label) const;
 
   edge_iterator GetInEdgeIterator(label_t label, vid_t u,
-                                  label_t neighnor_label,
+                                  label_t neighbor_label,
                                   label_t edge_label) const;
 
   template <typename EDATA_T>

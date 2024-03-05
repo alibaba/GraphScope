@@ -9,7 +9,6 @@ import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.common.exception.IngestRejectException;
 import com.alibaba.graphscope.groot.common.util.PartitionUtils;
-import com.alibaba.graphscope.groot.ingestor.IngestCallback;
 import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
@@ -143,10 +142,7 @@ public class KafkaAppender {
         if (batchSnapshotId == -1L) {
             throw new IllegalStateException("invalid ingestSnapshotId [" + batchSnapshotId + "]");
         }
-        logger.debug(
-                "append batch to WAL. requestId [{}], snapshotId [{}]",
-                task.requestId,
-                batchSnapshotId);
+        logger.debug("append batch to WAL. snapshotId [{}]", batchSnapshotId);
         long latestSnapshotId = task.operationBatch.getLatestSnapshotId();
         if (latestSnapshotId > 0 && latestSnapshotId < batchSnapshotId) {
             throw new IllegalStateException(
@@ -163,7 +159,7 @@ public class KafkaAppender {
                     int storeId = entry.getKey();
                     OperationBatch batch = entry.getValue().build();
                     // logger.info("Log writer append partitionId [{}]", storeId);
-                    logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
+                    logWriter.append(storeId, new LogEntry(ingestSnapshotId.get(), batch));
                 }
             } catch (Exception e) {
                 // write failed, just throw out to fail this task
@@ -249,8 +245,7 @@ public class KafkaAppender {
                         if (batch.getOperationCount() == 0) {
                             continue;
                         }
-                        batchSnapshotId = this.ingestSnapshotId.get();
-                        logWriter.appendAsync(storeId, new LogEntry(batchSnapshotId, batch));
+                        logWriter.append(storeId, new LogEntry(ingestSnapshotId.get(), batch));
                         replayCount++;
                     }
                 }

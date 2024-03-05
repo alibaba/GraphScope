@@ -36,7 +36,7 @@ public class RpcServer {
     public static final Logger logger = LoggerFactory.getLogger(RpcServer.class);
 
     protected final Server server;
-    private LocalNodeProvider localNodeProvider;
+    private final LocalNodeProvider localNodeProvider;
 
     public RpcServer(
             Configs conf, LocalNodeProvider localNodeProvider, BindableService... services) {

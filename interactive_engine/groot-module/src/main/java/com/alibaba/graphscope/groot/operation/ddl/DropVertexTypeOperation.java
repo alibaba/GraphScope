@@ -21,9 +21,9 @@ import com.google.protobuf.ByteString;
 
 public class DropVertexTypeOperation extends Operation {
 
-    private int partitionId;
-    private long schemaVersion;
-    private LabelId labelId;
+    private final int partitionId;
+    private final long schemaVersion;
+    private final LabelId labelId;
 
     public DropVertexTypeOperation(int partitionId, long schemaVersion, LabelId labelId) {
         super(OperationType.DROP_VERTEX_TYPE);

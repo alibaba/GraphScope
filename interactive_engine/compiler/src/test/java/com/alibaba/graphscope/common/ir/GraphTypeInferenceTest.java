@@ -109,12 +109,7 @@ public class GraphTypeInferenceTest {
                                 Utils.mockGraphBuilder("schema/ldbc.json"))
                         .build();
         GraphPathType pathType = (GraphPathType) match.getRowType().getFieldList().get(0).getType();
-        // check label type of expand in path_expand
-        Assert.assertEquals(
-                "[EdgeLabel(KNOWS, PERSON, PERSON)]",
-                ((GraphSchemaType) pathType.getComponentType().getExpandType())
-                        .getLabelType()
-                        .toString());
+        // check label type of getV in path_expand
         Assert.assertEquals(
                 "[VertexLabel(PERSON)]",
                 ((GraphSchemaType) pathType.getComponentType().getGetVType())

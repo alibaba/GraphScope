@@ -356,14 +356,14 @@ static std::pair<std::string, std::string> BuildOneLabelEdgeExpandOpt(
     }
   } else {
     if (params.has_predicate()) {
-      VLOG(10) << "Building EdgeExpanV with predicate";
+      VLOG(10) << "Building EdgeExpandV with predicate";
       formater = boost::format(EDGE_EXPAND_V_OPT_FILTER_TEMPLATE_STR);
       formater % expr_var_name % expr_func_name % func_construct_params_str %
           property_selectors_str % opt_var_name %
           gs::direction_pb_to_str(direction) % edge_label_id_str %
           dst_label_ids_str;
     } else {
-      VLOG(10) << "Buliding EdgeExpandV without predicate";
+      VLOG(10) << "Building EdgeExpandV without predicate";
       formater = boost::format(EDGE_EXPAND_V_OPT_NO_FILTER_TEMPLATE_STR);
       formater % opt_var_name % gs::direction_pb_to_str(direction) %
           edge_label_id_str % dst_label_ids_str;
@@ -499,8 +499,8 @@ class EdgeExpandOpBuilder {
       CHECK(graph_data_type.size() > 0);
 
       CHECK(direction_ != internal::Direction::kNotSet);
-      for (auto ele_labe_type : graph_data_type) {
-        auto& triplet = ele_labe_type.label();
+      for (auto ele_label_type : graph_data_type) {
+        auto& triplet = ele_label_type.label();
         auto& dst_label = triplet.dst_label();
         edge_labels_.emplace_back(triplet.label());
         if (direction_ == internal::Direction::kOut) {

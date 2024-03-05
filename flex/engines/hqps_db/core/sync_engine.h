@@ -34,7 +34,7 @@
 #include "flex/engines/hqps_db/core/operator/group_by.h"
 #include "flex/engines/hqps_db/core/operator/path_expand.h"
 #include "flex/engines/hqps_db/core/operator/scan.h"
-#include "flex/engines/hqps_db/core/operator/shorest_path.h"
+#include "flex/engines/hqps_db/core/operator/shortest_path.h"
 #include "flex/engines/hqps_db/core/operator/sink.h"
 #include "flex/engines/hqps_db/core/utils/props.h"
 
@@ -886,7 +886,7 @@ class SyncEngine : public BaseEngine {
       Context<CTX_HEAD_T, cur_alias, base_tag, CTX_PREV...>&& ctx,
       std::tuple<GROUP_KEY...>&& group_key,
       std::tuple<AGG_FUNC...>&& agg_func) {
-    VLOG(10) << "[Group] with with group opt";
+    VLOG(10) << "[Group] with group opt";
     return GroupByOp<GRAPH_INTERFACE>::GroupByImpl(
         graph, std::move(ctx), std::move(group_key), std::move(agg_func));
   }

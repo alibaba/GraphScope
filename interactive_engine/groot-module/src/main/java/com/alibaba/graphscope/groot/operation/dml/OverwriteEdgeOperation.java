@@ -26,10 +26,10 @@ import java.util.Map;
 
 public class OverwriteEdgeOperation extends Operation {
 
-    private EdgeId edgeId;
-    private EdgeKind edgeKind;
-    private Map<Integer, PropertyValue> properties;
-    private boolean forward;
+    private final EdgeId edgeId;
+    private final EdgeKind edgeKind;
+    private final Map<Integer, PropertyValue> properties;
+    private final boolean forward;
 
     public OverwriteEdgeOperation(
             EdgeId edgeId,

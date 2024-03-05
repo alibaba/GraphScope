@@ -45,7 +45,7 @@ public class KafkaWalTest {
                         .put(
                                 KafkaConfig.KAFKA_SERVERS.getKey(),
                                 sharedKafkaTestResource.getKafkaConnectString())
-                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_destroy")
+                        .put(KafkaConfig.KAFKA_TOPIC.getKey(), "test_double_destroy")
                         .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
                         .build();
         LogService logService = new KafkaLogService(configs);
@@ -61,7 +61,7 @@ public class KafkaWalTest {
                         .put(
                                 KafkaConfig.KAFKA_SERVERS.getKey(),
                                 sharedKafkaTestResource.getKafkaConnectString())
-                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_double_init")
+                        .put(KafkaConfig.KAFKA_TOPIC.getKey(), "test_double_init")
                         .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
                         .build();
         LogService logService = new KafkaLogService(configs);
@@ -77,7 +77,7 @@ public class KafkaWalTest {
                         .put(
                                 KafkaConfig.KAFKA_SERVERS.getKey(),
                                 sharedKafkaTestResource.getKafkaConnectString())
-                        .put(KafkaConfig.KAKFA_TOPIC.getKey(), "test_logservice")
+                        .put(KafkaConfig.KAFKA_TOPIC.getKey(), "test_logservice")
                         .put(CommonConfig.STORE_NODE_COUNT.getKey(), "1")
                         .build();
         LogService logService = new KafkaLogService(configs);

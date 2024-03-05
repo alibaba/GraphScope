@@ -154,7 +154,7 @@ struct KeyedT<KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>,
       const PropertySelector<grape::EmptyType>& selector) {
     return builder_t(set);
   }
-  static unkeyed_builder_t create_unkyedkeyed_builder(
+  static unkeyed_builder_t create_unkeyedkeyed_builder(
       const KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, SET_T...>& set,
       const PropertySelector<grape::EmptyType>& selector) {
     return set.CreateBuilder();
