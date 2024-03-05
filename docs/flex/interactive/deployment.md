@@ -1,6 +1,17 @@
 # GraphScope Interactive Deployment
 
-## QuickStart
+## Deploy with docker
+
+You can deploy a single-node GraphScope Interactive instance on modern graph with docker
+```bash
+docker run -it -d -p 7687:7687 -p 10000:10000 -p 7777:7777 registry.cn-hongkong.aliyuncs.com/graphscope/interactive:latest
+```
+
+Now, the admin service will be listening on port 7777, the Cypher Bolt server will be listening on port 7687, and the Interactive engine will be listening on port 10000.
+
+## Deploy with helm
+
+### QuickStart
 
 ```bash
 git clone https://github.com/alibaba/GraphScope.git
@@ -22,7 +33,7 @@ Delete the deployment via
 helm delete {your-release-name}
 ```
 
-## Customizing Configuration
+### Customizing Configuration
 
 By default, all pods of `GraphScope Interactive` is deployed on the same k8s node.
 In such case, all pods can share the storage via k8s pvc of `hostPath` kind.
@@ -30,12 +41,12 @@ In such case, all pods can share the storage via k8s pvc of `hostPath` kind.
 To offer higher throughput and query performance, we also support launching pods across multiple nodes. However, in this mode, you need a storage solution like NFS to ensure that all nodes can access the same storage.
 
 
-## Customize Graph Data.
+### Customize Graph Data.
 
 By default we provide builtin `modern_graph` for `Interactive`. We also support customizing graph data by providing raw graph data via `csv` files. 
 For detail about Graph Model and DataLoading, please check [Interactive Data Model](https://graphscope.io/docs/latest/flex/interactive/data_model);
 
-### Single Node
+#### Single Node
 
 If you just want to deploy Interactive on a single node, then you can just put all `csv` files into a directory, i.e. `/tmp/data/`.
 
@@ -52,7 +63,7 @@ vim pvc/pvc.yaml
 kubectl apply -f pvc.yaml
 ```
 
-### Multiple nodes
+#### Multiple nodes
 
 If you want to deploy Interactive on multiple nodes, then you need something like `nfs` to store you raw graph data, such that all k8s nodes can share the access to same files.
 
