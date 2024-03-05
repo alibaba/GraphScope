@@ -11,7 +11,7 @@ use std::str::FromStr;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
 use crate::graph_db::GraphDB;
-use crate::graph_loader::get_files_list;
+use crate::graph_loader::{get_files_list, get_files_list_beta};
 use crate::ldbc_parser::{LDBCEdgeParser, LDBCVertexParser};
 use crate::schema::{CsrGraphSchema, InputSchema, Schema};
 use crate::types::{DefaultId, LabelId};
@@ -527,18 +527,7 @@ impl GraphModifier {
                         graph.graph_schema.vertex_label_names()[v_label_i as usize]
                     );
                     let vertex_files_prefix = self.input_dir.clone();
-                    let vertex_files = get_files_list(&vertex_files_prefix, &vertex_file_strings);
-                    if vertex_files.is_err() {
-                        warn!(
-                            "Get vertex files {:?}/{:?} failed: {:?}",
-                            &vertex_files_prefix,
-                            &vertex_file_strings,
-                            vertex_files.err().unwrap()
-                        );
-                        delete_sets.push(delete_set);
-                        continue;
-                    }
-                    let vertex_files = vertex_files.unwrap();
+                    let vertex_files = get_files_list_beta(&vertex_files_prefix, &vertex_file_strings);
                     if vertex_files.is_empty() {
                         delete_sets.push(delete_set);
                         continue;
@@ -596,12 +585,14 @@ impl GraphModifier {
                             for result in rdr.records() {
                                 if let Ok(record) = result {
                                     let vertex_meta = parser.parse_vertex_meta(&record);
-                                    let (got_label, lid) = graph
+                                    if let Some((got_label, lid)) = graph
                                         .vertex_map
-                                        .get_internal_id(vertex_meta.global_id)
-                                        .unwrap();
-                                    if got_label == v_label_i as LabelId {
-                                        delete_set.insert(lid);
+                                        .get_internal_id(vertex_meta.global_id) {
+                                      if got_label == v_label_i as LabelId {
+                                          delete_set.insert(lid);
+                                      }
+                                    } else {
+                                      warn!("parse vertex record: {:?} when delete failed", &record);
                                     }
                                 }
                             }

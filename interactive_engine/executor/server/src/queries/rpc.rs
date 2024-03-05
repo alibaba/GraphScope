@@ -10,7 +10,7 @@ use std::task::{Context, Poll};
 use std::time::Duration;
 
 use bmcsr::graph_db::GraphDB;
-use bmcsr::graph_modifier::{GraphModifier, DeleteGenerator};
+use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
 use bmcsr::schema::InputSchema;
 use bmcsr::traverse::traverse;
 use dlopen::wrapper::{Container, WrapperApi};
@@ -118,7 +118,7 @@ impl<S: pb::bi_job_service_server::BiJobService> RPCJobServer<S> {
     pub async fn run(
         self, server_id: u64, mut listener: StandaloneServiceListener,
     ) -> Result<(), Box<dyn std::error::Error>>
-        where {
+where {
         let RPCJobServer { service, mut rpc_config } = self;
         let mut builder = Server::builder();
         if let Some(limit) = rpc_config.rpc_concurrency_limit_per_connection {
@@ -252,7 +252,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
 
     async fn submit(&self, req: Request<pb::BiJobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
-        let pb::BiJobRequest { job_name, params } = req.into_inner();
+        let pb::BiJobRequest { job_name, arguments } = req.into_inner();
 
         let mut conf = JobConf::new(job_name.clone().to_owned());
         conf.set_workers(self.workers);
@@ -263,26 +263,23 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let sink = ResultSink::<Vec<u8>>::with(rpc_sink);
 
         let mut input_params = HashMap::new();
-        input_params.insert(params.clone(), params.clone());
+        for i in arguments {
+            input_params.insert(i.param_name, i.value);
+        }
+
         let graph = self.graph_db.read().unwrap();
         let graph_index = self.graph_index.read().unwrap();
 
         if let Some(libc) = self.query_register.get_query(&job_name) {
             let conf_temp = conf.clone();
             if let Err(e) = pegasus::run_opt(conf, sink, |worker| {
-                worker.dataflow(libc.Query(
-                    conf_temp.clone(),
-                    &graph,
-                    &graph_index,
-                    input_params.clone(),
-                ))
+                worker.dataflow(libc.Query(conf_temp.clone(), &graph, &graph_index, input_params.clone()))
             }) {
                 error!("submit job {} failure: {:?}", job_id, e);
                 Err(Status::unknown(format!("submit job error {}", e)))
             } else {
                 Ok(Response::new(UnboundedReceiverStream::new(rx)))
             }
-            //Err(Status::unknown(format!("query not found, job name {}", job_name)))
         } else {
             Err(Status::unknown(format!("query not found, job name {}", job_name)))
         }
@@ -303,9 +300,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
             .insert(&mut graph, &insert_schema)
             .unwrap();
 
-        let reply = pb::BatchUpdateResponse {
-            is_success: true,
-        };
+        let reply = pb::BatchUpdateResponse { is_success: true };
         Ok(Response::new(reply))
     }
 
@@ -324,13 +319,13 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
             .delete(&mut graph, &delete_schema)
             .unwrap();
 
-        let reply = pb::BatchUpdateResponse {
-            is_success: true,
-        };
+        let reply = pb::BatchUpdateResponse { is_success: true };
         Ok(Response::new(reply))
     }
 
-    async fn submit_delete_generation(&self, req: Request<pb::DeleteGenerationRequest>) -> Result<Response<pb::DeleteGenerationResponse>, Status> {
+    async fn submit_delete_generation(
+        &self, req: Request<pb::DeleteGenerationRequest>,
+    ) -> Result<Response<pb::DeleteGenerationResponse>, Status> {
         let pb::DeleteGenerationRequest { raw_data_root, batch_id } = req.into_inner();
 
         let graph = self.graph_db.read().unwrap();
@@ -339,9 +334,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         delete_generator.skip_header();
         delete_generator.generate(&graph, batch_id.as_str());
 
-        let reply = pb::DeleteGenerationResponse {
-            is_success: true,
-        };
+        let reply = pb::DeleteGenerationResponse { is_success: true };
         Ok(Response::new(reply))
     }
 
@@ -350,23 +343,22 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
     ) -> Result<Response<pb::PrecomputeResponse>, Status> {
         let graph = self.graph_db.read().unwrap();
         let mut graph_index = self.graph_index.write().unwrap();
-        self.query_register.run_precomputes(&graph, &mut graph_index, self.workers);
+        self.query_register
+            .run_precomputes(&graph, &mut graph_index, self.workers);
 
-        let reply = pb::PrecomputeResponse {
-            is_success: true,
-        };
+        let reply = pb::PrecomputeResponse { is_success: true };
         Ok(Response::new(reply))
     }
 
-    async fn submit_traverse(&self, req: Request<pb::TraverseRequest>) -> Result<Response<pb::TraverseResponse>, Status> {
+    async fn submit_traverse(
+        &self, req: Request<pb::TraverseRequest>,
+    ) -> Result<Response<pb::TraverseResponse>, Status> {
         let pb::TraverseRequest { output_dir } = req.into_inner();
         std::fs::create_dir_all(&output_dir).unwrap();
         let graph = self.graph_db.read().unwrap();
         traverse(&graph, &output_dir);
 
-        let reply = pb::TraverseResponse {
-            is_success: true,
-        };
+        let reply = pb::TraverseResponse { is_success: true };
         Ok(Response::new(reply))
     }
 }

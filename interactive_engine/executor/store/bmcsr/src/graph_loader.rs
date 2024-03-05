@@ -1,4 +1,5 @@
 use csv::{Reader, ReaderBuilder};
+use glob::glob;
 use rust_htslib::bgzf::Reader as GzReader;
 use std::collections::HashSet;
 use std::fs::{create_dir_all, read_dir, File};
@@ -19,6 +20,20 @@ use crate::schema::{CsrGraphSchema, InputSchema, Schema};
 use crate::types::{DefaultId, InternalId, LabelId, DIR_BINARY_DATA};
 use crate::vertex_map::VertexMap;
 use regex::Regex;
+
+pub fn get_files_list_beta(prefix: &PathBuf, file_strings: &Vec<String>) -> Vec<PathBuf> {
+    let mut ret = vec![];
+    for suffix in file_strings.iter() {
+        let path = prefix.to_str().unwrap().to_string() + "/" + suffix;
+        for entry in glob(&path).unwrap() {
+            match entry {
+                Ok(p) => ret.push(p),
+                Err(e) => warn!("parsing {} failed: {:?}", path, e),
+            }
+        }
+    }
+    ret
+}
 
 pub fn get_files_list(prefix: &PathBuf, file_strings: &Vec<String>) -> GDBResult<Vec<PathBuf>> {
     let mut path_lists = vec![];
