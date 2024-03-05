@@ -34,6 +34,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
 
+/**
+ * to support common partial computation, we need to wrap the common sub-plan into a {@code RelOptTable}, i.e.
+ * in the query `g.V().out().union(out(), out())`, `g.V().out()` is a common sub-plan, which is denoted as a {@code CommonOptTable} here.
+ */
 public class CommonOptTable implements RelOptTable {
     private final RelNode common;
 
@@ -43,7 +47,7 @@ public class CommonOptTable implements RelOptTable {
 
     @Override
     public List<String> getQualifiedName() {
-        return ImmutableList.of("common#" + this.common.getId());
+        return ImmutableList.of("common#" + this.common.explain().hashCode());
     }
 
     public RelNode getCommon() {

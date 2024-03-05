@@ -71,6 +71,9 @@ public class PrimitiveCountEstimator {
         }
         PatternVertex src = edge.getSrcVertex();
         PatternVertex dst = edge.getDstVertex();
+        // todo: for path expand, the edge selectivity should be calculated in each hop, and the
+        // vertex selectivity should be calculated in each hop if the filter condition is applied in
+        // each hop
         return sum
                 * edge.getDetails().getSelectivity()
                 * src.getDetails().getSelectivity()

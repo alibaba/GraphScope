@@ -54,6 +54,7 @@ public class GraphRelOptimizer {
     private final PlannerConfig config;
     private final RelOptPlanner relPlanner;
     private final RelOptPlanner matchPlanner;
+    private final RelOptPlanner physicalPlanner;
     private final RelBuilderFactory relBuilderFactory;
 
     public GraphRelOptimizer(Configs graphConfig) {
@@ -61,10 +62,19 @@ public class GraphRelOptimizer {
         this.relBuilderFactory = new GraphBuilderFactory(graphConfig);
         this.relPlanner = createRelPlanner();
         this.matchPlanner = createMatchPlanner();
+        this.physicalPlanner = createPhysicalPlanner();
     }
 
     public RelOptPlanner getMatchPlanner() {
         return matchPlanner;
+    }
+
+    public RelOptPlanner getPhysicalPlanner() {
+        return physicalPlanner;
+    }
+
+    public RelOptPlanner getRelPlanner() {
+        return relPlanner;
     }
 
     public @Nullable RelMetadataQuery createMetaDataQuery() {
@@ -80,14 +90,17 @@ public class GraphRelOptimizer {
 
     public RelNode optimize(RelNode before, GraphIOProcessor ioProcessor) {
         if (config.isOn()) {
-            // apply rules of 'FieldTrim' before the match optimization
-            if (config.getRules().contains(FieldTrimRule.class.getSimpleName())) {
-                before = FieldTrimRule.trim(ioProcessor.getBuilder(), before);
-            }
             // apply rules of 'FilterPushDown' before the match optimization
             relPlanner.setRoot(before);
             RelNode relOptimized = relPlanner.findBestExp();
-            return relOptimized.accept(new MatchOptimizer(ioProcessor));
+            RelNode matchOptimized = relOptimized.accept(new MatchOptimizer(ioProcessor));
+            // apply rules of 'FieldTrim' after the match optimization
+            if (config.getRules().contains(FieldTrimRule.class.getSimpleName())) {
+                matchOptimized = FieldTrimRule.trim(ioProcessor.getBuilder(), matchOptimized);
+            }
+            physicalPlanner.setRoot(matchOptimized);
+            RelNode physicalOptimized = physicalPlanner.findBestExp();
+            return physicalOptimized;
         }
         return before;
     }
@@ -168,5 +181,30 @@ public class GraphRelOptimizer {
         }
         // todo: re-implement heuristic rules in ir core match
         return new HepPlanner(HepProgram.builder().build());
+    }
+
+    private RelOptPlanner createPhysicalPlanner() {
+        HepProgramBuilder hepBuilder = HepProgram.builder();
+        if (config.isOn()) {
+            List<RelRule.Config> ruleConfigs = Lists.newArrayList();
+            config.getRules()
+                    .forEach(
+                            k -> {
+                                if (k.equals(ExpandGetVFusionRule.class.getSimpleName())) {
+                                    ruleConfigs.add(
+                                            ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config
+                                                    .DEFAULT);
+                                    ruleConfigs.add(
+                                            ExpandGetVFusionRule.PathBaseExpandGetVFusionRule.Config
+                                                    .DEFAULT);
+                                }
+                            });
+            ruleConfigs.forEach(
+                    k -> {
+                        hepBuilder.addRuleInstance(
+                                k.withRelBuilderFactory(relBuilderFactory).toRule());
+                    });
+        }
+        return new GraphHepPlanner(hepBuilder.build());
     }
 }

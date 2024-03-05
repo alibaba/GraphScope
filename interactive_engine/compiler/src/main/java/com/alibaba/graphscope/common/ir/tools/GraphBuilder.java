@@ -59,6 +59,7 @@ import org.apache.calcite.sql.type.GraphInferTypes;
 import org.apache.calcite.sql.type.IntervalSqlType;
 import org.apache.calcite.sql.type.SqlTypeName;
 import org.apache.calcite.tools.RelBuilder;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Litmus;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Sarg;
@@ -399,6 +400,7 @@ public class GraphBuilder extends RelBuilder {
         for (RelDataTypeField firstField : firstFields) {
             for (RelDataTypeField secondField : secondFields) {
                 if (isGraphElementTypeWithSameOpt(firstField.getType(), secondField.getType())
+                        && firstField.getIndex() != AliasInference.DEFAULT_ID
                         && firstField.getIndex() == secondField.getIndex()) {
                     RexGraphVariable leftKey =
                             RexGraphVariable.of(
@@ -947,7 +949,7 @@ public class GraphBuilder extends RelBuilder {
             // try to extract unique key filters from the original condition
             List<RexNode> disjunctions = RelOptUtil.disjunctions(condition);
             for (RexNode disjunction : disjunctions) {
-                if (isUniqueKeyEqualFilter(disjunction)) {
+                if (isUniqueKeyEqualFilter(disjunction, tableScan)) {
                     filtersToRemove.add(disjunction);
                     uniqueKeyFilters.add(disjunction);
                 }
@@ -997,7 +999,7 @@ public class GraphBuilder extends RelBuilder {
 
     // check the condition if it is the pattern of unique key equal filter, i.e. ~id = 1 or ~id
     // within [1, 2]
-    private boolean isUniqueKeyEqualFilter(RexNode condition) {
+    private boolean isUniqueKeyEqualFilter(RexNode condition, RelNode tableScan) {
         if (condition instanceof RexCall) {
             RexCall rexCall = (RexCall) condition;
             SqlOperator operator = rexCall.getOperator();
@@ -1006,7 +1008,7 @@ public class GraphBuilder extends RelBuilder {
                 case SEARCH:
                     RexNode left = rexCall.getOperands().get(0);
                     RexNode right = rexCall.getOperands().get(1);
-                    if (isUniqueKey(left) && isLiteralOrDynamicParams(right)) {
+                    if (isUniqueKey(left, tableScan) && isLiteralOrDynamicParams(right)) {
                         if (right instanceof RexLiteral) {
                             Comparable value = ((RexLiteral) right).getValue();
                             // if Sarg is a continuous range then the filter is not the 'equal',
@@ -1016,7 +1018,7 @@ public class GraphBuilder extends RelBuilder {
                             }
                         }
                         return true;
-                    } else if (isUniqueKey(right) && isLiteralOrDynamicParams(left)) {
+                    } else if (isUniqueKey(right, tableScan) && isLiteralOrDynamicParams(left)) {
                         if (left instanceof RexLiteral) {
                             Comparable value = ((RexLiteral) left).getValue();
                             if (value instanceof Sarg && !((Sarg) value).isPoints()) {
@@ -1033,14 +1035,46 @@ public class GraphBuilder extends RelBuilder {
         }
     }
 
-    private boolean isUniqueKey(RexNode rexNode) {
-        // todo: support primary keys
+    private boolean isUniqueKey(RexNode rexNode, RelNode tableScan) {
         if (rexNode instanceof RexGraphVariable) {
-            RexGraphVariable variable = (RexGraphVariable) rexNode;
-            return variable.getProperty() != null
-                    && variable.getProperty().getOpt() == GraphProperty.Opt.ID;
+            return isUniqueKey((RexGraphVariable) rexNode, tableScan);
         }
         return false;
+    }
+
+    private boolean isUniqueKey(RexGraphVariable var, RelNode tableScan) {
+        if (var.getProperty() == null) return false;
+        switch (var.getProperty().getOpt()) {
+            case ID:
+                return true;
+            case KEY:
+                GraphSchemaType schemaType =
+                        (GraphSchemaType) tableScan.getRowType().getFieldList().get(0).getType();
+                ImmutableBitSet propertyIds = getPropertyIds(var.getProperty(), schemaType);
+                if (!propertyIds.isEmpty() && tableScan.getTable().isKey(propertyIds)) {
+                    return true;
+                }
+            case LABEL:
+            case ALL:
+            case LEN:
+            default:
+                return false;
+        }
+    }
+
+    private ImmutableBitSet getPropertyIds(GraphProperty property, GraphSchemaType schemaType) {
+        if (property.getOpt() != GraphProperty.Opt.KEY) return ImmutableBitSet.of();
+        GraphNameOrId key = property.getKey();
+        if (key.getOpt() == GraphNameOrId.Opt.ID) {
+            return ImmutableBitSet.of(key.getId());
+        }
+        for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
+            RelDataTypeField field = schemaType.getFieldList().get(i);
+            if (field.getName().equals(key.getName())) {
+                return ImmutableBitSet.of(i);
+            }
+        }
+        return ImmutableBitSet.of();
     }
 
     private boolean isLiteralOrDynamicParams(RexNode node) {

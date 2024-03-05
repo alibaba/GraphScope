@@ -27,13 +27,25 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
     @Override
     public void onMatch(RelOptRuleCall relOptRuleCall) {
         GraphPattern pattern = relOptRuleCall.rel(0);
-        if (pattern.getPattern().getVertexNumber() < config.getMinPatternSize()) {
+        if (getMaxVertexNum(pattern.getPattern()) < config.getMinPatternSize()) {
             return;
         }
         List<GraphJoinDecomposition> decompositions = getDecompositions(pattern);
         for (GraphJoinDecomposition decomposition : decompositions) {
             relOptRuleCall.transformTo(decomposition);
         }
+    }
+
+    private int getMaxVertexNum(Pattern pattern) {
+        int maxVertexNum = pattern.getVertexNumber();
+        for (PatternEdge edge : pattern.getEdgeSet()) {
+            if (edge.getDetails().getRange() != null) {
+                PathExpandRange range = edge.getDetails().getRange();
+                int maxHop = range.getOffset() + range.getFetch() - 1;
+                maxVertexNum += (maxHop - 1);
+            }
+        }
+        return maxVertexNum;
     }
 
     // bfs to get all possible decompositions
@@ -272,55 +284,57 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
         if (pxdRange != null) {
             int minHop = pxdRange.getOffset();
             int maxHop = pxdRange.getOffset() + pxdRange.getFetch() - 1;
-            for (int i = 0; i <= minHop; ++i) {
-                for (int j = 1; j <= maxHop - 1; ++j) {
-                    if (i <= j) {
-                        // split the path expand into two path expands
-                        // probe part: [i, j]
-                        // build part: [minHop - i, maxHop - j]
-                        PatternVertex anotherVertex =
-                                Utils.getExtendFromVertex(probeEdge, jointVertex);
-                        PatternVertex splitVertex = createNewVertex(anotherVertex);
-                        newAddVertices.add(splitVertex);
-                        PatternVertex probeSrc, probeDst;
-                        if (probeEdge.getSrcVertex().equals(jointVertex)) {
-                            probeSrc = jointVertex;
-                            probeDst = splitVertex;
-                        } else {
-                            probeSrc = splitVertex;
-                            probeDst = jointVertex;
+            if (maxHop >= config.getMinPatternSize() - 1) {
+                for (int i = 0; i <= minHop; ++i) {
+                    for (int j = 1; j <= maxHop - 1; ++j) {
+                        if (i <= j && (minHop - i) <= (maxHop - j)) {
+                            // split the path expand into two path expands
+                            // probe part: [i, j]
+                            // build part: [minHop - i, maxHop - j]
+                            PatternVertex anotherVertex =
+                                    Utils.getExtendFromVertex(probeEdge, jointVertex);
+                            PatternVertex splitVertex = createNewVertex(anotherVertex);
+                            newAddVertices.add(splitVertex);
+                            PatternVertex probeSrc, probeDst;
+                            if (probeEdge.getSrcVertex().equals(jointVertex)) {
+                                probeSrc = jointVertex;
+                                probeDst = splitVertex;
+                            } else {
+                                probeSrc = splitVertex;
+                                probeDst = jointVertex;
+                            }
+                            PatternEdge probeSplit =
+                                    createNewEdge(
+                                            probeEdge,
+                                            probeSrc,
+                                            probeDst,
+                                            new PathExpandRange(i, j - i + 1));
+                            PatternVertex buildSrc, buildDst;
+                            if (probeEdge.getSrcVertex().equals(jointVertex)) {
+                                buildSrc = splitVertex;
+                                buildDst = anotherVertex;
+                            } else {
+                                buildSrc = anotherVertex;
+                                buildDst = splitVertex;
+                            }
+                            PatternEdge buildSplit =
+                                    createNewEdge(
+                                            probeEdge,
+                                            buildSrc,
+                                            buildDst,
+                                            new PathExpandRange(
+                                                    minHop - i, maxHop - j - (minHop - i) + 1));
+                            EdgeDecomposition cloneDecomposition = curDecomposition.copy();
+                            cloneDecomposition.probeEdges.add(probeSplit);
+                            cloneDecomposition.buildEdges.add(buildSplit);
+                            getEdgeDecompositions(
+                                    probeEdges,
+                                    edgeId + 1,
+                                    cloneDecomposition,
+                                    resultDecompositions,
+                                    jointVertex,
+                                    newAddVertices);
                         }
-                        PatternEdge probeSplit =
-                                createNewEdge(
-                                        probeEdge,
-                                        probeSrc,
-                                        probeDst,
-                                        new PathExpandRange(i, j - i + 1));
-                        PatternVertex buildSrc, buildDst;
-                        if (probeEdge.getSrcVertex().equals(jointVertex)) {
-                            buildSrc = splitVertex;
-                            buildDst = anotherVertex;
-                        } else {
-                            buildSrc = anotherVertex;
-                            buildDst = splitVertex;
-                        }
-                        PatternEdge buildSplit =
-                                createNewEdge(
-                                        probeEdge,
-                                        buildSrc,
-                                        buildDst,
-                                        new PathExpandRange(
-                                                minHop - i, maxHop - j - (minHop - i) + 1));
-                        EdgeDecomposition cloneDecomposition = curDecomposition.copy();
-                        cloneDecomposition.probeEdges.add(probeSplit);
-                        cloneDecomposition.buildEdges.add(buildSplit);
-                        getEdgeDecompositions(
-                                probeEdges,
-                                edgeId + 1,
-                                cloneDecomposition,
-                                resultDecompositions,
-                                jointVertex,
-                                newAddVertices);
                     }
                 }
             }
@@ -395,7 +409,9 @@ public class JoinDecompositionRule<C extends JoinDecompositionRule.Config> exten
                             Pattern dProbe = ((GraphPattern) d.getLeft()).getPattern();
                             Pattern dBuild = ((GraphPattern) d.getRight()).getPattern();
                             return dProbe.isIsomorphicTo(targetProbe)
-                                    && dBuild.isIsomorphicTo(targetBuild);
+                                            && dBuild.isIsomorphicTo(targetBuild)
+                                    || dProbe.isIsomorphicTo(targetBuild)
+                                            && dBuild.isIsomorphicTo(targetProbe);
                         });
     }
 

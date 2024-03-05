@@ -34,10 +34,13 @@ import org.apache.calcite.rel.metadata.RelMdSelectivity;
 import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Pair;
+import org.apache.calcite.util.Sarg;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
@@ -109,8 +112,14 @@ public class GraphSelectivityHandler extends RelMdSelectivity
                 maxCount = count;
             }
         }
-        if (condition.isA(SqlKind.EQUALS) && Double.compare(maxCountForUniqueKeys, 0.0d) != 0) {
-            return 1.0d / maxCountForUniqueKeys;
+        if (Double.compare(maxCountForUniqueKeys, 0.0d) != 0) {
+            if (condition.isA(SqlKind.SEARCH)) {
+                RexNode right = ((RexCall) condition).getOperands().get(1);
+                Sarg sarg = ((RexLiteral) right).getValueAs(Sarg.class);
+                return sarg.pointCount / maxCountForUniqueKeys;
+            } else if (condition.isA(SqlKind.EQUALS)) {
+                return 1.0d / maxCountForUniqueKeys;
+            }
         }
         return Math.max(RelMdUtil.guessSelectivity(condition), relax(1.0d / maxCount));
     }

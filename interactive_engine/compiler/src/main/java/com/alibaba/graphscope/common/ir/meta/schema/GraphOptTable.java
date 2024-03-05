@@ -22,7 +22,7 @@ import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.alibaba.graphscope.groot.common.schema.api.*;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 
 import org.apache.calcite.linq4j.tree.Expression;
 import org.apache.calcite.plan.RelOptSchema;
@@ -116,25 +116,22 @@ public class GraphOptTable implements RelOptTable {
                 (schema instanceof GraphOptSchema)
                         ? ((GraphOptSchema) schema).getRootSchema().isColumnId()
                         : false;
-        ImmutableBitSet.Builder builder = ImmutableBitSet.builder();
+        List<ImmutableBitSet> uniqueKeys = Lists.newArrayList();
         List<GraphProperty> primaryKeyList = element.getPrimaryKeyList();
         if (ObjectUtils.isNotEmpty(primaryKeyList)) {
             for (GraphProperty property : primaryKeyList) {
                 for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
                     RelDataTypeField field = schemaType.getFieldList().get(i);
                     if (field.getName().equals(property.getName())) {
-                        if (isColumnId) {
-                            builder.set(field.getIndex());
-                        } else {
-                            builder.set(i);
-                        }
+                        // todo: support unique key consisting of multiple columns, here we assume
+                        // there is only one column in a unique key
+                        uniqueKeys.add(ImmutableBitSet.of(isColumnId ? field.getIndex() : i));
                         break;
                     }
                 }
             }
         }
-        if (builder.isEmpty()) return ImmutableList.of();
-        return ImmutableList.of(builder.build());
+        return uniqueKeys;
     }
 
     private RelDataType deriveType(GraphProperty property) {

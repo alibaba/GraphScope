@@ -21,10 +21,23 @@ import com.google.common.collect.ImmutableList;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.plan.RelTraitSet;
+import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.core.TableScan;
 
+/**
+ * represent a common sub-plan as a table scan, specific to a {@code CommonOptTable}
+ */
 public class CommonTableScan extends TableScan {
     public CommonTableScan(RelOptCluster cluster, RelTraitSet traitSet, RelOptTable table) {
         super(cluster, traitSet, ImmutableList.of(), table);
+    }
+
+    @Override
+    public RelNode accept(RelShuttle shuttle) {
+        if (shuttle instanceof GraphShuttle) {
+            return ((GraphShuttle) shuttle).visit(this);
+        }
+        return shuttle.visit(this);
     }
 }

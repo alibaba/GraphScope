@@ -37,10 +37,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rex.RexDynamicParam;
-import org.apache.calcite.rex.RexLiteral;
-import org.apache.calcite.rex.RexNode;
-import org.apache.calcite.rex.RexSubQuery;
+import org.apache.calcite.rex.*;
 import org.apache.calcite.sql.SqlIntervalQualifier;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlOperator;
@@ -143,6 +140,10 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 operand =
                         visitOC_StringPredicateExpression(
                                 operand, (CypherGSParser.OC_StringPredicateExpressionContext) o);
+            } else if (CypherGSParser.OC_ListPredicateExpressionContext.class.isInstance(o)) {
+                operand =
+                        visitOC_ListPredicateExpression(
+                                operand, (CypherGSParser.OC_ListPredicateExpressionContext) o);
             }
         }
         return operand;
@@ -210,6 +211,22 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 ctx.oC_MultiplyDivideModuloExpression().stream()
                         .map(k -> visitOC_MultiplyDivideModuloExpression(k))
                         .collect(Collectors.toList()));
+    }
+
+    private ExprVisitorResult visitOC_ListPredicateExpression(
+            ExprVisitorResult left, CypherGSParser.OC_ListPredicateExpressionContext ctx) {
+        RexBuilder rexBuilder = builder.getRexBuilder();
+        ExprVisitorResult rightRes =
+                visitOC_AddOrSubtractExpression(ctx.oC_AddOrSubtractExpression());
+        RexNode rightExpr = rightRes.getExpr();
+        Preconditions.checkArgument(
+                rightExpr.getKind() == SqlKind.ARRAY_VALUE_CONSTRUCTOR,
+                "the right operand of list predicate expression should be a list literal");
+        List<RelBuilder.AggCall> aggCalls = Lists.newArrayList();
+        aggCalls.addAll(left.getAggCalls());
+        aggCalls.addAll(rightRes.getAggCalls());
+        return new ExprVisitorResult(
+                aggCalls, rexBuilder.makeIn(left.getExpr(), ((RexCall) rightExpr).getOperands()));
     }
 
     @Override

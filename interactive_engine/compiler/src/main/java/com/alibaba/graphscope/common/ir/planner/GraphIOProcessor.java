@@ -31,6 +31,7 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.ExtendStep;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueExtendIntersectEdge;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.*;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
+import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.Utils;
@@ -44,10 +45,10 @@ import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.JoinRelType;
-import org.apache.calcite.rel.logical.LogicalJoin;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.MultiJoin;
 import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.rex.RexUtil;
@@ -202,7 +203,7 @@ public class GraphIOProcessor {
                                 DataValue value = vertexOrEdgeDetails.get(existVertex);
                                 if (value.getFilter() == null
                                         || !RelOptUtil.conjunctions(value.getFilter())
-                                                .contains(filters)) {
+                                                .containsAll(RelOptUtil.conjunctions(filters))) {
                                     throw new IllegalArgumentException(
                                             "filters "
                                                     + filters
@@ -487,13 +488,10 @@ public class GraphIOProcessor {
                             buildOrderMap,
                             decomposition.getBuildPattern());
             // here we assume all inputs of the join come from different sources
-            return LogicalJoin.create(
-                    newLeft,
-                    newRight,
-                    ImmutableList.of(),
-                    joinCondition,
-                    ImmutableSet.of(),
-                    JoinRelType.INNER);
+            return builder.push(newLeft)
+                    .push(newRight)
+                    .join(JoinRelType.INNER, joinCondition)
+                    .build();
         }
 
         private RexNode createJoinFilter(
@@ -504,6 +502,8 @@ public class GraphIOProcessor {
                 Map<Integer, Integer> buildOrderMap,
                 Pattern buildPattern) {
             List<RexNode> joinCondition = Lists.newArrayList();
+            List<RelDataTypeField> leftFields =
+                    com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(left).getFieldList();
             for (GraphJoinDecomposition.JoinVertexPair jointVertex : jointVertices) {
                 Integer targetOrderId = buildOrderMap.get(jointVertex.getRightOrderId());
                 if (targetOrderId == null) {
@@ -515,14 +515,19 @@ public class GraphIOProcessor {
                                 vertexDetails,
                                 buildPattern.getVertexByOrder(jointVertex.getRightOrderId()));
                 builder.push(left);
-                RexVariable leftVar = builder.variable(value.getAlias());
+                RexGraphVariable leftVar = builder.variable(value.getAlias());
                 builder.build();
                 builder.push(right);
-                RexVariable rightVar = builder.variable(value.getAlias());
+                RexGraphVariable rightVar = builder.variable(value.getAlias());
+                rightVar =
+                        RexGraphVariable.of(
+                                rightVar.getAliasId(),
+                                leftFields.size() + rightVar.getIndex(),
+                                rightVar.getName(),
+                                rightVar.getType());
                 builder.build();
                 joinCondition.add(builder.equals(leftVar, rightVar));
             }
-
             return RexUtil.composeConjunction(builder.getRexBuilder(), joinCondition);
         }
 
@@ -626,7 +631,16 @@ public class GraphIOProcessor {
                         .alias(edgeValue.getAlias())
                         .startAlias(srcValue.getAlias())
                         .range(edge.getRange().getOffset(), edge.getRange().getFetch());
-                builder.pathExpand(pxdBuilder.build()).getV(getVConfig);
+                builder.pathExpand(pxdBuilder.build())
+                        .getV(
+                                new GetVConfig(
+                                        GraphOpt.GetV.END,
+                                        getVConfig.getLabels(),
+                                        getVConfig.getAlias(),
+                                        getVConfig.getStartAlias()));
+                if (targetValue.getFilter() != null) {
+                    builder.filter(targetValue.getFilter());
+                }
             } else {
                 builder.expand(expandConfig);
                 if (edgeValue.getFilter() != null) {
