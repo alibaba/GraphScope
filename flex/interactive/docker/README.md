@@ -26,3 +26,10 @@ sudo docker manifest create registry.cn-hongkong.aliyuncs.com/graphscope/interac
 
 sudo docker manifest push registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${VERSION}
 ```
+
+## Start Interactive Service
+
+The following command with start the interactive service on the default modern graph.
+```bash
+docker run -it -d -p 7687:7687 -p 10000:10000 -p 7777:7777 registry.cn-hongkong.aliyuncs.com/graphscope/interactive:latest
+```

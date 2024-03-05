@@ -57,7 +57,7 @@ Set `location` to `/home/graphscope/default_graph`.
 ```bash
 ./bin/gs_interactive service stop
 ./bin/gs_interactive database remove -g modern
-./bin/gs_interactive database create -g test -c ./examples/modern_graph/modern_graph.yaml
+./bin/gs_interactive database create -g test -c ./examples/modern_graph/graph.yaml
 ./bin/gs_interactive database import -g test -c ./examples/modern_graph/bulk_load.yaml
 ./bin/gs_interactive service start -g test
 ```

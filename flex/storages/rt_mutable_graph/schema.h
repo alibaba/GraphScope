@@ -178,7 +178,7 @@ class Schema {
 
   void Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader);
 
-  static Schema LoadFromYaml(const std::string& schema_config);
+  static Result<Schema> LoadFromYaml(const std::string& schema_config);
 
   static Result<Schema> LoadFromYamlNode(const YAML::Node& schema_node);
 
@@ -191,6 +191,8 @@ class Schema {
   bool EmplacePlugins(const std::vector<std::string>& plugin_paths_or_names);
 
   void SetPluginDir(const std::string& plugin_dir);
+
+  void RemovePlugin(const std::string& plugin_name);
 
   std::string GetPluginDir() const;
 

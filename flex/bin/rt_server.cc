@@ -83,7 +83,10 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  gs::GraphDBConfig config(schema, data_path, shard_num);
+  if (!schema.ok()) {
+    LOG(FATAL) << "Failed to load schema: " << schema.status().error_message();
+  }
+  gs::GraphDBConfig config(schema.value(), data_path, shard_num);
   config.memory_level = memory_level;
   if (config.memory_level >= 2) {
     config.enable_auto_compaction = true;

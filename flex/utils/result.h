@@ -50,6 +50,7 @@ class Status {
   Status(StatusCode error_code, const std::string& error_msg) noexcept;
   bool ok() const;
   std::string error_message() const;
+  StatusCode error_code() const;
 
   static Status OK();
 
@@ -95,10 +96,52 @@ class Result {
   const Status& status() const noexcept { return status_; }
   ValueType& value() noexcept { return value_; }
 
+  // return rvalue
+  ValueType&& move_value() noexcept { return std::move(value_); }
+
  private:
   Status status_;
   ValueType value_;
 };
+
+template <typename T>
+struct is_gs_result_type : std::false_type {};
+
+template <typename T>
+struct is_gs_result_type<Result<T>> : std::true_type {};
+
+// define a macro, which checks the return status of a function, if ok, continue
+// to execute, otherwise, return the status.
+// the macro accept the calling code of a function, and the function name.
+#define RETURN_IF_NOT_OK(expr) \
+  do {                         \
+    auto status = (expr);      \
+    if (!status.ok()) {        \
+      return status;           \
+    }                          \
+  } while (0)
+
+// a Macro automatically assign the return value of a function, which returns
+// result to a variable, and check the status of the result, if ok, continue to
+// execute, otherwise, return the status. the macro accept the calling code of a
+// function, the function name, and the variable name.
+// reference:
+// https://github.com/boostorg/leaf/blob/develop/include/boost/leaf/error.hpp
+#define ASSIGN_AND_RETURN_IF_NOT_OK(var, expr)                                 \
+  auto&& FLEX_TMP_VAR = expr;                                                  \
+  static_assert(::gs::is_gs_result_type<                                       \
+                    typename std::decay<decltype(FLEX_TMP_VAR)>::type>::value, \
+                "The expression must return a Result type");                   \
+  if (!FLEX_TMP_VAR.ok()) {                                                    \
+    return FLEX_TMP_VAR;                                                       \
+  }                                                                            \
+  var = std::forward<decltype(FLEX_TMP_VAR)>(FLEX_TMP_VAR).move_value()
+
+// A Marco automatically use a auto variable to store the return value of a
+// function, which returns result, and check the status of the result, if ok,
+// continue to execute, otherwise, return the status. the macro accept the
+// calling code of a function, the function name, and the variable name.
+#define FLEX_AUTO(var, expr) ASSIGN_AND_RETURN_IF_NOT_OK(auto var, expr)
 
 }  // namespace gs
 

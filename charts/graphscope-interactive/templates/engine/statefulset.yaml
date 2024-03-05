@@ -81,7 +81,7 @@ spec:
               if [ ! -d ${builtin_graph_data_path} ]; then
                 mkdir -p ${INTERACTIVE_WORKSPACE}/data/${DEFAULT_GRAPH_NAME}
                 echo "Loading builtin graph: ${DEFAULT_GRAPH_NAME} with command: $builtin_graph_loader_cmd"
-                cp /opt/flex/share/gs_interactive_default_graph/modern_graph.yaml ${builtin_graph_schema_path}
+                cp /opt/flex/share/gs_interactive_default_graph/graph.yaml ${builtin_graph_schema_path}
                 cp /opt/flex/share/gs_interactive_default_graph/bulk_load.yaml ${builtin_graph_import_path}
                 export FLEX_DATA_DIR=/opt/flex/share/gs_interactive_default_graph/
 

@@ -203,7 +203,11 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  db.Open(schema, data_path, shard_num);
+  if (!schema.ok()) {
+    LOG(ERROR) << "Failed to load graph schema from " << graph_schema_path;
+    return -1;
+  }
+  db.Open(schema.value(), data_path, shard_num);
 
   t0 += grape::GetCurrentTime();
   uint32_t warmup_num = vm["warmup-num"].as<uint32_t>();
