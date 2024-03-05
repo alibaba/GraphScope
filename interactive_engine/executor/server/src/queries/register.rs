@@ -72,7 +72,7 @@ pub struct QueriesSetting {
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct QueriesConfig {
-    precompute: Vec<PrecomputeSetting>,
+    precompute: Option<Vec<PrecomputeSetting>>,
     read_queries: Vec<QueriesSetting>,
 }
 
@@ -100,11 +100,13 @@ impl QueryRegister {
     pub fn load(&mut self, config_path: &PathBuf) {
         let file = File::open(config_path).expect("Failed to open config file");
         let config: QueriesConfig = serde_yaml::from_reader(file).expect("Could not read values");
-        for precompute in config.precompute {
-            let lib_path = precompute.path.clone();
-            let libc: Container<PrecomputeApi> = unsafe { Container::load(lib_path) }.unwrap();
+        if let Some(precomputes) = config.precompute {
+            for precompute in precomputes {
+                let lib_path = precompute.path.clone();
+                let libc: Container<PrecomputeApi> = unsafe { Container::load(lib_path) }.unwrap();
 
-            self.register_precompute(precompute.precompute_name.clone(), precompute.clone(), libc);
+                self.register_precompute(precompute.precompute_name.clone(), precompute.clone(), libc);
+            }
         }
         for query in config.read_queries {
             let lib_path = query.path.clone();
@@ -128,7 +130,6 @@ impl QueryRegister {
 
     pub fn run_precomputes(&self, graph: &GraphDB<usize, usize>, graph_index: &mut GraphIndex, worker_num: u32)
     {
-        /*
         for (i, (name, (setting, libc))) in self.precompute_map.iter().enumerate() {
             let start = Instant::now();
 
@@ -240,6 +241,5 @@ impl QueryRegister {
                 start.elapsed().as_millis()
             );
         }
-         */
     }
 }
