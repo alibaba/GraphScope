@@ -454,7 +454,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     // The intersect op can be:
                     //     1) EdgeExpand with Opt = ExpandV, which is to expand and intersect on id-only vertices;
                     //     2) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges (not supported yet);
-                    //     3) PathExpand, which is to expand paths and intersect on the end vertices.
+                    //     3) PathExpand + EndV, which is to expand paths and intersect on the end vertices.
                     // Specifically,
                     //     1) if we want to expand and intersect on vertices, while there are some further filters on the intersected vertices,
                     //        this would be translated into Intersect(EdgeExpand(V), EdgeExpand(V)) + Unfold + Select in physical plan for now.
@@ -462,7 +462,7 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                     let mut intersected_expands = vec![];
                     let mut pre_expands = vec![];
                     for mut subplan in intersect.sub_plans {
-                        if subplan.plan.len() > 2 {
+                        if subplan.plan.len() > 3 {
                             Err(FnGenError::unsupported_error(&format!(
                                 "subplan in pb::Intersect::plan {:?}",
                                 subplan,
@@ -497,89 +497,115 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                                 };
                                 intersected_expands.push((repartition, expand));
                             }
-                            OpKind::Path(mut path_expand) => {
-                                let repartition = if let Some(prev) = subplan.plan.last() {
-                                    if let OpKind::Repartition(path_expand_repartition) = prev
-                                        .try_into()
-                                        .map_err(|e| FnGenError::from(e))?
-                                    {
-                                        subplan.plan.pop();
-                                        Some(path_expand_repartition)
-                                    } else {
-                                        Err(FnGenError::unsupported_error(&format!(
-                                            "subplan in pb::Intersect::plan {:?}",
-                                            subplan,
-                                        )))?
-                                    }
-                                } else {
-                                    None
-                                };
-                                // the case of expand paths and intersect on the end vertices
-                                // Process path_expand as follows:
-                                // 1. If path_expand range from 0, it is unsupported;
-                                // 2. If it is path_expand(1,2), optimized as edge_expand;
-                                // 3. Otherwise, translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
-                                //    and the last edge_expand is the one to intersect.
-                                //    Notice that if we have predicates for vertices in path_expand, or for the last vertex of path_expand,
-                                //    do the filtering after intersection.
-                                // TODO: there might be a bug here:
-                                // if path_expand has an alias which indicates that the path would be referred later, it may not as expected.
-                                let path_expand_base = path_expand.base.as_ref().ok_or_else(|| {
-                                    FnGenError::ParseError("PathExpand::base in Pattern is empty".into())
+                            OpKind::Vertex(mut end_v) => {
+                                // the case of PathExpand + EndV
+                                if end_v.opt != pb::get_v::VOpt::End as i32 {
+                                    Err(FnGenError::unsupported_error(&format!(
+                                        "Subplan in Intersection {:?}",
+                                        subplan,
+                                    )))?
+                                }
+                                let prev_opr = subplan.plan.pop().ok_or_else(|| {
+                                    FnGenError::unsupported_error(&format!(
+                                        "subplan with only getV in pb::Intersect::plan {:?}",
+                                        end_v,
+                                    ))
                                 })?;
-                                let base_edge_expand = path_expand_base
-                                    .edge_expand
-                                    .as_ref()
-                                    .ok_or_else(|| {
+
+                                if let OpKind::Path(mut path_expand) = prev_opr
+                                    .try_into()
+                                    .map_err(|e| FnGenError::from(e))?
+                                {
+                                    let repartition = if let Some(prev) = subplan.plan.last() {
+                                        if let OpKind::Repartition(path_expand_repartition) = prev
+                                            .try_into()
+                                            .map_err(|e| FnGenError::from(e))?
+                                        {
+                                            subplan.plan.pop();
+                                            Some(path_expand_repartition)
+                                        } else {
+                                            Err(FnGenError::unsupported_error(&format!(
+                                                "subplan in pb::Intersect::plan {:?}",
+                                                subplan,
+                                            )))?
+                                        }
+                                    } else {
+                                        None
+                                    };
+                                    // the case of expand paths and intersect on the end vertices
+                                    // Process path_expand as follows:
+                                    // 1. If path_expand range from 0, it is unsupported;
+                                    // 2. If it is path_expand(1,2), optimized as edge_expand;
+                                    // 3. Otherwise, translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
+                                    //    and the last edge_expand is the one to intersect.
+                                    //    Notice that if we have predicates for vertices in path_expand, or for the last vertex of path_expand,
+                                    //    do the filtering after intersection.
+                                    // TODO: there might be a bug here:
+                                    // if path_expand has an alias which indicates that the path would be referred later, it may not as expected.
+                                    let path_expand_base = path_expand.base.as_ref().ok_or_else(|| {
                                         FnGenError::ParseError(
-                                            "PathExpand::base::edge_expand is empty".into(),
+                                            "PathExpand::base in Pattern is empty".into(),
                                         )
                                     })?;
-                                // only support expand_opt = ExpandV
-                                if base_edge_expand.expand_opt != pb::edge_expand::ExpandOpt::Vertex as i32
-                                {
-                                    Err(FnGenError::unsupported_error(&format!(
-                                        "PathExpand in Intersection with expand {:?}",
-                                        base_edge_expand
-                                    )))?
-                                }
-                                // pick the last edge expand out from the path expand
-                                let hop_range = path_expand.hop_range.as_mut().ok_or_else(|| {
-                                    FnGenError::ParseError("pb::PathExpand::hop_range is empty".into())
-                                })?;
-                                if hop_range.lower < 1 {
-                                    Err(FnGenError::unsupported_error(&format!(
-                                        "PathExpand in Intersection with lower range of {:?}",
-                                        hop_range.lower
-                                    )))?
-                                }
-                                if hop_range.lower == 1 && hop_range.upper == 2 {
-                                    // optimized Path(1..2) to as EdgeExpand
-                                    let mut edge_expand = base_edge_expand.clone();
-                                    edge_expand.v_tag = path_expand.start_tag;
-                                    edge_expand.alias = path_expand.alias;
-                                    intersected_expands.push((repartition, edge_expand));
-                                } else {
-                                    // translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
-                                    let mut edge_expand = base_edge_expand.clone();
-                                    edge_expand.v_tag = None;
-                                    // edge expand should carry the path alias, which is the intersect key.
-                                    edge_expand.alias = path_expand.alias.clone();
-                                    path_expand.alias.take();
-                                    hop_range.lower -= 1;
-                                    hop_range.upper -= 1;
-                                    let mut end_v = pb::GetV::default();
-                                    end_v.opt = pb::get_v::VOpt::End as i32;
-                                    // pre expand path_expand(l-1, h-1)
-                                    if let Some(repartition) = repartition.clone() {
-                                        pre_expands.push(repartition.into());
+                                    let base_edge_expand = path_expand_base
+                                        .edge_expand
+                                        .as_ref()
+                                        .ok_or_else(|| {
+                                            FnGenError::ParseError(
+                                                "PathExpand::base::edge_expand is empty".into(),
+                                            )
+                                        })?;
+                                    // only support expand_opt = ExpandV
+                                    if base_edge_expand.expand_opt
+                                        != pb::edge_expand::ExpandOpt::Vertex as i32
+                                    {
+                                        Err(FnGenError::unsupported_error(&format!(
+                                            "PathExpand in Intersection with expand {:?}",
+                                            base_edge_expand
+                                        )))?
                                     }
-                                    pre_expands.push(path_expand.into());
-                                    pre_expands.push(end_v.into());
-                                    // and then expand and intersect on the last edge_expand
-                                    intersected_expands.push((repartition, edge_expand));
+                                    // pick the last edge expand out from the path expand
+                                    let hop_range = path_expand.hop_range.as_mut().ok_or_else(|| {
+                                        FnGenError::ParseError("pb::PathExpand::hop_range is empty".into())
+                                    })?;
+                                    if hop_range.lower < 1 {
+                                        Err(FnGenError::unsupported_error(&format!(
+                                            "PathExpand in Intersection with lower range of {:?}",
+                                            hop_range.lower
+                                        )))?
+                                    }
+                                    if hop_range.lower == 1 && hop_range.upper == 2 {
+                                        // optimized Path(1..2) to as EdgeExpand
+                                        let mut edge_expand = base_edge_expand.clone();
+                                        edge_expand.v_tag = path_expand.start_tag;
+                                        edge_expand.alias = end_v.alias;
+                                        intersected_expands.push((repartition, edge_expand));
+                                    } else {
+                                        // translate path_expand(l,h) to path_expand(l-1, h-1) + endV() + edge_expand,
+                                        let mut edge_expand = base_edge_expand.clone();
+                                        edge_expand.v_tag = None;
+                                        // edge expand should carry endv's alias, which is the intersect key.
+                                        edge_expand.alias = end_v.alias.clone();
+                                        end_v.alias.take();
+                                        hop_range.lower -= 1;
+                                        hop_range.upper -= 1;
+                                        // pre expand path_expand(l-1, h-1)
+                                        if let Some(repartition) = repartition.clone() {
+                                            pre_expands.push(repartition.into());
+                                        }
+                                        pre_expands.push(path_expand.into());
+                                        pre_expands.push(end_v.into());
+                                        // and then expand and intersect on the last edge_expand
+                                        intersected_expands.push((repartition, edge_expand));
+                                    }
+                                } else {
+                                    Err(FnGenError::unsupported_error(&format!(
+                                        "subplan in pb::Intersect::plan {:?}",
+                                        subplan,
+                                    )))?
                                 }
                             }
+
                             _ => Err(FnGenError::unsupported_error(&format!(
                                 "Opr in Intersection to intersect: {:?}",
                                 last_op_kind

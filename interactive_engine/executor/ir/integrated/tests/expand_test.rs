@@ -1110,7 +1110,7 @@ mod test {
             meta_data: None,
         };
         let path_opr = algebra_pb::PathExpand {
-            alias: Some(TAG_C.into()),
+            alias: None,
             base: Some(algebra_pb::path_expand::ExpandBase {
                 edge_expand: Some(expand_opr2.clone()),
                 get_v: None,
@@ -1120,6 +1120,14 @@ mod test {
             path_opt: 1,   // simple
             result_opt: 0, // endv
             condition: None,
+        };
+
+        let end_v = algebra_pb::GetV {
+            tag: None,
+            opt: 1, // EndV
+            params: Some(query_params(vec![], vec![], None)),
+            alias: Some(TAG_C.into()),
+            meta_data: None,
         };
 
         // lop (B) <- josh (C): expand C and intersect on C;
@@ -1141,6 +1149,7 @@ mod test {
         let mut plan_builder_1 = PlanBuilder::new(1);
         plan_builder_1.shuffle(None);
         plan_builder_1.path_expand(path_opr);
+        plan_builder_1.get_v(end_v);
         let mut plan_builder_2 = PlanBuilder::new(2);
         plan_builder_2.shuffle(None);
         plan_builder_2.edge_expand(expand_opr3.clone());
