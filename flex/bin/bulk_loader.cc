@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <csignal>
 #include <filesystem>
 #include <iostream>
 
@@ -24,6 +25,22 @@
 #include "flex/engines/http_server/options.h"
 
 namespace bpo = boost::program_options;
+
+static std::string work_dir;
+
+void signal_handler(int signal) {
+  LOG(INFO) << "Received signal " << signal << ", exiting...";
+  // support SIGKILL, SIGINT, SIGTERM
+  if (signal == SIGKILL || signal == SIGINT || signal == SIGTERM) {
+    LOG(ERROR) << "Received signal " << signal
+               << ",Clearing directory: " << work_dir << ", exiting...";
+    gs::clear_tmp(work_dir);
+    exit(0);
+  } else {
+    LOG(ERROR) << "Received unexpected signal " << signal << ", exiting...";
+    exit(1);
+  }
+}
 
 int main(int argc, char** argv) {
   bpo::options_description desc("Usage:");
@@ -97,9 +114,17 @@ int main(int argc, char** argv) {
   }
   std::filesystem::path serial_path = data_dir_path / "schema";
   if (std::filesystem::exists(serial_path)) {
-    LOG(WARNING) << "data directory is not empty";
-    return 0;
+    LOG(WARNING) << "data directory is not empty: " << data_dir_path.string()
+                 << ", please remove the directory and try again.";
+    return -1;
   }
+
+  work_dir = data_dir_path.string();
+
+  // Register handlers for SIGKILL, SIGINT, SIGTERM
+  std::signal(SIGINT, signal_handler);
+  std::signal(SIGTERM, signal_handler);
+  std::signal(SIGKILL, signal_handler);
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
       data_dir_path.string(), schema_res.value(), loading_config_res.value(),
