@@ -52,6 +52,9 @@ docs/source/reference/
 docs/reference/generated/
 docs/reference/networkx/generated/
 docs/_build/
+# generated docs
+docs/flex/interactive/sdk/java/*
+docs/flex/interactive/sdk/python/*
 
 analytical_engine/build/
 
@@ -100,5 +103,5 @@ flex/interactive/.running
 flex/interactive/.env
 
 # flex generated sdk
-flex/interactive/sdk/python/interactive_sdk/*
-flex/interactive/sdk/java/interactive_sdk/*
+flex/interactive/sdk/python/*
+flex/interactive/sdk/java/*
