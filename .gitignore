@@ -105,3 +105,6 @@ flex/interactive/.env
 # flex generated sdk
 flex/interactive/sdk/python/*
 flex/interactive/sdk/java/*
+flex/interactive/sdk/python/README.md
+flex/interactive/sdk/java/README.md
+flex/interactive/sdk/python/setup.py
