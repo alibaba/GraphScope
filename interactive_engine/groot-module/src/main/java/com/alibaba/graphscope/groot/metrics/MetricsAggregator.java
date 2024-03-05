@@ -31,21 +31,18 @@ public class MetricsAggregator {
 
     private final ObjectMapper objectMapper;
     private final int frontendCount;
-    private final int ingestorCount;
     private final int storeCount;
 
     public MetricsAggregator(
             Configs configs,
             RoleClients<MetricsCollectClient> frontendMetricsCollectClients,
-            RoleClients<MetricsCollectClient> ingestorMetricsCollectClients,
+            //            RoleClients<MetricsCollectClient> ingestorMetricsCollectClients,
             RoleClients<MetricsCollectClient> storeMetricsCollectClients) {
         this.roleToClients.put(RoleType.FRONTEND, frontendMetricsCollectClients);
-        this.roleToClients.put(RoleType.INGESTOR, ingestorMetricsCollectClients);
         this.roleToClients.put(RoleType.STORE, storeMetricsCollectClients);
 
         this.objectMapper = new ObjectMapper();
         this.frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);
-        this.ingestorCount = CommonConfig.INGESTOR_NODE_COUNT.get(configs);
         this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
     }
 
@@ -59,10 +56,6 @@ public class MetricsAggregator {
                 case FRONTEND:
                     totalNode += this.frontendCount;
                     roleTypeToCount.put(roleType, this.frontendCount);
-                    break;
-                case INGESTOR:
-                    totalNode += this.ingestorCount;
-                    roleTypeToCount.put(roleType, this.ingestorCount);
                     break;
                 case STORE:
                     totalNode += this.storeCount;

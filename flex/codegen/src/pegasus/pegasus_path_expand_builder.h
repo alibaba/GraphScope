@@ -111,7 +111,7 @@ class PathExpandOpBuilder {
   }
 
   PathExpandOpBuilder& condition(const common::Expression& condition_pb) {
-    LOG(WARNING) << "Skiped for path expand with condition";
+    LOG(WARNING) << "Skipped for path expand with condition";
     return *this;
   }
 
@@ -170,7 +170,7 @@ class PathExpandOpBuilder {
       if (src_vertex_labels_.size() > 1) {
         ss << "let vertex_label = LDBCVertexParser::<usize>::get_label_id(i0 "
               "as usize);\n";
-        for (auto j = 0; j < src_vertex_labels_.size(); ++j) {
+        for (size_t j = 0; j < src_vertex_labels_.size(); ++j) {
           VLOG(10) << "get vertex_label " << src_vertex_labels_[j];
           if (j == 0) {
             ss << "if vertex_label == " << src_vertex_labels_[j] << " {\n";
@@ -183,7 +183,7 @@ class PathExpandOpBuilder {
         }
       } else {
         auto src_label = src_vertex_labels_[0];
-        for (auto j = 0; j < dst_vertex_labels_.size(); ++j) {
+        for (size_t j = 0; j < dst_vertex_labels_.size(); ++j) {
           write_edge_expand(ss, src_label, edge_label, dst_vertex_labels_[j]);
         }
       }
@@ -208,7 +208,7 @@ class PathExpandOpBuilder {
       vertex_labels.push_back(vertex_label_pb.id());
     }
     if (!vertex_labels.empty()) {
-      for (auto i = 0; i < dst_vertex_labels_.size(); ++i) {
+      for (size_t i = 0; i < dst_vertex_labels_.size(); ++i) {
         if (std::find(vertex_labels.begin(), vertex_labels.end(),
                       dst_vertex_labels_[i]) == vertex_labels.end()) {
           filter_label = true;

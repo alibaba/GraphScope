@@ -121,7 +121,7 @@ class PathExpandOpBuilder {
           throw std::runtime_error("Expect edge type size > 0");
         }
         std::vector<int32_t> src_labels, dst_labels;
-        for (auto i = 0; i < edge_type.size(); ++i) {
+        for (int i = 0; i < edge_type.size(); ++i) {
           auto& edge_type_i = edge_type[i];
           auto& edge_labels_i = edge_type_i.label();
           src_labels.push_back(edge_labels_i.src_label().value());
@@ -143,7 +143,7 @@ class PathExpandOpBuilder {
           std::sort(dst_labels.begin(), dst_labels.end());
           dst_labels.erase(std::unique(dst_labels.begin(), dst_labels.end()),
                            dst_labels.end());
-          for (auto i = 0; i < src_labels.size(); ++i) {
+          for (size_t i = 0; i < src_labels.size(); ++i) {
             if (src_labels[i] != dst_labels[i]) {
               throw std::runtime_error(
                   "Expect src_label == dst_label for both direction");
@@ -151,11 +151,11 @@ class PathExpandOpBuilder {
             dst_vertex_labels_.emplace_back(dst_labels[i]);
           }
         } else if (direction_ == internal::Direction::kOut) {
-          for (auto i = 0; i < dst_labels.size(); ++i) {
+          for (size_t i = 0; i < dst_labels.size(); ++i) {
             dst_vertex_labels_.emplace_back(dst_labels[i]);
           }
         } else if (direction_ == internal::Direction::kIn) {
-          for (auto i = 0; i < src_labels.size(); ++i) {
+          for (size_t i = 0; i < src_labels.size(); ++i) {
             dst_vertex_labels_.emplace_back(src_labels[i]);
           }
         } else {
@@ -174,13 +174,13 @@ class PathExpandOpBuilder {
       auto& v_labels_pb = get_v_pb.params().tables();
 
       if (dst_vertex_labels_.empty()) {
-        for (auto i = 0; i < v_labels_pb.size(); ++i) {
+        for (int i = 0; i < v_labels_pb.size(); ++i) {
           dst_vertex_labels_.push_back(
               try_get_label_from_name_or_id<LabelT>(v_labels_pb[i]));
         }
       }
       VLOG(10) << "get vertex labels:" << gs::to_string(dst_vertex_labels_);
-      CHECK(!get_v_pb.params().has_predicate()) << "currently don't suppport "
+      CHECK(!get_v_pb.params().has_predicate()) << "currently don't support "
                                                    "getv with condition";
       // std::tie(get_v_expr_call_code, get_v_opt, getv_opt_) =
       // BuildGetVOpt(ctx_, get_v_pb);
@@ -194,7 +194,7 @@ class PathExpandOpBuilder {
       // build edge_expand_opt
       auto& params = edge_expand_pb.params();
       auto expand_opt = edge_expand_pb.expand_opt();
-      CHECK(dst_vertex_labels_.size() > 0) << "no dst lables found";
+      CHECK(dst_vertex_labels_.size() > 0) << "no dst labels found";
 
       if (params.tables().size() < 1) {
         throw std::runtime_error("no edge labels found");
@@ -292,7 +292,7 @@ class PathExpandOpBuilder {
   }
 
   PathExpandOpBuilder& condition(const common::Expression& condition_pb) {
-    LOG(WARNING) << "Skiped for path expand with condition";
+    LOG(WARNING) << "Skipped for path expand with condition";
     return *this;
   }
 
@@ -369,8 +369,8 @@ class PathExpandOpBuilder {
 // get_v_opt
 // path_expand_opt
 // op_code.
-// NOTE: we currenly only support path expand v, the in_tag can be fetch fromn
-// path_expand_pb itself, while the res_alilas shall be fetch from the later
+// NOTE: we currently only support path expand v, the in_tag can be fetch from
+// path_expand_pb itself, while the res_alias shall be fetch from the later
 // get_v
 template <typename LabelT>
 static std::string BuildPathExpandVOp(

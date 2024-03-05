@@ -73,6 +73,62 @@ public class GraphAlgoTest {
         Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
     }
 
+    @Test
+    public void run_graph_query6_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test6();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query7_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test7();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query8_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test8();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query9_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test9();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query10_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test10();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query11_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test11();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query12_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test12();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
+    @Test
+    public void run_graph_query13_test() {
+        QueryContext testQuery = GraphAlgoQueries.get_graph_algo_test13();
+        Result result = session.run(testQuery.getQuery());
+        Assert.assertEquals(testQuery.getExpectedResult().toString(), result.list().toString());
+    }
+
     @AfterClass
     public static void afterClass() {
         if (session != null) {

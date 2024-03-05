@@ -25,7 +25,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && \
     apt-get install -y sudo default-jdk dnsutils tzdata \
-        libjemalloc-dev libunwind-dev binutils && \
+        libjemalloc-dev libunwind-dev binutils less && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/*
 

@@ -32,7 +32,8 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
   ~LDBCTimeStampParser() override {}
 
   bool operator()(const char* s, size_t length, arrow::TimeUnit::type out_unit,
-                  int64_t* out) const override {
+                  int64_t* out,
+                  bool* out_zone_offset_present = NULLPTR) const override {
     using seconds_type = std::chrono::duration<arrow::TimestampType::c_type>;
 
     // We allow the following formats for all units:
@@ -148,14 +149,14 @@ class LDBCTimeStampParser : public arrow::TimestampParser {
 
 class LDBCLongDateParser : public arrow::TimestampParser {
  public:
+  using seconds_type = std::chrono::duration<arrow::TimestampType::c_type>;
   LDBCLongDateParser() = default;
 
   ~LDBCLongDateParser() override {}
 
   bool operator()(const char* s, size_t length, arrow::TimeUnit::type out_unit,
-                  int64_t* out) const override {
-    using seconds_type = std::chrono::duration<arrow::TimestampType::c_type>;
-
+                  int64_t* out,
+                  bool* out_zone_offset_present = NULLPTR) const override {
     uint64_t seconds;
     // convert (s, s + length - 4) to seconds_since_epoch
     if (ARROW_PREDICT_FALSE(
@@ -274,6 +275,16 @@ struct TypeConverter<std::string_view> {
 template <>
 struct TypeConverter<Date> {
   static PropertyType property_type() { return PropertyType::kDate; }
+  using ArrowType = arrow::TimestampType;
+  using ArrowArrayType = arrow::TimestampArray;
+  static std::shared_ptr<arrow::DataType> ArrowTypeValue() {
+    return arrow::timestamp(arrow::TimeUnit::MILLI);
+  }
+};
+
+template <>
+struct TypeConverter<Day> {
+  static PropertyType property_type() { return PropertyType::kDay; }
   using ArrowType = arrow::TimestampType;
   using ArrowArrayType = arrow::TimestampArray;
   static std::shared_ptr<arrow::DataType> ArrowTypeValue() {

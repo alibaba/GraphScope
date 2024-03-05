@@ -28,8 +28,6 @@ public interface GraphLibrary extends Library {
 
     JnaResponse getGraphDefBlob(Pointer storePointer);
 
-    JnaResponse ingestData(Pointer storePointer, String dataPath);
-
     Pointer openGraphBackupEngine(Pointer storePointer, String backupPath);
 
     void closeGraphBackupEngine(Pointer bePointer);
@@ -46,9 +44,11 @@ public interface GraphLibrary extends Library {
 
     void dropJnaResponse(JnaResponse jnaResponse);
 
-    Pointer createWrapperPartitionGraph(Pointer graphStore);
-
-    void deleteWrapperPartitionGraph(Pointer wrapperPartitionGraph);
-
     JnaResponse garbageCollectSnapshot(Pointer storePointer, long snapshotId);
+
+    JnaResponse tryCatchUpWithPrimary(Pointer storePointer);
+
+    JnaResponse reopenSecondary(Pointer storePointer, long wait_sec);
+
+    JnaResponse compact(Pointer storePointer);
 }

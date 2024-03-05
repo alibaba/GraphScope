@@ -58,8 +58,7 @@ class FlashVertexDataContext
     auto& frag = this->fragment();
     auto inner_vertices = frag.InnerVertices();
     for (auto v : inner_vertices) {
-      vid_t oid = frag.GetId(v);
-      os << oid << " " << this->result[v] << std::endl;
+      os << frag.GetId(v) << " " << this->result[v] << std::endl;
     }
   }
 

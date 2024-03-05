@@ -358,7 +358,7 @@ inline std::vector<offset_t> merge_union_offset(std::vector<offset_t>& a,
   std::vector<offset_t> res;
   res.reserve(a.size());
   res[0] = a[0] + b[0];
-  for (auto i = 1; i < a.size(); ++i) {
+  for (size_t i = 1; i < a.size(); ++i) {
     res[i] = res[i - 1] + a[i] - a[i - 1] + b[i] - b[i - 1];
   }
   return res;
@@ -367,10 +367,10 @@ inline std::vector<offset_t> merge_union_offset(std::vector<offset_t>& a,
 inline auto make_offset_vector(size_t m, size_t n) {
   std::vector<std::vector<size_t>> offsets;
   //[0,m)
-  for (auto i = 0; i < m; ++i) {
+  for (size_t i = 0; i < m; ++i) {
     // [0, n]
     std::vector<offset_t> cur(n + 1, 0);
-    for (auto j = 0; j <= n; ++j) {
+    for (size_t j = 0; j <= n; ++j) {
       cur[j] = j;
     }
     offsets.emplace_back(std::move(cur));
@@ -672,7 +672,7 @@ struct ColumnAccessorImpl;
 template <std::size_t i>
 struct ColumnAccessorImpl<i> {};
 
-// Recurvise
+// Recursive
 template <std::size_t i, typename FIRST, typename... OTHER>
 struct ColumnAccessorImpl<i, FIRST, OTHER...>
     : public SingleColumn<i, FIRST>,
@@ -727,7 +727,7 @@ template <typename T, size_t N>
 std::vector<T> array_to_vec(const std::array<T, N>& array) {
   std::vector<T> res;
   res.reserve(N);
-  for (auto i = 0; i < N; ++i) {
+  for (size_t i = 0; i < N; ++i) {
     res.emplace_back(array[i]);
   }
   return res;
@@ -757,7 +757,7 @@ struct to_string_impl<std::vector<T>> {
     std::ostringstream ss;
     //    ss << "Vec[";
     if (vec.size() > 0) {
-      for (int i = 0; i < vec.size() - 1; ++i) {
+      for (size_t i = 0; i < vec.size() - 1; ++i) {
         ss << to_string_impl<T>::to_string(vec[i]) << ",";
       }
       ss << to_string_impl<T>::to_string(vec[vec.size() - 1]);

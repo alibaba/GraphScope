@@ -351,4 +351,71 @@ mod test {
         }
         assert_eq!(result, expected)
     }
+
+    // g.V().hasLabel('person').has("id", 1)
+    #[test]
+    fn scan_pk_test() {
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: Some(ir_common::generated::algebra::IndexPredicate {
+                or_predicates: vec![ir_common::generated::algebra::index_predicate::AndPredicate {
+                    predicates: vec![ir_common::generated::algebra::index_predicate::Triplet {
+                        key: Some("id".to_string().into()),
+                        value: Some(1.into()),
+                        cmp: 0, // eq
+                    }],
+                }],
+            }),
+            is_count_only: false,
+        });
+        let mut result_ids = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let mut expected_ids = vec![v1];
+        for record in source_iter {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
+                result_ids.push(element.id() as usize)
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
+
+    // g.V().hasLabel('person').has("id", P.within(1,2,4,6))
+    #[test]
+    fn scan_pk_within_test() {
+        let source_iter = scan_gen(pb::Scan {
+            scan_opt: 0,
+            alias: None,
+            params: Some(query_params(vec![PERSON_LABEL.into()], vec![], None)),
+            idx_predicate: Some(ir_common::generated::algebra::IndexPredicate {
+                or_predicates: vec![ir_common::generated::algebra::index_predicate::AndPredicate {
+                    predicates: vec![ir_common::generated::algebra::index_predicate::Triplet {
+                        key: Some("id".to_string().into()),
+                        value: Some(ir_common::generated::algebra::index_predicate::triplet::Value::Const(
+                            vec![1, 2, 4, 6].into(),
+                        )),
+                        cmp: 6, // within
+                    }],
+                }],
+            }),
+            is_count_only: false,
+        });
+        let mut result_ids = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_ids = vec![v1, v2, v4, v6];
+        for record in source_iter {
+            if let Some(element) = record.get(None).unwrap().as_vertex() {
+                result_ids.push(element.id() as usize)
+            }
+        }
+        result_ids.sort();
+        expected_ids.sort();
+        assert_eq!(result_ids, expected_ids)
+    }
 }

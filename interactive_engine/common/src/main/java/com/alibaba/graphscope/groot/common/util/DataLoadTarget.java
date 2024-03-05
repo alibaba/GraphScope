@@ -16,13 +16,13 @@ package com.alibaba.graphscope.groot.common.util;
 import com.alibaba.graphscope.proto.groot.DataLoadTargetPb;
 
 public class DataLoadTarget {
-    private String label;
-    private String srcLabel;
-    private String dstLabel;
+    private final String label;
+    private final String srcLabel;
+    private final String dstLabel;
 
-    private int labelId;
-    private int srcLabelId;
-    private int dstLabelId;
+    private final int labelId;
+    private final int srcLabelId;
+    private final int dstLabelId;
 
     private DataLoadTarget(
             String label,

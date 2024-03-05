@@ -1101,7 +1101,7 @@ protected:
 
   void copy_settings(const ClientImpl &rhs);
 
-  // Socket endoint information
+  // Socket endpoint information
   const std::string host_;
   const int port_;
   const std::string host_and_port_;
@@ -5819,7 +5819,7 @@ Server::process_request(Stream &strm, bool close_connection,
     }
   }
 
-  // Rounting
+  // Routing
   bool routed = false;
 #ifdef CPPHTTPLIB_NO_EXCEPTIONS
   routed = routing(req, res, strm);
@@ -6258,7 +6258,7 @@ inline bool ClientImpl::write_content_with_provider(Stream &strm,
   auto is_shutting_down = []() { return false; };
 
   if (req.is_chunked_content_provider_) {
-    // TODO: Brotli suport
+    // TODO: Brotli support
     std::unique_ptr<detail::compressor> compressor;
 #ifdef CPPHTTPLIB_ZLIB_SUPPORT
     if (compress_) {
@@ -7062,7 +7062,7 @@ inline void ClientImpl::stop() {
     return;
   }
 
-  // Otherwise, sitll holding the mutex, we can shut everything down ourselves
+  // Otherwise, still holding the mutex, we can shut everything down ourselves
   shutdown_ssl(socket_, true);
   shutdown_socket(socket_);
   close_socket(socket_);

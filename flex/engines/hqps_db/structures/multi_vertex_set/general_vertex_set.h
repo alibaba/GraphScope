@@ -43,12 +43,12 @@ auto general_project_vertices_impl(
   auto old_num_labels = old_bit_sets.size();
   std::vector<grape::Bitset> res_bitsets(old_num_labels);
   // reserve enough size for bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].init(old_vec.size());
   }
   std::vector<size_t> select_label_id;
   if constexpr (filter_num_labels == 0) {
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       select_label_id.emplace_back(i);
     }
   } else {
@@ -56,7 +56,7 @@ auto general_project_vertices_impl(
     for (auto l : filter_labels) {
       set.insert(l);
     }
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       if (set.find(old_labels[i]) != set.end()) {
         select_label_id.emplace_back(i);
       }
@@ -67,7 +67,7 @@ auto general_project_vertices_impl(
   std::vector<offset_t> offset;
 
   offset.emplace_back(0);
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     for (auto label_id : select_label_id) {
       if (old_bit_sets[label_id].get_bit(i)) {
         auto eles = prop_getters[label_id].get_view(old_vec[i]);
@@ -88,20 +88,20 @@ auto general_project_vertices_impl(
     }
     offset.emplace_back(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
   }
   // resize bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].resize(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
@@ -126,12 +126,12 @@ auto general_project_vertices_impl(
   auto old_num_labels = old_bit_sets.size();
   std::vector<grape::Bitset> res_bitsets(old_num_labels);
   // reserve enough size for bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].init(old_vec.size());
   }
   std::vector<size_t> select_label_id;
   if constexpr (filter_num_labels == 0) {
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       select_label_id.emplace_back(i);
     }
   } else {
@@ -139,7 +139,7 @@ auto general_project_vertices_impl(
     for (auto l : filter_labels) {
       set.insert(l);
     }
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       if (set.find(old_labels[i]) != set.end()) {
         select_label_id.emplace_back(i);
       }
@@ -150,7 +150,7 @@ auto general_project_vertices_impl(
   std::vector<offset_t> offset;
 
   offset.emplace_back(0);
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     for (auto label_id : select_label_id) {
       if (old_bit_sets[label_id].get_bit(i)) {
         auto eles = prop_getters[label_id].get_view(old_vec[i]);
@@ -173,20 +173,20 @@ auto general_project_vertices_impl(
     }
     offset.emplace_back(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
   }
   // resize bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].resize(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
@@ -205,12 +205,12 @@ auto general_project_vertices_no_expr_impl(
   std::vector<VID_T> res_vec;
   std::vector<grape::Bitset> res_bitsets(old_num_labels);
   // reserve enough size for bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].init(old_vec.size());
   }
   std::vector<size_t> select_label_id;
   if constexpr (filter_num_labels == 0) {
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       select_label_id.emplace_back(i);
     }
   } else {
@@ -218,7 +218,7 @@ auto general_project_vertices_no_expr_impl(
     for (auto l : filter_labels) {
       set.insert(l);
     }
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       if (set.find(old_labels[i]) != set.end()) {
         select_label_id.emplace_back(i);
       }
@@ -229,7 +229,7 @@ auto general_project_vertices_no_expr_impl(
   std::vector<offset_t> offset;
 
   offset.emplace_back(0);
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     for (auto label_id : select_label_id) {
       if (old_bit_sets[label_id].get_bit(i)) {
         res_bitsets[label_id].set_bit(res_vec.size());
@@ -239,20 +239,20 @@ auto general_project_vertices_no_expr_impl(
     }
     offset.emplace_back(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
   }
   // resize bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].resize(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
@@ -274,12 +274,12 @@ auto general_project_vertices_no_expr_impl(
   std::vector<DATA_TUPLE> res_data_vec;
   std::vector<grape::Bitset> res_bitsets(old_num_labels);
   // reserve enough size for bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].init(old_vec.size());
   }
   std::vector<size_t> select_label_id;
   if constexpr (filter_num_labels == 0) {
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       select_label_id.emplace_back(i);
     }
   } else {
@@ -287,7 +287,7 @@ auto general_project_vertices_no_expr_impl(
     for (auto l : filter_labels) {
       set.insert(l);
     }
-    for (auto i = 0; i < old_labels.size(); ++i) {
+    for (size_t i = 0; i < old_labels.size(); ++i) {
       if (set.find(old_labels[i]) != set.end()) {
         select_label_id.emplace_back(i);
       }
@@ -298,7 +298,7 @@ auto general_project_vertices_no_expr_impl(
   std::vector<offset_t> offset;
 
   offset.emplace_back(0);
-  for (auto i = 0; i < old_vec.size(); ++i) {
+  for (size_t i = 0; i < old_vec.size(); ++i) {
     for (auto label_id : select_label_id) {
       if (old_bit_sets[label_id].get_bit(i)) {
         res_bitsets[label_id].set_bit(res_vec.size());
@@ -309,20 +309,20 @@ auto general_project_vertices_no_expr_impl(
     }
     offset.emplace_back(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
   }
   // resize bitset.
-  for (auto i = 0; i < old_num_labels; ++i) {
+  for (size_t i = 0; i < old_num_labels; ++i) {
     res_bitsets[i].resize(res_vec.size());
   }
-  for (auto i = 0; i < res_vec.size(); ++i) {
+  for (size_t i = 0; i < res_vec.size(); ++i) {
     bool flag = false;
-    for (auto j = 0; j < old_num_labels; ++j) {
+    for (size_t j = 0; j < old_num_labels; ++j) {
       flag |= res_bitsets[j].get_bit(i);
     }
     CHECK(flag) << "check fail at ind: " << i;
@@ -340,8 +340,8 @@ auto general_project_with_repeat_array_impl(
       std::tuple<typename gs::tuple_element<Is, std::tuple<lid_t>>::type...>>;
 
   res_t res_vec;
-  for (auto i = 0; i < repeat_array.size(); ++i) {
-    for (auto j = 0; j < repeat_array[i]; ++j) {
+  for (size_t i = 0; i < repeat_array.size(); ++i) {
+    for (size_t j = 0; j < repeat_array[i]; ++j) {
       auto tuple = std::make_tuple(old_lids[i]);
       res_vec.emplace_back(std::make_tuple(gs::get_from_tuple<Is>(tuple)...));
     }
@@ -362,7 +362,7 @@ auto generalSetFlatImpl(
   std::vector<grape::Bitset> res_bitsets(origin_bitsets.size());
   res_vids.reserve(dst_size);
   res_data_vec.reserve(dst_size);
-  for (auto i = 0; i < origin_bitsets.size(); ++i) {
+  for (size_t i = 0; i < origin_bitsets.size(); ++i) {
     res_bitsets[i].init(dst_size);
   }
   for (auto ele : index_ele_tuples) {
@@ -371,7 +371,7 @@ auto generalSetFlatImpl(
     auto ind = std::get<0>(cur);
     CHECK(ind < origin_vids.size());
 
-    for (auto i = 0; i < origin_bitsets.size(); ++i) {
+    for (size_t i = 0; i < origin_bitsets.size(); ++i) {
       if (origin_bitsets[i].get_bit(ind)) {
         res_bitsets[i].set_bit(res_vids.size());
         break;
@@ -393,7 +393,7 @@ auto generalSetFlatImpl(
   std::vector<lid_t> res_vids;
   std::vector<grape::Bitset> res_bitsets(origin_bitsets.size());
   res_vids.reserve(dst_size);
-  for (auto i = 0; i < origin_bitsets.size(); ++i) {
+  for (size_t i = 0; i < origin_bitsets.size(); ++i) {
     res_bitsets[i].init(dst_size);
   }
   for (auto ele : index_ele_tuples) {
@@ -402,7 +402,7 @@ auto generalSetFlatImpl(
     auto ind = std::get<0>(cur);
     CHECK(ind < origin_vids.size());
 
-    for (auto i = 0; i < origin_bitsets.size(); ++i) {
+    for (size_t i = 0; i < origin_bitsets.size(); ++i) {
       if (origin_bitsets[i].get_bit(ind)) {
         res_bitsets[i].set_bit(res_vids.size());
         break;
@@ -557,12 +557,12 @@ class GeneralVertexSet {
                    std::vector<grape::Bitset>&& bitsets)
       : vec_(std::move(vec)),
         data_vec_(std::move(data_vec)),
-        prop_names_(std::move(prop_names)),
-        label_names_(std::move(label_names)) {
+        label_names_(std::move(label_names)),
+        prop_names_(std::move(prop_names)) {
     CHECK(label_names_.size() == bitsets.size());
     CHECK(vec_.size() == data_vec_.size());
     bitsets_.resize(bitsets.size());
-    for (auto i = 0; i < bitsets.size(); ++i) {
+    for (size_t i = 0; i < bitsets.size(); ++i) {
       bitsets_[i].swap(bitsets[i]);
     }
     if (bitsets_.size() > 0) {
@@ -575,10 +575,10 @@ class GeneralVertexSet {
   GeneralVertexSet(GeneralVertexSet&& other)
       : vec_(std::move(other.vec_)),
         data_vec_(std::move(other.data_vec_)),
-        prop_names_(std::move(other.prop_names_)),
-        label_names_(std::move(other.label_names_)) {
+        label_names_(std::move(other.label_names_)),
+        prop_names_(std::move(other.prop_names_)) {
     bitsets_.resize(other.bitsets_.size());
-    for (auto i = 0; i < bitsets_.size(); ++i) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
       bitsets_[i].swap(other.bitsets_[i]);
     }
     if (bitsets_.size() > 0) {
@@ -590,10 +590,10 @@ class GeneralVertexSet {
   GeneralVertexSet(const GeneralVertexSet& other)
       : vec_(other.vec_),
         data_vec_(other.data_vec_),
-        prop_names_(other.prop_names_),
-        label_names_(other.label_names_) {
+        label_names_(other.label_names_),
+        prop_names_(other.prop_names_) {
     bitsets_.resize(other.bitsets_.size());
-    for (auto i = 0; i < bitsets_.size(); ++i) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
       bitsets_[i].copy(other.bitsets_[i]);
     }
     if (bitsets_.size() > 0) {
@@ -656,8 +656,8 @@ class GeneralVertexSet {
   const std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     // fill res with vertex labels
-    for (auto i = 0; i < vec_.size(); ++i) {
-      for (auto j = 0; j < bitsets_.size(); ++j) {
+    for (size_t i = 0; i < vec_.size(); ++i) {
+      for (size_t j = 0; j < bitsets_.size(); ++j) {
         if (bitsets_[j].get_bit(i)) {
           res.emplace_back(label_names_[j]);
           break;
@@ -671,8 +671,8 @@ class GeneralVertexSet {
   std::vector<uint8_t> GenerateLabelIndices() const {
     std::vector<uint8_t> label_indices;
     label_indices.resize(vec_.size(), 255);
-    for (auto i = 0; i < bitsets_.size(); ++i) {
-      for (auto j = 0; j < bitsets_[i].cardinality(); ++j) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
+      for (size_t j = 0; j < bitsets_[i].cardinality(); ++j) {
         if (bitsets_[i].get_bit(j)) {
           CHECK(label_indices[j] == 255);
           label_indices[j] = i;
@@ -706,7 +706,7 @@ class GeneralVertexSet {
     size_t cnt = bitsets_[ind].count();
     res.reserve(cnt);
     active_ind.reserve(cnt);
-    for (auto i = 0; i < bitsets_[ind].cardinality(); ++i) {
+    for (size_t i = 0; i < bitsets_[ind].cardinality(); ++i) {
       if (bitsets_[ind].get_bit(i)) {
         res.push_back(vec_[i]);
         active_ind.push_back(i);
@@ -731,7 +731,7 @@ class GeneralVertexSet {
     for (auto i : indices) {
       res_vec.emplace_back(vec_[i]);
       res_data_vec.emplace_back(data_vec_[i]);
-      for (auto j = 0; j < bitsets_.size(); ++j) {
+      for (size_t j = 0; j < bitsets_.size(); ++j) {
         if (bitsets_[j].get_bit(i)) {
           res_bitsets[j].set_bit(i);
           break;
@@ -740,7 +740,7 @@ class GeneralVertexSet {
     }
     vec_.swap(res_vec);
     data_vec_.swap(res_data_vec);
-    for (auto i = 0; i < bitsets_.size(); ++i) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
       bitsets_[i].swap(res_bitsets[i]);
     }
   }
@@ -752,7 +752,7 @@ class GeneralVertexSet {
     std::vector<lid_t> next_vids;
     std::vector<std::tuple<T...>> next_data_vec;
     size_t next_size = 0;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       next_size += repeat_array[i];
     }
     VLOG(10) << "[GeneralVertexSet] size: " << Size()
@@ -765,7 +765,7 @@ class GeneralVertexSet {
       i.init(next_size);
     }
     VLOG(10) << "after init";
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       size_t ind = 0;
       while (ind < bitsets_.size()) {
         if (bitsets_[ind].get_bit(i)) {
@@ -774,7 +774,7 @@ class GeneralVertexSet {
         ind += 1;
       }
       CHECK(ind < bitsets_.size());
-      for (auto j = 0; j < repeat_array[i]; ++j) {
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         // VLOG(10) << "Project: " << vids_[i];
         next_sets[ind].set_bit(next_vids.size());
         next_vids.push_back(vec_[i]);
@@ -800,7 +800,7 @@ class GeneralVertexSet {
     size_t total_cnt = repeat_vec.back();
     VLOG(10) << "Repeat current vertices num: " << vec_.size() << ", to "
              << total_cnt;
-    for (auto i = 0; i < res_bitsets.size(); ++i) {
+    for (size_t i = 0; i < res_bitsets.size(); ++i) {
       res_bitsets[i].init(total_cnt);
     }
     {
@@ -808,10 +808,9 @@ class GeneralVertexSet {
       size_t cur_ind = 0;
       res_vec.reserve(repeat_vec.back());
       res_data_vec.reserve(repeat_vec.back());
-      for (auto i = 0; i + 1 < cur_offset.size(); ++i) {
+      for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
         auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
-        auto num_ele = cur_offset[i + 1] - cur_offset[i];
-        for (auto j = 0; j < times_to_repeat; ++j) {
+        for (size_t j = 0; j < times_to_repeat; ++j) {
           for (auto k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
             res_vec.emplace_back(vec_[k]);
             res_data_vec.emplace_back(data_vec_[k]);
@@ -855,8 +854,8 @@ class GeneralVertexSet {
         VLOG(10) << "Found builtin property " << prop_name;
         CHECK(repeat_array.size() == data_vec_.size());
         size_t ind = 0;
-        for (auto i = 0; i < repeat_array.size(); ++i) {
-          for (auto j = 0; j < repeat_array[i]; ++j) {
+        for (size_t i = 0; i < repeat_array.size(); ++i) {
+          for (size_t j = 0; j < repeat_array[i]; ++j) {
             std::get<Is>(tuples[ind]) = std::get<0>(data_vec_[i]);
             ind += 1;
           }
@@ -935,7 +934,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
       : vec_(std::move(vec)), label_names_(std::move(label_names)) {
     CHECK(label_names_.size() == bitsets.size());
     bitsets_.resize(bitsets.size());
-    for (auto i = 0; i < bitsets.size(); ++i) {
+    for (size_t i = 0; i < bitsets.size(); ++i) {
       bitsets_[i].swap(bitsets[i]);
     }
     if (bitsets_.size() > 0) {
@@ -949,7 +948,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
       : vec_(std::move(other.vec_)),
         label_names_(std::move(other.label_names_)) {
     bitsets_.resize(other.bitsets_.size());
-    for (auto i = 0; i < bitsets_.size(); ++i) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
       bitsets_[i].swap(other.bitsets_[i]);
     }
     if (bitsets_.size() > 0) {
@@ -961,7 +960,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
   GeneralVertexSet(const GeneralVertexSet& other)
       : vec_(other.vec_), label_names_(other.label_names_) {
     bitsets_.resize(other.bitsets_.size());
-    for (auto i = 0; i < bitsets_.size(); ++i) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
       bitsets_[i].copy(other.bitsets_[i]);
     }
     if (bitsets_.size() > 0) {
@@ -1015,8 +1014,8 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
   const std::vector<LabelKey> GetLabelVec() const {
     std::vector<LabelKey> res;
     // fill res with vertex labels
-    for (auto i = 0; i < vec_.size(); ++i) {
-      for (auto j = 0; j < bitsets_.size(); ++j) {
+    for (size_t i = 0; i < vec_.size(); ++i) {
+      for (size_t j = 0; j < bitsets_.size(); ++j) {
         if (bitsets_[j].get_bit(i)) {
           res.emplace_back(label_names_[j]);
           break;
@@ -1030,8 +1029,8 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
   std::vector<uint8_t> GenerateLabelIndices() const {
     std::vector<uint8_t> label_indices;
     label_indices.resize(vec_.size(), 255);
-    for (auto i = 0; i < bitsets_.size(); ++i) {
-      for (auto j = 0; j < bitsets_[i].cardinality(); ++j) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
+      for (size_t j = 0; j < bitsets_[i].cardinality(); ++j) {
         if (bitsets_[i].get_bit(j)) {
           CHECK(label_indices[j] == 255);
           label_indices[j] = i;
@@ -1065,7 +1064,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
     size_t cnt = bitsets_[ind].count();
     res.reserve(cnt);
     active_ind.reserve(cnt);
-    for (auto i = 0; i < bitsets_[ind].cardinality(); ++i) {
+    for (size_t i = 0; i < bitsets_[ind].cardinality(); ++i) {
       if (bitsets_[ind].get_bit(i)) {
         res.push_back(vec_[i]);
         active_ind.push_back(i);
@@ -1087,7 +1086,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
     res_vec.reserve(indices.size());
     for (auto i : indices) {
       res_vec.emplace_back(vec_[i]);
-      for (auto j = 0; j < bitsets_.size(); ++j) {
+      for (size_t j = 0; j < bitsets_.size(); ++j) {
         if (bitsets_[j].get_bit(i)) {
           res_bitsets[j].set_bit(i);
           break;
@@ -1095,7 +1094,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
       }
     }
     vec_.swap(res_vec);
-    for (auto i = 0; i < bitsets_.size(); ++i) {
+    for (size_t i = 0; i < bitsets_.size(); ++i) {
       bitsets_[i].swap(res_bitsets[i]);
     }
   }
@@ -1106,7 +1105,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
                                      KeyAlias<tag_id, Fs>& key_alias) const {
     std::vector<lid_t> next_vids;
     size_t next_size = 0;
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       next_size += repeat_array[i];
     }
     VLOG(10) << "[GeneralVertexSet] size: " << Size()
@@ -1118,7 +1117,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
       i.init(next_size);
     }
     VLOG(10) << "after init";
-    for (auto i = 0; i < repeat_array.size(); ++i) {
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
       size_t ind = 0;
       while (ind < bitsets_.size()) {
         if (bitsets_[ind].get_bit(i)) {
@@ -1127,8 +1126,7 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
         ind += 1;
       }
       CHECK(ind < bitsets_.size());
-      for (auto j = 0; j < repeat_array[i]; ++j) {
-        // VLOG(10) << "Project: " << vids_[i];
+      for (size_t j = 0; j < repeat_array[i]; ++j) {
         next_sets[ind].set_bit(next_vids.size());
         next_vids.push_back(vec_[i]);
       }
@@ -1149,17 +1147,16 @@ class GeneralVertexSet<VID_T, LabelT, grape::EmptyType> {
     size_t total_cnt = repeat_vec.back();
     VLOG(10) << "Repeat current vertices num: " << vec_.size() << ", to "
              << total_cnt;
-    for (auto i = 0; i < res_bitsets.size(); ++i) {
+    for (size_t i = 0; i < res_bitsets.size(); ++i) {
       res_bitsets[i].init(total_cnt);
     }
     {
       auto label_indices = GenerateLabelIndices();
       size_t cur_ind = 0;
       res_vec.reserve(repeat_vec.back());
-      for (auto i = 0; i + 1 < cur_offset.size(); ++i) {
+      for (size_t i = 0; i + 1 < cur_offset.size(); ++i) {
         auto times_to_repeat = repeat_vec[i + 1] - repeat_vec[i];
-        auto num_ele = cur_offset[i + 1] - cur_offset[i];
-        for (auto j = 0; j < times_to_repeat; ++j) {
+        for (size_t j = 0; j < times_to_repeat; ++j) {
           for (auto k = cur_offset[i]; k < cur_offset[i + 1]; ++k) {
             res_vec.emplace_back(vec_[k]);
             CHECK(label_indices[k] < res_bitsets.size());
@@ -1262,7 +1259,7 @@ auto make_general_set(std::vector<VID_T>&& vec,
       std::move(label_names), std::move(bitsets));
 }
 
-static std::vector<std::vector<int32_t>> bitsets_to_vids_inds(
+std::vector<std::vector<int32_t>> bitsets_to_vids_inds(
     const std::vector<grape::Bitset>& bitset) {
   auto num_labels = bitset.size();
   std::vector<std::vector<int32_t>> res(num_labels);
@@ -1271,10 +1268,10 @@ static std::vector<std::vector<int32_t>> bitsets_to_vids_inds(
   }
   auto limit_size = bitset[0].cardinality();
   VLOG(10) << "old bitset limit size: " << limit_size;
-  for (auto i = 0; i < num_labels; ++i) {
+  for (size_t i = 0; i < num_labels; ++i) {
     auto count = bitset[i].count();
     res[i].reserve(count);
-    for (auto j = 0; j < limit_size; ++j) {
+    for (size_t j = 0; j < limit_size; ++j) {
       if (bitset[i].get_bit(j)) {
         res[i].emplace_back(j);
       }
@@ -1319,19 +1316,6 @@ static auto get_property_tuple_general(
               &ind](auto&&... args) { ((prop_names[ind++] = args.name), ...); },
              named_prop);
   return get_property_tuple_general<T...>(graph, general_set, prop_names);
-}
-
-// generate a vector of bitset
-static std::vector<grape::Bitset> get_label_indices_as_bitset(
-    const std::vector<uint8_t>& label_indices, int num_labels) {
-  std::vector<grape::Bitset> res(num_labels);
-  for (auto i = 0; i < num_labels; ++i) {
-    res[i].init(label_indices.size());
-  }
-  for (auto i = 0; i < label_indices.size(); ++i) {
-    res[label_indices[i]].set_bit(i);
-  }
-  return res;
 }
 
 }  // namespace gs

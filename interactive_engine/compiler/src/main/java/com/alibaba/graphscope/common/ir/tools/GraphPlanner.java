@@ -18,7 +18,6 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
-import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
@@ -29,6 +28,7 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
@@ -38,12 +38,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 
 import org.apache.calcite.plan.GraphOptCluster;
-import org.apache.calcite.plan.RelOptCluster;
-import org.apache.calcite.plan.RelOptSchema;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rex.RexBuilder;
-import org.apache.calcite.tools.RelBuilderFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -55,7 +52,6 @@ import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
@@ -64,25 +60,17 @@ import java.util.function.Function;
 public class GraphPlanner {
     private static final Logger logger = LoggerFactory.getLogger(GraphPlanner.class);
     private final Configs graphConfig;
-    private final PlannerConfig plannerConfig;
     private final GraphRelOptimizer optimizer;
     private final RexBuilder rexBuilder;
-    private final AtomicLong idGenerator;
     private final LogicalPlanFactory logicalPlanFactory;
 
-    public static final RelBuilderFactory relBuilderFactory =
-            (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
-                    GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
     public static final Function<Configs, RexBuilder> rexBuilderFactory =
             (Configs configs) -> new GraphRexBuilder(new GraphTypeFactoryImpl(configs));
 
     public GraphPlanner(Configs graphConfig, LogicalPlanFactory logicalPlanFactory) {
         this.graphConfig = graphConfig;
-        this.plannerConfig = new PlannerConfig(this.graphConfig);
-        logger.debug("planner config: " + this.plannerConfig);
-        this.optimizer = new GraphRelOptimizer(this.plannerConfig);
+        this.optimizer = new GraphRelOptimizer(this.graphConfig);
         this.rexBuilder = rexBuilderFactory.apply(graphConfig);
-        this.idGenerator = new AtomicLong(FrontendConfig.FRONTEND_SERVER_ID.get(graphConfig));
         this.logicalPlanFactory = logicalPlanFactory;
     }
 
@@ -94,15 +82,6 @@ public class GraphPlanner {
             optCluster.setMetadataQuerySupplier(() -> mq);
         }
         return new PlannerInstance(query, optCluster, irMeta);
-    }
-
-    public long generateUniqueId() {
-        long delta = FrontendConfig.FRONTEND_SERVER_NUM.get(graphConfig);
-        return idGenerator.getAndAdd(delta);
-    }
-
-    public String generateUniqueName(long uniqueId) {
-        return "ir_plan_" + uniqueId;
     }
 
     public class PlannerInstance {
@@ -117,10 +96,8 @@ public class GraphPlanner {
         }
 
         public Summary plan() {
-            long jobId = generateUniqueId();
             LogicalPlan logicalPlan = planLogical();
-            return new Summary(
-                    jobId, generateUniqueName(jobId), logicalPlan, planPhysical(logicalPlan));
+            return new Summary(logicalPlan, planPhysical(logicalPlan));
         }
 
         public LogicalPlan planLogical() {
@@ -128,8 +105,12 @@ public class GraphPlanner {
             IrGraphSchema schema = irMeta.getSchema();
             GraphBuilder graphBuilder =
                     GraphBuilder.create(
-                            null, this.optCluster, new GraphOptSchema(this.optCluster, schema));
+                            graphConfig,
+                            this.optCluster,
+                            new GraphOptSchema(this.optCluster, schema));
+
             LogicalPlan logicalPlan = logicalPlanFactory.create(graphBuilder, irMeta, query);
+
             // apply optimizations
             if (logicalPlan.getRegularQuery() != null && !logicalPlan.isReturnEmpty()) {
                 RelNode before = logicalPlan.getRegularQuery();
@@ -147,11 +128,23 @@ public class GraphPlanner {
             if (logicalPlan.isReturnEmpty()) {
                 return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getRegularQuery() != null) {
-                try (PhysicalBuilder physicalBuilder =
-                        new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
-                    return physicalBuilder.build();
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                String physicalOpt = FrontendConfig.PHYSICAL_OPT_CONFIG.get(graphConfig);
+                if ("proto".equals(physicalOpt.toLowerCase())) {
+                    logger.info("physical type is proto");
+                    try (GraphRelProtoPhysicalBuilder physicalBuilder =
+                            new GraphRelProtoPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    logger.info("physical type is ffi");
+                    try (PhysicalBuilder physicalBuilder =
+                            new FfiPhysicalBuilder(graphConfig, irMeta, logicalPlan)) {
+                        return physicalBuilder.build();
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             } else {
                 return new ProcedurePhysicalBuilder(logicalPlan).build();
@@ -160,24 +153,12 @@ public class GraphPlanner {
     }
 
     public static class Summary {
-        private final long id;
-        private final String name;
         private final LogicalPlan logicalPlan;
         private final PhysicalPlan physicalPlan;
 
-        public Summary(long id, String name, LogicalPlan logicalPlan, PhysicalPlan physicalPlan) {
-            this.id = id;
-            this.name = name;
+        public Summary(LogicalPlan logicalPlan, PhysicalPlan physicalPlan) {
             this.logicalPlan = Objects.requireNonNull(logicalPlan);
             this.physicalPlan = Objects.requireNonNull(physicalPlan);
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
         }
 
         public LogicalPlan getLogicalPlan() {

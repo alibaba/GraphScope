@@ -126,10 +126,10 @@ class GSClientWrapper(
       .substring(rawRes.indexOf(RES_PATTERN) + RES_PATTERN.length + 1)
       .trim
     log.info(s"res str ${resStr}")
-    val splited = resStr.split(";")
-    require(splited.length == 2, "result str can't be splited into two parts")
-    val fragName    = splited(0)
-    val fragGroupId = splited(1)
+    val split = resStr.split(";")
+    require(split.length == 2, "result str can't be split into two parts")
+    val fragName    = split(0)
+    val fragGroupId = split(1)
     log.info(s"frag name : ${fragName}")
     log.info(s"frag group id ${fragGroupId}")
     //as this graph can later be used to run in graphscope session, we need to keep the matching between
@@ -166,7 +166,7 @@ class GSClientWrapper(
 object GSClientWrapper {
   val RES_PATTERN = "res_str";
   //A safe word which we append to the execution of python code, its appearance in
-  // output stream, indicating command has been successfully executoed.
+  // output stream, indicating command has been successfully executed.
   val SAFE_WORD                   = "Spark-GraphScope-OK"
   val graphNameCounter            = new AtomicInteger(0)
   val VINEYARD_DEFAULT_SHARED_MEM = "10Gi"

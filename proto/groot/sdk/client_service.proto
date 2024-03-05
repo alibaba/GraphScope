@@ -33,6 +33,8 @@ service Client {
   rpc getLoggerInfo(GetLoggerInfoRequest) returns (GetLoggerInfoResponse);
   rpc clearIngest(ClearIngestRequest) returns (ClearIngestResponse);
   rpc getStoreState(GetStoreStateRequest) returns (GetStoreStateResponse);
+  rpc compactDB(CompactDBRequest) returns (CompactDBResponse);
+  rpc reopenSecondary(ReopenSecondaryRequest) returns (ReopenSecondaryResponse);
 }
 
 message GetSchemaRequest {
@@ -41,14 +43,6 @@ message GetSchemaRequest {
 
 message GetSchemaResponse {
   GraphDefPb graphDef = 1;
-}
-
-message IngestDataRequest {
-  string dataPath = 1;
-  map<string, string> config = 2;
-}
-
-message IngestDataResponse {
 }
 
 message GetMetricsRequest {
@@ -109,11 +103,3 @@ message GetLoggerInfoResponse {
   string loggerTopic = 2;
   int32 loggerQueueCount = 3;
 }
-
-message ClearIngestRequest {
-  string dataPath = 1;
-}
-
-message ClearIngestResponse {
-}
-

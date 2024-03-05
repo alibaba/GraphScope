@@ -30,11 +30,25 @@ public abstract class GraphOpt {
         BOTH,
     }
 
+    public enum PhysicalExpandOpt {
+        EDGE,
+        VERTEX,
+        DEGREE,
+    }
+
     public enum GetV {
         START,
         END,
         OTHER,
         BOTH
+    }
+
+    public enum PhysicalGetVOpt {
+        START,
+        END,
+        OTHER,
+        BOTH,
+        ITSELF,
     }
 
     public enum Match {

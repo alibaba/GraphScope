@@ -26,12 +26,15 @@
 package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.IrPlan;
+import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.PegasusConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.intermediate.InterOpCollection;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.QueryCache;
+import com.alibaba.graphscope.common.ir.tools.QueryIdGenerator;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.alibaba.graphscope.gremlin.InterOpCollectionBuilder;
@@ -40,6 +43,7 @@ import com.alibaba.graphscope.gremlin.plugin.MetricsCollector;
 import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.plugin.script.AntlrGremlinScriptEngineFactory;
+import com.alibaba.graphscope.gremlin.plugin.script.GremlinCalciteScriptEngineFactory;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ExpandFusionStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.RemoveUselessStepStrategy;
 import com.alibaba.graphscope.gremlin.plugin.strategy.ScanFusionStepStrategy;
@@ -86,20 +90,24 @@ import java.util.function.Supplier;
 import javax.script.SimpleBindings;
 
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    protected Graph graph;
-    protected GraphTraversalSource g;
-    protected Configs configs;
+    protected final Graph graph;
+    protected final GraphTraversalSource g;
+    protected final Configs configs;
     /**
      * todo: replace with {@link com.alibaba.graphscope.common.client.ExecutionClient} after unifying Gremlin into the Calcite stack
      */
-    protected RpcClient rpcClient;
+    protected final RpcClient rpcClient;
 
-    protected IrMetaQueryCallback metaQueryCallback;
-    protected final GraphPlanner graphPlanner;
+    protected final IrMetaQueryCallback metaQueryCallback;
+    protected final QueryIdGenerator idGenerator;
+    protected final QueryCache queryCache;
+    protected final ExecutionClient executionClient;
 
     public IrStandardOpProcessor(
             Configs configs,
-            GraphPlanner graphPlanner,
+            QueryIdGenerator idGenerator,
+            QueryCache queryCache,
+            ExecutionClient executionClient,
             ChannelFetcher fetcher,
             IrMetaQueryCallback metaQueryCallback,
             Graph graph,
@@ -109,7 +117,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.configs = configs;
         this.rpcClient = new RpcClient(fetcher.fetch());
         this.metaQueryCallback = metaQueryCallback;
-        this.graphPlanner = graphPlanner;
+        this.idGenerator = idGenerator;
+        this.queryCache = queryCache;
+        this.executionClient = executionClient;
     }
 
     @Override
@@ -128,15 +138,37 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             ctx.writeAndFlush(ResponseMessage.build(msg).code(ResponseStatusCode.SUCCESS).create());
             return;
         }
-
-        String language = AntlrGremlinScriptEngineFactory.LANGUAGE_NAME;
-
-        long jobId = graphPlanner.generateUniqueId();
+        long jobId = idGenerator.generateId();
+        String jobName = idGenerator.generateName(jobId);
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
-        GremlinExecutor.LifeCycle lifeCycle =
-                createLifeCycle(
-                        ctx, gremlinExecutorSupplier, bindingsSupplier, irMeta, statusCallback);
+        String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
+        GremlinExecutor.LifeCycle lifeCycle;
+        switch (language) {
+            case AntlrGremlinScriptEngineFactory.LANGUAGE_NAME:
+                lifeCycle =
+                        createLifeCycle(
+                                ctx,
+                                gremlinExecutorSupplier,
+                                bindingsSupplier,
+                                irMeta,
+                                statusCallback);
+                break;
+            case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
+                lifeCycle =
+                        new LifeCycleSupplier(
+                                        ctx,
+                                        queryCache,
+                                        executionClient,
+                                        jobId,
+                                        jobName,
+                                        irMeta,
+                                        statusCallback)
+                                .get();
+                break;
+            default:
+                throw new IllegalArgumentException("invalid script language name: " + language);
+        }
         try {
             CompletableFuture<Object> evalFuture =
                     gremlinExecutor.eval(script, language, new SimpleBindings(), lifeCycle);
@@ -323,7 +355,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         InterOpCollection.process(opCollection);
 
         long jobId = queryLogger.getQueryId();
-        String jobName = "ir_plan_" + jobId;
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
         queryLogger.info("ir plan {}", irPlan.getPlanAsJson());
@@ -334,6 +365,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                 PegasusClient.JobRequest.newBuilder()
                         .setPlan(ByteString.copyFrom(physicalPlanBytes))
                         .build();
+        String jobName = "ir_plan_" + jobId;
         PegasusClient.JobConfig jobConfig =
                 PegasusClient.JobConfig.newBuilder()
                         .setJobId(jobId)
@@ -346,6 +378,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
+
         this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
     }
 

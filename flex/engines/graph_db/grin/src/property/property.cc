@@ -343,7 +343,6 @@ const void* grin_get_vertex_property_value(GRIN_GRAPH g, GRIN_VERTEX v,
   }
   case GRIN_DATATYPE::String: {
     auto _col = static_cast<const gs::StringColumn*>(col);
-    auto view = _col->get_view(vid);
     auto s = _col->get_view(vid);
     auto len = s.size() + 1;
     char* out = new char[len];

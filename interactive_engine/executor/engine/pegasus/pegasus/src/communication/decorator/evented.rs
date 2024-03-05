@@ -16,6 +16,7 @@ use crate::channel_id::ChannelInfo;
 use crate::communication::IOResult;
 use crate::data::MicroBatch;
 use crate::data_plane::{GeneralPush, Push};
+use crate::errors::{IOError, IOErrorKind};
 use crate::event::emitter::EventEmitter;
 use crate::event::{Event, EventKind};
 use crate::progress::{DynPeers, EndOfScope, EndSyncSignal};
@@ -57,13 +58,13 @@ impl<T: Data> EventEmitPush<T> {
 
     pub fn push_end(&mut self, mut end: EndOfScope, children: DynPeers) -> IOResult<()> {
         if end.tag.len() == self.push_monitor.scope_level as usize {
-            assert_eq!(
-                end.peers().value(),
-                1,
-                "peers = {} of scope {:?} should be sync;",
-                end.peers().value(),
-                end.tag
-            );
+            if end.peers().value() != 1 {
+                let mut err = IOError::new(IOErrorKind::Internal);
+                let message =
+                    format!("peers = {} of scope {:?} should be sync;", end.peers().value(), end.tag);
+                err.set_io_cause(std::io::Error::new(std::io::ErrorKind::Other, message));
+                return Err(err);
+            }
             if end.peers_contains(self.source_worker) {
                 trace_worker!(
                     "output[{:?}] send end of {:?} to channel[{}] to worker {}, peers {:?} => {:?}",
@@ -93,11 +94,17 @@ impl<T: Data> EventEmitPush<T> {
             return self.push_end(end, children);
         }
         if end.tag.len() == self.push_monitor.scope_level as usize {
-            assert!(
-                end.peers().contains_source(self.source_worker),
-                "send end of {:?} without allow ",
-                end.tag
-            );
+            if !end.peers().contains_source(self.source_worker) {
+                let mut err = IOError::new(IOErrorKind::Internal);
+                let message = format!(
+                    "send end of {:?} without permission, peers: {:?}, source_worker: {};",
+                    end.tag,
+                    end.peers(),
+                    self.source_worker
+                );
+                err.set_io_cause(std::io::Error::new(std::io::ErrorKind::Other, message));
+                return Err(err);
+            }
             let size = self
                 .push_monitor
                 .remove(&end.tag)
@@ -153,7 +160,11 @@ impl<D: Data> Push<MicroBatch<D>> for EventEmitPush<D> {
             batch.set_end(end);
             batch.set_seq(seq as u64);
         } else {
-            assert!(len > 0, "push batch size = 0;");
+            if len == 0 {
+                let mut err = IOError::new(IOErrorKind::Internal);
+                err.set_io_cause(std::io::Error::new(std::io::ErrorKind::Other, "Push batch size = 0;"));
+                return Err(err);
+            }
             let (seq, cnt, total) = self.push_monitor.get_mut_or_insert(&batch.tag);
             *cnt += len;
             *total += len;

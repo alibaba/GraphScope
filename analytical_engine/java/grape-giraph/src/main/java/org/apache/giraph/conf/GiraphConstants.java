@@ -473,11 +473,11 @@ public interface GiraphConstants {
                     20,
                     "Maximum bind attempts for different IPC ports");
     /**
-     * Maximum connections trys for client to connect to server
+     * Maximum connections tries for client to connect to server
      */
     IntConfOption MAX_CONN_TRY_ATTEMPTS =
             new IntConfOption(
-                    "giraph.maxConnTryAttempty",
+                    "giraph.maxConnTryAttempts",
                     20,
                     "Maximum bind attempts for client to connect to server");
 
@@ -537,7 +537,7 @@ public interface GiraphConstants {
                     "which type of out message cache to use");
 
     StrConfOption EDGE_MANAGER =
-            new StrConfOption("girpah.edgeManager", "default", "default or lazy");
+            new StrConfOption("giraph.edgeManager", "default", "default or lazy");
 
     ClassConfOption<ComputationFactory> COMPUTATION_FACTORY_CLASS =
             ClassConfOption.create(
@@ -802,13 +802,13 @@ public interface GiraphConstants {
                     "Which language computation is implemented in");
 
     /**
-     * Option of whether to create vertexes that were not existent before but received messages
+     * Option of whether to create vertexes that did not exist before but received messages
      */
     BooleanConfOption RESOLVER_CREATE_VERTEX_ON_MSGS =
             new BooleanConfOption(
                     "giraph.vertex.resolver.create.on.msgs",
                     true,
-                    "Option of whether to create vertexes that were not existent "
+                    "Option of whether to create vertexes that did not exist "
                             + "before but received messages");
 
     /**
@@ -850,11 +850,11 @@ public interface GiraphConstants {
             new StrConfOption("giraph.edge.output.subdir", "", "EdgeOutputFormat sub-directory");
 
     /**
-     * GiraphTextOuputFormat Separator
+     * GiraphTextOutputFormat Separator
      */
     StrConfOption GIRAPH_TEXT_OUTPUT_FORMAT_SEPARATOR =
             new StrConfOption(
-                    "giraph.textoutputformat.separator", "\t", "GiraphTextOuputFormat Separator");
+                    "giraph.textoutputformat.separator", "\t", "GiraphTextOutputFormat Separator");
     /**
      * Reverse values in the output
      */
@@ -876,8 +876,8 @@ public interface GiraphConstants {
                             + "end of application, saveVertex will be called right after each "
                             + "vertex.compute() is called."
                             + "NOTE: This feature doesn't work well with checkpointing - if you "
-                            + "restart from a checkpoint you won't have any ouptut from previous "
-                            + "supresteps.");
+                            + "restart from a checkpoint you won't have any output from previous "
+                            + "supersteps.");
     /**
      * Vertex output format thread-safe - if your VertexOutputFormat allows several vertexWriters to
      * be created and written to in parallel, you should set this to true.
@@ -1057,7 +1057,7 @@ public interface GiraphConstants {
     /**
      * ZooKeeper comma-separated list (if not set, will start up ZooKeeper locally). Consider that
      * after locally-starting zookeeper, this parameter will updated the configuration with the
-     * corrent configuration value.
+     * current configuration value.
      */
     StrConfOption ZOOKEEPER_LIST =
             new StrConfOption(
@@ -1066,17 +1066,17 @@ public interface GiraphConstants {
                     "ZooKeeper comma-separated list (if not set, will start up "
                             + "ZooKeeper locally). Consider that after locally-starting "
                             + "zookeeper, this parameter will updated the configuration with "
-                            + "the corrent configuration value.");
+                            + "the current configuration value.");
 
     /**
-     * Zookeeper List will always hold a value during the computation while this option provides
+     * ZooKeeper List will always hold a value during the computation while this option provides
      * information regarding whether the zookeeper was internally started or externally provided.
      */
     BooleanConfOption ZOOKEEPER_IS_EXTERNAL =
             new BooleanConfOption(
                     "giraph.zkIsExternal",
                     true,
-                    "Zookeeper List will always hold a value during "
+                    "ZooKeeper List will always hold a value during "
                             + "the computation while this option provides "
                             + "information regarding whether the zookeeper was "
                             + "internally started or externally provided.");
@@ -1143,13 +1143,13 @@ public interface GiraphConstants {
                     "giraph.maxResolveAddressAttempts", 5, "Max resolve address attempts");
 
     /**
-     * Millseconds to wait for an event before continuing
+     * Milliseconds to wait for an event before continuing
      */
     IntConfOption EVENT_WAIT_MSECS =
             new IntConfOption(
                     "giraph.eventWaitMsecs",
                     SECONDS.toMillis(30),
-                    "Millseconds to wait for an event before continuing");
+                    "Milliseconds to wait for an event before continuing");
 
     /**
      * Maximum milliseconds to wait before giving up trying to get the minimum number of workers
@@ -1164,7 +1164,7 @@ public interface GiraphConstants {
 
     /**
      * Maximum milliseconds to wait before giving up waiting for the workers to write the counters
-     * to the Zookeeper after a superstep
+     * to the ZooKeeper after a superstep
      */
     IntConfOption MAX_COUNTER_WAIT_MSECS =
             new IntConfOption(
@@ -1591,7 +1591,7 @@ public interface GiraphConstants {
      */
     int ZOOKEEPER_SNAP_RETAIN_COUNT = 3;
     /**
-     * Zookeeper purge interval in hours
+     * ZooKeeper purge interval in hours
      */
     int ZOOKEEPER_PURGE_INTERVAL = 1;
     /**
@@ -1731,19 +1731,19 @@ public interface GiraphConstants {
      * This counter group will contain one counter whose name is the ZooKeeper server:port which
      * this job is using
      */
-    String ZOOKEEPER_SERVER_PORT_COUNTER_GROUP = "Zookeeper server:port";
+    String ZOOKEEPER_SERVER_PORT_COUNTER_GROUP = "ZooKeeper server:port";
 
     /**
      * This counter group will contain one counter whose name is the ZooKeeper node path which
      * should be created to trigger computation halt
      */
-    String ZOOKEEPER_HALT_NODE_COUNTER_GROUP = "Zookeeper halt node";
+    String ZOOKEEPER_HALT_NODE_COUNTER_GROUP = "ZooKeeper halt node";
 
     /**
      * This counter group will contain one counter whose name is the ZooKeeper node path which
      * contains all data about this job
      */
-    String ZOOKEEPER_BASE_PATH_COUNTER_GROUP = "Zookeeper base path";
+    String ZOOKEEPER_BASE_PATH_COUNTER_GROUP = "ZooKeeper base path";
 
     /**
      * Which class to use to write instructions on how to halt the application
@@ -1763,7 +1763,7 @@ public interface GiraphConstants {
             new IntConfOption(
                     "giraph.waitTaskDoneTimeoutMs",
                     MINUTES.toMillis(15),
-                    "Maximum timeout (in ms) for waiting for all all tasks to " + "complete");
+                    "Maximum timeout (in ms) for waiting for all tasks to " + "complete");
 
     /**
      * Whether to track job progress on client or not
@@ -1886,7 +1886,7 @@ public interface GiraphConstants {
      */
     LongConfOption WAIT_ZOOKEEPER_TIMEOUT_MSEC =
             new LongConfOption(
-                    "giraph.waitZookeeperTimeoutMsec",
+                    "giraph.waitZooKeeperTimeoutMsec",
                     MINUTES.toMillis(15),
                     "How long should we stay in waitForever loops in various "
                             + "places that require network connection");

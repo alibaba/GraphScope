@@ -75,8 +75,8 @@ public class GraphRelShuttleWrapper extends RelShuttleImpl {
             return relShuttle.visit((GraphLogicalMultiMatch) relNode);
         } else if (relNode instanceof GraphLogicalPathExpand) {
             return relShuttle.visit((GraphLogicalPathExpand) relNode);
-        } else if (relNode instanceof GraphLogicalExpandDegree) {
-            return relShuttle.visit((GraphLogicalExpandDegree) relNode);
+        } else if (relNode instanceof GraphLogicalDedupBy) {
+            return relShuttle.visit((GraphLogicalDedupBy) relNode);
         } else {
             throw new UnsupportedOperationException(
                     "relNode " + relNode.getClass() + " can not be visited in shuttle");

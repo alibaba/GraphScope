@@ -161,16 +161,16 @@ class MutableCSRInterface {
   void ScanVertices(const label_id_t& label_id,
                     const std::tuple<SELECTOR...>& selectors,
                     const FUNC_T& func) const {
-    auto columns =
-        get_tuple_column_from_graph_with_property(label_id, selectors);
     auto vnum = db_session_.graph().vertex_num(label_id);
     std::tuple<typename SELECTOR::prop_t...> t;
     if constexpr (sizeof...(SELECTOR) == 0) {
-      for (auto v = 0; v != vnum; ++v) {
+      for (size_t v = 0; v != vnum; ++v) {
         func(v, t);
       }
     } else {
-      for (auto v = 0; v != vnum; ++v) {
+      auto columns =
+          get_tuple_column_from_graph_with_property(label_id, selectors);
+      for (size_t v = 0; v != vnum; ++v) {
         get_tuple_from_column_tuple(v, t, columns);
         func(v, t);
       }
@@ -215,7 +215,7 @@ class MutableCSRInterface {
                                    const FUNC_T& func) const {
     auto label_id = db_session_.schema().get_vertex_label_id(label);
     auto vnum = db_session_.graph().vertex_num(label_id);
-    for (auto v = 0; v != vnum; ++v) {
+    for (size_t v = 0; v != vnum; ++v) {
       func(v);
     }
   }
@@ -285,7 +285,7 @@ class MutableCSRInterface {
     get_tuple_column_from_graph(label_id, prop_names, columns);
     std::vector<std::tuple<T...>> props(vids.size());
     fetch_properties_in_column(vids, props, columns);
-    return std::move(props);
+    return props;
   }
 
   /**
@@ -308,7 +308,7 @@ class MutableCSRInterface {
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
     std::vector<column_tuple_t> columns;
     columns.resize(label_ids.size());
-    for (auto i = 0; i < label_ids.size(); ++i) {
+    for (size_t i = 0; i < label_ids.size(); ++i) {
       get_tuple_column_from_graph(label_ids[i], prop_names, columns[i]);
     }
 
@@ -320,7 +320,7 @@ class MutableCSRInterface {
     t0 += grape::GetCurrentTime();
     VLOG(10) << "Finish getting vertices's property, cost: " << t0;
 
-    return std::move(props);
+    return props;
   }
 
   /**
@@ -349,7 +349,7 @@ class MutableCSRInterface {
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
     std::vector<column_tuple_t> columns;
     columns.resize(label_ids.size());
-    for (auto i = 0; i < label_ids.size(); ++i) {
+    for (size_t i = 0; i < label_ids.size(); ++i) {
       get_tuple_column_from_graph(label_ids[i], prop_names, columns[i]);
     }
 
@@ -378,21 +378,20 @@ class MutableCSRInterface {
     size_t total_size = vids.size();
     std::vector<std::tuple<T...>> props(total_size);
     std::vector<label_t> label_ids;
-    for (auto label : labels) {
+    for (label_id_t label : labels) {
       CHECK(label < db_session_.schema().vertex_label_num());
       label_ids.emplace_back(label);
-      // label_ids.emplace_back(db_session_.schema().get_vertex_label_id(label));
     }
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
     std::vector<column_tuple_t> columns;
     columns.resize(label_ids.size());
-    for (auto i = 0; i < label_ids.size(); ++i) {
+    for (size_t i = 0; i < label_ids.size(); ++i) {
       get_tuple_column_from_graph(label_ids[i], prop_names, columns[i]);
     }
 
     fetch_propertiesV2<0>(props, columns, vids, bitset);
 
-    return std::move(props);
+    return props;
   }
 
   template <size_t Is, typename... T, typename column_tuple_t,
@@ -409,7 +408,7 @@ class MutableCSRInterface {
       auto ptr0 = std::get<Is>(column_tuple0);
       auto ptr1 = std::get<Is>(column_tuple1);
       if (ptr0 && ptr1) {
-        for (auto i = 0; i < vids.size(); ++i) {
+        for (size_t i = 0; i < vids.size(); ++i) {
           if (bitset.get_bit(i)) {
             std::get<Is>(props[i]) = ptr0->get_view(vids[i]);
           } else {
@@ -417,13 +416,13 @@ class MutableCSRInterface {
           }
         }
       } else if (ptr0) {
-        for (auto i = 0; i < vids.size(); ++i) {
+        for (size_t i = 0; i < vids.size(); ++i) {
           if (bitset.get_bit(i)) {
             std::get<Is>(props[i]) = ptr0->get_view(vids[i]);
           }
         }
       } else if (ptr1) {
-        for (auto i = 0; i < vids.size(); ++i) {
+        for (size_t i = 0; i < vids.size(); ++i) {
           if (!bitset.get_bit(i)) {
             std::get<Is>(props[i]) = ptr1->get_view(vids[i]);
           }
@@ -443,7 +442,7 @@ class MutableCSRInterface {
 
     auto& cur_column = std::get<Is>(column);
     if (cur_column) {
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         std::get<Is>(props[i]) = cur_column->get_view(vids[i]);
       }
     }
@@ -473,7 +472,7 @@ class MutableCSRInterface {
       auto column_tuple = columns[i];
       auto ptr = std::get<Is>(column_tuple);
       if (ptr) {
-        for (auto j = 0; j < vid_inds[i].size(); ++j) {
+        for (size_t j = 0; j < vid_inds[i].size(); ++j) {
           auto vid_ind = vid_inds[i][j];
           auto vid = vids[vid_ind];
           std::get<Is>(props[vid_ind]) = ptr->get_view(vid);
@@ -499,7 +498,7 @@ class MutableCSRInterface {
   GetSubGraph(const label_id_t src_label_id, const label_id_t dst_label_id,
               const label_id_t edge_label_id, const std::string& direction_str,
               const std::vector<std::string>& prop_names) const {
-    const MutableCsrBase *csr = nullptr, *other_csr = nullptr;
+    const CsrBase *csr = nullptr, *other_csr = nullptr;
     if (direction_str == "out" || direction_str == "Out" ||
         direction_str == "OUT") {
       csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
@@ -602,7 +601,7 @@ class MutableCSRInterface {
       auto csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                 edge_label_id);
       auto size = 0;
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         size += csr->edge_iter(v)->size();
       }
@@ -610,7 +609,7 @@ class MutableCSRInterface {
       ret_offset.reserve(vids.size());
       ret_offset.emplace_back(0);
 
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         auto iter = csr->edge_iter(v);
         while (iter->is_valid()) {
@@ -624,7 +623,7 @@ class MutableCSRInterface {
       auto csr = db_session_.graph().get_ie_csr(dst_label_id, src_label_id,
                                                 edge_label_id);
       auto size = 0;
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         size += csr->edge_iter(v)->size();
       }
@@ -632,7 +631,7 @@ class MutableCSRInterface {
       ret_offset.reserve(vids.size());
       ret_offset.emplace_back(0);
 
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         auto iter = csr->edge_iter(v);
         while (iter->is_valid()) {
@@ -648,7 +647,7 @@ class MutableCSRInterface {
       auto oe_csr = db_session_.graph().get_oe_csr(src_label_id, dst_label_id,
                                                    edge_label_id);
       auto size = 0;
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         size += ie_csr->edge_iter(v)->size();
         size += oe_csr->edge_iter(v)->size();
@@ -656,7 +655,7 @@ class MutableCSRInterface {
       ret_v.reserve(size);
       ret_offset.reserve(vids.size() + 1);
       ret_offset.emplace_back(0);
-      for (auto i = 0; i < vids.size(); ++i) {
+      for (size_t i = 0; i < vids.size(); ++i) {
         auto v = vids[i];
         {
           auto iter = ie_csr->edge_iter(v);
@@ -769,7 +768,6 @@ class MutableCSRInterface {
   mutable_csr_graph_impl::MultiPropGetter<T...> GetMultiPropGetter(
       const label_id_t& label_id,
       const std::array<std::string, sizeof...(T)>& prop_names) const {
-    static constexpr auto ind_seq = std::make_index_sequence<sizeof...(T)>();
     using column_tuple_t = std::tuple<std::shared_ptr<TypedRefColumn<T>>...>;
     column_tuple_t columns;
     get_tuple_column_from_graph(label_id, prop_names, columns);

@@ -47,6 +47,9 @@ test:
 gremlin_test:
 	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.IrGremlinTest
 
+gremlin_calcite_test:
+	mvn test -Dtest=com.alibaba.graphscope.gremlin.integration.standard.calcite.IrGremlinTest
+
 run:
 	cd $(CUR_DIR) && $(java) \
 	  -cp ".:./target/libs/*:./target/compiler-0.0.1-SNAPSHOT.jar" \
@@ -54,6 +57,8 @@ run:
 	  -Dgraph.schema=${graph.schema} \
 	  -Dgraph.store=${graph.store} \
 	  -Dpegasus.hosts=${pegasus.hosts} \
+	  -Dgremlin.script.language.name=${gremlin.script.language.name} \
+	  -Dphysical.opt.config=${physical.opt.config} \
 	  com.alibaba.graphscope.GraphServer ${config.path}
 
 # make physical_plan config.path='<path to the config file>'

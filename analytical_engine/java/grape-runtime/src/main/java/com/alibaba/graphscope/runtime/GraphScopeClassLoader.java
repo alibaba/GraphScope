@@ -61,7 +61,7 @@ public class GraphScopeClassLoader {
      *
      * @param classPath a string will be interpreted as java class path.
      * @return new classloader with specified classPath.
-     * @throws IllegalAccessException if ClassScope can not get loaded libraries.
+     * @throws IllegalAccessException if ClassScope cannot get loaded libraries.
      */
     public static URLClassLoader newGraphScopeClassLoader(String classPath)
             throws IllegalAccessException {
@@ -74,7 +74,7 @@ public class GraphScopeClassLoader {
         logger.info(
                 "Class Loader "
                         + urlClassLoader
-                        + " serach path: "
+                        + " search path: "
                         + urlsToString(urlClassLoader.getURLs()));
         return urlClassLoader;
     }
@@ -83,7 +83,7 @@ public class GraphScopeClassLoader {
      * Return a default URLClassLoader with no classPath.
      *
      * @return the default class loader.
-     * @throws IllegalAccessException if ClassScope can not get loaded libraries.
+     * @throws IllegalAccessException if ClassScope cannot get loaded libraries.
      */
     public static URLClassLoader newGraphScopeClassLoader() throws IllegalAccessException {
         String[] libraries = ClassScope.getLoadedLibraries(ClassLoader.getSystemClassLoader());
@@ -100,7 +100,7 @@ public class GraphScopeClassLoader {
      * @param classLoader
      * @param className   a/b/c/ or a.b.c
      * @return a instance for loaded class.
-     * @throws ClassNotFoundException if class can not be found in current path.
+     * @throws ClassNotFoundException if class cannot be found in current path.
      * @throws InstantiationException if error in creating new instance.
      * @throws IllegalAccessException if error in creating new instance.
      */
@@ -126,8 +126,8 @@ public class GraphScopeClassLoader {
      * @param foreignName The foreign name for C++ object,shall be fully specified.
      * @param address     The address for C++ object.
      * @return a FFIPointer wrapper.
-     * @throws ClassNotFoundException    if class can not be found in current path.
-     * @throws NoSuchMethodException     if method for ffi type factory can not be found.
+     * @throws ClassNotFoundException    if class cannot be found in current path.
+     * @throws NoSuchMethodException     if method for ffi type factory cannot be found.
      * @throws InvocationTargetException if error in invoke the specific method.
      * @throws IllegalAccessException    if error in invoke the specific method.
      * @throws InstantiationException    if error in creating new instance.
@@ -153,7 +153,7 @@ public class GraphScopeClassLoader {
             throw new IllegalArgumentException("Get ffi java class null");
         }
 
-        // The class loaded by FFITypeFactor's classLoader can not be directly used
+        // The class loaded by FFITypeFactor's classLoader cannot be directly used
         // by us. We load again with our class loader.
         //        Class<?> javaClass = classLoader.loadClass(ffiJavaClass.getName());
         if (Objects.nonNull(javaClass)) {
@@ -177,7 +177,7 @@ public class GraphScopeClassLoader {
      * @param classLoader url class loader to utilized.
      * @param className   full name for java class.
      * @return loaded class.
-     * @throws ClassNotFoundException if target class can not be found in current path.
+     * @throws ClassNotFoundException if target class cannot be found in current path.
      */
     public static Class<?> loadClass(URLClassLoader classLoader, String className)
             throws ClassNotFoundException {
@@ -189,7 +189,7 @@ public class GraphScopeClassLoader {
      *
      * @param classLoader url class loader to utilized.
      * @return loaded class.
-     * @throws ClassNotFoundException if target class can not be found in current path.
+     * @throws ClassNotFoundException if target class cannot be found in current path.
      */
     public static Class<?> loadCommunicatorClass(URLClassLoader classLoader)
             throws ClassNotFoundException {
@@ -208,10 +208,10 @@ public class GraphScopeClassLoader {
             logger.error("Empty class Path!");
             return new URL[] {};
         }
-        String[] splited = classPath.split(":");
-        logger.debug("Splited class path: " + String.join(",", splited));
+        String[] split = classPath.split(":");
+        logger.debug("Split class path: " + String.join(",", split));
         List<URL> res =
-                Arrays.stream(splited)
+                Arrays.stream(split)
                         .map(File::new)
                         .map(
                                 file -> {
@@ -227,8 +227,8 @@ public class GraphScopeClassLoader {
                 "Extracted URL: "
                         + String.join(
                                 ":", res.stream().map(URL::toString).collect(Collectors.toList())));
-        URL[] ret = new URL[splited.length];
-        for (int i = 0; i < splited.length; ++i) {
+        URL[] ret = new URL[split.length];
+        for (int i = 0; i < split.length; ++i) {
             ret[i] = res.get(i);
         }
         return ret;
@@ -290,7 +290,7 @@ public class GraphScopeClassLoader {
         }
 
         /**
-         * Get the libraries already loaded in one classLoader. Note that one lib can not be loaded
+         * Get the libraries already loaded in one classLoader. Note that one lib cannot be loaded
          * twice via the same class loader.
          *
          * @param loader

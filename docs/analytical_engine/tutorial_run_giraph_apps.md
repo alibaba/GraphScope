@@ -1,9 +1,9 @@
 # Tutorial: Run Giraph Applications on GraphScope
 
-[Apache Giraph](https://giraph.apache.org/intro.html) is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through `pregel` interface, user can write ``vertex-cetric`` graph algorithms. 
+[Apache Giraph](https://giraph.apache.org/intro.html) is one of the most famous graph computing frameworks, built on top of Apache Hadoop. Through `pregel` interface, user can write ``vertex-centric`` graph algorithms. 
 
-GraphScope aiming to provide one-stop graph processing framework, including intergrating with popular open-source graph computing framework.
-Actually, Giraph algorithms can be easily run on Graphscope without any adaptation.
+GraphScope aiming to provide one-stop graph processing framework, including integrating with popular open-source graph computing framework.
+Actually, Giraph algorithms can be easily run on GraphScope without any adaptation.
 
 ## Try some example giraph apps
 
@@ -24,7 +24,7 @@ graph = graphscope_session.load_from(
 )
 ```
 
-vertices and edges should points to vertex input and edge input. We also provide some example dataset `gstest` at [Graphscope/gstest](https://github.com/7br/gstest.git). 
+vertices and edges should points to vertex input and edge input. We also provide some example dataset `gstest` at [GraphScope/gstest](https://github.com/7br/gstest.git). 
 In this tutorial we will only need `p2p` dataset. You can download it by:
 
 ```bash
@@ -79,7 +79,7 @@ mvn package -pl :giraph-examples
 
 Then you could find `giraph-examples-1.4.0-SNAPSHOT-for-hadoop-1.2.1-jar-with-dependencies.jar` in directory `giraph-examples/target`.
 
-Although almost all APIs are supported, there are indeed some limitation of Giraph-on-Graphscope.
+Although almost all APIs are supported, there are indeed some limitation of Giraph-on-GraphScope.
 
 - Currently graph modification API is not supported.
 - Using of Complex Writable will cause performance degradation.
@@ -91,7 +91,7 @@ The procedure almost the same as above, except that you need to replace the subm
 ```python
 import graphscope
 
-"""Or lauch session in k8s cluster"""
+"""Or launch session in k8s cluster"""
 sess = graphscope.session(cluster_type='hosts') 
 
 # path to local jar file, will be distributed over cluster

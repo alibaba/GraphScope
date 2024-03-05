@@ -28,7 +28,7 @@ import java.io.IOException;
 public class StoreSchemaService extends StoreSchemaGrpc.StoreSchemaImplBase {
     private static final Logger logger = LoggerFactory.getLogger(StoreSchemaService.class);
 
-    private StoreService storeService;
+    private final StoreService storeService;
 
     public StoreSchemaService(StoreService storeService) {
         this.storeService = storeService;

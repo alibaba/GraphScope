@@ -52,8 +52,8 @@ class Req {
     std::vector<char> tmp(size);
     size_t index = 0;
     while (fi.read(buffer.data(), size)) {
-      auto len = fi.gcount();
-      for (size_t i = 0; i < len; ++i) {
+      std::streamsize len = fi.gcount();
+      for (std::streamsize i = 0; i < len; ++i) {
         if (index >= 4 && tmp[index - 1] == '#') {
           if (tmp[index - 4] == 'e' && tmp[index - 3] == 'o' &&
               tmp[index - 2] == 'r') {
@@ -118,7 +118,7 @@ class Req {
         "IC9", "IC10", "IC11", "IC12", "IC13", "IC14", "IS1", "IS2",
         "IS3", "IS4",  "IS5",  "IS6",  "IS7",  "IU1",  "IU2", "IU3",
         "IU4", "IU5",  "IU6",  "IU7",  "IU8"};
-    for (auto i = 0; i < vec.size(); ++i) {
+    for (size_t i = 0; i < vec.size(); ++i) {
       size_t sz = ts[i].size();
       if (sz > 0) {
         std::cout << queries[i] << "; mean: " << vec[i] * 1. / count[i]
@@ -218,12 +218,12 @@ int main(int argc, char** argv) {
   int ac = 1;
   char* av[] = {(char*) "rt_bench"};
   app.run(ac, av, [shard_num] {
-    return seastar::parallel_for_each(
-               boost::irange<unsigned>(0u, shard_num),
-               [](unsigned id) {
-                 return seastar::smp::submit_to(
-                     id, [id] { return Req::get().simulate(); });
-               })
+    return seastar::parallel_for_each(boost::irange<unsigned>(0u, shard_num),
+                                      [](unsigned id) {
+                                        return seastar::smp::submit_to(id, [] {
+                                          return Req::get().simulate();
+                                        });
+                                      })
         .then([] {
           hiactor::actor_engine().exit();
           fmt::print("Exit actor system.\n");

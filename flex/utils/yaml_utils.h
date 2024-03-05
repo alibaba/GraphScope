@@ -74,34 +74,6 @@ static bool expect_config(YAML::Node root, const std::string& key,
   }
   return true;
 }
-// When file_path is absolute path, try to find the file in the absolute path.
-// When data_location is give, try to find the file in data_location first.
-// When data_location is not given, try to find the file Under FLEX_DATA_DIR
-// When FLEX_DATA_DIR is not set, try to find the file under current path.
-
-static bool access_file(const std::string data_location,
-                        std::string& file_path) {
-  if (file_path.size() == 0) {
-    return false;
-  }
-  if (file_path[0] == '/') {
-    std::filesystem::path path(file_path);
-    return std::filesystem::exists(path);
-  }
-
-  std::string real_location;
-  if (!data_location.empty()) {
-    real_location = data_location;
-  } else if (std::getenv("FLEX_DATA_DIR") != NULL) {
-    real_location = std::string(std::getenv("FLEX_DATA_DIR"));
-  } else {
-    real_location = std::filesystem::current_path().generic_string();
-  }
-
-  file_path = real_location + "/" + file_path;
-  std::filesystem::path path(file_path);
-  return std::filesystem::exists(path);
-}
 
 }  // namespace config_parsing
 }  // namespace gs

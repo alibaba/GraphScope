@@ -25,10 +25,10 @@ import java.util.List;
 
 public class ClearEdgePropertyOperation extends Operation {
 
-    private EdgeId edgeId;
-    private EdgeKind edgeKind;
-    private List<Integer> properties;
-    private boolean forward;
+    private final EdgeId edgeId;
+    private final EdgeKind edgeKind;
+    private final List<Integer> properties;
+    private final boolean forward;
 
     public ClearEdgePropertyOperation(
             EdgeId edgeId, EdgeKind edgeKind, List<Integer> properties, boolean forward) {

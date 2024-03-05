@@ -5,7 +5,7 @@ use crate::db::api::*;
 use crate::db::common::concurrency::volatile::Volatile;
 use crate::db::util::lock::GraphMutexLock;
 
-const MAX_SIZE: usize = 128;
+pub const MAX_SIZE: usize = 4096;
 const SIZE_MASK: usize = MAX_SIZE - 1;
 const TOMBSTONE: i64 = i64::min_value();
 const EMPTY_SI: SnapshotId = 0;
@@ -100,8 +100,7 @@ impl VersionManager {
             let cur_si = self.slots[idx].get_si();
             let _data = self.slots[idx].get_data();
             if cur_si == 0 {
-                let msg =
-                    format!("A bug found! Something wrong with the VersionManager. Maybe thread unsafe");
+                let msg = format!("cur_si should not be 0! Maybe thread unsafe");
                 let err = gen_graph_err!(GraphErrorCode::GraphStoreBug, msg, gc, si);
                 return Err(err);
             }

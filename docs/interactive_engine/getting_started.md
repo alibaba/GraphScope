@@ -45,7 +45,7 @@ python3.9 -m venv tutorial-env
 source tutorial-env/bin/activate
 # Install GraphScope
 python3.9 -m pip install graphscope
-# Use Graphscope
+# Use GraphScope
 python3.9
 >>> import graphscope as gs
 >>> ......

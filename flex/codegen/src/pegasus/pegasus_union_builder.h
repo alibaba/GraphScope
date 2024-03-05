@@ -58,7 +58,7 @@ class UnionOpBuilder {
 
     // codegen for sub plans
     std::stringstream plan_ss;
-    for (auto i = 0; i < sub_plan_size; i++) {
+    for (int32_t i = 0; i < sub_plan_size; i++) {
       auto sub_ctx = ctx_.CreateSubTaskContext();
       auto sub_plan = sub_plans_[i];
       plan_ss << generate_sub_plan(sub_ctx, sub_plan, i);
@@ -78,7 +78,7 @@ class UnionOpBuilder {
         "%3%"  // code for copied
     );
     std::stringstream copied_ss;
-    for (auto i = 0; i < sub_plans_.size() - 1; i++) {
+    for (size_t i = 0; i + 1 < sub_plans_.size(); i++) {
       boost::format copied_fmter(
           "let (mut stream_%1%_%2%, mut stream_%1%_%3%) = "
           "stream_%1%_%2%.copied();\n");
@@ -99,7 +99,7 @@ class UnionOpBuilder {
         "%3%"
         "};\n");
     std::stringstream sub_plan_code_ss;
-    for (auto i = 0; i < sub_plan.plan_size(); i++) {
+    for (int32_t i = 0; i < sub_plan.plan_size(); i++) {
       auto op = sub_plan.plan(i);
       auto& meta_datas = op.meta_data();
 
@@ -118,7 +118,7 @@ class UnionOpBuilder {
       }
       case physical::PhysicalOpr::Operator::kGroupBy: {
         std::vector<physical::PhysicalOpr::MetaData> meta_datas;
-        for (auto i = 0; i < op.meta_data_size(); i++) {
+        for (int32_t i = 0; i < op.meta_data_size(); i++) {
           meta_datas.push_back(op.meta_data(i));
         }
 
@@ -141,7 +141,7 @@ class UnionOpBuilder {
       }
       case physical::PhysicalOpr::Operator::kProject: {
         std::vector<physical::PhysicalOpr::MetaData> meta_data;
-        for (auto i = 0; i < op.meta_data_size(); i++) {
+        for (int32_t i = 0; i < op.meta_data_size(); i++) {
           meta_data.push_back(op.meta_data(i));
         }
 
@@ -185,7 +185,7 @@ class UnionOpBuilder {
         break;
       }
       default:
-        LOG(FATAL) << "Not supproted in union.";
+        LOG(FATAL) << "Not supported in union.";
       }
     }
     union_fmter % operator_index_ % index % sub_plan_code_ss.str();
@@ -197,7 +197,7 @@ class UnionOpBuilder {
         "let result_stream = stream_%1%_0%2%;\n"
         "result_stream");
     std::stringstream merge_ss;
-    for (auto i = 1; i < sub_plans_.size(); i++) {
+    for (size_t i = 1; i < sub_plans_.size(); i++) {
       boost::format merge_fmter(".merge(stream_%1%_%2%)?");
       merge_fmter % operator_index_ % i;
       merge_ss << merge_fmter.str();
@@ -216,7 +216,7 @@ static std::string BuildUnionOp(
     const physical::Union& union_pb,
     const physical::PhysicalOpr::MetaData& meta_data) {
   UnionOpBuilder builder(ctx);
-  for (auto i = 0; i < union_pb.sub_plans_size(); i++) {
+  for (int32_t i = 0; i < union_pb.sub_plans_size(); i++) {
     builder.add_plan(union_pb.sub_plans(i));
   }
   return builder.operator_index(operator_index).Build();

@@ -16,6 +16,13 @@ public class DataLoadConfig {
     public static final String UNIQUE_PATH = "unique.path"; // generated automatically for each task
     public static final String USER_NAME = "auth.username";
     public static final String PASS_WORD = "auth.password";
+    public static final String WAIT_TIME_BEFORE_COMMIT = "wait.time.before.commit";
+    public static final String WAIT_TIME_BEFORE_REPLAY = "wait.time.before.replay";
+    public static final String COMPACT_AFTER_COMMIT = "compact.after.commit";
+    public static final String REOPEN_AFTER_COMMIT = "reopen.after.commit";
+    public static final String PRIMARY_VIP_SERVER_DOMAIN = "primary.vipserver.domain";
+    public static final String SECONDARY_VIP_SERVER_DOMAIN = "secondary.vipserver.domain";
+    public static final String REPLAY_DATE = "replay.date";
 
     /** job on HDFS configurations **/
 

@@ -76,15 +76,6 @@ class MatchQuery : public AppBase {
     auto ctx0 = Engine::template ScanVertex<gs::AppendOpt::Persist>(
         graph, std::array<label_id_t, 1>{1},
         Filter<TruePredicate>());  // person
-    {
-      size_t cnt = 0;
-      for (auto iter : ctx0) {
-        auto ele = iter.GetAllElement();
-        cnt += 1;
-        // LOG(INFO) << gs::to_string(ele);
-      }
-      LOG(INFO) << "vertices cnt: " << cnt;
-    }
 
     // auto ctx0_1 = Engine::template Limit(std::move(ctx0), 0, 100);
 

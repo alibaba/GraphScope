@@ -26,14 +26,8 @@ import com.alibaba.graphscope.groot.operation.StoreDataBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -53,23 +47,22 @@ public class WriterAgent implements MetricsAgent {
     public static final String STORE_WRITE_TOTAL = "store.write.total";
     public static final String BUFFER_WRITE_PER_SECOND_MS = "buffer.write.per.second.ms";
 
-    private Configs configs;
-    private int storeId;
-    private int queueCount;
-    private StoreService storeService;
-    private MetaService metaService;
-    private SnapshotCommitter snapshotCommitter;
+    private final Configs configs;
+    private final int storeId;
+    private final int queueCount;
+    private final StoreService storeService;
+    private final MetaService metaService;
+    private final SnapshotCommitter snapshotCommitter;
 
     private volatile boolean shouldStop = true;
     private SnapshotSortQueue bufferQueue;
-    private volatile long lastCommitSnapshotId;
-    private volatile long consumeSnapshotId;
+    private volatile long lastCommitSI;
+    private volatile long consumeSI;
     private volatile long consumeDdlSnapshotId;
-    private AtomicReference<SnapshotInfo> availSnapshotInfoRef;
+    private final AtomicReference<SnapshotInfo> availSnapshotInfoRef;
     private ExecutorService commitExecutor;
     private List<Long> consumedQueueOffsets;
     private Thread consumeThread;
-
     private volatile long lastUpdateTime;
     private volatile long totalWrite;
     private volatile long writePerSecond;
@@ -95,7 +88,7 @@ public class WriterAgent implements MetricsAgent {
         this.snapshotCommitter = snapshotCommitter;
         this.availSnapshotInfoRef = new AtomicReference<>();
         initMetrics();
-        metricsCollector.register(this, () -> updateMetrics());
+        metricsCollector.register(this, this::updateMetrics);
     }
 
     /** should be called once, before start */
@@ -104,8 +97,8 @@ public class WriterAgent implements MetricsAgent {
     }
 
     public void start() {
-        this.lastCommitSnapshotId = -1L;
-        this.consumeSnapshotId = 0L;
+        this.lastCommitSI = -1L;
+        this.consumeSI = 0L;
         this.consumeDdlSnapshotId = 0L;
 
         this.shouldStop = false;
@@ -114,11 +107,6 @@ public class WriterAgent implements MetricsAgent {
         for (int i = 0; i < this.queueCount; i++) {
             this.consumedQueueOffsets.add(-1L);
         }
-
-        this.consumeThread = new Thread(() -> processBatches());
-        this.consumeThread.setName("store-consume");
-        this.consumeThread.setDaemon(true);
-        this.consumeThread.start();
 
         this.commitExecutor =
                 new ThreadPoolExecutor(
@@ -129,6 +117,11 @@ public class WriterAgent implements MetricsAgent {
                         new LinkedBlockingQueue<>(),
                         ThreadFactoryUtils.daemonThreadFactoryWithLogExceptionHandler(
                                 "writer-agent-commit", logger));
+
+        this.consumeThread = new Thread(this::processBatches);
+        this.consumeThread.setName("store-consume");
+        this.consumeThread.setDaemon(true);
+        this.consumeThread.start();
         logger.info("WriterAgent started");
     }
 
@@ -152,6 +145,7 @@ public class WriterAgent implements MetricsAgent {
             }
             this.commitExecutor = null;
         }
+
         logger.debug("WriterAgent stopped");
     }
 
@@ -163,9 +157,11 @@ public class WriterAgent implements MetricsAgent {
      * @return True if offer success, otherwise False
      */
     public boolean writeStore(StoreDataBatch storeDataBatch) throws InterruptedException {
-        int queueId = storeDataBatch.getQueueId();
+        // logger.info("writeStore {}", storeDataBatch.toProto());
+        //        int queueId = storeDataBatch.getQueueId();
         long beforeOfferTime = System.nanoTime();
-        boolean suc = this.bufferQueue.offerQueue(queueId, storeDataBatch);
+        boolean suc = this.bufferQueue.offerQueue(0, storeDataBatch);
+        logger.debug("Buffer queue: {}, {}", suc, this.bufferQueue.innerQueueSizes());
         long afterOfferTime = System.nanoTime();
         this.bufferWritePerSecondMetric.add(afterOfferTime - beforeOfferTime);
         return suc;
@@ -187,45 +183,29 @@ public class WriterAgent implements MetricsAgent {
     private void processBatches() {
         while (!shouldStop) {
             try {
-                long beforePollNano = System.nanoTime();
-                StoreDataBatch storeDataBatch = this.bufferQueue.poll();
-                long afterPollNano = System.nanoTime();
-                long pollNano = afterPollNano - beforePollNano;
-                this.totalPollLatencyNano += pollNano;
-                this.maxPollLatencyNano.updateAndGet(
-                        curMax -> (pollNano > curMax) ? pollNano : curMax);
-                if (storeDataBatch == null) {
+                StoreDataBatch batch = this.bufferQueue.poll();
+                if (batch == null) {
                     continue;
                 }
-                long batchSnapshotId = storeDataBatch.getSnapshotId();
-                logger.debug("polled one batch [" + batchSnapshotId + "]");
-                boolean hasDdl = writeEngineWithRetry(storeDataBatch);
-                int writeCount = storeDataBatch.getSize();
-                this.totalWrite += writeCount;
-                if (this.consumeSnapshotId < batchSnapshotId) {
-                    SnapshotInfo availSnapshotInfo = this.availSnapshotInfoRef.get();
-                    long availDdlSnapshotId = availSnapshotInfo.getDdlSnapshotId();
-                    if (availDdlSnapshotId < this.consumeDdlSnapshotId) {
-                        availDdlSnapshotId = this.consumeDdlSnapshotId;
-                    }
-                    long prevSnapshotId = batchSnapshotId - 1;
-                    long availSnapshotId = availSnapshotInfo.getSnapshotId();
-                    if (availSnapshotId < prevSnapshotId) {
-                        availSnapshotId = prevSnapshotId;
-                    }
-                    this.consumeSnapshotId = batchSnapshotId;
-                    this.availSnapshotInfoRef.set(
-                            new SnapshotInfo(availSnapshotId, availDdlSnapshotId));
-                    this.commitExecutor.execute(() -> asyncCommit());
+                long batchSI = batch.getSnapshotId();
+                logger.debug("polled one batch [" + batchSI + "]");
+                boolean hasDdl = writeEngineWithRetry(batch);
+                this.totalWrite += batch.getSize();
+                if (this.consumeSI < batchSI) {
+                    SnapshotInfo availSInfo = this.availSnapshotInfoRef.get();
+                    long availSI = Math.max(availSInfo.getSnapshotId(), batchSI - 1);
+                    long availDdlSI = Math.max(availSInfo.getDdlSnapshotId(), consumeDdlSnapshotId);
+                    this.consumeSI = batchSI;
+                    this.availSnapshotInfoRef.set(new SnapshotInfo(availSI, availDdlSI));
+                    this.commitExecutor.execute(this::asyncCommit);
+                } else {
+                    logger.warn("consumedSI {} >= batchSI {}, ignored", consumeSI, batchSI);
                 }
-
                 if (hasDdl) {
-                    this.consumeDdlSnapshotId = batchSnapshotId;
+                    this.consumeDdlSnapshotId = batchSI;
                 }
-
-                int queueId = storeDataBatch.getQueueId();
-                long offset = storeDataBatch.getOffset();
-                this.consumedQueueOffsets.set(queueId, offset);
+                // this.consumedQueueOffsets.set(batch.getQueueId(), batch.getOffset());
+                this.consumedQueueOffsets.set(0, batch.getOffset());
             } catch (InterruptedException e) {
                 logger.error("processBatches interrupted");
             } catch (Exception e) {
@@ -236,29 +216,20 @@ public class WriterAgent implements MetricsAgent {
 
     private void asyncCommit() {
         SnapshotInfo snapshotInfo = this.availSnapshotInfoRef.get();
-        long availSnapshotId = snapshotInfo.getSnapshotId();
-        if (availSnapshotId > this.lastCommitSnapshotId) {
+        long curSI = snapshotInfo.getSnapshotId();
+        if (curSI > this.lastCommitSI) {
             long ddlSnapshotId = snapshotInfo.getDdlSnapshotId();
             List<Long> queueOffsets = new ArrayList<>(this.consumedQueueOffsets);
             try {
-                logger.debug(
-                        "commit snapshotId ["
-                                + availSnapshotId
-                                + "], last DDL snapshotId ["
-                                + ddlSnapshotId
-                                + "]");
+                // logger.info("commit SI {}, last DDL SI {}", availSnapshotId, ddlSnapshotId);
                 this.snapshotCommitter.commitSnapshotId(
-                        this.storeId, availSnapshotId, ddlSnapshotId, queueOffsets);
-                this.lastCommitSnapshotId = availSnapshotId;
+                        storeId, curSI, ddlSnapshotId, queueOffsets);
+                this.lastCommitSI = curSI;
             } catch (Exception e) {
-                logger.warn(
-                        "commit failed. snapshotId ["
-                                + availSnapshotId
-                                + "], queueOffsets ["
-                                + queueOffsets
-                                + "]. will ignore",
-                        e);
+                logger.warn("commit failed. SI {}, offset {}. ignored", curSI, queueOffsets, e);
             }
+        } else {
+            logger.warn("curSI {} <= lastCommitSI {}, ignored", curSI, lastCommitSI);
         }
     }
 
@@ -267,20 +238,14 @@ public class WriterAgent implements MetricsAgent {
             try {
                 return this.storeService.batchWrite(storeDataBatch);
             } catch (Exception e) {
-                logger.error(
-                        "writeEngine failed. queueId ["
-                                + storeDataBatch.getQueueId()
-                                + "], "
-                                + "snapshotId ["
-                                + storeDataBatch.getSnapshotId()
-                                + "], "
-                                + "offset ["
-                                + storeDataBatch.getOffset()
-                                + "]. will retry",
-                        e);
+                logger.error("writeEngine failed: batch {}.", storeDataBatch.toProto(), e);
             }
         }
         return false;
+    }
+
+    public List<Long> getConsumedQueueOffsets() {
+        return consumedQueueOffsets;
     }
 
     @Override

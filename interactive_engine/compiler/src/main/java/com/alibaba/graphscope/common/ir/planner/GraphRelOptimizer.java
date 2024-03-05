@@ -16,18 +16,19 @@
 
 package com.alibaba.graphscope.common.ir.planner;
 
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.PlannerConfig;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.GraphRelMetadataQuery;
 import com.alibaba.graphscope.common.ir.meta.glogue.calcite.handler.GraphMetadataHandlerProvider;
 import com.alibaba.graphscope.common.ir.planner.rules.*;
 import com.alibaba.graphscope.common.ir.planner.volcano.VolcanoPlannerX;
-import com.alibaba.graphscope.common.ir.rel.GraphRelVisitor;
+import com.alibaba.graphscope.common.ir.rel.GraphShuttle;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalMultiMatch;
 import com.alibaba.graphscope.common.ir.rel.graph.match.GraphLogicalSingleMatch;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.Glogue;
 import com.alibaba.graphscope.common.ir.rel.metadata.glogue.GlogueQuery;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.google.common.collect.Lists;
 
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -41,10 +42,10 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.rules.CoreRules;
 import org.apache.calcite.rel.rules.FilterJoinRule;
+import org.apache.calcite.tools.RelBuilderFactory;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Optimize graph relational tree which consists of match and other relational operators
@@ -53,9 +54,11 @@ public class GraphRelOptimizer {
     private final PlannerConfig config;
     private final RelOptPlanner relPlanner;
     private final RelOptPlanner matchPlanner;
+    private final RelBuilderFactory relBuilderFactory;
 
-    public GraphRelOptimizer(PlannerConfig config) {
-        this.config = Objects.requireNonNull(config);
+    public GraphRelOptimizer(Configs graphConfig) {
+        this.config = new PlannerConfig(graphConfig);
+        this.relBuilderFactory = new GraphBuilderFactory(graphConfig);
         this.relPlanner = createRelPlanner();
         this.matchPlanner = createMatchPlanner();
     }
@@ -89,7 +92,7 @@ public class GraphRelOptimizer {
         return before;
     }
 
-    private class MatchOptimizer extends GraphRelVisitor {
+    private class MatchOptimizer extends GraphShuttle {
         private final GraphIOProcessor ioProcessor;
 
         public MatchOptimizer(GraphIOProcessor ioProcessor) {
@@ -128,7 +131,7 @@ public class GraphRelOptimizer {
             ruleConfigs.forEach(
                     k -> {
                         hepBuilder.addRuleInstance(
-                                k.withRelBuilderFactory(GraphPlanner.relBuilderFactory).toRule());
+                                k.withRelBuilderFactory(relBuilderFactory).toRule());
                     });
         }
         return new HepPlanner(hepBuilder.build());
@@ -157,8 +160,7 @@ public class GraphRelOptimizer {
                                 if (ruleConfig != null) {
                                     planner.addRule(
                                             ruleConfig
-                                                    .withRelBuilderFactory(
-                                                            GraphPlanner.relBuilderFactory)
+                                                    .withRelBuilderFactory(relBuilderFactory)
                                                     .toRule());
                                 }
                             });

@@ -1,3 +1,18 @@
+/** Copyright 2020 Alibaba Group Holding Limited.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * 	http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "flex/engines/http_server/workdir_manipulator.h"
 #include "flex/engines/http_server/codegen_proxy.h"
 
@@ -80,7 +95,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::CreateGraph(
            << GetGraphSchemaPath(graph_name);
 
   return gs::Result<seastar::sstring>(
-      seastar::sstring("successfuly created graph "));
+      seastar::sstring("successfully created graph "));
 }
 
 gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
@@ -102,7 +117,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
   if (!schema_str_res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
-                   "Failt to read schema file: " + schema_file +
+                   "Failed to read schema file: " + schema_file +
                        ", error: " + schema_str_res.status().error_message()));
   } else {
     return gs::Result<seastar::sstring>(schema_str_res.value());
@@ -624,7 +639,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         gs::Status(gs::StatusCode::InternalError,
                    "Fail to parse parameter as json: " + parameters));
   }
-  VLOG(1) << "Successfully parse json paramters: " << json.dump();
+  VLOG(1) << "Successfully parse json parameters: " << json.dump();
   // load plugin_file as yaml
   YAML::Node plugin_node;
   try {
@@ -1214,9 +1229,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::disable_procedure_on_graph(
   // error: procedure already exists.
   // remove procedure from enable_lists
   auto new_enable_list = YAML::Node(YAML::NodeType::Sequence);
-  int ind = -1;
   for (auto iter = enable_lists.begin(); iter != enable_lists.end(); iter++) {
-    ind += 1;
     if (iter->as<std::string>() == procedure_name) {
       LOG(INFO) << "Found procedure " << procedure_name << " in enable_lists";
       break;

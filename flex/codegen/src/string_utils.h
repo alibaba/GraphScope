@@ -68,28 +68,26 @@ std::string res_alias_to_append_opt(int res_alias) {
 }
 
 template <typename LabelIdT>
-static std::string ensure_label_id(LabelIdT label_id) {
+std::string ensure_label_id(LabelIdT label_id) {
   return std::string(LABEL_ID_T_CASTER) + std::string(" ") +
          std::to_string(label_id);
 }
 
-static std::string make_move(int32_t i) {
+std::string make_move(int32_t i) {
   return "std::move(" + std::to_string(i) + ")";
 }
 
-static std::string make_move(const std::string& param) {
+std::string make_move(const std::string& param) {
   return "std::move(" + param + ")";
 }
 
-static std::string format_input_col(const int32_t v_tag) {
+std::string format_input_col(const int32_t v_tag) {
   return "INPUT_COL_ID(" + std::to_string(v_tag) + ")";
 }
 
-static std::string add_quote(const std::string& str) {
-  return "\"" + str + "\"";
-}
+std::string add_quote(const std::string& str) { return "\"" + str + "\""; }
 
-static std::string direction_pb_to_str(
+std::string direction_pb_to_str(
     const physical::EdgeExpand::Direction& direction) {
   switch (direction) {
   case physical::EdgeExpand::Direction::EdgeExpand_Direction_IN:
@@ -104,8 +102,7 @@ static std::string direction_pb_to_str(
   }
 }
 
-static std::string direction_pb_to_str(
-    const gs::internal::Direction& direction) {
+std::string direction_pb_to_str(const gs::internal::Direction& direction) {
   switch (direction) {
   case gs::internal::Direction::kIn:
     return "gs::Direction::In";
@@ -119,11 +116,10 @@ static std::string direction_pb_to_str(
 }
 
 template <typename LabelT>
-static std::string label_ids_to_array_str(
-    const std::vector<LabelT>& label_ids) {
+std::string label_ids_to_array_str(const std::vector<LabelT>& label_ids) {
   std::stringstream ss;
   ss << "std::array<label_id_t, " << label_ids.size() << ">{";
-  for (int i = 0; i < label_ids.size(); ++i) {
+  for (size_t i = 0; i < label_ids.size(); ++i) {
     ss << ensure_label_id(label_ids[i]);
     if (i != label_ids.size() - 1) {
       ss << ", ";

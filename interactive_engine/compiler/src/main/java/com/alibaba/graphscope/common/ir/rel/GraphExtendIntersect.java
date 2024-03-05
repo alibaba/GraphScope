@@ -53,8 +53,8 @@ public class GraphExtendIntersect extends SingleRel {
 
     @Override
     public RelNode accept(RelShuttle shuttle) {
-        if (shuttle instanceof GraphRelVisitor) {
-            return ((GraphRelVisitor) shuttle).visit(this);
+        if (shuttle instanceof GraphShuttle) {
+            return ((GraphShuttle) shuttle).visit(this);
         }
         return super.accept(shuttle);
     }

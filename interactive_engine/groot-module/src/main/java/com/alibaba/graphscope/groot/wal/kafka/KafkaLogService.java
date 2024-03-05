@@ -39,7 +39,7 @@ public class KafkaLogService implements LogService {
     private final Configs configs;
     private final String servers;
     private final String topic;
-    private final int queueCount;
+    private final int storeCount;
     private final short replicationFactor;
     private final int maxMessageMb;
 
@@ -48,16 +48,17 @@ public class KafkaLogService implements LogService {
     public KafkaLogService(Configs configs) {
         this.configs = configs;
         this.servers = KafkaConfig.KAFKA_SERVERS.get(configs);
-        this.topic = KafkaConfig.KAKFA_TOPIC.get(configs);
-        this.queueCount = CommonConfig.INGESTOR_QUEUE_COUNT.get(configs);
+        this.topic = KafkaConfig.KAFKA_TOPIC.get(configs);
+        this.storeCount = CommonConfig.STORE_NODE_COUNT.get(configs);
         this.replicationFactor = KafkaConfig.KAFKA_REPLICATION_FACTOR.get(configs);
         this.maxMessageMb = KafkaConfig.KAFKA_MAX_MESSAGE_MB.get(configs);
+        logger.info("Initialized KafkaLogService");
     }
 
     @Override
     public void init() {
         AdminClient admin = getAdmin();
-        NewTopic newTopic = new NewTopic(this.topic, this.queueCount, this.replicationFactor);
+        NewTopic newTopic = new NewTopic(this.topic, this.storeCount, this.replicationFactor);
         Map<String, String> configs = new HashMap<>();
         configs.put("retention.ms", "-1");
         configs.put("retention.bytes", "-1");
@@ -91,7 +92,9 @@ public class KafkaLogService implements LogService {
     }
 
     @Override
-    public LogWriter createWriter(int queueId) {
+    public LogWriter createWriter() {
+        while (!initialized())
+            ;
         String customConfigsStr = KafkaConfig.KAFKA_PRODUCER_CUSTOM_CONFIGS.get(configs);
         Map<String, String> customConfigs = new HashMap<>();
         if (!customConfigsStr.isEmpty()) {
@@ -105,11 +108,13 @@ public class KafkaLogService implements LogService {
             }
         }
         logger.info("Kafka writer configs {}", customConfigs);
-        return new KafkaLogWriter(servers, topic, queueId, customConfigs);
+        return new KafkaLogWriter(servers, topic, customConfigs);
     }
 
     @Override
     public LogReader createReader(int queueId, long offset) throws IOException {
+        while (!initialized())
+            ;
         return createReader(queueId, offset, -1);
     }
 
@@ -144,6 +149,7 @@ public class KafkaLogService implements LogService {
                 }
             }
         }
+        logger.info("Created AdminClient");
         return this.adminClient;
     }
 
@@ -151,12 +157,12 @@ public class KafkaLogService implements LogService {
         Map<String, Object> adminConfig = new HashMap<>();
         adminConfig.put("bootstrap.servers", this.servers);
 
-        for (int i = 0; i < 10; ++i) {
+        for (int i = 0; i < 30; ++i) {
             try {
                 return AdminClient.create(adminConfig);
             } catch (Exception e) {
                 logger.warn("Error creating Kafka AdminClient", e);
-                Thread.sleep(5000);
+                Thread.sleep(10000);
             }
         }
         throw new RuntimeException("Create Kafka Client failed");

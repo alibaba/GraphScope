@@ -32,7 +32,7 @@ public interface GraphRelShuttle {
 
     RelNode visit(GraphLogicalExpand expand);
 
-    RelNode visit(GraphLogicalExpandDegree expandCount);
+    RelNode visit(GraphPhysicalExpand physicalExpand);
 
     RelNode visit(GraphLogicalGetV getV);
 
@@ -51,4 +51,6 @@ public interface GraphRelShuttle {
     RelNode visit(GraphLogicalMultiMatch match);
 
     RelNode visit(LogicalJoin join);
+
+    RelNode visit(GraphLogicalDedupBy dedupBy);
 }

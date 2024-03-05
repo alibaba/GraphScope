@@ -23,7 +23,12 @@ import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.rpc.ChannelManager;
 import com.alibaba.graphscope.groot.rpc.GrootNameResolverFactory;
 import com.alibaba.graphscope.groot.rpc.RpcServer;
+import com.alibaba.graphscope.groot.servers.ir.IrServiceProducer;
 import com.alibaba.graphscope.groot.store.*;
+import com.alibaba.graphscope.groot.store.backup.BackupAgent;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupService;
+import com.alibaba.graphscope.groot.wal.LogService;
+import com.alibaba.graphscope.groot.wal.LogServiceFactory;
 import com.google.common.annotations.VisibleForTesting;
 
 import io.grpc.NameResolver;
@@ -41,13 +46,16 @@ public class Store extends NodeBase {
     private RpcServer rpcServer;
     private AbstractService executorService;
 
+    private KafkaProcessor processor;
+
+    private PartitionService partitionService;
+
     public Store(Configs configs) {
         super(configs);
         configs = reConfig(configs);
         LocalNodeProvider localNodeProvider = new LocalNodeProvider(configs);
         DiscoveryFactory discoveryFactory = new DiscoveryFactory(configs);
         this.discovery = discoveryFactory.makeDiscovery(localNodeProvider);
-
         NameResolver.Factory nameResolverFactory = new GrootNameResolverFactory(this.discovery);
         this.channelManager = new ChannelManager(configs, nameResolverFactory);
         this.metaService = new DefaultMetaService(configs);
@@ -55,6 +63,8 @@ public class Store extends NodeBase {
         this.storeService = new StoreService(configs, this.metaService, metricsCollector);
         SnapshotCommitter snapshotCommitter = new DefaultSnapshotCommitter(this.channelManager);
         MetricsCollectService metricsCollectService = new MetricsCollectService(metricsCollector);
+        LogService logService = LogServiceFactory.makeLogService(configs);
+
         this.writerAgent =
                 new WriterAgent(
                         configs,
@@ -68,7 +78,6 @@ public class Store extends NodeBase {
         StoreSchemaService storeSchemaService = new StoreSchemaService(this.storeService);
         StoreIngestService storeIngestService = new StoreIngestService(this.storeService);
         StoreSnapshotService storeSnapshotService = new StoreSnapshotService(this.storeService);
-        StoreStateService storeStateService = new StoreStateService(this.storeService);
         this.rpcServer =
                 new RpcServer(
                         configs,
@@ -78,11 +87,12 @@ public class Store extends NodeBase {
                         storeSchemaService,
                         storeIngestService,
                         storeSnapshotService,
-                        storeStateService,
                         metricsCollectService);
-        ComputeServiceProducer serviceProducer = ServiceProducerFactory.getProducer(configs);
+        IrServiceProducer serviceProducer = new IrServiceProducer(configs);
         this.executorService =
                 serviceProducer.makeExecutorService(storeService, metaService, discoveryFactory);
+        this.partitionService = new PartitionService(configs, storeService);
+        this.processor = new KafkaProcessor(configs, metaService, writerAgent, logService);
     }
 
     @Override
@@ -93,13 +103,7 @@ public class Store extends NodeBase {
         } catch (IOException e) {
             throw new GrootException(e);
         }
-        long availSnapshotId;
-        try {
-            availSnapshotId = this.storeService.recover();
-        } catch (IOException | InterruptedException e) {
-            throw new GrootException(e);
-        }
-        this.writerAgent.init(availSnapshotId);
+        this.writerAgent.init(0);
         this.writerAgent.start();
         this.backupAgent.start();
         try {
@@ -110,10 +114,14 @@ public class Store extends NodeBase {
         this.discovery.start();
         this.channelManager.start();
         this.executorService.start();
+        this.processor.start();
+        this.partitionService.start();
     }
 
     @Override
     public void close() throws IOException {
+        this.partitionService.stop();
+        this.processor.stop();
         this.executorService.stop();
         this.rpcServer.stop();
         this.backupAgent.stop();

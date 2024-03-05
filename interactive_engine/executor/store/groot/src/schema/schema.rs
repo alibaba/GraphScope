@@ -215,7 +215,7 @@ mod tests {
             builder = builder.add_type_def(t);
         }
         let schema = builder.build();
-        let proto = ::protobuf::parse_from_bytes(&schema.to_proto()).unwrap();
+        let proto = Message::parse_from_bytes(&schema.to_proto()).unwrap();
         let schema = SchemaBuilder::from(&proto).build();
         check_schema(schema);
     }

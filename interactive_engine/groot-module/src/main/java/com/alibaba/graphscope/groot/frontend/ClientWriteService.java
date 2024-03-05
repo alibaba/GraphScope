@@ -12,26 +12,24 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
     private static final Logger logger = LoggerFactory.getLogger(ClientWriteService.class);
 
-    private final WriteSessionGenerator writeSessionGenerator;
     private final GraphWriter graphWriter;
 
-    public ClientWriteService(
-            WriteSessionGenerator writeSessionGenerator, GraphWriter graphWriter) {
-        this.writeSessionGenerator = writeSessionGenerator;
+    public ClientWriteService(GraphWriter graphWriter) {
         this.graphWriter = graphWriter;
     }
 
     @Override
     public void getClientId(
             GetClientIdRequest request, StreamObserver<GetClientIdResponse> responseObserver) {
-        String writeSession = writeSessionGenerator.newWriteSession();
-        responseObserver.onNext(GetClientIdResponse.newBuilder().setClientId(writeSession).build());
+        responseObserver.onNext(
+                GetClientIdResponse.newBuilder().setClientId("placeholder").build());
         responseObserver.onCompleted();
     }
 
@@ -116,8 +114,14 @@ public class ClientWriteService extends ClientWriteGrpc.ClientWriteImplBase {
         long offset = request.getOffset();
         long timestamp = request.getTimestamp();
         logger.info("replay records from offset {}, timestamp {}", offset, timestamp);
-        List<Long> ids = graphWriter.replayWALFrom(offset, timestamp);
-        responseObserver.onNext(ReplayRecordsResponse.newBuilder().addAllSnapshotId(ids).build());
-        responseObserver.onCompleted();
+        try {
+            List<Long> ids = graphWriter.replayWALFrom(offset, timestamp);
+            responseObserver.onNext(
+                    ReplayRecordsResponse.newBuilder().addAllSnapshotId(ids).build());
+            responseObserver.onCompleted();
+        } catch (IOException e) {
+            logger.error("replayRecords failed", e);
+            responseObserver.onError(e);
+        }
     }
 }

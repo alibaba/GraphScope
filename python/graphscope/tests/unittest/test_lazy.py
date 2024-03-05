@@ -236,8 +236,7 @@ def test_gremlin_timeout(sess):
     interactive = sess.gremlin(g_node)
     # expect to timeout after 1s (caused by grpc timeout or pegasus timeout)
     with pytest.raises(
-        protocol.GremlinServerError,
-        match="|".join(["DEADLINE_EXCEEDED", "Job is canceled"]),
+        protocol.GremlinServerError, match=r".*exceeds the timeout limit.*"
     ):
         res = (
             interactive.execute(

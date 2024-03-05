@@ -17,9 +17,11 @@ import static org.mockito.Mockito.*;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.store.*;
-import com.alibaba.graphscope.groot.store.StoreBackupService;
 import com.alibaba.graphscope.groot.store.StoreSchemaService;
 import com.alibaba.graphscope.groot.store.StoreWriteService;
+import com.alibaba.graphscope.groot.store.backup.BackupAgent;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupId;
+import com.alibaba.graphscope.groot.store.backup.StoreBackupService;
 import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.stub.StreamObserver;

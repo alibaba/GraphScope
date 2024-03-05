@@ -108,7 +108,7 @@ static std::string value_pb_to_str(const common::Value& value) {
   }
 }
 
-bool constains_vertex_id(const std::vector<codegen::ParamConst>& params) {
+bool contains_vertex_id(const std::vector<codegen::ParamConst>& params) {
   for (auto& param : params) {
     if (param.type == codegen::DataType::kVertexId) {
       return true;
@@ -143,7 +143,7 @@ class ExprBuilder {
     // If we meet label keys just ignore.
     auto size = expr_ops.size();
     VLOG(10) << "Adding expr of size: " << size;
-    for (auto i = 0; i < size;) {
+    for (int32_t i = 0; i < size;) {
       auto expr = expr_ops[i];
       if (expr.has_var() && expr.var().property().has_label()) {
         VLOG(10) << "Found label in expr, skip this check";
@@ -260,7 +260,7 @@ class ExprBuilder {
       case_ss << "{\n";
       int32_t cur_var_num = 0;
       std::unordered_set<int32_t> tag_used;
-      for (auto i = 0; i < when_then_size; i++) {
+      for (int32_t i = 0; i < when_then_size; i++) {
         auto when_then = opr.case_().when_then_expressions(i);
         auto when_expr = when_then.when_expression();
         auto then_expr = when_then.then_result_expression();
@@ -353,7 +353,7 @@ class ExprBuilder {
   BuildRust() const {
     std::stringstream expr_ss;
 
-    for (auto i = 0; i < expr_nodes_.size(); ++i) {
+    for (size_t i = 0; i < expr_nodes_.size(); ++i) {
       expr_ss << expr_nodes_[i] << " ";
     }
     std::string predicate_expr = expr_ss.str();
@@ -361,7 +361,7 @@ class ExprBuilder {
     std::vector<std::string> var_names;
     std::vector<codegen::ParamConst> properties;
     if (func_call_vars_.size() > 0) {
-      for (auto i = 0; i < func_call_vars_.size(); ++i) {
+      for (size_t i = 0; i < func_call_vars_.size(); ++i) {
         var_names.push_back(std::string(EXPR_OPERATOR_CALL_VAR_NAME) +
                             std::to_string(cur_var_start_ + i));
         if (func_call_vars_[i].var_name.find("var") == 0) {
@@ -442,13 +442,13 @@ class ExprBuilder {
   void add_func_call(std::stringstream& ss) const {
     // for function call, there can be vertex_id_t as input param, which depends
     // on vertex_id type. so we need to template typename.
-    if (constains_vertex_id(func_call_vars_)) {
+    if (contains_vertex_id(func_call_vars_)) {
       ss << _4_SPACES << "template <typename vertex_id_t>" << std::endl;
     }
     ss << _4_SPACES << "inline auto operator()";
     ss << "(";
     if (func_call_vars_.size() > 0) {
-      for (auto i = 0; i < func_call_vars_.size() - 1; ++i) {
+      for (size_t i = 0; i + 1 < func_call_vars_.size(); ++i) {
         ss << data_type_2_string(func_call_vars_[i].type) << " "
            << EXPR_OPERATOR_CALL_VAR_NAME << i << ",";
       }
@@ -457,35 +457,21 @@ class ExprBuilder {
     }
     ss << ") const {" << std::endl;
     ss << _8_SPACES << "return ";
-    for (auto i = 0; i < expr_nodes_.size(); ++i) {
+    for (size_t i = 0; i < expr_nodes_.size(); ++i) {
       ss << expr_nodes_[i] << " ";
     }
     ss << ";" << std::endl;
     ss << _4_SPACES << "}" << std::endl;
   }
 
-  void add_tag_prop_getter(std::stringstream& ss) const {
-    ss << _4_SPACES << "inline auto Properties() const {" << std::endl;
-    ss << _8_SPACES << "return std::make_tuple(";
-
-    for (auto i = 0; i < tag_prop_strs_.size() - 1; ++i) {
-      ss << "prop_" << i << "_"
-         << ",";
-    }
-    ss << "prop_" << tag_prop_strs_.size() - 1 << "_"
-       << ");" << std::endl;
-    ss << _4_SPACES << "}";
-    ss << std::endl;
-  }
-
   void add_private_member(std::stringstream& ss) const {
     ss << _4_SPACES << "private:" << std::endl;
-    for (auto i = 0; i < construct_params_.size(); ++i) {
+    for (size_t i = 0; i < construct_params_.size(); ++i) {
       ss << _8_SPACES << data_type_2_string(construct_params_[i].type) << " "
          << construct_params_[i].var_name << "_;";
       ss << std::endl;
     }
-    for (auto i = 0; i < tag_prop_strs_.size(); ++i) {
+    for (size_t i = 0; i < tag_prop_strs_.size(); ++i) {
       ss << _8_SPACES << "TAG_PROP_" << i << " prop_" << i << "_;";
       ss << std::endl;
     }
@@ -522,7 +508,7 @@ class ExprBuilder {
       }
     }
 
-    for (auto i = 0; i < var_names.size(); i++) {
+    for (size_t i = 0; i < var_names.size(); i++) {
       int32_t var_tag = var_tags[i];
       std::pair<int32_t, std::vector<int32_t>> input_type;
       if (var_tag != -1) {
@@ -532,7 +518,7 @@ class ExprBuilder {
       }
       ss << "let " << var_names[i] << " = ";
       if (input_type.first == 0 && input_type.second.size() > 1) {
-        for (auto j = 0; j < input_type.second.size(); j++) {
+        for (size_t j = 0; j < input_type.second.size(); j++) {
           if (j != 0) {
             ss << "} else ";
           }

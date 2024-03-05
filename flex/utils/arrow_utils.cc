@@ -32,6 +32,8 @@ std::shared_ptr<arrow::DataType> PropertyTypeToArrowType(PropertyType type) {
     return arrow::float32();
   } else if (type == PropertyType::Date()) {
     return arrow::timestamp(arrow::TimeUnit::MILLI);
+  } else if (type == PropertyType::Day()) {
+    return arrow::timestamp(arrow::TimeUnit::MILLI);
   } else if (type == PropertyType::String()) {
     return arrow::large_utf8();
   } else if (type == PropertyType::StringMap()) {
@@ -51,7 +53,7 @@ template <typename T>
 void emplace_into_vector(const std::shared_ptr<arrow::ChunkedArray>& array,
                          std::vector<Any>& vec) {
   using arrow_array_type = typename gs::TypeConverter<T>::ArrowArrayType;
-  for (auto i = 0; i < array->num_chunks(); ++i) {
+  for (int32_t i = 0; i < array->num_chunks(); ++i) {
     auto casted = std::static_pointer_cast<arrow_array_type>(array->chunk(i));
     for (auto k = 0; k < casted->length(); ++k) {
       vec.emplace_back(AnyConverter<T>::to_any(casted->Value(k)));

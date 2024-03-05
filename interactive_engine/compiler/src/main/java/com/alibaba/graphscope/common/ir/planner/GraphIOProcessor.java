@@ -103,7 +103,7 @@ public class GraphIOProcessor {
         return builder;
     }
 
-    private class InputConvertor extends GraphRelVisitor {
+    private class InputConvertor extends GraphShuttle {
         @Override
         public RelNode visit(GraphLogicalMultiMatch match) {
             return new GraphPattern(
@@ -386,7 +386,7 @@ public class GraphIOProcessor {
         }
     }
 
-    private class OutputConvertor extends GraphRelVisitor {
+    private class OutputConvertor extends GraphShuttle {
         private Map<DataKey, DataValue> details = Maps.newHashMap(graphDetails);
 
         @Override

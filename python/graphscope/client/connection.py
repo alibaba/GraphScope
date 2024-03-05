@@ -186,12 +186,17 @@ class Connection:
         )
         return response.snapshot_id
 
-    def get_store_state(self):
-        request = model_pb2.GetStoreStateRequest()
-        response = self._client_service_stub.getStoreState(
+    def compact_db(self):
+        request = model_pb2.CompactDBRequest()
+        response = self._client_service_stub.compactDB(request, metadata=self._metadata)
+        return response.success
+
+    def reopen_secondary(self):
+        request = model_pb2.ReopenSecondaryRequest()
+        response = self._client_service_stub.reopenSecondary(
             request, metadata=self._metadata
         )
-        return response.partitionStates
+        return response.success
 
     def _encode_metadata(self, username, password):
         if not (username and password):

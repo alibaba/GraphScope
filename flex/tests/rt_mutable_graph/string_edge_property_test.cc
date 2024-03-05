@@ -27,17 +27,20 @@ class TestStringEdgeProperty {
         src_label_(db.graph().schema().get_vertex_label_id("person")),
         dst_label_(db.graph().schema().get_vertex_label_id("software")),
         edge_label_(db.graph().schema().get_edge_label_id("created")) {}
+
   void test() {
-    int64_t src, dst;
+    int64_t src;
+    std::string dst{};
     src = 1;
     test_get_edge(src);
     src = 1;
-    dst = 3;
+    dst = "5";
     test_get_graph_view(src, dst);
     src = 3;
-    dst = 5;
+    dst = "5";
     test_add_edge(src, dst);
   }
+
   void test_get_edge(int64_t oid) {
     vid_t src_lid;
     CHECK(db_.graph().get_lid(src_label_, oid, src_lid));
@@ -50,7 +53,7 @@ class TestStringEdgeProperty {
     LOG(INFO) << "Finish test get edge\n";
   }
 
-  void test_get_graph_view(int64_t src, int64_t dst) {
+  void test_get_graph_view(int64_t src, const std::string& dst) {
     auto txn = db_.GetReadTransaction();
     vid_t src_lid, dst_lid;
 
@@ -77,7 +80,7 @@ class TestStringEdgeProperty {
     LOG(INFO) << "Finish test get GraphView\n";
   }
 
-  void test_add_edge(int64_t src, int64_t dst) {
+  void test_add_edge(int64_t src, const std::string& dst) {
     {
       auto txn = db_.GetSingleVertexInsertTransaction();
       std::string name = "test-3";

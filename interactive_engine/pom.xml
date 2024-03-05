@@ -79,7 +79,6 @@
         <module>executor</module>
         <module>groot-module</module>
         <module>groot-server</module>
-        <module>lgraph</module>
         <module>groot-client</module>
         <module>executor/engine/pegasus/clients/java/client</module>
         <module>compiler</module>
@@ -198,7 +197,7 @@
     <antlr4.version>4.9.1</antlr4.version>
 
     <aliyun.oss.version>3.16.3</aliyun.oss.version>
-    <!-- httpcomponents version should aligh with version of OSS SDK -->
+    <!-- httpcomponents version should align with version of OSS SDK -->
     <httpcomponents.version>4.5.13</httpcomponents.version>
 
     <odps.sdk.public.version>0.36.4-public</odps.sdk.public.version>

@@ -27,7 +27,7 @@ namespace gs {
 
 // There can be multiple labels.
 // for each label, we have multiple properties.
-// deuplicate the property name and types if two edge label are same, only
+// duplicate the property name and types if two edge label are same, only
 // differs on src-dst pair
 static std::pair<std::vector<std::vector<std::string>>,
                  std::vector<std::vector<std::string>>>
@@ -79,8 +79,10 @@ parse_prop_names_and_prop_types_from_ir_data_type(
 
     return std::make_pair(prop_names, prop_types);
   }
+  default: {
+    LOG(WARNING) << "Unsupported data type: " << ir_data_type.DebugString();
   }
-  LOG(WARNING) << "Unsupported data type: " << ir_data_type.DebugString();
+  }
   return std::make_pair(prop_names, prop_types);
 }
 

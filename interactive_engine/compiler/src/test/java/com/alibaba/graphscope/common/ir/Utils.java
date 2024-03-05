@@ -22,39 +22,51 @@ import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.store.ExperimentalMetaFetcher;
 import com.alibaba.graphscope.common.store.IrMeta;
 import com.google.common.collect.ImmutableMap;
 
-import org.apache.calcite.plan.*;
+import org.apache.calcite.plan.GraphOptCluster;
+import org.apache.calcite.plan.RelOptPlanner;
+import org.apache.calcite.plan.RelRule;
 import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.tools.RelBuilderFactory;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.net.URL;
 
 public class Utils {
-    public static final RelDataTypeFactory typeFactory =
-            new GraphTypeFactoryImpl(
-                    new Configs(
-                            ImmutableMap.of(
-                                    FrontendConfig.CALCITE_DEFAULT_CHARSET.getKey(), "UTF-8")));
+    public static final Configs configs =
+            new Configs(ImmutableMap.of(FrontendConfig.CALCITE_DEFAULT_CHARSET.getKey(), "UTF-8"));
+    public static final RelDataTypeFactory typeFactory = new GraphTypeFactoryImpl(configs);
     public static final RexBuilder rexBuilder = new GraphRexBuilder(typeFactory);
-    public static final IrMeta schemaMeta = mockSchemaMeta();
-    public static final RelBuilderFactory relBuilderFactory =
-            (RelOptCluster cluster, @Nullable RelOptSchema schema) ->
-                    GraphBuilder.create(null, (GraphOptCluster) cluster, schema);
+    public static final IrMeta schemaMeta = mockSchemaMeta("schema/modern.json");
+    public static final RelBuilderFactory relBuilderFactory = new GraphBuilderFactory(configs);
 
     public static final GraphBuilder mockGraphBuilder() {
         GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
         return GraphBuilder.create(
-                null, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
+                configs, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
+    }
+
+    public static final GraphBuilder mockGraphBuilder(String schemaJson) {
+        GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
+        return GraphBuilder.create(
+                configs,
+                cluster,
+                new GraphOptSchema(cluster, mockSchemaMeta(schemaJson).getSchema()));
+    }
+
+    public static final GraphBuilder mockGraphBuilder(Configs configs) {
+        GraphOptCluster cluster = GraphOptCluster.create(mockPlanner(), rexBuilder);
+        return GraphBuilder.create(
+                configs, cluster, new GraphOptSchema(cluster, schemaMeta.getSchema()));
     }
 
     public static final RelOptPlanner mockPlanner(RelRule.Config... rules) {
@@ -68,12 +80,10 @@ public class Utils {
         return new HepPlanner(hepBuilder.build());
     }
 
-    private static IrMeta mockSchemaMeta() {
+    private static IrMeta mockSchemaMeta(String schemaJson) {
         try {
             URL schemaResource =
-                    Thread.currentThread()
-                            .getContextClassLoader()
-                            .getResource("schema/ldbc_schema_exp_hierarchy.json");
+                    Thread.currentThread().getContextClassLoader().getResource(schemaJson);
             URL proceduresResource =
                     Thread.currentThread()
                             .getContextClassLoader()

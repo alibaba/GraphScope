@@ -38,7 +38,7 @@ public interface ParallelEngine {
     int chunkSize = 1024;
 
     /**
-     * Iterate over vertexs in VertexRange, applying lambda functions on each vertex.
+     * Iterate over vertices in VertexRange, applying lambda functions on each vertex.
      *
      * @param vertices VertexRange obj contains querying vertices
      * @param threadNum number of thread to use
@@ -80,7 +80,7 @@ public interface ParallelEngine {
                                     logger.error(
                                             "origin end "
                                                     + originEnd
-                                                    + " verteics "
+                                                    + " vertices "
                                                     + curBegin
                                                     + " "
                                                     + curEnd
@@ -212,7 +212,7 @@ public interface ParallelEngine {
     }
 
     /**
-     * Iterate over vertexs in VertexRange, applying lambda functions on each vertex, and send msg
+     * Iterate over vertices in VertexRange, applying lambda functions on each vertex, and send msg
      * with msg created from message supplier
      *
      * @param vertices VertexRange obj contains querying vertices
@@ -263,7 +263,7 @@ public interface ParallelEngine {
                                     logger.error(
                                             "origin end "
                                                     + originEnd
-                                                    + " verteics "
+                                                    + " vertices "
                                                     + curBegin
                                                     + " "
                                                     + curEnd
@@ -286,7 +286,7 @@ public interface ParallelEngine {
     }
 
     /**
-     * Iterate over vertexs in VertexRange(without vertex set), applying lambda functions on each
+     * Iterate over vertices in VertexRange(without vertex set), applying lambda functions on each
      * vertex, and send msg with msg created from message supplier
      *
      * @param vertices VertexRange obj contains querying vertices
@@ -332,7 +332,7 @@ public interface ParallelEngine {
                                     logger.error(
                                             "origin end "
                                                     + originEnd
-                                                    + " verteics "
+                                                    + " vertices "
                                                     + curBegin
                                                     + " "
                                                     + curEnd
@@ -356,7 +356,7 @@ public interface ParallelEngine {
 
     /**
      * Apply Triconsumer for each vertex in vertices, in a parallel schema. Used in property
-     * grpah-app where the vertex id label is needed.
+     * graph-app where the vertex id label is needed.
      *
      * @param vertices VertexRange obj contains querying vertices.
      * @param vertexLabelId vertex label id.
@@ -413,7 +413,7 @@ public interface ParallelEngine {
 
     /**
      * Apply Triconsumer for each vertex in vertices, without checking the vertexSet in a parallel
-     * schema. Used in property grpah-app where the vertex id label is needed.
+     * schema. Used in property graph-app where the vertex id label is needed.
      *
      * @param vertices VertexRange obj contains querying vertices.
      * @param vertexLabelId vertex label id.

@@ -16,6 +16,8 @@
 use std::fmt;
 
 use ahash::HashMap;
+use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
+use dyn_type::DateTimeFormats;
 use dyn_type::Object;
 use dyn_type::Primitives;
 use global_query::store_api::prelude::Property;
@@ -52,6 +54,18 @@ fn encode_runtime_prop_val(prop_val: Property) -> Object {
         Property::Double(d) => Object::Primitive(Primitives::Float(d)),
         Property::Bytes(v) => Object::Blob(v.into_boxed_slice()),
         Property::String(s) => Object::String(s),
+        Property::Date(s) => match NaiveDate::parse_from_str(&s, "%Y-%m-%d") {
+            Ok(date) => Object::DateFormat(DateTimeFormats::Date(date)),
+            Err(_) => match NaiveTime::parse_from_str(&s, "%H:%M:%S.%6f") {
+                Ok(time) => Object::DateFormat(DateTimeFormats::Time(time)),
+                Err(_) => match NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S.%6f") {
+                    Ok(datetime) => Object::DateFormat(DateTimeFormats::DateTime(datetime)),
+                    Err(_) => {
+                        unimplemented!("Failed to parse the datetime/timestamp property value: '{}'", s)
+                    }
+                },
+            },
+        },
         _ => unimplemented!(),
     }
 }

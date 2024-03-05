@@ -66,8 +66,8 @@ public class DegreeFusionTest {
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
                         + " values=[[{operands=[DEFAULT], aggFunction=$SUM0, alias='cnt',"
                         + " distinct=false}]])\n"
-                        + "  GraphLogicalExpandDegree(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[DEGREE])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 after.explain().trim());
@@ -105,8 +105,8 @@ public class DegreeFusionTest {
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
                         + " values=[[{operands=[DEFAULT], aggFunction=$SUM0, alias='cnt',"
                         + " distinct=false}]])\n"
-                        + "  GraphLogicalExpandDegree(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
+                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[DEGREE])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 after.explain().trim());

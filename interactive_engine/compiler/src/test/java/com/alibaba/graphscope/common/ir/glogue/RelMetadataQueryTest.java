@@ -35,7 +35,6 @@ import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.SinglePatter
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.EdgeTypeId;
 import com.alibaba.graphscope.common.ir.rel.metadata.schema.GlogueSchema;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
-import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.plan.ConventionTraitDef;
@@ -71,7 +70,7 @@ public class RelMetadataQueryTest {
         planner.setNoneConventionHasInfiniteCost(false);
         planner.addRule(
                 ExtendIntersectRule.Config.DEFAULT
-                        .withRelBuilderFactory(GraphPlanner.relBuilderFactory)
+                        .withRelBuilderFactory(Utils.relBuilderFactory)
                         .withMaxPatternSizeInGlogue(gq.getMaxPatternSize())
                         .toRule());
 
@@ -139,21 +138,22 @@ public class RelMetadataQueryTest {
 
     @Test
     public void test_3() throws Exception {
-        PlannerConfig plannerConfig =
-                new PlannerConfig(
-                        new Configs(
-                                ImmutableMap.of(
-                                        "graph.planner.is.on", "true",
-                                        "graph.planner.opt", "CBO",
-                                        "graph.planner.rules",
-                                                "FilterMatchRule, ExtendIntersectRule")));
-        GraphRelOptimizer optimizer = new GraphRelOptimizer(plannerConfig);
+        Configs configs =
+                new Configs(
+                        ImmutableMap.of(
+                                "graph.planner.is.on",
+                                "true",
+                                "graph.planner.opt",
+                                "CBO",
+                                "graph.planner.rules",
+                                "FilterMatchRule, ExtendIntersectRule"));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
         RelOptCluster optCluster =
                 GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
         optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
         GraphBuilder builder =
                 (GraphBuilder)
-                        GraphPlanner.relBuilderFactory.create(
+                        Utils.relBuilderFactory.create(
                                 optCluster,
                                 new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
         RelNode node =
@@ -169,26 +169,24 @@ public class RelMetadataQueryTest {
 
     @Test
     public void test_4() throws Exception {
-        PlannerConfig plannerConfig =
-                new PlannerConfig(
-                        new Configs(
-                                ImmutableMap.of(
-                                        "graph.planner.is.on",
-                                        "true",
-                                        "graph.planner.opt",
-                                        "CBO",
-                                        "graph.planner.rules",
-                                        "FilterMatchRule, JoinDecompositionRule,"
-                                                + " ExtendIntersectRule",
-                                        "graph.planner.cbo.glogue.schema",
-                                        "conf/ldbc30_statistics.txt")));
-        GraphRelOptimizer optimizer = new GraphRelOptimizer(plannerConfig);
+        Configs configs =
+                new Configs(
+                        ImmutableMap.of(
+                                "graph.planner.is.on",
+                                "true",
+                                "graph.planner.opt",
+                                "CBO",
+                                "graph.planner.rules",
+                                "FilterMatchRule, JoinDecompositionRule," + " ExtendIntersectRule",
+                                "graph.planner.cbo.glogue.schema",
+                                "conf/ldbc30_statistics.txt"));
+        GraphRelOptimizer optimizer = new GraphRelOptimizer(configs);
         RelOptCluster optCluster =
                 GraphOptCluster.create(optimizer.getMatchPlanner(), Utils.rexBuilder);
         optCluster.setMetadataQuerySupplier(() -> optimizer.createMetaDataQuery());
         GraphBuilder builder =
                 (GraphBuilder)
-                        GraphPlanner.relBuilderFactory.create(
+                        Utils.relBuilderFactory.create(
                                 optCluster,
                                 new GraphOptSchema(optCluster, Utils.schemaMeta.getSchema()));
         RelNode node =

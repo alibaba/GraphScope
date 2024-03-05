@@ -120,11 +120,11 @@ public class SnapshotSortQueue {
                 }
             } else {
                 logger.warn(
-                        "Illegal entry polled from queue [{}]. entrySnapshotId [{}] <"
-                                + " currentSnapshotId [{}]. Ignored entry",
-                        currentPollQueueIdx,
+                        "Illegal entry polled from queue, entrySnapshotId [{}] <"
+                                + " currentSnapshotId [{}]. Ignored entry {}",
                         snapshotId,
-                        currentPollSnapshotId);
+                        currentPollSnapshotId,
+                        entry.toProto());
             }
         }
     }

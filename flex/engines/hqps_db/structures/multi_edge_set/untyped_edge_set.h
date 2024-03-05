@@ -147,11 +147,11 @@ class UnTypedEdgeSetIter {
     }
   }
 
+  const std::vector<vid_t>& src_vertices_;
+  std::vector<std::vector<edge_iter_t>> adj_lists_;
   size_t vid_ind_, iter_ind_;
   size_t cur_ind_;
   edge_iter_t cur_iter_;
-  const std::vector<vid_t>& src_vertices_;
-  std::vector<std::vector<edge_iter_t>> adj_lists_;
 };
 
 // Define a EdgeSet which is able to store any kind of edges. Edges can have
@@ -189,7 +189,7 @@ class UnTypedEdgeSet {
   }
 
   iterator begin() const {
-    // generate a vector of vistable edge iterators.
+    // generate a vector of visitable edge iterators.
     auto tmp = generate_iters();
     return iterator(src_vertices_, std::move(tmp), 0);
   }
@@ -205,7 +205,7 @@ class UnTypedEdgeSet {
     std::vector<LabelKey> res;
     res.reserve(Size());
     VLOG(1) << "GetLabelVec for UntypedEdgeSet, size: " << Size();
-    for (auto i = 0; i < src_vertices_.size(); ++i) {
+    for (size_t i = 0; i < src_vertices_.size(); ++i) {
       auto label_ind = label_indices_[i];
       auto label = src_labels_[label_ind];
       if (adj_lists_.find(label) != adj_lists_.end()) {
@@ -213,7 +213,7 @@ class UnTypedEdgeSet {
         for (auto& sub_graph : sub_graphs) {
           auto edge_iters = sub_graph.get_edges(src_vertices_[i]);
           auto edge_label = sub_graph.GetEdgeLabel();
-          for (auto j = 0; j < edge_iters.Size(); ++j) {
+          for (size_t j = 0; j < edge_iters.Size(); ++j) {
             res.emplace_back(edge_label);
           }
         }
@@ -257,7 +257,7 @@ class UnTypedEdgeSet {
         ConvertAny<PropT>::to(edata, prop);
       }
       CHECK(cur_ind < sum) << "cur: " << cur_ind << ", sum: " << sum;
-      for (auto i = 0; i < repeat_array[cur_ind]; ++i) {
+      for (size_t i = 0; i < repeat_array[cur_ind]; ++i) {
         tmp_prop_vec.emplace_back(prop);
       }
       cur_ind += 1;
@@ -311,7 +311,7 @@ class UnTypedEdgeSet {
         preprocess_getting_labels(req_labels, src_labels_);
 
     std::vector<grape::Bitset> bitsets(res_label_vec.size());
-    for (auto i = 0; i < bitsets.size(); ++i) {
+    for (size_t i = 0; i < bitsets.size(); ++i) {
       bitsets[i].init(Size());
     }
     size_t cur_cnt = 0;
@@ -329,7 +329,7 @@ class UnTypedEdgeSet {
     }
     CHECK(cur_cnt <= Size());
     offset.emplace_back(cur_cnt);
-    for (auto i = 0; i < bitsets.size(); ++i) {
+    for (size_t i = 0; i < bitsets.size(); ++i) {
       bitsets[i].resize(cur_cnt);
     }
     LOG(INFO) << "After resize from " << Size() << " to " << cur_cnt;
@@ -360,7 +360,7 @@ class UnTypedEdgeSet {
         preprocess_getting_labels(req_labels, all_cur_labels);
 
     std::vector<grape::Bitset> bitsets(res_label_vec.size());
-    for (auto i = 0; i < bitsets.size(); ++i) {
+    for (size_t i = 0; i < bitsets.size(); ++i) {
       bitsets[i].init(Size());
     }
     {
@@ -370,7 +370,7 @@ class UnTypedEdgeSet {
     }
     std::vector<int32_t> label_to_ind_vec;
     label_to_ind_vec.resize(max_label_id + 1, -1);
-    for (auto i = 0; i < res_label_vec.size(); ++i) {
+    for (size_t i = 0; i < res_label_vec.size(); ++i) {
       label_to_ind_vec[res_label_vec[i]] = label_to_ind[res_label_vec[i]];
     }
     size_t cur_cnt = 0;
@@ -388,7 +388,7 @@ class UnTypedEdgeSet {
     }
     CHECK(cur_cnt <= Size());
     offset.emplace_back(cur_cnt);
-    for (auto i = 0; i < bitsets.size(); ++i) {
+    for (size_t i = 0; i < bitsets.size(); ++i) {
       bitsets[i].resize(cur_cnt);
     }
     LOG(INFO) << "After resize from " << Size() << " to " << cur_cnt;
@@ -421,19 +421,19 @@ class UnTypedEdgeSet {
     label_triplet_indices.reserve(real_size);
     std::vector<size_t> sizes;
     sizes.emplace_back(0);
-    for (auto i = 0; i < edge_label_triplets.size(); ++i) {
+    for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
       sizes.emplace_back(sizes.back() + edge_label_triplets[i].size());
     }
 
     // 0,2,4
     size_t cur_ind = 0;
-    for (auto i = 0; i < src_vertices_.size(); ++i) {
+    for (size_t i = 0; i < src_vertices_.size(); ++i) {
       auto src_vid = src_vertices_[i];
       auto& cur_edge_iters = edge_iters[i];
       auto src_label_ind = label_indices_[i];
       auto src_label = src_labels_[src_label_ind];
 
-      for (auto j = 0; j < cur_edge_iters.size(); ++j) {
+      for (size_t j = 0; j < cur_edge_iters.size(); ++j) {
         auto& cur_iter = cur_edge_iters[j];
         while (cur_iter.IsValid()) {
           auto dst_vid = cur_iter.GetDstId();
@@ -449,13 +449,13 @@ class UnTypedEdgeSet {
     }
     std::vector<std::array<LabelT, 3>> res_label_triplets;
     // put edge_label_triplets into res_label_triplets
-    for (auto i = 0; i < edge_label_triplets.size(); ++i) {
+    for (size_t i = 0; i < edge_label_triplets.size(); ++i) {
       auto& cur_triplets_vec = edge_label_triplets[i];
-      for (auto j = 0; j < cur_triplets_vec.size(); ++j) {
+      for (size_t j = 0; j < cur_triplets_vec.size(); ++j) {
         res_label_triplets.emplace_back(cur_triplets_vec[j]);
       }
     }
-    std::vector<std::vector<std::string>> prop_names = get_prop_namees();
+    std::vector<std::vector<std::string>> prop_names = get_prop_names();
     CHECK(prop_names.size() == res_label_triplets.size());
     return FlatEdgeSet<vid_t, label_t, Any>(
         std::move(dst_eles), std::move(res_label_triplets), prop_names,
@@ -468,7 +468,7 @@ class UnTypedEdgeSet {
                             const std::vector<label_t>& all_cur_labels) const {
     std::unordered_map<label_t, size_t> label_to_ind;
     std::vector<label_t> res_label_vec;
-    for (auto i = 0; i < all_cur_labels.size(); ++i) {
+    for (size_t i = 0; i < all_cur_labels.size(); ++i) {
       if (std::find(req_labels.begin(), req_labels.end(), all_cur_labels[i]) !=
           req_labels.end()) {
         res_label_vec.emplace_back(all_cur_labels[i]);
@@ -484,7 +484,7 @@ class UnTypedEdgeSet {
       size_t sub_graph_cnt = 0;
       for (auto iter : adj_lists_) {
         auto& sub_graphs = iter.second;
-        for (auto i = 0; i < sub_graphs.size(); ++i) {
+        for (size_t i = 0; i < sub_graphs.size(); ++i) {
           dst_label_set.insert(sub_graphs[i].GetDstLabel());
           sub_graph_cnt += 1;
         }
@@ -498,7 +498,7 @@ class UnTypedEdgeSet {
   std::vector<std::vector<edge_iter_t>> generate_iters() const {
     std::vector<std::vector<edge_iter_t>> edge_iter_vecs;
     edge_iter_vecs.reserve(src_vertices_.size());
-    for (auto i = 0; i < src_vertices_.size(); ++i) {
+    for (size_t i = 0; i < src_vertices_.size(); ++i) {
       std::vector<edge_iter_t> edge_iter_vec;
       auto label_ind = label_indices_[i];
       auto label = src_labels_[label_ind];
@@ -534,11 +534,11 @@ class UnTypedEdgeSet {
     return ret;
   }
 
-  std::vector<std::vector<std::string>> get_prop_namees() const {
+  std::vector<std::vector<std::string>> get_prop_names() const {
     std::vector<std::vector<std::string>> ret;
     for (auto iter : adj_lists_) {
       auto& sub_graphs = iter.second;
-      for (auto i = 0; i < sub_graphs.size(); ++i) {
+      for (size_t i = 0; i < sub_graphs.size(); ++i) {
         auto& sub_graph = sub_graphs[i];
         ret.push_back(sub_graph.GetPropNames());
       }

@@ -192,9 +192,16 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
 template <typename INDEX_T>
 class LFIndexer {
  public:
-  LFIndexer() : num_elements_(0), hasher_(), indices_size_(0), keys_(nullptr) {}
+  LFIndexer()
+      : indices_(),
+        indices_size_(0),
+        num_elements_(0),
+        num_slots_minus_one_(0),
+        keys_(nullptr),
+        hasher_() {}
   LFIndexer(LFIndexer&& rhs)
       : indices_(std::move(rhs.indices_)),
+        indices_size_(rhs.indices_size_),
         num_elements_(rhs.num_elements_.load()),
         num_slots_minus_one_(rhs.num_slots_minus_one_),
         hasher_(rhs.hasher_) {
@@ -207,6 +214,14 @@ class LFIndexer {
     hash_policy_.set_mod_function_by_index(
         rhs.hash_policy_.get_mod_function_index());
   }
+
+  ~LFIndexer() {
+    if (keys_ != nullptr) {
+      delete keys_;
+    }
+  }
+
+  static std::string prefix() { return "indexer"; }
 
   void init(const PropertyType& type) {
     if (keys_ != nullptr) {
@@ -233,7 +248,7 @@ class LFIndexer {
                              const std::string& snapshot_dir,
                              const std::string& work_dir) {
     keys_->open(filename + ".keys", "", work_dir);
-    indices_.open(work_dir + "/" + filename + ".indices", false);
+    indices_.open(work_dir + "/" + filename + ".indices", true);
 
     num_elements_.store(0);
     indices_size_ = 0;
@@ -356,7 +371,7 @@ class LFIndexer {
 
     load_meta(work_dir + "/" + name + ".meta");
     keys_->open(name + ".keys", "", work_dir);
-    indices_.open(work_dir + "/" + name + ".indices", false);
+    indices_.open(work_dir + "/" + name + ".indices", true);
     size_t num_elements = num_elements_.load();
 
     keys_->resize(num_elements + (num_elements >> 2));
@@ -371,7 +386,24 @@ class LFIndexer {
       num_elements_.store(0);
     }
     keys_->open_in_memory(name + ".keys");
-    indices_.open_in_memory(name + ".indices");
+    indices_.open(name + ".indices", false);
+    indices_size_ = indices_.size();
+    size_t num_elements = num_elements_.load();
+    keys_->resize(num_elements + (num_elements >> 2));
+  }
+
+  void open_with_hugepages(const std::string& name, bool hugepage_table) {
+    if (std::filesystem::exists(name + ".meta")) {
+      load_meta(name + ".meta");
+    } else {
+      num_elements_.store(0);
+    }
+    keys_->open_with_hugepages(name + ".keys", true);
+    if (hugepage_table) {
+      indices_.open_with_hugepages(name + ".indices");
+    } else {
+      indices_.open(name + ".indices", false);
+    }
     indices_size_ = indices_.size();
     size_t num_elements = num_elements_.load();
     keys_->resize(num_elements + (num_elements >> 2));
@@ -464,14 +496,14 @@ class LFIndexer {
   }
 
  private:
-  ColumnBase* keys_;
   mmap_array<INDEX_T>
       indices_;  // size() == indices_size_ == num_slots_minus_one_ +
                  // log(num_slots_minus_one_)
+  size_t indices_size_;
   std::atomic<size_t> num_elements_;
   size_t num_slots_minus_one_;
+  ColumnBase* keys_;
 
-  size_t indices_size_;
   ska::ska::prime_number_hash_policy hash_policy_;
   GHash<Any> hasher_;
 
@@ -486,7 +518,8 @@ class LFIndexer {
 template <typename INDEX_T>
 class IdIndexerBase {
  public:
-  IdIndexerBase() {}
+  IdIndexerBase() = default;
+  virtual ~IdIndexerBase() = default;
   virtual PropertyType get_type() const = 0;
   virtual void _add(const Any& oid) = 0;
   virtual bool add(const Any& oid, INDEX_T& lid) = 0;
@@ -524,7 +557,9 @@ class IdIndexer : public IdIndexerBase<INDEX_T> {
   bool get_key(const INDEX_T& lid, Any& oid) const override {
     KEY_T oid_;
     bool flag = get_key(lid, oid_);
-    oid = Any::From(oid_);
+    if (flag) {
+      oid = Any::From(oid_);
+    }
     return flag;
   }
 
@@ -944,7 +979,7 @@ void build_lf_indexer(const IdIndexer<KEY_T, INDEX_T>& input,
   _move_data<KEY_T, INDEX_T>()(input.keys_, *lf.keys_, size);
   lf.num_elements_.store(size);
 
-  lf.indices_.open(snapshot_dir + "/" + filename + ".indices", false);
+  lf.indices_.open(snapshot_dir + "/" + filename + ".indices", true);
   lf.indices_.resize(input.num_slots_minus_one_ + 1);
   for (size_t k = 0; k != input.num_slots_minus_one_ + 1; ++k) {
     lf.indices_[k] = std::numeric_limits<INDEX_T>::max();

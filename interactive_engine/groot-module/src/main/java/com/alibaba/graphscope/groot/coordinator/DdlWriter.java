@@ -13,7 +13,6 @@
  */
 package com.alibaba.graphscope.groot.coordinator;
 
-import com.alibaba.graphscope.groot.frontend.IngestorWriteClient;
 import com.alibaba.graphscope.groot.operation.BatchId;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.rpc.RoleClients;
@@ -21,15 +20,13 @@ import com.alibaba.graphscope.groot.rpc.RoleClients;
 public class DdlWriter {
 
     private final RoleClients<IngestorWriteClient> ingestorWriteClients;
-    private int queueId = 0;
 
     public DdlWriter(RoleClients<IngestorWriteClient> ingestorWriteClients) {
         this.ingestorWriteClients = ingestorWriteClients;
     }
 
     public BatchId writeOperations(String requestId, OperationBatch operationBatch) {
-        return this.ingestorWriteClients
-                .getClient(queueId)
-                .writeIngestor(requestId, queueId, operationBatch);
+        // Only send to first frontend
+        return this.ingestorWriteClients.getClient(0).writeIngestor(requestId, 0, operationBatch);
     }
 }

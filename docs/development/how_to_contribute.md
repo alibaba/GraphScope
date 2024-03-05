@@ -44,7 +44,7 @@ A great way to contribute to the project is by improving documentation. If you f
 please share your knowledge with the community.
 
 Documentation improvements are also a great way to gain some experience with our submission and review process, discussed below, without requiring a lot of local development environment setup. 
-In fact, many documentation-only changes can be made directly in the [GraphScope document pages](https://graphscope.io/docs/) by clicking the “Edit On Github” button. This will handle making a fork and a pull request for you.
+In fact, many documentation-only changes can be made directly in the [GraphScope document pages](https://graphscope.io/docs/) by clicking the “Edit On GitHub” button. This will handle making a fork and a pull request for you.
 
 TBF: add a link to how to helping with documentation
 TBF: add a link to how to build the documentation
@@ -111,7 +111,7 @@ Follow [our code style guide](./code_style_guide.md) to attain the proper code f
 
 To submit your changes, you will need to open a pull request (PR) against the main repository. If you're new to GitHub, you can find instructions on how to do that in [GitHub's documentation](https://help.github.com/articles/creating-a-pull-request). GraphScope requires PR titles to follow a specific format (a.k.a., [Conventional Commits specification](https://www.conventionalcommits.org/en/v1.0.0/)), depending on the type of change you're making. The format is as follows:
 
-**type(scope): brief desciption about the pr**
+**type(scope): brief description about the pr**
 
 Below are some examples of the valid PR titles:
 
@@ -147,7 +147,7 @@ The **scope** is optional. However, if it assigned, it must be one of the follow
 - analytical
 - learning
 
-In addtion to the conventional commit specification, we also require the PRs with feature update, (i.e., titled with feat:) should update the corresponding documentations. The repo depolyed a CI check to ensure this.
+In addition to the conventional commit specification, we also require the PRs with feature update, (i.e., titled with feat:) should update the corresponding documentations. The repo deployed a CI check to ensure this.
 
 ### Discussing and Keeping Your Pull Request Updated
 
@@ -195,7 +195,7 @@ If you have any questions or concerns about a pull request, please comment on th
 ## Continuous integration testing
 
 All pull requests that contain changes to code must be run through
-continuous integration (CI) testing at [Github Actions](https://github.com/alibaba/GarphScope/actions)
+continuous integration (CI) testing at [GitHub Actions](https://github.com/alibaba/GarphScope/actions)
 
 The pull request change will trigger a CI testing run. Ideally, the code change
 will pass ("be green") on all platform configurations supported by GraphScope.

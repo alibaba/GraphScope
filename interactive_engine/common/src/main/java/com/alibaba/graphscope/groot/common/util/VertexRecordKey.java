@@ -6,8 +6,8 @@ import java.util.Collections;
 import java.util.Map;
 
 public class VertexRecordKey {
-    private String label;
-    private Map<String, Object> properties;
+    private final String label;
+    private final Map<String, Object> properties;
 
     public VertexRecordKey(String label) {
         this(label, Collections.EMPTY_MAP);

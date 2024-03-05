@@ -48,7 +48,7 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
 
   static constexpr size_t num_props = sizeof...(T);
   GeneralEdgeSetBuilder(size_t edge_size, const grape::Bitset& bitset,
-                        std::array<std::string, num_props> prop_names,
+                        std::vector<std::string> prop_names,
                         LabelT edge_label, std::array<LabelT, 2> src_labels,
                         LabelT dst_label, Direction dir)
       : bitset_(bitset),
@@ -82,8 +82,8 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
     label_triplets.emplace_back(
         std::array<LabelT, 3>{src_labels_[1], dst_label_, dst_label_});
     std::vector<std::vector<std::string>> prop_names;
-    prop_names.emplace_back(array_to_vec(prop_names_));
-    prop_names.emplace_back(array_to_vec(prop_names_));
+    prop_names.emplace_back(prop_names_);
+    prop_names.emplace_back(prop_names_);
     return res_t(std::move(vec_), std::move(label_triplets), prop_names,
                  std::move(label_vec_), direction_);
   }
@@ -91,7 +91,7 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
  private:
   std::vector<ele_tuple_t> vec_;
   std::vector<LabelT> label_vec_;
-  std::array<std::string, num_props> prop_names_;
+  std::vector<std::string> prop_names_;
   LabelT edge_label_;
   std::array<LabelT, 2> src_labels_;
   LabelT dst_label_;
@@ -103,8 +103,9 @@ template <typename GI, typename VID_T, typename LabelT>
 class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
                             std::tuple<grape::EmptyType>> {
  public:
-  using adj_list_array_t = typename GI::template adj_list_array_t<>;
-  using adj_list_t = typename GI::template adj_list_t<>;
+  using adj_list_array_t =
+      typename GI::template adj_list_array_t<grape::EmptyType>;
+  using adj_list_t = typename GI::template adj_list_t<grape::EmptyType>;
   using adj_list_iterator = typename adj_list_t::iterator;
   using ele_tuple_t = std::tuple<VID_T, VID_T, grape::EmptyType>;
   using index_ele_tuple_t = std::tuple<size_t, VID_T, adj_list_iterator>;
@@ -277,8 +278,9 @@ class GeneralEdgeSetIter {
 template <typename GI, typename VID_T, typename LabelT>
 class GeneralEdgeSetIter<GI, VID_T, LabelT, grape::EmptyType> {
  public:
-  using adj_list_array_t = typename GI::template adj_list_array_t<>;
-  using adj_list_t = typename GI::template adj_list_t<>;
+  using adj_list_array_t =
+      typename GI::template adj_list_array_t<grape::EmptyType>;
+  using adj_list_t = typename GI::template adj_list_t<grape::EmptyType>;
   using adj_list_iterator = typename adj_list_t::iterator;
   using ele_tuple_t = std::tuple<VID_T, adj_list_iterator>;
   using data_tuple_t = ele_tuple_t;
@@ -390,49 +392,49 @@ class GeneralEdgeSetIter<GI, VID_T, LabelT, grape::EmptyType> {
   const std::array<LabelT, 2>& src_labels_;
   LabelT dst_label_;
   LabelT edge_label_;
-  const adj_list_t cur_adj_list_;
+  adj_list_t cur_adj_list_;
   adj_list_iterator begin_, end_;
   size_t ind_;
 };
 
 template <size_t edge_label_num, typename GI, typename VID_T, typename LabelT,
           typename... PROP_TUPLE>
-class GeneralEdgeSet {
- public:
-  static constexpr size_t num_src_labels = edge_label_num;
-  static constexpr bool is_edge_set = true;
-  static constexpr bool is_multi_dst_label = false;
-  using lid_t = VID_T;
-  static_assert(edge_label_num == sizeof...(PROP_TUPLE),
-                "The number of edge labels should be equal to the number of "
-                "property tuples.");
+class GeneralEdgeSet {};
+//  public:
+//   static constexpr size_t num_src_labels = edge_label_num;
+//   static constexpr bool is_edge_set = true;
+//   static constexpr bool is_multi_dst_label = false;
+//   using lid_t = VID_T;
+//   static_assert(edge_label_num == sizeof...(PROP_TUPLE),
+//                 "The number of edge labels should be equal to the number of "
+//                 "property tuples.");
 
-  using adj_list_array_tuple_t =
-      std::tuple<typename GetAdjListArrayT<GI, PROP_TUPLE>::type...>;
+//   using adj_list_array_tuple_t =
+//       std::tuple<typename GetAdjListArrayT<GI, PROP_TUPLE>::type...>;
 
-  GeneralEdgeSet(
-      std::array<std::vector<VID_T>, edge_label_num>&& vids,
-      adj_list_array_tuple_t&& adj_lists,
-      std::tuple<PropNameArray<PROP_TUPLE>...>& prop_names,
-      std::array<std::array<LabelT, 3>, edge_label_num> edge_label_triplet)
-      : vids_(std::move(vids)),
-        adj_lists_(std::move(adj_lists)),
-        prop_names_(prop_names),
-        edge_label_triplet_(edge_label_triplet) {}
+//   GeneralEdgeSet(
+//       std::array<std::vector<VID_T>, edge_label_num>&& vids,
+//       adj_list_array_tuple_t&& adj_lists,
+//       std::tuple<PropNameArray<PROP_TUPLE>...>& prop_names,
+//       std::array<std::array<LabelT, 3>, edge_label_num> edge_label_triplet)
+//       : vids_(std::move(vids)),
+//         adj_lists_(std::move(adj_lists)),
+//         prop_names_(prop_names),
+//         edge_label_triplet_(edge_label_triplet) {}
 
-  GeneralEdgeSet(
-      GeneralEdgeSet<edge_label_num, GI, VID_T, LabelT, PROP_TUPLE...>&& other)
-      : vids_(std::move(other.vids_)),
-        adj_lists_(std::move(other.adj_lists_)),
-        prop_names_(other.prop_names_),
-        edge_label_triplet_(std::move(other.edge_label_triplet_)) {}
+//   GeneralEdgeSet(
+//       GeneralEdgeSet<edge_label_num, GI, VID_T, LabelT, PROP_TUPLE...>&&
+//       other) : vids_(std::move(other.vids_)),
+//         adj_lists_(std::move(other.adj_lists_)),
+//         prop_names_(other.prop_names_),
+//         edge_label_triplet_(std::move(other.edge_label_triplet_)) {}
 
- private:
-  std::array<std::vector<VID_T>, edge_label_num> vids_;
-  std::tuple<PropNameArray<PROP_TUPLE>...> prop_names_;
-  std::array<std::array<LabelT, 3>, edge_label_num> edge_label_triplet_;
-  adj_list_array_tuple_t adj_lists_;
-};
+//  private:
+//   std::array<std::vector<VID_T>, edge_label_num> vids_;
+//   std::tuple<PropNameArray<PROP_TUPLE>...> prop_names_;
+//   std::array<std::array<LabelT, 3>, edge_label_num> edge_label_triplet_;
+//   adj_list_array_tuple_t adj_lists_;
+// };
 
 // general edge set stores multi src labels but only one dst label
 // Which stores the nbr ptrs rather than edge.
@@ -459,11 +461,11 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
   using builder_t = GeneralEdgeSetBuilder<2, GI, VID_T, LabelT,
                                           std::tuple<T...>, std::tuple<T...>>;
   GeneralEdgeSet(std::vector<VID_T>&& vids, adj_list_array_t&& adj_lists,
-                 grape::Bitset&& bitsets,
-                 const std::array<std::string, num_props>& prop_names,
+                 grape::Bitset&& bitsets, std::vector<std::string>& prop_names,
                  LabelT edge_label, std::array<LabelT, 2> src_labels,
                  LabelT dst_label, Direction dir)
       : vids_(std::move(vids)),
+
         adj_lists_(std::move(adj_lists)),
         prop_names_(prop_names),
         edge_label_(edge_label),
@@ -502,7 +504,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     VLOG(1) << "GetLabelVec for general edge set.";
     std::vector<LabelKey> res;
     res.reserve(Size());
-    for (auto i = 0; i < Size(); ++i) {
+    for (size_t i = 0; i < Size(); ++i) {
       res.emplace_back(edge_label_);
     }
     return res;
@@ -510,7 +512,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
 
   size_t Size() const {
     if (size_ == 0) {
-      for (auto i = 0; i < adj_lists_.size(); ++i) {
+      for (size_t i = 0; i < adj_lists_.size(); ++i) {
         auto adj = adj_lists_.get(i);
         size_ += adj.size();
       }
@@ -529,7 +531,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     std::vector<std::tuple<VID_T, VID_T, std::tuple<T...>>> res;
     res.reserve(index_ele_tuple.size());
     std::vector<LabelT> label_vec(index_ele_tuple.size(), (LabelT) 0);
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto ind = std::get<0>(cur_ind_ele);
       auto nbr = std::get<2>(cur_ind_ele);
@@ -580,8 +582,8 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
                             const std::vector<size_t>& repeat_array) {
     // Make sure this is correct.
     std::vector<bool> is_built_in(prop_names_.size(), false);
-    for (auto i = 0; i < prop_names_.size(); ++i) {
-      if (prop_names_[i].size() == 1 && prop_names_[i][0] == prop_names[0]) {
+    for (size_t i = 0; i < prop_names_.size(); ++i) {
+      if (prop_names_[i].size() == 1 && prop_names_[0] == prop_names[0]) {
         is_built_in[i] = true;
       }
     }
@@ -594,14 +596,14 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     using cur_prop = std::tuple_element_t<My_Is, std::tuple<T...>>;
     if constexpr (std::is_same_v<cur_prop, EDATA_T>) {
       if (prop_names.size() == 1 && prop_names[0] == prop_names_[My_Is]) {
-        VLOG(10) << "Found builin property" << prop_names[0];
+        VLOG(10) << "Found built-in property" << prop_names[0];
         CHECK(repeat_array.size() == Size());
         size_t cur_ind = 0;
         size_t iter_ind = 0;
         for (auto iter : *this) {
           auto edata = iter.GetData();
           auto repeat_times = repeat_array[iter_ind];
-          for (auto j = 0; j < repeat_times; ++j) {
+          for (size_t j = 0; j < repeat_times; ++j) {
             CHECK(cur_ind < tuples.size());
             std::get<0>(tuples[cur_ind]) = std::get<My_Is>(edata);
             cur_ind += 1;
@@ -631,12 +633,51 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
     fillBuiltinPropsImpl<0, EDATA_T>(tuples, vec, repeat_array);
   }
 
+  template <int tag_id, int Fs,
+            typename std::enable_if<Fs == -1>::type* = nullptr>
+  flat_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
+                                KeyAlias<tag_id, Fs>& key_alias) const {
+    std::vector<std::tuple<VID_T, VID_T, std::tuple<T...>>> res;
+    size_t total_size = 0;
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      total_size += repeat_array[i];
+    }
+    res.reserve(total_size);
+    std::vector<uint8_t> triplet_ind;
+    triplet_ind.reserve(total_size);
+    std::vector<std::array<LabelT, 3>> label_triplets;
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[0], dst_label_, edge_label_});
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[1], dst_label_, edge_label_});
+    size_t cur_ind = 0;
+    for (auto iter : *this) {
+      auto repeat_times = repeat_array[cur_ind];
+      for (size_t j = 0; j < repeat_times; ++j) {
+        res.emplace_back(
+            std::make_tuple(iter.GetSrc(), iter.GetDst(), iter.GetData()));
+        auto src_label = iter.GetSrcLabel();
+        if (src_label == src_labels_[0]) {
+          triplet_ind.emplace_back(0);
+        } else {
+          triplet_ind.emplace_back(1);
+        }
+        cur_ind += 1;
+      }
+    }
+    std::vector<std::vector<std::string>> prop_names;
+    prop_names.emplace_back(prop_names_);
+    prop_names.emplace_back(prop_names_);
+    return flat_t(std::move(res), std::move(label_triplets), prop_names,
+                  std::move(triplet_ind), dir_);
+  }
+
  private:
   mutable size_t size_;
   LabelT edge_label_, dst_label_;
   std::array<LabelT, 2> src_labels_;
 
-  std::array<std::string, num_props> prop_names_;
+  std::vector<std::string> prop_names_;
 
   std::vector<VID_T> vids_;
   adj_list_array_t adj_lists_;
@@ -656,8 +697,9 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
   using lid_t = VID_T;
   using flat_t = FlatEdgeSet<VID_T, LabelT, std::tuple<grape::EmptyType>>;
 
-  using adj_list_t = typename GI::template adj_list_t<>;
-  using adj_list_array_t = typename GI::template adj_list_array_t<>;
+  using adj_list_t = typename GI::template adj_list_t<grape::EmptyType>;
+  using adj_list_array_t =
+      typename GI::template adj_list_array_t<grape::EmptyType>;
   using adj_list_iter_t = typename adj_list_t::iterator;
   using ele_tuple_t = std::tuple<VID_T, adj_list_iter_t>;
   using data_tuple_t = ele_tuple_t;
@@ -668,16 +710,17 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
       GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
                             std::tuple<grape::EmptyType>>;
   GeneralEdgeSet(std::vector<VID_T>&& vids, adj_list_array_t&& adj_lists,
-                 grape::Bitset&& bitsets, LabelT edge_label,
-                 std::array<LabelT, 2> src_labels, LabelT dst_label,
-                 Direction dir)
+                 grape::Bitset&& bitsets, std::vector<std::string>& prop_names,
+                 LabelT edge_label, std::array<LabelT, 2> src_labels,
+                 LabelT dst_label, Direction dir)
       : vids_(std::move(vids)),
         adj_lists_(std::move(adj_lists)),
         edge_label_(edge_label),
         src_labels_(src_labels),
         dst_label_(dst_label),
         size_(0),
-        dir_(dir) {
+        dir_(dir),
+        prop_names_(prop_names) {
     bitsets_.swap(bitsets);
   }
 
@@ -688,7 +731,8 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
         src_labels_(std::move(other.src_labels_)),
         dst_label_(other.dst_label_),
         size_(0),
-        dir_(other.dir_) {
+        dir_(other.dir_),
+        prop_names_(other.prop_names_) {
     bitsets_.swap(other.bitsets_);
   }
 
@@ -696,21 +740,27 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
     std::vector<LabelKey> res;
     VLOG(1) << "GetLabelVec for general edge set.";
     res.reserve(Size());
-    for (auto i = 0; i < Size(); ++i) {
+    for (size_t i = 0; i < Size(); ++i) {
       res.emplace_back(edge_label_);
     }
     return res;
   }
 
-  iterator begin() const { return iterator(vids_, adj_lists_, 0); }
+  iterator begin() const {
+    return iterator(vids_, adj_lists_, bitsets_, src_labels_, dst_label_,
+                    edge_label_, 0);
+  }
 
-  iterator end() const { return iterator(vids_, adj_lists_, vids_.size()); }
+  iterator end() const {
+    return iterator(vids_, adj_lists_, bitsets_, src_labels_, dst_label_,
+                    edge_label_, vids_.size());
+  }
 
   const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
   size_t Size() const {
     if (size_ == 0) {
-      for (auto i = 0; i < adj_lists_.size(); ++i) {
+      for (size_t i = 0; i < adj_lists_.size(); ++i) {
         auto adj = adj_lists_.get(i);
         size_ += adj.size();
       }
@@ -729,7 +779,7 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
     std::vector<std::tuple<VID_T, VID_T, grape::EmptyType>> res;
     res.reserve(index_ele_tuple.size());
     std::vector<LabelT> label_vec(index_ele_tuple.size(), (LabelT) 0);
-    for (auto i = 0; i < index_ele_tuple.size(); ++i) {
+    for (size_t i = 0; i < index_ele_tuple.size(); ++i) {
       auto cur_ind_ele = std::get<col_ind>(index_ele_tuple[i]);
       auto ind = std::get<0>(cur_ind_ele);
       auto nbr = std::get<2>(cur_ind_ele);
@@ -768,6 +818,46 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
     return std::make_pair(std::move(set), std::move(offsets));
   }
 
+  // implement ProjectWithRepeatArray
+  template <int tag_id, int Fs,
+            typename std::enable_if<Fs == -1>::type* = nullptr>
+  flat_t ProjectWithRepeatArray(const std::vector<size_t>& repeat_array,
+                                KeyAlias<tag_id, Fs>& key_alias) const {
+    std::vector<std::tuple<VID_T, VID_T, std::tuple<grape::EmptyType>>> res;
+    size_t total_size = 0;
+    for (size_t i = 0; i < repeat_array.size(); ++i) {
+      total_size += repeat_array[i];
+    }
+    res.reserve(total_size);
+    std::vector<uint8_t> triplet_ind;
+    triplet_ind.reserve(total_size);
+    std::vector<std::array<LabelT, 3>> label_triplets;
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[0], dst_label_, edge_label_});
+    label_triplets.emplace_back(
+        std::array<LabelT, 3>{src_labels_[1], dst_label_, edge_label_});
+    size_t cur_ind = 0;
+    for (auto iter : *this) {
+      auto repeat_times = repeat_array[cur_ind];
+      for (size_t j = 0; j < repeat_times; ++j) {
+        res.emplace_back(std::make_tuple(iter.GetSrc(), iter.GetDst(),
+                                         std::make_tuple(grape::EmptyType())));
+        auto src_label = iter.GetSrcLabel();
+        if (src_label == src_labels_[0]) {
+          triplet_ind.emplace_back(0);
+        } else {
+          triplet_ind.emplace_back(1);
+        }
+        cur_ind += 1;
+      }
+    }
+    std::vector<std::vector<std::string>> prop_names;
+    prop_names.emplace_back(prop_names_);
+    prop_names.emplace_back(prop_names_);
+    return flat_t(std::move(res), std::move(label_triplets), prop_names,
+                  std::move(triplet_ind), dir_);
+  }
+
   void Repeat(std::vector<offset_t>& cur_offset,
               std::vector<offset_t>& repeat_vec) {
     LOG(FATAL) << "not implemented";
@@ -783,6 +873,6 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<grape::EmptyType>,
   grape::Bitset bitsets_;  // bitset of src vertices.
   Direction dir_;
   std::vector<std::string> prop_names_;
-};
+};  // namespace gs
 }  // namespace gs
 #endif  // ENGINES_HQPS_ENGINE_DS_EDGE_MULTISET_GENERAL_EDGE_SET_H_

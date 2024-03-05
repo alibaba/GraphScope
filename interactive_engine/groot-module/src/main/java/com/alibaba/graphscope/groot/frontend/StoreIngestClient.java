@@ -15,11 +15,7 @@ package com.alibaba.graphscope.groot.frontend;
 
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.rpc.RpcClient;
-import com.alibaba.graphscope.proto.groot.StoreClearIngestRequest;
-import com.alibaba.graphscope.proto.groot.StoreClearIngestResponse;
-import com.alibaba.graphscope.proto.groot.StoreIngestGrpc;
-import com.alibaba.graphscope.proto.groot.StoreIngestRequest;
-import com.alibaba.graphscope.proto.groot.StoreIngestResponse;
+import com.alibaba.graphscope.proto.groot.*;
 
 import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
@@ -37,14 +33,14 @@ public class StoreIngestClient extends RpcClient {
 
     public void storeIngest(
             String dataPath, Map<String, String> config, CompletionCallback<Void> callback) {
-        StoreIngestRequest.Builder builder = StoreIngestRequest.newBuilder();
+        IngestDataRequest.Builder builder = IngestDataRequest.newBuilder();
         builder.setDataPath(dataPath);
         builder.putAllConfig(config);
         this.stub.storeIngest(
                 builder.build(),
-                new StreamObserver<StoreIngestResponse>() {
+                new StreamObserver<>() {
                     @Override
-                    public void onNext(StoreIngestResponse value) {
+                    public void onNext(IngestDataResponse value) {
                         callback.onCompleted(null);
                     }
 
@@ -60,16 +56,54 @@ public class StoreIngestClient extends RpcClient {
 
     public void storeClearIngest(String path, CompletionCallback<Void> callback) {
         this.stub.storeClearIngest(
-                StoreClearIngestRequest.newBuilder().setDataPath(path).build(),
-                new StreamObserver<StoreClearIngestResponse>() {
+                ClearIngestRequest.newBuilder().setDataPath(path).build(),
+                new StreamObserver<>() {
                     @Override
-                    public void onNext(StoreClearIngestResponse storeClearIngestResponse) {
+                    public void onNext(ClearIngestResponse storeClearIngestResponse) {
                         callback.onCompleted(null);
                     }
 
                     @Override
                     public void onError(Throwable throwable) {
                         callback.onError(throwable);
+                    }
+
+                    @Override
+                    public void onCompleted() {}
+                });
+    }
+
+    public void storeCompact(CompletionCallback<Void> callback) {
+        this.stub.compactDB(
+                CompactDBRequest.newBuilder().build(),
+                new StreamObserver<>() {
+                    @Override
+                    public void onNext(CompactDBResponse value) {
+                        callback.onCompleted(null);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        callback.onError(t);
+                    }
+
+                    @Override
+                    public void onCompleted() {}
+                });
+    }
+
+    public void reopenSecondary(CompletionCallback<Void> callback) {
+        this.stub.reopenSecondary(
+                ReopenSecondaryRequest.newBuilder().build(),
+                new StreamObserver<>() {
+                    @Override
+                    public void onNext(ReopenSecondaryResponse value) {
+                        callback.onCompleted(null);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        callback.onError(t);
                     }
 
                     @Override

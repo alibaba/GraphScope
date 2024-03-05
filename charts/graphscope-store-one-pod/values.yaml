@@ -122,36 +122,6 @@ frontend:
     ##
     annotations: {}
 
-ingestor:
-  replicaCount: 2
-
-  ## @param hostAliases pods host aliases
-  ## https://kubernetes.io/docs/concepts/services-networking/add-entries-to-pod-etc-hosts-with-host-aliases/
-  ##
-  hostAliases: []
-  ## @param hostNetwork Specify if host network should be enabled for pods
-  ##
-  hostNetwork: false
-  ## @param hostIPC Specify if host IPC should be enabled for pods
-  ##
-  hostIPC: false
-  ## @param podLabels Extra labels for pods
-  ## Ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
-  ##
-  podLabels: {}
-  ## @param podAnnotations Extra annotations for pods
-  ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
-  ##
-  podAnnotations: {}
-  ## @param podAffinityPreset Pod affinity preset. Ignored if `affinity` is set. Allowed values: `soft` or `hard`
-  ## ref: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#inter-pod-affinity-and-anti-affinity
-  ##
-
-  ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
-  ##
-  schedulerName: ""
-
-
 ## @section Common parameters
 ##
 
@@ -350,11 +320,6 @@ javaOpts: ""
 
 rpcMaxBytesMb: 20
 
-## Ingestor Config
-ingestorQueueBufferMaxCount: 102400
-ingestorSenderBufferMaxCount: 102400
-ingestorSenderOperationMaxCount: 102400
-
 ## Coordinator Config
 snapshotIncreaseIntervalMs: 1000
 offsetsPersistIntervalMs: 3000
@@ -369,9 +334,14 @@ storeDataPath: "/var/lib/graphscope-store"
 storeWriteThreadCount: 1
 storeQueueBufferSize: 102400
 
+storeGcIntervalMs: 5000
+
 ## Kafka Config
 kafkaTopic: "graphscope"
 kafkaProducerCustomConfigs: ""
+
+## Zk Config
+zkBasePath: "/graphscope/groot"
 
 ## Key-value pair separated by ;
 ## For example extraConfig="k1=v1;k2=v2"
@@ -385,3 +355,7 @@ pegasus:
   worker:
     num: 1
   timeout: 240000
+
+secondary:
+  enabled: false
+  storeDataPath: "./data_secondary"

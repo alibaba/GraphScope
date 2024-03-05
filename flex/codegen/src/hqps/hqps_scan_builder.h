@@ -78,7 +78,7 @@ class ScanOpBuilder {
   ScanOpBuilder& scanOpt(const physical::Scan::ScanOpt& opt) {
     if (opt != physical::Scan::ScanOpt::Scan_ScanOpt_VERTEX) {
       throw std::runtime_error(
-          std::string("Currently only suppor from vertex"));
+          std::string("Currently only support from vertex"));
     }
     scan_opt_ = opt;
     return *this;
@@ -108,7 +108,7 @@ class ScanOpBuilder {
       // labels.
       std::vector<int32_t> expr_label_ids;
       if (try_to_get_label_ids_from_expr(predicate, expr_label_ids)) {
-        // join expr_label_ids with table_lable_ids;
+        // join expr_label_ids with table_label_ids;
         VLOG(10) << "Found label ids in expr: "
                  << gs::to_string(expr_label_ids);
         intersection(labels_ids_, expr_label_ids);
@@ -130,7 +130,7 @@ class ScanOpBuilder {
       expr_var_name_ = ctx_.GetNextExprVarName();
       {
         std::stringstream ss;
-        for (auto i = 0; i < func_call_param_const.size(); ++i) {
+        for (size_t i = 0; i < func_call_param_const.size(); ++i) {
           ss << func_call_param_const[i].var_name;
           if (i != func_call_param_const.size() - 1) {
             ss << ",";
@@ -142,7 +142,7 @@ class ScanOpBuilder {
         std::stringstream ss;
         if (expr_tag_props.size() > 0) {
           ss << ",";
-          for (auto i = 0; i + 1 < expr_tag_props.size(); ++i) {
+          for (size_t i = 0; i + 1 < expr_tag_props.size(); ++i) {
             ss << expr_tag_props[i].second << ", ";
           }
           ss << expr_tag_props[expr_tag_props.size() - 1].second;
@@ -172,7 +172,6 @@ class ScanOpBuilder {
           std::string("Currently only support one and predicate"));
     }
     auto triplet = or_predicate.predicates(0);
-    auto& property = triplet.key();
     if (triplet.value_case() == algebra::IndexPredicate::Triplet::kConst) {
       // FUTURE: check property is really the primary key.
       auto const_value = triplet.const_();
@@ -200,6 +199,9 @@ class ScanOpBuilder {
       VLOG(10) << "receive param const in index predicate: "
                << dyn_param_pb.DebugString();
       ctx_.AddParameterVar(param_const);
+      // set to oid_ and oid_type_name_
+      oid_ = param_const.var_name;
+      oid_type_name_ = data_type_2_string(param_const.type);
     }
 
     return *this;
@@ -240,7 +242,7 @@ class ScanOpBuilder {
     } else {
       boost::format formater(SCAN_OP_WITH_OID_MUL_LABEL_TEMPLATE_STR);
       std::stringstream ss;
-      for (auto i = 0; i + 1 < label_ids.size(); ++i) {
+      for (size_t i = 0; i + 1 < label_ids.size(); ++i) {
         ss << std::to_string(label_ids[i]) << ", ";
       }
       ss << std::to_string(label_ids[label_ids.size() - 1]);
@@ -259,7 +261,7 @@ class ScanOpBuilder {
         ss << label_ids[0];
       } else {
         ss << "std::array<label_id_t, " << label_ids.size() << "> {";
-        for (auto i = 0; i + 1 < label_ids.size(); ++i) {
+        for (size_t i = 0; i + 1 < label_ids.size(); ++i) {
           ss << std::to_string(label_ids[i]) << ", ";
         }
         ss << std::to_string(label_ids[label_ids.size() - 1]);
@@ -287,7 +289,7 @@ class ScanOpBuilder {
         ss << label_ids[0];
       } else {
         ss << "std::array<label_id_t, " << label_ids.size() << "> {";
-        for (auto i = 0; i + 1 < label_ids.size(); ++i) {
+        for (size_t i = 0; i + 1 < label_ids.size(); ++i) {
           ss << std::to_string(label_ids[i]) << ", ";
         }
         ss << std::to_string(label_ids[label_ids.size() - 1]);

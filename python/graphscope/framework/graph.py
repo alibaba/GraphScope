@@ -125,10 +125,12 @@ class GraphInterface(metaclass=ABCMeta):
         raise NotImplementedError
 
     def unload(self):
-        warnings.warn(
-            "The Graph.unload() method has been deprecated, please using the `del` operator instead, e.g., `del graph`",
-            DeprecationWarning,
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("always", DeprecationWarning)
+            warnings.warn(
+                "The Graph.unload() method has been deprecated, please using the `del` operator instead, i.e., `del graph`",
+                DeprecationWarning,
+            )
 
     def _from_nx_graph(self, g):
         """Create a gs graph from a nx graph.
@@ -182,7 +184,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.VINEYARD_ID] = utils.i_to_attr(int(vineyard_id))
         # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
         #
-        # the metadata should be retrived from vineyard
+        # the metadata should be retrieved from vineyard
         config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         return dag_utils.create_graph(
@@ -196,7 +198,7 @@ class GraphInterface(metaclass=ABCMeta):
         config[types_pb2.VINEYARD_NAME] = utils.s_to_attr(str(vineyard_name))
         # FIXME(hetao) hardcode oid/vid type for codegen, when loading from vineyard
         #
-        # the metadata should be retrived from vineyard
+        # the metadata should be retrieved from vineyard
         config[types_pb2.OID_TYPE] = utils.s_to_attr("int64_t")
         config[types_pb2.VID_TYPE] = utils.s_to_attr("uint64_t")
         return dag_utils.create_graph(

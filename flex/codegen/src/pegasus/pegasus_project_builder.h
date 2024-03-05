@@ -110,11 +110,11 @@ std::string project_mapping_to_string(
     CHECK(prop_names.size() == data_types.size());
     CHECK(prop_names.size() > 0);
     ss << PROJECT_PROPS_STR << "<" << in_tag_id << ", " << res_alias;
-    for (auto i = 0; i < data_types.size(); ++i) {
+    for (size_t i = 0; i < data_types.size(); ++i) {
       ss << "," << data_type_2_string(data_types[i]);
     }
     ss << ">({";
-    for (auto i = 0; i < prop_names.size() - 1; ++i) {
+    for (size_t i = 0; i < prop_names.size() - 1; ++i) {
       ss << "\"" << prop_names[i] << "\", ";
     }
     ss << "\"" << prop_names[prop_names.size() - 1] << "\"";
@@ -155,7 +155,7 @@ class ProjectOpBuilder {
     std::string head_code = write_head();
 
     std::string project_body_code;
-    for (auto i = 0; i < mappings_.size(); ++i) {
+    for (size_t i = 0; i < mappings_.size(); ++i) {
       project_body_code += project_map_to_code(i);
     }
     if (is_append_) {
@@ -163,7 +163,7 @@ class ProjectOpBuilder {
     } else {
       ctx_.SetHead(false);
       ctx_.ResetAlias();
-      for (auto i = 0; i < mappings_.size(); i++) {
+      for (size_t i = 0; i < mappings_.size(); i++) {
         int32_t output_alias = mappings_[i].alias().value();
         ctx_.SetAlias(output_alias);
         VLOG(10) << "Set alias " << output_alias << ", index "
@@ -233,7 +233,7 @@ class ProjectOpBuilder {
     for (auto i : case_exprs) {
       vars_code += i;
     }
-    for (auto i = 0; i < var_names.size(); i++) {
+    for (size_t i = 0; i < var_names.size(); i++) {
       int32_t input_index;
       std::pair<int32_t, std::vector<int32_t>> input_type;
       VLOG(10) << "Input tag is " << var_tags[i];
@@ -274,7 +274,7 @@ class ProjectOpBuilder {
               "};\n");
 
           std::string condition_code;
-          for (auto j = 0; j < input_type.second.size(); j++) {
+          for (size_t j = 0; j < input_type.second.size(); j++) {
             boost::format condition_fmter(
                 "if vertex_label == %1% {\n"
                 "%2%[vertex_id]\n"
@@ -324,7 +324,7 @@ static std::string BuildProjectOp(
   ProjectOpBuilder builder(ctx);
   builder.is_append(project_pb.is_append());
   auto& mappings = project_pb.mappings();
-  for (auto i = 0; i < mappings.size(); ++i) {
+  for (int32_t i = 0; i < mappings.size(); ++i) {
     builder.add_mapping(mappings[i]);
   }
   return builder.operator_index(operator_index).meta_data(meta_data).Build();

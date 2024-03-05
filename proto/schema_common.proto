@@ -33,6 +33,20 @@ enum DataTypePb {
     UINT = 16;
     ULONG = 17;
     DYNAMIC = 18;
+    DATE32 = 19;
+    DATE64 = 20;
+    TIME32_S = 21;
+    TIME32_MS = 22;
+    TIME32_US = 23;
+    TIME32_NS = 24;
+    TIME64_S = 25;
+    TIME64_MS = 26;
+    TIME64_US = 27;
+    TIME64_NS = 28;
+    TIMESTAMP_S = 29;
+    TIMESTAMP_MS = 30;
+    TIMESTAMP_US = 31;
+    TIMESTAMP_NS = 32;
 }
 
 message PropertyValuePb {

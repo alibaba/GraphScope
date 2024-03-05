@@ -1,5 +1,4 @@
 {{- $frontendFullname := include "graphscope-store.frontend.fullname" . }}
-{{- $ingestorFullname := include "graphscope-store.ingestor.fullname" . }}
 {{- $coordinatorFullname := include "graphscope-store.coordinator.fullname" . }}
 {{- $storeFullname := include "graphscope-store.store.fullname" . }}
 {{- $kafkaFullname := include "graphscope-store.kafka.fullname" . -}}
@@ -110,16 +109,12 @@ spec:
               value: "coordinator"
             - name: FRONTEND_COUNT
               value: {{ .Values.frontend.replicaCount | quote }}
-            - name: INGESTOR_COUNT
-              value: {{ .Values.ingestor.replicaCount | quote }}
             - name: COORDINATOR_COUNT
               value: {{ .Values.coordinator.replicaCount | quote }}
             - name: STORE_COUNT
               value: {{ .Values.store.replicaCount | quote }}
             - name: DNS_NAME_PREFIX_FRONTEND
               value: {{ $frontendFullname }}-{}.{{ $frontendFullname }}-headless
-            - name: DNS_NAME_PREFIX_INGESTOR
-              value: {{ $ingestorFullname }}-{}.{{ $ingestorFullname }}-headless
             - name: DNS_NAME_PREFIX_COORDINATOR
               value: {{ $coordinatorFullname }}-{}.{{ $coordinatorFullname }}-headless
             - name: DNS_NAME_PREFIX_STORE

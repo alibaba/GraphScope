@@ -17,6 +17,7 @@ use std::convert::TryInto;
 
 use graph_proxy::apis::GraphElement;
 use graph_proxy::apis::{get_graph, DynDetails, GraphPath, QueryParams, Vertex};
+use graph_proxy::utils::expr::eval_pred::EvalPred;
 use ir_common::error::ParsePbError;
 use ir_common::generated::physical as pb;
 use ir_common::generated::physical::get_v::VOpt;
@@ -197,22 +198,26 @@ impl FilterMapFunction<Record, Record> for AuxiliaOperator {
                     }
                 }
                 EntryType::Edge => {
-                    // TODO: This is a little bit tricky. Modify this logic to query store with eid when supported.
-                    // Currently, when getting properties from an edge,
-                    // we assume that it has already been carried in the edge (when the first time queried the edge)
-                    // since on most storages, query edges by eid is not supported yet.
-                    if self.tag.eq(&self.alias) {
-                        // do nothing as we assume properties is already carried
-                    } else {
-                        let entry = entry.clone();
-                        if let Some(alias) = self.alias {
-                            // append without moving head
-                            input
-                                .get_columns_mut()
-                                .insert(alias as usize, entry);
-                        } else {
-                            input.append_arc_entry(entry, self.alias.clone());
+                    // TODO: This is a little bit tricky. Modify this logic to query store once query by eid is supported.
+                    // Currently, we support two cases:
+                    // 1. use auxilia to rename the edge to a new alias;
+                    // 2. use auxilia to filter the edge by predicates, where the necessary properties of the edge is assumed to be already pre-cached.
+                    let entry = entry.clone();
+                    if let Some(predicate) = &self.query_params.filter {
+                        let res = predicate
+                            .eval_bool(Some(&input))
+                            .map_err(|e| FnExecError::from(e))?;
+                        if !res {
+                            return Ok(None);
                         }
+                    }
+                    if let Some(alias) = self.alias {
+                        // append without moving head
+                        input
+                            .get_columns_mut()
+                            .insert(alias as usize, entry);
+                    } else {
+                        input.append_arc_entry(entry, self.alias.clone());
                     }
                 }
                 EntryType::Path => {
@@ -263,7 +268,6 @@ impl FilterMapFuncGen for pb::GetV {
                             .collect::<Result<Vec<_>, _>>()?;
                     }
                 }
-
                 let get_vertex_operator = GetVertexOperator {
                     start_tag: self.tag,
                     opt,

@@ -15,6 +15,7 @@
 #ifndef ENGINES_HQPS_SERVER_CODEGEN_PROXY_H_
 #define ENGINES_HQPS_SERVER_CODEGEN_PROXY_H_
 
+#include <condition_variable>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -37,7 +38,7 @@ enum CodegenStatus {
   RUNNING = 0,
   FAILED = 1,
   SUCCESS = 2,
-  UNINITALIZED = 3,
+  UNINITIALIZED = 3,
 };
 
 struct StoredProcedureLibMeta {

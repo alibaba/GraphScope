@@ -207,7 +207,7 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             numOfEdges = new long[(int) innerVerticesNum];
             nbrPositions = new int[(int) innerVerticesNum];
             // marks the mapping between lid to start pos of nbr, i.e. offset.
-            // the reason why we don't resuse oeBegin Offset is that eid may not sequential.
+            // the reason why we don't reuse oeBegin Offset is that eid may not sequential.
             //            edatas = (BIZ_EDATA_T[]) Array.newInstance(bizEdataClass,
             // (int)totalNumOfEdges);
             //            edatas = (BIZ_EDATA_T[]) new Object[(int) totalNumOfEdges];
@@ -250,19 +250,19 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             // deserialize back from csr.
             int index = 0;
             for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                long curAddrr = nbrUnitAddrs[lid];
+                long curAddr = nbrUnitAddrs[lid];
                 nbrPositions[lid] = index;
                 for (int j = 0; j < numOfEdges[lid]; ++j) {
                     if (vid_t == 0) {
-                        Long dstLid = JavaRuntime.getLong(curAddrr);
+                        Long dstLid = JavaRuntime.getLong(curAddr);
                         dstLids.set(index, (VID_T) dstLid);
                         dstOids.set(index++, vertexIdManager.lid2Oid((VID_T) dstLid));
                     } else {
-                        Integer dstLid = JavaRuntime.getInt(curAddrr);
+                        Integer dstLid = JavaRuntime.getInt(curAddr);
                         dstLids.set(index, (VID_T) dstLid);
                         dstOids.set(index++, vertexIdManager.lid2Oid((VID_T) dstLid));
                     }
-                    curAddrr += nbrUnitEleSize;
+                    curAddr += nbrUnitEleSize;
                 }
             }
             // fill in edata arrays.
@@ -276,11 +276,11 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
             if (bizEdataClass.equals(edataClass)) {
                 logger.info("biz edata {} == grape edata, try to read direct", edata_t);
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                    long curAddrr = nbrUnitAddrs[lid] + VID_SIZE_IN_BYTE;
+                    long curAddr = nbrUnitAddrs[lid] + VID_SIZE_IN_BYTE;
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
-                        long eid = JavaRuntime.getLong(curAddrr);
+                        long eid = JavaRuntime.getLong(curAddr);
                         edatas.set(index++, (BIZ_EDATA_T) edataArray.get(eid));
-                        curAddrr += nbrUnitEleSize;
+                        curAddr += nbrUnitEleSize;
                     }
                 }
             } else {
@@ -377,61 +377,61 @@ public abstract class AbstractEdgeManager<VID_T, GRAPE_OID_T, BIZ_OID_T, GRAPE_E
         switch (edata_t) {
             case 0:
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                    long curAddrr = nbrUnitAddrs[lid];
+                    long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
-                        long eid = JavaRuntime.getLong(curAddrr + VID_SIZE_IN_BYTE);
+                        long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
                         GRAPE_ED_T edata = edataArray.get(eid);
                         Long longValue = (Long) edata;
                         outputStream.writeLong(longValue);
-                        curAddrr += nbrUnitEleSize;
+                        curAddr += nbrUnitEleSize;
                     }
                 }
                 break;
             case 1:
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                    long curAddrr = nbrUnitAddrs[lid];
+                    long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
-                        long eid = JavaRuntime.getLong(curAddrr + VID_SIZE_IN_BYTE);
+                        long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
                         GRAPE_ED_T edata = edataArray.get(eid);
                         Integer longValue = (Integer) edata;
                         outputStream.writeInt(longValue);
-                        curAddrr += nbrUnitEleSize;
+                        curAddr += nbrUnitEleSize;
                     }
                 }
                 break;
             case 2:
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                    long curAddrr = nbrUnitAddrs[lid];
+                    long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
-                        long eid = JavaRuntime.getLong(curAddrr + VID_SIZE_IN_BYTE);
+                        long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
                         GRAPE_ED_T edata = edataArray.get(eid);
                         Double longValue = (Double) edata;
                         outputStream.writeDouble(longValue);
-                        curAddrr += nbrUnitEleSize;
+                        curAddr += nbrUnitEleSize;
                     }
                 }
                 break;
             case 3:
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                    long curAddrr = nbrUnitAddrs[lid];
+                    long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
-                        long eid = JavaRuntime.getLong(curAddrr + VID_SIZE_IN_BYTE);
+                        long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
                         GRAPE_ED_T edata = edataArray.get(eid);
                         Float longValue = (Float) edata;
                         outputStream.writeFloat(longValue);
-                        curAddrr += nbrUnitEleSize;
+                        curAddr += nbrUnitEleSize;
                     }
                 }
                 break;
             case 4:
                 for (int lid = 0; lid < innerVerticesNum; ++lid) {
-                    long curAddrr = nbrUnitAddrs[lid];
+                    long curAddr = nbrUnitAddrs[lid];
                     for (int j = 0; j < numOfEdges[lid]; ++j) {
-                        long eid = JavaRuntime.getLong(curAddrr + VID_SIZE_IN_BYTE);
+                        long eid = JavaRuntime.getLong(curAddr + VID_SIZE_IN_BYTE);
                         GRAPE_ED_T edata = edataArray.get(eid);
                         String longValue = (String) edata;
                         outputStream.writeBytes(longValue);
-                        curAddrr += nbrUnitEleSize;
+                        curAddr += nbrUnitEleSize;
                     }
                 }
                 break;
