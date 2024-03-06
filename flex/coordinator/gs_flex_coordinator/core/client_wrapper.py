@@ -26,7 +26,6 @@ import threading
 from typing import List, Union
 
 import psutil
-
 from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
                                              DATASET_WORKSPACE, INSTANCE_NAME,
                                              SOLUTION, WORKSPACE)
@@ -37,11 +36,11 @@ from gs_flex_coordinator.core.utils import (GraphInfo, decode_datetimestr,
                                             encode_datetime, get_current_time)
 from gs_flex_coordinator.models import (DataSource, DeploymentInfo,
                                         EdgeDataSource, EdgeType, Graph,
-                                        GrootGraph, GrootSchema, JobStatus,
-                                        ModelSchema, NodeStatus, Procedure,
-                                        SchemaMapping, ServiceStatus,
-                                        StartServiceRequest, VertexDataSource,
-                                        VertexType, GrootDataloadingJobConfig)
+                                        GrootDataloadingJobConfig, GrootGraph,
+                                        GrootSchema, JobStatus, ModelSchema,
+                                        NodeStatus, Procedure, SchemaMapping,
+                                        ServiceStatus, StartServiceRequest,
+                                        VertexDataSource, VertexType)
 from gs_flex_coordinator.version import __version__
 
 logger = logging.getLogger("graphscope")
@@ -125,6 +124,9 @@ class ClientWrapper(object):
 
     def import_groot_schema(self, graph_name: str, schema: GrootSchema) -> str:
         return self._client.import_groot_schema(graph_name, schema.to_dict())
+
+    def get_current_graph(self) -> GrootGraph:
+        return self._client.get_current_graph()
 
     def create_graph(self, graph: Graph) -> str:
         # there are some tricks here, since schema is a keyword of openapi
@@ -282,7 +284,9 @@ class ClientWrapper(object):
     def create_groot_dataloading_job(
         self, graph_name: str, job_config: GrootDataloadingJobConfig
     ) -> str:
-        job_id = self._client.create_groot_dataloading_job(graph_name, job_config.to_dict())
+        job_id = self._client.create_groot_dataloading_job(
+            graph_name, job_config.to_dict()
+        )
         return job_id
 
     def list_groot_graph(self) -> List[GrootGraph]:

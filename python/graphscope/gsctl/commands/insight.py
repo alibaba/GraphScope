@@ -20,14 +20,20 @@ import click
 import yaml
 from graphscope.gsctl.impl import (create_edge_type,
                                    create_groot_dataloading_job,
-                                   create_vertex_type, delete_edge_type,
+                                   create_vertex_type,
+                                   delete_alert_receiver_by_id,
+                                   delete_alert_rule_by_name, delete_edge_type,
                                    delete_job_by_id, delete_vertex_type,
                                    get_datasource, get_deployment_info,
                                    get_job_by_id, get_node_status,
                                    import_datasource, import_groot_schema,
-                                   list_groot_graph, list_jobs,
-                                   unbind_edge_datasource,
-                                   unbind_vertex_datasource)
+                                   list_alert_messages, list_alert_receivers,
+                                   list_alert_rules, list_groot_graph,
+                                   list_jobs, unbind_edge_datasource,
+                                   unbind_vertex_datasource,
+                                   update_alert_messages,
+                                   update_alert_receiver_by_id,
+                                   update_alert_rule)
 from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
                                     terminal_display)
 
@@ -46,6 +52,12 @@ def create():
 @cli.group()
 def delete():
     """Delete a resource by name"""
+    pass
+
+
+@cli.group()
+def update():
+    """Update a resource from a file"""
     pass
 
 
@@ -482,6 +494,249 @@ def node():
         click.secho(f"Failed to get node status: {str(e)}", fg="red")
     else:
         _construct_and_display_data(nodes)
+
+
+@get.command()
+def alertrule():
+    """Display alert rules in database"""
+
+    def _construct_and_display_data(rules):
+        if not rules:
+            click.secho("no alert rules found in database.", fg="blue")
+            return
+        head = [
+            "NAME",
+            "SEVERITY",
+            "METRIC_TYPE",
+            "CONDITIONS_DESCRIPTION",
+            "FREQUENCY",
+            "ENABLE",
+        ]
+        data = [head]
+        for r in rules:
+            data.append(
+                [
+                    r.name,
+                    r.severity,
+                    r.metric_type,
+                    r.conditions_description,
+                    "{0} Min".format(r.frequency),
+                    str(r.enable),
+                ]
+            )
+        terminal_display(data)
+
+    try:
+        rules = list_alert_rules()
+    except Exception as e:
+        click.secho(f"Failed to list alert rules: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(rules)
+
+
+@update.command()
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to update an alertrule",
+)
+def alertrule(filename):  # noqa: F811
+    """Update an alert rule in database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        rule = read_yaml_file(filename)
+        update_alert_rule(rule)
+    except Exception as e:
+        click.secho(f"Failed to update alert rule: {str(e)}", fg="red")
+    else:
+        click.secho(f"Update alert rule {rule['name']} successfully.", fg="green")
+
+
+@delete.command()
+@click.argument("RULE_NAME", required=True)
+def alertrule(rule_name):  # noqa: F811
+    """Delete an alert rule indatabase"""
+    try:
+        delete_alert_rule_by_name(rule_name)
+    except Exception as e:
+        click.secho(f"Failed to delete alert rule: {str(e)}", fg="red")
+    else:
+        click.secho(
+            f"Delete alert rule {rule_name} successfully.",
+            fg="green",
+        )
+
+
+@get.command()
+@click.option(
+    "--status",
+    type=click.Choice(["unsolved", "dealing", "solved"]),
+    required=False,
+)
+@click.option(
+    "--severity",
+    type=click.Choice(["emergency", "warning"]),
+    required=False,
+)
+@click.option("--starttime", required=False, help="format with 2024-01-01-00-00-00")
+@click.option("--endtime", required=False, help="format with 2024-01-02-12-30-00")
+@click.option("--limit", required=False, default=100)
+def alertmessage(status, severity, starttime, endtime, limit):
+    """Display alert messages in database"""
+
+    def _construct_and_display_data(messages):
+        if not messages:
+            click.secho("no alert message found in database.", fg="blue")
+            return
+        head = [
+            "MESSAGE_ID",
+            "SEVERITY",
+            "METRIC_TYPE",
+            "TARGET",
+            "TRIGGER_TIME",
+            "STATUS",
+            "MESSAGE",
+        ]
+        data = [head]
+        for m in messages[:limit]:
+            data.append(
+                [
+                    m.message_id,
+                    m.severity,
+                    m.metric_type,
+                    ",".join(m.target),
+                    m.trigger_time,
+                    m.status,
+                    m.message,
+                ]
+            )
+        terminal_display(data)
+
+    try:
+        messages = list_alert_messages(status, severity, starttime, endtime)
+    except Exception as e:
+        click.secho(f"Failed to list alert messages: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(messages)
+
+
+@update.command()
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to update alert messages in batch",
+)
+def alertmessage(filename):  # noqa: F811
+    """Update alert messages in batch"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        request = read_yaml_file(filename)
+        update_alert_messages(request)
+    except Exception as e:
+        click.secho(f"Failed to update alert messages: {str(e)}", fg="red")
+    else:
+        click.secho("Update alert messages successfully.", fg="green")
+
+
+@get.command()
+def alertreceiver():
+    """Display alert receivers in database"""
+
+    def _construct_and_display_data(receivers):
+        if not receivers:
+            click.secho("no alert receiver found in database.", fg="blue")
+            return
+        head = [
+            "RECEIVER_ID",
+            "TYPE",
+            "WEBHOOK_URL",
+            "AT_USERS_ID",
+            "IS_AT_ALL",
+            "ENABLE",
+            "MESSAGE",
+        ]
+        data = [head]
+        for r in receivers:
+            data.append(
+                [
+                    r.receiver_id,
+                    r.type,
+                    r.webhook_url,
+                    ",".join(r.at_user_ids),
+                    str(r.is_at_all),
+                    str(r.enable),
+                    r.message,
+                ]
+            )
+        terminal_display(data)
+
+    try:
+        receivers = list_alert_receivers()
+    except Exception as e:
+        click.secho(f"Failed to list alert receivers: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(receivers)
+
+
+@create.command()
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to create an alert receiver",
+)
+def alertreceiver(filename):  # noqa: F811
+    """Create an alert receiver in database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        receiver = read_yaml_file(filename)
+        register_receiver(receiver)
+    except Exception as e:
+        click.secho(f"Failed to create alert receiver: {str(e)}", fg="red")
+    else:
+        click.secho("Create alert receiver successfully.", fg="green")
+
+
+@update.command()
+@click.argument("receiver_id", required=True)
+@click.option(
+    "-f",
+    "--filename",
+    required=True,
+    help="Path of yaml file to use to update an alert receiver",
+)
+def alertreceiver(receiver_id, filename):  # noqa: F811
+    """Update an alert receiver by id in database"""
+    if not is_valid_file_path(filename):
+        click.secho("Invalid file: {0}".format(filename), fg="blue")
+        return
+    try:
+        receiver = read_yaml_file(filename)
+        update_alert_receiver_by_id(receiver_id, receiver)
+    except Exception as e:
+        click.secho(f"Failed to update the alert receiver: {str(e)}", fg="red")
+    else:
+        click.secho(f"Update alert receiver {receiver_id} successfully.", fg="green")
+
+
+@delete.command()
+@click.argument("receiver_id", required=True)
+def alertreceiver(receiver_id):  # noqa: F811
+    """Delete an alert receiver by id in database"""
+    try:
+        delete_alert_receiver_by_id(receiver_id)
+    except Exception as e:
+        click.secho(f"Failed to delete alert receiver: {str(e)}", fg="red")
+    else:
+        click.secho(f"Delete alert receiver {receiver_id} successfully.", fg="green")
 
 
 if __name__ == "__main__":

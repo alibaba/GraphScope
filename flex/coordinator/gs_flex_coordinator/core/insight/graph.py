@@ -26,9 +26,6 @@ from dateutil import tz
 from graphscope.deploy.kubernetes.utils import (get_service_endpoints,
                                                 resolve_api_client)
 from gremlin_python.driver.client import Client
-from kubernetes import client as kube_client
-from kubernetes import config as kube_config
-
 from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
                                              ENABLE_DNS, GROOT_GREMLIN_PORT,
                                              GROOT_GRPC_PORT, GROOT_PASSWORD,
@@ -39,6 +36,8 @@ from gs_flex_coordinator.core.utils import (data_type_to_groot,
                                             encode_datetime, get_internal_ip,
                                             get_public_ip)
 from gs_flex_coordinator.version import __version__
+from kubernetes import client as kube_client
+from kubernetes import config as kube_config
 
 logger = logging.getLogger("graphscope")
 
@@ -283,12 +282,6 @@ def get_groot_graph_from_local():
             client.submit(
                 "g.with('evaluationTimeout', 5000).V().limit(1)"
             ).all().result()
-            print(
-                "DEBUG: ",
-                client.submit("g.with('evaluationTimeout', 5000).V().valueMap().limit(10)")
-                .all()
-                .result(),
-            )
         except Exception as e:
             pass
         else:

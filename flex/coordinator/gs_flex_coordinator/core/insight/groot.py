@@ -106,6 +106,9 @@ class GrootClient(object):
     ) -> str:
         return f"{source_vertex_type}_{type_name}_{destination_vertex_type}"
 
+    def get_current_graph(self):
+        return self._graph
+
     def list_groot_graph(self) -> list:
         rlts = [self._graph.to_dict()]
         return rlts
