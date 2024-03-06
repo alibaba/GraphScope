@@ -19,6 +19,7 @@ package com.alibaba.graphscope.gremlin.antlr4x;
 import com.alibaba.graphscope.common.ir.Utils;
 import com.alibaba.graphscope.common.ir.runtime.proto.RexToProtoConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
+import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
@@ -270,6 +271,24 @@ public class GraphBuilderTest {
                     + " alias=[DEFAULT], fusedFilter=[[NOT(POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
                     + " _UTF-8'.*mar.*'))]], opt=[VERTEX])",
                 node.explain().trim());
+    }
+
+    // @.name not containing 'mar'
+    @Test
+    public void name_not_containing_expr_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RexNode expr =
+                builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                        .not(
+                                builder.call(
+                                        GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
+                                        builder.variable(null, "name"),
+                                        builder.literal(".*mar.*")));
+        RexToProtoConverter converter = new RexToProtoConverter(true, false, Utils.rexBuilder);
+        OuterExpression.Expression exprProto = expr.accept(converter);
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/name_not_containing_expr.json"),
+                JsonFormat.printer().print(exprProto));
     }
 
     @Test
