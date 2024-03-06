@@ -377,7 +377,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq + std::fmt::Display> DeleteGenera
             prefix
                 .clone()
                 .join("Person")
-                .join("batch_id=2012-11-29"),
+                .join(format!("batch_id={}", batch_id)),
             person_label,
         );
         self.person_set = self.persons.iter().map(|(_, id)| *id).collect();
@@ -390,7 +390,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq + std::fmt::Display> DeleteGenera
             prefix
                 .clone()
                 .join("Comment")
-                .join("batch_id=2012-11-29"),
+                .join(format!("batch_id={}", batch_id)),
             comment_label,
         );
         self.comment_set = self
@@ -407,7 +407,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq + std::fmt::Display> DeleteGenera
             prefix
                 .clone()
                 .join("Post")
-                .join("batch_id=2012-11-29"),
+                .join(format!("batch_id={}", batch_id)),
             post_label,
         );
         self.post_set = self.posts.iter().map(|(_, id)| *id).collect();
@@ -420,7 +420,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq + std::fmt::Display> DeleteGenera
             prefix
                 .clone()
                 .join("Forum")
-                .join("batch_id=2012-11-29"),
+                .join(format!("batch_id={}", batch_id)),
             forum_label,
         );
         self.forum_set = self.forums.iter().map(|(_, id)| *id).collect();
@@ -587,12 +587,13 @@ impl GraphModifier {
                                     let vertex_meta = parser.parse_vertex_meta(&record);
                                     if let Some((got_label, lid)) = graph
                                         .vertex_map
-                                        .get_internal_id(vertex_meta.global_id) {
-                                      if got_label == v_label_i as LabelId {
-                                          delete_set.insert(lid);
-                                      }
+                                        .get_internal_id(vertex_meta.global_id)
+                                    {
+                                        if got_label == v_label_i as LabelId {
+                                            delete_set.insert(lid);
+                                        }
                                     } else {
-                                      warn!("parse vertex record: {:?} when delete failed", &record);
+                                        warn!("parse vertex record: {:?} when delete failed", &record);
                                     }
                                 }
                             }

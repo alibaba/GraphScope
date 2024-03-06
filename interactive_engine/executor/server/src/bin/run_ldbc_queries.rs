@@ -14,18 +14,18 @@ use dlopen::wrapper::{Container, WrapperApi};
 use graph_index::types::Item;
 
 use pegasus::{Configuration, JobConf, ServerConf};
-use serde::{Deserialize, Serialize};
 use rpc_server::queries::rpc::RPCServerConfig;
+use serde::{Deserialize, Serialize};
 
-use std::fs::File;
-use std::io::{BufRead, BufReader};
+use bmcsr::graph::Direction;
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
 use bmcsr::schema::InputSchema;
-use bmcsr::graph::Direction;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 
-use bmcsr::types::LabelId;
 use bmcsr::traverse::traverse;
+use bmcsr::types::LabelId;
 use graph_index::GraphIndex;
 use lazy_static::lazy_static;
 
@@ -153,7 +153,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let mut graph_modifier = GraphModifier::new(&graph_raw);
         graph_modifier.skip_header();
-        let insert_schema = InputSchema::from_json_file(insert_schema_file_path, &graph.graph_schema).unwrap();
+        let insert_schema =
+            InputSchema::from_json_file(insert_schema_file_path, &graph.graph_schema).unwrap();
         graph_modifier
             .insert(&mut graph, &insert_schema)
             .unwrap();
@@ -163,12 +164,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         delete_generator.generate(&mut graph, batch_id.as_str());
 
         info!("delete schema file: {:?}", delete_schema_file_path);
-        let delete_schema = InputSchema::from_json_file(delete_schema_file_path, &graph.graph_schema).unwrap();
+        let delete_schema =
+            InputSchema::from_json_file(delete_schema_file_path, &graph.graph_schema).unwrap();
         graph_modifier
             .delete(&mut graph, &delete_schema)
             .unwrap();
 
-        let traverse_out = output_dir.clone().join("traverse");
+        let traverse_out = output_dir
+            .clone()
+            .join(format!("date-{}", batch_id));
         std::fs::create_dir_all(&traverse_out).unwrap();
         traverse(&graph, traverse_out.to_str().unwrap());
 
