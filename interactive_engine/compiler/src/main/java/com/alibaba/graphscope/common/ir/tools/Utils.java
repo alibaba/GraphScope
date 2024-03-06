@@ -31,7 +31,6 @@ import org.apache.calcite.util.Sarg;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Utils {
     public static RelDataType getOutputType(RelNode topNode) {
@@ -45,16 +44,20 @@ public class Utils {
             }
             inputs.addAll(cur.getInputs());
         }
-        Set<String> fieldNames = Sets.newHashSet();
-        List<RelDataTypeField> dedup =
-                outputFields.stream()
-                        .filter(
-                                k -> {
-                                    boolean notExist = !fieldNames.contains(k.getName());
-                                    fieldNames.add(k.getName());
-                                    return notExist;
-                                })
-                        .collect(Collectors.toList());
+        Set<String> uniqueNames = Sets.newHashSet();
+        // if field name is duplicated, we dedup it and keep the last one
+        List<RelDataTypeField> dedup = Lists.newArrayList();
+        for (int i = outputFields.size() - 1; i >= 0; i--) {
+            RelDataTypeField field = outputFields.get(i);
+            // specific implementation for gremlin `head`, DEFAULT can only denote the last field
+            if (field.getName() == AliasInference.DEFAULT_NAME && i != outputFields.size() - 1) {
+                continue;
+            }
+            if (!uniqueNames.contains(field.getName())) {
+                uniqueNames.add(field.getName());
+                dedup.add(0, field);
+            }
+        }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, dedup);
     }
 
