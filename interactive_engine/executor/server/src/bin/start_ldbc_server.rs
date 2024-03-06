@@ -11,7 +11,7 @@ use std::time::Instant;
 use bmcsr::graph_db::GraphDB;
 
 use rpc_server::queries;
-use rpc_server::queries::register::{PrecomputeApi, QueryApi, QueryRegister};
+use rpc_server::queries::register::{PrecomputeVertexApi, QueryApi, QueryRegister};
 use dlopen::wrapper::{Container, WrapperApi};
 use graph_index::types::Item;
 use graph_index::GraphIndex;

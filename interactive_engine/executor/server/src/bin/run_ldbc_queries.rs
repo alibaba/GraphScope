@@ -9,7 +9,7 @@ use std::path::PathBuf;
 use std::time::Instant;
 use structopt::StructOpt;
 
-use rpc_server::queries::register::{PrecomputeApi, QueryApi, QueryRegister};
+use rpc_server::queries::register::{PrecomputeVertexApi, PrecomputeEdgeApi, QueryApi, QueryRegister};
 use dlopen::wrapper::{Container, WrapperApi};
 use graph_index::types::Item;
 

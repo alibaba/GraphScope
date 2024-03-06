@@ -143,9 +143,10 @@ impl GraphIndex {
             .get_edge_index(edge_label, src_label, dst_label, index_name)
             .expect("index name not found in edge index");
         let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
-
         if let Some(edge_index) = self.incoming_edge_index.get_mut(&encode_label) {
             edge_index.add_index_batch(index, data);
+        } else {
+            panic!();
         }
         Ok(())
     }
@@ -158,9 +159,10 @@ impl GraphIndex {
             .get_edge_index(edge_label, src_label, dst_label, index_name)
             .expect("index name not found in edge index");
         let encode_label = encode_edge_index(src_label, edge_label, dst_label, index_label);
-
         if let Some(edge_index) = self.outgoing_edge_index.get_mut(&encode_label) {
             edge_index.add_index_batch(index, data);
+        } else {
+            panic!();
         }
         Ok(())
     }
