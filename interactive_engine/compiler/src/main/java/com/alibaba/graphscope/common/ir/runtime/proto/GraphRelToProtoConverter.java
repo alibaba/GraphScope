@@ -30,7 +30,6 @@ import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphGroupKeys;
 import com.alibaba.graphscope.common.ir.rel.type.order.GraphFieldCollation;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
-import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
@@ -308,11 +307,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(filter.getRowType(), isColumnId));
         if (isPartitioned) {
             Map<Integer, Set<GraphNameOrId>> tagColumns =
-                    Utils.extractTagColumnsFromVariables(
-                            filter.getCondition()
-                                    .accept(
-                                            new RexVariableAliasCollector<RexGraphVariable>(
-                                                    true, k -> k)));
+                    Utils.extractTagColumnsFromRexNodes(List.of(filter.getCondition()));
             if (preCacheEdgeProps) {
                 Utils.removeEdgeProperties(
                         com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(
@@ -334,20 +329,12 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                 GraphAlgebraPhysical.Project.newBuilder();
         projectBuilder.setIsAppend(project.isAppend());
         List<RelDataTypeField> fields = project.getRowType().getFieldList();
-        List<RexGraphVariable> allVariables = Lists.newArrayList();
+
         for (int i = 0; i < project.getProjects().size(); ++i) {
             OuterExpression.Expression expression =
                     project.getProjects()
                             .get(i)
                             .accept(new RexToProtoConverter(true, isColumnId, this.rexBuilder));
-            if (isPartitioned) {
-                allVariables.addAll(
-                        project.getProjects()
-                                .get(i)
-                                .accept(
-                                        new RexVariableAliasCollector<RexGraphVariable>(
-                                                true, k -> k)));
-            }
             int aliasId = fields.get(i).getIndex();
             GraphAlgebraPhysical.Project.ExprAlias.Builder projectExprAliasBuilder =
                     GraphAlgebraPhysical.Project.ExprAlias.newBuilder();
@@ -362,7 +349,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(project.getRowType(), isColumnId));
         if (isPartitioned) {
             Map<Integer, Set<GraphNameOrId>> tagColumns =
-                    Utils.extractTagColumnsFromVariables(allVariables);
+                    Utils.extractTagColumnsFromRexNodes(project.getProjects());
             if (preCacheEdgeProps) {
                 Utils.removeEdgeProperties(
                         com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(
@@ -436,7 +423,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                     GraphAlgebraPhysical.PhysicalOpr.Operator.newBuilder().setDedup(dedupBuilder));
             if (isPartitioned) {
                 Map<Integer, Set<GraphNameOrId>> tagColumns =
-                        Utils.extractTagColumnsFromVariables(keys.getVariables());
+                        Utils.extractTagColumnsFromRexNodes(keys.getVariables());
                 if (preCacheEdgeProps) {
                     Utils.removeEdgeProperties(
                             com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(
@@ -517,7 +504,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                                 .flatMap(k -> k.getOperands().stream())
                                 .collect(Collectors.toList()));
                 Map<Integer, Set<GraphNameOrId>> tagColumns =
-                        Utils.extractTagColumnsFromVariables(keysAndAggs);
+                        Utils.extractTagColumnsFromRexNodes(keysAndAggs);
                 if (preCacheEdgeProps) {
                     Utils.removeEdgeProperties(
                             com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(
@@ -554,7 +541,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         oprBuilder.addAllMetaData(Utils.physicalProtoRowType(dedupBy.getRowType(), isColumnId));
         if (isPartitioned) {
             Map<Integer, Set<GraphNameOrId>> tagColumns =
-                    Utils.extractTagColumnsFromVariables(dedupBy.getDedupByKeys());
+                    Utils.extractTagColumnsFromRexNodes(dedupBy.getDedupByKeys());
             if (preCacheEdgeProps) {
                 Utils.removeEdgeProperties(
                         com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(
@@ -596,7 +583,7 @@ public class GraphRelToProtoConverter extends GraphShuttle {
                             .setOrderBy(orderByBuilder));
             if (isPartitioned) {
                 Map<Integer, Set<GraphNameOrId>> tagColumns =
-                        Utils.extractTagColumnsFromVariables(
+                        Utils.extractTagColumnsFromRexNodes(
                                 collations.stream()
                                         .map(k -> ((GraphFieldCollation) k).getVariable())
                                         .collect(Collectors.toList()));
@@ -665,9 +652,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         if (isPartitioned) {
 
             Map<Integer, Set<GraphNameOrId>> leftTagColumns =
-                    Utils.extractTagColumnsFromVariables(leftKeys);
+                    Utils.extractTagColumnsFromRexNodes(leftKeys);
             Map<Integer, Set<GraphNameOrId>> rightTagColumns =
-                    Utils.extractTagColumnsFromVariables(rightKeys);
+                    Utils.extractTagColumnsFromRexNodes(rightKeys);
             if (preCacheEdgeProps) {
                 Utils.removeEdgeProperties(
                         com.alibaba.graphscope.common.ir.tools.Utils.getOutputType(join.getLeft()),

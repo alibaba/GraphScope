@@ -17,7 +17,7 @@
 package com.alibaba.graphscope.common.ir.runtime.proto;
 
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
-import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
+import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
@@ -638,25 +638,30 @@ public abstract class Utils {
         return GraphAlgebraPhysical.Repartition.newBuilder().setToAnother(shuffleBuilder).build();
     }
 
-    // extract tagColumns from a list of RexNode, and return e.g., {a.{name, age}, b.{weight}}}
-    public static Map<Integer, Set<GraphNameOrId>> extractTagColumnsFromVariables(
-            List<? extends RexNode> exprs) {
+    public static Map<Integer, Set<GraphNameOrId>> extractTagColumnsFromRexNodes(
+            List<RexNode> exprs) {
         return exprs.stream()
                 .map(
-                        k -> {
-                            if (k instanceof RexGraphVariable) {
-                                RexGraphVariable var = (RexGraphVariable) k;
-                                if (var.getProperty() != null
-                                        && (GraphProperty.Opt.ALL.equals(var.getProperty().getOpt())
-                                                || GraphProperty.Opt.KEY.equals(
-                                                        var.getProperty().getOpt()))) {
-                                    Pair<Integer, GraphNameOrId> result =
-                                            Pair.with(var.getAliasId(), var.getProperty().getKey());
-                                    return result;
-                                } else return null;
-                            } else return null;
-                        })
-                .filter(k -> k != null)
+                        expr ->
+                                expr.accept(
+                                        new RexVariableAliasCollector<Pair<Integer, GraphNameOrId>>(
+                                                true,
+                                                var -> {
+                                                    if (var.getProperty() != null
+                                                            && (GraphProperty.Opt.ALL.equals(
+                                                                            var.getProperty()
+                                                                                    .getOpt())
+                                                                    || GraphProperty.Opt.KEY.equals(
+                                                                            var.getProperty()
+                                                                                    .getOpt()))) {
+                                                        return Pair.with(
+                                                                var.getAliasId(),
+                                                                var.getProperty().getKey());
+
+                                                    } else return Pair.with(null, null);
+                                                })))
+                .flatMap(List::stream)
+                .filter(k -> k.getValue0() != null && k.getValue1() != null)
                 .collect(
                         Collectors.groupingBy(
                                 pair -> pair.getValue0(),
