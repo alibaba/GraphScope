@@ -133,7 +133,7 @@ rt_server -g /path/to/schema_config -d /path/to/data [-l /path/to/load_schema] [
     - If the work directory is empty, the query engine will load graph defined by the input description file, and generate an initial snapshot in work directory.
     - Otherwise, the query engine will recover by loading the initial snapshot and replaying update operations.
 - `-g` Specifies the schema description file.
-    - `storages/rt_mutable_graph/modern_graph/modern_graph.yaml` is an example of schema description file.
+    - `storages/rt_mutable_graph/modern_graph/graph.yaml` is an example of schema description file.
 - `-l` Specifies the bulk loading description file.
     - `storages/rt_mutable_graph/modern_graph/bulk_load.yaml` is an example of bulk loading description file, it defines the path of raw files and the mapping from raw files to vertex/edge labels.
 - `-s` Specifies the concurrency.
