@@ -83,11 +83,9 @@ public class GraphRelToProtoConverter extends GraphShuttle {
         this.isPartitioned =
                 !(PegasusConfig.PEGASUS_HOSTS.get(configs).split(",").length == 1
                         && PegasusConfig.PEGASUS_WORKER_NUM.get(configs) == 1);
-        this.preCacheEdgeProps =
-                this.isPartitioned
-                        ? true
-                        : false; // currently, since the store doesn't support get properties from
-        // edges, we need to precache edge properties.
+        // currently, since the store doesn't support get properties from edges, we always need to
+        // precache edge properties.
+        this.preCacheEdgeProps = true;
     }
 
     @Override

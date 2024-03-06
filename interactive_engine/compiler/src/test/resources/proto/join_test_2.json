@@ -74,6 +74,9 @@
                   "tables": [{
                     "id": 0
                   }],
+                  "columns": [{
+                    "name": "weight"
+                  }],
                   "sampleRatio": 1.0
                 },
                 "alias": 1,
@@ -196,6 +199,9 @@
                 "params": {
                   "tables": [{
                     "id": 1
+                  }],
+                  "columns": [{
+                    "name": "weight"
                   }],
                   "sampleRatio": 1.0
                 },
