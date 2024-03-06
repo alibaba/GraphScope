@@ -22,14 +22,17 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphStdOperatorTable;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
 import com.alibaba.graphscope.common.ir.tools.config.SourceConfig;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.utils.FileUtils;
 import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.alibaba.graphscope.gremlin.antlr4x.parser.GremlinAntlr4Parser;
 import com.alibaba.graphscope.gremlin.antlr4x.visitor.GraphBuilderVisitor;
+import com.google.common.collect.ImmutableList;
 import com.google.protobuf.util.JsonFormat;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rex.RexBuilder;
 import org.apache.calcite.rex.RexNode;
 import org.junit.Assert;
 import org.junit.Test;
@@ -669,5 +672,22 @@ public class GraphBuilderTest {
                     + "        GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
+    }
+
+    // ~id within [0, 72057594037927937]
+    @Test
+    public void id_in_list_expr_test() throws Exception {
+        GraphBuilder builder = Utils.mockGraphBuilder();
+        RexBuilder rexBuilder = Utils.rexBuilder;
+        RexNode expr =
+                rexBuilder.makeIn(
+                        builder.source(new SourceConfig(GraphOpt.Source.VERTEX))
+                                .variable(null, GraphProperty.ID_KEY),
+                        ImmutableList.of(builder.literal(0), builder.literal(72057594037927937L)));
+        OuterExpression.Expression exprProto =
+                expr.accept(new RexToProtoConverter(true, false, rexBuilder));
+        Assert.assertEquals(
+                FileUtils.readJsonFromResource("proto/id_in_list_expr.json"),
+                JsonFormat.printer().print(exprProto));
     }
 }
