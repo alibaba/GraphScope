@@ -248,12 +248,8 @@ With [Vineyard](https://github.com/v6d-io/v6d) as the distributed in-memory data
 To continue this tutorial, please ensure that you have a k8s-managed cluster and know the credentials for the cluster.
 (e.g., address of k8s API server, usually stored a `~/.kube/config` file.)
 
-Alternatively, you can set up a local k8s cluster for testing with [Kind](https://kind.sigs.k8s.io/). We provide a script for setup this environment.
-
-```bash
-# for usage, type -h
-./scripts/install_deps.sh --k8s
-```
+Alternatively, you can set up a local k8s cluster for testing with [Kind](https://kind.sigs.k8s.io/). 
+You can install and deploy Kind referring to [Quick Start](https://kind.sigs.k8s.io/docs/user/quick-start/);
 
 If you did not install the `graphscope` package in the above step, you can install a subset of the whole package with client functions only.
 

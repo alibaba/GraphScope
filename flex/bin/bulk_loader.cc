@@ -77,9 +77,19 @@ int main(int argc, char** argv) {
 
   double t = -grape::GetCurrentTime();
 
-  auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
-  auto loading_config =
-      gs::LoadingConfig::ParseFromYamlFile(schema, bulk_load_config_path);
+  auto schema_res = gs::Schema::LoadFromYaml(graph_schema_path);
+  if (!schema_res.ok()) {
+    LOG(ERROR) << "Fail to load graph schema file: "
+               << schema_res.status().error_message();
+    return -1;
+  }
+  auto loading_config_res = gs::LoadingConfig::ParseFromYamlFile(
+      schema_res.value(), bulk_load_config_path);
+  if (!loading_config_res.ok()) {
+    LOG(ERROR) << "Fail to parse loading config file: "
+               << loading_config_res.status().error_message();
+    return -1;
+  }
 
   std::filesystem::path data_dir_path(data_path);
   if (!std::filesystem::exists(data_dir_path)) {
@@ -92,7 +102,8 @@ int main(int argc, char** argv) {
   }
 
   auto loader = gs::LoaderFactory::CreateFragmentLoader(
-      data_dir_path.string(), schema, loading_config, parallelism);
+      data_dir_path.string(), schema_res.value(), loading_config_res.value(),
+      parallelism);
   loader->LoadFragment();
 
   t += grape::GetCurrentTime();
