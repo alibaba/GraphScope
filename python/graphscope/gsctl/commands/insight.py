@@ -18,13 +18,16 @@
 
 import click
 import yaml
-from graphscope.gsctl.impl import (create_edge_type, create_vertex_type,
-                                   delete_edge_type, delete_vertex_type,
-                                   get_datasource, import_datasource,
-                                   import_groot_schema, list_groot_graph,
+from graphscope.gsctl.impl import (create_edge_type,
+                                   create_groot_dataloading_job,
+                                   create_vertex_type, delete_edge_type,
+                                   delete_job_by_id, delete_vertex_type,
+                                   get_datasource, get_deployment_info,
+                                   get_job_by_id, get_node_status,
+                                   import_datasource, import_groot_schema,
+                                   list_groot_graph, list_jobs,
                                    unbind_edge_datasource,
-                                   unbind_vertex_datasource,
-                                   create_groot_dataloading_job)
+                                   unbind_vertex_datasource)
 from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
                                     terminal_display)
 
@@ -392,6 +395,93 @@ def job(filename):  # noqa: F811
         click.secho(f"Failed to create a job: {str(e)}", fg="red")
     else:
         click.secho(f"Create job {jobid} successfully.", fg="green")
+
+
+@get.command()
+def job():  # noqa: F81
+    """Display jobs in database"""
+
+    def _construct_and_display_data(jobs):
+        if not jobs:
+            click.secho("no job found in database.", fg="blue")
+            return
+        head = ["JOBID", "TYPE", "STATUS", "START_TIME", "END_TIME"]
+        data = [head]
+        for j in jobs:
+            data.append(
+                [
+                    j.job_id,
+                    j.type,
+                    j.status,
+                    j.start_time,
+                    str(j.end_time),
+                ]
+            )
+        terminal_display(data)
+
+    try:
+        jobs = list_jobs()
+    except Exception as e:
+        click.secho(f"Failed to list jobs: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(jobs)
+
+
+@describe.command()
+@click.argument("job_id", required=True)
+def job(job_id):  # noqa: F811
+    """Show details of job"""
+    try:
+        job = get_job_by_id(job_id)
+    except Exception as e:
+        click.secho(f"Failed to get job: {str(e)}", fg="red")
+    else:
+        click.secho(yaml.dump(job.to_dict()))
+
+
+@delete.command()
+@click.argument("job_id", required=True)
+def job(job_id):  # noqa: F811
+    """Cancel a job by id in database"""
+    try:
+        delete_job_by_id(job_id)
+    except Exception as e:
+        click.secho(f"Failed to delete job {job_id}: {str(e)}", fg="red")
+    else:
+        click.secho(f"Delete job {job_id} successfully.", fg="green")
+
+
+@get.command()
+def node():
+    """Display resource(cpu/memory) usage of nodes"""
+
+    def _construct_and_display_data(nodes):
+        head = ["HOSTNAME", "CPU_USAGE", "MEMORY_USAGE", "DISK_USAGE"]
+        data = [head]
+        for node in nodes:
+            data.append(
+                [
+                    node.node,
+                    f"{node.cpu_usage}%",
+                    f"{node.memory_usage}%",
+                    f"{node.disk_usage}%",
+                ]
+            )
+
+        terminal_display(data)
+
+    try:
+        deployment_info = get_deployment_info()
+        if deployment_info.cluster_type != "HOSTS":
+            click.secho(
+                f"Cluster type {deployment_info.cluster_type} is not support yet."
+            )
+            return
+        nodes = get_node_status()
+    except Exception as e:
+        click.secho(f"Failed to get node status: {str(e)}", fg="red")
+    else:
+        _construct_and_display_data(nodes)
 
 
 if __name__ == "__main__":

@@ -1101,6 +1101,7 @@ components:
   schemas:
     ApiResponse:
       type: string
+      example: operation successful
     Connection:
       x-body-name: connection
       type: object
@@ -1126,6 +1127,7 @@ components:
       properties:
         name:
           type: string
+          example: mocking_graph
         store_type:
           type: string
           enum:
@@ -1158,16 +1160,29 @@ components:
         type_id:
           type: integer
           format: int32
+          example: 0
         type_name:
           type: string
+          example: person
         properties:
           type: array
           items:
             $ref: '#/components/schemas/Property'
+          example:
+            - property_id: 0
+              property_name: id
+              property_type: DT_STRING
+            - property_id: 1
+              property_name: name
+              property_type: DT_STRING
+            - property_id: 2
+              property_name: age
+              property_type: DT_SIGNED_INT32
         primary_keys:
           type: array
           items:
             type: string
+            example: ["id"]
     EdgeType:
       x-body-name: edge_type
       type: object
@@ -1175,8 +1190,10 @@ components:
         type_id:
           type: integer
           format: int32
+          example: 0
         type_name:
           type: string
+          example: knows
         vertex_type_pair_relations:
           type: array
           items:
@@ -1203,10 +1220,18 @@ components:
                       - ONLY_IN
                       - ONLY_OUT
                       - BOTH_OUT_IN
+          example:
+            - source_vertex: person
+              destination_vertex: person
+              relation: MANY_TO_MANY
         properties:
           type: array
           items:
             $ref: '#/components/schemas/Property'
+          example:
+            - property_id: 0
+              property_name: weight
+              property_type: DT_DOUBLE
     Property:
       x-body-name: property
       type: object
@@ -1233,17 +1258,22 @@ components:
       properties:
         name:
           type: string
+          example: mocking_procedure
         bound_graph:
           type: string
+          example: mocking_graph
         description:
           type: string
+          example: This a test stored procedure
         type:
           type: string
           enum:
            - cpp
            - cypher
+          example: cypher
         query:
           type: string
+          example: MATCH (n:Person) return n;
         enable:
           type: boolean
         runnable:
@@ -1257,6 +1287,11 @@ components:
                 type: string
               type:
                 type: string
+          example:
+            - name: param1
+              type: DT_DOUBLE
+            - name: param2
+              type: DT_STRING
         returns:
           type: array
           items:
@@ -1266,26 +1301,34 @@ components:
                 type: string
               type:
                 type: string
+          example:
+            - name: rlt
+              type: DT_DOUBLE
     DeploymentInfo:
       x-body-name: deployment_info
       type: object
       properties:
         name:
           type: string
+          example: demo
         cluster_type:
           type: string
           enum:
             - HOSTS
             - KUBERNETES
+          example: HOSTS
         version:
           type: string
+          example: 0.26.0
         solution:
           type: string
           enum:
             - INTERACTIVE
             - GRAPHSCOPE_INSIGHT
+          example: INTERACTIVE
         creation_time:
           type: string
+          example: 2024-02-29 12:00:00
         graphs_info:
           type: object
           additionalProperties:
@@ -1293,12 +1336,16 @@ components:
             properties:
               name:
                 type: string
+                example: mocking_graph
               creation_time:
                 type: string
+                example: 2024-02-29 12:00:00
               update_time:
                 type: string
+                example: 2024-02-29 14:00:00
               last_dataloading_time:
                 type: string
+                example: 2024-02-29 16:00:00
     DeploymentStatus:
       x-body-name: deployment_status
       type: object
@@ -1343,56 +1390,71 @@ components:
       properties:
         node:
           type: string
+          example: node1
         cpu_usage:
           type: number
           format: double
+          example: 80
         memory_usage:
           type: number
           format: double
+          example: 70
         disk_usage:
           type: number
           format: double
+          example: 99
     ServiceStatus:
       x-body-name: service_status
       type: object
       properties:
         status:
           type: string
+          example: running
         graph_name:
           description: which graph is serving now
           type: string
+          example: mocking_graph
         sdk_endpoints:
           type: object
           properties:
             cypher:
               type: string
+              example: neo4j://111.111.111.111:7687
             gremlin:
               type: string
+              example: ws://111.111.111.111:12312/gremlin
             hqps:
               type: string
+              example: neo4j://111.111.111.111:10000
             grpc:
               type: string
+              example: 111.111.111.111:55556
     AlertRule:
       type: object
       x-body-name: alert_rule
       properties:
         name:
           type: string
+          example: HighDiskUtilization
         severity:
           type: string
           enum:
             - warning
             - emergency
+          example: warning
         metric_type:
           type: string
           enum:
             - node
             - service
+          example: node
         conditions_description:
           type: string
+          example: disk_utilization>80
         frequency:
           type: integer
           description: (mins)
+          example: 1
         enable:
           type: boolean
     AlertMessage:
@@ -1402,24 +1464,31 @@ components:
         message_id:
           type: string
           description: Generated in server side
+          example: MESSAGE_ABCDEF123GHIJKL456
         alert_name:
           type: string
+          example: HighDiskUtilization
         severity:
           type: string
           enum:
             - warning
             - emergency
+          example: warning
         metric_type:
           type: string
           enum:
             - node
             - service
+          example: node
         target:
           type: array
           items:
             type: string
+          example:
+            - node1
         trigger_time:
           type: string
+          example: 2024-03-1 12:00:00
         status:
           type: string
           enum:
@@ -1428,6 +1497,7 @@ components:
             - dealing
         message:
           type: string
+          example: Disk usage node1 43.63%, exceeds threshold
     AlertReceiver:
       type: object
       x-body-name: alert_receiver
@@ -1439,12 +1509,17 @@ components:
         receiver_id:
           type: string
           description: Generated in server side
+          example: RECEIVER_ABCDEF123GHIJKL456
         webhook_url:
           type: string
+          example: "http://test/webhook/url.com"
         at_user_ids:
           type: array
           items:
             type: string
+          example:
+            - 111111
+            - 222222
         is_at_all:
           type: boolean
         enable:
@@ -1458,6 +1533,7 @@ components:
       properties:
         graph:
           type: string
+          example: mocking_graph
         loading_config:
           type: object
           properties:
@@ -1473,11 +1549,13 @@ components:
               enum:
                 - init
                 - overwrite
+              example: overwrite
             format:
               type: object
               properties:
                 type:
                   type: string
+                  example: csv
                 metadata:
                   type: object
                   additionalProperties: true
@@ -1495,10 +1573,13 @@ components:
       properties:
         type_name:
           type: string
+          example: person
         inputs:
           type: array
           items:
             type: string
+          example:
+            - /home/graphscope/person.csv
         column_mappings:
           type: array
           items:
@@ -1513,14 +1594,19 @@ components:
           properties:
             edge:
               type: string
+              example: knows
             source_vertex:
               type: string
+              example: person
             destination_vertex:
               type: string
+              example: person
         inputs:
           type: array
           items:
             type: string
+          example:
+            - /home/graphscope/person_knows_person.csv
         source_vertex_mappings:
           type: array
           items:
@@ -1535,6 +1621,7 @@ components:
                     format: int32
                   name:
                     type: string
+                    example: column_name
         destination_vertex_mappings:
           type: array
           items:
@@ -1549,6 +1636,7 @@ components:
                     format: int32
                   name:
                     type: string
+                    example: column_name
         column_mappings:
           type: array
           items:
@@ -1565,17 +1653,21 @@ components:
               format: int32
             name:
               type: string
+              example: column_name
         property:
           type: string
           description: must align with the schema
+          example: id
     JobStatus:
       type: object
       x-body-name: job_status
       properties:
         job_id:
           type: string
+          example: JOB_XKDJEJ27827HDJHDJ
         type:
           type: string
+          example: Data Import
         status:
           type: string
           enum:
@@ -1586,14 +1678,19 @@ components:
             - WAITING
         start_time:
           type: string
+          example: 2024-02-29 14:00:00
         end_time:
           type: string
+          example: null
         log:
           type: string
           description: URL or log string
+          example: logging ...
         detail:
           type: object
           additionalProperties: true
+          example:
+            - graph_name: mocking_graph
     VertexDataSource:
       x-body-name: vertex_data_source
       type: object

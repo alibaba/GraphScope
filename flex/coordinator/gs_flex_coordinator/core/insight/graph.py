@@ -145,6 +145,10 @@ class GrootGraph(Graph):
         self._schema = self._g.schema().to_dict()
         return self._schema
 
+    @property
+    def conn(self):
+        return self._conn
+
     def _fetch_endpoints_impl(self):
         if CLUSTER_TYPE != "K8S":
             return
@@ -188,6 +192,14 @@ class GrootGraph(Graph):
                     "password": GROOT_PASSWORD,
                 }
                 logger.info(f"Update frontend endpoints: {str(endpoints)}")
+
+    def get_vertex_primary_key(self, vertex_type: str) -> str:
+        for v in self._schema["vertices"]:
+            if vertex_type == v["label"]:
+                for p in v["properties"]:
+                    if p["is_primary_key"]:
+                        return p["name"]
+        raise RuntimeError(f"Vertex type {vertex_type} not exists")
 
     def import_schema(self, data: dict):
         schema = self._g.schema()
@@ -273,7 +285,7 @@ def get_groot_graph_from_local():
             ).all().result()
             print(
                 "DEBUG: ",
-                client.submit("g.with('evaluationTimeout', 5000).E().limit(10)")
+                client.submit("g.with('evaluationTimeout', 5000).V().valueMap().limit(10)")
                 .all()
                 .result(),
             )

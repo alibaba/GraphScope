@@ -44,6 +44,8 @@ class GrootClient(object):
         self._datasource_pickle_path = os.path.join(
             self._workspace, "datasource.pickle"
         )
+        # job
+        self._job_scheduler = {}
         # job status
         self._job_status = {}
         # pickle path
@@ -261,9 +263,25 @@ class GrootClient(object):
         dataloading_job_scheduler = DataloadingJobScheduler(
             job_config=job_config,
             data_source=self._data_source,
+            job_scheduler=self._job_scheduler,
             job_status=self._job_status,
+            graph=self._graph,
         )
         return dataloading_job_scheduler.schedulerid
+
+    def get_job_by_id(self, job_id: str) -> dict:
+        if job_id not in self._job_status:
+            raise RuntimeError(f"Job {job_id} not found")
+        return self._job_status[job_id].to_dict()
+
+    def delete_job_by_id(self, job_id: str) -> str:
+        if job_id not in self._job_status:
+            raise RuntimeError(f"Job {job_id} not found")
+        if job_id in self._job_scheduler:
+            # we don't have some processes in case of restart the coordinator
+            # some processes will not exist if the coordinator is restart
+            self._job_scheduler[job_id].cancel()
+        return f"Submit cancellation job successfully"
 
 
 def init_groot_client():
