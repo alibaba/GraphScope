@@ -58,6 +58,26 @@ where
         }
     }
 
+    pub fn remove_vertex(&mut self, label: LabelId, internal_id: &I) {
+        let internal_id = internal_id.index();
+        if internal_id < self.labeled_num[label as usize] {
+            if self.index_to_global_id[label as usize].len() <= internal_id {
+                return;
+            }
+            let global_id = self.index_to_global_id[label as usize][internal_id].clone();
+            self.global_id_to_index.remove(&global_id);
+            self.index_to_global_id[label as usize][internal_id] = <G as IndexType>::max();
+        } else {
+            let index = <I as IndexType>::max().index() - internal_id - 1;
+            if self.index_to_corner_global_id[label as usize].len() <= index {
+                return;
+            }
+            let global_id = self.index_to_corner_global_id[label as usize][index].clone();
+            self.global_id_to_index.remove(&global_id);
+            self.index_to_corner_global_id[label as usize][index] = <G as IndexType>::max();
+        }
+    }
+
     pub fn add_vertex(&mut self, global_id: G, label: LabelId) -> I {
         assert_eq!(label, LDBCVertexParser::get_label_id(global_id));
 

@@ -2,18 +2,19 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 use std::time::Instant;
-use bmcsr::graph::Direction;
 
 use dlopen::wrapper::{Container, WrapperApi};
-use graph_index::types::{ArrayData, DataType as IndexDataType, Item};
-use graph_index::GraphIndex;
+use serde::{Deserialize, Serialize};
+
+use bmcsr::graph::Direction;
 use bmcsr::graph_db::GraphDB;
 use bmcsr::types::LabelId;
+use graph_index::types::{ArrayData, DataType as IndexDataType, Item};
+use graph_index::GraphIndex;
 use pegasus::api::*;
 use pegasus::errors::BuildJobError;
 use pegasus::result::ResultSink;
-use pegasus::{Configuration, JobConf, ServerConf};
-use serde::{Deserialize, Serialize};
+use pegasus::{JobConf, ServerConf};
 
 #[derive(WrapperApi)]
 pub struct QueryApi {
@@ -53,7 +54,10 @@ pub struct PrecomputeEdgeApi {
         src_label: Option<LabelId>,
         dst_label: Option<LabelId>,
     ) -> Box<
-        dyn Fn(&mut Source<i32>, ResultSink<(Vec<usize>, Vec<ArrayData>, Vec<usize>, Vec<ArrayData>)>) -> Result<(), BuildJobError>,
+        dyn Fn(
+            &mut Source<i32>,
+            ResultSink<(Vec<usize>, Vec<ArrayData>, Vec<usize>, Vec<ArrayData>)>,
+        ) -> Result<(), BuildJobError>,
     >,
 }
 
@@ -111,12 +115,18 @@ impl QueryRegister {
         self.query_map.insert(query_name, lib);
     }
 
-    fn register_vertex_precompute(&mut self, query_name: String, setting: PrecomputeSetting, lib: Container<PrecomputeVertexApi>) {
-        self.precompute_vertex_map.insert(query_name, (setting, lib));
+    fn register_vertex_precompute(
+        &mut self, query_name: String, setting: PrecomputeSetting, lib: Container<PrecomputeVertexApi>,
+    ) {
+        self.precompute_vertex_map
+            .insert(query_name, (setting, lib));
     }
 
-    fn register_edge_precompute(&mut self, query_name: String, setting: PrecomputeSetting, lib: Container<PrecomputeEdgeApi>) {
-        self.precompute_edge_map.insert(query_name, (setting, lib));
+    fn register_edge_precompute(
+        &mut self, query_name: String, setting: PrecomputeSetting, lib: Container<PrecomputeEdgeApi>,
+    ) {
+        self.precompute_edge_map
+            .insert(query_name, (setting, lib));
     }
 
     pub fn load(&mut self, config_path: &PathBuf) {
@@ -126,11 +136,20 @@ impl QueryRegister {
             for precompute in precomputes {
                 let lib_path = precompute.path.clone();
                 if precompute.precompute_type == "vertex" {
-                    let libc: Container<PrecomputeVertexApi> = unsafe { Container::load(lib_path) }.unwrap();
-                    self.register_vertex_precompute(precompute.precompute_name.clone(), precompute.clone(), libc);
+                    let libc: Container<PrecomputeVertexApi> =
+                        unsafe { Container::load(lib_path) }.unwrap();
+                    self.register_vertex_precompute(
+                        precompute.precompute_name.clone(),
+                        precompute.clone(),
+                        libc,
+                    );
                 } else {
                     let libc: Container<PrecomputeEdgeApi> = unsafe { Container::load(lib_path) }.unwrap();
-                    self.register_edge_precompute(precompute.precompute_name.clone(), precompute.clone(), libc);
+                    self.register_edge_precompute(
+                        precompute.precompute_name.clone(),
+                        precompute.clone(),
+                        libc,
+                    );
                 }
             }
         }
@@ -146,17 +165,22 @@ impl QueryRegister {
         self.query_map.get(query_name)
     }
 
-    pub fn get_precompute_vertex(&self, precompute_name: &String) -> Option<&(PrecomputeSetting, Container<PrecomputeVertexApi>)> {
+    pub fn get_precompute_vertex(
+        &self, precompute_name: &String,
+    ) -> Option<&(PrecomputeSetting, Container<PrecomputeVertexApi>)> {
         self.precompute_vertex_map.get(precompute_name)
     }
 
     pub fn precompute_names(&self) -> Vec<String> {
-        self.precompute_vertex_map.keys().cloned().collect()
+        self.precompute_vertex_map
+            .keys()
+            .cloned()
+            .collect()
     }
 
-    pub fn run_precomputes(&self, graph: &GraphDB<usize, usize>, graph_index: &mut GraphIndex, worker_num: u32)
-    {
-
+    pub fn run_precomputes(
+        &self, graph: &GraphDB<usize, usize>, graph_index: &mut GraphIndex, worker_num: u32,
+    ) {
         for (i, (name, (setting, libc))) in self.precompute_vertex_map.iter().enumerate() {
             let start = Instant::now();
 
@@ -197,7 +221,7 @@ impl QueryRegister {
                         dst_label,
                     )
                 })
-                    .expect("submit precompute failure")
+                .expect("submit precompute failure")
             };
             let mut result_vec = vec![];
             for x in result {
@@ -206,12 +230,14 @@ impl QueryRegister {
             }
             for (index_set, data_set) in result_vec {
                 for i in 0..properties_size {
-                    graph_index.add_vertex_index_batch(
-                        label,
-                        &properties_info[i].0,
-                        &index_set,
-                        data_set[i].as_ref(),
-                    ).unwrap();
+                    graph_index
+                        .add_vertex_index_batch(
+                            label,
+                            &properties_info[i].0,
+                            &index_set,
+                            data_set[i].as_ref(),
+                        )
+                        .unwrap();
                 }
             }
             println!(
@@ -237,29 +263,43 @@ impl QueryRegister {
                 let data_type = graph_index::types::str_to_data_type(&setting.properties[i].data_type);
                 properties_info.push((index_name, data_type));
             }
-            let oe_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Outgoing);
+            let oe_property_size = graph.get_max_edge_offset(
+                src_label.unwrap(),
+                label,
+                dst_label.unwrap(),
+                Direction::Outgoing,
+            );
             for i in 0..properties_info.len() {
-                graph_index.init_outgoing_edge_index(
-                    properties_info[i].0.clone(),
-                    src_label.unwrap(),
-                    dst_label.unwrap(),
-                    label,
-                    properties_info[i].1.clone(),
-                    Some(oe_property_size),
-                    Some(Item::Int32(0)),
-                ).unwrap();
+                graph_index
+                    .init_outgoing_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(oe_property_size),
+                        Some(Item::Int32(0)),
+                    )
+                    .unwrap();
             }
-            let ie_property_size = graph.get_max_edge_offset(src_label.unwrap(), label, dst_label.unwrap(), Direction::Incoming);
+            let ie_property_size = graph.get_max_edge_offset(
+                src_label.unwrap(),
+                label,
+                dst_label.unwrap(),
+                Direction::Incoming,
+            );
             for i in 0..properties_info.len() {
-                graph_index.init_incoming_edge_index(
-                    properties_info[i].0.clone(),
-                    src_label.unwrap(),
-                    dst_label.unwrap(),
-                    label,
-                    properties_info[i].1.clone(),
-                    Some(ie_property_size),
-                    Some(Item::Int32(0)),
-                ).unwrap();
+                graph_index
+                    .init_incoming_edge_index(
+                        properties_info[i].0.clone(),
+                        src_label.unwrap(),
+                        dst_label.unwrap(),
+                        label,
+                        properties_info[i].1.clone(),
+                        Some(ie_property_size),
+                        Some(Item::Int32(0)),
+                    )
+                    .unwrap();
             }
             let result = {
                 pegasus::run(conf.clone(), || {
@@ -274,31 +314,36 @@ impl QueryRegister {
                         dst_label,
                     )
                 })
-                    .expect("submit precompute failure")
+                .expect("submit precompute failure")
             };
             let mut result_vec = vec![];
             for x in result {
-                let (in_index_set, in_data_set, out_index_set, out_data_set) = x.expect("Fail to get result");
+                let (in_index_set, in_data_set, out_index_set, out_data_set) =
+                    x.expect("Fail to get result");
                 result_vec.push((in_index_set, in_data_set, out_index_set, out_data_set));
             }
             for (in_index_set, in_data_set, out_index_set, out_data_set) in result_vec {
                 for i in 0..properties_size {
-                    graph_index.add_outgoing_edge_index_batch(
-                        src_label.unwrap(),
-                        label,
-                        dst_label.unwrap(),
-                        &properties_info[i].0,
-                        &out_index_set,
-                        out_data_set[i].as_ref(),
-                    ).unwrap();
-                    graph_index.add_incoming_edge_index_batch(
-                        src_label.unwrap(),
-                        label,
-                        dst_label.unwrap(),
-                        &properties_info[i].0,
-                        &in_index_set,
-                        in_data_set[i].as_ref(),
-                    ).unwrap();
+                    graph_index
+                        .add_outgoing_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &out_index_set,
+                            out_data_set[i].as_ref(),
+                        )
+                        .unwrap();
+                    graph_index
+                        .add_incoming_edge_index_batch(
+                            src_label.unwrap(),
+                            label,
+                            dst_label.unwrap(),
+                            &properties_info[i].0,
+                            &in_index_set,
+                            in_data_set[i].as_ref(),
+                        )
+                        .unwrap();
                 }
             }
             println!(

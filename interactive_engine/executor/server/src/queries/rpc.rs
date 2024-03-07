@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::error::Error;
-use std::io::Write;
 use std::net::SocketAddr;
 use std::path::PathBuf;
 use std::pin::Pin;
@@ -9,26 +8,25 @@ use std::sync::{Arc, RwLock};
 use std::task::{Context, Poll};
 use std::time::Duration;
 
+use futures::Stream;
+use hyper::server::accept::Accept;
+use hyper::server::conn::{AddrIncoming, AddrStream};
+use serde::Deserialize;
+use tokio::sync::mpsc::UnboundedSender;
+use tokio_stream::wrappers::UnboundedReceiverStream;
+use tonic::transport::Server;
+use tonic::{Request, Response, Status};
+
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
 use bmcsr::schema::InputSchema;
 use bmcsr::traverse::traverse;
-use dlopen::wrapper::{Container, WrapperApi};
-use futures::Stream;
 use graph_index::GraphIndex;
-use hyper::server::accept::Accept;
-use hyper::server::conn::{AddrIncoming, AddrStream};
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::result::{FromStreamExt, ResultSink};
-use pegasus::{cancel_job, Configuration, Data, JobConf, ServerConf};
+use pegasus::{Configuration, JobConf, ServerConf};
 use pegasus_network::config::ServerAddr;
-use serde::Deserialize;
-use tokio::sync::mpsc::UnboundedSender;
-use tokio_stream::wrappers::UnboundedReceiverStream;
-use tonic::codegen::Body;
-use tonic::transport::Server;
-use tonic::{Code, Request, Response, Status};
 
 use crate::generated::protocol as pb;
 use crate::queries::register::QueryRegister;

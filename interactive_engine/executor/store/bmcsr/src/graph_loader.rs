@@ -89,7 +89,7 @@ pub struct GraphLoader<
 
 impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> GraphLoader<G, I> {
     pub fn new<D: AsRef<Path>>(
-        input_dir: D, output_path: &str, input_schema_file: D, graph_schema_file: D, work_id: usize,
+        input_dir: D, output_path: D, input_schema_file: D, graph_schema_file: D, work_id: usize,
         peers: usize,
     ) -> GraphLoader<G, I> {
         let graph_schema =
@@ -101,7 +101,7 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
         let vertex_label_num = graph_schema.vertex_type_to_id.len();
         let vertex_map = VertexMap::<G, I>::new(vertex_label_num);
 
-        let output_dir = PathBuf::from_str(output_path).unwrap();
+        let output_dir = output_path.as_ref();
         let partition_dir = output_dir
             .join(DIR_BINARY_DATA)
             .join(format!("partition_{}", work_id));

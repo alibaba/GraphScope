@@ -785,6 +785,18 @@ impl GraphModifier {
             }
         }
 
+        for v_label_i in 0..vertex_label_num {
+            let delete_set = &delete_sets[v_label_i as usize];
+            if delete_set.is_empty() {
+                continue;
+            }
+            for v in delete_set.iter() {
+                graph
+                    .vertex_map
+                    .remove_vertex(v_label_i as LabelId, v);
+            }
+        }
+
         Ok(())
     }
 
