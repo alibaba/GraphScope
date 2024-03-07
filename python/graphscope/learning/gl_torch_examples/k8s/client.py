@@ -62,8 +62,7 @@ def run_client_proc(
     glt_graph, group_master: str,
     num_servers: int, num_clients: int, client_rank: int, server_rank_list: List[int],
     dataset_name: str, epochs: int, batch_size: int, 
-    training_pg_master_port: int, train_loader_master_port: int,
-    test_loader_master_port: int
+    training_pg_master_port: int,
 ):
 
     print("-- Initializing client ...")
@@ -73,7 +72,8 @@ def run_client_proc(
         client_rank=client_rank,
         master_addr=glt_graph.master_addr,
         master_port=glt_graph.server_client_master_port,
-        num_rpc_threads=1,
+        num_rpc_threads=4,
+        client_group_name="k8s_glt_client",
         is_dynamic=True,
     )
 
@@ -107,7 +107,6 @@ def run_client_proc(
             prefetch_size=1,
             glt_graph=glt_graph,
             workload_type="train",
-            id_select=glt.data.v6d_id_select
         ),
     )
 
@@ -130,7 +129,6 @@ def run_client_proc(
             prefetch_size=1,
             glt_graph=glt_graph,
             workload_type="test",
-            id_select=glt.data.v6d_id_select
         ),
     )
 
@@ -274,6 +272,5 @@ if __name__ == '__main__':
         num_servers, num_clients, client_rank,
         [server_rank for server_rank in range(num_servers)],
         args.dataset, args.epochs, args.batch_size,
-        args.training_pg_master_port, args.train_loader_master_port,
-        args.test_loader_master_port
+        args.training_pg_master_port
     )

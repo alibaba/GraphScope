@@ -15,10 +15,10 @@ spec:
               image: registry.cn-hongkong.aliyuncs.com/graphscope/graphlearn-torch-client:0.26.0a20240115-x86_64
               imagePullPolicy: IfNotPresent
               command:
-                - /bin/bash
+                - bash
                 - -c
                 - |- 
-                  python3 client.py --node_rank 0 --master_addr ${MASTER_ADDR} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
+                  python3 -c "import time;time.sleep(1800)"
               volumeMounts:
               - mountPath: /dev/shm
                 name: cache-volume
@@ -37,10 +37,10 @@ spec:
               image: registry.cn-hongkong.aliyuncs.com/graphscope/graphlearn-torch-client:0.26.0a20240115-x86_64
               imagePullPolicy: IfNotPresent
               command:
-                - /bin/bash
+                - bash
                 - -c
                 - |-
-                  python3 client.py --node_rank $((${MY_POD_NAME: -1}+1)) --master_addr ${MASTER_ADDR} --group_master ${GROUP_MASTER} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
+                  python3 -c "import time;time.sleep(1800)"
               env:
                 - name: GROUP_MASTER
                   value: pytorch-simple-master-0

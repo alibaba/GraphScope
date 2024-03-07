@@ -15,7 +15,7 @@ sess = gs.session(
     vineyard_shared_mem="8Gi",
     k8s_image_pull_policy='IfNotPresent',
     k8s_image_tag="0.26.0a20240115-x86_64",
-    num_workers=3,
+    num_workers=2,
 )
 g = load_ogbn_arxiv(sess=sess, prefix="/dataset/ogbn_arxiv")
 print(f"here {g.fragments}, {g.vineyard_id}")
