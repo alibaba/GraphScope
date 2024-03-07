@@ -18,45 +18,189 @@
 
 import os
 
+import pytest
+
 from graphscope.framework.graph import Graph
 
 graphar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
+graphar_temp_dir = os.path.expandvars("${TMPDIR}")
 
 
-def test_load_from_graphar(graphscope_session):
-    graph_yaml = os.path.join(
-        graphar_test_repo_dir, "graphar/ldbc_sample/parquet/ldbc_sample.graph.yml"
+def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session):
+    output_dir = graphar_temp_dir + "graphar/"
+    r = ldbc_graph.save_to(
+        output_dir,
+        format="graphar",
+        graphar_graph_name="ldbc_sample",
+        graphar_file_type="parquet",
+        graphar_vertex_chunk_size=1000000,
+        graphar_edge_chunk_size=1000000,
     )
-    graph_yaml_path = "graphar+file://" + graph_yaml
-    print(graph_yaml_path)
-    g = Graph.load_from(graph_yaml_path, graphscope_session)
-    assert g.schema is not None
+    assert r == {
+        "type": "graphar",
+        "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
+    }
+    g = Graph.load_from(r["URI"], graphscope_session)
+    assert g.schema.to_dict() == ldbc_graph.schema.to_dict()
     del g
 
 
-def test_save_to_graphar(ldbc_graph):
-    graphar_options = {
-        "graph_name": "ldbc_sample",
-        "file_type": "orc",
-        "vertex_block_size": 256,
-        "edge_block_size": 1024,
+def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
+    output_dir = graphar_temp_dir + "graphar_subgraph/"
+    selector = {
+        "vertices": {
+            "person": ["id", "firstName", "lastName"],
+            "organisation": ["name", "type"],
+        },
+        "edges": {
+            "studyAt": ["classYear"],
+            "workAt": ["workFrom"],
+        },
     }
-    ldbc_graph.save_to("/tmp/", format="graphar", graphar_options=graphar_options)
 
-def test_save_and_load_in_local_with_graphar(ldbc_graph, graphscope_session):
-    graphar_options = {
-        "graph_name": "ldbc_sample",
-        "file_type": "parquet",
-        "vertex_block_size": 256,
-        "edge_block_size": 1024,
-        "store_in_local": True,  # save to local file system
+    r = ldbc_graph.save_to(
+        "file://" + output_dir,
+        format="graphar",
+        selector=selector,
+        graphar_graph_name="ldbc_sample",
+        graphar_file_type="orc",
+        graphar_vertex_chunk_size=256,
+        graphar_edge_chunk_size=1024,
+    )
+    assert r == {
+        "type": "graphar",
+        "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
     }
-    ldbc_graph.save_to("/tmp/", format="graphar", graphar_options=graphar_options)
+    g = Graph.load_from(r["URI"])
+    assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
+    assert (
+        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+    )
+    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert (
+        g.schema.vertex_properties_num("person") == 3
+        and g.schema.vertex_properties_num("organisation") == 2
+    )
+    assert (
+        g.schema.edge_properties_num("studyAt") == 1
+        and g.schema.edge_properties_num("workAt") == 1
+    )
+    del g
 
-    # load from local file system
-    storage_options = {
-        "store_in_local": True
-        "vertex_label": ["person"],
-        "edge_label": [("person", "knows", "person")],
+
+def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
+    output_dir = graphar_temp_dir + "graphar_subgraph2/"
+    selector = {
+        "vertices": {
+            "person": ["id", "firstName", "lastName"],
+            "organisation": ["name", "type"],
+        },
+        "edges": {
+            "studyAt": [],
+            "workAt": [],
+        },
     }
-    g = Graph.load_from("graphar+file:///tmp/ldbc_sample.graph.yaml", graphscope_session, storage_options=storage_options)
+
+    r = ldbc_graph.save_to(
+        output_dir,
+        format="graphar",
+        selector=selector,
+        graphar_graph_name="ldbc_sample",
+        graphar_file_type="orc",
+        graphar_vertex_chunk_size=256,
+        graphar_edge_chunk_size=1024,
+    )
+    assert r == {
+        "type": "graphar",
+        "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
+    }
+    g = Graph.load_from(r["URI"])
+    assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
+    assert (
+        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+    )
+    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert (
+        g.schema.vertex_properties_num("person") == 3
+        and g.schema.vertex_properties_num("organisation") == 2
+    )
+    assert (
+        g.schema.edge_properties_num("studyAt") == 0
+        and g.schema.edge_properties_num("workAt") == 0
+    )
+    del g
+
+
+def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
+    output_dir = graphar_temp_dir + "graphar_subgraph3/"
+    selector = {
+        "vertices": {
+            "person": ["id", "firstName", "lastName"],
+            "organisation": None,
+        },
+        "edges": {
+            "studyAt": None,
+            "workAt": None,
+        },
+    }
+
+    r = ldbc_graph.save_to(
+        output_dir,
+        format="graphar",
+        selector=selector,
+        graphar_graph_name="ldbc_sample",
+        graphar_file_type="orc",
+        graphar_vertex_chunk_size=256,
+        graphar_edge_chunk_size=1024,
+    )
+    assert r == {
+        "type": "graphar",
+        "URI": "graphar+file://${}ldbc_sample.graph.yaml".format(output_dir),
+    }
+    g = Graph.load_from(r["URI"])
+    assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
+    assert (
+        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+    )
+    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert (
+        g.schema.vertex_properties_num("person") == 3
+        and g.schema.vertex_properties_num("organisation") == 4
+    )
+    assert (
+        g.schema.edge_properties_num("studyAt") == 2
+        and g.schema.edge_properties_num("workAt") == 2
+    )
+    del g
+
+
+@pytest.mark.dependency(depends=["test_save_full_ldbc_to_graphar_and_load_back"])
+def test_load_from_graphar_with_selector(graphscope_session):
+    graph_uri = "graphar+file://{}graphar/ldbc_sample.graph.yaml".format(
+        graphar_temp_dir
+    )
+    selector = {
+        "vertices": {
+            "person": None,
+            "organisation": None,
+        },
+        "edges": {
+            "studyAt": None,
+            "workAt": None,
+        },
+    }
+    g = Graph.load_from(graph_uri, selector=selector)
+    assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
+    assert (
+        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+    )
+    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert (
+        g.schema.vertex_properties_num("person") == 8
+        and g.schema.vertex_properties_num("organisation") == 4
+    )
+    assert (
+        g.schema.edge_properties_num("studyAt") == 2
+        and g.schema.edge_properties_num("workAt") == 2
+    )
+    del g
