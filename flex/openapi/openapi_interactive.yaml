@@ -10,7 +10,7 @@ info:
   description: |
     This is the definition of GraphScope Interactive API, including
       - AdminService API
-      - GraphService API
+      - Vertex/Edge API
       - QueryService
     
     
@@ -20,7 +20,7 @@ info:
     
     QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
   version: "1.0.0"
-  title: GraphScope Interactive API
+  title: GraphScope Interactive API v0.0.3
   contact:
     email: graphscope@alibaba-inc.com
   license:
@@ -36,8 +36,8 @@ tags:
     description: ProcedureManagement
   - name: AdminService/ServiceManagement
     description: ServiceManagement
-  - name: GraphService/VertexManagment
-    description: VertexManagment
+  - name: GraphService/VertexManagement
+    description: VertexManagement
   - name: GraphService/EdgeManagement
     description: EdgeManagement
   - name: QueryService
@@ -62,6 +62,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
+              example: "Successfully create graph"
     get:
       tags:
         - AdminService/GraphManagement
@@ -88,6 +89,8 @@ paths:
           required: true
           schema:
             type: string
+          description:
+            The name of graph to delete
       responses:
         '200':
           description: Successful operation
@@ -95,6 +98,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
+              example: "Successfully delete graph"
   /v1/graph/{graph_name}/schema:
     get:
       tags:
@@ -107,6 +111,7 @@ paths:
         required: true
         schema:
           type: string
+        description: The name of graph to delete
       responses:
         '200':
           description: successful operation
@@ -114,6 +119,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GraphSchema'
+                
   /v1/graph/{graph_name}/dataloading:
     post:
       tags:
@@ -126,6 +132,7 @@ paths:
         required: true
         schema:
           type: string
+        description: The name of graph to do bulk loading.
       requestBody:
         content:
           application/json:
@@ -150,6 +157,7 @@ paths:
           required: true
           schema:
             type: string
+          description: The id of the job, returned from POST /v1/graph/{graph_name}/dataloading
       responses:
         '200':
           description: successful operation
@@ -174,6 +182,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/APIResponse'
+              example: "Successfully cancel job: 123"
   /v1/job:
     get:
       tags:
@@ -366,10 +375,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServiceStatus'
-  /v1/vertex:
+  /v1/graph/{graph_name}/vertex:
     get:
       tags:
-        - GraphService/VertexManagment
+        - GraphService/VertexManagement
       summary: Get the vertex's properties with vertex primary key.
       operationId: get_vertex
       description: |
@@ -380,51 +389,57 @@ paths:
         Host: example.com
         ```
       parameters:
-        - name: vertex_label
+        - name: graph_name
+          in: path
+          required: true
+          description: The name of the graph
+          schema:
+            type: string
+        - name: label
           in: query
           required: true
           description: The label name of querying vertex.
           schema:
             type: string
-        - name: vertex_pk
-          in: query
-          required: true
-          description: The primary key name of querying vertex.
-          schema:
-            type: string
-        - name: vertex_pk_value
+        - name: primary_key_value
           in: query
           required: true
           description: The primary key value of querying vertex.
           schema:
-            # $ref: '#/components/schemas/AnyValue'
-            type: object
+            $ref: '#/components/schemas/AnyValue'
       responses:
         '200':
           description: Found vertex
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/VertexData'
+                $ref: '#/components/schemas/VertexData'
               example: 
                 label: "person"
-                properties: 
-                  id: 1
-                  age: 23
-                  name: "amy"
+                values: 
+                  - name: "id"
+                    value: 1
+                  - name: "age"
+                    value: 23
+                  - name: "name"
+                    value: "amy"
         '400':
           description: Bad input parameter
         '404':
-          description: Vertex not found
+          description: Vertex not found or graph not found
         '500':
           description: Server internal error
     post:
       tags:
-        - GraphService/VertexManagment
+        - GraphService/VertexManagement
       summary: Add vertex to the graph
       operationId: add_vertex
+      parameters: 
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
       description: |
         Add the provided vertex to the specified graph.
       responses:
@@ -438,6 +453,8 @@ paths:
                 message: "Successfully created vertex"
         '400':
           description: Invalid input vertex
+        '404':
+          description: Graph not found
         '409':
           description: Vertex already exists
         '500':
@@ -449,19 +466,24 @@ paths:
               $ref: '#/components/schemas/VertexRequest'
             example:
               label: "person"
-              primimary_key:
-                id: 1
+              primimary_key_value: 1
               properties:
                 age: 2
                 name: "Bob"
         description: Add vertex to graph.
     put:
       tags:
-        - GraphService/VertexManagment
+        - GraphService/VertexManagement
       summary: Update vertex's property
       operationId: update_vertex
       description: |
         Remove the vertex from the specified graph.
+      parameters: 
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -469,8 +491,7 @@ paths:
               $ref: '#/components/schemas/VertexRequest'
             example: 
               label: "person"
-              primary_key: 
-                id: 1
+              primary_key_value: 2
               properties:
                 age: 24
                 name: "Cindy"
@@ -491,32 +512,29 @@ paths:
           description: Server internal error
     delete:
       tags:
-        - GraphService/VertexManagment
+        - GraphService/VertexManagement
       summary: Remove vertex from the graph
       operationId: delete_vertex
       description: |
         Remove the vertex from the specified graph.
       parameters:
-        - name: vertex_label
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
+        - name: label
           in: query
           required: true
           description: The label name of querying vertex.
           schema:
             type: string
-        - name: vertex_pk
+        - name: primary_key_value
           in: query
           required: true
-          description: The primary key name of querying vertex.
+          description: The value of the querying vertex's primary key
           schema:
-            type: string
-        - name: vertex_pk_value
-          in: query
-          required: true
-          description: The primary key value of querying vertex.
-          schema:
-            # $ref: '#/components/schemas/AnyValue'
-            type: object
-            example: 123
+            $ref: '#/components/schemas/AnyValue'
       responses:
         '200':
           description: Successfully delete vertex
@@ -529,11 +547,11 @@ paths:
         '400':
           description: Invalid input vertex
         '404':
-          description: Vertex not exists
+          description: Vertex not exists or Graph not exits.
         '500':
           description: Server internal error
           
-  /v1/edge:
+  /v1/graph/{graph_name}/edge:
     get:
       tags:
         - GraphService/EdgeManagement
@@ -542,49 +560,45 @@ paths:
       description: |
         Get the properties for the specified vertex.
       parameters:
-        - name: src_vertex_label
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
+        - name: edge_label
+          in: query
+          required: true
+          description: The label name of querying edge.
+          schema:
+            type: string
+          example: created
+        - name: src_label
           in: query
           required: true
           description: The label name of src vertex.
           schema:
             type: string
           example: person
-        - name: src_vertex_pk_name
-          in: query
-          required: true
-          description: The primary key name of src vertex.
-          schema:
-            type: string
-          example: id
-        - name: src_vertex_pk_value
+        - name: src_primary_key_value
           in: query
           required: true
           description: The primary key value of src vertex.
           schema:
-            # $ref: '#/components/schemas/AnyValue'   
-            type: object
+            $ref: '#/components/schemas/AnyValue'   
           example: 1
-        - name: ds_vertex_label
+        - name: dst_label
           in: query
           required: true
           description: The label name of dst vertex.
           schema:
             type: string
           example: software
-        - name: dst_vertex_pk_name
+        - name: dst_primary_key_value
           in: query
           required: true
-          description: The primary key name of dst vertex.
+          description: The value of dst vertex's primary key
           schema:
-            type: string
-          example: id
-        - name: dst_vertex_pk_value
-          in: query
-          required: true
-          description: The primary key value of dst vertex.
-          schema:
-            # $ref: '#/components/schemas/AnyValue' 
-            type: object
+            $ref: '#/components/schemas/AnyValue' 
           example: 3
       responses:
         '200':
@@ -597,16 +611,15 @@ paths:
                 src_label: "person"
                 dst_label: "software"
                 edge_label: "created"
-                src_pk_name: "id"
                 src_pk_value: 1
-                dst_pk_name: "id"
                 dst_pk_value: 3
                 properties:
-                  weight: 0.2
+                  - name: "weight"
+                    value: 0.2
         '400':
           description: Bad input parameter
         '404':
-          description: Edge not found
+          description: Edge not found or Graph not found
         '500':
           description: Server internal error
     post:
@@ -616,6 +629,12 @@ paths:
       operationId: add_edge
       description: |
         Add the edge to graph.
+      parameters:
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: Successfully insert the edge
@@ -645,7 +664,8 @@ paths:
               dst_pk_name: "id"
               dst_pk_value: 3
               properties:
-                weight: 0.2
+                - name: "weight"
+                  value: 0.2
     put:
       tags:
         - GraphService/EdgeManagement
@@ -653,6 +673,12 @@ paths:
       operationId: update_edge
       description: |
         Update the edge on the running graph.
+      parameters:
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -667,7 +693,8 @@ paths:
               dst_pk_name: "id"
               dst_pk_value: 3
               properties:
-                weight: 0.4
+                - name: "weight"
+                  value: 0.3
       responses:
         '200':
           description: Successfully update edge
@@ -691,49 +718,39 @@ paths:
       description: |
         Remove the edge from current graph.
       parameters:
-        - name: src_vertex_label
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
+        - name: src_label
           in: query
           required: true
           description: The label name of src vertex.
           schema:
             type: string
           example: person
-        - name: src_vertex_pk_name
-          in: query
-          required: true
-          description: The primary key name of src vertex.
-          schema:
-            type: string
-          example: id
-        - name: src_vertex_pk_value
+        - name: src_primary_key_value
           in: query
           required: true
           description: The primary key value of src vertex.
           schema:
-            # $ref: '#/components/schemas/AnyValue'   
-            type: object
+            $ref: '#/components/schemas/AnyValue'   
+            # type: object
           example: 1
-        - name: ds_vertex_label
+        - name: dst_label
           in: query
           required: true
           description: The label name of dst vertex.
           schema:
             type: string
           example: software
-        - name: dst_vertex_pk_name
-          in: query
-          required: true
-          description: The primary key name of dst vertex.
-          schema:
-            type: string
-          example: id
-        - name: dst_vertex_pk_value
+        - name: dst_primary_key_value
           in: query
           required: true
           description: The primary key value of dst vertex.
           schema:
-            # $ref: '#/components/schemas/AnyValue' 
-            type: object
+            $ref: '#/components/schemas/AnyValue' 
           example: 3
       responses:
         '200':
@@ -747,24 +764,25 @@ paths:
         '400':
           description: Invalid input edge
         '404':
-          description: Edge not exists
+          description: Edge not exists or Graph not exits
         '500':
           description: Server internal error
-  /v1/query:
+  /v1/graph/{graph_name}/query:
     post:
       tags:
         - QueryService
       summary: run queries on graph
       operationId: proc_call
       description: |
-        (TBD)Three kinds of payload(query) can be submitted
-          - C++ procedure call(use encoder/decoder) for request/result serialization/deserialization
-          - Cypher procedure call. Also raw bytes and can be deserialized into protobuf.
-          - Cypher/Gremlin adhoc query. The payload are raw bytes and should be able to be deserialized into physical plan.
-          
-        The request body/response body can have two different design.
-          - Binary bytes.
-          - Json string.
+        After the procedure is created, user can use this API to run the procedure.
+        TODO: a full example cypher->plan->json.
+        TODO: make sure typeinfo can be passed.
+      parameters:
+        - name: graph_name
+          in : path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           # text/plain:
@@ -778,6 +796,8 @@ paths:
           #       value:
           #         id: 2
           application/json:
+            schema: 
+              type: string
             examples:
               example1: 
                 value:
@@ -814,20 +834,19 @@ paths:
           description: Server internal error
 components:
   schemas:
-    # AnyValue: 
-    #   type: object
-    #   additionalProperties:
-    #     true
+    AnyValue: {}
     Property:
+      x-body-name: property
       type: object
       properties:
         name:
           type: string
           example: "id"
         value: 
-          # $ref: '#/components/schemas/AnyValue'
-          type: object
+          $ref: '#/components/schemas/AnyValue'
+          # type: object
     PropertyArray:
+      x-body-name: property_array
       type: object
       required:
         - properties
@@ -837,19 +856,21 @@ components:
           items: 
             $ref: '#/components/schemas/Property'
     VertexRequest:
+      x-body-name: vertex_request
       type: object
       required:
         - label
-        - primary_key
+        - primary_key_value
       properties:
         label:
           type: string
           example: person
-        primary_key:
-          $ref: '#/components/schemas/Property'
+        primary_key_value:
+          $ref: '#/components/schemas/AnyValue'
         properties:
           $ref: '#/components/schemas/PropertyArray'
     VertexData:
+      x-body-name: vertex_data
       type: object
       required:
         - label
@@ -862,15 +883,14 @@ components:
           items:
             $ref: '#/components/schemas/Property'
     EdgeData:
+      x-body-name: edge_data
       type: object
       required:
         - src_label
         - dst_label
         - edge_label
-        - src_pk_name
-        - src_pk_value
-        - dst_pk_name
-        - dst_pk_value
+        - src_primary_key_value
+        - dst_primary_key_value
         - properties
       properties:
         src_label:
@@ -882,35 +902,23 @@ components:
         edge_label:
           type: string
           example: created
-        src_pk_name:
-          type: string
-          example: id
-        src_pk_value:
-          # $ref: '#/components/schemas/AnyValue'
-          type: object
-          example: 123
-        dst_pk_name:
-          type: string
-          example: id
-        dst_pk_value:
-          # $ref: '#/components/schemas/AnyValue'    
-          type: object
-          example: 234
+        src_primary_key_value:
+          $ref: '#/components/schemas/AnyValue'
+        dst_primary_key_value:
+          $ref: '#/components/schemas/AnyValue'    
         properties:
           type: array
           items:
             $ref: '#/components/schemas/Property'
-            
     EdgeRequest:
+      x-body-name: edge_request
       type: object
       required:
         - src_label
         - dst_label
         - edge_label
-        - src_pk_name
-        - src_pk_value
-        - dst_pk_name
-        - dst_pk_value
+        - src_primary_key_value
+        - dst_primary_key_value
       properties:
         src_label:
           type: string
@@ -921,20 +929,10 @@ components:
         edge_label:
           type: string
           example: created
-        src_pk_name:
-          type: string
-          example: id
-        src_pk_value:
-          # $ref: '#/components/schemas/AnyValue'
-          type: object
-          example: 123
-        dst_pk_name:
-          type: string
-          example: id
-        dst_pk_value:
-          # $ref: '#/components/schemas/AnyValue'    
-          type: object
-          example: 234
+        src_primary_key_value:
+          $ref: '#/components/schemas/AnyValue'
+        dst_primary_key_value:
+          $ref: '#/components/schemas/AnyValue'    
         properties:
           type: array
           items:
@@ -943,8 +941,9 @@ components:
       type: string
       example: "0{scan{},edge_expand{}}"
     APIResponse:
+      x-body-name: api_response
       type: string
-      example: "{message: Response string}"
+      example: "Response string"
     Graph:
       x-body-name: graph
       type: object
@@ -1033,7 +1032,7 @@ components:
           items:
             $ref: '#/components/schemas/PropertyMeta'
     PropertyMeta:
-      x-body-name: property
+      x-body-name: property_meta
       type: object
       properties:
         property_id:
