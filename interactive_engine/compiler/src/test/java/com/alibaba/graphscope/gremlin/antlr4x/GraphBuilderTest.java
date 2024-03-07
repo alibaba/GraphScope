@@ -659,7 +659,7 @@ public class GraphBuilderTest {
     }
 
     @Test
-    public void g_V_union_1_test() {
+    public void g_V_union_out_in_test() {
         RelNode node = eval("g.V().union(out(), in())");
         Assert.assertEquals(
                 "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
@@ -696,7 +696,7 @@ public class GraphBuilderTest {
     }
 
     @Test
-    public void g_V_union_2_test() {
+    public void g_V_out_union_out_in_test() {
         RelNode node = eval("g.V().out().union(out(), in())");
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -721,7 +721,7 @@ public class GraphBuilderTest {
     }
 
     @Test
-    public void g_V_union_8_test() {
+    public void g_V_out_union_out_in_inXin_test() {
         RelNode node = eval("g.V().out().union(out(), in(), in().in())");
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -751,7 +751,7 @@ public class GraphBuilderTest {
     }
 
     @Test
-    public void g_V_union_3_test() {
+    public void g_V_union_out_inXunion_out_outX_test() {
         RelNode node = eval("g.V().union(out(), in().union(out(), out()))");
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -781,7 +781,7 @@ public class GraphBuilderTest {
     }
 
     @Test
-    public void g_V_union_4_test() {
+    public void g_V_out_union_out_inXunion_out_outX_test() {
         RelNode node = eval("g.V().out().union(out(), in().union(out(), out()))");
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -814,7 +814,7 @@ public class GraphBuilderTest {
     }
 
     @Test
-    public void g_V_union_5_test() {
+    public void g_V_out_union_outXunion_out_outX_inXunion_out_outX_test() {
         RelNode node =
                 eval("g.V().out().union(out().union(out(), out()), in().union(out(), out()))");
         RelOptPlanner planner =
@@ -857,7 +857,7 @@ public class GraphBuilderTest {
 
     // `g.V().in()` is extracted as the common sub-plan of the root union
     @Test
-    public void g_V_union_6_test() {
+    public void g_V_union_inXunion_out_outX_inXunion_out_outX_test() {
         RelNode node = eval("g.V().union(in().union(out(), out()), in().union(out(), out()))");
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -891,7 +891,7 @@ public class GraphBuilderTest {
 
     // `g.V().out().in()` is extracted as the common sub-plan of the root union
     @Test
-    public void g_V_union_7_test() {
+    public void g_V_out_union_inXunion_out_outX_inXunion_out_outX_test() {
         RelNode node =
                 eval("g.V().out().union(in().union(out(), out()), in().union(out(), out()))");
         RelOptPlanner planner =

@@ -117,21 +117,22 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Long> get_g_V_out_union_out_in_in_count();
 
     // g.V().union(out(), in().union(out(), out())).count()
-    public abstract Traversal<Vertex, Long> get_g_V_union_out_in_union_out_out_count();
+    public abstract Traversal<Vertex, Long> get_g_V_union_out_inXunion_out_outX_count();
 
     // g.V().out().union(out(), in().union(out(), out())).count()
-    public abstract Traversal<Vertex, Long> get_g_V_out_union_out_in_union_out_out_count();
+    public abstract Traversal<Vertex, Long> get_g_V_out_union_out_inXunion_out_outX_count();
 
     // g.V().out().union(out().union(out(), out()), in().union(out(), out())).count()
     public abstract Traversal<Vertex, Long>
-            get_g_V_out_union_out_union_out_out_in_union_out_out_count();
+            get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count();
 
     // g.V().union(in().union(out(), out()), in().union(out(), out())).count()
-    public abstract Traversal<Vertex, Long> get_g_V_union_in_union_out_out_in_union_out_out_count();
+    public abstract Traversal<Vertex, Long>
+            get_g_V_union_inXunion_out_outX_inXunion_out_outX_count();
 
     // g.V().out().union(in().union(out(), out()), in().union(out(), out())).count()
     public abstract Traversal<Vertex, Long>
-            get_g_V_out_union_in_union_out_out_in_union_out_out_count();
+            get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count();
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
@@ -143,43 +144,43 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
-    public void g_V_union_out_in_union_out_out_count() {
-        Traversal<Vertex, Long> traversal = this.get_g_V_union_out_in_union_out_out_count();
+    public void g_V_union_out_inXunion_out_outX_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_union_out_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(34, traversal.next().intValue());
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
-    public void g_V_out_union_out_in_union_out_out_count() {
-        Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_in_union_out_out_count();
+    public void g_V_out_union_out_inXunion_out_outX_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(54, traversal.next().intValue());
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
-    public void g_V_out_union_out_union_out_out_in_union_out_out_count() {
+    public void g_V_out_union_outXunion_out_outX_inXunion_out_outX_count() {
         Traversal<Vertex, Long> traversal =
-                this.get_g_V_out_union_out_union_out_out_in_union_out_out_count();
+                this.get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(52, traversal.next().intValue());
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
-    public void g_V_union_in_union_out_out_in_union_out_out_count() {
+    public void g_V_union_inXunion_out_outX_inXunion_out_outX_count() {
         Traversal<Vertex, Long> traversal =
-                this.get_g_V_union_in_union_out_out_in_union_out_out_count();
+                this.get_g_V_union_inXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(56, traversal.next().intValue());
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
-    public void g_V_out_union_in_union_out_out_in_union_out_out_count() {
+    public void g_V_out_union_inXunion_out_outX_inXunion_out_outX_count() {
         Traversal<Vertex, Long> traversal =
-                this.get_g_V_out_union_in_union_out_out_in_union_out_out_count();
+                this.get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(104, traversal.next().intValue());
     }
@@ -727,32 +728,33 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
         // g.V().union(out(), in().union(out(), out())).count()
         @Override
-        public Traversal<Vertex, Long> get_g_V_union_out_in_union_out_out_count() {
+        public Traversal<Vertex, Long> get_g_V_union_out_inXunion_out_outX_count() {
             return g.V().union(out(), in().union(out(), out())).count();
         }
 
         // g.V().out().union(out(), in().union(out(), out())).count()
         @Override
-        public Traversal<Vertex, Long> get_g_V_out_union_out_in_union_out_out_count() {
+        public Traversal<Vertex, Long> get_g_V_out_union_out_inXunion_out_outX_count() {
             return g.V().out().union(out(), in().union(out(), out())).count();
         }
 
         // g.V().out().union(out().union(out(), out()), in().union(out(), out())).count()
         @Override
         public Traversal<Vertex, Long>
-                get_g_V_out_union_out_union_out_out_in_union_out_out_count() {
+                get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count() {
             return g.V().out().union(out().union(out(), out()), in().union(out(), out())).count();
         }
 
         // g.V().union(in().union(out(), out()), in().union(out(), out())).count()
         @Override
-        public Traversal<Vertex, Long> get_g_V_union_in_union_out_out_in_union_out_out_count() {
+        public Traversal<Vertex, Long> get_g_V_union_inXunion_out_outX_inXunion_out_outX_count() {
             return g.V().union(in().union(out(), out()), in().union(out(), out())).count();
         }
 
         // g.V().out().union(in().union(out(), out()), in().union(out(), out())).count()
         @Override
-        public Traversal<Vertex, Long> get_g_V_out_union_in_union_out_out_in_union_out_out_count() {
+        public Traversal<Vertex, Long>
+                get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count() {
             return g.V().out().union(in().union(out(), out()), in().union(out(), out())).count();
         }
 
