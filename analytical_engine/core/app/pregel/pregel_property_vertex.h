@@ -165,8 +165,8 @@ class PregelPropertyVertex {
   void set_fragment(const fragment_t* fragment) { fragment_ = fragment; }
 
   void set_compute_context(
-      PregelPropertyComputeContext<FRAG_T, VD_T, MD_T>* compute_comtext) {
-    compute_context_ = compute_comtext;
+      PregelPropertyComputeContext<FRAG_T, VD_T, MD_T>* compute_context) {
+    compute_context_ = compute_context;
   }
 
   void set_vertex(vertex_t vertex) { vertex_ = vertex; }
