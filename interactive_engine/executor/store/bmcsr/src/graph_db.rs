@@ -45,6 +45,10 @@ impl<'a, G: IndexType + Sync + Send, I: IndexType + Sync + Send> LocalVertex<'a,
         LocalVertex { index, label, id_list, table, corner_id_list }
     }
 
+    pub fn is_valid(&self) -> bool {
+        self.get_id() != <G as IndexType>::max()
+    }
+
     pub fn get_id(&self) -> G {
         let index = self.index.index();
         if index < self.id_list.len() {
@@ -212,12 +216,14 @@ where
         self.oe[index].edge_num()
     }
 
-    pub fn get_max_edge_offset(&self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, dir: Direction) -> usize {
+    pub fn get_max_edge_offset(
+        &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, dir: Direction,
+    ) -> usize {
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
-match dir {
-    Direction::Incoming => self.ie[index].max_edge_offset(),
-    Direction::Outgoing => self.oe[index].max_edge_offset(),
-}
+        match dir {
+            Direction::Incoming => self.ie[index].max_edge_offset(),
+            Direction::Outgoing => self.oe[index].max_edge_offset(),
+        }
     }
 
     pub fn get_global_id(&self, id: I, label: LabelId) -> Option<G> {
@@ -446,9 +452,13 @@ match dir {
         &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, dir: Direction,
     ) -> SubGraph<'_, G, I> {
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
-        info!("get_sub_graph: {} - {} - {}, {:?}", self.graph_schema.vertex_label_names()[src_label as usize],
-        self.graph_schema.edge_label_names()[edge_label as usize],
-        self.graph_schema.vertex_label_names()[dst_label as usize], dir);
+        info!(
+            "get_sub_graph: {} - {} - {}, {:?}",
+            self.graph_schema.vertex_label_names()[src_label as usize],
+            self.graph_schema.edge_label_names()[edge_label as usize],
+            self.graph_schema.vertex_label_names()[dst_label as usize],
+            dir
+        );
         match dir {
             Direction::Outgoing => SubGraph::new(
                 &self.oe[index]
@@ -480,9 +490,13 @@ match dir {
     pub fn get_single_sub_graph(
         &self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, dir: Direction,
     ) -> SingleSubGraph<'_, G, I> {
-        info!("get_single_sub_graph: {} - {} - {}, {:?}", self.graph_schema.vertex_label_names()[src_label as usize],
-        self.graph_schema.edge_label_names()[edge_label as usize],
-        self.graph_schema.vertex_label_names()[dst_label as usize], dir);
+        info!(
+            "get_single_sub_graph: {} - {} - {}, {:?}",
+            self.graph_schema.vertex_label_names()[src_label as usize],
+            self.graph_schema.edge_label_names()[edge_label as usize],
+            self.graph_schema.vertex_label_names()[dst_label as usize],
+            dir
+        );
         let index = self.edge_label_to_index(src_label, dst_label, edge_label, dir);
         match dir {
             Direction::Outgoing => SingleSubGraph::new(
@@ -794,10 +808,20 @@ match dir {
             }
         }
         self.oe[index].delete_vertices(src_delete_set);
-        self.oe[index].delete_edges(&edges, false);
-        self.oe[index].delete_edges(&ie_to_delete, false);
+        if let Some(table) = self.oe_edge_prop_table.get_mut(&index) {
+            self.oe[index].delete_edges_with_props(&edges, false, table);
+            self.oe[index].delete_edges_with_props(&ie_to_delete, false, table);
+        } else {
+            self.oe[index].delete_edges(&edges, false);
+            self.oe[index].delete_edges(&ie_to_delete, false);
+        }
         self.ie[index].delete_vertices(dst_delete_set);
-        self.ie[index].delete_edges(&edges, true);
-        self.ie[index].delete_edges(&oe_to_delete, true);
+        if let Some(table) = self.ie_edge_prop_table.get_mut(&index) {
+            self.ie[index].delete_edges_with_props(&edges, true, table);
+            self.ie[index].delete_edges_with_props(&oe_to_delete, true, table);
+        } else {
+            self.ie[index].delete_edges(&edges, true);
+            self.ie[index].delete_edges(&oe_to_delete, true);
+        }
     }
 }

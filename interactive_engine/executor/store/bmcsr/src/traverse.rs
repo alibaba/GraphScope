@@ -31,21 +31,23 @@ fn traverse_vertices<G: Send + Sync + IndexType, I: Send + Sync + IndexType>(
 
             let v_labels = vec![v_label];
             for v in graph.get_all_vertices(Some(&v_labels)) {
-                let id = LDBCVertexParser::<G>::get_original_id(v.get_id());
-                write!(file, "{}", id.index()).unwrap();
-                for c in header {
-                    if c.1 != DataType::ID {
-                        write!(
-                            file,
-                            "|{}",
-                            v.get_property(c.0.as_str())
-                                .unwrap()
-                                .to_string()
-                        )
-                        .unwrap();
+                if v.is_valid() {
+                    let id = LDBCVertexParser::<G>::get_original_id(v.get_id());
+                    write!(file, "{}", id.index()).unwrap();
+                    for c in header {
+                        if c.1 != DataType::ID {
+                            write!(
+                                file,
+                                "|{}",
+                                v.get_property(c.0.as_str())
+                                    .unwrap()
+                                    .to_string()
+                            )
+                            .unwrap();
+                        }
                     }
+                    writeln!(file).unwrap();
                 }
-                writeln!(file).unwrap();
             }
         }
     }

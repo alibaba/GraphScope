@@ -86,10 +86,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut graph = GraphDB::<usize, usize>::deserialize(graph_data_str, 0, None).unwrap();
     let mut graph_index = GraphIndex::new(0);
 
+    // let traverse_out = output_dir.clone().join(format!("init"));
+    // std::fs::create_dir_all(&traverse_out).unwrap();
+    // traverse(&graph, traverse_out.to_str().unwrap());
+
     let mut query_register = QueryRegister::new();
-    println!("Start load lib");
-    query_register.load(&PathBuf::from(config.queries_config));
-    println!("Finished load libs");
+    if !config.queries_config.is_empty() {
+        println!("Start load lib");
+        query_register.load(&PathBuf::from(&config.queries_config));
+        println!("Finished load libs");
+    }
 
     let batches = [
         "2012-11-29",
@@ -126,7 +132,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "2012-12-30",
         "2012-12-31",
     ];
-    // let batches = ["2012-11-29"];
+    let batches = ["2012-11-29"];
 
     let graph_raw = config.graph_raw;
     let batch_configs = config.batch_update_configs;
@@ -163,12 +169,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         std::fs::create_dir_all(&traverse_out).unwrap();
         traverse(&graph, traverse_out.to_str().unwrap());
 
-        println!("before run precomputes...");
-        query_register.run_precomputes(&graph, &mut graph_index, worker_num);
-        println!("after run precomputes...");
+        if !config.queries_config.is_empty() {
+            println!("before run precomputes...");
+            query_register.run_precomputes(&graph, &mut graph_index, worker_num);
+            println!("after run precomputes...");
+        }
 
-        println!("Start iterating parameter files: {:?}", config.parameters);
         if config.parameters.is_dir() {
+            println!("Start iterating parameter files: {:?}", config.parameters);
             let start = Instant::now();
             for pair in PARAMETERS_MAP.iter() {
                 let query_name = pair.0.to_string();

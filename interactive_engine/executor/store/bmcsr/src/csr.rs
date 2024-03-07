@@ -1,6 +1,7 @@
 use std::any::Any;
 use std::collections::HashSet;
 
+use crate::col_table::ColTable;
 use crate::graph::IndexType;
 
 pub struct NbrIter<'a, I> {
@@ -63,6 +64,7 @@ pub trait CsrTrait<I: IndexType>: Send + Sync {
 
     fn delete_vertices(&mut self, vertices: &HashSet<I>);
     fn delete_edges(&mut self, edges: &HashSet<(I, I)>, reverse: bool);
+    fn delete_edges_with_props(&mut self, edges: &HashSet<(I, I)>, reverse: bool, table: &mut ColTable);
 }
 
 #[derive(Debug)]

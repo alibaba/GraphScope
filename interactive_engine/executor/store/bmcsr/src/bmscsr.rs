@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 
+use crate::col_table::ColTable;
 use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrOffsetIter};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
@@ -221,5 +222,9 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableSingleCsr<I> {
                 self.remove_edge(*src, *dst);
             }
         }
+    }
+
+    fn delete_edges_with_props(&mut self, edges: &HashSet<(I, I)>, reverse: bool, _: &mut ColTable) {
+        self.delete_edges(edges, reverse);
     }
 }

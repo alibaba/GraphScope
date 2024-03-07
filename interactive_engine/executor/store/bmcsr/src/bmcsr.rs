@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 
+use crate::col_table::ColTable;
 use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrOffsetIter};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
@@ -255,6 +256,72 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
                 while offset < (end - 1) {
                     if edges.contains(&(I::new(src), self.neighbors[offset])) {
                         self.neighbors[offset] = self.neighbors[end - 1];
+                        end -= 1;
+                    } else {
+                        offset += 1;
+                    }
+                }
+                if edges.contains(&(I::new(src), self.neighbors[end - 1])) {
+                    end -= 1;
+                }
+                let new_degree = end - self.offsets[src];
+                let degree_diff = self.degree[src] as usize - new_degree;
+                self.degree[src] = new_degree as i32;
+                self.edge_num -= degree_diff;
+            }
+        }
+    }
+
+    fn delete_edges_with_props(&mut self, edges: &HashSet<(I, I)>, reverse: bool, table: &mut ColTable) {
+        if reverse {
+            let mut src_set = HashSet::new();
+            for (_, src) in edges {
+                let src = src.index();
+                if src >= self.vertex_num().index() {
+                    continue;
+                }
+                src_set.insert(src);
+            }
+            for src in src_set {
+                let mut offset = self.offsets[src];
+                let mut end = self.offsets[src] + self.degree[src] as usize;
+                while offset < (end - 1) {
+                    if edges.contains(&(self.neighbors[offset], I::new(src))) {
+                        self.neighbors[offset] = self.neighbors[end - 1];
+                        let row = table.get_row(end - 1).unwrap();
+                        table.insert(offset, &row);
+
+                        end -= 1;
+                    } else {
+                        offset += 1;
+                    }
+                }
+                if edges.contains(&(self.neighbors[end - 1], I::new(src))) {
+                    end -= 1;
+                }
+                let new_degree = end - self.offsets[src];
+                let degree_diff = self.degree[src] as usize - new_degree;
+                self.degree[src] = new_degree as i32;
+                self.edge_num -= degree_diff;
+            }
+        } else {
+            let mut src_set = HashSet::new();
+            for (src, _) in edges {
+                let src = src.index();
+                if src >= self.vertex_num().index() {
+                    continue;
+                }
+                src_set.insert(src);
+            }
+            for src in src_set {
+                let mut offset = self.offsets[src];
+                let mut end = self.offsets[src] + self.degree[src] as usize;
+                while offset < (end - 1) {
+                    if edges.contains(&(I::new(src), self.neighbors[offset])) {
+                        self.neighbors[offset] = self.neighbors[end - 1];
+                        let row = table.get_row(end - 1).unwrap();
+                        table.insert(offset, &row);
+
                         end -= 1;
                     } else {
                         offset += 1;
