@@ -1,0 +1,305 @@
+{
+  "vertex": [
+    {
+      "label": "PLACE",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "url",
+          "data_type": "String"
+        },
+        {
+          "name": "type",
+          "data_type": "String"
+        }
+      ]
+    },
+    {
+      "label": "PERSON",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "creationDate",
+          "data_type": "DateTime"
+        },
+        {
+          "name": "firstName",
+          "data_type": "String"
+        },
+        {
+          "name": "lastName",
+          "data_type": "String"
+        },
+        {
+          "name": "gender",
+          "data_type": "String"
+        },
+        {
+          "name": "birthday",
+          "data_type": "Date"
+        },
+        {
+          "name": "locationIP",
+          "data_type": "String"
+        },
+        {
+          "name": "browserUsed",
+          "data_type": "LCString"
+        },
+        {
+          "name": "language",
+          "data_type": "LCString"
+        },
+        {
+          "name": "email",
+          "data_type": "String"
+        }
+      ]
+    },
+    {
+      "label": "COMMENT",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "creationDate",
+          "data_type": "DateTime"
+        },
+        {
+          "name": "length",
+          "data_type": "Int32"
+        }
+      ]
+    },
+    {
+      "label": "POST",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "creationDate",
+          "data_type": "DateTime"
+        },
+        {
+          "name": "language",
+          "data_type": "LCString"
+        },
+        {
+          "name": "length",
+          "data_type": "Int32"
+        }
+      ]
+    },
+    {
+      "label": "FORUM",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "creationDate",
+          "data_type": "DateTime"
+        },
+        {
+          "name": "title",
+          "data_type": "String"
+        }
+      ]
+    },
+    {
+      "label": "ORGANISATION",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "type",
+          "data_type": "String"
+        },
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "url",
+          "data_type": "String"
+        }
+      ]
+    },
+    {
+      "label": "TAGCLASS",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "url",
+          "data_type": "String"
+        }
+      ]
+    },
+    {
+      "label": "TAG",
+      "partition_type": "Dynamic",
+      "properties": [
+        {
+          "name": "name",
+          "data_type": "String"
+        },
+        {
+          "name": "url",
+          "data_type": "String"
+        }
+      ]
+    }
+  ],
+  "edge": [
+    {
+      "src_label": "COMMENT",
+      "dst_label": "PERSON",
+      "label": "HASCREATOR",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "POST",
+      "dst_label": "PERSON",
+      "label": "HASCREATOR",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "COMMENT",
+      "dst_label": "TAG",
+      "label": "HASTAG"
+    },
+    {
+      "src_label": "POST",
+      "dst_label": "TAG",
+      "label": "HASTAG"
+    },
+    {
+      "src_label": "COMMENT",
+      "dst_label": "PLACE",
+      "label": "ISLOCATEDIN",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "POST",
+      "dst_label": "PLACE",
+      "label": "ISLOCATEDIN",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "COMMENT",
+      "dst_label": "COMMENT",
+      "label": "REPLYOF",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "COMMENT",
+      "dst_label": "POST",
+      "label": "REPLYOF",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "FORUM",
+      "dst_label": "POST",
+      "label": "CONTAINEROF",
+      "ie_strategy": "Single"
+    },
+    {
+      "src_label": "FORUM",
+      "dst_label": "PERSON",
+      "label": "HASMEMBER"
+    },
+    {
+      "src_label": "FORUM",
+      "dst_label": "PERSON",
+      "label": "HASMODERATOR",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "FORUM",
+      "dst_label": "PERSON",
+      "label": "HASMODERATOR"
+    },
+    {
+      "src_label": "FORUM",
+      "dst_label": "TAG",
+      "label": "HASTAG"
+    },
+    {
+      "src_label": "PERSON",
+      "dst_label": "TAG",
+      "label": "HASINTEREST"
+    },
+    {
+      "src_label": "PERSON",
+      "dst_label": "PLACE",
+      "label": "ISLOCATEDIN",
+      "oe_strategy": "Single"
+    },
+    {
+      "src_label": "PERSON",
+      "dst_label": "PERSON",
+      "label": "KNOWS",
+      "properties": [
+        {
+          "name": "creationDate",
+          "data_type": "DateTime"
+        }
+      ]
+    },
+    {
+      "src_label": "PERSON",
+      "dst_label": "COMMENT",
+      "label": "LIKES"
+    },
+    {
+      "src_label": "PERSON",
+      "dst_label": "POST",
+      "label": "LIKES"
+    },
+    {
+      "src_label": "PERSON",
+      "dst_label": "ORGANISATION",
+      "label": "STUDYAT",
+      "properties": [
+        {
+          "name": "studyFrom",
+          "data_type": "Int32"
+        }
+      ]
+    },
+    {
+      "src_label": "PERSON",
+      "dst_label": "ORGANISATION",
+      "label": "WORKAT",
+      "properties": [
+        {
+          "name": "workFrom",
+          "data_type": "Int32"
+        }
+      ]
+    },
+    {
+      "src_label": "ORGANISATION",
+      "dst_label": "PLACE",
+      "label": "ISLOCATEDIN"
+    },
+    {
+      "src_label": "PLACE",
+      "dst_label": "PLACE",
+      "label": "ISPARTOF"
+    },
+    {
+      "src_label": "TAGCLASS",
+      "dst_label": "TAGCLASS",
+      "label": "ISSUBCLASSOF"
+    },
+    {
+      "src_label": "TAG",
+      "dst_label": "TAGCLASS",
+      "label": "HASTYPE"
+    }
+  ]
+}
