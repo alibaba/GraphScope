@@ -73,7 +73,7 @@ object FragmentLoader extends Logging {
       hostname2Cores(host) = curCores
       hostname2Cores(host) = hostname2Cores(host) / (hostName2ExecutorId(host).size * 2) + 1
       log.info(s"for host ${host}, there are executor ids ${hostName2ExecutorId(host)
-        .mkString(",")} total cores ${curCores}, per executor parallelsim ${hostname2Cores(host)}")
+        .mkString(",")} total cores ${curCores}, per executor parallelism ${hostname2Cores(host)}")
     }
 
     while (hostInd < hostNum && curPartition < numEmptyPartitions) {

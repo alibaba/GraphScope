@@ -54,7 +54,7 @@ public interface PrimitiveArray<T> extends Serializable {
     }
 
     static <TT> PrimitiveArray<TT> createImmutable(
-            PrimitiveTypedArray<TT> arrray, Class<? extends TT> clz) {
-        return new TypedBackendPrimitiveArray<>(arrray);
+            PrimitiveTypedArray<TT> array, Class<? extends TT> clz) {
+        return new TypedBackendPrimitiveArray<>(array);
     }
 }

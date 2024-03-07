@@ -986,7 +986,7 @@ function do_init(){
   docker exec -u graphscope "${GIE_DB_CONTAINER_NAME}" bash -c "mkdir -p ${DATABASE_WORKSPACE}/data" || exit 1
 
   # create default_graph
-  do_create -g ${DATABASE_DEFAULT_GRAPH_NAME} -c ${HOST_DB_HOME}/examples/modern_graph/modern_graph.yaml
+  do_create -g ${DATABASE_DEFAULT_GRAPH_NAME} -c ${HOST_DB_HOME}/examples/modern_graph/graph.yaml
   # check whether do_import success
   if ! do_import -g ${DATABASE_DEFAULT_GRAPH_NAME} -c ${HOST_DB_HOME}/examples/modern_graph/bulk_load.yaml; then
     err "Fail to import default graph"

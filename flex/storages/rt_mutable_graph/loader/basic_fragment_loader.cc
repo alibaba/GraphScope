@@ -19,6 +19,34 @@
 
 namespace gs {
 
+std::ostream& operator<<(std::ostream& os, const LoadingStatus& status) {
+  if (status == LoadingStatus::kLoading) {
+    os << "Loading";
+  } else if (status == LoadingStatus::kLoaded) {
+    os << "Loaded";
+  } else if (status == LoadingStatus::kCommited) {
+    os << "Commited";
+  } else {
+    os << "Unknown";
+  }
+  return os;
+}
+
+std::istream& operator>>(std::istream& is, LoadingStatus& status) {
+  std::string tmp;
+  is >> tmp;
+  if (tmp == "Loading") {
+    status = LoadingStatus::kLoading;
+  } else if (tmp == "Loaded") {
+    status = LoadingStatus::kLoaded;
+  } else if (tmp == "Commited") {
+    status = LoadingStatus::kCommited;
+  } else {
+    status = LoadingStatus::kUnknown;
+  }
+  return is;
+}
+
 BasicFragmentLoader::BasicFragmentLoader(const Schema& schema,
                                          const std::string& prefix)
     : schema_(schema),
@@ -37,6 +65,57 @@ BasicFragmentLoader::BasicFragmentLoader(const Schema& schema,
   std::filesystem::create_directories(tmp_dir(prefix));
 
   init_vertex_data();
+  // initially create all status files for vertices and edges.
+  init_loading_status_file();
+}
+
+void BasicFragmentLoader::append_vertex_loading_progress(
+    const std::string& label_name, LoadingStatus status) {
+  auto status_file_path = bulk_load_progress_file(work_dir_);
+  std::lock_guard<std::mutex> lock(loading_progress_mutex_);
+  std::ofstream status_file(status_file_path, std::ios::app);
+  std::stringstream ss;
+  ss << "[VertexLabel]:" << label_name << ", [Status]:" << status << "\n";
+  status_file << ss.str();
+  status_file.close();
+  return;
+}
+
+void BasicFragmentLoader::append_edge_loading_progress(
+    const std::string& src_label_name, const std::string& dst_label_name,
+    const std::string& edge_label_name, LoadingStatus status) {
+  auto status_file_path = bulk_load_progress_file(work_dir_);
+  std::lock_guard<std::mutex> lock(loading_progress_mutex_);
+  std::ofstream status_file(status_file_path, std::ios::app);
+  std::stringstream ss;
+  ss << "[SrcVertexLabel]:" << src_label_name
+     << " -> [DstVertexLabel]:" << dst_label_name << " : [EdgeLabel]"
+     << edge_label_name << ", [Status]:" << status << "\n";
+  status_file << ss.str();
+  status_file.close();
+  return;
+}
+
+void BasicFragmentLoader::init_loading_status_file() {
+  for (label_t v_label = 0; v_label < vertex_label_num_; v_label++) {
+    auto label_name = schema_.get_vertex_label_name(v_label);
+    append_vertex_loading_progress(label_name, LoadingStatus::kLoading);
+  }
+  VLOG(1) << "Finish init vertex status files";
+  for (size_t src_label = 0; src_label < vertex_label_num_; src_label++) {
+    std::string src_label_name = schema_.get_vertex_label_name(src_label);
+    for (size_t dst_label = 0; dst_label < vertex_label_num_; dst_label++) {
+      std::string dst_label_name = schema_.get_vertex_label_name(dst_label);
+      for (size_t edge_label = 0; edge_label < edge_label_num_; edge_label++) {
+        std::string edge_label_name = schema_.get_edge_label_name(edge_label);
+        if (schema_.exist(src_label_name, dst_label_name, edge_label_name)) {
+          append_edge_loading_progress(src_label_name, dst_label_name,
+                                       edge_label_name,
+                                       LoadingStatus::kLoading);
+        }
+      }
+    }
+  }
 }
 
 void BasicFragmentLoader::init_vertex_data() {
@@ -67,6 +146,7 @@ void BasicFragmentLoader::LoadFragment() {
     auto label_name = schema_.get_vertex_label_name(v_label);
     v_data.resize(lf_indexers_[v_label].size());
     v_data.dump(vertex_table_prefix(label_name), snapshot_dir(work_dir_, 0));
+    append_vertex_loading_progress(label_name, LoadingStatus::kCommited);
   }
 
   for (size_t src_label = 0; src_label < vertex_label_num_; src_label++) {
@@ -88,6 +168,9 @@ void BasicFragmentLoader::LoadFragment() {
                 ie_prefix(src_label_name, dst_label_name, edge_label_name),
                 edata_prefix(src_label_name, dst_label_name, edge_label_name),
                 snapshot_dir(work_dir_, 0));
+            append_edge_loading_progress(src_label_name, dst_label_name,
+                                         edge_label_name,
+                                         LoadingStatus::kCommited);
           }
         }
       }

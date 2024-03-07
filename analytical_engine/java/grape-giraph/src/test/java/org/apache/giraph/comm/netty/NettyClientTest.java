@@ -100,7 +100,7 @@ public class NettyClientTest {
             Future<NettyMessage> msg = client.sendMessage(send);
             // while (!msg.isDone()) {}
             NettyMessage received = client.getResponse();
-            logger.info("reponse for round: " + i + ": " + received);
+            logger.info("response for round: " + i + ": " + received);
         }
     }
 

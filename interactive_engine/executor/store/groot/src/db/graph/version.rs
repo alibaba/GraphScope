@@ -5,7 +5,7 @@ use crate::db::api::*;
 use crate::db::common::concurrency::volatile::Volatile;
 use crate::db::util::lock::GraphMutexLock;
 
-const MAX_SIZE: usize = 128;
+pub const MAX_SIZE: usize = 4096;
 const SIZE_MASK: usize = MAX_SIZE - 1;
 const TOMBSTONE: i64 = i64::min_value();
 const EMPTY_SI: SnapshotId = 0;
