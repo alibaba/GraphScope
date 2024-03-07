@@ -64,19 +64,4 @@ public class FuzzyPatternEdge extends PatternEdge {
     public Integer getId() {
         return id;
     }
-
-    @Override
-    public String toString() {
-        return getSrcVertex().getId()
-                + "->"
-                + getDstVertex().getId()
-                + "["
-                + getEdgeTypeIds().toString()
-                + "]";
-    }
-
-    @Override
-    public int hashCode() {
-        return toString().hashCode();
-    }
 }

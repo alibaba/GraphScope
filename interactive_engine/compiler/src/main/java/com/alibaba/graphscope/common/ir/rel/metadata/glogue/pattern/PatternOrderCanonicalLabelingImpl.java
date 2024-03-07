@@ -38,8 +38,7 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
 
     // the mapping of vertex types <-> groups, used for pattern matching
     // filtering
-    // the key is a list of vertex type ids, notice that it is the type of a
-    // PatternVertex.
+    // the key is a IsomorphismChecker (comparator) for vertices, and
     // the value is a list of group ids
     private Map<IsomorphismChecker, List<Integer>> mapCheckerToGroup;
 
@@ -169,15 +168,6 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             if (this.mapCheckerToGroup.size() != other.mapCheckerToGroup.size()
                     || this.initColoring.getColorClasses().size()
                             != other.initColoring.getColorClasses().size()) {
-                logger.debug(
-                        "In color comparing, numbers of types / colors not equal: "
-                                + this.mapCheckerToGroup.size()
-                                + " vs "
-                                + other.mapCheckerToGroup.size()
-                                + " / "
-                                + this.initColoring.getColorClasses().size()
-                                + " vs "
-                                + other.initColoring.getColorClasses().size());
                 return false;
             }
             // each type should have the same number of groups
@@ -222,5 +212,10 @@ public class PatternOrderCanonicalLabelingImpl extends PatternOrder {
             }
         }
         return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(initColoring, mapCheckerToGroup);
     }
 }
