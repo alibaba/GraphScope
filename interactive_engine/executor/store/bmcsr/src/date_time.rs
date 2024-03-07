@@ -15,7 +15,7 @@
 
 use std::fmt::{Debug, Display, Formatter};
 
-use chrono::DateTime as CDateTime;
+use chrono::{DateTime as CDateTime, TimeZone};
 use chrono::{Datelike, Duration, Timelike, Utc};
 
 #[derive(Clone, Copy)]
@@ -91,6 +91,10 @@ impl DateTime {
 
     pub fn to_i64(&self) -> i64 {
         self.inner
+    }
+
+    pub fn to_days_i64(&self) -> i64 {
+        Utc.timestamp_millis_opt(self.inner).unwrap().date().and_hms(0, 0, 0).timestamp_millis()
     }
 
     pub fn to_chrono_date_utc(&self) -> CDateTime<Utc> {
