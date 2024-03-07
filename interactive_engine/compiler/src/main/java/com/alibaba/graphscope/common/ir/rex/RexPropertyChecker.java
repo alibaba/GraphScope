@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexVisitorImpl;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Pattern;
 
@@ -43,10 +44,7 @@ public class RexPropertyChecker extends RexVisitorImpl<Void> {
             if (splits.length > 1) {
                 String alias = splits[0];
                 String property = splits[1];
-                if (alias == null
-                        || alias.isEmpty()
-                        || alias.equals(AliasInference.DEFAULT_NAME)
-                        || alias.equals(AliasInference.SIMPLE_NAME(AliasInference.DEFAULT_NAME))) {
+                if (StringUtils.isEmpty(alias) || AliasInference.isDefaultAlias(alias)) {
                     builder.variable(null, property);
                 } else {
                     builder.variable(alias, property);

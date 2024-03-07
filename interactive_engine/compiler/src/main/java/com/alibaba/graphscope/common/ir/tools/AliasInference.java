@@ -16,12 +16,9 @@
 
 package com.alibaba.graphscope.common.ir.tools;
 
-import static org.apache.calcite.linq4j.Nullness.castNonNull;
-
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.google.common.collect.Lists;
-
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.type.RelDataTypeField;
@@ -40,11 +37,13 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import static org.apache.calcite.linq4j.Nullness.castNonNull;
+
 /**
  * infer a new alias name from the query given one, and validate if the query given alias is duplicated.
  */
 public abstract class AliasInference {
-    public static final String DEFAULT_NAME = "~DEFAULT";
+    public static final String DEFAULT_NAME = "DEFAULT";
     public static final int DEFAULT_ID = -1;
 
     public static final int DEFAULT_COLUMN_ID = 100;
@@ -65,7 +64,7 @@ public abstract class AliasInference {
      */
     public static final String inferDefault(@Nullable String fieldName, Set<String> uniqueNameList)
             throws IllegalArgumentException {
-        if (fieldName == null || fieldName == DEFAULT_NAME) return DEFAULT_NAME;
+        if (isDefaultAlias(fieldName)) return DEFAULT_NAME;
         if (uniqueNameList.contains(fieldName)) {
             throw new IllegalArgumentException(
                     "alias=" + fieldName + " exists in " + uniqueNameList);
@@ -94,8 +93,9 @@ public abstract class AliasInference {
             fieldNameList.add(null);
         }
         for (int i = 0; i < fieldNameList.size(); ++i) {
-            if (fieldNameList.get(i) == null) {
-                fieldNameList.set(i, innerInfer(exprList, exprList.get(i), i));
+            if (AliasInference.isDefaultAlias(fieldNameList.get(i))) {
+                String inferred = innerInfer(exprList, exprList.get(i), i);
+                fieldNameList.set(i, isDefaultAlias(inferred) ? null : inferred);
             } else {
                 String field = fieldNameList.get(i);
                 if (fieldNameList.lastIndexOf(field) != i || uniqueNameList.contains(field)) {
@@ -176,7 +176,7 @@ public abstract class AliasInference {
         while (!inputsQueue.isEmpty()) {
             RelNode cur = inputsQueue.remove(0);
             for (RelDataTypeField field : cur.getRowType().getFieldList()) {
-                if (field.getName() != null && field.getName() != DEFAULT_NAME) {
+                if (!isDefaultAlias(field.getName())) {
                     uniqueNames.add(field.getName());
                 }
             }
@@ -198,5 +198,9 @@ public abstract class AliasInference {
         return (node instanceof Aggregate)
                 || (node instanceof GraphLogicalProject)
                         && ((GraphLogicalProject) node).isAppend() == false;
+    }
+
+    public static final boolean isDefaultAlias(@Nullable String alias) {
+        return alias == null || alias.equals(DEFAULT_NAME);
     }
 }

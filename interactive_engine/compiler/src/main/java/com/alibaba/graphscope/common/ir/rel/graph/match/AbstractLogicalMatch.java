@@ -52,7 +52,7 @@ public abstract class AbstractLogicalMatch extends SingleRel {
                         super.visit(node, ordinal, parent);
                         List<RelDataTypeField> fields = node.getRowType().getFieldList();
                         for (RelDataTypeField field : fields) {
-                            if (!field.getName().equals(AliasInference.DEFAULT_NAME)) {
+                            if (!AliasInference.isDefaultAlias(field.getName())) {
                                 addTo.add(field);
                             }
                         }
