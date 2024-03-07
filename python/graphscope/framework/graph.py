@@ -1168,21 +1168,21 @@ class Graph(GraphInterface):
         )
 
     @staticmethod
-    def _load_from_graphar(path, sess, storage_options, **kwargs):
+    def _load_from_graphar(path, sess, **kwargs):
         # graphar now only support global vertex map.
         vertex_map = utils.vertex_map_type_to_enum("global")
         # oid_type = utils.get_oid_type_from_graph_info(path)
         config = {
             types_pb2.OID_TYPE: utils.s_to_attr(
-               "int64_t"
-            ),  # grahar use vertex index as oid, so it always be int64_t
+                "int64_t"
+            ),  # graphar use vertex index as oid, so it always be int64_t
             types_pb2.VID_TYPE: utils.s_to_attr("uint64_t"),
             types_pb2.IS_FROM_VINEYARD_ID: utils.b_to_attr(False),
             types_pb2.IS_FROM_GAR: utils.b_to_attr(True),
             types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(vertex_map),
             types_pb2.COMPACT_EDGES: utils.b_to_attr(False),
             types_pb2.GRAPH_INFO_PATH: utils.s_to_attr(path),
-            types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(storage_options)),
+            types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
         }
         op = dag_utils.create_graph(
             sess.session_id, graph_def_pb2.ARROW_PROPERTY, inputs=[], attrs=config
@@ -1190,40 +1190,59 @@ class Graph(GraphInterface):
         return sess._wrapper(GraphDAGNode(sess, op))
 
     @classmethod
-    def load_from(cls, uristring, sess=None, **kwargs):
-        """Load a ArrowProperty graph from with a certain data source. The data source
-        can be vineyard serialized files or graphar files.
+    def load_from(cls, uri, sess=None, **kwargs):
+        """Load a ArrowProperty graph from a certain data source. The data source
+        can be vineyard serialized files, graphar serialized files, or other data
+        sources supported by graphscope.
 
         Args:
-            uristring (str): URI contains the description of the data source or
+            uri (str): URI contains the description of the data source or
                 path contains the serialization files,
                 example: "graphar+file:///tmp/graphar/xxx"
             sess (`graphscope.Session`): The target session that the graph
                 will be construct, if None, use the default session.
-            kwargs: Other arguments that will be passed to the data source loader.
+            selector (dict, optional): the selector to select the data to read.
+            graphar_store_in_local (bool, optional): whether store graphar format in local, default is False.
         Returns:
             `Graph`: A new graph object.
         """
         from graphscope.client.session import get_default_session
 
+        def _check_load_options(load_options):
+            for k, v in load_options.items():
+                if k == "selector":
+                    if not isinstance(v, dict):
+                        raise ValueError(
+                            "selector should be a dict, but got {}".format(type(v))
+                        )
+                elif k == "graphar_store_in_local":
+                    if not isinstance(v, bool):
+                        raise ValueError(
+                            "graphar_store_in_local should be a bool, but got {}".format(
+                                v
+                            )
+                        )
+
         if sess is None:
             sess = get_default_session()
-        uri = urlparse(uristring)
+        uri_str = uri
+        uri = urlparse(uri)
         if uri.scheme and "+" in uri.scheme:
             source = uri.scheme.split("+")[0]
+            if uri.scheme.split("+")[-1] not in ["file", "s3", "oss", "hdfs"]:
+                raise ValueError(
+                    "Unknown file system %s, currently only support file, s3, oss and hdfs"
+                    % uri.scheme.split("+")[-1]
+                )
             path = uri.scheme.split("+")[-1] + "://" + uri.netloc + uri.path
-            storage_options = kwargs.pop("storage_options", {})
             if source == "graphar":
-                return cls._load_from_graphar(uri.path, sess, storage_options)
+                _check_load_options(kwargs)
+                return cls._load_from_graphar(path, sess, **kwargs)
             else:
-                raise ValueError("Unknown source: %s" % source)
+                raise ValueError("Unknown source %s with uri $s:" % source, uri_str)
         else:
             # not a uri string, assume it is a path for deserialization
-            storage_options = kwargs.pop("storage_options", {})
-            deserialization_options = kwargs.pop("deserialization_options", {})
-            op = dag_utils.deserialize_graph(
-                uristring, sess, storage_options, deserialization_options
-            )
+            op = dag_utils.deserialize_graph(uri_str, sess, **kwargs)
             return sess._wrapper(GraphDAGNode(sess, op))
 
     def save_to(
@@ -1237,28 +1256,91 @@ class Graph(GraphInterface):
         Args:
             path (str): the directory path to write graph.
             format (str): the format to write graph, default is "serialization".
-            kwargs: Other arguments that will be passed to the data source
-                    saver.
+            selector (dict, optional): the selector to select the data to write.
+            graphar_graph_name (str, optional): the name of graph in graphar format.
+            graphar_file_type (str, optional): the file type of graphar format,
+                support "parquet", "orc", "csv", default is "parquet".
+            graphar_vertex_chunk_size (int, optional): the chunk size of vertex in graphar format, default is 2^18.
+            graphar_edge_chunk_size (int, optional): the chunk size of edge in graphar format, default is 2^22.
+            graphar_store_in_local (bool, optional): whether store graphar format in local, default is False.
 
         Return (dict): A dict contains the type and uri string of output data.
         """
+
+        def _check_write_options(write_options):
+            for k, v in write_options.items():
+                if k == "graphar_graph_name" and not isinstance(v, str):
+                    raise ValueError(
+                        "graphar_graph_name should be a string, but got {}".format(
+                            type(v)
+                        )
+                    )
+                elif k == "graphar_file_type" and v not in ["parquet", "orc", "csv"]:
+                    raise ValueError(
+                        "graphar_file_type should be one of ['parquet', 'orc', 'csv'], but got {}".format(
+                            v
+                        )
+                    )
+                elif k == "graphar_vertex_chunk_size":
+                    if not isinstance(v, int) or v <= 0:
+                        raise ValueError(
+                            "graphar_vertex_chunk_size should be a positive integer, but got {}".format(
+                                v
+                            )
+                        )
+                elif k == "graphar_edge_chunk_size":
+                    if not isinstance(v, int) or v <= 0:
+                        raise ValueError(
+                            "graphar_edge_chunk_size should be a positive integer, but got {}".format(
+                                v
+                            )
+                        )
+                elif k == "graphar_store_in_local":
+                    if not isinstance(v, bool):
+                        raise ValueError(
+                            "graphar_store_in_local should be a bool, but got {}".format(
+                                v
+                            )
+                        )
+                elif k == "selector":
+                    if not isinstance(v, dict):
+                        raise ValueError(
+                            "selector should be a dict, but got {}".format(type(v))
+                        )
+
         if format == "graphar":
-            graphar_options = kwargs.pop("graphar_options", {})
-            op = dag_utils.save_to_graphar(self, path, graphar_options)
-            graph_name = graphar_options.get("graph_name", "graph")
+            if "graphar_graph_name" not in kwargs:
+                kwargs["graphar_graph_name"] = "graph"  # default graph name
+            _check_write_options(kwargs)
+            graph_name = kwargs["graphar_graph_name"]
+
+            maybe_uri = urlparse(path)
+            if maybe_uri.scheme and maybe_uri.scheme not in [
+                "file",
+                "s3",
+                "oss",
+                "hdfs",
+            ]:
+                raise ValueError(
+                    "Unknown file system %s, currently only support file, s3, oss and hdfs"
+                    % maybe_uri.scheme
+                )
+            if not maybe_uri.scheme:
+                maybe_uri = maybe_uri._replace(scheme="file")
+
+            op = dag_utils.save_to_graphar(self, path, **kwargs)
             self._session.dag.add_op(op)
             self._session._wrapper(op)
-            return {"type": format, "uri": "graphar+file://" + path + graph_name + ".graph.yml"}
+            return {
+                "type": format,
+                "URI": "graphar+" + maybe_uri.geturl() + graph_name + ".graph.yaml",
+            }
         elif format == "serialization":
             # serialize graph
-            storage_options = kwargs.pop("storage_options", {})
-            serialization_options = kwargs.pop("serialization_options", {})
-            op = dag_utils.serialize_graph(
-                self, path, storage_options, serialization_options
-            )
+            op = dag_utils.serialize_graph(self, path, **kwargs)
             self._session.dag.add_op(op)
             self._session._wrapper(op)
-            return {"type": format, "uri": path}
+            return {"type": format, "URI": path}
         else:
             raise ValueError("Unknown format: %s" % format)
 

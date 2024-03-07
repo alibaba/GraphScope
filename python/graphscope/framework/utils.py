@@ -31,12 +31,10 @@ import time
 import warnings
 from queue import Empty
 from queue import Queue
-from urllib.parse import urlparse
 
 import numpy as np
 import pandas as pd
 import psutil
-import yaml
 from google.protobuf.any_pb2 import Any
 
 from graphscope.client.archive import OutArchive

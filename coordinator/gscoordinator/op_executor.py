@@ -820,7 +820,6 @@ class OperationExecutor:
                 "\n"
             )
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
-        serialization_options = json.loads(op.attr[types_pb2.SERIALIZATION_OPTIONS].s.decode())
         vineyard_endpoint = self._launcher.vineyard_endpoint
         vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
@@ -833,7 +832,6 @@ class OperationExecutor:
             vineyard_ipc_socket=vineyard_ipc_socket,
             vineyard_endpoint=vineyard_endpoint,
             storage_options=storage_options,
-            serialization_options=serialization_options,
             deployment=deployment,
             hosts=hosts,
         )
@@ -854,7 +852,6 @@ class OperationExecutor:
                 "\n"
             )
         storage_options = json.loads(op.attr[types_pb2.STORAGE_OPTIONS].s.decode())
-        deserialization_options = json.loads(op.attr[types_pb2.DESERIALIZATION_OPTIONS].s.decode())
         vineyard_endpoint = self._launcher.vineyard_endpoint
         vineyard_ipc_socket = self._launcher.vineyard_socket
         deployment, hosts = self._launcher.get_vineyard_stream_info()
@@ -865,7 +862,6 @@ class OperationExecutor:
             vineyard_ipc_socket=vineyard_ipc_socket,
             vineyard_endpoint=vineyard_endpoint,
             storage_options=storage_options,
-            deserialization_options=deserialization_options,
             deployment=deployment,
             hosts=hosts,
         )

@@ -1082,7 +1082,7 @@ def gremlin_to_subgraph(
     return op
 
 
-def save_to_graphar(graph, path, graphar_options=None):
+def save_to_graphar(graph, path: str, **kwargs):
     """Archive a graph to gar format with a path.
 
     Args:
@@ -1099,7 +1099,7 @@ def save_to_graphar(graph, path, graphar_options=None):
         types_pb2.VERTEX_MAP_TYPE: utils.i_to_attr(graph._vertex_map),
         types_pb2.COMPACT_EDGES: utils.b_to_attr(graph._compact_edges),
         types_pb2.USE_PERFECT_HASH: utils.b_to_attr(graph._use_perfect_hash),
-        types_pb2.WRITE_OPTIONS: utils.s_to_attr(json.dumps(graphar_options)),
+        types_pb2.WRITE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
         types_pb2.GRAPH_INFO_PATH: utils.s_to_attr(path),
     }
     op = Operation(
@@ -1112,9 +1112,7 @@ def save_to_graphar(graph, path, graphar_options=None):
     return op
 
 
-def serialize_graph(
-    graph, path: str, storage_options: dict, serialization_options: dict
-):
+def serialize_graph(graph, path: str, **kwargs):
     """Serialize graph to the specified location
        The meta and data of graph is dumped to specified location,
        and can be restored by `Graph.load_from` in other sessions.
@@ -1132,10 +1130,7 @@ def serialize_graph(
     config = {
         types_pb2.GRAPH_SERIALIZATION_PATH: utils.s_to_attr(path),
         types_pb2.VINEYARD_ID: utils.i_to_attr(graph._vineyard_id),
-        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(storage_options)),
-        types_pb2.SERIALIZATION_OPTIONS: utils.s_to_attr(
-            json.dumps(serialization_options)
-        ),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
     }
     op = Operation(
         graph.session_id,
@@ -1147,9 +1142,7 @@ def serialize_graph(
     return op
 
 
-def deserialize_graph(
-    path: str, sess, storage_options: dict, deserialization_options: dict
-):
+def deserialize_graph(path: str, sess, **kwargs):
     """Deserialize graph from the specified location.
 
     Args:
@@ -1163,10 +1156,7 @@ def deserialize_graph(
     """
     config = {
         types_pb2.GRAPH_SERIALIZATION_PATH: utils.s_to_attr(path),
-        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(storage_options)),
-        types_pb2.DESERIALIZATION_OPTIONS: utils.s_to_attr(
-            json.dumps(deserialization_options)
-        ),
+        types_pb2.STORAGE_OPTIONS: utils.s_to_attr(json.dumps(kwargs)),
     }
     op = Operation(
         sess.session_id,
