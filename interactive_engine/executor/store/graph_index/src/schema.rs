@@ -362,12 +362,14 @@ impl IndexSchema {
                 .vertex_index_name_list
                 .get_mut(&vertex_label)
             {
-                let property_index = property_list.len() as LabelId;
-                property_list.push(index_name.clone());
-                if !index_metas.contains_key(&index_name) {
+                if let Some(property_info) = index_metas.get(&index_name) {
+                    Some(property_info.0)
+                } else {
+                    let property_index = property_list.len() as LabelId;
+                    property_list.push(index_name.clone());
                     index_metas.insert(index_name, (property_index, data_type));
+                    Some(property_index)
                 }
-                return Some(property_index);
             } else {
                 panic!("Vertex index map poisoned")
             }
