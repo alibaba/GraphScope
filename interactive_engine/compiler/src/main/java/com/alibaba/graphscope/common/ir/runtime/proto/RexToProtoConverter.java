@@ -293,8 +293,19 @@ public class RexToProtoConverter extends RexVisitorImpl<OuterExpression.Expressi
     }
 
     private boolean needBrace(SqlOperator operator, RexNode operand) {
-        return operand instanceof RexCall
-                && ((RexCall) operand).getOperator().getLeftPrec() <= operator.getLeftPrec();
+        switch (operator.getKind()) {
+            case NOT:
+                // the operator precedence of `not` in sql is low, which is the same as `and` or
+                // `or`.
+                // However, the `not` operator is implemented by `!` in c++ or in rust, which
+                // precedence is high.
+                // To solve the inconsistency, we always add brace for operand of `not` operator.
+                return true;
+            default:
+                return operand instanceof RexCall
+                        && ((RexCall) operand).getOperator().getLeftPrec()
+                                <= operator.getLeftPrec();
+        }
     }
 
     @Override

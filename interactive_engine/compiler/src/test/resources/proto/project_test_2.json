@@ -49,6 +49,7 @@
           }],
           "sampleRatio": 1.0
         },
+        "alias": 1,
         "expandOpt": "EDGE"
       }
     },
@@ -70,7 +71,68 @@
           }]
         }
       },
-      "alias": -1
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "project": {
+        "mappings": [{
+          "expr": {
+            "operators": [{
+              "var": {
+                "tag": {
+                  "id": 0
+                },
+                "property": {
+                  "key": {
+                    "name": "name"
+                  }
+                },
+                "nodeType": {
+                  "dataType": "STRING"
+                }
+              },
+              "nodeType": {
+                "dataType": "STRING"
+              }
+            }]
+          },
+          "alias": 2
+        }, {
+          "expr": {
+            "operators": [{
+              "var": {
+                "tag": {
+                  "id": 1
+                },
+                "property": {
+                  "key": {
+                    "name": "weight"
+                  }
+                },
+                "nodeType": {
+                  "dataType": "DOUBLE"
+                }
+              },
+              "nodeType": {
+                "dataType": "DOUBLE"
+              }
+            }]
+          },
+          "alias": 3
+        }]
+      }
+    },
+    "metaData": [{
+      "type": {
+        "dataType": "STRING"
+      },
+      "alias": 2
+    }, {
+      "type": {
+        "dataType": "DOUBLE"
+      },
+      "alias": 3
     }]
   }, {
     "opr": {
