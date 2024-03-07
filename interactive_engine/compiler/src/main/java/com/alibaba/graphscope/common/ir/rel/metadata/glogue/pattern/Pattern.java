@@ -425,6 +425,6 @@ public class Pattern {
 
     @Override
     public int hashCode() {
-        return this.patternGraph.hashCode();
+        return Objects.hash(this.maxVertexId, this.maxEdgeId, this.patternOrder);
     }
 }
