@@ -39,6 +39,13 @@
     }]
   }, {
     "opr": {
+      "repartition": {
+        "toAnother": {
+        }
+      }
+    }
+  }, {
+    "opr": {
       "edge": {
         "params": {
           "tables": [{
@@ -66,6 +73,45 @@
                 "name": "weight"
               },
               "type": "DOUBLE"
+            }]
+          }]
+        }
+      },
+      "alias": -1
+    }]
+  }, {
+    "opr": {
+      "vertex": {
+        "opt": "END",
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
             }]
           }]
         }

@@ -2,7 +2,6 @@
   "plan": [{
     "opr": {
       "scan": {
-        "alias": 0,
         "params": {
           "tables": [{
             "id": 0
@@ -35,8 +34,16 @@
             }]
           }]
         }
-      }
+      },
+      "alias": -1
     }]
+  }, {
+    "opr": {
+      "repartition": {
+        "toAnother": {
+        }
+      }
+    }
   }, {
     "opr": {
       "edge": {
@@ -44,28 +51,31 @@
           "tables": [{
             "id": 0
           }],
-          "columns": [{
-            "name": "weight"
-          }],
           "sampleRatio": 1.0
-        },
-        "expandOpt": "EDGE"
+        }
       }
     },
     "metaData": [{
       "type": {
         "graphType": {
-          "elementOpt": "EDGE",
           "graphDataType": [{
             "label": {
-              "srcLabel": 0,
-              "dstLabel": 0
             },
             "props": [{
               "propId": {
-                "name": "weight"
+                "name": "id"
               },
-              "type": "DOUBLE"
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
             }]
           }]
         }

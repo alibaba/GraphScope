@@ -52,7 +52,7 @@
         },
         "hopRange": {
           "lower": 1,
-          "upper": 3
+          "upper": 4
         },
         "pathOpt": "SIMPLE",
         "resultOpt": "ALL_V"

@@ -39,6 +39,13 @@
     }]
   }, {
     "opr": {
+      "repartition": {
+        "toAnother": {
+        }
+      }
+    }
+  }, {
+    "opr": {
       "edge": {
         "params": {
           "tables": [{
@@ -49,6 +56,7 @@
           }],
           "sampleRatio": 1.0
         },
+        "alias": 1,
         "expandOpt": "EDGE"
       }
     },
@@ -70,46 +78,76 @@
           }]
         }
       },
-      "alias": -1
+      "alias": 1
     }]
   }, {
     "opr": {
-      "vertex": {
-        "opt": "END",
-        "params": {
-          "tables": [{
-            "id": 0
-          }],
-          "sampleRatio": 1.0
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 0
         }
+      }
+    }
+  }, {
+    "opr": {
+      "project": {
+        "mappings": [{
+          "expr": {
+            "operators": [{
+              "var": {
+                "tag": {
+                  "id": 0
+                },
+                "property": {
+                  "key": {
+                    "name": "name"
+                  }
+                },
+                "nodeType": {
+                  "dataType": "STRING"
+                }
+              },
+              "nodeType": {
+                "dataType": "STRING"
+              }
+            }]
+          },
+          "alias": 2
+        }, {
+          "expr": {
+            "operators": [{
+              "var": {
+                "tag": {
+                  "id": 1
+                },
+                "property": {
+                  "key": {
+                    "name": "weight"
+                  }
+                },
+                "nodeType": {
+                  "dataType": "DOUBLE"
+                }
+              },
+              "nodeType": {
+                "dataType": "DOUBLE"
+              }
+            }]
+          },
+          "alias": 3
+        }]
       }
     },
     "metaData": [{
       "type": {
-        "graphType": {
-          "graphDataType": [{
-            "label": {
-            },
-            "props": [{
-              "propId": {
-                "name": "id"
-              },
-              "type": "INT64"
-            }, {
-              "propId": {
-                "name": "name"
-              },
-              "type": "STRING"
-            }, {
-              "propId": {
-                "name": "age"
-              },
-              "type": "INT32"
-            }]
-          }]
-        }
+        "dataType": "STRING"
       },
-      "alias": -1
+      "alias": 2
+    }, {
+      "type": {
+        "dataType": "DOUBLE"
+      },
+      "alias": 3
     }]
   }, {
     "opr": {
