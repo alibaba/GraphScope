@@ -16,15 +16,15 @@
 # limitations under the License.
 #
 
-import requests
-import time
 import datetime
 import logging
 import os
 import pickle
+import time
 from typing import List, Union
 
 import hqps_client
+import requests
 from hqps_client import (Graph, JobResponse, JobStatus, ModelSchema, Procedure,
                          SchemaMapping, Service)
 
@@ -34,8 +34,6 @@ from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
 from gs_flex_coordinator.core.utils import (encode_datetime, get_internal_ip,
                                             get_public_ip)
 from gs_flex_coordinator.models import StartServiceRequest
-
-logger = logging.getLogger("graphscope")
 
 
 class HQPSClient(object):
@@ -57,23 +55,24 @@ class HQPSClient(object):
     def _try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._pickle_path):
-                logger.info(
+                logging.info(
                     "Recover dataloading configs from file %s", self._pickle_path
                 )
                 with open(self._pickle_path, "rb") as f:
                     self._dataloading_config = pickle.load(f)
         except Exception as e:
-            logger.warn("Failed to recover dataloading configs: %s", str(e))
+            logging.warn("Failed to recover dataloading configs: %s", str(e))
 
     def _pickle_dataloading_config_impl(self):
         try:
             with open(self._pickle_path, "wb") as f:
                 pickle.dump(self._dataloading_config, f)
         except Exception as e:
-            logger.warn("Failed to dump dataloading configs: %s", str(e))
+            logging.warn("Failed to dump dataloading configs: %s", str(e))
 
     def _get_hqps_service_endpoints(self):
         if CLUSTER_TYPE == "HOSTS":
+            logging.info("Connecting to HQPS service ...")
             while True:
                 try:
                     requests.get(f"http://192.168.0.9:{HQPS_ADMIN_SERVICE_PORT}")
@@ -81,7 +80,6 @@ class HQPSClient(object):
                     time.sleep(3)
                 else:
                     return f"http://192.168.0.9:{HQPS_ADMIN_SERVICE_PORT}"
-
 
     def list_graphs(self) -> List[Graph]:
         with hqps_client.ApiClient(

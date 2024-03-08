@@ -26,6 +26,9 @@ from dateutil import tz
 from graphscope.deploy.kubernetes.utils import (get_service_endpoints,
                                                 resolve_api_client)
 from gremlin_python.driver.client import Client
+from kubernetes import client as kube_client
+from kubernetes import config as kube_config
+
 from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
                                              ENABLE_DNS, GROOT_GREMLIN_PORT,
                                              GROOT_GRPC_PORT, GROOT_PASSWORD,
@@ -36,10 +39,6 @@ from gs_flex_coordinator.core.utils import (data_type_to_groot,
                                             encode_datetime, get_internal_ip,
                                             get_public_ip)
 from gs_flex_coordinator.version import __version__
-from kubernetes import client as kube_client
-from kubernetes import config as kube_config
-
-logger = logging.getLogger("graphscope")
 
 
 class Graph(metaclass=ABCMeta):
@@ -175,7 +174,7 @@ class GrootGraph(Graph):
             )
             g = conn.g()
         except Exception as e:
-            logger.warn(f"Failed to fetch frontend endpoints: {str(e)}")
+            logging.warn(f"Failed to fetch frontend endpoints: {str(e)}")
         else:
             if (
                 gremlin_endpoint != self._gremlin_interface["gremlin_endpoint"]
@@ -190,7 +189,7 @@ class GrootGraph(Graph):
                     "username": GROOT_USERNAME,
                     "password": GROOT_PASSWORD,
                 }
-                logger.info(f"Update frontend endpoints: {str(endpoints)}")
+                logging.info(f"Update frontend endpoints: {str(endpoints)}")
 
     def get_vertex_primary_key(self, vertex_type: str) -> str:
         for v in self._schema["vertices"]:

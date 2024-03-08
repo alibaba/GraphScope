@@ -21,30 +21,6 @@ import logging
 import os
 import tempfile
 
-logger = logging.getLogger("graphscope")
-
-
-# config logging
-def config_logging(log_level: str):
-    # `NOTSET` is special as it doesn't show log in Python
-    log_level = getattr(logging, log_level.upper())
-    if log_level == logging.NOTSET:
-        log_level = logging.DEBUG
-    logger = logging.getLogger("graphscope")
-    logger.setLevel(log_level)
-
-    handler = logging.StreamHandler()
-    handler.setLevel(log_level)
-
-    formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-
-config_logging("info")
-
 
 def str_to_bool(s):
     if isinstance(s, bool):

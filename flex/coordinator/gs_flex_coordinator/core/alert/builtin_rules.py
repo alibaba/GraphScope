@@ -22,13 +22,12 @@ import socket
 
 import psutil
 from gremlin_python.driver.client import Client
+
 from gs_flex_coordinator.core import client_wrapper
 from gs_flex_coordinator.core.alert.alert_rule import AlertRule
 from gs_flex_coordinator.core.alert.message_collector import \
     AlertMessageCollector
 from gs_flex_coordinator.core.config import CLUSTER_TYPE, SOLUTION
-
-logger = logging.getLogger("graphscope")
 
 
 class HighDiskUtilizationAlert(AlertRule):
@@ -74,7 +73,7 @@ class HighDiskUtilizationAlert(AlertRule):
                 alert_message = self.generate_alert_message(target, message)
                 self.alert(alert_message)
         except Exception as e:
-            logger.warn("Failed to get disk usage: %s", str(e))
+            logging.warn("Failed to get disk usage: %s", str(e))
 
 
 class GremlinServiceAvailableAlert(AlertRule):

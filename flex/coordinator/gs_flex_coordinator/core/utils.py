@@ -26,8 +26,6 @@ from typing import Union
 
 import requests
 
-logger = logging.getLogger("graphscope")
-
 
 def handle_api_exception():
     """Decorator to handle api exception for openapi controllers."""
@@ -38,7 +36,7 @@ def handle_api_exception():
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                logger.info(str(e))
+                logging.info(str(e))
                 return str(e), 500
 
         return wrapper
@@ -94,7 +92,7 @@ def get_public_ip() -> Union[str, None]:
         else:
             return None
     except requests.exceptions.RequestException as e:
-        logger.warn("Failed to get public ip: %s", str(e))
+        logging.warn("Failed to get public ip: %s", str(e))
         return None
 
 

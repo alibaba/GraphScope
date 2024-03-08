@@ -27,8 +27,6 @@ from gs_flex_coordinator.core.insight.job import DataloadingJobScheduler
 from gs_flex_coordinator.core.scheduler import schedule
 from gs_flex_coordinator.models import JobStatus
 
-logger = logging.getLogger("graphscope")
-
 
 class GrootClient(object):
     """Class used to interact with Groot"""
@@ -64,17 +62,17 @@ class GrootClient(object):
     def _try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._datasource_pickle_path):
-                logger.info(
+                logging.info(
                     "Recover data source from file %s", self._datasource_pickle_path
                 )
                 with open(self._datasource_pickle_path, "rb") as f:
                     self._data_source = pickle.load(f)
         except Exception as e:
-            logger.warn("Failed to recover data source: %s", str(e))
+            logging.warn("Failed to recover data source: %s", str(e))
 
         try:
             if os.path.exists(self._job_status_pickle_path):
-                logger.info(
+                logging.info(
                     "Recover job status from file %s", self._job_status_pickle_path
                 )
                 with open(self._job_status_pickle_path, "rb") as f:
@@ -82,14 +80,14 @@ class GrootClient(object):
                     for jobid, status in data.items():
                         self._job_status[jobid] = JobStatus.from_dict(status)
         except Exception as e:
-            logger.warn("Failed to recover job status: %s", str(e))
+            logging.warn("Failed to recover job status: %s", str(e))
 
     def _pickle_datasource_impl(self):
         try:
             with open(self._datasource_pickle_path, "wb") as f:
                 pickle.dump(self._data_source, f)
         except Exception as e:
-            logger.warn("Failed to dump data source: %s", str(e))
+            logging.warn("Failed to dump data source: %s", str(e))
 
     def _pickle_job_status_impl(self):
         try:
@@ -99,7 +97,7 @@ class GrootClient(object):
             with open(self._job_status_pickle_path, "wb") as f:
                 pickle.dump(rlt, f)
         except Exception as e:
-            logger.warn("Failed to dump job status: %s", str(e))
+            logging.warn("Failed to dump job status: %s", str(e))
 
     def get_edge_full_label(
         self, type_name: str, source_vertex_type: str, destination_vertex_type: str

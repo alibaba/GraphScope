@@ -26,6 +26,7 @@ import threading
 from typing import List, Union
 
 import psutil
+
 from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
                                              DATASET_WORKSPACE, INSTANCE_NAME,
                                              SOLUTION, WORKSPACE)
@@ -42,8 +43,6 @@ from gs_flex_coordinator.models import (DataSource, DeploymentInfo,
                                         ServiceStatus, StartServiceRequest,
                                         VertexDataSource, VertexType)
 from gs_flex_coordinator.version import __version__
-
-logger = logging.getLogger("graphscope")
 
 
 class ClientWrapper(object):
@@ -70,11 +69,11 @@ class ClientWrapper(object):
     def _try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._pickle_path):
-                logger.info("Recover graphs info from file %s", self._pickle_path)
+                logging.info("Recover graphs info from file %s", self._pickle_path)
                 with open(self._pickle_path, "rb") as f:
                     self._graphs_info = pickle.load(f)
         except Exception as e:
-            logger.warn("Failed to recover graphs info: %s", str(e))
+            logging.warn("Failed to recover graphs info: %s", str(e))
         # set default graph info
         self._sync_graphs_info_impl()
 
@@ -83,7 +82,7 @@ class ClientWrapper(object):
             with open(self._pickle_path, "wb") as f:
                 pickle.dump(self._graphs_info, f)
         except Exception as e:
-            logger.warn("Failed to dump graphs info: %s", str(e))
+            logging.warn("Failed to dump graphs info: %s", str(e))
 
     def _sync_graphs_info_impl(self):
         if SOLUTION == "INTERACTIVE":
