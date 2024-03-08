@@ -45,8 +45,11 @@ public class OfflineBuildOdps {
     private static final Logger logger = LoggerFactory.getLogger(OfflineBuildOdps.class);
     private static Odps odps;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         String propertiesFile = args[0];
+        for (String arg : args) {
+            logger.info("arg is {}", arg);
+        }
 
         Properties properties = new Properties();
         try (InputStream is = new FileInputStream(propertiesFile)) {
@@ -63,6 +66,37 @@ public class OfflineBuildOdps {
         long waitTimeBeforeCommit =
                 Long.parseLong(
                         properties.getProperty(DataLoadConfig.WAIT_TIME_BEFORE_COMMIT, "-1"));
+
+        long waitTimeBeforeReplay =
+                Long.parseLong(
+                        properties.getProperty(DataLoadConfig.WAIT_TIME_BEFORE_REPLAY, "-1"));
+
+        String primaryVipServerDomain =
+                properties.getProperty(DataLoadConfig.PRIMARY_VIP_SERVER_DOMAIN, "");
+        String secondaryVipServerDomain =
+                properties.getProperty(DataLoadConfig.SECONDARY_VIP_SERVER_DOMAIN, "");
+        if (!"".equals(primaryVipServerDomain)) {
+            // if vipserver domain is not blank, get vipserver ip:port replace graphEndpoint param
+            try {
+                List<EndpointDTO> vipServerEndpoints =
+                        Utils.getEndpointFromVipServerDomain(primaryVipServerDomain);
+                logger.info("vipServerEndpoint is {}", vipServerEndpoints);
+                if (vipServerEndpoints.size() > 0) {
+                    graphEndpoint = vipServerEndpoints.get(0).toAddress();
+                }
+            } catch (Exception e) {
+                logger.error("Get vipserver domain endpoint has error.", e);
+            }
+        }
+
+        boolean compactAfterCommit =
+                Boolean.parseBoolean(
+                        properties.getProperty(DataLoadConfig.COMPACT_AFTER_COMMIT, "false"));
+        boolean reopenAfterCommit =
+                Boolean.parseBoolean(
+                        properties.getProperty(DataLoadConfig.REOPEN_AFTER_COMMIT, "false"));
+        Long replayTimeStamp = getReplayTimeStampFromArgs(args);
+        logger.info("replayTimeStamp is {}", replayTimeStamp);
 
         String uniquePath =
                 properties.getProperty(DataLoadConfig.UNIQUE_PATH, UuidUtils.getBase64UUIDString());
@@ -178,5 +212,87 @@ public class OfflineBuildOdps {
                 }
             }
         }
+        replayRecords(replayTimeStamp, waitTimeBeforeReplay, client);
+        compactDb(compactAfterCommit, client, graphEndpoint);
+        reopenDb(reopenAfterCommit, secondaryVipServerDomain, username, password);
+    }
+
+    private static void reopenDb(
+            boolean reopenAfterCommit,
+            String secondaryVipServerDomain,
+            String username,
+            String password)
+            throws Exception {
+        if (reopenAfterCommit) {
+            if (!"".equals(secondaryVipServerDomain)) {
+                try {
+                    List<EndpointDTO> secondaryVipServerEndpoints =
+                            Utils.getEndpointFromVipServerDomain(secondaryVipServerDomain);
+                    for (EndpointDTO secondaryVipServerEndpoint : secondaryVipServerEndpoints) {
+                        String address = secondaryVipServerEndpoint.getIp() + ":55556";
+                        logger.info("endpoint: {}, reopen start.", address);
+                        GrootClient secondaryClient = Utils.getClient(address, username, password);
+                        boolean reopenSuccess = secondaryClient.reopenSecondary();
+                        logger.info("endpoint: {}, reopen result:{}", address, reopenSuccess);
+                    }
+                } catch (Exception e) {
+                    logger.error("Get secondary vipserver domain endpoint has error.", e);
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private static void compactDb(
+            boolean compactAfterCommit, GrootClient client, String graphEndpoint) {
+        if (compactAfterCommit) {
+            logger.info("endpoint {} compact start:", graphEndpoint);
+            boolean compactSuccess = client.compactDB();
+            logger.info("compact result:" + compactSuccess);
+        }
+    }
+
+    private static void replayRecords(
+            Long replayTimeStamp, long waitTimeBeforeReplay, GrootClient client) {
+        if (replayTimeStamp != null) {
+            if (waitTimeBeforeReplay > 0) {
+                long waitStartTime = System.currentTimeMillis();
+                logger.info("start wait before replay: " + waitStartTime);
+                try {
+                    Thread.sleep(waitTimeBeforeReplay);
+                    logger.info("wait time has arrived. will replay soon.");
+                } catch (InterruptedException e) {
+                    logger.warn("wait thread has been interrupt. will replay soon.");
+                }
+            }
+            long replayStartTime = System.currentTimeMillis();
+            logger.info("start replay records: " + replayStartTime);
+            // need replay time stamp
+            List<Long> snapShotIds = client.replayRecords(-1, replayTimeStamp);
+            for (Long snapShotId : snapShotIds) {
+                client.remoteFlush(snapShotId);
+            }
+            long replayEndTime = System.currentTimeMillis();
+            logger.info("replay records end: " + replayEndTime);
+        }
+    }
+
+    /**
+     * find replay timestamp
+     * @param args
+     * @return
+     */
+    private static Long getReplayTimeStampFromArgs(String[] args) {
+        for (String arg : args) {
+            if (arg.contains(DataLoadConfig.REPLAY_DATE)) {
+                String[] kv = arg.split("=");
+                if (kv.length < 2) {
+                    return null;
+                }
+                String replayDate = kv[1];
+                return Utils.transferDateToTimeStamp(replayDate, "yyyyMMdd");
+            }
+        }
+        return null;
     }
 }

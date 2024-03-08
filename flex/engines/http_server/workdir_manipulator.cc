@@ -117,7 +117,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::GetGraphSchemaString(
   if (!schema_str_res.ok()) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::NotExists,
-                   "Failt to read schema file: " + schema_file +
+                   "Failed to read schema file: " + schema_file +
                        ", error: " + schema_str_res.status().error_message()));
   } else {
     return gs::Result<seastar::sstring>(schema_str_res.value());
@@ -141,7 +141,11 @@ gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
   // Load schema from schema_file
   try {
     LOG(INFO) << "Load graph schema from file: " << schema_file;
-    schema = gs::Schema::LoadFromYaml(schema_file);
+    auto schema_res = gs::Schema::LoadFromYaml(schema_file);
+    if (!schema_res.ok()) {
+      return gs::Result<gs::Schema>(schema_res.status(), schema);
+    }
+    schema = schema_res.value();
   } catch (const std::exception& e) {
     LOG(ERROR) << "Fail to load graph schema: " << schema_file
                << ", error: " << e.what();
@@ -275,7 +279,11 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
   auto schema_file = GetGraphSchemaPath(graph_name);
   gs::Schema schema;
   try {
-    schema = gs::Schema::LoadFromYaml(schema_file);
+    auto schema_res = gs::Schema::LoadFromYaml(schema_file);
+    if (!schema_res.ok()) {
+      return gs::Result<seastar::sstring>(schema_res.status());
+    }
+    schema = schema_res.value();
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,
@@ -639,7 +647,7 @@ gs::Result<seastar::sstring> WorkDirManipulator::UpdateProcedure(
         gs::Status(gs::StatusCode::InternalError,
                    "Fail to parse parameter as json: " + parameters));
   }
-  VLOG(1) << "Successfully parse json paramters: " << json.dump();
+  VLOG(1) << "Successfully parse json parameters: " << json.dump();
   // load plugin_file as yaml
   YAML::Node plugin_node;
   try {

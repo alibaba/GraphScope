@@ -979,7 +979,6 @@ static bool parse_schema_config_file(const std::string& path, Schema& schema) {
   YAML::Node graph_node = YAML::LoadFile(path);
   // get the directory of path
   auto parent_dir = std::filesystem::path(path).parent_path().string();
-
   return parse_schema_from_yaml_node(graph_node, schema, parent_dir);
 }
 
@@ -1075,6 +1074,10 @@ bool Schema::EmplacePlugins(
 
 void Schema::SetPluginDir(const std::string& dir) { plugin_dir_ = dir; }
 
+void Schema::RemovePlugin(const std::string& name) {
+  plugin_name_to_path_and_id_.erase(name);
+}
+
 std::string Schema::GetPluginDir() const { return plugin_dir_; }
 
 // check whether prop in vprop_names, or is the primary key
@@ -1139,11 +1142,13 @@ bool Schema::has_edge_label(const std::string& src_label,
   return eprop_names_.find(e_label_id) != eprop_names_.end();
 }
 
-Schema Schema::LoadFromYaml(const std::string& schema_config) {
+Result<Schema> Schema::LoadFromYaml(const std::string& schema_config) {
   Schema schema;
   if (!schema_config.empty() && std::filesystem::exists(schema_config)) {
     if (!config_parsing::parse_schema_config_file(schema_config, schema)) {
-      LOG(FATAL) << "Failed to parse schema config file: " << schema_config;
+      LOG(ERROR) << "Failed to parse schema config file: " << schema_config;
+      return Result<Schema>(
+          Status(StatusCode::InvalidSchema, "Failed to parse schema"), schema);
     }
   }
   return schema;

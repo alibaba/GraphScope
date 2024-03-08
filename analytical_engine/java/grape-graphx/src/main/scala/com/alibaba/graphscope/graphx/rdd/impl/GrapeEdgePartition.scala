@@ -225,7 +225,7 @@ class GrapeEdgePartition[VD: ClassTag, ED: ClassTag](
           //a new round start, we add new Edata to this edge
           newEdata.setWithOffset(prevEdgeInd.toInt, attrSum)
           log.info(
-            s"end of acculating edge ${curSrcId}, ${curDstId}, ${attrSum}"
+            s"end of accumulating edge ${curSrcId}, ${curDstId}, ${attrSum}"
           )
         }
         curSrcId = edge.srcId
@@ -985,7 +985,7 @@ object GrapeEdgePartition extends Logging {
 
             log.info(
               s"Totally ${size} ele in queue, registered partition num ${pidQueue
-                .size()}, first ${numLargestSplit} frags are splited into ${maxTimes}, others are splited into ${maxTimes - 1} times"
+                .size()}, first ${numLargestSplit} frags are split into ${maxTimes}, others are split into ${maxTimes - 1} times"
             )
             for (i <- 0 until size) {
               val tuple      = tupleQueue.poll()

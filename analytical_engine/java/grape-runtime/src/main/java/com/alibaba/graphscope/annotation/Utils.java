@@ -48,8 +48,8 @@ public class Utils {
                         .build());
     }
 
-    public static void addLongCXXTemplate(AnnotationSpec.Builder buider) {
-        buider.addMember(
+    public static void addLongCXXTemplate(AnnotationSpec.Builder builder) {
+        builder.addMember(
                 "templates",
                 "$L",
                 AnnotationSpec.builder(CXXTemplate.class)

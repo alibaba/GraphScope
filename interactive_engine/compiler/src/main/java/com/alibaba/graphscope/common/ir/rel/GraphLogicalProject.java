@@ -84,8 +84,8 @@ public class GraphLogicalProject extends Project {
 
     @Override
     public RelNode accept(RelShuttle shuttle) {
-        if (shuttle instanceof GraphRelVisitor) {
-            return ((GraphRelVisitor) shuttle).visit(this);
+        if (shuttle instanceof GraphShuttle) {
+            return ((GraphShuttle) shuttle).visit(this);
         }
         return shuttle.visit(this);
     }

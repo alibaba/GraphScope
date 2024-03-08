@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 /**
  * visit a graph relation tree and push filter to the corresponding source
  */
-public class PushFilterVisitor extends GraphRelVisitor {
+public class PushFilterVisitor extends GraphShuttle {
     private final GraphBuilder builder;
     private final RexNode condition;
     private final List<Integer> distinctAliasIds;

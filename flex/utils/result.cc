@@ -28,6 +28,8 @@ Status::Status(StatusCode error_code, const std::string& error_msg) noexcept
 
 std::string Status::error_message() const { return error_msg_; }
 
+StatusCode Status::error_code() const { return error_code_; }
+
 bool Status::ok() const { return error_code_ == StatusCode::OK; }
 
 Status Status::OK() { return Status(StatusCode::OK); }
