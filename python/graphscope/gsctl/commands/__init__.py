@@ -17,6 +17,7 @@
 #
 
 import click
+
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
 from graphscope.gsctl.commands.insight import cli as insight

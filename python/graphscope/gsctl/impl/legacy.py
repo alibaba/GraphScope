@@ -19,9 +19,9 @@
 from typing import List
 
 import graphscope.flex.rest
+from graphscope.flex.rest import GrootDataloadingJobConfig
 from graphscope.flex.rest import GrootGraph
 from graphscope.flex.rest import GrootSchema
-from graphscope.flex.rest import GrootDataloadingJobConfig
 from graphscope.gsctl.config import get_current_context
 
 
@@ -56,4 +56,3 @@ def create_groot_dataloading_job(graph_name: str, job_config: dict) -> str:
         return api_instance.create_groot_dataloading_job(
             graph_name, GrootDataloadingJobConfig.from_dict(job_config)
         )
-

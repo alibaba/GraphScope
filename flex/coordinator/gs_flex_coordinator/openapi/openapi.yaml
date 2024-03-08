@@ -472,9 +472,7 @@ paths:
           content:
             application/json:
               schema:
-                items:
-                  $ref: '#/components/schemas/SchemaMapping'
-                type: array
+                $ref: '#/components/schemas/SchemaMapping'
           description: Successful operation
       tags:
       - job
@@ -1270,34 +1268,38 @@ components:
           vertex_types:
           - type_name: person
             primary_keys:
-            - "[\"id\"]"
-            - "[\"id\"]"
+            - id
             type_id: 0
             properties:
             - property_id: 0
               property_name: id
-              property_type: DT_STRING
+              property_type:
+                primitive_type: DT_STRING
             - property_id: 1
               property_name: name
-              property_type: DT_STRING
+              property_type:
+                primitive_type: DT_STRING
             - property_id: 2
               property_name: age
-              property_type: DT_SIGNED_INT32
+              property_type:
+                primitive_type: DT_SIGNED_INT32
           - type_name: person
             primary_keys:
-            - "[\"id\"]"
-            - "[\"id\"]"
+            - id
             type_id: 0
             properties:
             - property_id: 0
               property_name: id
-              property_type: DT_STRING
+              property_type:
+                primitive_type: DT_STRING
             - property_id: 1
               property_name: name
-              property_type: DT_STRING
+              property_type:
+                primitive_type: DT_STRING
             - property_id: 2
               property_name: age
-              property_type: DT_SIGNED_INT32
+              property_type:
+                primitive_type: DT_SIGNED_INT32
           edge_types:
           - type_name: knows
             type_id: 0
@@ -1308,7 +1310,8 @@ components:
             properties:
             - property_id: 0
               property_name: weight
-              property_type: DT_DOUBLE
+              property_type:
+                primitive_type: DT_DOUBLE
           - type_name: knows
             type_id: 0
             vertex_type_pair_relations:
@@ -1318,7 +1321,8 @@ components:
             properties:
             - property_id: 0
               property_name: weight
-              property_type: DT_DOUBLE
+              property_type:
+                primitive_type: DT_DOUBLE
         stored_procedures:
           directory: plugins
         name: mocking_graph
@@ -1345,34 +1349,38 @@ components:
         vertex_types:
         - type_name: person
           primary_keys:
-          - "[\"id\"]"
-          - "[\"id\"]"
+          - id
           type_id: 0
           properties:
           - property_id: 0
             property_name: id
-            property_type: DT_STRING
+            property_type:
+              primitive_type: DT_STRING
           - property_id: 1
             property_name: name
-            property_type: DT_STRING
+            property_type:
+              primitive_type: DT_STRING
           - property_id: 2
             property_name: age
-            property_type: DT_SIGNED_INT32
+            property_type:
+              primitive_type: DT_SIGNED_INT32
         - type_name: person
           primary_keys:
-          - "[\"id\"]"
-          - "[\"id\"]"
+          - id
           type_id: 0
           properties:
           - property_id: 0
             property_name: id
-            property_type: DT_STRING
+            property_type:
+              primitive_type: DT_STRING
           - property_id: 1
             property_name: name
-            property_type: DT_STRING
+            property_type:
+              primitive_type: DT_STRING
           - property_id: 2
             property_name: age
-            property_type: DT_SIGNED_INT32
+            property_type:
+              primitive_type: DT_SIGNED_INT32
         edge_types:
         - type_name: knows
           type_id: 0
@@ -1383,7 +1391,8 @@ components:
           properties:
           - property_id: 0
             property_name: weight
-            property_type: DT_DOUBLE
+            property_type:
+              primitive_type: DT_DOUBLE
         - type_name: knows
           type_id: 0
           vertex_type_pair_relations:
@@ -1393,7 +1402,8 @@ components:
           properties:
           - property_id: 0
             property_name: weight
-            property_type: DT_DOUBLE
+            property_type:
+              primitive_type: DT_DOUBLE
       properties:
         vertex_types:
           items:
@@ -1412,19 +1422,21 @@ components:
       example:
         type_name: person
         primary_keys:
-        - "[\"id\"]"
-        - "[\"id\"]"
+        - id
         type_id: 0
         properties:
         - property_id: 0
           property_name: id
-          property_type: DT_STRING
+          property_type:
+            primitive_type: DT_STRING
         - property_id: 1
           property_name: name
-          property_type: DT_STRING
+          property_type:
+            primitive_type: DT_STRING
         - property_id: 2
           property_name: age
-          property_type: DT_SIGNED_INT32
+          property_type:
+            primitive_type: DT_SIGNED_INT32
       properties:
         type_id:
           example: 0
@@ -1439,20 +1451,24 @@ components:
           example:
           - property_id: 0
             property_name: id
-            property_type: DT_STRING
+            property_type:
+              primitive_type: DT_STRING
           - property_id: 1
             property_name: name
-            property_type: DT_STRING
+            property_type:
+              primitive_type: DT_STRING
           - property_id: 2
             property_name: age
-            property_type: DT_SIGNED_INT32
+            property_type:
+              primitive_type: DT_SIGNED_INT32
           items:
             $ref: '#/components/schemas/Property'
           title: properties
           type: array
         primary_keys:
+          example:
+          - id
           items:
-            example: "[\"id\"]"
             type: string
           title: primary_keys
           type: array
@@ -1470,7 +1486,8 @@ components:
         properties:
         - property_id: 0
           property_name: weight
-          property_type: DT_DOUBLE
+          property_type:
+            primitive_type: DT_DOUBLE
       properties:
         type_id:
           example: 0
@@ -1494,7 +1511,8 @@ components:
           example:
           - property_id: 0
             property_name: weight
-            property_type: DT_DOUBLE
+            property_type:
+              primitive_type: DT_DOUBLE
           items:
             $ref: '#/components/schemas/Property'
           title: properties
@@ -1917,27 +1935,23 @@ components:
           - /home/graphscope/person_knows_person.csv
           source_vertex_mappings:
           - column:
-              name: column_name
               index: 0
+              name: id
           - column:
-              name: column_name
               index: 0
+              name: id
           destination_vertex_mappings:
           - column:
-              name: column_name
-              index: 0
+              index: 1
+              name: id
           - column:
-              name: column_name
-              index: 0
+              index: 1
+              name: id
           column_mappings:
           - column:
-              name: column_name
-              index: 0
-            property: id
-          - column:
-              name: column_name
-              index: 0
-            property: id
+              index: 2
+              name: weight
+            property: weight
           type_triplet:
             edge: knows
             source_vertex: person
@@ -1946,27 +1960,23 @@ components:
           - /home/graphscope/person_knows_person.csv
           source_vertex_mappings:
           - column:
-              name: column_name
               index: 0
+              name: id
           - column:
-              name: column_name
               index: 0
+              name: id
           destination_vertex_mappings:
           - column:
-              name: column_name
-              index: 0
+              index: 1
+              name: id
           - column:
-              name: column_name
-              index: 0
+              index: 1
+              name: id
           column_mappings:
           - column:
-              name: column_name
-              index: 0
-            property: id
-          - column:
-              name: column_name
-              index: 0
-            property: id
+              index: 2
+              name: weight
+            property: weight
           type_triplet:
             edge: knows
             source_vertex: person
@@ -1978,25 +1988,33 @@ components:
           - /home/graphscope/person.csv
           column_mappings:
           - column:
-              name: column_name
               index: 0
+              name: id
             property: id
           - column:
-              name: column_name
               index: 0
-            property: id
+              name: name
+            property: name
+          - column:
+              index: 0
+              name: age
+            property: age
         - type_name: person
           inputs:
           - /home/graphscope/person.csv
           column_mappings:
           - column:
-              name: column_name
               index: 0
+              name: id
             property: id
           - column:
-              name: column_name
               index: 0
-            property: id
+              name: name
+            property: name
+          - column:
+              index: 0
+              name: age
+            property: age
       properties:
         graph:
           example: mocking_graph
@@ -2024,13 +2042,17 @@ components:
         - /home/graphscope/person.csv
         column_mappings:
         - column:
-            name: column_name
             index: 0
+            name: id
           property: id
         - column:
-            name: column_name
             index: 0
-          property: id
+            name: name
+          property: name
+        - column:
+            index: 0
+            name: age
+          property: age
       properties:
         type_name:
           example: person
@@ -2044,6 +2066,19 @@ components:
           title: inputs
           type: array
         column_mappings:
+          example:
+          - column:
+              index: 0
+              name: id
+            property: id
+          - column:
+              index: 0
+              name: name
+            property: name
+          - column:
+              index: 0
+              name: age
+            property: age
           items:
             $ref: '#/components/schemas/ColumnMapping'
           title: column_mappings
@@ -2057,27 +2092,23 @@ components:
         - /home/graphscope/person_knows_person.csv
         source_vertex_mappings:
         - column:
-            name: column_name
             index: 0
+            name: id
         - column:
-            name: column_name
             index: 0
+            name: id
         destination_vertex_mappings:
         - column:
-            name: column_name
-            index: 0
+            index: 1
+            name: id
         - column:
-            name: column_name
-            index: 0
+            index: 1
+            name: id
         column_mappings:
         - column:
-            name: column_name
-            index: 0
-          property: id
-        - column:
-            name: column_name
-            index: 0
-          property: id
+            index: 2
+            name: weight
+          property: weight
         type_triplet:
           edge: knows
           source_vertex: person
@@ -2103,6 +2134,11 @@ components:
           title: destination_vertex_mappings
           type: array
         column_mappings:
+          example:
+          - column:
+              index: 2
+              name: weight
+            property: weight
           items:
             $ref: '#/components/schemas/ColumnMapping'
           title: column_mappings
@@ -2111,17 +2147,11 @@ components:
       type: object
       x-body-name: edge_mapping
     ColumnMapping:
-      example:
-        column:
-          name: column_name
-          index: 0
-        property: id
       properties:
         column:
           $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
         property:
           description: must align with the schema
-          example: id
           title: property
           type: string
       title: ColumnMapping
@@ -2802,16 +2832,12 @@ components:
       title: EdgeMapping_type_triplet
       type: object
     EdgeMapping_source_vertex_mappings_inner_column:
-      example:
-        name: column_name
-        index: 0
       properties:
         index:
           format: int32
           title: index
           type: integer
         name:
-          example: column_name
           title: name
           type: string
       title: EdgeMapping_source_vertex_mappings_inner_column
@@ -2820,8 +2846,8 @@ components:
       description: Mapping column index to the primary key of source vertex
       example:
         column:
-          name: column_name
           index: 0
+          name: id
       properties:
         column:
           $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'
@@ -2831,8 +2857,8 @@ components:
       description: Mapping column index to the primary key of destination vertex
       example:
         column:
-          name: column_name
-          index: 0
+          index: 1
+          name: id
       properties:
         column:
           $ref: '#/components/schemas/EdgeMapping_source_vertex_mappings_inner_column'

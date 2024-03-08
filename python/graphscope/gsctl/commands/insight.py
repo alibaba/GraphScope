@@ -18,24 +18,35 @@
 
 import click
 import yaml
-from graphscope.gsctl.impl import (create_edge_type,
-                                   create_groot_dataloading_job,
-                                   create_vertex_type,
-                                   delete_alert_receiver_by_id,
-                                   delete_alert_rule_by_name, delete_edge_type,
-                                   delete_job_by_id, delete_vertex_type,
-                                   get_datasource, get_deployment_info,
-                                   get_job_by_id, get_node_status,
-                                   import_datasource, import_groot_schema,
-                                   list_alert_messages, list_alert_receivers,
-                                   list_alert_rules, list_groot_graph,
-                                   list_jobs, unbind_edge_datasource,
-                                   unbind_vertex_datasource,
-                                   update_alert_messages,
-                                   update_alert_receiver_by_id,
-                                   update_alert_rule)
-from graphscope.gsctl.utils import (is_valid_file_path, read_yaml_file,
-                                    terminal_display)
+
+from graphscope.gsctl.impl import create_edge_type
+from graphscope.gsctl.impl import create_groot_dataloading_job
+from graphscope.gsctl.impl import create_vertex_type
+from graphscope.gsctl.impl import delete_alert_receiver_by_id
+from graphscope.gsctl.impl import delete_alert_rule_by_name
+from graphscope.gsctl.impl import delete_edge_type
+from graphscope.gsctl.impl import delete_job_by_id
+from graphscope.gsctl.impl import delete_vertex_type
+from graphscope.gsctl.impl import get_datasource
+from graphscope.gsctl.impl import get_deployment_info
+from graphscope.gsctl.impl import get_job_by_id
+from graphscope.gsctl.impl import get_node_status
+from graphscope.gsctl.impl import import_datasource
+from graphscope.gsctl.impl import import_groot_schema
+from graphscope.gsctl.impl import list_alert_messages
+from graphscope.gsctl.impl import list_alert_receivers
+from graphscope.gsctl.impl import list_alert_rules
+from graphscope.gsctl.impl import list_groot_graph
+from graphscope.gsctl.impl import list_jobs
+from graphscope.gsctl.impl import register_receiver
+from graphscope.gsctl.impl import unbind_edge_datasource
+from graphscope.gsctl.impl import unbind_vertex_datasource
+from graphscope.gsctl.impl import update_alert_messages
+from graphscope.gsctl.impl import update_alert_receiver_by_id
+from graphscope.gsctl.impl import update_alert_rule
+from graphscope.gsctl.utils import is_valid_file_path
+from graphscope.gsctl.utils import read_yaml_file
+from graphscope.gsctl.utils import terminal_display
 
 
 @click.group()
@@ -274,7 +285,7 @@ def datasource(filename):  # noqa: F811
 
 
 @get.command()
-def datasource():
+def datasource():  # noqa: F811
     """Display data source on graph"""
 
     def _construct_and_display_data(datasource):

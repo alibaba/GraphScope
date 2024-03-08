@@ -609,9 +609,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SchemaMapping'
+                $ref: '#/components/schemas/SchemaMapping'
   /api/v1/procedure:
     get:
       tags:
@@ -1171,18 +1169,22 @@ components:
           example:
             - property_id: 0
               property_name: id
-              property_type: DT_STRING
+              property_type:
+                primitive_type: DT_STRING
             - property_id: 1
               property_name: name
-              property_type: DT_STRING
+              property_type:
+                primitive_type: DT_STRING
             - property_id: 2
               property_name: age
-              property_type: DT_SIGNED_INT32
+              property_type:
+                primitive_type: DT_SIGNED_INT32
         primary_keys:
           type: array
           items:
             type: string
-            example: ["id"]
+          example:
+            - id
     EdgeType:
       x-body-name: edge_type
       type: object
@@ -1231,7 +1233,8 @@ components:
           example:
             - property_id: 0
               property_name: weight
-              property_type: DT_DOUBLE
+              property_type:
+                primitive_type: DT_DOUBLE
     Property:
       x-body-name: property
       type: object
@@ -1584,6 +1587,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ColumnMapping'
+          example:
+            - column:
+                index: 0
+                name: id
+              property: id
+            - column:
+                index: 0
+                name: name
+              property: name
+            - column:
+                index: 0
+                name: age
+              property: age
     EdgeMapping:
       x-body-name: edge_mapping
       type: object
@@ -1621,7 +1637,10 @@ components:
                     format: int32
                   name:
                     type: string
-                    example: column_name
+            example:
+              column:
+                index: 0
+                name: id
         destination_vertex_mappings:
           type: array
           items:
@@ -1636,11 +1655,19 @@ components:
                     format: int32
                   name:
                     type: string
-                    example: column_name
+            example:
+              column:
+                index: 1
+                name: id
         column_mappings:
           type: array
           items:
             $ref: '#/components/schemas/ColumnMapping'
+          example:
+            - column:
+                index: 2
+                name: weight
+              property: weight
     ColumnMapping:
       x-body-name: column_mapping
       type: object
@@ -1653,11 +1680,9 @@ components:
               format: int32
             name:
               type: string
-              example: column_name
         property:
           type: string
           description: must align with the schema
-          example: id
     JobStatus:
       type: object
       x-body-name: job_status

@@ -19,9 +19,12 @@
 """Group of commands used by all products under the FLEX architecture"""
 
 import click
-from graphscope.gsctl.config import (Context, get_current_context,
-                                     load_gs_config)
-from graphscope.gsctl.impl import connect_coordinator, disconnect_coordinator
+
+from graphscope.gsctl.config import Context
+from graphscope.gsctl.config import get_current_context
+from graphscope.gsctl.config import load_gs_config
+from graphscope.gsctl.impl import connect_coordinator
+from graphscope.gsctl.impl import disconnect_coordinator
 
 
 @click.group()

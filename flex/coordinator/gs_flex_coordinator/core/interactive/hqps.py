@@ -16,6 +16,8 @@
 # limitations under the License.
 #
 
+import requests
+import time
 import datetime
 import logging
 import os
@@ -72,7 +74,14 @@ class HQPSClient(object):
 
     def _get_hqps_service_endpoints(self):
         if CLUSTER_TYPE == "HOSTS":
-            return "http://192.168.0.9:{0}".format(HQPS_ADMIN_SERVICE_PORT)
+            while True:
+                try:
+                    requests.get(f"http://192.168.0.9:{HQPS_ADMIN_SERVICE_PORT}")
+                except requests.ConnectionError:
+                    time.sleep(3)
+                else:
+                    return f"http://192.168.0.9:{HQPS_ADMIN_SERVICE_PORT}"
+
 
     def list_graphs(self) -> List[Graph]:
         with hqps_client.ApiClient(
