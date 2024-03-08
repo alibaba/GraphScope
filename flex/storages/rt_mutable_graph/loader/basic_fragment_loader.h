@@ -211,7 +211,6 @@ class BasicFragmentLoader {
           ie_prefix(src_label_name, dst_label_name, edge_label_name),
           edata_prefix(src_label_name, dst_label_name, edge_label_name),
           snapshot_dir(work_dir_, 0));
-
     } else {
       bool oe_mutable = schema_.outgoing_edge_mutable(
           src_label_name, dst_label_name, edge_label_name);
