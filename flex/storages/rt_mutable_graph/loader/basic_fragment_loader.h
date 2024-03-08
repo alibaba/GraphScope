@@ -268,7 +268,7 @@ class BasicFragmentLoader {
 
     append_edge_loading_progress(src_label_name, dst_label_name,
                                  edge_label_name, LoadingStatus::kCommited);
-    VLOG(10) << "Finish adding edge batch of size: " << edges.size();
+    VLOG(10) << "Finish adding edge batch of size: " << sum;
   }
 
   Table& GetVertexTable(size_t ind) {
