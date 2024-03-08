@@ -120,6 +120,14 @@ impl DateTime {
     }
 }
 
+impl PartialEq for DateTime {
+    fn eq(&self, other: &Self) -> bool {
+        self.inner == other.inner
+    }
+}
+
+impl Eq for DateTime {}
+
 impl Display for DateTime {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
