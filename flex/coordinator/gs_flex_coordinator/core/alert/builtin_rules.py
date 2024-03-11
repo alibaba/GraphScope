@@ -111,14 +111,14 @@ class GremlinServiceAvailableAlert(AlertRule):
             client.submit("g.with('evaluationTimeout', 5000).V().limit(1)").all.result()
         except Exception as e:
             message = "Gremlin service unavailable: {0}".format(str(e))
-            # unable to distinguish whether frontend or excutor is unavailable,
+            # unable to distinguish whether frontend or executor is unavailable,
             # thus, we set the target "-"
             alert_message = self.generate_alert_message("-", message)
             self.alert(alert_message)
         finally:
             try:
                 client.close()
-            except:  # noqa: E722
+            except:  # noqa: E722, B110
                 pass
 
 

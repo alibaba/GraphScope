@@ -281,7 +281,7 @@ def get_groot_graph_from_local():
             client.submit(
                 "g.with('evaluationTimeout', 5000).V().limit(1)"
             ).all().result()
-        except Exception as e:
+        except Exception as e:  # noqa: B110
             pass
         else:
             break
