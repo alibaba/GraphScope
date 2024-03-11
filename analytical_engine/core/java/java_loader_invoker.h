@@ -171,7 +171,7 @@ class JavaLoaderInvoker {
 
   void SetWorkerInfo(int worker_id, int worker_num,
                      const grape::CommSpec& comm_spec) {
-    VLOG(2) << "JavaLoaderInvoekr set worker Id, num " << worker_id << ", "
+    VLOG(2) << "JavaLoaderInvoker set worker Id, num " << worker_id << ", "
             << worker_num;
     worker_id_ = worker_id;
     worker_num_ = worker_num;

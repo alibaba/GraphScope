@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
-#define GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
+#ifndef STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
+#define STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
 
 #include <assert.h>
 #include <fcntl.h>
@@ -44,6 +44,7 @@ namespace gs {
     │       ├── vertex_table_PERSON.col_0 
     │       ├── vertex_table_PERSON.col_1.data
     │       └── vertex_table_PERSON.col_1.items 
+            └── bulk_load_progress.log               // bulk load progress file
     ├── snapshots // snapshots dir 
     │   ├── 0 
     │   │   ├── ie_PERSON_KNOWS_PERSON.deg 
@@ -212,6 +213,10 @@ inline std::string tmp_dir(const std::string& work_dir) {
   return runtime_dir(work_dir) + "tmp/";
 }
 
+inline std::string bulk_load_progress_file(const std::string& work_dir) {
+  return tmp_dir(work_dir) + "bulk_load_progress.log";
+}
+
 inline void clear_tmp(const std::string& work_dir) {
   std::string tmp_dir_str = tmp_dir(work_dir);
   if (std::filesystem::exists(tmp_dir_str)) {
@@ -259,4 +264,4 @@ inline std::string thread_local_allocator_prefix(const std::string& work_dir,
 
 }  // namespace gs
 
-#endif  // GRAPHSCOPE_STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_
+#endif  // STORAGES_RT_MUTABLE_GRAPH_FILE_NAMES_H_

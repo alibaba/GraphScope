@@ -74,6 +74,12 @@ COPY --from=builder /opt/flex /opt/flex
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
+COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_test.yaml /opt/flex/share/engine_config.yaml
+COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoint.sh /opt/flex/bin/entrypoint.sh
+RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml
+# change the default graph name.
+RUN sed -i 's/default_graph: ldbc/default_graph: gs_interactive_default_graph/g' /opt/flex/share/engine_config.yaml
+RUN chown -R graphscope:graphscope /opt/flex
 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
@@ -85,6 +91,7 @@ COPY --from=builder /usr/lib/$ARCH-linux-gnu/libglog*.so* /usr/lib/$ARCH-linux-g
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libyaml-cpp*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libmpi*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_program_options*.so* /usr/lib/$ARCH-linux-gnu/
+COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_filesystem*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libboost_thread*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libcrypto*.so* /usr/lib/$ARCH-linux-gnu/
 COPY --from=builder /usr/lib/$ARCH-linux-gnu/libopen-rte*.so* /usr/lib/$ARCH-linux-gnu/
@@ -131,3 +138,5 @@ ENV SOLUTION=INTERACTIVE
 ENV HOME=/home/graphscope
 USER graphscope
 WORKDIR /home/graphscope
+
+ENTRYPOINT ["/opt/flex/bin/entrypoint.sh"]

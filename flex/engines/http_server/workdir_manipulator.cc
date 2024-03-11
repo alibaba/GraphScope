@@ -141,7 +141,11 @@ gs::Result<gs::Schema> WorkDirManipulator::GetGraphSchema(
   // Load schema from schema_file
   try {
     LOG(INFO) << "Load graph schema from file: " << schema_file;
-    schema = gs::Schema::LoadFromYaml(schema_file);
+    auto schema_res = gs::Schema::LoadFromYaml(schema_file);
+    if (!schema_res.ok()) {
+      return gs::Result<gs::Schema>(schema_res.status(), schema);
+    }
+    schema = schema_res.value();
   } catch (const std::exception& e) {
     LOG(ERROR) << "Fail to load graph schema: " << schema_file
                << ", error: " << e.what();
@@ -275,7 +279,11 @@ gs::Result<seastar::sstring> WorkDirManipulator::LoadGraph(
   auto schema_file = GetGraphSchemaPath(graph_name);
   gs::Schema schema;
   try {
-    schema = gs::Schema::LoadFromYaml(schema_file);
+    auto schema_res = gs::Schema::LoadFromYaml(schema_file);
+    if (!schema_res.ok()) {
+      return gs::Result<seastar::sstring>(schema_res.status());
+    }
+    schema = schema_res.value();
   } catch (const std::exception& e) {
     return gs::Result<seastar::sstring>(
         gs::Status(gs::StatusCode::InternalError,
