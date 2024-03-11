@@ -46,34 +46,53 @@ public class StoredProcedureMeta {
 
     protected StoredProcedureMeta(
             String name,
-            String type,
-            String queryStr,
             Mode mode,
             String description,
             String extension,
             RelDataType returnType,
-            List<Parameter> parameters) {
+            List<Parameter> parameters,
+            String queryStr,
+            String type) {
         this.name = name;
-        this.type = type;
-        this.queryStr = queryStr;
         this.mode = mode;
         this.description = description;
         this.extension = extension;
         this.returnType = returnType;
         this.parameters = Objects.requireNonNull(parameters);
+        this.queryStr = queryStr;
+        this.type = type;
+    }
+
+    public StoredProcedureMeta(
+            String name,
+            Mode mode,
+            String description,
+            String extension,
+            RelDataType returnType,
+            List<Parameter> parameters,
+            Map<String, Object> option) {
+        this(
+                name,
+                mode,
+                description,
+                extension,
+                returnType,
+                parameters,
+                (String) option.getOrDefault("queryStr", "UNKNOWN"),
+                (String) option.getOrDefault("type", "cypher"));
     }
 
     public StoredProcedureMeta(
             Configs configs, String queryStr, RelDataType returnType, List<Parameter> parameters) {
         this(
                 Config.NAME.get(configs),
-                Config.TYPE.get(configs),
-                queryStr,
                 Mode.valueOf(Config.MODE.get(configs)),
                 Config.DESCRIPTION.get(configs),
                 Config.EXTENSION.get(configs),
                 returnType,
-                parameters);
+                parameters,
+                queryStr,
+                Config.TYPE.get(configs));
     }
 
     public String getName() {
@@ -94,12 +113,17 @@ public class StoredProcedureMeta {
                 + "name='"
                 + name
                 + '\''
-                + ", queryStr='"
-                + queryStr
                 + ", returnType="
                 + returnType
                 + ", parameters="
                 + parameters
+                + ", option={"
+                + "queryStr='"
+                + queryStr
+                + '\''
+                + ", type="
+                + type
+                + '}'
                 + '}';
     }
 
@@ -152,12 +176,8 @@ public class StoredProcedureMeta {
             return ImmutableBiMap.of(
                     "name",
                     meta.name,
-                    "type",
-                    meta.type,
                     "description",
                     meta.description,
-                    "queryStr",
-                    meta.queryStr,
                     "mode",
                     meta.mode.name(),
                     "extension",
@@ -181,7 +201,9 @@ public class StoredProcedureMeta {
                                             ImmutableMap.of(
                                                     "name", k.getName(),
                                                     "type", Utils.typeToStr(k.getType())))
-                            .collect(Collectors.toList()));
+                            .collect(Collectors.toList()),
+                    "option",
+                    ImmutableBiMap.of("queryStr", meta.queryStr, "type", meta.type));
         }
     }
 
@@ -191,13 +213,12 @@ public class StoredProcedureMeta {
             Map<String, Object> config = yaml.load(inputStream);
             return new StoredProcedureMeta(
                     (String) config.get("name"),
-                    (String) config.get("type"),
-                    (String) config.get("queryStr"),
                     Mode.valueOf((String) config.get("mode")),
                     (String) config.get("description"),
                     (String) config.get("extension"),
                     createReturnType((List) config.get("returns")),
-                    createParameters((List) config.get("params")));
+                    createParameters((List) config.get("params")),
+                    (Map<String, Object>) config.get("option"));
         }
 
         private static RelDataType createReturnType(List config) {

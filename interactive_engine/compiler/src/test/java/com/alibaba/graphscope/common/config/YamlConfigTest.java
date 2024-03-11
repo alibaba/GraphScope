@@ -41,8 +41,10 @@ public class YamlConfigTest {
         StoredProcedureMeta meta = procedures.getStoredProcedure("ldbc_ic2");
         Assert.assertEquals(
                 "StoredProcedureMeta{name='ldbc_ic2', returnType=RecordType(CHAR(1) name),"
-                        + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
-                        + " Parameter{name='maxDate', dataType=BIGINT}]}",
+                    + " parameters=[Parameter{name='personId2', dataType=BIGINT},"
+                    + " Parameter{name='maxDate', dataType=BIGINT}], option={queryStr='MATCH(n:"
+                    + " PERSON ${personId2}) WHERE n.creationDate < ${maxDate} RETURN n.firstName"
+                    + " AS name LIMIT 10;', type=cypher}}",
                 meta.toString());
     }
 
