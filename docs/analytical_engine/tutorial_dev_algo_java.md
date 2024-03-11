@@ -41,13 +41,25 @@ To implement java graph algorithms runnable on GraphScope, all you need is `GRAP
 
 ### Prepare **GRAPE-jdk**
 
-You can include `GRAPE-jdk` as a dependency in your maven project by adding following configuration.
+You can include `GRAPE-jdk` as a dependency in your maven project by adding following configuration. 
+
+#### Get from Maven Central Repository
+
+Find the latest version available on [Maven-Central-Repository](https://mvnrepository.com/artifact/com.alibaba.graphscope/grape-jdk)
+
+#### Build from source
+
+```bash
+git clone https://github.com/alibaba/GraphScope
+cd GraphScope/analytical_engine/java
+mvn clean install -DskipTests # the version is specified in pom.xml's revision property
+```
 
 ```xml
 <dependency>
   <groupId>com.alibaba.graphscope</groupId>
   <artifactId>grape-jdk</artifactId>
-  <version>0.19.0</version>
+  <version>${grape-jdk-version}</version>
 </dependency>
 ```
 
@@ -76,12 +88,12 @@ results, init configuration in this class. The `init` method will be called befo
 Here we provide a simple PIE algorithm which simply traverse the graph.
 
 ```java
-public class Traverse implements ParallelAppBase<Long, Long, Double, Long, TraverseContext>,
+public class Traverse implements ParallelAppBase<Long, Long, Long, Long, TraverseContext>,
     ParallelEngine {
 
     @Override
-    public void PEval(IFragment<Long, Long, Double, Long> fragment,
-        ParallelContextBase<Long, Long, Double, Long> context,
+    public void PEval(IFragment<Long, Long, Long, Long> fragment,
+        ParallelContextBase<Long, Long, Long, Long> context,
         ParallelMessageManager messageManager) {
         TraverseContext ctx = (TraverseContext) context;
         for (Vertex<Long> vertex : fragment.innerVertices()) {
@@ -92,13 +104,13 @@ public class Traverse implements ParallelAppBase<Long, Long, Double, Long, Trave
                 ctx.vertexArray.setValue(vertex, Math.max(nbr.data(), ctx.vertexArray.get(vertex)));
             }
         }
-        messageManager.ForceContinue();
+        messageManager.forceContinue();
     }
 
 
     @Override
-    public void IncEval(IFragment<Long, Long, Double, Long> fragment,
-        ParallelContextBase<Long, Long, Double, Long> context,
+    public void IncEval(IFragment<Long, Long, Long, Long> fragment,
+        ParallelContextBase<Long, Long, Long, Long> context,
         ParallelMessageManager messageManager) {
         TraverseContext ctx = (TraverseContext) context;
         for (Vertex<Long> vertex : fragment.innerVertices()) {
@@ -116,7 +128,7 @@ public class Traverse implements ParallelAppBase<Long, Long, Double, Long, Trave
 The corresponding context class parse the input parameter `maxIteration` from a JSONObject.
 ```java
 public class TraverseContext extends
-    VertexDataContext<IFragment<Long, Long, Double, Long>, Long> implements ParallelContextBase<Long,Long,Double,Long> {
+    VertexDataContext<IFragment<Long, Long, Long, Long>, Long> implements ParallelContextBase<Long,Long,Long,Long> {
 
 
     public GSVertexArray<Long> vertexArray;
@@ -124,7 +136,7 @@ public class TraverseContext extends
 
 
     @Override
-    public void Init(IFragment<Long, Long, Double, Long> frag,
+    public void Init(IFragment<Long, Long, Long, Long> frag,
         ParallelMessageManager messageManager, JSONObject jsonObject) {
         createFFIContext(frag, Long.class, false);
         //This vertex Array is created by our framework. Data stored in this array will be available
@@ -138,7 +150,7 @@ public class TraverseContext extends
 
 
     @Override
-    public void Output(IFragment<Long, Long, Double, Long> frag) {
+    public void Output(IFragment<Long, Long, Long, Long> frag) {
         //You can also write output logic in this function.
     }
 }
@@ -172,10 +184,8 @@ graph = graph.project(vertices={"host": ['id']}, edges={"connect": ["dist"]})
 # you can also use your own graph, refer to graphscope load graph tutorial.
 # But remember project to single property graph before running algorithms.
 
-app=JavaApp(
-    full_jar_path="{full/path/to/your/packed/jar}", # *-shaded.jar
-    java_app_class="{fully/qualified/class/name/of/your/app}", # com.a.b.c
-)
+sess.add_lib("{full/path/to/your/packed/jar}")  # *-shaded.jar
+app=load_app(algo="java_pie:com.alibaba.graphscope.example.Traverse") # java_pie:{you-full-class-name}
 ctx=app(graph, "{param string}") # a=b,c=d
 ```
 
