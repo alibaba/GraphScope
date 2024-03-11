@@ -410,8 +410,9 @@ public class GraphWriter implements MetricsAgent {
             GraphSchema schema,
             DataRecord dataRecord) {
         long edgeInnerId;
-        if (this.enableHashEid) {
-            GraphElement edgeDef = schema.getElement(edgeRecordKey.getLabel());
+        GraphElement edgeDef = schema.getElement(edgeRecordKey.getLabel());
+        List<GraphProperty> pks = edgeDef.getPrimaryKeyList();
+        if (pks != null && pks.size() > 0) {
             Map<Integer, PropertyValue> edgePkVals =
                     parseRawProperties(edgeDef, dataRecord.getProperties());
             List<byte[]> edgePkBytes = getPkBytes(edgePkVals, edgeDef);
