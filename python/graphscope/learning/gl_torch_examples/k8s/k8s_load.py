@@ -18,7 +18,7 @@ sess = gs.session(
     num_workers=2,
 )
 g = load_ogbn_arxiv(sess=sess, prefix="/dataset/ogbn_arxiv")
-print(f"here {g.fragments}, {g.vineyard_id}")
+
 glt_graph = gs.graphlearn_torch(
     g,
     edges=[
@@ -38,4 +38,4 @@ glt_graph = gs.graphlearn_torch(
     master_id=0,
 )
 print(glt_graph)
-time.sleep(7200)
+time.sleep(1800)
