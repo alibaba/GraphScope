@@ -3,6 +3,7 @@ name: "ldbc_ic2"
 description: "A stored procedures for the ldbc complex interactive workload 2"
 mode: READ  # WRITE, SCHEMA
 type: cypher # cypher/cpp
+queryStr: "MATCH(n: PERSON ${personId2}) WHERE n.creationDate < ${maxDate} RETURN n.firstName AS name LIMIT 10;"
 extension: ".so"
 library: libquery_ic2.so  # To specify the directory to the stored procedure
 params:
