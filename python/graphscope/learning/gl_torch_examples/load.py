@@ -23,7 +23,7 @@ gs.set_option(log_level='DEBUG')
 gs.set_option(show_log=True)
 
 # load the ogbn_arxiv graph as an example.
-sess = gs.session(cluster_type="hosts", num_workers=3)
+sess = gs.session(cluster_type="hosts", num_workers=2)
 g = load_ogbn_arxiv(sess=sess)
 
 glt_graph = gs.graphlearn_torch(

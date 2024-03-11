@@ -18,7 +18,7 @@ spec:
                 - bash
                 - -c
                 - |- 
-                  python3 -c "import time;time.sleep(1800)"
+                  python3 client.py --node_rank 0 --master_addr ${MASTER_ADDR} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
               volumeMounts:
               - mountPath: /dev/shm
                 name: cache-volume
@@ -40,7 +40,7 @@ spec:
                 - bash
                 - -c
                 - |-
-                  python3 -c "import time;time.sleep(1800)"
+                  python3 client.py --node_rank $((${MY_POD_NAME: -1}+1)) --master_addr ${MASTER_ADDR} --group_master ${GROUP_MASTER} --num_server_nodes ${NUM_SERVER_NODES} --num_client_nodes ${NUM_CLIENT_NODES}
               env:
                 - name: GROUP_MASTER
                   value: pytorch-simple-master-0

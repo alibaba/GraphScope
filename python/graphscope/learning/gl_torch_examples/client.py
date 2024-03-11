@@ -19,7 +19,6 @@ import pickle
 
 import torch
 import torch.nn.functional as F
-from ogb.nodeproppred import Evaluator
 from torch_geometric.nn import GraphSAGE
 from torch.nn.parallel import DistributedDataParallel
 from typing import List
@@ -27,7 +26,6 @@ from torch.distributed.algorithms.join import Join
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
-from graphscope.dataset import load_ogbn_arxiv
 from graphscope.learning.graphlearn_torch.typing import Split
 
 
@@ -187,7 +185,7 @@ if __name__ == '__main__':
     parser.add_argument(
         "--num_server_nodes",
         type=int,
-        default=3,
+        default=2,
         help="Number of server nodes for remote sampling.",
     )
     parser.add_argument(

@@ -1376,7 +1376,6 @@ class KubernetesClusterLauncher(AbstractLauncher):
     def _distribute_graphlearn_torch_process(
         self, pod_name_list, pod_ip_list, object_id, handle, config
     ):
-        #TODO: add graphlearn torch process
         # allocate service for ports
         # prepare arguments
         handle = json.loads(
@@ -1384,16 +1383,7 @@ class KubernetesClusterLauncher(AbstractLauncher):
                 "utf-8", errors="ignore"
             )
         )
-        # hosts = ",".join(
-        #     [
-        #         f"{pod_name}:{port}"
-        #         for pod_name, port in zip(
-        #             pod_name_list,
-        #             self._engine_cluster.get_graphlearn_torch_ports(
-        #                 self._graphlearn_torch_start_port),
-        #         )
-        #     ]
-        # )
+
         ports = self._engine_cluster.get_graphlearn_torch_ports(
             self._graphlearn_torch_start_port
         )

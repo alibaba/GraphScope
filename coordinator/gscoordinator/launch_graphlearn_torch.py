@@ -19,7 +19,6 @@
 import base64
 import json
 import logging
-import os.path as osp
 import sys
 
 import graphscope
@@ -70,18 +69,11 @@ def launch_graphlearn_torch_server(handle, config, server_rank):
             str(handle["vineyard_socket"]),
             str(handle["fragments"][server_rank]),
             "paper",
-            # {str(handle["fragments"][0]): 0, str(handle["fragments"][1]): 1}
         )
     )
     dataset.load_vineyard(
-        # vineyard_id=str(handle["vineyard_id"]),
         vineyard_id=str(handle["fragments"][server_rank]),
         vineyard_socket=handle["vineyard_socket"],
-        # id2idx=glt.data.VineyardGid2Lid(
-        #     sock=str(handle["vineyard_socket"]),
-        #     fid=str(handle["fragments"][server_rank]),
-        #     v_label_name="paper",
-        # ),
         **config,
     )
     if random_node_split is not None:

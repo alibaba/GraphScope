@@ -526,34 +526,6 @@ class EngineCluster:
             )
             return endpoints
         raise RuntimeError("Get graphlearn service endpoint failed.")
-    
-    # def get_graphlearn_torch_service_endpoint(self, api_client, object_id, pod_host_ip_list):
-    #     service_name = self.get_graphlearn_torch_service_name(object_id)
-    #     service_type = self._service_type
-    #     core_api = kube_client.CoreV1Api(api_client)
-    #     if service_type == "NodePort":
-    #         services = core_api.list_namespaced_service(self._namespace)
-    #         for svc in services.items:
-    #             if svc.metadata.name == service_name:
-    #                 endpoints = []
-    #                 for ip, port_spec in zip(pod_host_ip_list, svc.spec.ports):
-    #                     endpoints.append(
-    #                         (
-    #                             f"{ip}:{port_spec.node_port}",
-    #                             int(port_spec.name.split("-")[-1]),
-    #                         )
-    #                     )
-    #                 endpoints.sort(key=lambda ep: ep[1])
-    #                 return [ep[0] for ep in endpoints]
-    #     elif service_type == "LoadBalancer":
-    #         endpoints = get_service_endpoints(
-    #             api_client=api_client,
-    #             namespace=self._namespace,
-    #             name=service_name,
-    #             service_type=service_type,
-    #         )
-    #         return endpoints
-    #     raise RuntimeError("Get graphlearn torch service endpoint failed.")
 
     def get_interactive_frontend_container(self):
         name = INTERACTIVE_FRONTEND_CONTAINER_NAME

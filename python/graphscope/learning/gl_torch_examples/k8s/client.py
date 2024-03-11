@@ -92,7 +92,7 @@ def run_client_proc(
     print("-- Creating training dataloader ...")
     train_loader = glt.distributed.DistNeighborLoader(
         data=None,
-        num_neighbors=[2, 2, 1],
+        num_neighbors=[5, 3, 2],
         input_nodes=Split.train,
         batch_size=batch_size,
         shuffle=True,
@@ -114,7 +114,7 @@ def run_client_proc(
     print("-- Creating testing dataloader ...")
     test_loader = glt.distributed.DistNeighborLoader(
         data=None,
-        num_neighbors=[2, 2, 1],
+        num_neighbors=[5, 3, 2],
         input_nodes=Split.test,
         batch_size=batch_size,
         shuffle=False,
