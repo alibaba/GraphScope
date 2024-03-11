@@ -36,6 +36,8 @@ public class StoredProcedureMeta {
     private static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
 
     private final String name;
+    private final String type;
+    private final String queryStr;
     private final RelDataType returnType;
     private final List<Parameter> parameters;
     private final Mode mode;
@@ -44,12 +46,16 @@ public class StoredProcedureMeta {
 
     protected StoredProcedureMeta(
             String name,
+            String type,
+            String queryStr,
             Mode mode,
             String description,
             String extension,
             RelDataType returnType,
             List<Parameter> parameters) {
         this.name = name;
+        this.type = type;
+        this.queryStr = queryStr;
         this.mode = mode;
         this.description = description;
         this.extension = extension;
@@ -58,9 +64,11 @@ public class StoredProcedureMeta {
     }
 
     public StoredProcedureMeta(
-            Configs configs, RelDataType returnType, List<Parameter> parameters) {
+            Configs configs, String queryStr, RelDataType returnType, List<Parameter> parameters) {
         this(
                 Config.NAME.get(configs),
+                Config.TYPE.get(configs),
+                queryStr,
                 Mode.valueOf(Config.MODE.get(configs)),
                 Config.DESCRIPTION.get(configs),
                 Config.EXTENSION.get(configs),
@@ -86,6 +94,8 @@ public class StoredProcedureMeta {
                 + "name='"
                 + name
                 + '\''
+                + ", queryStr='"
+                + queryStr
                 + ", returnType="
                 + returnType
                 + ", parameters="
@@ -142,8 +152,12 @@ public class StoredProcedureMeta {
             return ImmutableBiMap.of(
                     "name",
                     meta.name,
+                    "type",
+                    meta.type,
                     "description",
                     meta.description,
+                    "queryStr",
+                    meta.queryStr,
                     "mode",
                     meta.mode.name(),
                     "extension",
@@ -177,6 +191,8 @@ public class StoredProcedureMeta {
             Map<String, Object> config = yaml.load(inputStream);
             return new StoredProcedureMeta(
                     (String) config.get("name"),
+                    (String) config.get("type"),
+                    (String) config.get("queryStr"),
                     Mode.valueOf((String) config.get("mode")),
                     (String) config.get("description"),
                     (String) config.get("extension"),
@@ -230,5 +246,7 @@ public class StoredProcedureMeta {
                 com.alibaba.graphscope.common.config.Config.stringConfig("extension", ".so");
         public static final com.alibaba.graphscope.common.config.Config<String> MODE =
                 com.alibaba.graphscope.common.config.Config.stringConfig("mode", "READ");
+        public static final com.alibaba.graphscope.common.config.Config<String> TYPE =
+                com.alibaba.graphscope.common.config.Config.stringConfig("type", "cypher");
     }
 }
