@@ -225,7 +225,6 @@ class JavaApp(AppAssets):
             if len(java_app_type_params) != 1:
                 logger.error("Expected one type params.")
                 return False
-            num_type_params = 1
             # Get the OID_T from the graph template string
             split_parts = graph.template_str.split("<")
             if len(split_parts) > 1:
@@ -254,7 +253,9 @@ class JavaApp(AppAssets):
             if len(split_parts) > 1:
                 type_parts = split_parts[1].split(",")
                 cpp_graph_type = []
-                if len(type_parts) > 3:  # Check if there are at least 4 parts to extract
+                if (
+                    len(type_parts) > 3
+                ):  # Check if there are at least 4 parts to extract
                     cpp_graph_type = type_parts[:4]
                     logger.info("found type param {}".format(cpp_graph_type))
                 else:
@@ -262,14 +263,18 @@ class JavaApp(AppAssets):
                         "Error format graph template str: {}".format(graph.template_str)
                     )
                 for i in range(0, 4):
-                    logger.info("checking type param {},{},{}".format(i, cpp_graph_type[i], java_app_type_params[i]))
-                    if not _type_param_consistent(cpp_graph_type[i], java_app_type_params[i]):
+                    logger.info(
+                        "checking type param {},{},{}".format(
+                            i, cpp_graph_type[i], java_app_type_params[i]
+                        )
+                    )
+                    if not _type_param_consistent(
+                        cpp_graph_type[i], java_app_type_params[i]
+                    ):
                         return False
                 return True
             else:
-                raise Exception(
-                    "Expect least {}".format(graph.template_str)
-                )
+                raise Exception("Expect least {}".format(graph.template_str))
         else:
             raise Exception(
                 "Unrecoginizable graph template str: {}".format(graph.template_str)
