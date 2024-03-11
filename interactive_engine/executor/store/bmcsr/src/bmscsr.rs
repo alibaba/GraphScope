@@ -3,8 +3,10 @@ use std::collections::HashSet;
 use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 
+use rayon::prelude::*;
+
 use crate::col_table::ColTable;
-use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrOffsetIter};
+use crate::csr::{CsrBuildError, CsrTrait, NbrIter, NbrOffsetIter, SafeMutPtr, SafePtr};
 use crate::graph::IndexType;
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 
@@ -36,7 +38,7 @@ impl<I: IndexType> BatchMutableSingleCsrBuilder<I> {
         }
     }
 
-    pub fn init(&mut self, degree: &Vec<i64>, reserve_rate: f64) {
+    pub fn init(&mut self, degree: &Vec<i32>, reserve_rate: f64) {
         let vertex_num = degree.len();
         let mut edge_num = 0_usize;
         for i in 0..vertex_num {
@@ -212,19 +214,119 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableSingleCsr<I> {
         }
     }
 
-    fn delete_edges(&mut self, edges: &HashSet<(I, I)>, reverse: bool) {
-        if reverse {
-            for (dst, src) in edges {
-                self.remove_edge(*src, *dst);
+    fn parallel_delete_edges(&mut self, edges: &Vec<(I, I)>, reverse: bool, p: u32) {
+        let edges_num = edges.len();
+
+        let safe_nbr_list_ptr = SafeMutPtr::new(&mut self.nbr_list);
+        let safe_edges_ptr = SafePtr::new(edges);
+
+        let num_threads = p as usize;
+        let chunk_size = (edges_num + num_threads - 1) / num_threads;
+        rayon::scope(|s| {
+            for i in 0..num_threads {
+                let start_idx = i * chunk_size;
+                let end_idx = edges_num.min(start_idx + chunk_size);
+                s.spawn(move |_| {
+                    let edges_ref = safe_edges_ptr.get_ref();
+                    let nbr_list_ref = safe_nbr_list_ptr.get_mut();
+                    if reverse {
+                        for k in start_idx..end_idx {
+                            let v = edges_ref[k].1;
+                            nbr_list_ref[v.index()] = <I as IndexType>::max();
+                        }
+                    } else {
+                        for k in start_idx..end_idx {
+                            let v = edges_ref[k].0;
+                            nbr_list_ref[v.index()] = <I as IndexType>::max();
+                        }
+                    }
+                });
             }
-        } else {
-            for (src, dst) in edges {
-                self.remove_edge(*src, *dst);
-            }
-        }
+        });
     }
 
-    fn delete_edges_with_props(&mut self, edges: &HashSet<(I, I)>, reverse: bool, _: &mut ColTable) {
-        self.delete_edges(edges, reverse);
+    fn parallel_delete_edges_with_props(
+        &mut self, edges: &Vec<(I, I)>, reverse: bool, _: &mut ColTable, p: u32,
+    ) {
+        self.parallel_delete_edges(edges, reverse, p);
+    }
+
+    fn insert_edges(&mut self, vertex_num: usize, edges: &Vec<(I, I)>, reverse: bool, p: u32) {
+        self.resize_vertex(vertex_num);
+
+        let num_threads = p as usize;
+        let chunk_size = (edges.len() + num_threads - 1) / num_threads;
+
+        let safe_nbr_list_ptr = SafeMutPtr::new(&mut self.nbr_list);
+        let safe_edges_ptr = SafePtr::new(edges);
+
+        let edge_num = edges.len();
+
+        rayon::scope(|s| {
+            for i in 0..num_threads {
+                let start_idx = i * chunk_size;
+                let end_idx = (start_idx + chunk_size).min(edge_num);
+                s.spawn(move |_| {
+                    let nbr_list_ref = safe_nbr_list_ptr.get_mut();
+                    let edges_ref = safe_edges_ptr.get_ref();
+                    if reverse {
+                        for idx in start_idx..end_idx {
+                            let (dst, src) = edges_ref.get(idx).unwrap();
+                            nbr_list_ref[src.index()] = *dst;
+                        }
+                    } else {
+                        for idx in start_idx..end_idx {
+                            let (src, dst) = edges_ref.get(idx).unwrap();
+                            nbr_list_ref[src.index()] = *dst;
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    fn insert_edges_with_prop(
+        &mut self, vertex_num: usize, edges: &Vec<(I, I)>, edges_prop: &ColTable, reverse: bool, p: u32,
+        mut table: ColTable,
+    ) -> ColTable {
+        self.resize_vertex(vertex_num);
+        table.resize(vertex_num);
+
+        let num_threads = p as usize;
+        let chunk_size = (edges.len() + num_threads - 1) / num_threads;
+
+        let safe_nbr_list_ptr = SafeMutPtr::new(&mut self.nbr_list);
+        let safe_edges_ptr = SafePtr::new(edges);
+        let safe_table_ptr = SafeMutPtr::new(&mut table);
+
+        let edge_num = edges.len();
+
+        rayon::scope(|s| {
+            for i in 0..num_threads {
+                let start_idx = i * chunk_size;
+                let end_idx = (start_idx + chunk_size).min(edge_num);
+                s.spawn(move |_| {
+                    let nbr_list_ref = safe_nbr_list_ptr.get_mut();
+                    let edges_ref = safe_edges_ptr.get_ref();
+                    let table_ref = safe_table_ptr.get_mut();
+
+                    if reverse {
+                        for idx in start_idx..end_idx {
+                            let (dst, src) = edges_ref.get(idx).unwrap();
+                            nbr_list_ref[src.index()] = *dst;
+                            table_ref.set_table_row(src.index(), edges_prop, idx);
+                        }
+                    } else {
+                        for idx in start_idx..end_idx {
+                            let (src, dst) = edges_ref.get(idx).unwrap();
+                            nbr_list_ref[src.index()] = *dst;
+                            table_ref.set_table_row(src.index(), edges_prop, idx);
+                        }
+                    }
+                });
+            }
+        });
+
+        table
     }
 }

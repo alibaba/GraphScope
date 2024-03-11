@@ -17,14 +17,17 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use dashmap::DashMap;
 use fnv::FnvHashMap;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::graph::IndexType;
 use crate::ldbc_parser::LDBCVertexParser;
 use crate::types::*;
 
 pub struct VertexMap<G: Send + Sync + IndexType, I: Send + Sync + IndexType> {
-    global_id_to_index: FnvHashMap<G, I>,
+    // global_id_to_index: FnvHashMap<G, I>,
+    global_id_to_index: DashMap<G, I>,
     labeled_num: Vec<usize>,
     pub index_to_global_id: Vec<Vec<G>>,
     labeled_corner_num: Vec<usize>,
@@ -49,7 +52,8 @@ where
             index_to_corner_global_id.push(Vec::new());
         }
         Self {
-            global_id_to_index: FnvHashMap::default(),
+            // global_id_to_index: FnvHashMap::default(),
+            global_id_to_index: DashMap::new(),
             labeled_num,
             index_to_global_id,
             labeled_corner_num,
@@ -206,6 +210,7 @@ where
 
         self.index_to_global_id.clear();
         self.index_to_corner_global_id.clear();
+        self.global_id_to_index.clear();
         for i in 0..self.label_num {
             let iv_num = self.labeled_num[i as usize];
             let mut native_ids = Vec::<G>::with_capacity(iv_num);
@@ -219,19 +224,26 @@ where
                 corner_ids.push(G::read(&mut reader).unwrap());
             }
 
+            native_ids
+                .par_iter()
+                .enumerate()
+                .for_each(|(index, v)| {
+                    self.global_id_to_index
+                        .insert(*v, I::new(index));
+                });
+
             self.index_to_global_id.push(native_ids);
             self.index_to_corner_global_id.push(corner_ids);
         }
 
-        self.global_id_to_index.clear();
-        for i in 0..self.label_num {
-            let mut index = 0_usize;
-            for v in self.index_to_global_id[i as usize].iter() {
-                self.global_id_to_index
-                    .insert(*v, I::new(index));
-                index += 1;
-            }
-        }
+        // for i in 0..self.label_num {
+        //     let mut index = 0_usize;
+        //     for v in self.index_to_global_id[i as usize].iter() {
+        //         self.global_id_to_index
+        //             .insert(*v, I::new(index));
+        //         index += 1;
+        //     }
+        // }
     }
 
     pub fn desc(&self) {
@@ -247,9 +259,9 @@ where
     }
 
     pub fn is_same(&self, other: &Self) -> bool {
-        if self.global_id_to_index != other.global_id_to_index {
-            return false;
-        }
+        // if self.global_id_to_index != other.global_id_to_index {
+        //     return false;
+        // }
         if self.label_num != other.label_num {
             return false;
         }

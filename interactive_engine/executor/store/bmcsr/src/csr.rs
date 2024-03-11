@@ -1,5 +1,6 @@
 use std::any::Any;
 use std::collections::HashSet;
+use std::marker::PhantomData;
 
 use crate::col_table::ColTable;
 use crate::graph::IndexType;
@@ -63,8 +64,17 @@ pub trait CsrTrait<I: IndexType>: Send + Sync {
     fn as_mut_any(&mut self) -> &mut dyn Any;
 
     fn delete_vertices(&mut self, vertices: &HashSet<I>);
-    fn delete_edges(&mut self, edges: &HashSet<(I, I)>, reverse: bool);
-    fn delete_edges_with_props(&mut self, edges: &HashSet<(I, I)>, reverse: bool, table: &mut ColTable);
+    fn parallel_delete_edges(&mut self, edges: &Vec<(I, I)>, reverse: bool, p: u32);
+    fn parallel_delete_edges_with_props(
+        &mut self, edges: &Vec<(I, I)>, reverse: bool, table: &mut ColTable, p: u32,
+    );
+
+    fn insert_edges(&mut self, vertex_num: usize, edges: &Vec<(I, I)>, reverse: bool, p: u32);
+
+    fn insert_edges_with_prop(
+        &mut self, vertex_num: usize, edges: &Vec<(I, I)>, edges_prop: &ColTable, reverse: bool, p: u32,
+        old_table: ColTable,
+    ) -> ColTable;
 }
 
 #[derive(Debug)]
@@ -72,3 +82,47 @@ pub enum CsrBuildError {
     OffsetOutOfCapacity,
     UnfinishedVertex,
 }
+
+pub struct SafePtr<I>(*const I, PhantomData<I>);
+unsafe impl<I> Send for SafePtr<I> {}
+unsafe impl<I> Sync for SafePtr<I> {}
+
+impl<I> Clone for SafePtr<I> {
+    fn clone(&self) -> Self {
+        SafePtr(self.0.clone(), PhantomData)
+    }
+}
+
+impl<I> Copy for SafePtr<I> {}
+
+impl<I> SafePtr<I> {
+    pub fn new(ptr: &I) -> Self {
+        Self { 0: ptr as *const I, 1: PhantomData }
+    }
+
+    pub fn get_ref(&self) -> &I {
+        unsafe { &*self.0 }
+    }
+}
+
+pub struct SafeMutPtr<I>(*mut I, PhantomData<I>);
+unsafe impl<I> Send for SafeMutPtr<I> {}
+unsafe impl<I> Sync for SafeMutPtr<I> {}
+
+impl<I> SafeMutPtr<I> {
+    pub fn new(ptr: &mut I) -> Self {
+        Self { 0: ptr as *mut I, 1: PhantomData }
+    }
+
+    pub fn get_mut(&self) -> &mut I {
+        unsafe { &mut *self.0 }
+    }
+}
+
+impl<I> Clone for SafeMutPtr<I> {
+    fn clone(&self) -> Self {
+        SafeMutPtr(self.0.clone(), PhantomData)
+    }
+}
+
+impl<I> Copy for SafeMutPtr<I> {}

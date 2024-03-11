@@ -194,8 +194,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
 
     fn load_edges<R: Read>(
         &mut self, src_vertex_type: LabelId, dst_vertex_type: LabelId, edge_type: LabelId,
-        is_src_static: bool, is_dst_static: bool, mut rdr: Reader<R>, idegree: &mut Vec<i64>,
-        odegree: &mut Vec<i64>, parsed_edges: &mut Vec<(I, I, Vec<Item>)>,
+        is_src_static: bool, is_dst_static: bool, mut rdr: Reader<R>, idegree: &mut Vec<i32>,
+        odegree: &mut Vec<i32>, parsed_edges: &mut Vec<(I, I, Vec<Item>)>,
     ) {
         info!("loading edge-{}-{}-{}", src_vertex_type, edge_type, dst_vertex_type);
         let input_header = self
@@ -408,8 +408,8 @@ impl<G: FromStr + Send + Sync + IndexType + Eq, I: Send + Sync + IndexType> Grap
                 for dst_label_i in 0..v_label_num {
                     let src_num = self.vertex_map.vertex_num(src_label_i);
                     let dst_num = self.vertex_map.vertex_num(dst_label_i);
-                    let mut idegree = vec![0_i64; dst_num as usize];
-                    let mut odegree = vec![0_i64; src_num as usize];
+                    let mut idegree = vec![0_i32; dst_num as usize];
+                    let mut odegree = vec![0_i32; src_num as usize];
                     let mut parsed_edges = vec![];
 
                     if let Some(edge_file_strings) =

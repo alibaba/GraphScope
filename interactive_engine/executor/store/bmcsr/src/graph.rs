@@ -22,7 +22,9 @@ use std::ops::AddAssign;
 ///
 /// Marked `unsafe` because: the trait must faithfully preserve
 /// and convert index values.
-pub unsafe trait IndexType: Copy + Default + Hash + Ord + fmt::Debug + 'static + AddAssign {
+pub unsafe trait IndexType:
+    Copy + Default + Hash + Ord + fmt::Debug + 'static + AddAssign + Send + Sync
+{
     fn new(x: usize) -> Self;
     fn index(&self) -> usize;
     fn max() -> Self;

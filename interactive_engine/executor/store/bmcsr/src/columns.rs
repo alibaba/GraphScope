@@ -371,6 +371,11 @@ pub trait Column: Debug {
     fn len(&self) -> usize;
     fn as_any(&self) -> &dyn Any;
 
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize);
+    fn move_elem(&mut self, from: usize, to: usize);
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize);
+    fn resize(&mut self, size: usize);
+
     fn serialize(&self, writer: &mut BufWriter<File>) -> std::io::Result<()>;
     fn deserialize(&mut self, reader: &mut BufReader<File>) -> std::io::Result<()>;
 }
@@ -461,6 +466,25 @@ impl Column for Int32Column {
 
         Ok(())
     }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, 0);
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
+    }
 }
 
 pub struct UInt32Column {
@@ -548,6 +572,25 @@ impl Column for UInt32Column {
         }
 
         Ok(())
+    }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, 0);
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
     }
 }
 
@@ -637,6 +680,25 @@ impl Column for Int64Column {
 
         Ok(())
     }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, 0);
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
+    }
 }
 
 pub struct UInt64Column {
@@ -725,6 +787,25 @@ impl Column for UInt64Column {
 
         Ok(())
     }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, 0);
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
+    }
 }
 
 pub struct IDColumn {
@@ -800,6 +881,25 @@ impl Column for IDColumn {
 
         Ok(())
     }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, 0);
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
+    }
 }
 
 pub struct DoubleColumn {
@@ -874,6 +974,25 @@ impl Column for DoubleColumn {
         }
 
         Ok(())
+    }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, 0.0);
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
     }
 }
 
@@ -953,6 +1072,26 @@ impl Column for StringColumn {
         }
 
         Ok(())
+    }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, String::new());
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index].clone();
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from].clone();
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        for i in 0..num {
+            self.data[self_index + i] = casted_col.data[col_index + i].clone();
+        }
     }
 }
 
@@ -1081,6 +1220,42 @@ impl Column for LCStringColumn {
 
         Ok(())
     }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, 0);
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        let val = casted_col.list[casted_col.data[col_index] as usize].clone();
+        if let Some(idx) = self.table.get(&val) {
+            self.data[self_index] = *idx;
+        } else {
+            let idx = self.table.len() as u16;
+            self.list.push(val.clone());
+            self.table.insert(val, idx);
+            self.data[self_index] = idx;
+        }
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        for i in 0..num {
+            let val = casted_col.list[casted_col.data[col_index + i] as usize].clone();
+            if let Some(idx) = self.table.get(&val) {
+                self.data[self_index + i] = *idx;
+            } else {
+                let idx = self.table.len() as u16;
+                self.list.push(val.clone());
+                self.table.insert(val, idx);
+                self.data[self_index + i] = idx;
+            }
+        }
+    }
 }
 
 pub struct DateColumn {
@@ -1168,6 +1343,25 @@ impl Column for DateColumn {
         }
 
         Ok(())
+    }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, Date::empty());
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
     }
 }
 
@@ -1258,5 +1452,24 @@ impl Column for DateTimeColumn {
         }
 
         Ok(())
+    }
+
+    fn resize(&mut self, size: usize) {
+        self.data.resize(size, DateTime::empty());
+    }
+
+    fn set_column_elem(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index] = casted_col.data[col_index];
+    }
+
+    fn move_elem(&mut self, from: usize, to: usize) {
+        self.data[to] = self.data[from];
+    }
+
+    fn copy_range(&mut self, self_index: usize, col: &Box<dyn Column>, col_index: usize, num: usize) {
+        let casted_col = col.as_any().downcast_ref::<Self>().unwrap();
+        self.data[self_index..self_index + num]
+            .copy_from_slice(&casted_col.data[col_index..col_index + num]);
     }
 }

@@ -78,6 +78,18 @@ impl ColTable {
         Self { columns, header, row_num: 0 }
     }
 
+    pub fn new_empty(&self) -> Self {
+        let mut types = Vec::<(DataType, String)>::new();
+        types.resize(self.col_num(), (DataType::NULL, String::new()));
+        for col_i in 0..self.col_num() {
+            types[col_i].0 = self.columns[col_i].get_type();
+        }
+        for (name, idx) in self.header.iter() {
+            types[*idx].1 = name.clone();
+        }
+        Self::new(types)
+    }
+
     pub fn col_num(&self) -> usize {
         self.columns.len()
     }
@@ -152,6 +164,37 @@ impl ColTable {
         } else {
             None
         }
+    }
+
+    pub fn set_table_row(&mut self, self_i: usize, other: &ColTable, other_i: usize) {
+        if self.row_num <= self_i {
+            self.resize(self_i + 1);
+        }
+        for col_i in 0..self.col_num() {
+            self.columns[col_i].set_column_elem(self_i, &other.columns[col_i], other_i);
+        }
+    }
+
+    pub fn move_row(&mut self, from: usize, to: usize) {
+        for col_i in 0..self.col_num() {
+            self.columns[col_i].move_elem(from, to);
+        }
+    }
+
+    pub fn copy_range(&mut self, self_i: usize, other: &ColTable, other_i: usize, num: usize) {
+        if self.row_num < (self_i + num) {
+            self.resize(self_i + num);
+        }
+        for col_i in 0..self.col_num() {
+            self.columns[col_i].copy_range(self_i, &other.columns[col_i], other_i, num);
+        }
+    }
+
+    pub fn resize(&mut self, row_num: usize) {
+        for col_i in 0..self.col_num() {
+            self.columns[col_i].resize(row_num);
+        }
+        self.row_num = row_num;
     }
 
     pub fn serialize_table(&self, path: &String) {

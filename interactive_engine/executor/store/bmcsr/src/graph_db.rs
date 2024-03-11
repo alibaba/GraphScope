@@ -4,7 +4,10 @@ use std::path::{Path, PathBuf};
 use std::str::FromStr;
 use std::sync::Arc;
 
-use crate::bmcsr::{BatchMutableCsr, BatchMutableCsrBuilder};
+use rayon::iter::IntoParallelIterator;
+use rayon::prelude::*;
+
+use crate::bmcsr::BatchMutableCsr;
 use crate::bmscsr::BatchMutableSingleCsr;
 use crate::col_table::ColTable;
 use crate::columns::{Item, RefItem};
@@ -12,7 +15,7 @@ use crate::csr::CsrTrait;
 use crate::edge_trim::EdgeTrimJson;
 use crate::error::GDBResult;
 use crate::graph::{Direction, IndexType};
-use crate::schema::{CsrGraphSchema, Schema};
+use crate::schema::CsrGraphSchema;
 use crate::sub_graph::{SingleSubGraph, SubGraph};
 use crate::types::*;
 use crate::utils::{Iter, LabeledIterator, Range};
@@ -319,6 +322,7 @@ where
             oe.push(Box::new(BatchMutableSingleCsr::<I>::new()));
         }
 
+        let mut csr_tasks = vec![];
         for e_label_i in 0..edge_label_num {
             let edge_label_name = graph_schema.edge_label_names()[e_label_i].clone();
             for src_label_i in 0..vertex_label_num {
@@ -328,59 +332,93 @@ where
                     let index: usize = src_label_i * vertex_label_num * edge_label_num
                         + dst_label_i * edge_label_num
                         + e_label_i;
-
                     let ie_path = &partition_dir
                         .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
                     if Path::exists(ie_path) && (trim_json_path.is_none() || ie_enable.contains(&index)) {
-                        info!("importing {}", ie_path.as_os_str().to_str().unwrap());
-                        let path_str = ie_path.to_str().unwrap().to_string();
-                        if graph_schema.is_single_ie(
-                            src_label_i as LabelId,
-                            e_label_i as LabelId,
-                            dst_label_i as LabelId,
-                        ) {
-                            let mut ie_csr = BatchMutableSingleCsr::<I>::new();
-                            ie_csr.deserialize(&path_str);
-                            ie[index] = Box::new(ie_csr);
-                        } else {
-                            let mut ie_csr = BatchMutableCsr::<I>::new();
-                            ie_csr.deserialize(&path_str);
-                            ie[index] = Box::new(ie_csr);
-                        }
+                        csr_tasks.push((src_label_i, e_label_i, dst_label_i, Direction::Incoming));
                     }
+                    let oe_path = &partition_dir
+                        .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
+                    if Path::exists(oe_path) && (trim_json_path.is_none() || oe_enable.contains(&index)) {
+                        csr_tasks.push((src_label_i, e_label_i, dst_label_i, Direction::Outgoing));
+                    }
+                }
+            }
+        }
 
+        let csr_return: Vec<Box<dyn CsrTrait<I>>> = csr_tasks
+            .par_iter()
+            .map(|(src_label, edge_label, dst_label, dir)| {
+                let src_label_name = graph_schema.vertex_label_names()[*src_label].clone();
+                let dst_label_name = graph_schema.vertex_label_names()[*dst_label].clone();
+                let edge_label_name = graph_schema.edge_label_names()[*edge_label].clone();
+                let index: usize =
+                    src_label * vertex_label_num * edge_label_num + dst_label * edge_label_num + edge_label;
+                if *dir == Direction::Outgoing {
                     let oe_path = &partition_dir
                         .join(format!("oe_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
                     if Path::exists(oe_path) && (trim_json_path.is_none() || oe_enable.contains(&index)) {
                         info!("importing {}", oe_path.as_os_str().to_str().unwrap());
                         let path_str = oe_path.to_str().unwrap().to_string();
-                        if graph_schema.is_single_oe(
-                            src_label_i as LabelId,
-                            e_label_i as LabelId,
-                            dst_label_i as LabelId,
+                        let mut oe_csr: Box<dyn CsrTrait<I>> = if graph_schema.is_single_oe(
+                            *src_label as LabelId,
+                            *edge_label as LabelId,
+                            *dst_label as LabelId,
                         ) {
-                            let mut oe_csr = BatchMutableSingleCsr::<I>::new();
-                            oe_csr.deserialize(&path_str);
-                            oe[index] = Box::new(oe_csr);
+                            Box::new(BatchMutableSingleCsr::<I>::new())
                         } else {
-                            let mut oe_csr = BatchMutableCsr::<I>::new();
-                            oe_csr.deserialize(&path_str);
-                            oe[index] = Box::new(oe_csr);
-                        }
+                            Box::new(BatchMutableCsr::<I>::new())
+                        };
+                        oe_csr.deserialize(&path_str);
+                        return oe_csr;
+                    }
+                } else {
+                    let ie_path = &partition_dir
+                        .join(format!("ie_{}_{}_{}", src_label_name, edge_label_name, dst_label_name));
+                    if Path::exists(ie_path) && (trim_json_path.is_none() || ie_enable.contains(&index)) {
+                        info!("importing {}", ie_path.as_os_str().to_str().unwrap());
+                        let path_str = ie_path.to_str().unwrap().to_string();
+                        let mut ie_csr: Box<dyn CsrTrait<I>> = if graph_schema.is_single_ie(
+                            *src_label as LabelId,
+                            *edge_label as LabelId,
+                            *dst_label as LabelId,
+                        ) {
+                            Box::new(BatchMutableSingleCsr::<I>::new())
+                        } else {
+                            Box::new(BatchMutableCsr::<I>::new())
+                        };
+                        ie_csr.deserialize(&path_str);
+                        return ie_csr;
                     }
                 }
+                Box::new(BatchMutableSingleCsr::<I>::new())
+            })
+            .collect();
+
+        for ((src_label_i, e_label_i, dst_label_i, dir), csr) in csr_tasks
+            .into_iter()
+            .zip(csr_return.into_iter())
+        {
+            let index: usize =
+                src_label_i * vertex_label_num * edge_label_num + dst_label_i * edge_label_num + e_label_i;
+            if dir == Direction::Outgoing {
+                oe[index] = csr;
+            } else {
+                ie[index] = csr;
             }
         }
-        let mut vertex_prop_table = vec![];
-        for i in 0..vertex_label_num {
-            let v_label_name = graph_schema.vertex_label_names()[i].clone();
-            let mut table = ColTable::new(vec![]);
-            let table_path = &partition_dir.join(format!("vp_{}", v_label_name));
-            let table_path_str = table_path.to_str().unwrap().to_string();
-            info!("importing vertex property: {}, {}", v_label_name, table_path_str);
-            table.deserialize_table(&table_path_str);
-            vertex_prop_table.push(table);
-        }
+
+        let vertex_prop_table: Vec<ColTable> = (0..vertex_label_num)
+            .into_par_iter()
+            .map(|v_label| {
+                let v_label_name = graph_schema.vertex_label_names()[v_label].clone();
+                let mut table = ColTable::new(vec![]);
+                let table_path = &partition_dir.join(format!("vp_{}", v_label_name));
+                let table_path_str = table_path.to_str().unwrap().to_string();
+                table.deserialize_table(&table_path_str);
+                table
+            })
+            .collect();
 
         let mut oe_edge_prop_table = HashMap::new();
         let mut ie_edge_prop_table = HashMap::new();
@@ -526,302 +564,10 @@ where
         }
     }
 
-    pub fn insert_edges_to_oe_csr(
-        &mut self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, edges: &Vec<(I, I)>,
-        table: &Option<ColTable>,
-    ) {
-        let csr_index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
-        let mut builder = BatchMutableCsrBuilder::new();
-        let new_vertex_num = self.vertex_map.vertex_num(src_label);
-        let mut new_degree = vec![0 as i64; new_vertex_num];
-        for (src, _) in edges {
-            new_degree[src.index()] += 1;
-        }
-        {
-            let oe = self.oe[csr_index]
-                .as_any()
-                .downcast_ref::<BatchMutableCsr<I>>()
-                .unwrap();
-            let old_vertex_num = oe.vertex_num();
-            for v in 0..old_vertex_num.index() {
-                new_degree[v] += oe.degree(I::new(v)) as i64;
-            }
-        }
-        builder.init(&new_degree, 1.0);
-        if let Some(input_table) = table {
-            let mut new_table = ColTable::new({
-                let cols = self
-                    .graph_schema
-                    .get_edge_header(src_label, edge_label, dst_label)
-                    .unwrap();
-                let mut header = vec![];
-                for pair in cols {
-                    header.push((pair.1.clone(), pair.0.clone()));
-                }
-                header
-            });
-
-            {
-                let oe = self.oe[csr_index]
-                    .as_any()
-                    .downcast_ref::<BatchMutableCsr<I>>()
-                    .unwrap();
-                let old_table = self.oe_edge_prop_table.get(&csr_index).unwrap();
-                let old_vertex_num = oe.vertex_num().index();
-                for v in 0..old_vertex_num {
-                    for (nbr, offset) in oe.get_edges_with_offset(I::new(v)).unwrap() {
-                        let new_offset = builder.put_edge(I::new(v), nbr).unwrap();
-                        let row = old_table.get_row(offset).unwrap();
-                        new_table.insert(new_offset, &row);
-                    }
-                }
-                for (index, (src, dst)) in edges.iter().enumerate() {
-                    let new_offset = builder.put_edge(*src, *dst).unwrap();
-                    let row = input_table.get_row(index).unwrap();
-                    new_table.insert(new_offset, &row);
-                }
-            }
-
-            self.oe_edge_prop_table
-                .insert(csr_index, new_table);
-        } else {
-            {
-                let oe = self.oe[csr_index]
-                    .as_any()
-                    .downcast_ref::<BatchMutableCsr<I>>()
-                    .unwrap();
-                let old_vertex_num = oe.vertex_num().index();
-                for v in 0..old_vertex_num {
-                    for nbr in oe.get_edges(I::new(v)).unwrap() {
-                        builder.put_edge(I::new(v), *nbr).unwrap();
-                    }
-                }
-                for (src, dst) in edges {
-                    builder.put_edge(*src, *dst).unwrap();
-                }
-            }
-        }
-        self.oe[csr_index] = Box::new(builder.finish().unwrap());
-    }
-
-    pub fn insert_edges_to_ie_csr(
-        &mut self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, edges: &Vec<(I, I)>,
-        table: &Option<ColTable>,
-    ) {
-        let csr_index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
-        let mut builder = BatchMutableCsrBuilder::new();
-        let new_vertex_num = self.vertex_map.vertex_num(dst_label);
-        let mut new_degree = vec![0 as i64; new_vertex_num];
-        for (_, dst) in edges {
-            new_degree[dst.index()] += 1;
-        }
-        {
-            let ie = self.ie[csr_index]
-                .as_any()
-                .downcast_ref::<BatchMutableCsr<I>>()
-                .unwrap();
-            let old_vertex_num = ie.vertex_num();
-            for v in 0..old_vertex_num.index() {
-                new_degree[v] += ie.degree(I::new(v)) as i64;
-            }
-        }
-        builder.init(&new_degree, 1.0);
-        if let Some(input_table) = table {
-            let mut new_table = ColTable::new({
-                let cols = self
-                    .graph_schema
-                    .get_edge_header(src_label, edge_label, dst_label)
-                    .unwrap();
-                let mut header = vec![];
-                for pair in cols {
-                    header.push((pair.1.clone(), pair.0.clone()));
-                }
-                header
-            });
-
-            {
-                let ie = self.ie[csr_index]
-                    .as_any()
-                    .downcast_ref::<BatchMutableCsr<I>>()
-                    .unwrap();
-                let old_table = self.ie_edge_prop_table.get(&csr_index).unwrap();
-                let old_vertex_num = ie.vertex_num().index();
-                for v in 0..old_vertex_num {
-                    for (nbr, offset) in ie.get_edges_with_offset(I::new(v)).unwrap() {
-                        let new_offset = builder.put_edge(I::new(v), nbr).unwrap();
-                        let row = old_table.get_row(offset).unwrap();
-                        new_table.insert(new_offset, &row);
-                    }
-                }
-                for (index, (src, dst)) in edges.iter().enumerate() {
-                    let new_offset = builder.put_edge(*dst, *src).unwrap();
-                    let row = input_table.get_row(index).unwrap();
-                    new_table.insert(new_offset, &row);
-                }
-            }
-
-            self.ie_edge_prop_table
-                .insert(csr_index, new_table);
-        } else {
-            {
-                let ie = self.ie[csr_index]
-                    .as_any()
-                    .downcast_ref::<BatchMutableCsr<I>>()
-                    .unwrap();
-                let old_vertex_num = ie.vertex_num().index();
-                for v in 0..old_vertex_num {
-                    for nbr in ie.get_edges(I::new(v)).unwrap() {
-                        builder.put_edge(I::new(v), *nbr).unwrap();
-                    }
-                }
-                for (src, dst) in edges {
-                    builder.put_edge(*dst, *src).unwrap();
-                }
-            }
-        }
-        self.ie[csr_index] = Box::new(builder.finish().unwrap());
-    }
-
-    pub fn insert_edges_to_oe_single_csr(
-        &mut self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, edges: &Vec<(I, I)>,
-        table: &Option<ColTable>,
-    ) {
-        let csr_index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
-        let oe = self.oe[csr_index]
-            .as_mut_any()
-            .downcast_mut::<BatchMutableSingleCsr<I>>()
-            .unwrap();
-        oe.resize_vertex(self.vertex_map.vertex_num(src_label));
-        if let Some(new_table) = table {
-            let old_table = self
-                .oe_edge_prop_table
-                .get_mut(&csr_index)
-                .unwrap();
-            for (index, (src, dst)) in edges.iter().enumerate() {
-                oe.insert_edge(*src, *dst);
-                let row = new_table.get_row(index).unwrap();
-                old_table.insert(src.index(), &row);
-            }
-        } else {
-            for (src, dst) in edges {
-                oe.insert_edge(*src, *dst);
-            }
-        }
-    }
-
-    pub fn insert_edges_to_ie_single_csr(
-        &mut self, src_label: LabelId, dst_label: LabelId, edge_label: LabelId, edges: &Vec<(I, I)>,
-        table: &Option<ColTable>,
-    ) {
-        let csr_index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
-        let ie = self.ie[csr_index]
-            .as_mut_any()
-            .downcast_mut::<BatchMutableSingleCsr<I>>()
-            .unwrap();
-        ie.resize_vertex(self.vertex_map.vertex_num(dst_label));
-        if let Some(new_table) = table {
-            let old_table = self
-                .ie_edge_prop_table
-                .get_mut(&csr_index)
-                .unwrap();
-            for (index, (src, dst)) in edges.iter().enumerate() {
-                ie.insert_edge(*dst, *src);
-                let row = new_table.get_row(index).unwrap();
-                old_table.insert(dst.index(), &row);
-            }
-        } else {
-            for (src, dst) in edges {
-                ie.insert_edge(*dst, *src);
-            }
-        }
-    }
-
-    pub fn insert_edges(
-        &mut self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, edges: Vec<(G, G)>,
-        table: Option<ColTable>,
-    ) {
-        let mut parsed_edges = vec![];
-        for (src, dst) in edges {
-            let (got_src_label, src_lid) = self.vertex_map.get_internal_id(src).unwrap();
-            let (got_dst_label, dst_lid) = self.vertex_map.get_internal_id(dst).unwrap();
-            if got_src_label != src_label || got_dst_label != dst_label {
-                warn!("insert edges with wrong label");
-                parsed_edges.push((<I as IndexType>::max(), <I as IndexType>::max()));
-                continue;
-            }
-            parsed_edges.push((src_lid, dst_lid));
-        }
-        let oe_single = self
-            .graph_schema
-            .is_single_oe(src_label, edge_label, dst_label);
-        let ie_single = self
-            .graph_schema
-            .is_single_ie(src_label, edge_label, dst_label);
-
-        if oe_single {
-            self.insert_edges_to_oe_single_csr(src_label, dst_label, edge_label, &parsed_edges, &table);
-        } else {
-            self.insert_edges_to_oe_csr(src_label, dst_label, edge_label, &parsed_edges, &table);
-        }
-
-        if ie_single {
-            self.insert_edges_to_ie_single_csr(src_label, dst_label, edge_label, &parsed_edges, &table);
-        } else {
-            self.insert_edges_to_ie_csr(src_label, dst_label, edge_label, &parsed_edges, &table);
-        }
-    }
-
     pub fn insert_vertex(&mut self, label: LabelId, id: G, properties: Option<Vec<Item>>) {
         let lid = self.vertex_map.add_vertex(id, label);
         if let Some(properties) = properties {
             self.vertex_prop_table[label as usize].insert(lid.index(), &properties);
-        }
-    }
-
-    pub fn delete_edges(
-        &mut self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId,
-        src_delete_set: &HashSet<I>, dst_delete_set: &HashSet<I>, edges: &HashSet<(I, I)>,
-    ) {
-        let index = self.edge_label_to_index(src_label, dst_label, edge_label, Direction::Outgoing);
-        let mut oe_to_delete = HashSet::new();
-        let mut ie_to_delete = HashSet::new();
-        {
-            let oe_csr = &self.oe[index];
-            for v in src_delete_set.iter() {
-                if let Some(oe_list) = oe_csr.get_edges(*v) {
-                    for e in oe_list {
-                        if !dst_delete_set.contains(e) {
-                            oe_to_delete.insert((*v, *e));
-                        }
-                    }
-                }
-            }
-            let ie_csr = &self.ie[index];
-            for v in dst_delete_set.iter() {
-                if let Some(ie_list) = ie_csr.get_edges(*v) {
-                    for e in ie_list {
-                        if !src_delete_set.contains(e) {
-                            ie_to_delete.insert((*e, *v));
-                        }
-                    }
-                }
-            }
-        }
-        self.oe[index].delete_vertices(src_delete_set);
-        if let Some(table) = self.oe_edge_prop_table.get_mut(&index) {
-            self.oe[index].delete_edges_with_props(&edges, false, table);
-            self.oe[index].delete_edges_with_props(&ie_to_delete, false, table);
-        } else {
-            self.oe[index].delete_edges(&edges, false);
-            self.oe[index].delete_edges(&ie_to_delete, false);
-        }
-        self.ie[index].delete_vertices(dst_delete_set);
-        if let Some(table) = self.ie_edge_prop_table.get_mut(&index) {
-            self.ie[index].delete_edges_with_props(&edges, true, table);
-            self.ie[index].delete_edges_with_props(&oe_to_delete, true, table);
-        } else {
-            self.ie[index].delete_edges(&edges, true);
-            self.ie[index].delete_edges(&oe_to_delete, true);
         }
     }
 }

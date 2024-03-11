@@ -26,6 +26,7 @@ log = "0.4"
 rand = "0.8.5"
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.8"
+serde_json = "1.0"
 itertools = "0.10.2"
 bmcsr = { path = "../store/bmcsr" }
 num = "0.4.1"
