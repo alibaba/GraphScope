@@ -20,6 +20,7 @@ import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
 import com.alibaba.graphscope.gremlin.result.GroupResultParser;
+import com.alibaba.pegasus.common.StreamIterator;
 import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 
@@ -51,9 +52,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     protected final List<Object> resultCollectors;
     protected final int resultCollectorsBatchSize;
-
-    // can write back to gremlin context session if true
-    protected boolean isContextWritable;
+    protected final StreamIterator<PegasusClient.JobResponse> responseStreamIterator;
 
     protected AbstractResultProcessor(
             Context writeResult,
@@ -74,23 +73,33 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
                                 .orElse(settings.resultIterationBatchSize);
         this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
-        this.isContextWritable = true;
+        this.responseStreamIterator = new StreamIterator<>();
+    }
+
+    // request results from remote engine service in blocking way
+    public void request() {
+        while (responseStreamIterator.hasNext()) {
+            PegasusClient.JobResponse response = responseStreamIterator.next();
+            // send back a page of results if batch size is met and then reset the
+            // resultCollectors
+            if (this.resultCollectors.size() >= this.resultCollectorsBatchSize
+                    && !(resultParser instanceof GroupResultParser)) {
+                aggregateResults();
+                writeResult.writeAndFlush(ResponseMessage.build(writeResult.getRequestMessage())
+                        .code(ResponseStatusCode.PARTIAL_CONTENT)
+                        .result(resultCollectors)
+                        .create());
+                this.resultCollectors.clear();
+            }
+            resultCollectors.addAll(resultParser.parseFrom(response));
+        }
     }
 
     @Override
     public synchronized void process(PegasusClient.JobResponse response) {
         try {
             if (isContextWritable) {
-                // send back a page of results if batch size is met and then reset the
-                // resultCollectors
-                if (this.resultCollectors.size() >= this.resultCollectorsBatchSize
-                        && !(resultParser instanceof GroupResultParser)) {
-                    aggregateResults();
-                    writeResultList(
-                            writeResult, resultCollectors, ResponseStatusCode.PARTIAL_CONTENT);
-                    this.resultCollectors.clear();
-                }
-                resultCollectors.addAll(resultParser.parseFrom(response));
+
             }
         } catch (Exception e) {
             statusCallback.getQueryLogger().error("process response from grpc fail, msg: {}", e);
@@ -141,81 +150,92 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
 
     protected abstract void aggregateResults();
 
-    protected void writeResultList(
-            final Context context,
+    private ResponseMessage createResponseMsg(
+            final RequestMessage msg,
+            final ResponseStatusCode statusCode,
             final List<Object> resultList,
-            final ResponseStatusCode statusCode) {
-        final ChannelHandlerContext ctx = context.getChannelHandlerContext();
-        final RequestMessage msg = context.getRequestMessage();
-        final MessageSerializer serializer = ctx.channel().attr(StateKey.SERIALIZER).get();
-        final boolean useBinary = ctx.channel().attr(StateKey.USE_BINARY).get();
-
-        if (statusCode == ResponseStatusCode.SERVER_ERROR) {
-            ResponseMessage.Builder builder =
-                    ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR);
-            if (resultList.size() > 0) {
-                builder.statusMessage((String) resultList.get(0));
-            }
-            ctx.writeAndFlush(builder.create());
-            return;
-        }
-
-        boolean retryOnce = false;
-        while (true) {
-            if (ctx.channel().isWritable()) {
-                Frame frame = null;
-                try {
-                    frame =
-                            makeFrame(
-                                    context,
-                                    msg,
-                                    serializer,
-                                    useBinary,
-                                    resultList,
-                                    statusCode,
-                                    Collections.emptyMap(),
-                                    Collections.emptyMap());
-                    ctx.writeAndFlush(frame).get();
-                    break;
-                } catch (Exception e) {
-                    if (frame != null) {
-                        frame.tryRelease();
-                    }
-                    statusCallback
-                            .getQueryLogger()
-                            .error(
-                                    "write "
-                                            + resultList.size()
-                                            + " result to context "
-                                            + context
-                                            + " status code=>"
-                                            + statusCode
-                                            + " fail, msg: {}",
-                                    e);
-                    throw new RuntimeException(e);
-                }
-            } else {
-                if (retryOnce) {
-                    String message =
-                            "write result to context fail for context " + msg + " is too busy";
-                    statusCallback.getQueryLogger().error(message);
-                    throw new RuntimeException(message);
-                } else {
-                    statusCallback
-                            .getQueryLogger()
-                            .warn(
-                                    "Pausing response writing as writeBufferHighWaterMark exceeded"
-                                            + " on "
-                                            + msg
-                                            + " - writing will continue once client has caught up");
-                    retryOnce = true;
-                    try {
-                        TimeUnit.MILLISECONDS.sleep(10L);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-            }
-        }
+            final boolean useBinary) {
+        return ResponseMessage.build(msg)
+                .code(statusCode)
+                .result(resultList)
+                .create();
     }
+
+//    protected void writeResultList(
+//            final Context context,
+//            final List<Object> resultList,
+//            final ResponseStatusCode statusCode) {
+//        final ChannelHandlerContext ctx = context.getChannelHandlerContext();
+//        final RequestMessage msg = context.getRequestMessage();
+//        final MessageSerializer serializer = ctx.channel().attr(StateKey.SERIALIZER).get();
+//        final boolean useBinary = ctx.channel().attr(StateKey.USE_BINARY).get();
+//
+//        if (statusCode == ResponseStatusCode.SERVER_ERROR) {
+//            ResponseMessage.Builder builder =
+//                    ResponseMessage.build(msg).code(ResponseStatusCode.SERVER_ERROR);
+//            if (resultList.size() > 0) {
+//                builder.statusMessage((String) resultList.get(0));
+//            }
+//            ctx.writeAndFlush(builder.create());
+//            return;
+//        }
+//
+//        boolean retryOnce = false;
+//        while (true) {
+//            if (ctx.channel().isWritable()) {
+//                Frame frame = null;
+//                try {
+//                    frame =
+//                            makeFrame(
+//                                    context,
+//                                    msg,
+//                                    serializer,
+//                                    useBinary,
+//                                    resultList,
+//                                    statusCode,
+//                                    Collections.emptyMap(),
+//                                    Collections.emptyMap());
+//                    ctx.writeAndFlush(frame).get();
+//                    break;
+//                } catch (Exception e) {
+//                    if (frame != null) {
+//                        frame.tryRelease();
+//                    }
+//                    statusCallback
+//                            .getQueryLogger()
+//                            .error(
+//                                    "write "
+//                                            + resultList.size()
+//                                            + " result to context "
+//                                            + context
+//                                            + " status code=>"
+//                                            + statusCode
+//                                            + " fail, msg: {}",
+//                                    e);
+//                    throw new RuntimeException(e);
+//                }
+//            } else {
+//                if (retryOnce) {
+//                    String message =
+//                            "write result to context fail for context " + msg + " is too busy";
+//                    statusCallback.getQueryLogger().error(message);
+//                    throw new RuntimeException(message);
+//                } else {
+//                    statusCallback
+//                            .getQueryLogger()
+//                            .warn(
+//                                    "Pausing response writing as writeBufferHighWaterMark exceeded"
+//                                            + " on "
+//                                            + msg
+//                                            + " - writing will continue once client has caught up");
+//                    retryOnce = true;
+//                    try {
+//                        TimeUnit.MILLISECONDS.sleep(10L);
+//                    } catch (InterruptedException e) {
+//                        throw new RuntimeException(e);
+//                    }
+//                }
+//            }
+//        }
+//    }
 }

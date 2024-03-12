@@ -26,9 +26,9 @@ public class QueryTimeoutConfig {
     private static final double GRADUAL_FACTOR = 0.1d;
 
     public QueryTimeoutConfig(long engineTimeoutMS) {
-        this.engineTimeoutMS = engineTimeoutMS;
-        this.channelTimeoutMS = (long) (engineTimeoutMS * (1 + GRADUAL_FACTOR));
-        this.executionTimeoutMS = (long) (engineTimeoutMS * (1 + 2 * GRADUAL_FACTOR));
+        this.engineTimeoutMS = engineTimeoutMS * 10;
+        this.channelTimeoutMS = this.engineTimeoutMS;
+        this.executionTimeoutMS = engineTimeoutMS;
     }
 
     public long getExecutionTimeoutMS() {
