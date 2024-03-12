@@ -19,6 +19,8 @@
 
 grammar GremlinGS;
 
+import ExprGS;
+
 // g or g.rootTraversal()
 query
     : rootTraversal
@@ -96,25 +98,29 @@ traversalMethod
     ;
 
 traversalSourceSpawnMethod_V
-	: 'V' LPAREN integerLiteralList RPAREN
+    : 'V' LPAREN oC_ListLiteral RPAREN
+    | 'V' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
 	;
 
 traversalSourceSpawnMethod_E
-    : 'E' LPAREN integerLiteralList RPAREN
+    : 'E' LPAREN oC_ListLiteral RPAREN
+    | 'E' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
     ;
 
 traversalMethod_as
-    : 'as' LPAREN stringLiteral RPAREN
+    : 'as' LPAREN StringLiteral RPAREN
     ;
 
 // hasLabel('')
 traversalMethod_hasLabel
-    : 'hasLabel' LPAREN stringLiteral (COMMA stringLiteralList)?  RPAREN
+    : 'hasLabel' LPAREN oC_ListLiteral RPAREN
+    | 'hasLabel' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
     ;
 
 // hasId(1, 2, 3)
 traversalMethod_hasId
-    : 'hasId' LPAREN nonEmptyIntegerLiteralList RPAREN
+    : 'hasId' LPAREN oC_ListLiteral RPAREN
+    | 'hasId' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
     ;
 
 // has("str", y), has("str", eq/neq/gt/gte/lt/lte(y))
@@ -122,49 +128,55 @@ traversalMethod_hasId
 // has("person", "name", P.eq("marko"))
 // has("name")
 traversalMethod_has
-    : 'has' LPAREN stringLiteral COMMA genericLiteral RPAREN  // indicate eq
-    | 'has' LPAREN stringLiteral COMMA traversalPredicate RPAREN
-    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA genericLiteral RPAREN
-    | 'has' LPAREN stringLiteral COMMA stringLiteral COMMA traversalPredicate RPAREN
-    | 'has' LPAREN stringLiteral RPAREN
+    : 'has' LPAREN StringLiteral COMMA oC_Literal RPAREN  // indicate eq
+    | 'has' LPAREN StringLiteral COMMA traversalPredicate RPAREN
+    | 'has' LPAREN StringLiteral COMMA StringLiteral COMMA oC_Literal RPAREN
+    | 'has' LPAREN StringLiteral COMMA StringLiteral COMMA traversalPredicate RPAREN
+    | 'has' LPAREN StringLiteral RPAREN
     ;
 
 // hasNot("age")
 traversalMethod_hasNot
-    : 'hasNot' LPAREN stringLiteral RPAREN
+    : 'hasNot' LPAREN StringLiteral RPAREN
     ;
 
 // out('str1', ...)
 // out('1..5', 'str1')
 traversalMethod_out
-	: 'out' LPAREN stringLiteralList RPAREN
+	: 'out' LPAREN oC_ListLiteral RPAREN
+	| 'out' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
 	;
 
 // in('str1', ...)
 // in('1..5', 'str1')
 traversalMethod_in
-	: 'in' LPAREN stringLiteralList RPAREN
+	: 'in' LPAREN oC_ListLiteral RPAREN
+    | 'in' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
 	;
 
 // both('str1', ...)
 // both('1..5', 'str1', ...)
 traversalMethod_both
-	: 'both' LPAREN stringLiteralList RPAREN
+	: 'both' LPAREN oC_ListLiteral RPAREN
+    | 'both' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
 	;
 
 // outE('str1', ...), outE().inV()
 traversalMethod_outE
-	: 'outE' LPAREN stringLiteralList RPAREN (DOT traversalMethod_inV)?
+	: 'outE' LPAREN oC_ListLiteral RPAREN (DOT traversalMethod_inV)?
+	| 'outE' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN (DOT traversalMethod_inV)?
 	;
 
 // inE('str1', ...), inE().outV()
 traversalMethod_inE
-	: 'inE' LPAREN stringLiteralList RPAREN (DOT traversalMethod_outV)?
+	: 'inE' LPAREN oC_ListLiteral RPAREN (DOT traversalMethod_outV)?
+	| 'inE' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN (DOT traversalMethod_outV)?
 	;
 
 // bothE('str1', ...), bothE().otherV()
 traversalMethod_bothE
-	: 'bothE' LPAREN stringLiteralList RPAREN (DOT traversalMethod_otherV)?
+	: 'bothE' LPAREN oC_ListLiteral RPAREN (DOT traversalMethod_otherV)?
+	| 'bothE' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN (DOT traversalMethod_otherV)?
 	;
 
 // case-insensitive
@@ -175,7 +187,7 @@ traversalMethod_bothE
 // with('Tokens.ARGS_EVAL_TIMEOUT', 2000L) // set evaluation timeout to 2 seconds
 // with('evaluationTimeout', 2000L) // set evaluation timeout to 2 seconds
 traversalMethod_with
-    : 'with' LPAREN stringLiteral COMMA genericLiteral RPAREN
+    : 'with' LPAREN StringLiteral COMMA oC_Literal RPAREN
     | 'with' LPAREN evaluationTimeoutKey COMMA evaluationTimeoutValue RPAREN
     ;
 
@@ -184,7 +196,7 @@ evaluationTimeoutKey
     ;
 
 evaluationTimeoutValue
-    : integerLiteral
+    : oC_IntegerLiteral
     ;
 
 // outV()
@@ -209,19 +221,21 @@ traversalMethod_endV
 
 // limit(n)
 traversalMethod_limit
-	: 'limit' LPAREN integerLiteral RPAREN
+	: 'limit' LPAREN oC_IntegerLiteral RPAREN
 	;
 
 // valueMap()
 // valueMap('s1', ...)
 traversalMethod_valueMap
-    : 'valueMap' LPAREN stringLiteralList RPAREN
+    : 'valueMap' LPAREN oC_ListLiteral RPAREN
+    | 'valueMap' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
     ;
 
 // elementMap()
 // elementMap('s1', ...)
 traversalMethod_elementMap
-    : 'elementMap' LPAREN stringLiteralList RPAREN
+    : 'elementMap' LPAREN oC_ListLiteral RPAREN
+    | 'elementMap' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
     ;
 
 // order()
@@ -241,7 +255,7 @@ traversalMethod_order
 traversalMethod_orderby
     : 'by' LPAREN RPAREN
     | 'by' LPAREN traversalOrder RPAREN
-    | 'by' LPAREN stringLiteral (COMMA traversalOrder)? RPAREN
+    | 'by' LPAREN StringLiteral (COMMA traversalOrder)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values (COMMA traversalOrder)? RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_select (COMMA traversalOrder)? RPAREN
     | 'by' LPAREN nestedTraversal (COMMA traversalOrder)? RPAREN
@@ -255,7 +269,8 @@ traversalMethod_orderby_list
 // select('s', ...).by(...).by(...)
 // select(expr('@.age'))
 traversalMethod_select
-    : 'select' LPAREN stringLiteral (COMMA stringLiteralList)? RPAREN (DOT traversalMethod_selectby_list)?
+    : 'select' LPAREN oC_ListLiteral RPAREN (DOT traversalMethod_selectby_list)?
+    | 'select' LPAREN (oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN (DOT traversalMethod_selectby_list)?
     | 'select' LPAREN traversalColumn RPAREN
     | 'select' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_expr RPAREN
     ;
@@ -268,7 +283,7 @@ traversalMethod_select
 // by(T.label/T.id)
 traversalMethod_selectby
     : 'by' LPAREN RPAREN
-    | 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN StringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_valueMap RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_elementMap RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
@@ -289,14 +304,15 @@ traversalMethod_selectby_list
 // dedup('a', 'b').by('name')
 // multiple by traversals is unsupported in standard gremlin, i.e. dedup().by(..).by(..)
 traversalMethod_dedup
-	: 'dedup' LPAREN stringLiteralList RPAREN (DOT traversalMethod_dedupby)?
+	: 'dedup' LPAREN oC_ListLiteral RPAREN (DOT traversalMethod_dedupby)?
+	| 'dedup' LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN (DOT traversalMethod_dedupby)?
 	;
 
 // by('name')
 // by(values('name')), by(out().count())
 // by(T.label/T.id)
 traversalMethod_dedupby
-    : 'by' LPAREN stringLiteral RPAREN
+    : 'by' LPAREN StringLiteral RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
     | 'by' LPAREN traversalToken RPAREN
     ;
@@ -317,7 +333,7 @@ traversalMethod_groupCount
 
 traversalMethod_group_keyby
     : 'by' LPAREN RPAREN                   // group().by()
-    | 'by' LPAREN stringLiteral RPAREN     // group().by('name')
+    | 'by' LPAREN StringLiteral RPAREN     // group().by('name')
     | 'by' LPAREN nonStringKeyByList RPAREN
     ;
 
@@ -337,7 +353,7 @@ nonStringKeyByList
 
 traversalMethod_group_valueby
     : 'by' LPAREN RPAREN                   // group().by(...).by()
-    | 'by' LPAREN stringLiteral RPAREN     // group().by(...).by("name") = group().by(...).by(values("name").fold())
+    | 'by' LPAREN StringLiteral RPAREN     // group().by(...).by("name") = group().by(...).by(values("name").fold())
     | 'by' LPAREN nonStringValueByList RPAREN
     ;
 
@@ -382,7 +398,7 @@ traversalMethod_count
 // only one argument is permitted
 // values("name")
 traversalMethod_values
-    : 'values' LPAREN stringLiteral RPAREN
+    : 'values' LPAREN StringLiteral RPAREN
     ;
 
 // fold()
@@ -413,7 +429,7 @@ traversalMethod_mean
 // is(27)
 // is(P.eq(27))
 traversalMethod_is
-	: 'is' LPAREN genericLiteral RPAREN
+	: 'is' LPAREN oC_Literal RPAREN
 	| 'is' LPAREN traversalPredicate RPAREN
 	;
 
@@ -427,7 +443,7 @@ traversalMethod_is
 // where(expr("@.age && @.age > 20"))
 traversalMethod_where
 	: 'where' LPAREN traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
-	| 'where' LPAREN stringLiteral COMMA traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
+	| 'where' LPAREN StringLiteral COMMA traversalPredicate RPAREN (DOT traversalMethod_whereby_list)?
     | 'where' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_not RPAREN // match not(__.out) as traversalMethod_not instead of nestedTraversal
     | 'where' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_expr RPAREN
 	| 'where' LPAREN nestedTraversal RPAREN
@@ -438,7 +454,7 @@ traversalMethod_where
 // where().by(values('name'))
 traversalMethod_whereby
     : 'by' LPAREN RPAREN
-    | 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN StringLiteral RPAREN
     | 'by' LPAREN (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_values RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
     ;
@@ -462,7 +478,7 @@ traversalMethod_identity
 
 // coin(0.5)
 traversalMethod_coin
-	: 'coin' LPAREN floatLiteral RPAREN
+	: 'coin' LPAREN oC_DoubleLiteral RPAREN
 	;
 
 // sample(100)
@@ -471,12 +487,12 @@ traversalMethod_coin
 // sample(100).by(select('a').by('name'))
 // sample(100).by(out().count())
 traversalMethod_sample
-    : 'sample' LPAREN integerLiteral RPAREN (DOT traversalMethod_sampleby) ?
+    : 'sample' LPAREN oC_IntegerLiteral RPAREN (DOT traversalMethod_sampleby) ?
     ;
 
 traversalMethod_sampleby
     : 'by' LPAREN traversalToken RPAREN
-    | 'by' LPAREN stringLiteral RPAREN
+    | 'by' LPAREN StringLiteral RPAREN
     | 'by' LPAREN nestedTraversal RPAREN
     ;
 
@@ -489,12 +505,13 @@ traversalMethod_match
 	;
 
 traversalMethod_expr
-    : 'expr' LPAREN stringLiteral RPAREN
+    : 'expr' LPAREN StringLiteral RPAREN
+    | 'expr' LPAREN oC_Expression RPAREN
     ;
 
 // i.e. g.E().subgraph("graph_name")
 traversalMethod_subgraph
-	: 'subgraph' LPAREN stringLiteral RPAREN
+	: 'subgraph' LPAREN StringLiteral RPAREN
 	;
 
 traversalMethod_bothV
@@ -514,69 +531,8 @@ traversalMethod_label
 	;
 
 traversalMethod_constant
-	: 'constant' LPAREN genericLiteral RPAREN
+	: 'constant' LPAREN oC_Literal RPAREN
 	;
-
-// only permit non empty, \'\' or \"\" or \'null\' is meaningless as a parameter
-stringLiteral
-    : NonEmptyStringLiteral
-    ;
-
-stringLiteralList
-    : stringLiteralExpr?
-    | LBRACK stringLiteralExpr? RBRACK
-    ;
-
-stringLiteralExpr
-    : stringLiteral (COMMA stringLiteral)*
-    ;
-
-genericLiteral
-	: integerLiteral
-	| floatLiteral
-	| booleanLiteral
-	| stringLiteral
-	;
-
-genericLiteralList
-    : genericLiteralExpr?
-    | LBRACK genericLiteralExpr? RBRACK
-    ;
-
-genericLiteralExpr
-    : genericLiteral (COMMA genericLiteral)*
-    ;
-
-integerLiteral
-    : IntegerLiteral
-    ;
-
-integerLiteralList
-    : integerLiteralExpr?
-    | LBRACK integerLiteralExpr? RBRACK
-    ;
-
-// should be at least one integer in the list
-nonEmptyIntegerLiteralList
-    : integerLiteralExpr
-    | LBRACK integerLiteralExpr RBRACK
-    ;
-
-integerLiteralExpr
-    : integerLiteral (COMMA integerLiteral)*
-    ;
-
-floatLiteral
-    : FloatingPointLiteral
-    ;
-
-booleanLiteral
-    : BooleanLiteral
-    ;
-
-nullLiteral
-    : NullLiteral
-    ;
 
 // Traversal predicate
 traversalPredicate
@@ -607,43 +563,45 @@ nestedTraversal
     ;
 
 traversalPredicate_eq
-    : ('P.eq' | 'eq') LPAREN genericLiteral RPAREN
+    : ('P.eq' | 'eq') LPAREN oC_Literal RPAREN
     ;
 
 traversalPredicate_neq
-    : ('P.neq' | 'neq') LPAREN genericLiteral RPAREN
+    : ('P.neq' | 'neq') LPAREN oC_Literal RPAREN
     ;
 
 traversalPredicate_lt
-    : ('P.lt' | 'lt') LPAREN genericLiteral RPAREN
+    : ('P.lt' | 'lt') LPAREN oC_Literal RPAREN
     ;
 
 traversalPredicate_lte
-    : ('P.lte' | 'lte') LPAREN genericLiteral RPAREN
+    : ('P.lte' | 'lte') LPAREN oC_Literal RPAREN
     ;
 
 traversalPredicate_gt
-    : ('P.gt' | 'gt') LPAREN genericLiteral RPAREN
+    : ('P.gt' | 'gt') LPAREN oC_Literal RPAREN
     ;
 
 traversalPredicate_gte
-    : ('P.gte' | 'gte') LPAREN genericLiteral RPAREN
+    : ('P.gte' | 'gte') LPAREN oC_Literal RPAREN
     ;
 
 traversalPredicate_within
-    : ('P.within' | 'within') LPAREN genericLiteralList RPAREN
+    : ('P.within' | 'within') LPAREN oC_ListLiteral RPAREN
+    | ('P.within' | 'within') LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
     ;
 
 traversalPredicate_without
-    : ('P.without' | 'without') LPAREN genericLiteralList RPAREN
+    : ('P.without' | 'without') LPAREN oC_ListLiteral RPAREN
+    | ('P.without' | 'without') LPAREN ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? RPAREN
     ;
 
 traversalPredicate_containing
-    : ('TextP.containing' | 'containing') LPAREN stringLiteral RPAREN
+    : ('TextP.containing' | 'containing') LPAREN StringLiteral RPAREN
     ;
 
 traversalPredicate_notContaining
-    : ('TextP.notContaining' | 'notContaining') LPAREN stringLiteral RPAREN
+    : ('TextP.notContaining' | 'notContaining') LPAREN StringLiteral RPAREN
     ;
 
 traversalPredicate_not
@@ -651,27 +609,27 @@ traversalPredicate_not
     ;
 
 traversalPredicate_inside
-    : ('P.inside' | 'inside') LPAREN genericLiteral COMMA genericLiteral RPAREN
+    : ('P.inside' | 'inside') LPAREN oC_Literal COMMA oC_Literal RPAREN
     ;
 
 traversalPredicate_outside
-    : ('P.outside' | 'outside') LPAREN genericLiteral COMMA genericLiteral RPAREN
+    : ('P.outside' | 'outside') LPAREN oC_Literal COMMA oC_Literal RPAREN
     ;
 
 traversalPredicate_startingWith
-    : ('TextP.startingWith' | 'startingWith') LPAREN stringLiteral RPAREN
+    : ('TextP.startingWith' | 'startingWith') LPAREN StringLiteral RPAREN
     ;
 
 traversalPredicate_notStartingWith
-    : ('TextP.notStartingWith' | 'notStartingWith') LPAREN stringLiteral RPAREN
+    : ('TextP.notStartingWith' | 'notStartingWith') LPAREN StringLiteral RPAREN
     ;
 
 traversalPredicate_endingWith
-    : ('TextP.endingWith' | 'endingWith') LPAREN stringLiteral RPAREN
+    : ('TextP.endingWith' | 'endingWith') LPAREN StringLiteral RPAREN
     ;
 
 traversalPredicate_notEndingWith
-    : ('TextP.notEndingWith' | 'notEndingWith') LPAREN stringLiteral RPAREN
+    : ('TextP.notEndingWith' | 'notEndingWith') LPAREN StringLiteral RPAREN
     ;
 
 // incr and decr is unsupported in 3.5.1
@@ -685,155 +643,6 @@ traversalColumn
     : 'keys' | 'Column.keys'
     | 'values' | 'Column.values'
     ;
-
-// Integer Literals
-
-IntegerLiteral
-	:	Sign? DecimalIntegerLiteral
-	;
-
-fragment
-DecimalIntegerLiteral
-	:	DecimalNumeral IntegerTypeSuffix?
-	;
-
-fragment
-IntegerTypeSuffix
-	:	[lL]
-	;
-
-fragment
-DecimalNumeral
-	:	'0'
-	|	NonZeroDigit (Digits? | Underscores Digits)
-	;
-
-fragment
-Digits
-	:	Digit (DigitsAndUnderscores? Digit)?
-	;
-
-fragment
-Digit
-	:	'0'
-	|	NonZeroDigit
-	;
-
-fragment
-NonZeroDigit
-	:	[1-9]
-	;
-
-fragment
-DigitsAndUnderscores
-	:	DigitOrUnderscore+
-	;
-
-fragment
-DigitOrUnderscore
-	:	Digit
-	|	'_'
-	;
-
-fragment
-Underscores
-	:	'_'+
-	;
-
-// Floating-Point Literals
-
-FloatingPointLiteral
-	:	Sign? DecimalFloatingPointLiteral
-	;
-
-fragment
-DecimalFloatingPointLiteral
-    :   Digits ('.' Digits ExponentPart? | ExponentPart) FloatTypeSuffix?
-	|	Digits FloatTypeSuffix
-	;
-
-fragment
-ExponentPart
-	:	ExponentIndicator SignedInteger
-	;
-
-fragment
-ExponentIndicator
-	:	[eE]
-	;
-
-fragment
-SignedInteger
-	:	Sign? Digits
-	;
-
-fragment
-Sign
-	:	[+-]
-	;
-
-fragment
-FloatTypeSuffix
-	:	[fFdD]
-	;
-
-// Boolean Literals
-
-BooleanLiteral
-	:	'true'
-	|	'false'
-	;
-
-// Null Literal
-
-NullLiteral
-	:	'null'
-	;
-
-
-fragment
-DoubleQuotedStringCharacters
-	:	DoubleQuotedStringCharacter+
-	;
-
-EmptyStringLiteral
-	:   '""'
-	|   '\'\''
-	;
-
-NonEmptyStringLiteral
-	:   '"' DoubleQuotedStringCharacters '"'
-	|   '\'' SingleQuotedStringCharacters '\''
-	;
-
-fragment
-DoubleQuotedStringCharacter
-	:	~('"' | '\\')
-	|   JoinLineEscape
-	|	EscapeSequence
-	;
-
-fragment
-SingleQuotedStringCharacters
-	:	SingleQuotedStringCharacter+
-	;
-
-fragment
-SingleQuotedStringCharacter
-	:	~('\'' | '\\')
-	|   JoinLineEscape
-	|	EscapeSequence
-	;
-
-// Escape Sequences for Character and String Literals
-fragment JoinLineEscape
-    : '\\' '\r'? '\n'
-    ;
-
-fragment
-EscapeSequence
-	:	'\\' [btnfr"'\\]
-	;
 
 // Separators
 

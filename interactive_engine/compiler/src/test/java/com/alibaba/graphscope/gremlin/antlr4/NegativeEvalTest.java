@@ -55,8 +55,8 @@ public class NegativeEvalTest {
         } catch (ParseCancellationException e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 1]; msg is: [no viable alternative at"
-                            + " input 'g111']",
+                    "syntax error occurs at [line: 1, column: 0]; msg is: [mismatched input 'g111'"
+                        + " expecting 'g']",
                     e.getMessage());
             return;
         }
@@ -70,7 +70,7 @@ public class NegativeEvalTest {
         } catch (ParseCancellationException e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 3]; msg is: [no viable alternative at"
+                    "syntax error occurs at [line: 1, column: 2]; msg is: [no viable alternative at"
                             + " input 'g.V111']",
                     e.getMessage());
             return;
@@ -85,8 +85,13 @@ public class NegativeEvalTest {
         } catch (ParseCancellationException e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 9]; msg is: [token recognition error"
-                            + " at: 'X']",
+                    "syntax error occurs at [line: 1, column: 6]; msg is: [mismatched input 'outX'"
+                        + " expecting {'as', 'hasLabel', 'hasId', 'has', 'hasNot', 'out', 'in',"
+                        + " 'both', 'outE', 'inE', 'bothE', 'with', 'outV', 'inV', 'otherV',"
+                        + " 'endV', 'limit', 'valueMap', 'elementMap', 'order', 'select', 'dedup',"
+                        + " 'id', 'label', 'group', 'groupCount', 'count', 'values', 'fold', 'sum',"
+                        + " 'min', 'max', 'mean', 'is', 'where', 'not', 'union', 'identity',"
+                        + " 'coin', 'sample', 'match', 'subgraph', 'bothV', 'unfold', 'constant'}]",
                     e.getMessage());
             return;
         }

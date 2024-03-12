@@ -20,7 +20,6 @@ import com.alibaba.graphscope.common.ir.rel.GraphLogicalDedupBy;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.grammar.GremlinGSBaseVisitor;
 import com.alibaba.graphscope.grammar.GremlinGSParser;
-import com.alibaba.graphscope.gremlin.antlr4.GenericLiteralVisitor;
 import com.alibaba.graphscope.gremlin.exception.UnsupportedEvalException;
 import com.google.common.base.Preconditions;
 
@@ -41,8 +40,9 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
     public RelBuilder.AggCall visitNonStringValueBy(GremlinGSParser.NonStringValueByContext byCtx) {
         String alias =
                 (byCtx.traversalMethod_as() != null)
-                        ? GenericLiteralVisitor.getStringLiteral(
-                                byCtx.traversalMethod_as().stringLiteral())
+                        ? (String)
+                                LiteralVisitor.INSTANCE.visit(
+                                        byCtx.traversalMethod_as().StringLiteral())
                         : null;
         if (byCtx.traversalMethod_dedup() != null) {
             GraphBuilder nestedBuilder =

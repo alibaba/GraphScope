@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.cypher.antlr4.visitor.type;
+package com.alibaba.graphscope.common.antlr4;
 
 import com.google.common.collect.ImmutableList;
 
