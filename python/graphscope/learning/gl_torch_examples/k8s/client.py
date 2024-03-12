@@ -13,25 +13,22 @@
 # limitations under the License.
 # ==============================================================================
 
-import time
 import argparse
-import pickle
+import time
+from typing import List
 
 import torch
 import torch.nn.functional as F
-from torch_geometric.nn import GraphSAGE
-from torch.nn.parallel import DistributedDataParallel
-from typing import List
 from torch.distributed.algorithms.join import Join
+from torch.nn.parallel import DistributedDataParallel
+from torch_geometric.nn import GraphSAGE
 
 import graphscope as gs
 import graphscope.learning.graphlearn_torch as glt
-from graphscope.dataset import load_ogbn_arxiv
-from graphscope.learning.graphlearn_torch.typing import Split
 from graphscope.learning.gl_torch_graph import GLTorchGraph
+from graphscope.learning.graphlearn_torch.typing import Split
 
-
-gs.set_option(log_level='DEBUG')
+gs.set_option(log_level="DEBUG")
 gs.set_option(show_log=True)
 
 
@@ -59,9 +56,15 @@ def test(model, test_loader, dataset_name):
 
 
 def run_client_proc(
-    glt_graph, group_master: str,
-    num_servers: int, num_clients: int, client_rank: int, server_rank_list: List[int],
-    dataset_name: str, epochs: int, batch_size: int, 
+    glt_graph,
+    group_master: str,
+    num_servers: int,
+    num_clients: int,
+    client_rank: int,
+    server_rank_list: List[int],
+    dataset_name: str,
+    epochs: int,
+    batch_size: int,
     training_pg_master_port: int,
 ):
 
@@ -79,12 +82,12 @@ def run_client_proc(
 
     # Initialize training process group of PyTorch.
     current_ctx = glt.distributed.get_context()
-    
+
     torch.distributed.init_process_group(
-        backend='gloo',
+        backend="gloo",
         rank=current_ctx.rank,
         world_size=current_ctx.world_size,
-        init_method='tcp://{}:{}'.format(group_master, training_pg_master_port)
+        init_method="tcp://{}:{}".format(group_master, training_pg_master_port),
     )
 
     device = torch.device("cpu")
@@ -154,7 +157,9 @@ def run_client_proc(
             for batch in train_loader:
                 optimizer.zero_grad()
                 batch.x = batch.x.to(torch.float32)  # TODO
-                out = model(batch.x, batch.edge_index)[: batch.batch_size].log_softmax(dim=-1)
+                out = model(batch.x, batch.edge_index)[: batch.batch_size].log_softmax(
+                    dim=-1
+                )
                 loss = F.nll_loss(out, torch.flatten(batch.y[: batch.batch_size]))
                 loss.backward()
                 optimizer.step()
@@ -173,14 +178,15 @@ def run_client_proc(
 
     print("-- Exited ...")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Arguments for distributed training of supervised SAGE with servers."
     )
     parser.add_argument(
         "--dataset",
         type=str,
-        default='ogbn-arxiv',
+        default="ogbn-arxiv",
         help="The name of ogbn arxiv.",
     )
     parser.add_argument(
@@ -234,43 +240,54 @@ if __name__ == '__main__':
     parser.add_argument(
         "--master_addr",
         type=str,
-        default='localhost',
+        default="localhost",
         help="The master address of the graphlearn server.",
     )
     parser.add_argument(
         "--group_master",
         type=str,
-        default='localhost',
+        default="localhost",
         help="The master address of the training process group.",
     )
     args = parser.parse_args()
 
     print(
-        f'--- Distributed training example of supervised SAGE with server-client mode. Client {args.node_rank} ---'
+        f"--- Distributed training example of supervised SAGE with server-client mode. Client {args.node_rank} ---"
     )
-    print(f'* dataset: {args.dataset}')
-    print(f'* total server nodes: {args.num_server_nodes}')
-    print(f'* total client nodes: {args.num_client_nodes}')
-    print(f'* node rank: {args.node_rank}')
+    print(f"* dataset: {args.dataset}")
+    print(f"* total server nodes: {args.num_server_nodes}")
+    print(f"* total client nodes: {args.num_client_nodes}")
+    print(f"* node rank: {args.node_rank}")
 
     num_servers = args.num_server_nodes
     num_clients = args.num_client_nodes
 
-    print(f'* epochs: {args.epochs}')
-    print(f'* batch size: {args.batch_size}')
-    print(f'* training process group master port: {args.training_pg_master_port}')
-    print(f'* training loader master port: {args.train_loader_master_port}')
-    print(f'* testing loader master port: {args.test_loader_master_port}')
+    print(f"* epochs: {args.epochs}")
+    print(f"* batch size: {args.batch_size}")
+    print(f"* training process group master port: {args.training_pg_master_port}")
+    print(f"* training loader master port: {args.train_loader_master_port}")
+    print(f"* testing loader master port: {args.test_loader_master_port}")
 
     client_rank = args.node_rank
-    print('--- Loading graph info ...')
-    glt_graph = GLTorchGraph([args.master_addr+':9001', args.master_addr+':9002',
-                              args.master_addr+':9003', args.master_addr+':9004'])
-    print('--- Launching client processes ...')
+    print("--- Loading graph info ...")
+    glt_graph = GLTorchGraph(
+        [
+            args.master_addr + ":9001",
+            args.master_addr + ":9002",
+            args.master_addr + ":9003",
+            args.master_addr + ":9004",
+        ]
+    )
+    print("--- Launching client processes ...")
     run_client_proc(
-        glt_graph, args.group_master,
-        num_servers, num_clients, client_rank,
+        glt_graph,
+        args.group_master,
+        num_servers,
+        num_clients,
+        client_rank,
         [server_rank for server_rank in range(num_servers)],
-        args.dataset, args.epochs, args.batch_size,
-        args.training_pg_master_port
+        args.dataset,
+        args.epochs,
+        args.batch_size,
+        args.training_pg_master_port,
     )

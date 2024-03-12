@@ -13,13 +13,13 @@
 # limitations under the License.
 # ==============================================================================
 
-import time
 import pickle
+import time
+
 import graphscope as gs
 from graphscope.dataset import load_ogbn_arxiv
 
-
-gs.set_option(log_level='DEBUG')
+gs.set_option(log_level="DEBUG")
 gs.set_option(show_log=True)
 
 # load the ogbn_arxiv graph as an example.
@@ -44,6 +44,6 @@ glt_graph = gs.graphlearn_torch(
     },
 )
 print(glt_graph)
-with open('glt_graph.pkl', 'wb') as f:
+with open("glt_graph.pkl", "wb") as f:
     pickle.dump(glt_graph, f)
 time.sleep(1800)

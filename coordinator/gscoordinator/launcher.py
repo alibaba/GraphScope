@@ -21,7 +21,7 @@ import os
 import platform
 from abc import ABCMeta
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List
 
 from gscoordinator.utils import GRAPHSCOPE_HOME
 
@@ -109,8 +109,7 @@ class AbstractLauncher(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def close_learning_instance(
-        self, object_id: int, learning_backend: int):
+    def close_learning_instance(self, object_id: int, learning_backend: int):
         pass
 
     @abstractmethod

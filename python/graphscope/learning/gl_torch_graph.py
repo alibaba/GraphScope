@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+
 class GLTorchGraph(object):
     def __init__(self, server_list):
         assert len(server_list) == 4

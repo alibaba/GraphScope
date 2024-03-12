@@ -153,7 +153,7 @@ class EngineConfig:
     gle_resource: ResourceConfig = field(
         default_factory=lambda: ResourceConfig.make_burstable(0.2, "1Gi")
     )
-    
+
     # Resource for learning pod
     glt_resource: ResourceConfig = field(
         default_factory=lambda: ResourceConfig.make_burstable(0.2, "1Gi")

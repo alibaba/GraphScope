@@ -1343,7 +1343,7 @@ class Session(object):
             "vineyard_socket": self._engine_config["vineyard_socket"],
             "vineyard_id": graph.vineyard_id,
             "fragments": graph.fragments,
-            "master_id": master_id, # -1 means local mode
+            "master_id": master_id,  # -1 means local mode
             "num_servers": len(graph.fragments),
             "num_clients": 1,
         }

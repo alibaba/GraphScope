@@ -27,7 +27,7 @@ import torch
 from graphscope.learning.gl_torch_graph import GLTorchGraph
 
 graphscope.set_option(show_log=True)
-graphscope.set_option(log_level='DEBUG')
+graphscope.set_option(log_level="DEBUG")
 
 logger = logging.getLogger("graphscope")
 
@@ -58,9 +58,8 @@ def run_server_proc(proc_rank, handle, config, server_rank, dataset):
 def launch_graphlearn_torch_server(handle, config, server_rank):
     logger.info(f"-- [Server {server_rank}] Initializing server ...")
     edge_dir = config.pop("edge_dir")
-
     random_node_split = config.pop("random_node_split")
-    logger.info(f'random_node_split: {random_node_split}')
+
     dataset = glt.distributed.DistDataset(
         edge_dir=edge_dir,
         num_partitions=handle["num_servers"],
@@ -69,7 +68,7 @@ def launch_graphlearn_torch_server(handle, config, server_rank):
             str(handle["vineyard_socket"]),
             str(handle["fragments"][server_rank]),
             "paper",
-        )
+        ),
     )
     dataset.load_vineyard(
         vineyard_id=str(handle["fragments"][server_rank]),
@@ -84,7 +83,7 @@ def launch_graphlearn_torch_server(handle, config, server_rank):
         fn=run_server_proc, args=(handle, config, server_rank, dataset), nprocs=1
     )
     logger.info(f"-- [Server {server_rank}] Server exited.")
-    
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:

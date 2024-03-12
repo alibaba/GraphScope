@@ -1,19 +1,19 @@
-import graphscope as gs
-from graphscope.dataset import load_ogbn_arxiv
 import time
 
+import graphscope as gs
+from graphscope.dataset import load_ogbn_arxiv
 
-gs.set_option(log_level='DEBUG')
+gs.set_option(log_level="DEBUG")
 gs.set_option(show_log=True)
 
 # load the ogbn_arxiv graph as an example.
 sess = gs.session(
     with_dataset=True,
-    k8s_service_type='NodePort',
+    k8s_service_type="NodePort",
     k8s_vineyard_mem="8Gi",
     k8s_engine_mem="8Gi",
     vineyard_shared_mem="8Gi",
-    k8s_image_pull_policy='IfNotPresent',
+    k8s_image_pull_policy="IfNotPresent",
     k8s_image_tag="0.26.0a20240115-x86_64",
     num_workers=2,
 )

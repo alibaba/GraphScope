@@ -33,11 +33,10 @@ from graphscope.deploy.kubernetes.utils import get_service_endpoints
 
 from gscoordinator.constants import ANALYTICAL_CONTAINER_NAME
 from gscoordinator.constants import DATASET_CONTAINER_NAME
+from gscoordinator.constants import GRAPHLEARN_CONTAINER_NAME
+from gscoordinator.constants import GRAPHLEARN_TORCH_CONTAINER_NAME
 from gscoordinator.constants import INTERACTIVE_EXECUTOR_CONTAINER_NAME
 from gscoordinator.constants import INTERACTIVE_FRONTEND_CONTAINER_NAME
-from gscoordinator.constants import (
-    GRAPHLEARN_CONTAINER_NAME, GRAPHLEARN_TORCH_CONTAINER_NAME
-)
 from gscoordinator.utils import parse_as_glog_level
 from gscoordinator.version import __version__
 
@@ -67,7 +66,6 @@ class EngineCluster:
         engine_pod_prefix,
         graphlearn_start_port,
         graphlearn_torch_start_port,
-        
     ):
         self._instance_id = config.session.instance_id
         self._glog_level = parse_as_glog_level(config.log_level)
@@ -273,7 +271,9 @@ class EngineCluster:
         )
         container.ports = [
             kube_client.V1ContainerPort(container_port=p)
-            for p in range(self._graphlearn_start_port, self._graphlearn_start_port + 1000)
+            for p in range(
+                self._graphlearn_start_port, self._graphlearn_start_port + 1000
+            )
         ]
         return container
 
@@ -287,7 +287,10 @@ class EngineCluster:
         )
         container.ports = [
             kube_client.V1ContainerPort(container_port=p)
-            for p in range(self._graphlearn_torch_start_port, self._graphlearn_torch_start_port + 1000)
+            for p in range(
+                self._graphlearn_torch_start_port,
+                self._graphlearn_torch_start_port + 1000,
+            )
         ]
         return container
 
@@ -364,7 +367,6 @@ class EngineCluster:
             containers.append(
                 self.get_graphlearn_container(volume_mounts=engine_volume_mounts)
             )
-            
         if self._with_graphlearn_torch:
             containers.append(
                 self.get_graphlearn_torch_container(volume_mounts=engine_volume_mounts)
@@ -439,7 +441,7 @@ class EngineCluster:
             self._namespace, name, service_spec, self._engine_labels
         )
         return service
-    
+
     def get_graphlearn_torch_service(self, object_id, start_port):
         service_type = self._service_type
         num_workers = self._num_workers
@@ -455,7 +457,6 @@ class EngineCluster:
             self._namespace, name, service_spec, self._engine_labels
         )
         return service
-    
 
     def get_graphlearn_ports(self, start_port):
         num_workers = self._num_workers

@@ -457,8 +457,6 @@ class GraphScopeOneServiceServicer(
 
     def CreateLearningInstance(self, request, context):
         object_id = request.object_id
-        logger.info(f"Handle: {request.handle}, Config: {request.config}, Learning backend: {request.learning_backend}")
-        logger.info("Create learning instance with object id %ld", object_id)
         handle, config, learning_backend = (
             request.handle,
             request.config,
@@ -468,14 +466,15 @@ class GraphScopeOneServiceServicer(
             endpoints = self._launcher.create_learning_instance(
                 object_id, handle, config, learning_backend
             )
-            self._object_manager.put(object_id, LearningInstanceManager(object_id, learning_backend))
+            self._object_manager.put(
+                object_id, LearningInstanceManager(object_id, learning_backend)
+            )
         except Exception as e:
             context.set_code(grpc.StatusCode.ABORTED)
             context.set_details(
                 f"Create learning instance failed: ${e}. The traceback is: {traceback.format_exc()}"
             )
-            self._launcher.close_learning_instance(
-                object_id, learning_backend)
+            self._launcher.close_learning_instance(object_id, learning_backend)
             self._object_manager.pop(object_id)
             return message_pb2.CreateLearningInstanceResponse()
         return message_pb2.CreateLearningInstanceResponse(
@@ -506,7 +505,9 @@ class GraphScopeOneServiceServicer(
             self._object_manager.pop(object_id)
             logger.info("Close learning instance with object id %ld", object_id)
             try:
-                self._launcher.close_learning_instance(object_id, request.learning_backend)
+                self._launcher.close_learning_instance(
+                    object_id, request.learning_backend
+                )
             except Exception as e:
                 context.set_code(grpc.StatusCode.ABORTED)
                 context.set_details(
