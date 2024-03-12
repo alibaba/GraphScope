@@ -39,6 +39,13 @@
     }]
   }, {
     "opr": {
+      "repartition": {
+        "toAnother": {
+        }
+      }
+    }
+  }, {
+    "opr": {
       "edge": {
         "params": {
           "tables": [{

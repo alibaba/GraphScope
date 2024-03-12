@@ -148,7 +148,7 @@ class PropertyAutoMessageManager : public grape::DefaultMessageManager {
                      << event->buffer->GetTypeId().name();
         }
       } else {
-        LOG(FATAL) << "Unexpected message stratety "
+        LOG(FATAL) << "Unexpected message strategy "
                    << underlying_value(event->message_strategy);
       }
     }
@@ -221,7 +221,7 @@ class PropertyAutoMessageManager : public grape::DefaultMessageManager {
         }
         */
       } else {
-        LOG(FATAL) << "Unexpected message stratety "
+        LOG(FATAL) << "Unexpected message strategy "
                    << underlying_value(event->message_strategy);
       }
     }

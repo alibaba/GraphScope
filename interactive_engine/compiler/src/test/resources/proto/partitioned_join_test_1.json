@@ -67,6 +67,28 @@
                 }
               }
             }]
+          }, {
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 0
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "vertex": {
+                "tag": 0,
+                "opt": "ITSELF",
+                "params": {
+                  "columns": [{
+                    "name": "name"
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 0
+              }
+            }
           }]
         },
         "rightPlan": {
@@ -109,6 +131,28 @@
               },
               "alias": 1
             }]
+          }, {
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 1
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "vertex": {
+                "tag": 1,
+                "opt": "ITSELF",
+                "params": {
+                  "columns": [{
+                    "name": "name"
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 1
+              }
+            }
           }]
         }
       }

@@ -39,38 +39,69 @@
     }]
   }, {
     "opr": {
-      "edge": {
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 0
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "vertex": {
+        "tag": 0,
+        "opt": "ITSELF",
         "params": {
-          "tables": [{
-            "id": 0
-          }],
           "columns": [{
-            "name": "weight"
+            "name": "name"
           }],
           "sampleRatio": 1.0
         },
-        "expandOpt": "EDGE"
+        "alias": 0
+      }
+    }
+  }, {
+    "opr": {
+      "dedup": {
+        "keys": [{
+          "tag": {
+            "id": 0
+          },
+          "property": {
+            "key": {
+              "name": "name"
+            }
+          },
+          "nodeType": {
+            "dataType": "STRING"
+          }
+        }]
       }
     },
     "metaData": [{
       "type": {
         "graphType": {
-          "elementOpt": "EDGE",
           "graphDataType": [{
             "label": {
-              "srcLabel": 0,
-              "dstLabel": 0
             },
             "props": [{
               "propId": {
-                "name": "weight"
+                "name": "id"
               },
-              "type": "DOUBLE"
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
             }]
           }]
         }
-      },
-      "alias": -1
+      }
     }]
   }, {
     "opr": {

@@ -69,6 +69,13 @@
             }]
           }, {
             "opr": {
+              "repartition": {
+                "toAnother": {
+                }
+              }
+            }
+          }, {
+            "opr": {
               "edge": {
                 "params": {
                   "tables": [{
@@ -144,6 +151,28 @@
               },
               "alias": 2
             }]
+          }, {
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 2
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "vertex": {
+                "tag": 2,
+                "opt": "ITSELF",
+                "params": {
+                  "columns": [{
+                    "name": "name"
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 2
+              }
+            }
           }]
         },
         "rightPlan": {
@@ -192,6 +221,13 @@
               },
               "alias": 3
             }]
+          }, {
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                }
+              }
+            }
           }, {
             "opr": {
               "edge": {
@@ -270,6 +306,28 @@
               },
               "alias": 5
             }]
+          }, {
+            "opr": {
+              "repartition": {
+                "toAnother": {
+                  "shuffleKey": 5
+                }
+              }
+            }
+          }, {
+            "opr": {
+              "vertex": {
+                "tag": 5,
+                "opt": "ITSELF",
+                "params": {
+                  "columns": [{
+                    "name": "name"
+                  }],
+                  "sampleRatio": 1.0
+                },
+                "alias": 5
+              }
+            }
           }]
         }
       }

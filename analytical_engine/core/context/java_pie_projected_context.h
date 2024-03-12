@@ -145,7 +145,7 @@ class JavaPIEProjectedContext : public JavaContextBase<FRAG_T> {
         return std::make_shared<inner_ctx_wrapper_type>(id, frag_wrapper,
                                                         inner_ctx_impl_shared);
       } else {
-        LOG(ERROR) << "Unregonizable data type: " << data_type;
+        LOG(ERROR) << "Unrecognizable data type: " << data_type;
       }
     } else if (java_ctx_type_name == "VertexPropertyContext") {
       using inner_ctx_type = VertexPropertyContext<FRAG_T>;
