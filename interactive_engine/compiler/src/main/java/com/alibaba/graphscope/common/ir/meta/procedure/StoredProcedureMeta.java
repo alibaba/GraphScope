@@ -36,13 +36,12 @@ public class StoredProcedureMeta {
     private static final RelDataTypeFactory typeFactory = new JavaTypeFactoryImpl();
 
     private final String name;
-    private final String type;
-    private final String queryStr;
     private final RelDataType returnType;
     private final List<Parameter> parameters;
     private final Mode mode;
     private final String description;
     private final String extension;
+    private final Map<String, Object> options;
 
     protected StoredProcedureMeta(
             String name,
@@ -51,39 +50,19 @@ public class StoredProcedureMeta {
             String extension,
             RelDataType returnType,
             List<Parameter> parameters,
-            String queryStr,
-            String type) {
+            Map<String, Object> options) {
         this.name = name;
         this.mode = mode;
         this.description = description;
         this.extension = extension;
         this.returnType = returnType;
         this.parameters = Objects.requireNonNull(parameters);
-        this.queryStr = queryStr;
-        this.type = type;
-    }
-
-    public StoredProcedureMeta(
-            String name,
-            Mode mode,
-            String description,
-            String extension,
-            RelDataType returnType,
-            List<Parameter> parameters,
-            Map<String, Object> option) {
-        this(
-                name,
-                mode,
-                description,
-                extension,
-                returnType,
-                parameters,
-                (String) option.getOrDefault("queryStr", "UNKNOWN"),
-                (String) option.getOrDefault("type", "cypher"));
+        this.options = options;
     }
 
     public StoredProcedureMeta(
             Configs configs, String queryStr, RelDataType returnType, List<Parameter> parameters) {
+        // For optional keys, construct a map and pass it to the constructor.
         this(
                 Config.NAME.get(configs),
                 Mode.valueOf(Config.MODE.get(configs)),
@@ -91,8 +70,11 @@ public class StoredProcedureMeta {
                 Config.EXTENSION.get(configs),
                 returnType,
                 parameters,
-                queryStr,
-                Config.TYPE.get(configs));
+                ImmutableMap.of(
+                        Config.TYPE.getKey(),
+                        Config.TYPE.get(configs),
+                        Config.QUERY_STR.getKey(),
+                        queryStr));
     }
 
     public String getName() {
@@ -107,6 +89,10 @@ public class StoredProcedureMeta {
         return Collections.unmodifiableList(parameters);
     }
 
+    public Object getOption(String key) {
+        return options.getOrDefault(key, null);
+    }
+
     @Override
     public String toString() {
         return "StoredProcedureMeta{"
@@ -117,13 +103,8 @@ public class StoredProcedureMeta {
                 + returnType
                 + ", parameters="
                 + parameters
-                + ", option={"
-                + "queryStr='"
-                + queryStr
-                + '\''
-                + ", type="
-                + type
-                + '}'
+                + ", option="
+                + options
                 + '}';
     }
 
@@ -203,7 +184,7 @@ public class StoredProcedureMeta {
                                                     "type", Utils.typeToStr(k.getType())))
                             .collect(Collectors.toList()),
                     "option",
-                    ImmutableBiMap.of("queryStr", meta.queryStr, "type", meta.type));
+                    meta.options);
         }
     }
 
@@ -267,7 +248,11 @@ public class StoredProcedureMeta {
                 com.alibaba.graphscope.common.config.Config.stringConfig("extension", ".so");
         public static final com.alibaba.graphscope.common.config.Config<String> MODE =
                 com.alibaba.graphscope.common.config.Config.stringConfig("mode", "READ");
+        // option configurations.
         public static final com.alibaba.graphscope.common.config.Config<String> TYPE =
-                com.alibaba.graphscope.common.config.Config.stringConfig("type", "cypher");
+                com.alibaba.graphscope.common.config.Config.stringConfig(
+                        "type", "UNKNOWN"); // cypher or cpp
+        public static final com.alibaba.graphscope.common.config.Config<String> QUERY_STR =
+                com.alibaba.graphscope.common.config.Config.stringConfig("queryStr", "UNKNOWN");
     }
 }
