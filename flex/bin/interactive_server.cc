@@ -20,6 +20,7 @@
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
+#include "flex/otel/otel.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/utils/service_utils.h"
 
@@ -199,7 +200,9 @@ int main(int argc, char** argv) {
       "open-thread-resource-pool", bpo::value<bool>()->default_value(true),
       "open thread resource pool")("worker-thread-number",
                                    bpo::value<unsigned>()->default_value(2),
-                                   "worker thread number");
+                                   "worker thread number")(
+      "enable-trace", bpo::value<bool>()->default_value(true),
+      "whether to enable opentelemetry tracing");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -230,6 +233,13 @@ int main(int argc, char** argv) {
   std::tie(shard_num, admin_port, query_port, default_graph) =
       gs::parse_from_server_config(engine_config_file);
   auto& db = gs::GraphDB::get();
+
+  if (vm["enable-trace"].as<bool>()) {
+    LOG(INFO) << "Initialize opentelemetry...";
+    otel::initTracer();
+    otel::initMeter();
+    otel::initLogger();
+  }
 
   if (start_admin_service) {
     // When start admin service, we need a workspace to put all the meta data

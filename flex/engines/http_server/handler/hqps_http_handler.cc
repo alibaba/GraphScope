@@ -12,10 +12,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "flex/engines/http_server/handler/hqps_http_handler.h"
+
+#include "opentelemetry/context/context.h"
+#include "opentelemetry/trace/span_metadata.h"
+#include "opentelemetry/trace/span_startoptions.h"
+
 #include "flex/engines/http_server/executor_group.actg.h"
 #include "flex/engines/http_server/options.h"
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/types.h"
+#include "flex/otel/otel.h"
+
+namespace otel {
+template <typename T>
+class HttpTextMapCarrier
+    : public opentelemetry::context::propagation::TextMapCarrier {
+ public:
+  HttpTextMapCarrier(T& headers) : headers_(headers) {}
+  HttpTextMapCarrier() = default;
+  virtual opentelemetry::nostd::string_view Get(
+      opentelemetry::nostd::string_view key) const noexcept override {
+    auto it = headers_.find(key.data());
+    if (it != headers_.end()) {
+      return opentelemetry::nostd::string_view(it->second);
+    }
+    return "";
+  }
+
+  virtual void Set(opentelemetry::nostd::string_view key,
+                   opentelemetry::nostd::string_view value) noexcept override {
+    headers_.insert(std::pair{std::string(key), std::string(value)});
+  }
+
+  T headers_;
+};
+}  // namespace otel
 
 namespace server {
 
@@ -221,12 +253,37 @@ bool hqps_adhoc_query_handler::create_actors() {
   return true;
 }
 
+opentelemetry::trace::StartSpanOptions get_parent_ctx(
+    opentelemetry::context::Context& context,
+    std::map<std::string, std::string>& headers) {
+  auto propagator = opentelemetry::context::propagation::
+      GlobalTextMapPropagator::GetGlobalPropagator();
+  otel::HttpTextMapCarrier<decltype(headers)> carrier(headers);
+  auto new_context = propagator->Extract(carrier, context);
+
+  opentelemetry::trace::StartSpanOptions options;
+  options.kind = opentelemetry::trace::SpanKind::kServer;
+  auto parent_ctx = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  options.parent = opentelemetry::trace::GetSpan(new_context)->GetContext();
+  return options;
+}
+
 seastar::future<std::unique_ptr<seastar::httpd::reply>>
 hqps_adhoc_query_handler::handle(const seastar::sstring& path,
                                  std::unique_ptr<seastar::httpd::request> req,
                                  std::unique_ptr<seastar::httpd::reply> rep) {
   auto dst_executor = executor_idx_;
   executor_idx_ = (executor_idx_ + 1) % shard_concurrency_;
+
+  auto tracer_ = otel::get_tracer("hqps_adhoc_query_handler");
+  // Extract context from headers. This copy is necessary to avoid access after
+  // header content been freed
+  std::map<std::string, std::string> headers(req->_headers.begin(),
+                                             req->_headers.end());
+  auto current_ctx = opentelemetry::context::RuntimeContext::GetCurrent();
+  auto options = get_parent_ctx(current_ctx, headers);
+  auto span = tracer_->StartSpan(path.data(), options);
+  auto scope = tracer_->WithActiveSpan(span);
 
   return codegen_actor_refs_[0]
       .do_codegen(query_param{std::move(req->content)})
@@ -243,26 +300,30 @@ hqps_adhoc_query_handler::handle(const seastar::sstring& path,
         return seastar::make_ready_future<query_param>(
             std::move(output.content.substr(4)));
       })
-      .then_wrapped(
-          [rep = std::move(rep)](seastar::future<query_result>&& fut) mutable {
-            if (__builtin_expect(fut.failed(), false)) {
-              rep->set_status(
-                  seastar::httpd::reply::status_type::internal_server_error);
-              try {
-                std::rethrow_exception(fut.get_exception());
-              } catch (std::exception& e) {
-                rep->write_body("bin", seastar::sstring(e.what()));
-              }
-              rep->done();
-              return seastar::make_ready_future<
-                  std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-            }
-            auto result = fut.get0();
-            rep->write_body("bin", std::move(result.content));
-            rep->done();
-            return seastar::make_ready_future<
-                std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
-          });
+      .then_wrapped([rep = std::move(rep),
+                     span](seastar::future<query_result>&& fut) mutable {
+        if (__builtin_expect(fut.failed(), false)) {
+          rep->set_status(
+              seastar::httpd::reply::status_type::internal_server_error);
+          try {
+            std::rethrow_exception(fut.get_exception());
+          } catch (std::exception& e) {
+            rep->write_body("bin", seastar::sstring(e.what()));
+          }
+          span->SetStatus(opentelemetry::trace::StatusCode::kError,
+                          "Internal Server Error");
+          span->End();
+          rep->done();
+          return seastar::make_ready_future<
+              std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+        }
+        auto result = fut.get0();
+        rep->write_body("bin", std::move(result.content));
+        span->End();
+        rep->done();
+        return seastar::make_ready_future<
+            std::unique_ptr<seastar::httpd::reply>>(std::move(rep));
+      });
 }
 
 seastar::future<std::unique_ptr<seastar::httpd::reply>>

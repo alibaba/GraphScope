@@ -30,3 +30,4 @@
     "remoteUser": "root",
     "postCreateCommand": "sudo chown -R graphscope /workspaces && bash pre-commit/install-hook.sh && bash pre-commit/prepare-commit-msg"
 }
+
