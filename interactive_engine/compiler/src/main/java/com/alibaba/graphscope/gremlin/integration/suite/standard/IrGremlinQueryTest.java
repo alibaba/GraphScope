@@ -125,6 +125,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
             get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
                     final Object v1Id);
 
+    public abstract Traversal<Edge, Edge> get_g_E_hasLabelXknowsX();
+
     // g.V().out().union(out(), in(), in()).count()
     public abstract Traversal<Vertex, Long> get_g_V_out_union_out_in_in_count();
 
