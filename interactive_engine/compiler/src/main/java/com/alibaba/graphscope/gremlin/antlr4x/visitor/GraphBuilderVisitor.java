@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.Project;
@@ -77,14 +76,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalSourceSpawnMethod_V(
             GremlinGSParser.TraversalSourceSpawnMethod_VContext ctx) {
-        builder.source(
-                new SourceConfig(
-                        GraphOpt.Source.VERTEX,
-                        new LabelConfig(true),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalSourceSpawnMethodContext)
-                                                ctx.getParent()))));
+        builder.source(new SourceConfig(GraphOpt.Source.VERTEX, new LabelConfig(true)));
         if (ctx.integerLiteralList() != null) {
             Object[] ids = GenericLiteralVisitor.getIntegerLiteralList(ctx.integerLiteralList());
             if (ids.length == 1) {
@@ -109,14 +101,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalSourceSpawnMethod_E(
             GremlinGSParser.TraversalSourceSpawnMethod_EContext ctx) {
-        builder.source(
-                new SourceConfig(
-                        GraphOpt.Source.EDGE,
-                        new LabelConfig(true),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalSourceSpawnMethodContext)
-                                                ctx.getParent()))));
+        builder.source(new SourceConfig(GraphOpt.Source.EDGE, new LabelConfig(true)));
         if (ctx.integerLiteralList() != null) {
             Object[] ids = GenericLiteralVisitor.getIntegerLiteralList(ctx.integerLiteralList());
             if (ids.length == 1) {
@@ -269,13 +254,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalMethod_outE(GremlinGSParser.TraversalMethod_outEContext ctx) {
         builder.expand(
-                new ExpandConfig(
-                        GraphOpt.Expand.OUT,
-                        getLabelConfig(ctx.stringLiteralList()),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                ctx.getParent()))));
+                new ExpandConfig(GraphOpt.Expand.OUT, getLabelConfig(ctx.stringLiteralList())));
         if (ctx.traversalMethod_inV() != null) {
             visitTraversalMethod_inV(ctx.traversalMethod_inV());
         }
@@ -285,13 +264,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalMethod_inE(GremlinGSParser.TraversalMethod_inEContext ctx) {
         builder.expand(
-                new ExpandConfig(
-                        GraphOpt.Expand.IN,
-                        getLabelConfig(ctx.stringLiteralList()),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                ctx.getParent()))));
+                new ExpandConfig(GraphOpt.Expand.IN, getLabelConfig(ctx.stringLiteralList())));
         if (ctx.traversalMethod_outV() != null) {
             visitTraversalMethod_outV(ctx.traversalMethod_outV());
         }
@@ -302,13 +275,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     public GraphBuilder visitTraversalMethod_bothE(
             GremlinGSParser.TraversalMethod_bothEContext ctx) {
         builder.expand(
-                new ExpandConfig(
-                        GraphOpt.Expand.BOTH,
-                        getLabelConfig(ctx.stringLiteralList()),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                ctx.getParent()))));
+                new ExpandConfig(GraphOpt.Expand.BOTH, getLabelConfig(ctx.stringLiteralList())));
         if (ctx.traversalMethod_otherV() != null) {
             visitTraversalMethod_otherV(ctx.traversalMethod_otherV());
         }
@@ -317,48 +284,18 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
 
     @Override
     public GraphBuilder visitTraversalMethod_outV(GremlinGSParser.TraversalMethod_outVContext ctx) {
-        ParseTree parent = ctx.getParent();
-        if (parent instanceof GremlinGSParser.TraversalMethod_inEContext) {
-            parent = parent.getParent();
-        }
-        return builder.getV(
-                new GetVConfig(
-                        GraphOpt.GetV.START,
-                        new LabelConfig(true),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext) parent))));
+        return builder.getV(new GetVConfig(GraphOpt.GetV.START, new LabelConfig(true)));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_inV(GremlinGSParser.TraversalMethod_inVContext ctx) {
-        ParseTree parent = ctx.getParent();
-        if (parent instanceof GremlinGSParser.TraversalMethod_outEContext) {
-            parent = parent.getParent();
-        }
-        return builder.getV(
-                new GetVConfig(
-                        GraphOpt.GetV.END,
-                        new LabelConfig(true),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext) parent))));
+        return builder.getV(new GetVConfig(GraphOpt.GetV.END, new LabelConfig(true)));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_otherV(
             GremlinGSParser.TraversalMethod_otherVContext ctx) {
-        ParseTree parent = ctx.getParent();
-        if (parent instanceof GremlinGSParser.TraversalMethod_bothEContext) {
-            parent = parent.getParent();
-        }
-        return builder.getV(
-                new GetVConfig(
-                        GraphOpt.GetV.OTHER,
-                        new LabelConfig(true),
-                        getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext) parent))));
+        return builder.getV(new GetVConfig(GraphOpt.GetV.OTHER, new LabelConfig(true)));
     }
 
     @Override
@@ -367,21 +304,14 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         if (peek instanceof GraphLogicalPathExpand) {
             GraphLogicalPathExpand pathExpand = (GraphLogicalPathExpand) peek;
             GraphLogicalExpand expand = (GraphLogicalExpand) pathExpand.getExpand();
-            String tag =
-                    getNextTag(
-                            new TraversalMethodIterator(
-                                    (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
             switch (expand.getOpt()) {
                 case OUT:
-                    return builder.getV(
-                            new GetVConfig(GraphOpt.GetV.END, new LabelConfig(true), tag));
+                    return builder.getV(new GetVConfig(GraphOpt.GetV.END, new LabelConfig(true)));
                 case IN:
-                    return builder.getV(
-                            new GetVConfig(GraphOpt.GetV.START, new LabelConfig(true), tag));
+                    return builder.getV(new GetVConfig(GraphOpt.GetV.START, new LabelConfig(true)));
                 case BOTH:
                 default:
-                    return builder.getV(
-                            new GetVConfig(GraphOpt.GetV.OTHER, new LabelConfig(true), tag));
+                    return builder.getV(new GetVConfig(GraphOpt.GetV.OTHER, new LabelConfig(true)));
             }
         }
         throw new InvalidGremlinScriptException("endV should follow with path expand");
@@ -396,14 +326,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             return builder.expand(
                             new ExpandConfig(
                                     GraphOpt.Expand.OUT, getLabelConfig(ctx.stringLiteralList())))
-                    .getV(
-                            new GetVConfig(
-                                    GraphOpt.GetV.END,
-                                    new LabelConfig(true),
-                                    getNextTag(
-                                            new TraversalMethodIterator(
-                                                    (GremlinGSParser.TraversalMethodContext)
-                                                            ctx.getParent()))));
+                    .getV(new GetVConfig(GraphOpt.GetV.END, new LabelConfig(true)));
         }
     }
 
@@ -416,14 +339,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             return builder.expand(
                             new ExpandConfig(
                                     GraphOpt.Expand.IN, getLabelConfig(ctx.stringLiteralList())))
-                    .getV(
-                            new GetVConfig(
-                                    GraphOpt.GetV.START,
-                                    new LabelConfig(true),
-                                    getNextTag(
-                                            new TraversalMethodIterator(
-                                                    (GremlinGSParser.TraversalMethodContext)
-                                                            ctx.getParent()))));
+                    .getV(new GetVConfig(GraphOpt.GetV.START, new LabelConfig(true)));
         }
     }
 
@@ -436,14 +352,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             return builder.expand(
                             new ExpandConfig(
                                     GraphOpt.Expand.BOTH, getLabelConfig(ctx.stringLiteralList())))
-                    .getV(
-                            new GetVConfig(
-                                    GraphOpt.GetV.OTHER,
-                                    new LabelConfig(true),
-                                    getNextTag(
-                                            new TraversalMethodIterator(
-                                                    (GremlinGSParser.TraversalMethodContext)
-                                                            ctx.getParent()))));
+                    .getV(new GetVConfig(GraphOpt.GetV.OTHER, new LabelConfig(true)));
         }
     }
 
@@ -454,7 +363,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
 
     @Override
     public GraphBuilder visitTraversalMethod_as(GremlinGSParser.TraversalMethod_asContext ctx) {
-        return builder;
+        return builder.as(GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
     }
 
     @Override
@@ -470,14 +379,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                                                         builder.literal(k),
                                                         builder.variable(null, k)))
                                 .collect(Collectors.toList()));
-        String tag =
-                getNextTag(
-                        new TraversalMethodIterator(
-                                (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
-        return builder.project(
-                ImmutableList.of(expr),
-                tag == null ? ImmutableList.of() : ImmutableList.of(tag),
-                true);
+        return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
     }
 
     @Override
@@ -487,17 +389,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             RexNode expr =
                     builder.variable(
                             null, GenericLiteralVisitor.getStringLiteral(ctx.stringLiteral()));
-            String tag =
-                    (ctx.getParent() instanceof GremlinGSParser.TraversalMethodContext)
-                            ? getNextTag(
-                                    new TraversalMethodIterator(
-                                            (GremlinGSParser.TraversalMethodContext)
-                                                    ctx.getParent()))
-                            : null;
-            return builder.project(
-                    ImmutableList.of(expr),
-                    tag == null ? ImmutableList.of() : ImmutableList.of(tag),
-                    true);
+            return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
         }
         throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [values('..')]");
     }
@@ -515,25 +407,12 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                                                         builder.literal(k),
                                                         builder.variable(null, k)))
                                 .collect(Collectors.toList()));
-        String tag =
-                getNextTag(
-                        new TraversalMethodIterator(
-                                (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
-        return builder.project(
-                ImmutableList.of(expr),
-                tag == null ? ImmutableList.of() : ImmutableList.of(tag),
-                true);
+        return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_select(
             GremlinGSParser.TraversalMethod_selectContext ctx) {
-        String tag =
-                (ctx.getParent() instanceof GremlinGSParser.TraversalMethodContext)
-                        ? getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext) ctx.getParent()))
-                        : null;
         RexNode expr;
         if (ctx.stringLiteral() != null) {
             List<String> selectTags =
@@ -578,10 +457,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                     GremlinGSParser.TraversalMethod_selectbyContext.class,
                     ctx.getText() + " is unsupported yet");
         }
-        return builder.project(
-                ImmutableList.of(expr),
-                tag == null ? ImmutableList.of() : ImmutableList.of(tag),
-                true);
+        return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
     }
 
     @Override
@@ -649,102 +525,42 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalMethod_count(
             GremlinGSParser.TraversalMethod_countContext ctx) {
-        ParseTree aggCtx = ctx.getParent();
-        String alias =
-                aggCtx != null
-                                && aggCtx.getParent()
-                                        instanceof GremlinGSParser.TraversalMethodContext
-                        ? getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                aggCtx.getParent()))
-                        : null;
-        return (GraphBuilder) builder.aggregate(builder.groupKey(), builder.countStar(alias));
+        return (GraphBuilder) builder.aggregate(builder.groupKey(), builder.countStar(null));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_fold(GremlinGSParser.TraversalMethod_foldContext ctx) {
-        ParseTree aggCtx = ctx.getParent();
-        String alias =
-                aggCtx != null
-                                && aggCtx.getParent()
-                                        instanceof GremlinGSParser.TraversalMethodContext
-                        ? getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                aggCtx.getParent()))
-                        : null;
-        return (GraphBuilder) builder.aggregate(builder.groupKey(), builder.collect(false, alias));
+        return (GraphBuilder) builder.aggregate(builder.groupKey(), builder.collect(false, null));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_sum(GremlinGSParser.TraversalMethod_sumContext ctx) {
-        ParseTree aggCtx = ctx.getParent();
-        String alias =
-                aggCtx != null
-                                && aggCtx.getParent()
-                                        instanceof GremlinGSParser.TraversalMethodContext
-                        ? getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                aggCtx.getParent()))
-                        : null;
         return (GraphBuilder)
                 builder.aggregate(
                         builder.groupKey(),
-                        builder.sum(false, alias, builder.variable((String) null)));
+                        builder.sum(false, null, builder.variable((String) null)));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_min(GremlinGSParser.TraversalMethod_minContext ctx) {
-        ParseTree aggCtx = ctx.getParent();
-        String alias =
-                aggCtx != null
-                                && aggCtx.getParent()
-                                        instanceof GremlinGSParser.TraversalMethodContext
-                        ? getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                aggCtx.getParent()))
-                        : null;
         return (GraphBuilder)
                 builder.aggregate(
-                        builder.groupKey(), builder.min(alias, builder.variable((String) null)));
+                        builder.groupKey(), builder.min(null, builder.variable((String) null)));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_max(GremlinGSParser.TraversalMethod_maxContext ctx) {
-        ParseTree aggCtx = ctx.getParent();
-        String alias =
-                aggCtx != null
-                                && aggCtx.getParent()
-                                        instanceof GremlinGSParser.TraversalMethodContext
-                        ? getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                aggCtx.getParent()))
-                        : null;
         return (GraphBuilder)
                 builder.aggregate(
-                        builder.groupKey(), builder.max(alias, builder.variable((String) null)));
+                        builder.groupKey(), builder.max(null, builder.variable((String) null)));
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_mean(GremlinGSParser.TraversalMethod_meanContext ctx) {
-        ParseTree aggCtx = ctx.getParent();
-        String alias =
-                aggCtx != null
-                                && aggCtx.getParent()
-                                        instanceof GremlinGSParser.TraversalMethodContext
-                        ? getNextTag(
-                                new TraversalMethodIterator(
-                                        (GremlinGSParser.TraversalMethodContext)
-                                                aggCtx.getParent()))
-                        : null;
         return (GraphBuilder)
                 builder.aggregate(
                         builder.groupKey(),
-                        builder.avg(false, alias, builder.variable((String) null)));
+                        builder.avg(false, null, builder.variable((String) null)));
     }
 
     @Override
@@ -806,26 +622,44 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     @Override
     public GraphBuilder visitTraversalMethod_label(
             GremlinGSParser.TraversalMethod_labelContext ctx) {
-        String tag =
-                getNextTag(
-                        new TraversalMethodIterator(
-                                (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
         return builder.project(
                 ImmutableList.of(builder.variable(null, T.label.getAccessor())),
-                tag == null ? ImmutableList.of() : ImmutableList.of(tag),
+                ImmutableList.of(),
                 true);
     }
 
     @Override
     public GraphBuilder visitTraversalMethod_id(GremlinGSParser.TraversalMethod_idContext ctx) {
-        String tag =
-                getNextTag(
-                        new TraversalMethodIterator(
-                                (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
         return builder.project(
                 ImmutableList.of(builder.variable(null, T.id.getAccessor())),
-                tag == null ? ImmutableList.of() : ImmutableList.of(tag),
+                ImmutableList.of(),
                 true);
+    }
+
+    @Override
+    public GraphBuilder visitTraversalMethod_union(
+            GremlinGSParser.TraversalMethod_unionContext ctx) {
+        GremlinGSParser.NestedTraversalExprContext exprCtx = ctx.nestedTraversalExpr();
+        NestedTraversalRelVisitor visitor = new NestedTraversalRelVisitor(builder);
+        List<RelNode> branches = Lists.newArrayList();
+        for (int i = 0; i < exprCtx.getChildCount(); ++i) {
+            if (!(exprCtx.getChild(i) instanceof GremlinGSParser.NestedTraversalContext)) continue;
+            GremlinGSParser.NestedTraversalContext nestedCtx =
+                    (GremlinGSParser.NestedTraversalContext) exprCtx.getChild(i);
+            branches.add(visitor.visitNestedTraversal(nestedCtx));
+        }
+        Preconditions.checkArgument(branches.size() > 0, "union should have at least one branch");
+        builder.build();
+        for (RelNode branch : branches) {
+            builder.push(branch);
+        }
+        return (GraphBuilder) builder.union(true, branches.size());
+    }
+
+    @Override
+    public GraphBuilder visitTraversalMethod_identity(
+            GremlinGSParser.TraversalMethod_identityContext ctx) {
+        return builder;
     }
 
     public GraphBuilder getGraphBuilder() {
@@ -853,7 +687,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                     if (byCtx == null) continue;
                     Pair<RexNode, @Nullable String> exprWithAlias =
                             Utils.convertExprToPair(
-                                    new NestedTraversalVisitor(this.builder, null)
+                                    new NestedTraversalRexVisitor(this.builder, null, keyCtx)
                                             .visitNestedTraversal(byCtx.nestedTraversal()));
                     exprs.add(exprWithAlias.getValue0());
                     String alias = exprWithAlias.getValue1();
@@ -920,7 +754,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         } else if (byCtx.nestedTraversal() != null) {
             RexNode rex =
                     Utils.convertExprToPair(
-                                    new NestedTraversalVisitor(this.builder, tag)
+                                    new NestedTraversalRexVisitor(this.builder, tag, byCtx)
                                             .visitNestedTraversal(byCtx.nestedTraversal()))
                             .getValue0();
             if (rex instanceof RexCall) {
@@ -954,7 +788,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         } else if (byCtx.nestedTraversal() != null) {
             RexNode rex =
                     Utils.convertExprToPair(
-                                    new NestedTraversalVisitor(this.builder, null)
+                                    new NestedTraversalRexVisitor(this.builder, null, byCtx)
                                             .visitNestedTraversal(byCtx.nestedTraversal()))
                             .getValue0();
             // todo: RexCall need to be computed in advance which will change the current head
@@ -1004,7 +838,7 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
                             .collect(Collectors.toList()));
         } else if (byCtx.nestedTraversal() != null) {
             return Utils.convertExprToPair(
-                            (new NestedTraversalVisitor(this.builder, tag))
+                            (new NestedTraversalRexVisitor(this.builder, tag, byCtx))
                                     .visitNestedTraversal(byCtx.nestedTraversal()))
                     .getValue0();
         }
@@ -1062,34 +896,6 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         Preconditions.checkArgument(
                 dataType instanceof GraphSchemaType, "can not get property from type=", dataType);
         return dataType.getFieldList().stream().map(k -> k.getName()).collect(Collectors.toList());
-    }
-
-    protected @Nullable String getNextTag(TraversalMethodIterator methodIterator) {
-        List<String> tags = Lists.newArrayList();
-        while (methodIterator.hasNext()) {
-            GremlinGSParser.TraversalMethodContext next = methodIterator.next();
-            if (next.traversalMethod_as() != null) {
-                tags.add(
-                        GenericLiteralVisitor.getStringLiteral(
-                                next.traversalMethod_as().stringLiteral()));
-            } else if (next.traversalMethod_has() != null
-                    || next.traversalMethod_hasId() != null
-                    || next.traversalMethod_hasLabel() != null
-                    || next.traversalMethod_hasNot() != null
-                    || next.traversalMethod_is() != null
-                    || next.traversalMethod_where() != null
-                    || next.traversalMethod_not() != null
-                    || next.traversalMethod_identity() != null
-                    || next.traversalMethod_limit() != null
-                    || next.traversalMethod_order() != null
-                    || next.traversalMethod_dedup() != null
-                    || next.traversalMethod_with() != null) {
-                // continue
-            } else {
-                break;
-            }
-        }
-        return tags.isEmpty() ? null : tags.get(tags.size() - 1);
     }
 
     private GraphBuilder appendTailProject() {

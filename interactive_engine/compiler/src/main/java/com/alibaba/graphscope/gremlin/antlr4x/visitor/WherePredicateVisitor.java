@@ -201,7 +201,7 @@ public class WherePredicateVisitor extends ExpressionVisitor {
                             byCtx.traversalMethod_values().stringLiteral()));
         } else if (byCtx.nestedTraversal() != null) {
             return Utils.convertExprToPair(
-                            new NestedTraversalVisitor(builder, tag)
+                            new NestedTraversalRexVisitor(builder, tag, byCtx)
                                     .visitNestedTraversal(byCtx.nestedTraversal()))
                     .getValue0();
         }

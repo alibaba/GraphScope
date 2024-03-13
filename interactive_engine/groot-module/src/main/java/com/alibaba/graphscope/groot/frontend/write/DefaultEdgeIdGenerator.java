@@ -39,10 +39,10 @@ public class DefaultEdgeIdGenerator extends RoleClients<IdAllocateClient>
 
     @Override
     public long getHashId(long srcId, long dstId, int labelId, List<byte[]> pks) {
-        if (pks != null && pks.size() > 0) {
-            return PkHashUtils.hash(srcId, dstId, labelId, pks);
+        if (pks == null || pks.size() == 0) {
+            throw new RuntimeException("Cannot get hash id when pk is empty");
         }
-        return PkHashUtils.hash(srcId, dstId, labelId, System.nanoTime());
+        return PkHashUtils.hash(srcId, dstId, labelId, pks);
     }
 
     private void allocateNewIds() {
