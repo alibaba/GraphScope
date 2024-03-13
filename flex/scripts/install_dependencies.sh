@@ -45,5 +45,13 @@ cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX
 make -j ${parallelism} && sudo make install
 popd && rm -rf /tmp/hiactor
 
+# install opentelemetry
+RUN cd /tmp && git clone https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
+cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
+-DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
+-DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
+-DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
+-DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF && make -j  && make install && rm -rf /tmp/opentelemetry-cpp
+
 sudo sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
 sudo sysctl -p /etc/sysctl.conf

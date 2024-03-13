@@ -19,13 +19,16 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 RUN apt-get update && apt-get install -y protobuf-compiler libprotobuf-dev maven git vim curl \
     wget python3 make libc-ares-dev doxygen python3-pip net-tools curl default-jdk nlohmann-json3-dev \
-    libgoogle-glog-dev libopenmpi-dev libboost-all-dev libyaml-cpp-dev libcrypto++-dev openssl && \
+    libgoogle-glog-dev libopenmpi-dev libboost-all-dev libyaml-cpp-dev libcrypto++-dev openssl libcurl4-openssl-dev && \
     apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # install libgrape-lite
 RUN cd /tmp && \
     git clone https://github.com/alibaba/libgrape-lite.git -b v0.3.2 --single-branch && cd libgrape-lite && \
     mkdir build && cd build && cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/opt/flex && make -j && make install && rm -rf /tmp/libgrape-lite
+
+RUN apt-get update && apt-get -y install pkg-config ninja-build xfslibs-dev ragel libpciaccess-dev libxml2-dev libgnutls28-dev liblz4-dev libsctp-dev systemtap-sdt-dev stow libfmt-dev valgrind && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/* 
 
 # install hiactor
 RUN cd /tmp && git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch && cd hiactor && \
