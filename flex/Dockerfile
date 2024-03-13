@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y protobuf-compiler libprotobuf-dev maven
 # install libgrape-lite
 RUN cd /tmp && \
     git clone https://github.com/alibaba/libgrape-lite.git -b v0.3.2 --single-branch && cd libgrape-lite && \
-    mkdir build && cd build && cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/opt/flex && make -j && make install && rm -rf /tmp/libgrape-lite
+    mkdir build && cd build && cmake .. -DBUILD_LIBGRAPELITE_TESTS=OFF && make -j && make install && rm -rf /tmp/libgrape-lite
 
 RUN apt-get update && apt-get -y install pkg-config ninja-build xfslibs-dev ragel libpciaccess-dev libxml2-dev libgnutls28-dev liblz4-dev libsctp-dev systemtap-sdt-dev stow libfmt-dev valgrind && \
     apt-get clean -y && rm -rf /var/lib/apt/lists/* 
@@ -33,7 +33,7 @@ RUN apt-get update && apt-get -y install pkg-config ninja-build xfslibs-dev rage
 # install hiactor
 RUN cd /tmp && git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch && cd hiactor && \
     git submodule update --init --recursive && ./seastar/seastar/install-dependencies.sh && mkdir build && cd build && \
-    cmake -DCMAKE_INSTALL_PREFIX=/opt/flex -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" .. && \
+    cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" .. && \
     make -j && make install && rm -rf /tmp/hiactor
 
 # install arrow
@@ -44,7 +44,7 @@ RUN cd /tmp && sudo apt-get update && sudo apt-get install -y -V ca-certificates
 
 # install opentelemetry
 RUN cd /tmp && git clone https://github.com/open-telemetry/opentelemetry-cpp && cd opentelemetry-cpp && \
-    cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
+    cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
     -DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
     -DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
     -DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
