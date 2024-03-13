@@ -28,7 +28,6 @@ data:
         gie_executor_resource: {{ toYaml .Values.engines.gie.executor.resources | nindent 10 }}
         gie_frontend_resource: {{ toYaml .Values.engines.gie.frontend.resources | nindent 10 }}
         gle_resource: {{ toYaml .Values.engines.gle.resources | nindent 10 }}
-        glt_resource: {{ toYaml .Values.engines.glt.resources | nindent 10 }}
       image:
         pull_policy: {{ .Values.image.pullPolicy }}
         pull_secrets: {{ toYaml .Values.image.pullSecrets | nindent 10 }}
