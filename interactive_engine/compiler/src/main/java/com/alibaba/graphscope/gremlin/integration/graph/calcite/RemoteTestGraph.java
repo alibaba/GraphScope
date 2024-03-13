@@ -1520,14 +1520,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 //        method = "g_V_valueMapXname_ageX",
 //        reason = "unsupported")
 
-// @Graph.OptOut(
-//        method = "g_V_unionXout__inX_name",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//        reason = "union is unsupported yet")
-// @Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//        method = "g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX",
-//        reason = "union is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_unionXout__inX_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
+        reason = "Tested in IrGremlinQueryTest")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
+        method = "g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX",
+        reason = "Tested in IrGremlinQueryTest")
 // @Graph.OptOut(
 //        method = "g_V_haslabel_union_identity_out_values",
 //        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
