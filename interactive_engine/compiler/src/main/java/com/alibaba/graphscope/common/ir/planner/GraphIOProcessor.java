@@ -255,36 +255,38 @@ public class GraphIOProcessor {
                                     dst = left;
                             }
                             PatternEdge expandEdge = visitEdge(expand, src, dst);
-                            if (pxd.getOffset() != null && pxd.getFetch() != null) {
-                                int offset =
-                                        ((RexLiteral) pxd.getOffset())
-                                                .getValueAs(Number.class)
-                                                .intValue();
-                                int fetch =
-                                        ((RexLiteral) pxd.getFetch())
-                                                .getValueAs(Number.class)
-                                                .intValue();
-                                ElementDetails newDetails =
-                                        new ElementDetails(
-                                                expandEdge.getDetails().getSelectivity(),
-                                                new PathExpandRange(offset, fetch));
-                                expandEdge =
-                                        expandEdge.isDistinct()
-                                                ? new SinglePatternEdge(
-                                                        expandEdge.getSrcVertex(),
-                                                        expandEdge.getDstVertex(),
-                                                        expandEdge.getEdgeTypeIds().get(0),
-                                                        expandEdge.getId(),
-                                                        expandEdge.isBoth(),
-                                                        newDetails)
-                                                : new FuzzyPatternEdge(
-                                                        expandEdge.getSrcVertex(),
-                                                        expandEdge.getDstVertex(),
-                                                        expandEdge.getEdgeTypeIds(),
-                                                        expandEdge.getId(),
-                                                        expandEdge.isBoth(),
-                                                        newDetails);
-                            }
+                            int offset =
+                                    (pxd.getOffset() == null)
+                                            ? 0
+                                            : ((RexLiteral) pxd.getOffset())
+                                                    .getValueAs(Number.class)
+                                                    .intValue();
+                            int fetch =
+                                    (pxd.getFetch() == null)
+                                            ? (Integer.MAX_VALUE - offset)
+                                            : ((RexLiteral) pxd.getFetch())
+                                                    .getValueAs(Number.class)
+                                                    .intValue();
+                            ElementDetails newDetails =
+                                    new ElementDetails(
+                                            expandEdge.getDetails().getSelectivity(),
+                                            new PathExpandRange(offset, fetch));
+                            expandEdge =
+                                    expandEdge.isDistinct()
+                                            ? new SinglePatternEdge(
+                                                    expandEdge.getSrcVertex(),
+                                                    expandEdge.getDstVertex(),
+                                                    expandEdge.getEdgeTypeIds().get(0),
+                                                    expandEdge.getId(),
+                                                    expandEdge.isBoth(),
+                                                    newDetails)
+                                            : new FuzzyPatternEdge(
+                                                    expandEdge.getSrcVertex(),
+                                                    expandEdge.getDstVertex(),
+                                                    expandEdge.getEdgeTypeIds(),
+                                                    expandEdge.getId(),
+                                                    expandEdge.isBoth(),
+                                                    newDetails);
                             pattern.addEdge(src, dst, expandEdge);
                             vertexOrEdgeDetails.put(
                                     expandEdge,
