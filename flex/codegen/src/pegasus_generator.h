@@ -158,8 +158,8 @@ class PegasusGenerator {
     ss << "let stream_0 = input.input_from(vec![0])?;\n";
 
     std::string plan_json;
-    option.always_print_primitive_fields = true;
     google::protobuf::util::JsonPrintOptions option;
+    option.always_print_primitive_fields = true;
     auto st = google::protobuf::util::MessageToJsonString(plan_, &plan_json, option);
     for (auto i = 0; i < size; ++i) {
       auto op = plan_.plan(i);
