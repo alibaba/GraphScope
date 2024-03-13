@@ -11,8 +11,6 @@ if [ $# -eq 1 ]; then
 fi
 echo "parallelism: $parallelism"
 
-sudo apt update -y
-
 sudo apt install -y \
       ninja-build ragel libhwloc-dev libnuma-dev libpciaccess-dev vim wget curl \
       git g++ libunwind-dev libgoogle-glog-dev cmake libopenmpi-dev default-jdk libcrypto++-dev \
@@ -36,6 +34,18 @@ sudo apt-get install -y ./apache-arrow-apt-source-latest.deb
 sudo apt-get update && sudo apt-get install -y libarrow-dev=8.0.0-1
 popd && rm -rf /tmp/apache-arrow-apt-source-latest.deb
 
+# install opentelemetry
+cd /tmp
+git clone https://github.com/open-telemetry/opentelemetry-cpp
+cd opentelemetry-cpp
+cmake . -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
+-DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
+-DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
+-DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
+-DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF
+make -j ${parallelism}  && sudo make install
+cd /tmp && rm -rf /tmp/opentelemetry-cpp
+
 pushd /tmp
 git clone https://github.com/alibaba/hiactor.git -b v0.1.1 --single-branch
 cd hiactor && git submodule update --init --recursive
@@ -44,18 +54,6 @@ mkdir build && cd build
 cmake -DHiactor_DEMOS=OFF -DHiactor_TESTING=OFF -DHiactor_DPDK=OFF -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" ..
 make -j ${parallelism} && sudo make install
 popd && rm -rf /tmp/hiactor
-
-# install opentelemetry
-cd /tmp
-git clone https://github.com/open-telemetry/opentelemetry-cpp
-cd opentelemetry-cpp
-cmake . -DCMAKE_INSTALL_PREFIX=/opt/flex -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_STANDARD=17 \
--DCMAKE_POSITION_INDEPENDENT_CODE=ON  -DBUILD_SHARED_LIBS=ON \
--DWITH_OTLP_HTTP=ON -DWITH_OTLP_GRPC=OFF \
--DWITH_ABSEIL=OFF -DWITH_PROMETHEUS=OFF \
--DBUILD_TESTING=OFF -DWITH_EXAMPLES=OFF
-make -j ${parallelism}  && sudo make install
-cd /tmp && rm -rf /tmp/opentelemetry-cpp
 
 sudo sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
 sudo sysctl -p /etc/sysctl.conf

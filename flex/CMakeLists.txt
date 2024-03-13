@@ -136,6 +136,13 @@ else ()
     endif()
 endif ()
 
+find_package(opentelemetry-cpp CONFIG)
+if (OPENTELEMETRY_CPP_FOUND)
+    find_package(Protobuf CONFIG REQUIRED)
+    find_package(CURL REQUIRED)
+    add_definitions(-DHAVE_OPENTELEMETRY_CPP)
+endif ()
+
 # Find Doxygen
 if (BUILD_DOC)
     find_package(Doxygen)

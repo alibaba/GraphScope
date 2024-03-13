@@ -16,6 +16,8 @@
 #ifndef OTEL_OTEL_H_
 #define OTEL_OTEL_H_
 
+#ifdef HAVE_OPENTELEMETRY_CPP
+
 #include <string>
 
 #include "opentelemetry/context/propagation/global_propagator.h"
@@ -68,3 +70,5 @@ nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
     std::string name, std::string version);
 }  // namespace otel
 #endif  // OTEL_OTEL_H_
+
+#endif  // HAVE_OPENTELEMETRY_CPP

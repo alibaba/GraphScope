@@ -15,6 +15,8 @@
 
 #include "flex/otel/otel.h"
 
+#ifdef HAVE_OPENTELEMETRY_CPP
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -146,3 +148,4 @@ nostd::unique_ptr<metrics_api::Counter<uint64_t>> initIntCounter(
   return int_counter;
 }
 }  // namespace otel
+#endif  // HAVE_OPENTELEMETRY_CPP

@@ -201,7 +201,7 @@ int main(int argc, char** argv) {
       "open thread resource pool")("worker-thread-number",
                                    bpo::value<unsigned>()->default_value(2),
                                    "worker thread number")(
-      "enable-trace", bpo::value<bool>()->default_value(true),
+      "enable-trace", bpo::value<bool>()->default_value(false),
       "whether to enable opentelemetry tracing");
 
   setenv("TZ", "Asia/Shanghai", 1);
@@ -235,10 +235,14 @@ int main(int argc, char** argv) {
   auto& db = gs::GraphDB::get();
 
   if (vm["enable-trace"].as<bool>()) {
+#ifdef HAVE_OPENTELEMETRY_CPP
     LOG(INFO) << "Initialize opentelemetry...";
     otel::initTracer();
     otel::initMeter();
     otel::initLogger();
+#else
+    LOG(WARNING) << "OpenTelemetry is not enabled in this build";
+#endif
   }
 
   if (start_admin_service) {

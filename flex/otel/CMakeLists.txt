@@ -1,6 +1,10 @@
 # OpenTelemetry
-find_package(opentelemetry-cpp CONFIG REQUIRED)
-find_package(Protobuf REQUIRED)
+find_package(opentelemetry-cpp CONFIG)
+if (OPENTELEMETRY_CPP_FOUND)
+    find_package(Protobuf CONFIG REQUIRED)
+    find_package(CURL REQUIRED)
+endif ()
+
 include_directories("${OPENTELEMETRY_CPP_INCLUDE_DIRS}")
 
 add_library(otel "otel.cc")
