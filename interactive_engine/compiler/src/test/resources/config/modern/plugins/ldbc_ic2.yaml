@@ -12,3 +12,6 @@ params:
 returns:
   - name: "name"
     type: "string"
+option: # consistent with standard cypher procedure meta, use field 'option' to specify additional meta info.
+  type: cypher # cypher/cpp
+  queryStr: "MATCH(n: PERSON ${personId2}) WHERE n.creationDate < ${maxDate} RETURN n.firstName AS name LIMIT 10;"
