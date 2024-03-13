@@ -136,6 +136,7 @@ cypher_to_plan() {
   # add extra_key_value_config
   extra_config="name:${procedure_name}"
   extra_config="${extra_config},description:${procedure_description}"
+  extra_config="${extra_config},type:cypher"
 
   cmd="java -cp ${COMPILER_LIB_DIR}/*:${COMPILER_JAR}"
   cmd="${cmd} -Dgraph.schema=${graph_schema_path}"

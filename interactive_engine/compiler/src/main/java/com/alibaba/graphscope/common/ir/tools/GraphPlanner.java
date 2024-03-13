@@ -293,7 +293,10 @@ public class GraphPlanner {
         Configs extraConfigs = createExtraConfigs(args.length > 4 ? args[4] : null);
         StoredProcedureMeta procedureMeta =
                 new StoredProcedureMeta(
-                        extraConfigs, logicalPlan.getOutputType(), logicalPlan.getDynamicParams());
+                        extraConfigs,
+                        query,
+                        logicalPlan.getOutputType(),
+                        logicalPlan.getDynamicParams());
         StoredProcedureMeta.Serializer.perform(procedureMeta, new FileOutputStream(args[3]));
     }
 }
