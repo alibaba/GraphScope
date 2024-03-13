@@ -18,7 +18,6 @@ package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -44,6 +43,8 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
     private final String queryName;
     private final IrMeta meta;
     private final QueryStatusCallback statusCallback;
+    private final QueryTimeoutConfig timeoutConfig;
+    IrStandardOpProcessor opProcessor;
 
     public LifeCycleSupplier(
             Context ctx,
@@ -52,7 +53,9 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
             long queryId,
             String queryName,
             IrMeta meta,
-            QueryStatusCallback statusCallback) {
+            QueryStatusCallback statusCallback,
+            QueryTimeoutConfig timeoutConfig,
+            IrStandardOpProcessor opProcessor) {
         this.ctx = ctx;
         this.queryCache = queryCache;
         this.client = client;
@@ -60,6 +63,8 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
         this.queryName = queryName;
         this.meta = meta;
         this.statusCallback = statusCallback;
+        this.timeoutConfig = timeoutConfig;
+        this.opProcessor = opProcessor;
     }
 
     @Override
@@ -88,12 +93,13 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                         .info("ir plan {}", summary.getPhysicalPlan().explain());
                                 ResultSchema resultSchema =
                                         new ResultSchema(summary.getLogicalPlan());
-                                ExecutionResponseListener listener =
+                                GremlinResultProcessor listener =
                                         new GremlinResultProcessor(
                                                 ctx,
-                                                statusCallback,
                                                 new GremlinRecordParser(resultSchema),
-                                                resultSchema);
+                                                resultSchema,
+                                                statusCallback,
+                                                timeoutConfig);
                                 if (value.result != null && value.result.isCompleted) {
                                     List<IrResult.Results> records = value.result.records;
                                     records.forEach(k -> listener.onNext(k.getRecord()));
@@ -108,6 +114,8 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                             listener,
                                             timeoutConfig);
                                 }
+                                // request results from remote engine in a blocking way
+                                listener.request();
                             } catch (Exception e) {
                                 throw new RuntimeException(e);
                             }

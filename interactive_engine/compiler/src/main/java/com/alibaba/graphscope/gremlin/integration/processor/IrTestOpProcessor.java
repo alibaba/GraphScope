@@ -150,11 +150,12 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     ExecutionResponseListener listener =
                                             new GremlinTestResultProcessor(
                                                     ctx,
-                                                    statusCallback,
                                                     new GremlinTestRecordParser(
                                                             resultSchema,
                                                             testGraph.getProperties(configs)),
-                                                    resultSchema);
+                                                    resultSchema,
+                                                    statusCallback,
+                                                    timeoutConfig);
                                     if (value.result != null && value.result.isCompleted) {
                                         List<IrResult.Results> records = value.result.records;
                                         records.forEach(k -> listener.onNext(k.getRecord()));
