@@ -27,11 +27,8 @@ public class QueryTimeoutConfig {
 
     public QueryTimeoutConfig(long executionTimeoutMS) {
         this.executionTimeoutMS = executionTimeoutMS;
-        //        this.channelTimeoutMS = (long) (executionTimeoutMS * (1 - GRADUAL_FACTOR));
-        //        this.engineTimeoutMS = (long) (executionTimeoutMS * (1 - 2 * GRADUAL_FACTOR));
-
-        this.channelTimeoutMS = executionTimeoutMS * 10;
-        this.engineTimeoutMS = executionTimeoutMS * 10;
+        this.channelTimeoutMS = (long) (executionTimeoutMS * (1 - GRADUAL_FACTOR));
+        this.engineTimeoutMS = (long) (executionTimeoutMS * (1 - 2 * GRADUAL_FACTOR));
     }
 
     public long getExecutionTimeoutMS() {
