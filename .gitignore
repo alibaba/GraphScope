@@ -99,6 +99,4 @@ flex/interactive/examples/sf0.1-raw/
 flex/interactive/.running
 flex/interactive/.env
 
-opentelemetry-cpp/
-protobuf/
-flex/.cache/
+**/.cache/
