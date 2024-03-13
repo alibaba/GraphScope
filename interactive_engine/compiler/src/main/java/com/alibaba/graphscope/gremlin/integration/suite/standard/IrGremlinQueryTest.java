@@ -158,11 +158,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_out_in_in_count() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_in_in_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(26, traversal.next().intValue());
@@ -171,11 +168,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_union_out_inXunion_out_outX_count() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported  in hqps
         Traversal<Vertex, Long> traversal = this.get_g_V_union_out_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(34, traversal.next().intValue());
@@ -184,11 +178,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_out_inXunion_out_outX_count() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(54, traversal.next().intValue());
@@ -197,11 +188,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_outXunion_out_outX_inXunion_out_outX_count() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported  in hqps
         Traversal<Vertex, Long> traversal =
                 this.get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
@@ -211,11 +199,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_union_inXunion_out_outX_inXunion_out_outX_count() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal =
                 this.get_g_V_union_inXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
@@ -225,11 +210,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_out_union_inXunion_out_outX_inXunion_out_outX_count() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Long> traversal =
                 this.get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count();
         this.printTraversalForm(traversal);
@@ -239,22 +221,19 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_unionXout__inX_name() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         final Traversal<Vertex, String> traversal = get_g_V_unionXout__inX_name();
         printTraversalForm(traversal);
         checkResults(
                 new HashMap<String, Long>() {
                     {
-                        put("marko", 3l);
-                        put("lop", 3l);
-                        put("peter", 1l);
-                        put("ripple", 1l);
-                        put("josh", 3l);
-                        put("vadas", 1l);
+                        put("marko", 3L);
+                        put("lop", 3L);
+                        put("peter", 1L);
+                        put("ripple", 1L);
+                        put("josh", 3L);
+                        put("vadas", 1L);
                     }
                 },
                 traversal);
@@ -263,16 +242,13 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         final Traversal<Vertex, Number> traversal =
                 get_g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX(
                         convertToVertexId("marko"), convertToVertexId("vadas"));
         printTraversalForm(traversal);
-        checkResults(Arrays.asList(3l, 1.9d, 1l), traversal);
+        checkResults(Arrays.asList(3L, 1.9d, 1L), traversal);
     }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
@@ -689,11 +665,8 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_haslabel_union_identity_out_values() {
-        assumeFalse(
-                "hiactor"
-                        .equals(
-                                System.getenv(
-                                        "ENGINE_TYPE"))); // TODO(zhanglei): support union in hqps
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
+        // union step is currently not supported in hqps
         Traversal<Vertex, Object> traversal = this.get_g_V_has_union_identity_out_values();
         this.printTraversalForm(traversal);
         int counter = 0;
