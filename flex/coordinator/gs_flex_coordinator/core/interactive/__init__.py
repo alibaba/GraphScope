@@ -21,7 +21,7 @@ import sys
 
 try:
     sys.path.insert(0, os.path.dirname(__file__))
-    import hqps_client
+    import interactive_sdk
 except ImportError:
     raise
 

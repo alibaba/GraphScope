@@ -32,25 +32,49 @@ clean:
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile doxygen
+%: Makefile interactive-sdk-codegen doxygen
 	@echo "Tag is:" $(TAG)
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)/$(TAG)" $(SPHINXOPTS) $(O)
 
 	@echo "Building Java doc to $(BUILDDIR)/${TAG}/$@/reference/gae_java"
 
-	cd ${WORKING_DIR}/../analytical_engine/java && \
-	mvn -P javadoc javadoc:aggregate \
-		-Dmaven.antrun.skip=true \
-		-DskipTests \
-		-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
-		-Djavadoc.output.destDir=gae_java \
-		--quiet
+	# cd ${WORKING_DIR}/../analytical_engine/java && \
+	# mvn -P javadoc javadoc:aggregate \
+	# 	-Dmaven.antrun.skip=true \
+	# 	-DskipTests \
+	# 	-Djavadoc.output.directory=${WORKING_DIR}/$(BUILDDIR)/${TAG}/$@/reference \
+	# 	-Djavadoc.output.destDir=gae_java \
+	# 	--quiet
 
 	# sphinx will append the `flex/` part to the output directory
-	@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/"
-	@mkdir -p "$(BUILDDIR)/${TAG}/$@/reference/"
-	@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
+	#@echo "Building Flex doc to $(BUILDDIR)/${TAG}/$@/reference/"
+	#@mkdir -p "$(BUILDDIR)/${TAG}/$@/reference/"
+	#@cat Doxyfile-flex | sed 's/_build\/latest\/html\/reference\//$(BUILDDIR)\/${TAG}\/$@\/reference\//g' | doxygen -
+
+
+	# The reference for Interactive Java/Python SDK
 
 doxygen:
 	@mkdir -p _build
 	@doxygen Doxyfile
+
+interactive-sdk-codegen:
+	# The doc for Interactive Java/Python SDK, generated from OpenAPI spec
+	#@echo "Building Java SDK doc for Interactive Engine to $(BUILDDIR)/${TAG}/$@/reference/gie_java"
+	bash ${WORKING_DIR}/../flex/interactive/sdk/generate_sdk.sh -g java
+	bash ${WORKING_DIR}/../flex/interactive/sdk/generate_sdk.sh -g python
+
+	# build java doc
+	@cp -R ${WORKING_DIR}/../flex/interactive/sdk/java/docs ${WORKING_DIR}/flex/interactive/sdk/java/
+	@cp ${WORKING_DIR}/../flex/interactive/sdk/java/README.md ${WORKING_DIR}/flex/interactive/sdk/java/java_sdk.md
+	@sed -i 's/interactive-java-sdk/GraphScope Interactive Java SDK/g' ${WORKING_DIR}/flex/interactive/sdk/java/java_sdk.md
+
+	#build python doc
+	cp -R ${WORKING_DIR}/../flex/interactive/sdk/python/docs ${WORKING_DIR}/flex/interactive/sdk/python/
+	cp ${WORKING_DIR}/../flex/interactive/sdk/python/README.md ${WORKING_DIR}/flex/interactive/sdk/python/python_sdk.md
+	# change the generated title # interactive-sdk to # GraphScope Interactive Python SDK
+	@sed -i 's/interactive-sdk/GraphScope Interactive Python SDK/g' ${WORKING_DIR}/flex/interactive/sdk/python/python_sdk.md
+
+
+# $(shell bash generate_sdk.sh -g java)
+# $(shell bash generate_sdk.sh -g python)

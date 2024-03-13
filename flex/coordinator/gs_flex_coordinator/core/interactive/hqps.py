@@ -21,12 +21,12 @@ import logging
 import os
 from typing import List, Union
 
-import hqps_client
-from hqps_client import (
+import interactive_sdk
+from interactive_sdk import (
     Graph,
     JobResponse,
     JobStatus,
-    ModelSchema,
+    GraphSchema,
     Procedure,
     SchemaMapping,
     Service,
@@ -62,38 +62,38 @@ class HQPSClient(object):
             return "http://192.168.0.9:{0}".format(HQPS_ADMIN_SERVICE_PORT)
 
     def list_graphs(self) -> List[Graph]:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.GraphApi(api_client)
+            api_instance = interactive_sdk.AdminServiceGraphManagementApi(api_client)
             return api_instance.list_graphs()
 
-    def get_schema_by_name(self, graph_name: str) -> ModelSchema:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+    def get_schema_by_name(self, graph_name: str) -> GraphSchema:
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.GraphApi(api_client)
+            api_instance = interactive_sdk.AdminServiceGraphManagementApi(api_client)
             return api_instance.get_schema(graph_name)
 
     def create_graph(self, graph: dict) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.GraphApi(api_client)
+            api_instance = interactive_sdk.AdminServiceGraphManagementApi(api_client)
             return api_instance.create_graph(Graph.from_dict(graph))
 
     def delete_graph_by_name(self, graph_name: str) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.GraphApi(api_client)
+            api_instance = interactive_sdk.AdminServiceGraphManagementApi(api_client)
             return api_instance.delete_graph(graph_name)
 
     def create_procedure(self, graph_name: str, procedure: dict) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.ProcedureApi(api_client)
+            api_instance = interactive_sdk.AdminServiceProcedureManagementApi(api_client)
             return api_instance.create_procedure(
                 graph_name, Procedure.from_dict(procedure)
             )
@@ -106,11 +106,11 @@ class HQPSClient(object):
             graphs = self.list_graphs()
             graph_name_list = [g.name for g in graphs]
 
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
             procedures = []
-            api_instance = hqps_client.ProcedureApi(api_client)
+            api_instance = interactive_sdk.AdminServiceProcedureManagementApi(api_client)
             for graph_name in graph_name_list:
                 response = api_instance.list_procedures(graph_name)
                 if response is not None:
@@ -120,26 +120,26 @@ class HQPSClient(object):
     def update_procedure(
         self, graph_name: str, procedure_name: str, procedure: dict
     ) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.ProcedureApi(api_client)
+            api_instance = interactive_sdk.AdminServiceProcedureManagementApi(api_client)
             return api_instance.update_procedure(
                 graph_name, procedure_name, Procedure.from_dict(procedure)
             )
 
     def delete_procedure_by_name(self, graph_name: str, procedure_name: str) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.ProcedureApi(api_client)
+            api_instance = interactive_sdk.AdminServiceProcedureManagementApi(api_client)
             return api_instance.delete_procedure(graph_name, procedure_name)
 
     def get_service_status(self) -> dict:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.ServiceApi(api_client)
+            api_instance = interactive_sdk.ServiceApi(api_client)
             response = api_instance.get_service_status()
             # transfer
             if CLUSTER_TYPE == "HOSTS":
@@ -156,33 +156,33 @@ class HQPSClient(object):
                 }
 
     def stop_service(self) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.ServiceApi(api_client)
+            api_instance = interactive_sdk.AdminServiceServiceManagementApi(api_client)
             return api_instance.stop_service()
 
     def restart_service(self) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.ServiceApi(api_client)
+            api_instance = interactive_sdk.AdminServiceServiceManagementApi(api_client)
             return api_instance.restart_service()
 
     def start_service(self, request: StartServiceRequest) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.ServiceApi(api_client)
+            api_instance = interactive_sdk.AdminServiceServiceManagementApi(api_client)
             return api_instance.start_service(
                 Service.from_dict({"graph_name": request.graph_name})
             )
 
     def list_jobs(self) -> List[dict]:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.JobApi(api_client)
+            api_instance = interactive_sdk.AdminServiceJobManagementApi(api_client)
             rlt = []
             for s in api_instance.list_jobs():
                 job_status = s.to_dict()
@@ -197,10 +197,10 @@ class HQPSClient(object):
             return rlt
 
     def get_job_by_id(self, job_id: str) -> dict:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.JobApi(api_client)
+            api_instance = interactive_sdk.AdminServiceJobManagementApi(api_client)
             job_status = api_instance.get_job_by_id(job_id).to_dict()
             job_status["start_time"] = encode_datetime(
                 datetime.datetime.fromtimestamp(job_status["start_time"] / 1000)
@@ -212,19 +212,19 @@ class HQPSClient(object):
             return job_status
 
     def delete_job_by_id(self, job_id: str) -> str:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.JobApi(api_client)
+            api_instance = interactive_sdk.AdminServiceJobManagementApi(api_client)
             return api_instance.delete_job_by_id(job_id)
 
     def create_dataloading_job(
         self, graph_name: str, schema_mapping: dict
     ) -> JobResponse:
-        with hqps_client.ApiClient(
-            hqps_client.Configuration(self._hqps_endpoint)
+        with interactive_sdk.ApiClient(
+            interactive_sdk.Configuration(self._hqps_endpoint)
         ) as api_client:
-            api_instance = hqps_client.JobApi(api_client)
+            api_instance = interactive_sdk.AdminServiceJobManagementApi(api_client)
             response = api_instance.create_dataloading_job(
                 graph_name, SchemaMapping.from_dict(schema_mapping)
             )
