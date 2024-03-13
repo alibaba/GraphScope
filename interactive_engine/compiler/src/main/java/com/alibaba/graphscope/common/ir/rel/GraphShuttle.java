@@ -79,4 +79,8 @@ public abstract class GraphShuttle extends RelShuttleImpl {
     public RelNode visit(GraphLogicalDedupBy dedupBy) {
         return visitChildren(dedupBy);
     }
+
+    public RelNode visit(CommonTableScan tableScan) {
+        return tableScan;
+    }
 }
