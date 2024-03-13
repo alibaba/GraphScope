@@ -44,7 +44,6 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
     private final IrMeta meta;
     private final QueryStatusCallback statusCallback;
     private final QueryTimeoutConfig timeoutConfig;
-    IrStandardOpProcessor opProcessor;
 
     public LifeCycleSupplier(
             Context ctx,
@@ -54,8 +53,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
             String queryName,
             IrMeta meta,
             QueryStatusCallback statusCallback,
-            QueryTimeoutConfig timeoutConfig,
-            IrStandardOpProcessor opProcessor) {
+            QueryTimeoutConfig timeoutConfig) {
         this.ctx = ctx;
         this.queryCache = queryCache;
         this.client = client;
@@ -64,12 +62,10 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
         this.meta = meta;
         this.statusCallback = statusCallback;
         this.timeoutConfig = timeoutConfig;
-        this.opProcessor = opProcessor;
     }
 
     @Override
     public GremlinExecutor.LifeCycle get() {
-        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
                 .beforeEval(

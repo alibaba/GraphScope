@@ -112,11 +112,12 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
                 default:
                     errorCode = ResponseStatusCode.SERVER_ERROR;
             }
+            errorMsg = (errorMsg == null) ? t.getMessage() : errorMsg;
             statusCallback.onEnd(false, errorMsg);
             ctx.writeAndFlush(
                     ResponseMessage.build(ctx.getRequestMessage())
                             .code(errorCode)
-                            .statusMessage((errorMsg == null) ? t.getMessage() : errorMsg)
+                            .statusMessage(errorMsg)
                             .create());
         } finally {
             // close the responseStreamIterator so that the subsequent grpc callback do nothing

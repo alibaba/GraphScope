@@ -56,6 +56,7 @@ import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -74,10 +75,7 @@ import org.apache.tinkerpop.gremlin.server.op.OpProcessorException;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.codehaus.groovy.control.MultipleCompilationErrorsException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.script.SimpleBindings;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
@@ -88,8 +86,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
+import javax.script.SimpleBindings;
+
 public class IrStandardOpProcessor extends StandardOpProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(IrStandardOpProcessor.class);
     protected final Graph graph;
     protected final GraphTraversalSource g;
     protected final Configs configs;
@@ -166,8 +165,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                         jobName,
                                         irMeta,
                                         statusCallback,
-                                        timeoutConfig,
-                                        this)
+                                        timeoutConfig)
                                 .get();
                 break;
             default:
@@ -369,6 +367,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         request = request.toBuilder().setConf(jobConfig).build();
 
         this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+        // request results from remote engine service in blocking way
         resultProcessor.request();
     }
 

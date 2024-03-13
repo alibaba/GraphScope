@@ -34,15 +34,12 @@ import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
 import org.apache.tinkerpop.gremlin.server.Context;
 import org.apache.tinkerpop.gremlin.server.Settings;
 import org.apache.tinkerpop.gremlin.server.op.standard.StandardOpProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public abstract class AbstractResultProcessor extends StandardOpProcessor
         implements ResultProcessor {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractResultProcessor.class);
     protected final Context writeResult;
     protected final ResultParser resultParser;
     protected final QueryStatusCallback statusCallback;
@@ -105,7 +102,6 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
             }
             responseProcessor.finish();
         } catch (Throwable t) {
-            logger.error("request error is {}", t);
             Status status;
             // if the exception is caused by InterruptedException, it means a timeout exception has
             // been thrown by gremlin executor
@@ -130,11 +126,12 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 default:
                     errorCode = ResponseStatusCode.SERVER_ERROR;
             }
+            errorMsg = (errorMsg == null) ? t.getMessage() : errorMsg;
             statusCallback.onEnd(false, errorMsg);
             writeResult.writeAndFlush(
                     ResponseMessage.build(writeResult.getRequestMessage())
                             .code(errorCode)
-                            .statusMessage((errorMsg == null) ? t.getMessage() : errorMsg)
+                            .statusMessage(errorMsg)
                             .create());
         } finally {
             // close the responseStreamIterator so that the subsequent grpc callback do nothing
