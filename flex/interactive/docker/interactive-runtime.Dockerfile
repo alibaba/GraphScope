@@ -83,7 +83,6 @@ COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/engine_config_te
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/docker/entrypoint.sh /opt/flex/bin/entrypoint.sh
 # change the default graph name.
 RUN sed -i 's/default_graph: ldbc/default_graph: gs_interactive_default_graph/g' /opt/flex/share/engine_config.yaml
-RUN chown -R graphscope:graphscope /opt/flex
 
 # remove bin/run_app
 RUN rm -rf /opt/flex/bin/run_app
@@ -141,6 +140,8 @@ ENV SOLUTION=INTERACTIVE
 # Add graphscope user with user id 1001
 RUN useradd -m graphscope -u 1001 && \
     echo 'graphscope ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+RUN chown -R graphscope:graphscope /opt/flex
 
 # set home to graphscope user
 ENV HOME=/home/graphscope
