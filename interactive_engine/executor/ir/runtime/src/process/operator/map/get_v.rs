@@ -107,8 +107,11 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                                 label.cloned(),
                                 DynDetails::default(),
                             );
-                            graph_path.append(vertex);
-                            Ok(Some(input))
+                            if graph_path.append(vertex) {
+                                Ok(Some(input))
+                            } else {
+                                Ok(None)
+                            }
                         } else {
                             Ok(None)
                         }
