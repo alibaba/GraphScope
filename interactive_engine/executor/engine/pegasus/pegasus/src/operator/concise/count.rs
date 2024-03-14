@@ -65,7 +65,7 @@ impl<D: Data> Count<D> for Stream<D> {
                                 } else {
                                     end
                                 };
-                                if new_end.contains_source(worker) {
+                                if new_end.contains_source(worker, total_peers) {
                                     let mut session = output.new_session(&batch.tag)?;
                                     trace_worker!("local count {} of {:?}", 0, batch.tag);
                                     session.give_last(0, new_end)?;
@@ -109,7 +109,7 @@ impl<D: Data> Count<D> for Stream<D> {
                                     session.give_last(Single(sum), end)?;
                                 } else {
                                     let index = worker_id;
-                                    if end.contains_source(index) {
+                                    if end.contains_source(index, total_peers) {
                                         let mut session = output.new_session(&batch.tag)?;
                                         trace_worker!("emit global count = {} of {:?};", 0, end.tag);
                                         session.give_last(Single(0), end)?;
@@ -151,7 +151,7 @@ impl<D: Data> Count<D> for Stream<D> {
                                 session.give_last(Single(cnt), end)?;
                             } else {
                                 let worker = worker_id;
-                                if end.contains_source(worker) {
+                                if end.contains_source(worker, total_peers) {
                                     let mut session = output.new_session(&batch.tag)?;
                                     trace_worker!("global count {} of {:?}", 0, batch.tag);
                                     session.give_last(Single(0), end)?;

@@ -261,11 +261,11 @@ impl EndOfScope {
         &self.peers
     }
 
-    pub(crate) fn contains_source(&self, src: u32) -> bool {
+    pub(crate) fn contains_source(&self, src: u32, total_peers: u32) -> bool {
         if !self.tag.is_root() {
             // get owner worker index of subtask
             let owner_index =
-                self.tag.current_uncheck() % crate::worker_id::get_current_worker().total_peers();
+                self.tag.current_uncheck() % total_peers;
             if owner_index != src {
                 // current worker has input
                 self.peers.value() > 0 && self.peers.contains_source(src)
