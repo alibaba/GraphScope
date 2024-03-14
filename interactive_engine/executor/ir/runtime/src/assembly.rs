@@ -453,9 +453,9 @@ impl<P: PartitionInfo, C: ClusterInfo> IRJobAssembly<P, C> {
                 OpKind::Intersect(intersect) => {
                     // The intersect op can be:
                     //     1) EdgeExpand with Opt = ExpandV, which is to expand and intersect on id-only vertices;
-                    //     2) EdgeExpand (ExpandE) + GetV(Adj), which is to expand and intersect on vertices. 
+                    //     2) EdgeExpand (ExpandE) + GetV(Adj), which is to expand and intersect on vertices.
                     //        In this case, EdgeExpand and GetV are not fused, usually with alias in EdgeExpand; Not supported yet;
-                    //     3) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges 
+                    //     3) EdgeExpand with Opt = ExpandE, which is to expand and intersect on edges
                     //        (not supported yet, and it won't happen in current plan);
                     //     4) PathExpand + GetV(EndV), which is to expand paths and intersect on the end vertices.
                     // Specifically,

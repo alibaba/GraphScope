@@ -1,0 +1,38 @@
+{
+  "operators": [{
+    "logical": "NOT",
+    "nodeType": {
+      "dataType": "BOOLEAN"
+    }
+  }, {
+    "brace": "LEFT_BRACE"
+  }, {
+    "var": {
+      "property": {
+        "key": {
+          "name": "name"
+        }
+      },
+      "nodeType": {
+        "dataType": "STRING"
+      }
+    },
+    "nodeType": {
+      "dataType": "STRING"
+    }
+  }, {
+    "logical": "REGEX",
+    "nodeType": {
+      "dataType": "BOOLEAN"
+    }
+  }, {
+    "const": {
+      "str": ".*mar.*"
+    },
+    "nodeType": {
+      "dataType": "STRING"
+    }
+  }, {
+    "brace": "RIGHT_BRACE"
+  }]
+}

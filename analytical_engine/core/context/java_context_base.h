@@ -220,7 +220,7 @@ class JavaContextBase : public grape::ContextBase {
           env->ExceptionClear();
           LOG(ERROR) << "Exception in context Init";
         }
-        VLOG(1) << "Successfully invokd ctx init method.";
+        VLOG(1) << "Successfully invoked ctx init method.";
         // 5. to output the result, we need the c++ context held by java
         // object.
         jfieldID inner_ctx_address_field =
@@ -454,7 +454,7 @@ class JavaContextBase : public grape::ContextBase {
       context_object_ =
           LoadAndCreate(env, url_class_loader_object_,
                         graphx_context_name.c_str(), serial_path.c_str());
-      VLOG(1) << "Succcessfully loaded graphx context: " << context_object_;
+      VLOG(1) << "Successfully loaded graphx context: " << context_object_;
     } else {
       std::string _context_class_name_str = getCtxClassNameFromAppObject(env);
       VLOG(1) << "Context class name: " << _context_class_name_str;

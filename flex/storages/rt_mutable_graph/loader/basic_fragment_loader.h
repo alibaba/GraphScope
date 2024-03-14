@@ -36,6 +36,18 @@ TypedMutableCsrBase<EDATA_T>* create_typed_csr(EdgeStrategy es,
   return nullptr;
 }
 
+enum class LoadingStatus {
+  kLoading = 0,
+  kLoaded = 1,
+  kCommited = 2,
+  kUnknown = 3,
+};
+
+// define << and >> for LoadingStatus
+std::ostream& operator<<(std::ostream& os, const LoadingStatus& status);
+
+std::istream& operator>>(std::istream& is, LoadingStatus& status);
+
 // FragmentLoader should use this BasicFragmentLoader to construct
 // mutable_csr_fragment.
 class BasicFragmentLoader {
@@ -69,6 +81,8 @@ class BasicFragmentLoader {
         indexer, LFIndexer<vid_t>::prefix() + "_" + filename,
         lf_indexers_[v_label], snapshot_dir(work_dir_, 0), tmp_dir(work_dir_),
         type);
+    append_vertex_loading_progress(schema_.get_vertex_label_name(v_label),
+                                   LoadingStatus::kLoaded);
   }
 #else
   template <typename KEY_T>
@@ -79,6 +93,8 @@ class BasicFragmentLoader {
         vertex_map_prefix(schema_.get_vertex_label_name(v_label));
     indexer_builder.finish(PTIndexer<vid_t>::prefix() + "_" + filename,
                            snapshot_dir(work_dir_, 0), lf_indexers_[v_label]);
+    append_vertex_loading_progress(schema_.get_vertex_label_name(v_label),
+                                   LoadingStatus::kLoaded);
   }
 #endif
 
@@ -181,6 +197,8 @@ class BasicFragmentLoader {
                                std::get<2>(edge));
       }
     }
+    append_edge_loading_progress(src_label_name, dst_label_name,
+                                 edge_label_name, LoadingStatus::kLoaded);
     VLOG(10) << "Finish adding edge batch of size: " << edges.size();
   }
 
@@ -194,6 +212,15 @@ class BasicFragmentLoader {
   IndexerType& GetLFIndexer(label_t v_label);
 
  private:
+  // create status files for each vertex label and edge triplet pair.
+  void append_vertex_loading_progress(const std::string& label_name,
+                                      LoadingStatus status);
+
+  void append_edge_loading_progress(const std::string& src_label_name,
+                                    const std::string& dst_label_name,
+                                    const std::string& edge_label_name,
+                                    LoadingStatus status);
+  void init_loading_status_file();
   void init_vertex_data();
   const Schema& schema_;
   std::string work_dir_;
@@ -202,6 +229,9 @@ class BasicFragmentLoader {
   std::vector<CsrBase*> ie_, oe_;
   std::vector<DualCsrBase*> dual_csr_list_;
   std::vector<Table> vertex_data_;
+
+  // loading progress related
+  std::mutex loading_progress_mutex_;
 };
 }  // namespace gs
 

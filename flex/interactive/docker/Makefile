@@ -32,3 +32,7 @@ interactive-runtime:
 		--build-arg ARCH=$(ARCH) \
 		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		-t registry.cn-hongkong.aliyuncs.com/graphscope/interactive:${SHORT_SHA}-${ARCH} --push .
+hqps-server-base:
+	docker build \
+		-f $(WORKING_DIR)/Dockerfile \
+		-t registry-vpc.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:${VERSION} .

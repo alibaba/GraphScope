@@ -20,6 +20,7 @@
 #include "flex/engines/http_server/codegen_proxy.h"
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/workdir_manipulator.h"
+#include "flex/otel/otel.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/utils/service_utils.h"
 
@@ -151,7 +152,10 @@ void initWorkspace(const std::string workspace, int32_t thread_num,
   auto& db = gs::GraphDB::get();
   auto schema_path =
       server::WorkDirManipulator::GetGraphSchemaPath(default_graph);
-  gs::Schema schema = gs::Schema::LoadFromYaml(schema_path);
+  auto schema_res = gs::Schema::LoadFromYaml(schema_path);
+  if (!schema_res.ok()) {
+    LOG(FATAL) << "Fail to load graph schema from yaml file: " << schema_path;
+  }
   auto data_dir_res =
       server::WorkDirManipulator::GetDataDirectory(default_graph);
   if (!data_dir_res.ok()) {
@@ -164,7 +168,7 @@ void initWorkspace(const std::string workspace, int32_t thread_num,
                << ", for graph: " << default_graph;
   }
   db.Close();
-  if (!db.Open(schema, data_dir, thread_num).ok()) {
+  if (!db.Open(schema_res.value(), data_dir, thread_num).ok()) {
     LOG(FATAL) << "Fail to load graph from data directory: " << data_dir;
   }
   LOG(INFO) << "Successfully init graph db for default graph: "
@@ -196,7 +200,9 @@ int main(int argc, char** argv) {
       "open-thread-resource-pool", bpo::value<bool>()->default_value(true),
       "open thread resource pool")("worker-thread-number",
                                    bpo::value<unsigned>()->default_value(2),
-                                   "worker thread number");
+                                   "worker thread number")(
+      "enable-trace", bpo::value<bool>()->default_value(false),
+      "whether to enable opentelemetry tracing");
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -227,6 +233,17 @@ int main(int argc, char** argv) {
   std::tie(shard_num, admin_port, query_port, default_graph) =
       gs::parse_from_server_config(engine_config_file);
   auto& db = gs::GraphDB::get();
+
+  if (vm["enable-trace"].as<bool>()) {
+#ifdef HAVE_OPENTELEMETRY_CPP
+    LOG(INFO) << "Initialize opentelemetry...";
+    otel::initTracer();
+    otel::initMeter();
+    otel::initLogger();
+#else
+    LOG(WARNING) << "OpenTelemetry is not enabled in this build";
+#endif
+  }
 
   if (start_admin_service) {
     // When start admin service, we need a workspace to put all the meta data
@@ -264,12 +281,16 @@ int main(int argc, char** argv) {
     }
     data_path = vm["data-path"].as<std::string>();
 
-    auto schema = gs::Schema::LoadFromYaml(graph_schema_path);
+    auto schema_res = gs::Schema::LoadFromYaml(graph_schema_path);
+    if (!schema_res.ok()) {
+      LOG(FATAL) << "Fail to load graph schema from yaml file: "
+                 << graph_schema_path;
+    }
 
     // The schema is loaded just to get the plugin dir and plugin list
     gs::init_codegen_proxy(vm, graph_schema_path, engine_config_file);
     db.Close();
-    auto load_res = db.Open(schema, data_path, shard_num);
+    auto load_res = db.Open(schema_res.value(), data_path, shard_num);
     if (!load_res.ok()) {
       LOG(FATAL) << "Failed to load graph from data directory: "
                  << load_res.status().error_message();

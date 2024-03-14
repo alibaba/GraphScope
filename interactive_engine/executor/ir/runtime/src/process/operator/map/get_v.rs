@@ -98,8 +98,11 @@ impl FilterMapFunction<Record, Record> for GetVertexOperator {
                             .ok_or_else(|| {
                                 FnExecError::unexpected_data_error(&format!("entry is not a path in GetV"))
                             })?;
-                        mut_graph_path.append(vertex);
-                        Ok(Some(input))
+                        if mut_graph_path.append(vertex) {
+                            Ok(Some(input))
+                        } else {
+                            Ok(None)
+                        }
                     } else {
                         Ok(None)
                     }

@@ -27,7 +27,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-22.04]
         platform: [x86_64]
 
     steps:
@@ -54,7 +54,7 @@ jobs:
   test-cmake-options:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
     strategy:
       matrix:
         BUILD_HQPS: [ON, OFF]
@@ -75,7 +75,7 @@ jobs:
   test-AOCC-compilation:
     runs-on: ubuntu-20.04
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
     steps:
     - uses: actions/checkout@v3
 
@@ -104,7 +104,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
     steps:
     - uses: actions/checkout@v3
 
@@ -134,10 +134,10 @@ jobs:
         mkdir build && cd build
         cmake .. && sudo make -j$(nproc)
         export FLEX_DATA_DIR=../../../../interactive/examples/modern_graph/
-        ${GITHUB_WORKSPACE}/flex/build/bin/bulk_loader -g ../../../../interactive/examples/modern_graph/modern_graph.yaml -l ../../../../interactive/examples/modern_graph/bulk_load.yaml -d ./data/
+        ${GITHUB_WORKSPACE}/flex/build/bin/bulk_loader -g ../../../../interactive/examples/modern_graph/graph.yaml -l ../../../../interactive/examples/modern_graph/bulk_load.yaml -d ./data/
         rm -r ./data/wal
         rm -r ./data/runtime/*
-        ./run_grin_test 'flex://schema_file=../../../../interactive/examples/modern_graph/modern_graph.yaml&data_dir=./data/'
+        ./run_grin_test 'flex://schema_file=../../../../interactive/examples/modern_graph/graph.yaml&data_dir=./data/'
 
     - name: Prepare test dataset
       env:
@@ -173,7 +173,7 @@ jobs:
       run: |
         rm -rf /tmp/csr-data-dir/
         cd ${GITHUB_WORKSPACE}/flex/build/
-        SCHEMA_FILE=../interactive/examples/modern_graph/modern_graph.yaml
+        SCHEMA_FILE=../interactive/examples/modern_graph/graph.yaml
         BULK_LOAD_FILE=../interactive/examples/modern_graph/bulk_load.yaml
         GLOG_v=10 ./bin/bulk_loader  -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
 

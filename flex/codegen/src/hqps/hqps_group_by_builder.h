@@ -67,6 +67,7 @@ std::string agg_func_pb_2_str(
     return "gs::AggFunc::FIRST";
   default:
     LOG(FATAL) << "Unsupported aggregate function";
+    return "";
   }
 }
 
