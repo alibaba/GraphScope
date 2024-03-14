@@ -800,10 +800,6 @@ void WorkDirManipulator::unlock_graph(const std::string& graph_name) {
   }
 }
 
-std::string WorkDirManipulator::get_engine_config_path() {
-  return workspace + "/conf/" + CONF_ENGINE_CONFIG_FILE_NAME;
-}
-
 bool WorkDirManipulator::ensure_graph_dir_exists(
     const std::string& graph_name) {
   auto graph_path = get_graph_dir(graph_name);
@@ -936,7 +932,6 @@ seastar::future<seastar::sstring> WorkDirManipulator::generate_procedure(
     std::filesystem::create_directory(output_dir);
   }
   auto schema_path = GetGraphSchemaPath(bounded_graph);
-  auto engine_config = get_engine_config_path();
 
   return CodegenProxy::CallCodegenCmd(
              codegen_bin, query_file, name, temp_codegen_directory, output_dir,

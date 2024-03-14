@@ -157,8 +157,6 @@ class WorkDirManipulator {
 
   static std::string get_graph_dir(const std::string& graph_name);
 
-  static std::string get_engine_config_path();
-
   static bool is_graph_exist(const std::string& graph_name);
 
   static bool is_graph_loaded(const std::string& graph_name);
