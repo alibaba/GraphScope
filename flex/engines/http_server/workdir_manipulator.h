@@ -128,7 +128,8 @@ class WorkDirManipulator {
       const std::string& graph_name, const std::string& procedure_name);
 
   static seastar::future<seastar::sstring> CreateProcedure(
-      const std::string& graph_name, const std::string& parameter);
+      const std::string& graph_name, const std::string& parameter,
+      const std::string& engine_config_path);
 
   static gs::Result<seastar::sstring> DeleteProcedure(
       const std::string& graph_name, const std::string& procedure_name);
@@ -177,7 +178,7 @@ class WorkDirManipulator {
 
   // Generate the procedure, return the generated yaml config.
   static seastar::future<seastar::sstring> generate_procedure(
-      const nlohmann::json& json);
+      const nlohmann::json& json, const std::string& engine_config_path);
 
   static seastar::future<seastar::sstring> add_procedure_to_graph(
       const nlohmann::json& json, const std::string& proc_yaml_config);

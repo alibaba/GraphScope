@@ -24,6 +24,8 @@
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
 
+#include <yaml-cpp/yaml.h>
+
 namespace server {
 
 /* Stored service configuration, read from engine_config.yaml
@@ -52,11 +54,59 @@ struct ServiceConfig {
   ServiceConfig();
 };
 
+class HQPSService {
+ public:
+  static const std::string DEFAULT_GRAPH_NAME;
+  static HQPSService& get();
+  ~HQPSService();
+
+  // only start the query service.
+  void init(const ServiceConfig& config);
+
+  const ServiceConfig& get_service_config() const;
+
+  bool is_initialized() const;
+
+  bool is_running() const;
+
+  uint16_t get_query_port() const;
+
+  gs::Result<seastar::sstring> service_status();
+
+  void run_and_wait_for_exit();
+
+  void set_exit_state();
+
+  // Actually stop the actors, the service is still on, but returns error code
+  // for each request.
+  seastar::future<> stop_query_actors();
+
+  // Actually create new actors with a different scope_id,
+  // Because we don't know whether the previous scope_id can be reused.
+  void start_query_actors();
+
+ private:
+  HQPSService() = default;
+
+ private:
+  std::unique_ptr<actor_system> actor_sys_;
+  std::unique_ptr<admin_http_handler> admin_hdl_;
+  std::unique_ptr<hqps_http_handler> query_hdl_;
+  std::atomic<bool> running_{false};
+  std::atomic<bool> initialized_{false};
+
+  ServiceConfig service_config_;
+};
+
+}  // namespace server
+
 namespace YAML {
+
 template <>
-struct convert<ServiceConfig> {
+struct convert<server::ServiceConfig> {
   // The encode function is not defined, since we don't need to write the config
-  static bool decode(const Node& config, ServiceConfig& service_config) {
+  static bool decode(const Node& config,
+                     server::ServiceConfig& service_config) {
     if (!config.IsMap()) {
       LOG(ERROR) << "ServiceConfig should be a map";
       return false;
@@ -114,51 +164,5 @@ struct convert<ServiceConfig> {
   }
 };
 }  // namespace YAML
-
-class HQPSService {
- public:
-  static const std::string DEFAULT_GRAPH_NAME;
-  static HQPSService& get();
-  ~HQPSService();
-
-  // only start the query service.
-  void init(const ServiceConfig& config);
-
-  const ServiceConfig& get_service_config() const;
-
-  bool is_initialized() const;
-
-  bool is_running() const;
-
-  uint16_t get_query_port() const;
-
-  gs::Result<seastar::sstring> service_status();
-
-  void run_and_wait_for_exit();
-
-  void set_exit_state();
-
-  // Actually stop the actors, the service is still on, but returns error code
-  // for each request.
-  seastar::future<> stop_query_actors();
-
-  // Actually create new actors with a different scope_id,
-  // Because we don't know whether the previous scope_id can be reused.
-  void start_query_actors();
-
- private:
-  HQPSService() = default;
-
- private:
-  std::unique_ptr<actor_system> actor_sys_;
-  std::unique_ptr<admin_http_handler> admin_hdl_;
-  std::unique_ptr<hqps_http_handler> query_hdl_;
-  std::atomic<bool> running_{false};
-  std::atomic<bool> initialized_{false};
-
-  ServiceConfig service_config_;
-};
-
-}  // namespace server
 
 #endif  // ENGINES_HTTP_SERVER_HQPS_SERVICE_H_

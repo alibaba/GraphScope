@@ -73,21 +73,18 @@ void init_codegen_proxy(const bpo::variables_map& vm,
                                    graph_schema_file);
 }
 
-void initWorkspace(const std::string workspace, int32_t thread_num,
-                   const std::string& default_graph) {
+void openDefaultGraph(const std::string workspace, int32_t thread_num,
+                      const std::string& default_graph) {
   if (!std::filesystem::exists(workspace)) {
-    std::filesystem::create_directory(workspace);
+    LOG(ERROR) << "Workspace directory not exists: " << workspace;
   }
-  // Create subdirectories
   auto data_dir_path =
       workspace + "/" + server::WorkDirManipulator::DATA_DIR_NAME;
   if (!std::filesystem::exists(data_dir_path)) {
-    std::filesystem::create_directory(data_dir_path);
+    LOG(ERROR) << "Data directory not exists: " << data_dir_path;
+    return;
   }
 
-  server::WorkDirManipulator::ClearRunningGraph();
-
-  LOG(INFO) << "Finish creating workspace directory " << workspace;
   // Get current executable path
 
   server::WorkDirManipulator::SetWorkspace(workspace);
@@ -95,7 +92,7 @@ void initWorkspace(const std::string workspace, int32_t thread_num,
   VLOG(1) << "Finish init workspace";
 
   if (default_graph.empty()) {
-    LOG(WARNING) << "No Default graph is specified";
+    LOG(FATAL) << "No Default graph is specified";
     return;
   }
 
@@ -177,7 +174,7 @@ int main(int argc, char** argv) {
   }
   engine_config_file = vm["server-config"].as<std::string>();
 
-  YAML::Node node = YAML::LoadFile(server_config_path);
+  YAML::Node node = YAML::LoadFile(engine_config_file);
   // Parse service config
   server::ServiceConfig service_config = node.as<server::ServiceConfig>();
   service_config.engine_config_path = engine_config_file;
@@ -203,8 +200,8 @@ int main(int argc, char** argv) {
                     "data-path should NOT be specified";
     }
 
-    gs::initWorkspace(workspace, service_config.shard_num,
-                      service_config.default_graph);
+    gs::openDefaultGraph(workspace, service_config.shard_num,
+                         service_config.default_graph);
     // Suppose the default_graph is already loaded.
     LOG(INFO) << "Finish init workspace";
     auto schema_file = server::WorkDirManipulator::GetGraphSchemaPath(
