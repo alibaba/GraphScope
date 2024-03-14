@@ -396,7 +396,7 @@ class BaseEngine {
   template <size_t real_x_ind, size_t real_y_ind, typename... BuilderX,
             typename... BuilderY>
   static auto BuilderConcatenate(const std::tuple<BuilderX...>& x_builders,
-                             const std::tuple<BuilderY...>& y_builders) {
+                                 const std::tuple<BuilderY...>& y_builders) {
     auto remove_x_th_col = remove_nth_element<real_x_ind>(x_builders);
     auto remove_y_th_col = remove_nth_element<real_y_ind>(y_builders);
     return std::tuple_cat(std::move(remove_x_th_col),
@@ -414,8 +414,9 @@ class BaseEngine {
           ctx_y) {
     auto ctx_x_builder_tuple = ctx_x.CreateSetBuilder();
     auto ctx_y_builder_tuple = ctx_y.CreateSetBuilder();
-    auto concatenated_builder_tuple = BuilderConcatenate<real_x_ind, real_y_ind>(
-        ctx_x_builder_tuple, ctx_y_builder_tuple);
+    auto concatenated_builder_tuple =
+        BuilderConcatenate<real_x_ind, real_y_ind>(ctx_x_builder_tuple,
+                                                   ctx_y_builder_tuple);
     return std::make_pair(concatenated_builder_tuple,
                           std::get<real_x_ind>(ctx_x_builder_tuple));
   }

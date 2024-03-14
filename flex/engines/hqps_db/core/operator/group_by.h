@@ -28,8 +28,8 @@ limitations under the License.
 
 namespace gs {
 
-// For each aggregator, return the type of applying aggregate on the desired col.
-// with possible aggregate func.
+// For each aggregator, return the type of applying aggregate on the desired
+// col. with possible aggregate func.
 
 template <typename CTX_T, typename GROUP_KEY>
 struct CommonBuilderT;

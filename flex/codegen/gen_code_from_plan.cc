@@ -60,7 +60,7 @@ void deserialize_plan_and_gen_pegasus(const std::string& input_file_path,
                                       const std::string& output_file_path) {
   auto input_json = read_json_str_from_path(input_file_path);
   physical::PhysicalPlan plan;
-  google::protobuf::util::JsonStringToMessage(input_json, &plan);
+  auto st = google::protobuf::util::JsonStringToMessage(input_json, &plan);
   gs::BuildingContext ctx;
   // parse query name from input_file_path
   std::string query_name =

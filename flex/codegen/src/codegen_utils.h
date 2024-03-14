@@ -259,6 +259,7 @@ std::string interval_to_str(const common::Extract::Interval& interval) {
     return "Interval::SECOND";
   default:
     LOG(FATAL) << "Unexpected interval" << interval;
+    return "";
   }
 }
 
