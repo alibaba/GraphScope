@@ -1,5 +1,0 @@
-export NUM_SERVER_NODES=2
-export NUM_CLIENT_NODES=2
-export NUM_WORKER_REPLICAS=$(($NUM_CLIENT_NODES-1))
-export MASTER_ADDR="10.244.0.9"
-envsubst '${NUM_SERVER_NODES},${NUM_CLIENT_NODES},${NUM_WORKER_REPLICAS},${MASTER_ADDR}' < client.yaml | kubectl create -f -
