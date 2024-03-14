@@ -108,7 +108,9 @@ class GremlinServiceAvailableAlert(AlertRule):
                 username=gremlin_interface["username"],
                 password=gremlin_interface["password"],
             )
-            client.submit("g.with('evaluationTimeout', 5000).V().limit(1)").all.result()
+            client.submit(
+                "g.with('evaluationTimeout', 5000).V().limit(1)"
+            ).all().result()
         except Exception as e:
             message = "Gremlin service unavailable: {0}".format(str(e))
             # unable to distinguish whether frontend or executor is unavailable,

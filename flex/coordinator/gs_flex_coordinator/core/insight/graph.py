@@ -23,21 +23,29 @@ from abc import ABCMeta, abstractmethod
 
 import graphscope
 from dateutil import tz
-from graphscope.deploy.kubernetes.utils import (get_service_endpoints,
-                                                resolve_api_client)
+from graphscope.deploy.kubernetes.utils import get_service_endpoints, resolve_api_client
 from gremlin_python.driver.client import Client
 from kubernetes import client as kube_client
 from kubernetes import config as kube_config
 
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE, CREATION_TIME,
-                                             ENABLE_DNS, GROOT_GREMLIN_PORT,
-                                             GROOT_GRPC_PORT, GROOT_PASSWORD,
-                                             GROOT_USERNAME, INSTANCE_NAME,
-                                             NAMESPACE, WORKSPACE)
+from gs_flex_coordinator.core.config import (
+    CLUSTER_TYPE,
+    CREATION_TIME,
+    ENABLE_DNS,
+    GROOT_GREMLIN_PORT,
+    GROOT_GRPC_PORT,
+    GROOT_PASSWORD,
+    GROOT_USERNAME,
+    INSTANCE_NAME,
+    NAMESPACE,
+    WORKSPACE,
+)
 from gs_flex_coordinator.core.scheduler import schedule
-from gs_flex_coordinator.core.utils import (data_type_to_groot,
-                                            encode_datetime, get_internal_ip,
-                                            get_public_ip)
+from gs_flex_coordinator.core.utils import (
+    data_type_to_groot,
+    encode_datetime,
+    get_internal_ip,
+)
 from gs_flex_coordinator.version import __version__
 
 
@@ -285,6 +293,7 @@ def get_groot_graph_from_local():
             pass
         else:
             break
+        time.sleep(5)
     # groot graph
     return GrootGraph(
         name=INSTANCE_NAME,

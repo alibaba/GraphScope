@@ -23,7 +23,7 @@ RUN cd /home/graphscope/graphscope \
 RUN cd /home/graphscope/graphscope/flex/coordinator \
     && python3 setup.py bdist_wheel \
     && mkdir -p /home/graphscope/groot/wheel \
-    && cp dist/*.wml /home/graphscope/groot/wheel
+    && cp dist/*.whl /home/graphscope/groot/wheel
 
 FROM ubuntu:22.04
 
@@ -45,7 +45,8 @@ RUN useradd -m graphscope -u 1001 \
 RUN sudo chmod a+wrx /tmp
 
 # install coordinator
-RUN pip3 install /usr/local/groot/wheel/*.whl
+RUN pip3 install --upgrade pip \
+    && pip3 install /usr/local/groot/wheel/*.whl
 
 USER graphscope
 WORKDIR /home/graphscope

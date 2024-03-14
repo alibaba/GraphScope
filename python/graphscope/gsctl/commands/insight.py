@@ -123,7 +123,7 @@ def graph():
 
 
 @describe.command()
-@click.argument("graph_name", required=False)
+@click.argument("graph_name", required=True)
 def graph(graph_name):  # noqa: F811
     """Show details of graphs"""
     try:
