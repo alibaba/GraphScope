@@ -12,8 +12,8 @@ project (
 
 option(BUILD_HQPS "Whether to build HighQPS Engine" ON)
 option(BUILD_TEST "Whether to build test" ON)
-option(BUILD_DOC "Whether to build doc" ON)
-option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" ON)
+option(BUILD_DOC "Whether to build doc" OFF)
+option(BUILD_ODPS_FRAGMENT_LOADER "Whether to build odps fragment loader" OFF)
 
 option(USE_PTHASH "Whether to use pthash" OFF)
 
@@ -136,6 +136,13 @@ else ()
     endif()
 endif ()
 
+find_package(opentelemetry-cpp CONFIG)
+if (OPENTELEMETRY_CPP_FOUND)
+    find_package(Protobuf REQUIRED)
+    find_package(CURL REQUIRED)
+    add_definitions(-DHAVE_OPENTELEMETRY_CPP)
+endif ()
+
 # Find Doxygen
 if (BUILD_DOC)
     find_package(Doxygen)
@@ -185,6 +192,7 @@ add_subdirectory(codegen)
 add_subdirectory(storages)
 add_subdirectory(engines)
 add_subdirectory(bin)
+add_subdirectory(otel)
 if (BUILD_TEST)
    add_subdirectory(tests)
 endif()
@@ -211,10 +219,11 @@ file(GLOB_RECURSE FILES_NEED_LINT
         "bin/*.cc"
         "storages/*.h"
         "storages/*.cc"
+        "otel/*.h"
+        "otel/*.cc"
         "test/*.h"
         "test/*.cc"
-        "third_party/*.h"
-        "third_party/*.cc" EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
+        EXCEPT "*.act.h" "*.actg.h" "*.autogen.h" "*.autogen.cc")
 list(FILTER FILES_NEED_LINT EXCLUDE REGEX ".*\.act.h$|.*\.actg.h$|.*\.autogen.h$|.*\.autogen.cc$")
 # gsa_clformat
 add_custom_target(flex_clformat

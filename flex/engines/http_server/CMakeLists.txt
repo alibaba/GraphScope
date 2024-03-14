@@ -46,6 +46,6 @@ if (Hiactor_FOUND)
       target_include_directories(flex_server PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/../hqps/)
       target_link_libraries(flex_server hqps_plan_proto)
   endif ()
-
+  target_link_libraries(flex_server otel)
   install_without_export_flex_target(flex_server)
 endif ()

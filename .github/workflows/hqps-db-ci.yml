@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-20.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
-      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.9
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/hqps-server-base:v0.0.10
     steps:
     - uses: actions/checkout@v3
 
@@ -186,6 +186,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
@@ -199,6 +200,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
@@ -212,6 +214,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         HOME : /home/graphscope/
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
