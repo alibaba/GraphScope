@@ -122,11 +122,11 @@ selector = {
     "vertices": {
         "person": ["id", "firstName", "lastName"],
         "comment": None,  # None means all properties
-    }
+    },
     "edges": {
         "knows": ["creationDate"],
-        "replyOf": ["creationDate"],
-    }
+        "likes": ["creationDate"],
+    },
 }
 
 # save the subgraph to GraphAr format
@@ -157,6 +157,7 @@ Here's an example:
 
 ```python
 import graphscope
+from graphscope import pagerank
 from graphscope.framework.graph import Graph 
 
 # initialize a session
@@ -167,10 +168,13 @@ uri = "graphar+file:///tmp/ldbc_graphar/ldbc.graph.yaml"
 
 # load the graph from GraphAr format
 g = Graph.load_from(uri, sess)
-
-# do some graph processing
 print(g.schema)
 
+# do some graph processing
+pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+ctx = pagerank(pg, max_round=10)
+df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+print(df)
 ```
 
 You can also load a subgraph from the whole ldbc dataset with GraphAr format data using the `load_from` function with the `selector` parameter. Here's an example:
@@ -190,16 +194,20 @@ selector = {
     "vertices": {
         "person": None,
         "comment": None,  # None means all properties
-    }
+    },
     "edges": {
         "knows": None,
-        "replyOf": None,
-    }
+        "likes": None,
+    },
 }
 g = Graph.load_from(uri, sess, selector=selector)
+print(g.schema)
 
 # do some graph processing
-print(g.schema)
+pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+ctx = pagerank(pg, max_round=10)
+df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+print(df)
 ```
 
-More examples about how to use GraphAr in GraphScope can be found in the [test_graphar]().
+More examples about how to use GraphAr in GraphScope can be found in the [test_graphar](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/unittest/test_graphar.py).

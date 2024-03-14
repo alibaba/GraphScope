@@ -20,6 +20,7 @@ import os
 
 import pytest
 
+from graphscope import pagerank
 from graphscope.framework.graph import Graph
 
 graphar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
@@ -42,6 +43,12 @@ def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session)
     }
     g = Graph.load_from(r["URI"], graphscope_session)
     assert g.schema.to_dict() == ldbc_graph.schema.to_dict()
+
+    # do some graph processing
+    pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+    ctx = pagerank(pg, max_round=10)
+    df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+    assert df.shape[0] == 903
     del g
 
 
@@ -50,11 +57,11 @@ def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
     selector = {
         "vertices": {
             "person": ["id", "firstName", "lastName"],
-            "organisation": ["name", "type"],
+            "comment": ["content", "creationDate"],
         },
         "edges": {
-            "studyAt": ["classYear"],
-            "workAt": ["workFrom"],
+            "knows": ["creationDate"],
+            "likes": ["creationDate"],
         },
     }
 
@@ -63,7 +70,7 @@ def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
         format="graphar",
         selector=selector,
         graphar_graph_name="ldbc_sample",
-        graphar_file_type="orc",
+        graphar_file_type="parquet",
         graphar_vertex_chunk_size=256,
         graphar_edge_chunk_size=1024,
     )
@@ -74,17 +81,23 @@ def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
     g = Graph.load_from(r["URI"])
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert (
-        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     )
-    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 3
-        and g.schema.vertex_properties_num("organisation") == 2
+        and g.schema.vertex_properties_num("comment") == 2
     )
     assert (
-        g.schema.edge_properties_num("studyAt") == 1
-        and g.schema.edge_properties_num("workAt") == 1
+        g.schema.edge_properties_num("knows") == 1
+        and g.schema.edge_properties_num("likes") == 1
     )
+
+    # do some graph processing
+    pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+    ctx = pagerank(pg, max_round=10)
+    df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+    assert df.shape[0] == 903
     del g
 
 
@@ -93,11 +106,11 @@ def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
     selector = {
         "vertices": {
             "person": ["id", "firstName", "lastName"],
-            "organisation": ["name", "type"],
+            "comment": ["content", "creationDate"],
         },
         "edges": {
-            "studyAt": [],
-            "workAt": [],
+            "knows": [],
+            "likes": [],
         },
     }
 
@@ -106,7 +119,7 @@ def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
         format="graphar",
         selector=selector,
         graphar_graph_name="ldbc_sample",
-        graphar_file_type="orc",
+        graphar_file_type="parquet",
         graphar_vertex_chunk_size=256,
         graphar_edge_chunk_size=1024,
     )
@@ -117,18 +130,23 @@ def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
     g = Graph.load_from(r["URI"])
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert (
-        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     )
-    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 3
-        and g.schema.vertex_properties_num("organisation") == 2
+        and g.schema.vertex_properties_num("comment") == 2
     )
     assert (
-        g.schema.edge_properties_num("studyAt") == 0
-        and g.schema.edge_properties_num("workAt") == 0
+        g.schema.edge_properties_num("knows") == 0
+        and g.schema.edge_properties_num("likes") == 0
     )
-    del g
+
+    # do some graph processing
+    pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+    ctx = pagerank(pg, max_round=10)
+    df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+    assert df.shape[0] == 903
 
 
 def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
@@ -136,11 +154,11 @@ def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
     selector = {
         "vertices": {
             "person": ["id", "firstName", "lastName"],
-            "organisation": None,
+            "comment": None,
         },
         "edges": {
-            "studyAt": None,
-            "workAt": None,
+            "knows": None,
+            "likes": None,
         },
     }
 
@@ -149,7 +167,7 @@ def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
         format="graphar",
         selector=selector,
         graphar_graph_name="ldbc_sample",
-        graphar_file_type="orc",
+        graphar_file_type="parquet",
         graphar_vertex_chunk_size=256,
         graphar_edge_chunk_size=1024,
     )
@@ -158,19 +176,26 @@ def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
         "URI": "graphar+file://${}ldbc_sample.graph.yaml".format(output_dir),
     }
     g = Graph.load_from(r["URI"])
+    print(g.schema)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert (
-        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     )
-    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 3
-        and g.schema.vertex_properties_num("organisation") == 4
+        and g.schema.vertex_properties_num("comment") == 6
     )
     assert (
-        g.schema.edge_properties_num("studyAt") == 2
-        and g.schema.edge_properties_num("workAt") == 2
+        g.schema.edge_properties_num("knows") == 2
+        and g.schema.edge_properties_num("likes") == 2
     )
+
+    # do some graph processing
+    pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+    ctx = pagerank(pg, max_round=10)
+    df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+    assert df.shape[0] == 903
     del g
 
 
@@ -182,25 +207,31 @@ def test_load_from_graphar_with_selector(graphscope_session):
     selector = {
         "vertices": {
             "person": None,
-            "organisation": None,
+            "comment": None,
         },
         "edges": {
-            "studyAt": None,
-            "workAt": None,
+            "knows": None,
+            "likes": None,
         },
     }
     g = Graph.load_from(graph_uri, selector=selector)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert (
-        "person" in g.schema.vertex_labels and "organisation" in g.schema.vertex_labels
+        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     )
-    assert "studyAt" in g.schema.edge_labels and "workAt" in g.schema.edge_labels
+    assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 8
-        and g.schema.vertex_properties_num("organisation") == 4
+        and g.schema.vertex_properties_num("comment") == 6
     )
     assert (
-        g.schema.edge_properties_num("studyAt") == 2
-        and g.schema.edge_properties_num("workAt") == 2
+        g.schema.edge_properties_num("knows") == 2
+        and g.schema.edge_properties_num("likes") == 2
     )
+
+    # do some graph processing
+    pg = g.project(vertices={"person": ["id"]}, edges={"knows": []})
+    ctx = pagerank(pg, max_round=10)
+    df = ctx.to_dataframe(selector={"id": "v.data", "r": "r"})
+    assert df.shape[0] == 903
     del g
