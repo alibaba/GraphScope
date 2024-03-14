@@ -116,6 +116,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
         TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
+        LD_LIBRARY_PATH: /usr/local/lib
       run: |
         cd ${GITHUB_WORKSPACE}/flex/build/
         SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
