@@ -68,6 +68,7 @@ default.etcd/
 
 # outer build directory
 build/
+flex/build/
 
 interactive_engine/rust-common/src/proto/*
 !interactive_engine/rust-common/src/proto/mod.rs

@@ -6,58 +6,26 @@
           "tag": {
             "id": 2
           },
-          "nodeType": {
-            "graphType": {
-              "graphDataType": [{
-                "label": {
-                },
-                "props": [{
-                  "propId": {
-                    "name": "id"
-                  },
-                  "type": "INT64"
-                }, {
-                  "propId": {
-                    "name": "name"
-                  },
-                  "type": "STRING"
-                }, {
-                  "propId": {
-                    "name": "age"
-                  },
-                  "type": "INT32"
-                }]
-              }]
+          "property": {
+            "key": {
+              "name": "name"
             }
+          },
+          "nodeType": {
+            "dataType": "STRING"
           }
         }],
         "rightKeys": [{
           "tag": {
-            "id": 2
+            "id": 5
+          },
+          "property": {
+            "key": {
+              "name": "name"
+            }
           },
           "nodeType": {
-            "graphType": {
-              "graphDataType": [{
-                "label": {
-                },
-                "props": [{
-                  "propId": {
-                    "name": "id"
-                  },
-                  "type": "INT64"
-                }, {
-                  "propId": {
-                    "name": "name"
-                  },
-                  "type": "STRING"
-                }, {
-                  "propId": {
-                    "name": "age"
-                  },
-                  "type": "INT32"
-                }]
-              }]
-            }
+            "dataType": "STRING"
           }
         }],
         "leftPlan": {
@@ -105,6 +73,9 @@
                 "params": {
                   "tables": [{
                     "id": 0
+                  }],
+                  "columns": [{
+                    "name": "weight"
                   }],
                   "sampleRatio": 1.0
                 },
@@ -229,6 +200,9 @@
                   "tables": [{
                     "id": 1
                   }],
+                  "columns": [{
+                    "name": "weight"
+                  }],
                   "sampleRatio": 1.0
                 },
                 "alias": 4,
@@ -266,7 +240,7 @@
                   }],
                   "sampleRatio": 1.0
                 },
-                "alias": 2
+                "alias": 5
               }
             },
             "metaData": [{
@@ -294,7 +268,7 @@
                   }]
                 }
               },
-              "alias": 2
+              "alias": 5
             }]
           }]
         }

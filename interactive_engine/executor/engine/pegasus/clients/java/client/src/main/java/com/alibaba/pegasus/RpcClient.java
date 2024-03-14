@@ -23,7 +23,10 @@ import com.alibaba.pegasus.service.protocol.PegasusClient.JobRequest;
 import com.alibaba.pegasus.service.protocol.PegasusClient.JobResponse;
 
 import io.grpc.Status;
+import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +49,12 @@ public class RpcClient {
                 channels.stream()
                         .map(k -> JobServiceGrpc.newStub(k.getChannel()))
                         .collect(Collectors.toList());
+    }
+
+    void configureClientInterceptor(
+            OpenTelemetry openTelemetry, NettyChannelBuilder nettyChannelBuilder) {
+        GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(openTelemetry);
+        nettyChannelBuilder.intercept(grpcTelemetry.newClientInterceptor());
     }
 
     public void submit(JobRequest jobRequest, ResultProcessor processor, long rpcTimeoutMS) {

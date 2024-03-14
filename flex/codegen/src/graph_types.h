@@ -247,6 +247,7 @@ static std::string data_type_2_rust_string(const codegen::DataType& data_type) {
     return "ID";
   default:
     LOG(FATAL) << "unknown data type" << static_cast<int>(data_type);
+    return "";
   }
 }
 
@@ -265,6 +266,7 @@ static common::DataType common_value_2_data_type(const common::Value& value) {
   default:
     LOG(FATAL) << "unknown value" << value.DebugString();
   }
+  return common::DataType::NONE;
 }
 
 static void parse_param_const_from_pb(

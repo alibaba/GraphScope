@@ -113,6 +113,17 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
     public abstract Traversal<Vertex, Object> get_g_V_has_fold_select_as_unfold_values();
 
+    public abstract Traversal<Vertex, Edge>
+            get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(final Object v1Id);
+
+    public abstract Traversal<Vertex, Edge>
+            get_g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX(
+                    final Object v1Id);
+
+    public abstract Traversal<Vertex, Edge>
+            get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
+                    final Object v1Id);
+
     // g.V().out().union(out(), in(), in()).count()
     public abstract Traversal<Vertex, Long> get_g_V_out_union_out_in_in_count();
 
@@ -718,6 +729,50 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(1, counter);
     }
 
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX() {
+        final Traversal<Vertex, Edge> traversal =
+                get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(
+                        convertToVertexId("marko"));
+        printTraversalForm(traversal);
+        final Edge edge = traversal.next();
+        Assert.assertEquals("knows", edge.label());
+        Assert.assertEquals(convertToVertexId("vadas"), edge.inVertex().id());
+        Assert.assertEquals(convertToVertexId("marko"), edge.outVertex().id());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX() {
+        final Traversal<Vertex, Edge> traversal =
+                get_g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX(
+                        convertToVertexId("marko"));
+        printTraversalForm(traversal);
+        Assert.assertTrue(traversal.hasNext());
+        final Edge edge = traversal.next();
+        Assert.assertEquals("knows", edge.label());
+        Assert.assertEquals(convertToVertexId("josh"), edge.inVertex().id());
+        Assert.assertEquals(convertToVertexId("marko"), edge.outVertex().id());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX() {
+        final Traversal<Vertex, Edge> traversal =
+                get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
+                        convertToVertexId("marko"));
+        printTraversalForm(traversal);
+        Assert.assertTrue(traversal.hasNext());
+        final Edge edge = traversal.next();
+        Assert.assertEquals("knows", edge.label());
+        Assert.assertEquals(convertToVertexId("josh"), edge.inVertex().id());
+        Assert.assertEquals(convertToVertexId("marko"), edge.outVertex().id());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
 
         // g.V().out().union(out(), in(), in()).count()
@@ -972,6 +1027,38 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .as("b")
                     .unfold()
                     .values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Edge>
+                get_g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX(
+                        final Object v1Id) {
+            return g.V(v1Id)
+                    .outE("knows")
+                    .has("weight", 1.0d)
+                    .as("here")
+                    .inV()
+                    .has("name", "josh")
+                    .select("here");
+        }
+
+        @Override
+        public Traversal<Vertex, Edge>
+                get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
+                        final Object v1Id) {
+            return g.V(v1Id)
+                    .outE("knows")
+                    .as("here")
+                    .has("weight", 1.0d)
+                    .inV()
+                    .has("name", "josh")
+                    .select("here");
+        }
+
+        @Override
+        public Traversal<Vertex, Edge> get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(
+                final Object v1Id) {
+            return g.V(v1Id).outE().as("here").inV().has("name", "vadas").select("here");
         }
     }
 }

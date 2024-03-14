@@ -78,6 +78,7 @@ interactive_engine/executor/ir/Cargo.lock
 
 # java sdk
 analytical_engine/java/**/dependency-reduced-pom.xml
+analytical_engine/java/**/.ci-friendly-pom.xml
 
 # GraphLearn
 coordinator/graphlearn*
@@ -98,3 +99,5 @@ flex/interactive/logs/*
 flex/interactive/examples/sf0.1-raw/
 flex/interactive/.running
 flex/interactive/.env
+
+**/.cache/

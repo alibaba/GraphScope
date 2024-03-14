@@ -52,7 +52,7 @@ public class Utils {
         for (int i = outputFields.size() - 1; i >= 0; i--) {
             RelDataTypeField field = outputFields.get(i);
             // specific implementation for gremlin `head`, DEFAULT can only denote the last field
-            if (AliasInference.isDefaultAlias(field.getName()) && i != outputFields.size() - 1) {
+            if (field.getName() == AliasInference.DEFAULT_NAME && i != outputFields.size() - 1) {
                 continue;
             }
             if (!uniqueNames.contains(field.getName())) {
