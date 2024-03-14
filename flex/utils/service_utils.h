@@ -38,6 +38,38 @@ namespace gs {
 
 static constexpr const char* CODEGEN_BIN = "load_plan_and_gen.sh";
 
+/// Util functions.
+inline int64_t GetCurrentTimeStamp() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::system_clock::now().time_since_epoch())
+      .count();
+}
+
+class GraphLockGuard {
+ public:
+  using LOCK_FUNC = std::function<Result<bool>()>;
+  using UNLOCK_FUNC = std::function<void()>;
+  GraphLockGuard(LOCK_FUNC&& lock_func, UNLOCK_FUNC&& unlock_func)
+      : lock_func_(std::forward<LOCK_FUNC>(lock_func)),
+        unlock_func_(std::forward<UNLOCK_FUNC>(unlock_func)) {}
+
+  GraphLockGuard(const GraphLockGuard&) = delete;
+
+  Result<bool> TryLock() {
+    LOG(INFO) << "Calling Locking function, obj address: " << this;
+    return lock_func_();
+  }
+  // Make sure the graph is unlocked when the guard is destroyed.
+  ~GraphLockGuard() {
+    LOG(INFO) << "Calling Unlocking function, obj address: " << this;
+    unlock_func_();
+  }
+
+ private:
+  LOCK_FUNC lock_func_;
+  UNLOCK_FUNC unlock_func_;
+};
+
 class FlexException : public std::exception {
  public:
   explicit FlexException(std::string&& error_msg);

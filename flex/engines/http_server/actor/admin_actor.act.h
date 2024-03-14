@@ -18,7 +18,9 @@
 
 #include "flex/engines/http_server/types.h"
 #include "flex/engines/http_server/service/hqps_service.h"
+#include "flex/storages/metadata/metadata_store.h"
 #include "flex/engines/graph_db/database/graph_db.h"
+#include "flex/storages/metadata/metadata_store.h"
 #include <mutex>
 
 #include <hiactor/core/actor-template.hh>
@@ -59,12 +61,19 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) node_status(query_param&& param);
 
+  seastar::future<admin_query_result> ANNOTATION(actor:method) get_job(query_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) list_jobs(query_param&& param);
+
+  seastar::future<admin_query_result> ANNOTATION(actor:method) cancel_job(query_param&& param);
+
   // DECLARE_RUN_QUERIES;
   /// Declare `do_work` func here, no need to implement.
   ACTOR_DO_WORK()
 
  private:
   std::mutex mtx_;
+  std::shared_ptr<gs::IMetaDataStore> metadata_store_;
 };
 
 }  // namespace server

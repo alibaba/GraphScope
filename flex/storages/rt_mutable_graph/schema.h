@@ -25,6 +25,11 @@
 
 namespace gs {
 
+namespace config_parsing {
+std::string PropertyTypeToString(PropertyType type);
+PropertyType StringToPropertyType(const std::string& str);
+}  // namespace config_parsing
+
 class Schema {
  public:
   // How many built-in plugins are there.

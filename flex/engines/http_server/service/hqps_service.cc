@@ -14,6 +14,7 @@
  */
 #include "flex/engines/http_server/service/hqps_service.h"
 #include "flex/engines/http_server/options.h"
+#include "flex/engines/http_server/workdir_manipulator.h"
 namespace server {
 
 ServiceConfig::ServiceConfig()
@@ -25,7 +26,8 @@ ServiceConfig::ServiceConfig()
       enable_thread_resource_pool(true),
       external_thread_num(2),
       start_admin_service(true),
-      start_compiler(false) {}
+      start_compiler(false),
+      metadata_store_type_(gs::MetadataStoreType::kLocalFile) {}
 
 const std::string HQPSService::DEFAULT_GRAPH_NAME = "modern_graph";
 const std::string HQPSService::DEFAULT_INTERACTIVE_HOME = "/opt/flex/";
@@ -49,9 +51,35 @@ void HQPSService::init(const ServiceConfig& config) {
   if (config.start_admin_service) {
     admin_hdl_ = std::make_unique<admin_http_handler>(config.admin_port);
   }
+
   initialized_.store(true);
   service_config_ = config;
   gs::init_cpu_usage_watch();
+  if (config.start_admin_service) {
+    metadata_store_ = gs::MetadataStoreFactory::Create(
+        config.metadata_store_type_, WorkDirManipulator::GetWorkspace());
+
+    auto res = metadata_store_->Open();
+    if (!res.ok()) {
+      std::cerr << "Failed to open metadata store: "
+                << res.status().error_message() << std::endl;
+      return;
+    }
+    LOG(INFO) << "Metadata store opened successfully.";
+    gs::GraphId default_graph_id = insert_default_graph_meta();
+    auto set_res = metadata_store_->SetRunningGraph(default_graph_id);
+    if (!set_res.ok()) {
+      LOG(FATAL) << "Failed to set running graph: "
+                 << res.status().error_message();
+      return;
+    }
+
+    auto lock_res = metadata_store_->LockGraphIndices(default_graph_id);
+    if (!lock_res.ok()) {
+      LOG(FATAL) << lock_res.status().error_message();
+      return;
+    }
+  }
   if (config.start_compiler) {
     start_compiler_subprocess();
   }
@@ -62,6 +90,10 @@ HQPSService::~HQPSService() {
     actor_sys_->terminate();
   }
   stop_compiler_subprocess();
+  clear_running_graph();
+  if (metadata_store_) {
+    metadata_store_->Close();
+  }
 }
 
 const ServiceConfig& HQPSService::get_service_config() const {
@@ -81,6 +113,10 @@ uint16_t HQPSService::get_query_port() const {
     return query_hdl_->get_port();
   }
   return 0;
+}
+
+std::shared_ptr<gs::IMetaDataStore> HQPSService::get_metadata_store() const {
+  return metadata_store_;
 }
 
 gs::Result<seastar::sstring> HQPSService::service_status() {
@@ -246,4 +282,67 @@ std::string HQPSService::find_interactive_class_path() {
   return "";
 }
 
+gs::GraphId HQPSService::insert_default_graph_meta() {
+  if (!metadata_store_) {
+    LOG(FATAL) << "Metadata store has not been inited!" << std::endl;
+  }
+  // If there is no graph in the metadata store, insert the default graph.
+  auto graph_metas_res = metadata_store_->GetAllGraphMeta();
+  if (!graph_metas_res.ok()) {
+    LOG(FATAL) << "Failed to get graph metas: "
+               << graph_metas_res.status().error_message();
+  }
+  if (!graph_metas_res.value().empty()) {
+    LOG(INFO) << "There are already " << graph_metas_res.value().size()
+              << " graph metas in the metadata store.";
+
+    // return the first graph id
+    return graph_metas_res.value().begin()->id;
+  }
+
+  auto default_graph_name = this->service_config_.default_graph;
+  auto schema_str_res =
+      WorkDirManipulator::GetGraphSchemaString(default_graph_name);
+  if (!schema_str_res.ok()) {
+    LOG(FATAL) << "Failed to get graph schema string: "
+               << schema_str_res.status().error_message();
+  }
+  auto request = gs::CreateGraphMetaRequest::FromJson(schema_str_res.value());
+  request.is_builtin = true;
+  request.data_update_time = gs::GetCurrentTimeStamp();
+
+  auto res = metadata_store_->CreateGraphMeta(request);
+  if (!res.ok()) {
+    LOG(FATAL) << "Failed to insert default graph meta: "
+               << res.status().error_message();
+  }
+
+  auto dst_graph_dir = WorkDirManipulator::GetGraphDir(res.value());
+  auto src_graph_dir = WorkDirManipulator::GetGraphDir(default_graph_name);
+  if (std::filesystem::exists(dst_graph_dir)) {
+    // if the dst_graph_dir is already existed, we do nothing.
+    LOG(INFO) << "Graph dir " << dst_graph_dir << " already exists.";
+  } else {
+    // create soft link
+    std::filesystem::create_symlink(src_graph_dir, dst_graph_dir);
+    LOG(INFO) << "Create soft link from " << src_graph_dir << " to "
+              << dst_graph_dir;
+  }
+
+  LOG(INFO) << "Insert default graph meta successfully.";
+  return res.value();
+}
+
+void HQPSService::clear_running_graph() {
+  if (!metadata_store_) {
+    std::cerr << "Metadata store has not been inited!" << std::endl;
+    return;
+  }
+  auto res = metadata_store_->ClearRunningGraph();
+  if (!res.ok()) {
+    std::cerr << "Failed to clear running graph: "
+              << res.status().error_message() << std::endl;
+    return;
+  }
+}
 }  // namespace server
