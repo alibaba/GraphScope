@@ -51,6 +51,9 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
             LoggerFactory.getLogger(GraphRelProtoPhysicalBuilder.class);
     private final GraphShuttle relShuttle;
     private final GraphAlgebraPhysical.PhysicalPlan.Builder physicalBuilder;
+    // map each rel (union/join...) to its corresponding common sub-plans, i.e. in query
+    // `g.V().out().union(out(), out())`,
+    // `g.V().out()` is a common sub-plan, the pair of <union, g.V().out()> is recorded in this map
     private final IdentityHashMap<RelNode, List<CommonTableScan>> relToCommons;
 
     public GraphRelProtoPhysicalBuilder(
@@ -147,6 +150,13 @@ public class GraphRelProtoPhysicalBuilder extends PhysicalBuilder {
         return relToCommons;
     }
 
+    /**
+     * find the lowest common ancestor (union/join...) of a list of common table scans
+     * @param top
+     * @param commons
+     * @param contains
+     * @return
+     */
     private @Nullable RelNode lowestCommonAncestor(
             RelNode top, List<CommonTableScan> commons, List<CommonTableScan> contains) {
         List<List<CommonTableScan>> inputContains = Lists.newArrayList();

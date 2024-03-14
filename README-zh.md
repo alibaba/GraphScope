@@ -211,12 +211,7 @@ GraphScope 是为处理超大图设计，而单机的内存通常不能够容纳
 
 为了继续本篇教程，请确保你拥有一个 k8s 集群与相应的安全证书 （比如，k8s API 服务器的地址，一般存储在 `~/.kube/config` 文件中）
 
-另外，你也可以使用 [Kind](https://kind.sigs.k8s.io) 部署一个本地的 k8s 集群，我们提供了一个脚本来部署环境。
-
-```bash
-# for usage, type -h
-./scripts/install_deps.sh --k8s
-```
+另外，你也可以使用 [Kind](https://kind.sigs.k8s.io) 部署一个本地的 k8s 集群，Kind 的安装和部署可以参考官网的 [Quick Start](https://kind.sigs.k8s.io/docs/user/quick-start/)。
 
 如果你没有安装 `graphscope` 包，这里可以只安装客户端的包。
 

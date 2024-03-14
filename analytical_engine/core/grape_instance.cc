@@ -192,15 +192,19 @@ bl::result<void> GrapeInstance::unloadGraph(const rpc::GSParams& params) {
 
       // delete the fragment group first
       if (comm_spec_.worker_id() == 0) {
+#if defined(VINEYARD_VERSION) && VINEYARD_VERSION >= 21003
+        VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true, true));
+#else
         VINEYARD_SUPPRESS(client_->DelData(frag_group_id, false, true));
+#endif
       }
       // ensure all fragments get deleted
       MPI_Barrier(comm_spec_.comm());
+#if defined(VINEYARD_VERSION) && VINEYARD_VERSION >= 21003
+      VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true, true));
+#else
       VINEYARD_SUPPRESS(client_->DelData(frag_id, false, true));
-      // trim vineyardd's shared memory
-      bool trimmed = false;
-      MPI_Barrier(comm_spec_.comm());
-      VINEYARD_SUPPRESS(client_->MemoryTrim(trimmed));
+#endif
     }
   }
   VLOG(1) << "Unloading Graph " << graph_name;
@@ -787,7 +791,7 @@ bl::result<void> GrapeInstance::outputContext(const rpc::GSParams& params) {
 
   if (!range.first.empty() && !range.second.empty()) {
     LOG(WARNING)
-        << "Specifing vertex range for output is not supported and ignored";
+        << "Specifying vertex range for output is not supported and ignored";
   }
 
   BOOST_LEAF_AUTO(location, params.Get<std::string>(rpc::FD));
@@ -1166,7 +1170,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::addLabelsToGraph(
       object_manager_.GetObject<ILabeledFragmentWrapper>(graph_name));
   if (src_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "AddLabelsToGraph is only avaiable for ArrowFragment");
+                    "AddLabelsToGraph is only available for ArrowFragment");
   }
 
   auto src_frag_id =
@@ -1197,7 +1201,7 @@ bl::result<rpc::graph::GraphDefPb> GrapeInstance::consolidateColumns(
       object_manager_.GetObject<ILabeledFragmentWrapper>(src_graph_name));
   if (src_wrapper->graph_def().graph_type() != rpc::graph::ARROW_PROPERTY) {
     RETURN_GS_ERROR(vineyard::ErrorCode::kInvalidOperationError,
-                    "ConsolidateColumns is only avaiable for ArrowFragment");
+                    "ConsolidateColumns is only available for ArrowFragment");
   }
   std::string dst_graph_name = "graph_" + generateId();
 

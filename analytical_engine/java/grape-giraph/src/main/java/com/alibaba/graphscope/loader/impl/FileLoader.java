@@ -164,7 +164,7 @@ public class FileLoader implements LoaderBase {
         this.executor = Executors.newFixedThreadPool(threadNum);
         // Create a proxy form adding vertex and adding edges
         proxy =
-                new GraphDataBufferManangerImpl(
+                new GraphDataBufferManagerImpl(
                         workerId,
                         threadNum,
                         vidBuffers,

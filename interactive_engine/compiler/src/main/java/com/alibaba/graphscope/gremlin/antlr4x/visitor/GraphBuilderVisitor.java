@@ -19,7 +19,6 @@ package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 import com.alibaba.graphscope.common.ir.rel.GraphLogicalProject;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalSource;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
@@ -652,43 +651,6 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     }
 
     @Override
-    public GraphBuilder visitTraversalMethod_match(
-            GremlinGSParser.TraversalMethod_matchContext ctx) {
-        Preconditions.checkArgument(
-                builder.peek() instanceof GraphLogicalSource,
-                "match should start from global source vertices");
-        GremlinGSParser.NestedTraversalExprContext exprCtx = ctx.nestedTraversalExpr();
-        NestedTraversalRelVisitor visitor = new NestedTraversalRelVisitor(builder);
-        List<RelNode> innerSentences = Lists.newArrayList();
-        List<RelNode> antiSentences = Lists.newArrayList();
-        for (int i = 0; i < exprCtx.getChildCount(); ++i) {
-            if (!(exprCtx.getChild(i) instanceof GremlinGSParser.NestedTraversalContext)) continue;
-            GremlinGSParser.NestedTraversalContext nestedCtx =
-                    (GremlinGSParser.NestedTraversalContext) exprCtx.getChild(i);
-            GremlinGSParser.NestedTraversalContext antiCtx = getAntiContext(nestedCtx);
-            if (antiCtx != null) {
-                antiSentences.add(visitor.visitNestedTraversal(antiCtx));
-            } else {
-                innerSentences.add(visitor.visitNestedTraversal(nestedCtx));
-            }
-        }
-        Preconditions.checkArgument(
-                innerSentences.size() > 0, "match should have at least one inner sentence");
-        builder.build();
-        // add inner sentences
-        if (innerSentences.size() == 1) {
-            builder.match(innerSentences.get(0), GraphOpt.Match.INNER);
-        } else {
-            builder.match(innerSentences.get(0), innerSentences.subList(1, innerSentences.size()));
-        }
-        // add anti sentences
-        for (RelNode anti : antiSentences) {
-            builder.match(anti, GraphOpt.Match.ANTI);
-        }
-        return builder;
-    }
-
-    @Override
     public GraphBuilder visitTraversalMethod_union(
             GremlinGSParser.TraversalMethod_unionContext ctx) {
         GremlinGSParser.NestedTraversalExprContext exprCtx = ctx.nestedTraversalExpr();
@@ -708,16 +670,10 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
         return (GraphBuilder) builder.union(true, branches.size());
     }
 
-    private GremlinGSParser.NestedTraversalContext getAntiContext(
-            GremlinGSParser.NestedTraversalContext ctx) {
-        GremlinGSParser.ChainedTraversalContext chainedCtx = ctx.chainedTraversal();
-        if (chainedCtx != null && chainedCtx.getChildCount() == 1) {
-            GremlinGSParser.TraversalMethodContext methodCtx = chainedCtx.traversalMethod();
-            if (methodCtx.traversalMethod_not() != null) {
-                return methodCtx.traversalMethod_not().nestedTraversal();
-            }
-        }
-        return null;
+    @Override
+    public GraphBuilder visitTraversalMethod_identity(
+            GremlinGSParser.TraversalMethod_identityContext ctx) {
+        return builder;
     }
 
     public GraphBuilder getGraphBuilder() {

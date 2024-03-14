@@ -46,6 +46,9 @@
               "tables": [{
                 "id": 0
               }],
+              "columns": [{
+                "name": "weight"
+              }],
               "sampleRatio": 1.0
             },
             "expandOpt": "EDGE"
@@ -62,7 +65,7 @@
         },
         "hopRange": {
           "lower": 1,
-          "upper": 3
+          "upper": 4
         },
         "pathOpt": "SIMPLE",
         "resultOpt": "ALL_V"

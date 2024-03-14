@@ -19,6 +19,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.IdentityHashMap;
 
+/**
+ * Original {@code HepPlanner} skip optimizations to the nested structures, i.e. {@code RelNode} nested in the {@code CommonTableScan} or {@code RexSubQuery},
+ * we supplement this functionality by overriding the {@code findBestExp} method.
+ */
 public class GraphHepPlanner extends HepPlanner {
     private @Nullable RelNode originalRoot;
 
@@ -44,7 +48,7 @@ public class GraphHepPlanner extends HepPlanner {
     private class PlannerVisitor extends GraphShuttle {
         private final RelNode root;
         private final IdentityHashMap<RelNode, RelNode> commonRelVisitedMap;
-        // apply optimization to sub query
+        // apply optimization to the sub-query
         private final RexShuttle subQueryPlanner;
 
         public PlannerVisitor(RelNode root) {

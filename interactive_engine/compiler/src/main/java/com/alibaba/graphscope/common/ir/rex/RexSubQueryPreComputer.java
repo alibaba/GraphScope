@@ -6,7 +6,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
+import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rex.*;
+import org.apache.calcite.sql.SqlIntervalQualifier;
+import org.apache.calcite.sql.parser.SqlParserPos;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +36,8 @@ public class RexSubQueryPreComputer extends RexVisitorImpl<RexNode> {
             case DESCENDING:
             case AS:
             case NOT:
+            case AND:
+            case OR:
                 List<RexNode> operands =
                         ((RexCall) top)
                                 .getOperands().stream()
@@ -57,6 +63,14 @@ public class RexSubQueryPreComputer extends RexVisitorImpl<RexNode> {
 
     @Override
     public RexNode visitLiteral(RexLiteral literal) {
+        if (literal.getType().getSqlTypeName() == SqlTypeName.SYMBOL
+                && literal.getValue() instanceof TimeUnit) {
+            return builder.getRexBuilder()
+                    .makeIntervalLiteral(
+                            null,
+                            new SqlIntervalQualifier(
+                                    literal.getValueAs(TimeUnit.class), null, SqlParserPos.ZERO));
+        }
         return literal;
     }
 

@@ -581,10 +581,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_selectXall_a_bX",
         reason = "unsupported")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-        method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
-        reason = "unsupported")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+//        method = "g_V_hasXperson_name_markoX_count_asXaX_unionXidentity_identityX_selectXaX",
+//        reason = "unsupported")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
         method = "g_V_outE_weight_groupCount_selectXvaluesX_unfold",
@@ -1031,18 +1031,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 // "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_asXfakeX_inV_hasXname_joshX_selectXhereX",
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
 //        reason = "returned label is id")
-// @Graph.OptOut(
-//        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-//        reason = "returned label is id")
-// @Graph.OptOut(
-//        method = "g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-//        reason = "returned label is id")
-// @Graph.OptOut(
-//        method = "g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
-//        reason = "returned label is id")
+@Graph.OptOut(
+        method = "g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        reason = "tested in IrGremlinQueryTest")
+@Graph.OptOut(
+        method = "g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        reason = "tested in IrGremlinQueryTest")
+@Graph.OptOut(
+        method = "g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.SelectTest",
+        reason = "tested in IrGremlinQueryTest")
 
 // add more ignored tests which are out of ir range
 @Graph.OptOut(
@@ -1519,18 +1519,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 //        method = "g_V_valueMapXname_ageX",
 //        reason = "unsupported")
 
-@Graph.OptOut(
-        method = "g_V_unionXout__inX_name",
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-        reason = "union is unsupported yet")
-@Graph.OptOut(
-        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-        method = "g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX",
-        reason = "union is unsupported yet")
-@Graph.OptOut(
-        method = "g_V_haslabel_union_identity_out_values",
-        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
-        reason = "union is unsupported yet")
+// @Graph.OptOut(
+//        method = "g_V_unionXout__inX_name",
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
+//        reason = "union is unsupported yet")
+// @Graph.OptOut(
+//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
+//        method = "g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX",
+//        reason = "union is unsupported yet")
+// @Graph.OptOut(
+//        method = "g_V_haslabel_union_identity_out_values",
+//        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
+//        reason = "union is unsupported yet")
 @Graph.OptOut(
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
         method = "g_V_hasLabelXpersonX_hasLabelXsoftwareX",

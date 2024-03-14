@@ -25,6 +25,9 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelShuttle;
 import org.apache.calcite.rel.core.TableScan;
 
+/**
+ * represent a common sub-plan as a table scan, specific to a {@code CommonOptTable}
+ */
 public class CommonTableScan extends TableScan {
     public CommonTableScan(RelOptCluster cluster, RelTraitSet traitSet, RelOptTable table) {
         super(cluster, traitSet, ImmutableList.of(), table);

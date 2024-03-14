@@ -19,10 +19,12 @@ package com.alibaba.graphscope.gremlin.integration.suite.standard;
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
 
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
+import com.google.common.collect.Lists;
 
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
 import org.apache.tinkerpop.gremlin.process.AbstractGremlinProcessTest;
 import org.apache.tinkerpop.gremlin.process.traversal.Order;
+import org.apache.tinkerpop.gremlin.process.traversal.P;
 import org.apache.tinkerpop.gremlin.process.traversal.Traversal;
 import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__;
 import org.apache.tinkerpop.gremlin.structure.Column;
@@ -112,6 +114,245 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
             get_g_V_has_fold_select_as_unfold_select_unfold_values();
 
     public abstract Traversal<Vertex, Object> get_g_V_has_fold_select_as_unfold_values();
+
+    public abstract Traversal<Vertex, Edge>
+            get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(final Object v1Id);
+
+    public abstract Traversal<Vertex, Edge>
+            get_g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX(
+                    final Object v1Id);
+
+    public abstract Traversal<Vertex, Edge>
+            get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
+                    final Object v1Id);
+
+    // g.V().out().union(out(), in(), in()).count()
+    public abstract Traversal<Vertex, Long> get_g_V_out_union_out_in_in_count();
+
+    // g.V().union(out(), in().union(out(), out())).count()
+    public abstract Traversal<Vertex, Long> get_g_V_union_out_inXunion_out_outX_count();
+
+    // g.V().out().union(out(), in().union(out(), out())).count()
+    public abstract Traversal<Vertex, Long> get_g_V_out_union_out_inXunion_out_outX_count();
+
+    // g.V().out().union(out().union(out(), out()), in().union(out(), out())).count()
+    public abstract Traversal<Vertex, Long>
+            get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count();
+
+    // g.V().union(in().union(out(), out()), in().union(out(), out())).count()
+    public abstract Traversal<Vertex, Long>
+            get_g_V_union_inXunion_out_outX_inXunion_out_outX_count();
+
+    // g.V().out().union(in().union(out(), out()), in().union(out(), out())).count()
+    public abstract Traversal<Vertex, Long>
+            get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_out_out_count();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_not_out_out_count();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_a_neq_b_by_out_count_count();
+
+    public abstract Traversal<Vertex, Map<String, Object>> get_g_V_select_a_b_by_out_count();
+
+    public abstract Traversal<Vertex, Map<String, Object>>
+            get_g_V_select_a_b_by_out_count_by_name();
+
+    public abstract Traversal<Vertex, Long> get_g_V_dedup_a_b_by_out_count_count();
+
+    public abstract Traversal<Vertex, Object> get_g_V_order_by_out_count_by_name();
+
+    public abstract Traversal<Vertex, Map<Object, Long>> get_g_V_groupCount_by_out_count_by_age();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_values_age_count();
+
+    public abstract Traversal<Vertex, Long> get_g_V_where_not_values_age_count();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_out_out_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_out_out_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(1, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_not_out_out_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_not_out_out_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(5, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_a_neq_b_by_out_count_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_a_neq_b_by_out_count_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(6, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_a_b_by_out_count() {
+        Traversal<Vertex, Map<String, Object>> traversal = this.get_g_V_select_a_b_by_out_count();
+        this.printTraversalForm(traversal);
+        int a_2_b_0_count = 0;
+        int a_1_b_0_count = 0;
+        int a_3_b_0_count = 0;
+        int a_3_b_2_count = 0;
+        while (traversal.hasNext()) {
+            Map<String, Object> result = traversal.next();
+            if (((Long) result.get("a")) == 2 && ((Long) result.get("b")) == 0) {
+                a_2_b_0_count++;
+            } else if (((Long) result.get("a")) == 1 && ((Long) result.get("b")) == 0) {
+                a_1_b_0_count++;
+            } else if (((Long) result.get("a")) == 3 && ((Long) result.get("b")) == 0) {
+                a_3_b_0_count++;
+            } else if (((Long) result.get("a")) == 3 && ((Long) result.get("b")) == 2) {
+                a_3_b_2_count++;
+            }
+        }
+        Assert.assertEquals(2, a_2_b_0_count);
+        Assert.assertEquals(1, a_1_b_0_count);
+        Assert.assertEquals(2, a_3_b_0_count);
+        Assert.assertEquals(1, a_3_b_2_count);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_a_b_by_out_count_by_name() {
+        Traversal<Vertex, Map<String, Object>> traversal =
+                this.get_g_V_select_a_b_by_out_count_by_name();
+        this.printTraversalForm(traversal);
+        int a_3_b_lop_count = 0;
+        int a_2_b_lop_count = 0;
+        int a_1_b_lop_count = 0;
+        int a_2_b_ripple_count = 0;
+        int a_3_b_vadas_count = 0;
+        int a_3_b_josh_count = 0;
+        while (traversal.hasNext()) {
+            Map<String, Object> result = traversal.next();
+            if (((Long) result.get("a")) == 3 && result.get("b").equals("lop")) {
+                a_3_b_lop_count++;
+            } else if (((Long) result.get("a")) == 2 && result.get("b").equals("lop")) {
+                a_2_b_lop_count++;
+            } else if (((Long) result.get("a")) == 1 && result.get("b").equals("lop")) {
+                a_1_b_lop_count++;
+            } else if (((Long) result.get("a")) == 2 && result.get("b").equals("ripple")) {
+                a_2_b_ripple_count++;
+            } else if (((Long) result.get("a")) == 3 && result.get("b").equals("vadas")) {
+                a_3_b_vadas_count++;
+            } else if (((Long) result.get("a")) == 3 && result.get("b").equals("josh")) {
+                a_3_b_josh_count++;
+            }
+        }
+        Assert.assertEquals(1, a_3_b_lop_count);
+        Assert.assertEquals(1, a_2_b_lop_count);
+        Assert.assertEquals(1, a_1_b_lop_count);
+        Assert.assertEquals(1, a_2_b_ripple_count);
+        Assert.assertEquals(1, a_3_b_vadas_count);
+        Assert.assertEquals(1, a_3_b_josh_count);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_dedup_a_b_by_out_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_dedup_a_b_by_out_count_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(4, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_order_by_out_count_by_name() {
+        Traversal<Vertex, Object> traversal = this.get_g_V_order_by_out_count_by_name();
+        this.printTraversalForm(traversal);
+        List names = Lists.newArrayList();
+        while (traversal.hasNext()) {
+            names.add(traversal.next());
+        }
+        Assert.assertEquals(
+                Lists.newArrayList("vadas", "ripple", "lop", "peter", "josh", "marko"), names);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_groupCount_by_out_count_by_age() {
+        Traversal<Vertex, Map<Object, Long>> traversal =
+                this.get_g_V_groupCount_by_out_count_by_age();
+        this.printTraversalForm(traversal);
+        Map<Object, Long> result = traversal.next();
+        Assert.assertEquals(1, result.get(2L).intValue());
+        Assert.assertEquals(5, result.get(0L).intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_values_age_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_values_age_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(4, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_not_values_age_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_where_not_values_age_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(2, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_out_union_out_in_in_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_in_in_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(26, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_union_out_inXunion_out_outX_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_union_out_inXunion_out_outX_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(34, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_out_union_out_inXunion_out_outX_count() {
+        Traversal<Vertex, Long> traversal = this.get_g_V_out_union_out_inXunion_out_outX_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(54, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_out_union_outXunion_out_outX_inXunion_out_outX_count() {
+        Traversal<Vertex, Long> traversal =
+                this.get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(52, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_union_inXunion_out_outX_inXunion_out_outX_count() {
+        Traversal<Vertex, Long> traversal =
+                this.get_g_V_union_inXunion_out_outX_inXunion_out_outX_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(56, traversal.next().intValue());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_out_union_inXunion_out_outX_inXunion_out_outX_count() {
+        Traversal<Vertex, Long> traversal =
+                this.get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count();
+        this.printTraversalForm(traversal);
+        Assert.assertEquals(104, traversal.next().intValue());
+    }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
@@ -646,7 +887,143 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
         Assert.assertEquals(1, counter);
     }
 
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX() {
+        final Traversal<Vertex, Edge> traversal =
+                get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(
+                        convertToVertexId("marko"));
+        printTraversalForm(traversal);
+        final Edge edge = traversal.next();
+        Assert.assertEquals("knows", edge.label());
+        Assert.assertEquals(convertToVertexId("vadas"), edge.inVertex().id());
+        Assert.assertEquals(convertToVertexId("marko"), edge.outVertex().id());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX() {
+        final Traversal<Vertex, Edge> traversal =
+                get_g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX(
+                        convertToVertexId("marko"));
+        printTraversalForm(traversal);
+        Assert.assertTrue(traversal.hasNext());
+        final Edge edge = traversal.next();
+        Assert.assertEquals("knows", edge.label());
+        Assert.assertEquals(convertToVertexId("josh"), edge.inVertex().id());
+        Assert.assertEquals(convertToVertexId("marko"), edge.outVertex().id());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
+    @Test
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    public void g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX() {
+        final Traversal<Vertex, Edge> traversal =
+                get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
+                        convertToVertexId("marko"));
+        printTraversalForm(traversal);
+        Assert.assertTrue(traversal.hasNext());
+        final Edge edge = traversal.next();
+        Assert.assertEquals("knows", edge.label());
+        Assert.assertEquals(convertToVertexId("josh"), edge.inVertex().id());
+        Assert.assertEquals(convertToVertexId("marko"), edge.outVertex().id());
+        Assert.assertFalse(traversal.hasNext());
+    }
+
     public static class Traversals extends IrGremlinQueryTest {
+
+        // g.V().out().union(out(), in(), in()).count()
+        @Override
+        public Traversal<Vertex, Long> get_g_V_out_union_out_in_in_count() {
+            return g.V().out().union(out(), in(), in()).count();
+        }
+
+        // g.V().union(out(), in().union(out(), out())).count()
+        @Override
+        public Traversal<Vertex, Long> get_g_V_union_out_inXunion_out_outX_count() {
+            return g.V().union(out(), in().union(out(), out())).count();
+        }
+
+        // g.V().out().union(out(), in().union(out(), out())).count()
+        @Override
+        public Traversal<Vertex, Long> get_g_V_out_union_out_inXunion_out_outX_count() {
+            return g.V().out().union(out(), in().union(out(), out())).count();
+        }
+
+        // g.V().out().union(out().union(out(), out()), in().union(out(), out())).count()
+        @Override
+        public Traversal<Vertex, Long>
+                get_g_V_out_union_outXunion_out_outX_inXunion_out_outX_count() {
+            return g.V().out().union(out().union(out(), out()), in().union(out(), out())).count();
+        }
+
+        // g.V().union(in().union(out(), out()), in().union(out(), out())).count()
+        @Override
+        public Traversal<Vertex, Long> get_g_V_union_inXunion_out_outX_inXunion_out_outX_count() {
+            return g.V().union(in().union(out(), out()), in().union(out(), out())).count();
+        }
+
+        // g.V().out().union(in().union(out(), out()), in().union(out(), out())).count()
+        @Override
+        public Traversal<Vertex, Long>
+                get_g_V_out_union_inXunion_out_outX_inXunion_out_outX_count() {
+            return g.V().out().union(in().union(out(), out()), in().union(out(), out())).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_out_out_count() {
+            return g.V().where(__.out().out()).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_not_out_out_count() {
+            return g.V().where(__.not(__.out().out())).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_a_neq_b_by_out_count_count() {
+            return g.V().as("a").out().as("b").where("a", P.neq("b")).by(out().count()).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>> get_g_V_select_a_b_by_out_count() {
+            return g.V().as("a").out().as("b").select("a", "b").by(__.out().count());
+        }
+
+        @Override
+        public Traversal<Vertex, Map<String, Object>> get_g_V_select_a_b_by_out_count_by_name() {
+            return g.V().as("a").out().as("b").select("a", "b").by(__.out().count()).by("name");
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_dedup_a_b_by_out_count_count() {
+            return g.V().as("a").out().as("b").dedup("a", "b").by(out().count()).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_order_by_out_count_by_name() {
+            return g.V().as("a")
+                    .values("name")
+                    .order()
+                    .by(select("a").out().count(), Order.asc)
+                    .by(select("a").values("name"), Order.desc);
+        }
+
+        @Override
+        public Traversal<Vertex, Map<Object, Long>> get_g_V_groupCount_by_out_count_by_age() {
+            return g.V().out().groupCount().by(__.out().count().as("key1"));
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_values_age_count() {
+            return g.V().where(__.values("age")).count();
+        }
+
+        @Override
+        public Traversal<Vertex, Long> get_g_V_where_not_values_age_count() {
+            return g.V().where(__.not(values("age"))).count();
+        }
 
         @Override
         public Traversal<Vertex, Map<Object, Long>> get_g_V_group_by_by_dedup_count_order_by_key() {
@@ -862,6 +1239,38 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                     .as("b")
                     .unfold()
                     .values("id");
+        }
+
+        @Override
+        public Traversal<Vertex, Edge>
+                get_g_VX1X_outEXknowsX_hasXweight_1X_asXhereX_inV_hasXname_joshX_selectXhereX(
+                        final Object v1Id) {
+            return g.V(v1Id)
+                    .outE("knows")
+                    .has("weight", 1.0d)
+                    .as("here")
+                    .inV()
+                    .has("name", "josh")
+                    .select("here");
+        }
+
+        @Override
+        public Traversal<Vertex, Edge>
+                get_g_VX1X_outEXknowsX_asXhereX_hasXweight_1X_inV_hasXname_joshX_selectXhereX(
+                        final Object v1Id) {
+            return g.V(v1Id)
+                    .outE("knows")
+                    .as("here")
+                    .has("weight", 1.0d)
+                    .inV()
+                    .has("name", "josh")
+                    .select("here");
+        }
+
+        @Override
+        public Traversal<Vertex, Edge> get_g_VX1X_outE_asXhereX_inV_hasXname_vadasX_selectXhereX(
+                final Object v1Id) {
+            return g.V(v1Id).outE().as("here").inV().has("name", "vadas").select("here");
         }
     }
 }

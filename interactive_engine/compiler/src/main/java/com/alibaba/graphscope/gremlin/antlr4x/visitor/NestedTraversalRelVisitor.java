@@ -12,6 +12,7 @@ import com.alibaba.graphscope.grammar.GremlinGSParser;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
+import org.apache.commons.lang3.ObjectUtils;
 
 /**
  * convert sub traversal nested in {@code NestedTraversalContext} to RelNode
@@ -44,7 +45,11 @@ public class NestedTraversalRelVisitor extends GremlinGSBaseVisitor<RelNode> {
     }
 
     private boolean isGlobalSource(RelNode rel) {
-        return (rel instanceof GraphLogicalSource)
-                && ((GraphLogicalSource) rel).getTableConfig().isAll();
+        if (rel instanceof GraphLogicalSource
+                && ((GraphLogicalSource) rel).getTableConfig().isAll()) {
+            GraphLogicalSource source = (GraphLogicalSource) rel;
+            return source.getUniqueKeyFilters() == null && ObjectUtils.isEmpty(source.getFilters());
+        }
+        return false;
     }
 }

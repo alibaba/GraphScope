@@ -86,6 +86,9 @@ public class GraphLogicalProject extends Project {
         if (this.exps == exps) {
             return this;
         } else {
+            // if exps are changed, we need to update the row type.
+            // here we override the original method to innovate and define our own type info for the
+            // project
             Preconditions.checkArgument(
                     exps.size() == this.exps.size(),
                     "rex shuttle should not change the size of exps");

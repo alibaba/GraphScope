@@ -3,7 +3,6 @@ package com.alibaba.graphscope.groot.frontend.write;
 import com.alibaba.graphscope.groot.CompletionCallback;
 import com.alibaba.graphscope.groot.SnapshotCache;
 import com.alibaba.graphscope.groot.common.config.Configs;
-import com.alibaba.graphscope.groot.common.config.FrontendConfig;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 import com.alibaba.graphscope.groot.common.exception.PropertyDefNotFoundException;
 import com.alibaba.graphscope.groot.common.schema.api.GraphElement;
@@ -14,7 +13,6 @@ import com.alibaba.graphscope.groot.common.schema.wrapper.EdgeKind;
 import com.alibaba.graphscope.groot.common.schema.wrapper.LabelId;
 import com.alibaba.graphscope.groot.common.schema.wrapper.PropertyValue;
 import com.alibaba.graphscope.groot.common.util.*;
-import com.alibaba.graphscope.groot.meta.MetaService;
 import com.alibaba.graphscope.groot.metrics.MetricsAgent;
 import com.alibaba.graphscope.groot.metrics.MetricsCollector;
 import com.alibaba.graphscope.groot.operation.EdgeId;
@@ -49,15 +47,10 @@ public class GraphWriter implements MetricsAgent {
     private volatile long ingestorBlockTimeAvgMs;
     private volatile long lastUpdateIngestorBlockTimeNano;
     private AtomicInteger pendingWriteCount;
-    /**
-     * true: enable use hash64(srcId, dstId, edgeLabelId, edgePks) to generate eid;
-     */
-    private boolean enableHashEid;
 
-    private SnapshotCache snapshotCache;
-    private EdgeIdGenerator edgeIdGenerator;
-    private MetaService metaService;
-    private AtomicLong lastWrittenSnapshotId = new AtomicLong(0L);
+    private final SnapshotCache snapshotCache;
+    private final EdgeIdGenerator edgeIdGenerator;
+    private final AtomicLong lastWrittenSnapshotId = new AtomicLong(0L);
 
     private final KafkaAppender kafkaAppender;
     private ScheduledExecutorService scheduler;
@@ -65,18 +58,13 @@ public class GraphWriter implements MetricsAgent {
     public GraphWriter(
             SnapshotCache snapshotCache,
             EdgeIdGenerator edgeIdGenerator,
-            MetaService metaService,
             MetricsCollector metricsCollector,
             KafkaAppender appender,
             Configs configs) {
         this.snapshotCache = snapshotCache;
         this.edgeIdGenerator = edgeIdGenerator;
-        this.metaService = metaService;
         initMetrics();
         metricsCollector.register(this, this::updateMetrics);
-        // default for increment eid generate
-        this.enableHashEid = FrontendConfig.ENABLE_HASH_GENERATE_EID.get(configs);
-
         this.kafkaAppender = appender;
     }
 
@@ -410,8 +398,9 @@ public class GraphWriter implements MetricsAgent {
             GraphSchema schema,
             DataRecord dataRecord) {
         long edgeInnerId;
-        if (this.enableHashEid) {
-            GraphElement edgeDef = schema.getElement(edgeRecordKey.getLabel());
+        GraphElement edgeDef = schema.getElement(edgeRecordKey.getLabel());
+        List<GraphProperty> pks = edgeDef.getPrimaryKeyList();
+        if (pks != null && pks.size() > 0) {
             Map<Integer, PropertyValue> edgePkVals =
                     parseRawProperties(edgeDef, dataRecord.getProperties());
             List<byte[]> edgePkBytes = getPkBytes(edgePkVals, edgeDef);

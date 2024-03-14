@@ -1,0 +1,30 @@
+{
+  "operators": [{
+    "var": {
+      "property": {
+        "id": {
+        }
+      },
+      "nodeType": {
+        "dataType": "INT64"
+      }
+    },
+    "nodeType": {
+      "dataType": "INT64"
+    }
+  }, {
+    "logical": "WITHIN",
+    "nodeType": {
+      "dataType": "BOOLEAN"
+    }
+  }, {
+    "const": {
+      "i64Array": {
+        "item": ["0", "72057594037927937"]
+      }
+    },
+    "nodeType": {
+      "dataType": "INT64"
+    }
+  }]
+}
