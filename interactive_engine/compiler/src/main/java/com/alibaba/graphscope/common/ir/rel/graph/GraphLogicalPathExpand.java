@@ -175,8 +175,8 @@ public class GraphLogicalPathExpand extends SingleRel {
                 .itemIf("fused", RelOptUtil.toString(fused), fused != null)
                 .itemIf("offset", offset, offset != null)
                 .itemIf("fetch", fetch, fetch != null)
-                .item("path_opt", getPathOpt().name())
-                .item("result_opt", getResultOpt().name())
+                .item("path_opt", getPathOpt())
+                .item("result_opt", getResultOpt())
                 .item("alias", AliasInference.SIMPLE_NAME(getAliasName()))
                 .itemIf(
                         "start_alias",

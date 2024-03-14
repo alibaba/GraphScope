@@ -63,7 +63,7 @@ public class GraphLogicalSingleMatch extends AbstractLogicalMatch {
     public RelWriter explainTerms(RelWriter pw) {
         return super.explainTerms(pw)
                 .item("sentence", RelOptUtil.toString(sentence))
-                .item("matchOpt", matchOpt.name());
+                .item("matchOpt", matchOpt);
     }
 
     @Override
