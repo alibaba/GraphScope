@@ -51,7 +51,7 @@ public class GraphBuilderTest {
     public void g_V_test() {
         RelNode node = eval("g.V()");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[VERTEX])",
                 node.explain().trim());
@@ -61,7 +61,7 @@ public class GraphBuilderTest {
     public void g_V_id_test() {
         RelNode node = eval("g.V(1, 2, 3)");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
                     + " Sarg[1, 2, 3])])",
@@ -72,7 +72,7 @@ public class GraphBuilderTest {
     public void g_V_hasLabel_test() {
         RelNode node = eval("g.V().hasLabel('person')");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], opt=[VERTEX])",
                 node.explain().trim());
@@ -116,7 +116,7 @@ public class GraphBuilderTest {
     public void g_V_hasId_test() {
         RelNode node = eval("g.V().hasId(1)");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[=(DEFAULT.~id, 1)])",
                 node.explain().trim());
@@ -126,7 +126,7 @@ public class GraphBuilderTest {
     public void g_V_hasIds_test() {
         RelNode node = eval("g.V().hasId(1, 2, 3)");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[VERTEX], uniqueKeyFilters=[SEARCH(DEFAULT.~id,"
                     + " Sarg[1, 2, 3])])",
@@ -137,7 +137,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_marko_test() {
         RelNode node = eval("g.V().has('name', 'marko')");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]],"
                     + " opt=[VERTEX])",
@@ -148,7 +148,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_eq_marko_test() {
         RelNode node = eval("g.V().has('name', eq('marko'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.name, _UTF-8'marko')]],"
                     + " opt=[VERTEX])",
@@ -159,7 +159,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_neq_marko_test() {
         RelNode node = eval("g.V().has('name', neq('marko'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[<>(DEFAULT.name, _UTF-8'marko')]],"
                     + " opt=[VERTEX])",
@@ -170,7 +170,7 @@ public class GraphBuilderTest {
     public void g_V_has_age_gt_17_test() {
         RelNode node = eval("g.V().has('age', gt(17))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[>(DEFAULT.age, 17)]], opt=[VERTEX])",
                 node.explain().trim());
@@ -181,7 +181,7 @@ public class GraphBuilderTest {
     public void g_V_hasNot_age_test() {
         RelNode node = eval("g.V().hasNot('age')");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[IS NULL(DEFAULT.age)]], opt=[VERTEX])",
                 node.explain().trim());
@@ -191,7 +191,7 @@ public class GraphBuilderTest {
     public void g_V_has_age_inside_17_20_test() {
         RelNode node = eval("g.V().has('age', inside(17, 20))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[[18..19]])]],"
                     + " opt=[VERTEX])",
@@ -202,7 +202,7 @@ public class GraphBuilderTest {
     public void g_V_has_age_outside_17_20_test() {
         RelNode node = eval("g.V().has('age', outside(17, 20))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[(-∞..18),"
                     + " (19..+∞)])]], opt=[VERTEX])",
@@ -213,7 +213,7 @@ public class GraphBuilderTest {
     public void g_V_has_age_within_test() {
         RelNode node = eval("g.V().has('age', within(17, 20))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[17, 20])]],"
                     + " opt=[VERTEX])",
@@ -224,7 +224,7 @@ public class GraphBuilderTest {
     public void g_V_has_age_without_test() {
         RelNode node = eval("g.V().has('age', without(17, 20))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[SEARCH(DEFAULT.age, Sarg[(-∞..17), (17..20),"
                     + " (20..+∞)])]], opt=[VERTEX])",
@@ -235,7 +235,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_endingWith_test() {
         RelNode node = eval("g.V().has('name', endingWith('mar'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
                     + " _UTF-8'mar$')]], opt=[VERTEX])",
@@ -246,7 +246,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_not_endingWith_test() {
         RelNode node = eval("g.V().has('name', notEndingWith('mar'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[NOT(POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
                     + " _UTF-8'mar$'))]], opt=[VERTEX])",
@@ -257,7 +257,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_containing_test() {
         RelNode node = eval("g.V().has('name', containing('mar'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
                     + " _UTF-8'.*mar.*')]], opt=[VERTEX])",
@@ -268,7 +268,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_not_containing_test() {
         RelNode node = eval("g.V().has('name', notContaining('mar'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[NOT(POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
                     + " _UTF-8'.*mar.*'))]], opt=[VERTEX])",
@@ -297,7 +297,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_startingWith_test() {
         RelNode node = eval("g.V().has('name', startingWith('mar'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
                     + " _UTF-8'^mar')]], opt=[VERTEX])",
@@ -308,7 +308,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_not_startingWith_test() {
         RelNode node = eval("g.V().has('name', notStartingWith('mar'))");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[NOT(POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
                     + " _UTF-8'^mar'))]], opt=[VERTEX])",
@@ -319,7 +319,7 @@ public class GraphBuilderTest {
     public void g_V_has_name_marko_age_17_has_label_test() {
         RelNode node = eval("g.V().has('name', 'marko').has('age', 17).hasLabel('person')");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[DEFAULT], fusedFilter=[[AND(=(DEFAULT.name, _UTF-8'marko'),"
                         + " =(DEFAULT.age, 17))]], opt=[VERTEX])",
@@ -344,7 +344,7 @@ public class GraphBuilderTest {
     public void g_V_out_test() {
         RelNode node = eval("g.V().out()");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[END])\n"
                     + "    GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
@@ -358,7 +358,7 @@ public class GraphBuilderTest {
     public void g_V_out_label_test() {
         RelNode node = eval("g.V().out('knows')");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[END])\n"
                     + "    GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
@@ -526,7 +526,7 @@ public class GraphBuilderTest {
     public void g_V_order_test() {
         RelNode node = eval("g.V().order()");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  GraphLogicalSort(sort0=[DEFAULT], dir0=[ASC])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                         + " person]}], alias=[DEFAULT], opt=[VERTEX])",
@@ -537,7 +537,7 @@ public class GraphBuilderTest {
     public void g_V_order_by_name_age_test() {
         RelNode node = eval("g.V().order().by('name', desc).by('age', asc)");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSort(sort0=[DEFAULT.name], sort1=[DEFAULT.age], dir0=[DESC],"
                     + " dir1=[ASC])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
@@ -560,7 +560,7 @@ public class GraphBuilderTest {
     public void g_V_limit_test() {
         RelNode node = eval("g.V().limit(10)");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  GraphLogicalSort(fetch=[10])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                         + " person]}], alias=[DEFAULT], opt=[VERTEX])",
@@ -571,7 +571,7 @@ public class GraphBuilderTest {
     public void g_V_order_limit_test() {
         RelNode node = eval("g.V().order().by('name', desc).by('age', asc).limit(10)");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSort(sort0=[DEFAULT.name], sort1=[DEFAULT.age], dir0=[DESC],"
                     + " dir1=[ASC], fetch=[10])\n"
                     + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
@@ -632,7 +632,7 @@ public class GraphBuilderTest {
     public void g_V_dedup_test() {
         RelNode node = eval("g.V().dedup()");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  GraphLogicalDedupBy(dedupByKeys=[[DEFAULT]])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                         + " person]}], alias=[DEFAULT], opt=[VERTEX])",
@@ -643,7 +643,7 @@ public class GraphBuilderTest {
     public void g_V_dedup_by_name_test() {
         RelNode node = eval("g.V().dedup().by('name')");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  GraphLogicalDedupBy(dedupByKeys=[[DEFAULT.name]])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                         + " person]}], alias=[DEFAULT], opt=[VERTEX])",
@@ -708,7 +708,7 @@ public class GraphBuilderTest {
     public void g_V_union_out_in_test() {
         RelNode node = eval("g.V().union(out(), in())");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    GraphLogicalGetV(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], opt=[END])\n"
@@ -728,7 +728,7 @@ public class GraphBuilderTest {
         planner.setRoot(node);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
@@ -750,7 +750,7 @@ public class GraphBuilderTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
@@ -775,7 +775,7 @@ public class GraphBuilderTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
@@ -805,7 +805,7 @@ public class GraphBuilderTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
@@ -835,7 +835,7 @@ public class GraphBuilderTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
                     + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
@@ -869,7 +869,7 @@ public class GraphBuilderTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    LogicalUnion(all=[true])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
@@ -911,7 +911,7 @@ public class GraphBuilderTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    LogicalUnion(all=[true])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
@@ -946,7 +946,7 @@ public class GraphBuilderTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    LogicalUnion(all=[true])\n"
                     + "      GraphPhysicalExpand(tableConfig=[{isAll=true, tables=[created,"
@@ -978,7 +978,7 @@ public class GraphBuilderTest {
     public void g_V_union_identity_test() {
         RelNode node = eval("g.V().union(identity(), identity())");
         Assert.assertEquals(
-                "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  LogicalUnion(all=[true])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                         + " person]}], alias=[DEFAULT], opt=[VERTEX])\n"
@@ -992,7 +992,7 @@ public class GraphBuilderTest {
         RelNode node = eval("g.V().has('name', 'marko').union(identity(), identity())");
         Assert.assertEquals(
                 "root:\n"
-                    + "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
+                    + "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                     + "  LogicalUnion(all=[true])\n"
                     + "    CommonTableScan(table=[[common#318359437]])\n"
                     + "    CommonTableScan(table=[[common#318359437]])\n"
@@ -1017,9 +1017,9 @@ public class GraphBuilderTest {
         node = eval("g.V().select(expr(DEFAULT.name))");
         Assert.assertEquals(
                 "GraphLogicalProject(name=[name], isAppend=[false])\n"
-                    + "  GraphLogicalProject(name=[DEFAULT.name], isAppend=[true])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[DEFAULT], opt=[VERTEX])",
+                        + "  GraphLogicalProject(name=[DEFAULT.name], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[DEFAULT], opt=[VERTEX])",
                 node.explain().trim());
 
         node = eval("g.V().as('a').select(expr(a))");
@@ -1032,9 +1032,9 @@ public class GraphBuilderTest {
         node = eval("g.V().as('a').select(expr(a.name))");
         Assert.assertEquals(
                 "GraphLogicalProject(name=[name], isAppend=[false])\n"
-                    + "  GraphLogicalProject(name=[a.name], isAppend=[true])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])",
+                        + "  GraphLogicalProject(name=[a.name], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
 
         node = eval("g.V().as('a').out().as('b').select(expr((a.age+b.age)/2*3))");
@@ -1052,9 +1052,9 @@ public class GraphBuilderTest {
         node = eval("g.V().as('a').select(expr(POWER(a.age, 3)))");
         Assert.assertEquals(
                 "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
-                    + "  GraphLogicalProject($f0=[POWER(a.age, 3)], isAppend=[true])\n"
-                    + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
-                    + " person]}], alias=[a], opt=[VERTEX])",
+                        + "  GraphLogicalProject($f0=[POWER(a.age, 3)], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
 
         // todo: add bitwise and bitshift functions

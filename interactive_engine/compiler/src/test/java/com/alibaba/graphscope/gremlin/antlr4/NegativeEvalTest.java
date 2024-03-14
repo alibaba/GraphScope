@@ -56,7 +56,7 @@ public class NegativeEvalTest {
             // expected error
             Assert.assertEquals(
                     "syntax error occurs at [line: 1, column: 0]; msg is: [mismatched input 'g111'"
-                        + " expecting 'g']",
+                            + " expecting 'g']",
                     e.getMessage());
             return;
         }
@@ -102,11 +102,11 @@ public class NegativeEvalTest {
     public void g_V_out_id_test() {
         try {
             scriptEngine.eval("g.V().out(1)", context);
-        } catch (ParseCancellationException e) {
+        } catch (Exception e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 10]; msg is: [no viable alternative"
-                            + " at input '1']",
+                    "value type [class java.lang.Integer] mismatch with the expected type [class"
+                            + " java.lang.String]",
                     e.getMessage());
             return;
         }
@@ -121,7 +121,7 @@ public class NegativeEvalTest {
             // expected error
             Assert.assertEquals(
                     "syntax error occurs at [line: 1, column: 18]; msg is: [mismatched input"
-                            + " ''xxx'' expecting IntegerLiteral]",
+                            + " ''xxx'' expecting {HexInteger, DecimalInteger, OctalInteger}]",
                     e.getMessage());
             return;
         }
@@ -147,11 +147,11 @@ public class NegativeEvalTest {
     public void g_V_valueMap_int_test() {
         try {
             scriptEngine.eval("g.V().valueMap(1)", context);
-        } catch (ParseCancellationException e) {
+        } catch (Exception e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 15]; msg is: [no viable alternative"
-                            + " at input '1']",
+                    "value type [class java.lang.Integer] mismatch with the expected type [class"
+                            + " java.lang.String]",
                     e.getMessage());
             return;
         }
@@ -162,26 +162,11 @@ public class NegativeEvalTest {
     public void g_V_select_none_test() {
         try {
             scriptEngine.eval("g.V().select()", context);
-        } catch (ParseCancellationException e) {
+        } catch (Exception e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 13]; msg is: [no viable alternative"
-                            + " at input 'select()']",
-                    e.getMessage());
-            return;
-        }
-        Assert.fail();
-    }
-
-    @Test
-    public void g_V_select_by_keys_test() {
-        try {
-            scriptEngine.eval("g.V().select().by('name', 'id')", context);
-        } catch (ParseCancellationException e) {
-            // expected error
-            Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 13]; msg is: [no viable alternative"
-                            + " at input 'select()']",
+                    "select() is invalid, supported pattern is [select('key')] or [select('key1',"
+                            + " 'key2', ...)] or [select(Column.keys)] or [select(expr)]",
                     e.getMessage());
             return;
         }
@@ -238,11 +223,11 @@ public class NegativeEvalTest {
     public void g_V_str_id_test() {
         try {
             scriptEngine.eval("g.V(\"1\")", context);
-        } catch (ParseCancellationException e) {
+        } catch (Exception e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 4]; msg is: [no viable alternative at"
-                            + " input 'g.V(\"1\"']",
+                    "value type [class java.lang.String] mismatch with the expected type [class"
+                            + " java.lang.Number]",
                     e.getMessage());
             return;
         }
@@ -253,11 +238,11 @@ public class NegativeEvalTest {
     public void g_E_str_id_test() {
         try {
             scriptEngine.eval("g.E(\"1\")", context);
-        } catch (ParseCancellationException e) {
+        } catch (Exception e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 4]; msg is: [no viable alternative at"
-                            + " input 'g.E(\"1\"']",
+                    "value type [class java.lang.String] mismatch with the expected type [class"
+                            + " java.lang.Number]",
                     e.getMessage());
             return;
         }
@@ -268,11 +253,11 @@ public class NegativeEvalTest {
     public void g_V_hasId_str_id_test() {
         try {
             scriptEngine.eval("g.V().hasId(\"1\")", context);
-        } catch (ParseCancellationException e) {
+        } catch (Exception e) {
             // expected error
             Assert.assertEquals(
-                    "syntax error occurs at [line: 1, column: 12]; msg is: [mismatched input"
-                            + " '\"1\"' expecting {IntegerLiteral, '['}]",
+                    "value type [class java.lang.String] mismatch with the expected type [class"
+                            + " java.lang.Number]",
                     e.getMessage());
             return;
         }

@@ -312,6 +312,11 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
             graphTraversal.select(column);
         } else if (ctx.traversalMethod_expr() != null) {
             visitExpr(ctx.traversalMethod_expr(), ExprStep.Type.PROJECTION);
+        } else {
+            throw new InvalidGremlinScriptException(
+                    ctx.getText()
+                            + " is invalid, supported pattern is [select('key')] or [select('key1',"
+                            + " 'key2', ...)] or [select(Column.keys)] or [select(expr)]");
         }
         // set by traversal
         if (ctx.traversalMethod_selectby_list() != null) {

@@ -118,7 +118,7 @@ public class OrderLimitTest {
                                                 builder.literal(1))))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalProject(~DEFAULT=[DEFAULT], isAppend=[false])\n"
+                "GraphLogicalProject($f0=[DEFAULT], isAppend=[false])\n"
                         + "  GraphLogicalSort(sort0=[$f0], dir0=[DESC])\n"
                         + "    GraphLogicalProject($f0=[+(DEFAULT.age, 1)], isAppend=[true])\n"
                         + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"

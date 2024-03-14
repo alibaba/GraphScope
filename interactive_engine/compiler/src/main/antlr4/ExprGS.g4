@@ -335,6 +335,7 @@ oC_SymbolicName
                 | EscapedSymbolicName
                 | HexLetter
                 | COUNT
+                | 'd' | 'D' | 'f' | 'F' | 'l' | 'L'
                 ;
 
 UnescapedSymbolicName

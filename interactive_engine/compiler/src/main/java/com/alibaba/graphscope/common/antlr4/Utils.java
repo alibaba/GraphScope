@@ -47,12 +47,6 @@ public class Utils {
                     operators.add(GraphStdOperatorTable.LESS_THAN_OR_EQUAL);
                 } else if (tree.getText().equals(">=")) {
                     operators.add(GraphStdOperatorTable.GREATER_THAN_OR_EQUAL);
-                } else if (tree.getText().equals("&")) {
-                    operators.add(GraphStdOperatorTable.BIT_AND);
-                } else if (tree.getText().equals("|")) {
-                    operators.add(GraphStdOperatorTable.BIT_OR);
-                } else if (tree.getText().equals("^")) {
-                    operators.add(GraphStdOperatorTable.BIT_XOR);
                 } else {
                     throw new UnsupportedOperationException(
                             "operator " + tree.getText() + " is unsupported yet");

@@ -1,6 +1,7 @@
 package com.alibaba.graphscope.gremlin.antlr4x.visitor;
 
 import com.alibaba.graphscope.grammar.GremlinGSParser;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -31,7 +32,15 @@ public class LiteralList {
         } else if (ObjectUtils.isNotEmpty(exprCtxList)) {
             for (GremlinGSParser.OC_ExpressionContext exprCtx : exprCtxList) {
                 if (exprCtx != null) {
-                    literals.add(clazz.cast(LiteralVisitor.INSTANCE.visit(exprCtx)));
+                    Object value = LiteralVisitor.INSTANCE.visit(exprCtx);
+                    Preconditions.checkArgument(
+                            clazz.isInstance(value),
+                            "value type ["
+                                    + value.getClass()
+                                    + "] mismatch with the expected type ["
+                                    + clazz
+                                    + "]");
+                    literals.add(clazz.cast(value));
                 }
             }
         }

@@ -473,9 +473,10 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
             }
             expr = exprRes.getExpr().accept(new RexTmpVariableConverter(true, builder));
         } else {
-            throw new UnsupportedEvalException(
-                    GremlinGSParser.TraversalMethod_selectbyContext.class,
-                    ctx.getText() + " is unsupported yet");
+            throw new InvalidGremlinScriptException(
+                    ctx.getText()
+                            + " is invalid, supported pattern is [select('key')] or [select('key1',"
+                            + " 'key2', ...)] or [select(Column.keys)] or [select(expr)]");
         }
         return builder.project(ImmutableList.of(expr), ImmutableList.of(), true);
     }
