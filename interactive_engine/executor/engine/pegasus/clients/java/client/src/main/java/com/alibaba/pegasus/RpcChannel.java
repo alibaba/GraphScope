@@ -17,6 +17,8 @@ package com.alibaba.pegasus;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,15 @@ public class RpcChannel {
 
     public RpcChannel(String host, int port) {
         this.channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+    }
+
+    public RpcChannel(String host, int port, OpenTelemetry openTelemetry) {
+        GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(openTelemetry);
+        this.channel =
+                ManagedChannelBuilder.forAddress(host, port)
+                        .usePlaintext()
+                        .intercept(grpcTelemetry.newClientInterceptor())
+                        .build();
     }
 
     public ManagedChannel getChannel() {

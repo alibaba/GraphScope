@@ -48,9 +48,9 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
 
   static constexpr size_t num_props = sizeof...(T);
   GeneralEdgeSetBuilder(size_t edge_size, const grape::Bitset& bitset,
-                        std::vector<std::string> prop_names,
-                        LabelT edge_label, std::array<LabelT, 2> src_labels,
-                        LabelT dst_label, Direction dir)
+                        std::vector<std::string> prop_names, LabelT edge_label,
+                        std::array<LabelT, 2> src_labels, LabelT dst_label,
+                        Direction dir)
       : bitset_(bitset),
         prop_names_(prop_names),
         edge_label_(edge_label),
