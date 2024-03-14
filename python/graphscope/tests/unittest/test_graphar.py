@@ -169,7 +169,7 @@ def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
     )
     assert r == {
         "type": "graphar",
-        "URI": "graphar+file://${}ldbc_sample.graph.yaml".format(output_dir),
+        "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
     }
     g = Graph.load_from(r["URI"])
     print(g.schema)
