@@ -115,9 +115,18 @@ jobs:
       env: 
         GS_TEST_DIR: ${{ github.workspace }}/gstest
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
-      run:
+        TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        mkdir -p ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/
+        cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_admin_test.sh /tmp/temp_workspace ./engine_config_test.yaml ${GS_TEST_DIR}
+        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ./engine_config_test.yaml
+        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./engine_config_test.yaml ${GS_TEST_DIR}
+        sed -i 's/default_graph: modern_graph/default_graph: ldbc/g' ./engine_config_test.yaml
 
     - name: Sample Query test
       env:
