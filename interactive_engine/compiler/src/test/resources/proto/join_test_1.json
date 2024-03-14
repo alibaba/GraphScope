@@ -6,58 +6,26 @@
           "tag": {
             "id": 0
           },
-          "nodeType": {
-            "graphType": {
-              "graphDataType": [{
-                "label": {
-                },
-                "props": [{
-                  "propId": {
-                    "name": "id"
-                  },
-                  "type": "INT64"
-                }, {
-                  "propId": {
-                    "name": "name"
-                  },
-                  "type": "STRING"
-                }, {
-                  "propId": {
-                    "name": "age"
-                  },
-                  "type": "INT32"
-                }]
-              }]
+          "property": {
+            "key": {
+              "name": "name"
             }
+          },
+          "nodeType": {
+            "dataType": "STRING"
           }
         }],
         "rightKeys": [{
           "tag": {
-            "id": 0
+            "id": 1
+          },
+          "property": {
+            "key": {
+              "name": "name"
+            }
           },
           "nodeType": {
-            "graphType": {
-              "graphDataType": [{
-                "label": {
-                },
-                "props": [{
-                  "propId": {
-                    "name": "id"
-                  },
-                  "type": "INT64"
-                }, {
-                  "propId": {
-                    "name": "name"
-                  },
-                  "type": "STRING"
-                }, {
-                  "propId": {
-                    "name": "age"
-                  },
-                  "type": "INT32"
-                }]
-              }]
-            }
+            "dataType": "STRING"
           }
         }],
         "leftPlan": {
@@ -105,7 +73,7 @@
           "plan": [{
             "opr": {
               "scan": {
-                "alias": 0,
+                "alias": 1,
                 "params": {
                   "tables": [{
                     "id": 0
@@ -138,7 +106,8 @@
                     }]
                   }]
                 }
-              }
+              },
+              "alias": 1
             }]
           }]
         }

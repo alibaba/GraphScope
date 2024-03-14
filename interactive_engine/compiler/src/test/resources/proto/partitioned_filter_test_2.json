@@ -1,0 +1,168 @@
+{
+  "plan": [{
+    "opr": {
+      "scan": {
+        "alias": 0,
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "sampleRatio": 1.0
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "graphDataType": [{
+            "label": {
+            },
+            "props": [{
+              "propId": {
+                "name": "id"
+              },
+              "type": "INT64"
+            }, {
+              "propId": {
+                "name": "name"
+              },
+              "type": "STRING"
+            }, {
+              "propId": {
+                "name": "age"
+              },
+              "type": "INT32"
+            }]
+          }]
+        }
+      }
+    }]
+  }, {
+    "opr": {
+      "repartition": {
+        "toAnother": {
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "edge": {
+        "params": {
+          "tables": [{
+            "id": 0
+          }],
+          "columns": [{
+            "name": "weight"
+          }],
+          "sampleRatio": 1.0
+        },
+        "alias": 1,
+        "expandOpt": "EDGE"
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "elementOpt": "EDGE",
+          "graphDataType": [{
+            "label": {
+              "srcLabel": 0,
+              "dstLabel": 0
+            },
+            "props": [{
+              "propId": {
+                "name": "weight"
+              },
+              "type": "DOUBLE"
+            }]
+          }]
+        }
+      },
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "repartition": {
+        "toAnother": {
+          "shuffleKey": 0
+        }
+      }
+    }
+  }, {
+    "opr": {
+      "select": {
+        "predicate": {
+          "operators": [{
+            "var": {
+              "tag": {
+                "id": 0
+              },
+              "property": {
+                "key": {
+                  "name": "age"
+                }
+              },
+              "nodeType": {
+                "dataType": "INT32"
+              }
+            },
+            "nodeType": {
+              "dataType": "INT32"
+            }
+          }, {
+            "logical": "GT",
+            "nodeType": {
+              "dataType": "BOOLEAN"
+            }
+          }, {
+            "var": {
+              "tag": {
+                "id": 1
+              },
+              "property": {
+                "key": {
+                  "name": "weight"
+                }
+              },
+              "nodeType": {
+                "dataType": "DOUBLE"
+              }
+            },
+            "nodeType": {
+              "dataType": "DOUBLE"
+            }
+          }]
+        }
+      }
+    },
+    "metaData": [{
+      "type": {
+        "graphType": {
+          "elementOpt": "EDGE",
+          "graphDataType": [{
+            "label": {
+              "srcLabel": 0,
+              "dstLabel": 0
+            },
+            "props": [{
+              "propId": {
+                "name": "weight"
+              },
+              "type": "DOUBLE"
+            }]
+          }]
+        }
+      },
+      "alias": 1
+    }]
+  }, {
+    "opr": {
+      "sink": {
+        "sinkTarget": {
+          "sinkDefault": {
+          }
+        }
+      }
+    }
+  }]
+}

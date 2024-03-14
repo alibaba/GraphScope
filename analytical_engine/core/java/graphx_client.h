@@ -70,16 +70,16 @@ class GraphXClient
     LOG(INFO) << "Finish built edge table";
 
     BOOST_LEAF_CHECK(this->AddVertexTable("v0", vertex_table));
-    LOG(INFO) << "Fnish adding vertices";
+    LOG(INFO) << "Finish adding vertices";
 
     BOOST_LEAF_CHECK(this->ConstructVertices());
-    LOG(INFO) << "Fnish Construct vertices";
+    LOG(INFO) << "Finish Construct vertices";
 
     BOOST_LEAF_CHECK(this->AddEdgeTable("v0", "v0", "e0", edge_table));
-    LOG(INFO) << "Fnish adding edges";
+    LOG(INFO) << "Finish adding edges";
 
     BOOST_LEAF_CHECK(this->ConstructEdges());
-    LOG(INFO) << "Fnish Construct edges";
+    LOG(INFO) << "Finish Construct edges";
 
     return this->ConstructFragment();
   }
