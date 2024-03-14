@@ -63,11 +63,11 @@ bool isTerminalValue(const boost::property_tree::ptree& pt) {
  * selector = {
  *   "vertices": {
  *          "person": ["id", "firstName", "secondName"],
- *          "comment": None,  # select all properties
- *    }
+ *          "comment": None  # select all properties
+ *    },
  *   "edges": {
  *          "knows": ["CreationDate"],
- *          "replyOf": None,
+ *          "replyOf": None
  *   }
  * }
  *
