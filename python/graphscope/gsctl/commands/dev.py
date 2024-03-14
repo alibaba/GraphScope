@@ -77,9 +77,7 @@ def insight(app, graphscope_repo):
     if graphscope_repo is None:
         graphscope_repo = default_graphscope_repo_path
     insight_build_dir = os.path.join(graphscope_repo, "k8s")
-    if not os.path.exists(insight_build_dir) or not os.path.isdir(
-        insight_build_dir
-    ):
+    if not os.path.exists(insight_build_dir) or not os.path.isdir(insight_build_dir):
         click.secho(
             f"No such file or directory {insight_build_dir}, try --graphscope-repo param.",
             fg="red",
