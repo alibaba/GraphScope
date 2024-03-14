@@ -24,7 +24,35 @@
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
 
+#include <yaml-cpp/yaml.h>
+
 namespace server {
+
+/* Stored service configuration, read from engine_config.yaml
+ */
+struct ServiceConfig {
+  static constexpr const uint32_t DEFAULT_SHARD_NUM = 1;
+  static constexpr const uint32_t DEFAULT_QUERY_PORT = 10000;
+  static constexpr const uint32_t DEFAULT_ADMIN_PORT = 7777;
+  static constexpr const uint32_t DEFAULT_BOLT_PORT = 7687;
+
+  // Those has default value
+  uint32_t bolt_port;
+  uint32_t admin_port;
+  uint32_t query_port;
+  uint32_t shard_num;
+  bool dpdk_mode;
+  bool enable_thread_resource_pool;
+  unsigned external_thread_num;
+  bool start_admin_service;  // Whether to start the admin service or only start
+                             // the query service.
+
+  // Those has not default value
+  std::string default_graph;
+  std::string engine_config_path;  // used for codegen.
+
+  ServiceConfig();
+};
 
 class HQPSService {
  public:
@@ -33,13 +61,9 @@ class HQPSService {
   ~HQPSService();
 
   // only start the query service.
-  void init(uint32_t num_shards, uint16_t query_port, bool dpdk_mode,
-            bool enable_thread_resource_pool, unsigned external_thread_num);
+  void init(const ServiceConfig& config);
 
-  // start both admin and query service.
-  void init(uint32_t num_shards, uint16_t admin_port, uint16_t query_port,
-            bool dpdk_mode, bool enable_thread_resource_pool,
-            unsigned external_thread_num);
+  const ServiceConfig& get_service_config() const;
 
   bool is_initialized() const;
 
@@ -70,8 +94,75 @@ class HQPSService {
   std::unique_ptr<hqps_http_handler> query_hdl_;
   std::atomic<bool> running_{false};
   std::atomic<bool> initialized_{false};
+
+  ServiceConfig service_config_;
 };
 
 }  // namespace server
+
+namespace YAML {
+
+template <>
+struct convert<server::ServiceConfig> {
+  // The encode function is not defined, since we don't need to write the config
+  static bool decode(const Node& config,
+                     server::ServiceConfig& service_config) {
+    if (!config.IsMap()) {
+      LOG(ERROR) << "ServiceConfig should be a map";
+      return false;
+    }
+    auto engine_node = config["compute_engine"];
+    if (engine_node) {
+      auto engine_type = engine_node["type"];
+      if (engine_type) {
+        auto engine_type_str = engine_type.as<std::string>();
+        if (engine_type_str != "hiactor" && engine_type_str != "Hiactor") {
+          LOG(ERROR) << "compute_engine type should be hiactor, found: "
+                     << engine_type_str;
+          return false;
+        }
+      }
+      auto shard_num_node = engine_node["thread_num_per_worker"];
+      if (shard_num_node) {
+        service_config.shard_num = shard_num_node.as<uint32_t>();
+      } else {
+        LOG(INFO) << "shard_num not found, use default value "
+                  << service_config.shard_num;
+      }
+    } else {
+      LOG(ERROR) << "Fail to find compute_engine configuration";
+      return false;
+    }
+    auto http_service_node = config["http_service"];
+    if (http_service_node) {
+      auto query_port_node = http_service_node["query_port"];
+      if (query_port_node) {
+        service_config.query_port = query_port_node.as<uint32_t>();
+      } else {
+        LOG(INFO) << "query_port not found, use default value "
+                  << service_config.query_port;
+      }
+      auto admin_port_node = http_service_node["admin_port"];
+      if (admin_port_node) {
+        service_config.admin_port = admin_port_node.as<uint32_t>();
+      } else {
+        LOG(INFO) << "admin_port not found, use default value "
+                  << service_config.admin_port;
+      }
+    } else {
+      LOG(ERROR) << "Fail to find http_service configuration";
+      return false;
+    }
+    auto default_graph_node = config["default_graph"];
+    std::string default_graph;
+    if (default_graph_node) {
+      service_config.default_graph = default_graph_node.as<std::string>();
+    } else {
+      LOG(WARNING) << "Fail to find default_graph configuration";
+    }
+    return true;
+  }
+};
+}  // namespace YAML
 
 #endif  // ENGINES_HTTP_SERVER_HQPS_SERVICE_H_

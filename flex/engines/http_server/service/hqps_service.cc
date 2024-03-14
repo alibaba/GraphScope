@@ -16,6 +16,16 @@
 #include "flex/engines/http_server/options.h"
 namespace server {
 
+ServiceConfig::ServiceConfig()
+    : bolt_port(DEFAULT_BOLT_PORT),
+      admin_port(DEFAULT_ADMIN_PORT),
+      query_port(DEFAULT_QUERY_PORT),
+      shard_num(DEFAULT_SHARD_NUM),
+      dpdk_mode(false),
+      enable_thread_resource_pool(true),
+      external_thread_num(2),
+      start_admin_service(true) {}
+
 const std::string HQPSService::DEFAULT_GRAPH_NAME = "modern_graph";
 
 HQPSService& HQPSService::get() {
@@ -23,33 +33,20 @@ HQPSService& HQPSService::get() {
   return instance;
 }
 
-void HQPSService::init(uint32_t num_shards, uint16_t query_port, bool dpdk_mode,
-                       bool enable_thread_resource_pool,
-                       unsigned external_thread_num) {
+void HQPSService::init(const ServiceConfig& config) {
   if (initialized_.load(std::memory_order_relaxed)) {
     std::cerr << "High QPS service has been already initialized!" << std::endl;
     return;
   }
   actor_sys_ = std::make_unique<actor_system>(
-      num_shards, dpdk_mode, enable_thread_resource_pool, external_thread_num);
-  query_hdl_ = std::make_unique<hqps_http_handler>(query_port);
-  initialized_.store(true);
-  gs::init_cpu_usage_watch();
-}
-
-void HQPSService::init(uint32_t num_shards, uint16_t admin_port,
-                       uint16_t query_port, bool dpdk_mode,
-                       bool enable_thread_resource_pool,
-                       unsigned external_thread_num) {
-  if (initialized_.load(std::memory_order_relaxed)) {
-    std::cerr << "High QPS service has been already initialized!" << std::endl;
-    return;
+      config.shard_num, config.dpdk_mode, config.enable_thread_resource_pool,
+      config.external_thread_num);
+  query_hdl_ = std::make_unique<hqps_http_handler>(config.query_port);
+  if (config.start_admin_service) {
+    admin_hdl_ = std::make_unique<admin_http_handler>(config.admin_port);
   }
-  actor_sys_ = std::make_unique<actor_system>(
-      num_shards, dpdk_mode, enable_thread_resource_pool, external_thread_num);
-  query_hdl_ = std::make_unique<hqps_http_handler>(query_port);
-  admin_hdl_ = std::make_unique<admin_http_handler>(admin_port);
   initialized_.store(true);
+  service_config_ = config;
   gs::init_cpu_usage_watch();
 }
 
@@ -57,6 +54,10 @@ HQPSService::~HQPSService() {
   if (actor_sys_) {
     actor_sys_->terminate();
   }
+}
+
+const ServiceConfig& HQPSService::get_service_config() const {
+  return service_config_;
 }
 
 bool HQPSService::is_initialized() const {

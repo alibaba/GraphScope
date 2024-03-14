@@ -221,7 +221,10 @@ seastar::future<query_result> admin_actor::create_procedure(
     create_procedure_query_param&& query_param) {
   auto& graph_name = query_param.content.first;
   auto& parameter = query_param.content.second;
-  return server::WorkDirManipulator::CreateProcedure(graph_name, parameter)
+  auto& hqps_service = HQPSService::get();
+  return server::WorkDirManipulator::CreateProcedure(
+             graph_name, parameter,
+             hqps_service.get_service_config().engine_config_path)
       .then_wrapped([](auto&& f) {
         try {
           auto res = f.get();
