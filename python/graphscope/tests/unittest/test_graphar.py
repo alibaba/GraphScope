@@ -80,9 +80,7 @@ def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
     }
     g = Graph.load_from(r["URI"])
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
-    assert (
-        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
-    )
+    assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 3
@@ -129,9 +127,7 @@ def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
     }
     g = Graph.load_from(r["URI"])
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
-    assert (
-        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
-    )
+    assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 3
@@ -178,9 +174,7 @@ def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
     g = Graph.load_from(r["URI"])
     print(g.schema)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
-    assert (
-        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
-    )
+    assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 3
@@ -216,9 +210,7 @@ def test_load_from_graphar_with_selector(graphscope_session):
     }
     g = Graph.load_from(graph_uri, selector=selector)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
-    assert (
-        "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
-    )
+    assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
     assert (
         g.schema.vertex_properties_num("person") == 8
