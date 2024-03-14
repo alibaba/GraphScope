@@ -14,6 +14,7 @@
  */
 
 #include "flex/storages/rt_mutable_graph/loader/csv_fragment_loader.h"
+#include "flex/engines/hqps_db/core/utils/hqps_utils.h"
 
 namespace gs {
 

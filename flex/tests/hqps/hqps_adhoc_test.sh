@@ -219,5 +219,4 @@ else
   exit 1
 fi
 
-
 kill_service

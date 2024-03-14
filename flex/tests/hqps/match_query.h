@@ -813,6 +813,7 @@ class MatchQuery12 : public AppBase {
             gs::PropertySelector<grape::EmptyType>(""))});
     auto ctx2 = Engine::Limit(std::move(ctx1), 0, 5);
     auto res = Engine::Sink(graph, ctx2, std::array<int32_t, 1>{0});
+    LOG(INFO) << "res: " << res.DebugString();
     return res;
   }
   // Wrapper query function for query class
@@ -877,7 +878,6 @@ class MatchQuery13 : public AppBase {
         graph, std::move(ctx2),
         std::tuple{gs::make_mapper_with_expr<0>(
             MatchQuery13Expr1(), gs::PropertySelector<Date>("None"))});
-
     return Engine::Sink(graph, ctx3, std::array<int32_t, 1>{2});
   }
   // Wrapper query function for query class

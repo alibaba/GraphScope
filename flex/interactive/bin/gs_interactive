@@ -1457,10 +1457,7 @@ function do_start(){
   info "Successfully start compiler"
   # get cypher port from engine config file
   eval $(parse_yaml "${real_engine_config_file}")
-  #bolt_connector_disabled=$(parse_yaml "${real_engine_config_file}" | grep "compiler_endpoint_bolt_connector_disabled" | awk -F "=" '{print $2}')
-  #bolt_connector_port=$(parse_yaml "${real_engine_config_file}" | grep "compiler_endpoint_bolt_connector_port" | awk -F "=" '{print $2}')
-  #gremlin_connector_disabled=$(parse_yaml "${real_engine_config_file}" | grep "compiler_endpoint_gremlin_connector_disabled" | awk -F "=" '{print $2}')
-  #gremlin_connector_port=$(parse_yaml "${real_engine_config_file}" | grep "compiler_endpoint_gremlin_connector_port" | awk -F "=" '{print $2}')
+
   if [ "${compiler_endpoint_bolt_connector_disabled}" = "false" ]; then
     emph "Cypher port is open on :${compiler_endpoint_bolt_connector_port}"
   else
