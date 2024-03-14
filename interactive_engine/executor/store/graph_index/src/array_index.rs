@@ -162,7 +162,6 @@ impl ArrayIndex for UInt64ArrayIndex {
     fn set_batch(&mut self, index: &Vec<usize>, data: ArrayDataRef) {
         match data {
             ArrayDataRef::Uint64Array(data) => {
-                assert_eq!(index.len(), self.data.len());
                 assert_eq!(index.len(), data.len());
                 for i in 0..index.len() {
                     self.data[index[i]] = data[i];

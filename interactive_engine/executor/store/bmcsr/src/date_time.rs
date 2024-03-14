@@ -14,6 +14,7 @@
 //! limitations under the License.
 
 use std::fmt::{Debug, Display, Formatter};
+use std::cmp::{Ordering, PartialOrd, Ord};
 
 use chrono::{DateTime as CDateTime, TimeZone};
 use chrono::{Datelike, Duration, Timelike, Utc};
@@ -42,7 +43,7 @@ impl DateTime {
                 .unwrap(),
             Utc,
         )
-        .timestamp_millis();
+            .timestamp_millis();
         Self { inner: date_dt }
     }
 
@@ -127,6 +128,18 @@ impl PartialEq for DateTime {
 }
 
 impl Eq for DateTime {}
+
+impl PartialOrd for DateTime {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for DateTime {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.inner.cmp(&other.inner)
+    }
+}
 
 impl Display for DateTime {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {

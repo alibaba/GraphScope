@@ -195,6 +195,7 @@ impl ArrayData {
     pub fn as_ref(&self) -> ArrayDataRef {
         match self {
             ArrayData::Int32Array(data) => ArrayDataRef::Int32Array(&data),
+            ArrayData::Uint64Array(data) => ArrayDataRef::Uint64Array(&data),
             _ => panic!("Unknown type"),
         }
     }
