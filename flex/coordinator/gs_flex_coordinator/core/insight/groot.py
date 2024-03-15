@@ -170,6 +170,16 @@ class GrootClient(object):
             self._data_source["edges_datasource"][edge_label] = edge_data_source
         self._pickle_datasource_impl()
 
+    def get_service_status(self) -> dict:
+        return {
+            "status": "running",
+            "graph_name": self._graph.name,
+            "sdk_endpoints": {
+                "gremlin": self._graph.gremlin_interface["gremlin_endpoint"],
+                "grpc": self._graph.gremlin_interface["grpc_endpoint"],
+            },
+        }
+
     def get_datasource(self, graph_name: str) -> dict:
         rlts = {"vertices_datasource": [], "edges_datasource": []}
         for _, v in self._data_source["vertices_datasource"].items():

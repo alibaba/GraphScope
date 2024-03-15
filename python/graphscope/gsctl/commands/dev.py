@@ -83,7 +83,7 @@ def insight(app, graphscope_repo):
             fg="red",
         )
         return
-    cmd = ["make", "graphscope-store"]
+    cmd = ["make", "graphscope-store", "ENABLE_COORDINATOR=true"]
     run_shell_cmd(cmd, os.path.join(graphscope_repo, insight_build_dir))
 
 

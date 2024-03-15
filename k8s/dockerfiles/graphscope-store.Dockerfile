@@ -3,6 +3,7 @@ ARG BUILDER_VERSION=latest
 FROM $REGISTRY/graphscope/graphscope-dev:$BUILDER_VERSION as builder
 
 ARG CI=false
+ARG ENABLE_COORDINATOR=false
 
 ARG profile=debug
 ENV profile=$profile
@@ -20,12 +21,16 @@ RUN cd /home/graphscope/graphscope \
     && tar xzf /home/graphscope/graphscope/interactive_engine/assembly/target/groot.tar.gz -C /home/graphscope/
 
 # build coordinator
-RUN cd /home/graphscope/graphscope/flex/coordinator \
-    && python3 setup.py bdist_wheel \
-    && mkdir -p /home/graphscope/groot/wheel \
-    && cp dist/*.whl /home/graphscope/groot/wheel
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      cd /home/graphscope/graphscope/flex/coordinator \
+      && python3 setup.py bdist_wheel \
+      && mkdir -p /home/graphscope/groot/wheel \
+      && cp dist/*.whl /home/graphscope/groot/wheel; \
+    fi
 
 FROM ubuntu:22.04
+
+ARG ENABLE_COORDINATOR=false
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -45,8 +50,10 @@ RUN useradd -m graphscope -u 1001 \
 RUN sudo chmod a+wrx /tmp
 
 # install coordinator
-RUN pip3 install --upgrade pip \
-    && pip3 install /usr/local/groot/wheel/*.whl
+RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
+      pip3 install --upgrade pip \
+      && pip3 install /usr/local/groot/wheel/*.whl; \
+    fi
 
 USER graphscope
 WORKDIR /home/graphscope

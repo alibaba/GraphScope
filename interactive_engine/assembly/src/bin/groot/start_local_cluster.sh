@@ -14,7 +14,7 @@ sed "s@LOG4RS_CONFIG@${GROOT_DIR}/conf/log4rs.yml@" ${GROOT_DIR}/conf/config.tem
 GROOT_CONF_FILE=${CONFIG_FILE} ${GROOT_DIR}/bin/store_ctl.sh start &
 
 # coordinator
-python3 -m gs_flex_coordinator
+python3 -m gs_flex_coordinator || true
 
 # Start container with port mapping
 # docker run -p 12312:12312 -p 55556:55556 -p 8080:8080 graphscope/graphscope-store:latest /usr/local/groot/bin/start_local_cluster.sh

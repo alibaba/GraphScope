@@ -25,14 +25,26 @@ from typing import List, Union
 
 import hqps_client
 import requests
-from hqps_client import (Graph, JobResponse, JobStatus, ModelSchema, Procedure,
-                         SchemaMapping, Service)
+from hqps_client import (
+    Graph,
+    JobResponse,
+    JobStatus,
+    ModelSchema,
+    Procedure,
+    SchemaMapping,
+    Service,
+)
 
-from gs_flex_coordinator.core.config import (CLUSTER_TYPE,
-                                             HQPS_ADMIN_SERVICE_PORT,
-                                             WORKSPACE)
-from gs_flex_coordinator.core.utils import (encode_datetime, get_internal_ip,
-                                            get_public_ip)
+from gs_flex_coordinator.core.config import (
+    CLUSTER_TYPE,
+    HQPS_ADMIN_SERVICE_PORT,
+    WORKSPACE,
+)
+from gs_flex_coordinator.core.utils import (
+    encode_datetime,
+    get_internal_ip,
+    get_public_ip,
+)
 from gs_flex_coordinator.models import StartServiceRequest
 
 
@@ -174,8 +186,7 @@ class HQPSClient(object):
                     "status": response.status,
                     "graph_name": response.graph_name,
                     "sdk_endpoints": {
-                        "cypher": f"neo4j://{host}:7688",
-                        # "cypher": f"neo4j://{host}:{response.bolt_port}",
+                        "cypher": f"neo4j://{host}:{response.bolt_port}",
                         "hqps": f"http://{host}:{response.hqps_port}",
                     },
                 }
