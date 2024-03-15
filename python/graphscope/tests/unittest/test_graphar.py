@@ -24,7 +24,11 @@ from graphscope import pagerank
 from graphscope.framework.graph import Graph
 
 graphar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
-graphar_temp_dir = os.path.expandvars("${TMPDIR}") if os.path.expandvars("${TMPDIR}").endswith(os.sep) else os.path.expandvars("${TMPDIR}") + os.sep
+graphar_temp_dir = (
+    os.path.expandvars("${TMPDIR}")
+    if os.path.expandvars("${TMPDIR}").endswith(os.sep)
+    else os.path.expandvars("${TMPDIR}") + os.sep
+)
 
 
 def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session):
