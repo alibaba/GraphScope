@@ -427,10 +427,4 @@ public class MatchTest {
                         + "]}])",
                 node.explain().trim());
     }
-
-    @Test
-    public void tmp_test() {
-        RelNode node = Utils.eval("Match (a:person) Return a.age + 1").build();
-        System.out.println(node.explain());
-    }
 }
