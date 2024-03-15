@@ -5,7 +5,7 @@ cd ${base_dir}/../executor/ir/target/release &&
 RUST_LOG=info CSR_PATH=/tmp/gstest/modern_graph_csr_bin PARTITION_ID=0 ./start_rpc_server_csr --config ${base_dir}/../executor/ir/integrated/config &
 sleep 5s
 # start compiler service
-cd ${base_dir} && make run graph.store=csr &
+cd ${base_dir} && make run graph.store=rust-mcsr &
 sleep 5s
 # run gremlin standard tests
 cd ${base_dir} && make gremlin_test

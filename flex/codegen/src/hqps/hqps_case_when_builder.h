@@ -113,7 +113,8 @@ class CaseWhenBuilder : public ExprBuilder {
     auto ret_type_str = common_data_type_pb_2_str(res_data_type_);
     formater % class_name_ % ret_type_str % constructor_param_str %
         field_init_code_str % func_call_template_typename_str % "auto" %
-        func_call_params_str % func_call_impl_str % private_filed_str;
+        func_call_params_str % func_call_impl_str % private_filed_str %
+        get_filter_null_str();
 
     std::string str = formater.str();
 

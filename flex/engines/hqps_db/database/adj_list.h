@@ -33,16 +33,24 @@ template <typename LabelT>
 class EdgeIter {
  public:
   using label_id_t = LabelT;
-  EdgeIter() : label_triplet_(), ptr1_(nullptr), prop_names_(nullptr) {}
+  EdgeIter()
+      : dir_(Direction::Out),
+        label_triplet_(),
+        ptr1_(nullptr),
+        prop_names_(nullptr) {}
 
   EdgeIter(const EdgeIter& other)
-      : label_triplet_(other.label_triplet_),
+      : dir_(other.dir_),
+        label_triplet_(other.label_triplet_),
         ptr1_(other.ptr1_),
         prop_names_(other.prop_names_) {}
-  EdgeIter(const std::array<LabelT, 3>& label_triplet,
+  EdgeIter(const Direction& dir, const std::array<LabelT, 3>& label_triplet,
            std::shared_ptr<CsrConstEdgeIterBase> ptr,
            const std::vector<std::string>* prop_names)
-      : label_triplet_(label_triplet), ptr1_(ptr), prop_names_(prop_names) {}
+      : dir_(dir),
+        label_triplet_(label_triplet),
+        ptr1_(ptr),
+        prop_names_(prop_names) {}
 
   inline void Next() const { ptr1_->next(); }
   inline vid_t GetDstId() const { return ptr1_->get_neighbor(); }
@@ -51,12 +59,15 @@ class EdgeIter {
 
   inline label_id_t GetSrcLabel() const { return label_triplet_[0]; }
 
+  inline Direction GetDirection() const { return dir_; }
+
   inline Any GetData() const { return ptr1_->get_data(); }
   inline bool IsValid() const { return ptr1_ && ptr1_->is_valid(); }
 
   const std::vector<std::string>& GetPropNames() const { return *prop_names_; }
 
   EdgeIter<LabelT>& operator=(const EdgeIter<LabelT>& rhs) {
+    this->dir_ = rhs.dir_;
     this->ptr1_ = rhs.ptr1_;
     this->label_triplet_ = rhs.label_triplet_;
     this->prop_names_ = rhs.prop_names_;
@@ -71,6 +82,7 @@ class EdgeIter {
   }
 
  private:
+  Direction dir_;
   std::array<LabelT, 3> label_triplet_;
   std::shared_ptr<CsrConstEdgeIterBase> ptr1_;
   const std::vector<std::string>* prop_names_;
@@ -84,20 +96,25 @@ class SubGraph {
   using iterator = EdgeIter<LabelT>;
   using label_id_t = LabelT;
   SubGraph(const CsrBase* first, const std::array<label_id_t, 3>& label_triplet,
-           const std::vector<std::string>& prop_names)
-      : first_(first), label_triplet_(label_triplet), prop_names_(prop_names) {}
+           const std::vector<std::string>& prop_names, Direction dir)
+      : first_(first),
+        label_triplet_(label_triplet),
+        prop_names_(prop_names),
+        dir_(dir) {}
 
   inline iterator get_edges(VID_T vid) const {
     if (first_) {
-      return iterator(label_triplet_, first_->edge_iter(vid), &prop_names_);
+      return iterator(dir_, label_triplet_, first_->edge_iter(vid),
+                      &prop_names_);
     }
-    return iterator(label_triplet_, nullptr, &prop_names_);
+    return iterator(dir_, label_triplet_, nullptr, &prop_names_);
   }
 
   // here the src, dst, refer the src, dst of the csr, not the direction.
   label_id_t GetSrcLabel() const { return label_triplet_[0]; }
   label_id_t GetEdgeLabel() const { return label_triplet_[2]; }
   label_id_t GetDstLabel() const { return label_triplet_[1]; }
+  Direction GetDirection() const { return dir_; }
 
   const std::vector<std::string>& GetPropNames() const { return prop_names_; }
 
@@ -106,6 +123,7 @@ class SubGraph {
   // We assume first is out edge, second is in edge.
   std::array<label_id_t, 3> label_triplet_;
   std::vector<std::string> prop_names_;
+  Direction dir_;
 };
 
 template <typename T>
@@ -236,6 +254,7 @@ class AdjList<T> {
   using nbr_t = MutableNbr<T>;
   class Iterator {
    public:
+    using edge_property_t = std::tuple<T>;
     Iterator()
         : cur_(),
           begin0_(nullptr),

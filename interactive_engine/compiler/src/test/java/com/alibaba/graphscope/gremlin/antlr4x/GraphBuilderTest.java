@@ -238,7 +238,7 @@ public class GraphBuilderTest {
                 "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                    + " _UTF-8'mar$')]], opt=[VERTEX])",
+                    + " _UTF-8'.*mar$')]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -249,7 +249,7 @@ public class GraphBuilderTest {
                 "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[NOT(POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                    + " _UTF-8'mar$'))]], opt=[VERTEX])",
+                    + " _UTF-8'.*mar$'))]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -300,7 +300,7 @@ public class GraphBuilderTest {
                 "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                    + " _UTF-8'^mar')]], opt=[VERTEX])",
+                    + " _UTF-8'^mar.*')]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -311,7 +311,7 @@ public class GraphBuilderTest {
                 "GraphLogicalProject(DEFAULT=[DEFAULT], isAppend=[false])\n"
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[DEFAULT], fusedFilter=[[NOT(POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                    + " _UTF-8'^mar'))]], opt=[VERTEX])",
+                    + " _UTF-8'^mar.*'))]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
