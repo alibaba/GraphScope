@@ -256,7 +256,7 @@ class PathSet {
       std::fill(label_set.begin(), label_set.end(), true);  // empty means all
     }
     size_t valid_labels = 0;
-    for (int i = 0; i < label_set.size(); ++i) {
+    for (size_t i = 0; i < label_set.size(); ++i) {
       if (label_set[i]) {
         labels.emplace_back(i);
         label_to_index[i] = valid_labels++;
@@ -265,7 +265,7 @@ class PathSet {
 
     std::vector<grape::Bitset> label_bitsets;
     label_bitsets.resize(labels.size());
-    for (auto i = 0; i < labels.size(); ++i) {
+    for (size_t i = 0; i < labels.size(); ++i) {
       label_bitsets[i].init(paths_.size());
     }
     for (auto iter : *this) {
@@ -289,7 +289,7 @@ class PathSet {
       offsets.emplace_back(vids.size());
     }
 
-    for (auto i = 0; i < labels.size(); ++i) {
+    for (size_t i = 0; i < labels.size(); ++i) {
       label_bitsets[i].resize(vids.size());
     }
     auto general_set = make_general_set(std::move(vids), std::move(labels),

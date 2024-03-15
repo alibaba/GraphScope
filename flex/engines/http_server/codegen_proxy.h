@@ -66,7 +66,8 @@ class CodegenProxy {
   bool Initialized();
 
   void Init(std::string working_dir, std::string codegen_bin,
-            std::string ir_compiler_prop, std::string compiler_graph_schema);
+            std::string ir_compiler_prop,
+            std::string default_graph_schema_path);
 
   // Do gen
   // A plan id is given along with the plan, we assume
@@ -77,17 +78,19 @@ class CodegenProxy {
   //
   // Consider the critical scenario: when two same plan arrived at the same
   // time, we need to ensure that only one codegen is running.
+  // if graph_schema_path is not prvoided, we will use the default graph schema
   seastar::future<std::pair<int32_t, std::string>> DoGen(
       const physical::PhysicalPlan& plan);
 
   static seastar::future<int> CallCodegenCmd(
-      const std::string& plan_path, const std::string& query_name,
-      const std::string& work_dir, const std::string& output_dir,
-      const std::string& graph_schema_path, const std::string& engine_config,
-      const std::string& codegen_bin);
+      const std::string& codegen_bin, const std::string& plan_path,
+      const std::string& query_name, const std::string& work_dir,
+      const std::string& output_dir, const std::string& graph_schema_path,
+      const std::string& engine_config, const std::string& description = "");
 
  private:
-  seastar::future<int> call_codegen_cmd(const physical::PhysicalPlan& plan);
+  seastar::future<int> call_codegen_cmd(const physical::PhysicalPlan& plan,
+                                        const std::string& graph_schema_path);
 
   seastar::future<std::pair<int32_t, std::string>> get_res_lib_path_from_cache(
       int32_t job_id);
@@ -106,14 +109,14 @@ class CodegenProxy {
                                    const std::string& query_name,
                                    const physical::PhysicalPlan& plan);
 
+  bool initialized_;
   std::string working_directory_;
   std::string codegen_bin_;
   std::string ir_compiler_prop_;
-  std::string compiler_graph_schema_;
+  std::string default_graph_schema_path_;
   std::mutex mutex_;
   std::condition_variable cv_;
   std::unordered_map<int32_t, StoredProcedureLibMeta> job_id_2_procedures_;
-  bool initialized_;
 };
 
 }  // namespace server

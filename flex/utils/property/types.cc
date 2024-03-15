@@ -48,6 +48,10 @@ const PropertyType PropertyType::kString =
     PropertyType(impl::PropertyTypeImpl::kString);
 const PropertyType PropertyType::kStringMap =
     PropertyType(impl::PropertyTypeImpl::kStringMap);
+const PropertyType PropertyType::kVertexGlobalId =
+    PropertyType(impl::PropertyTypeImpl::kVertexGlobalId);
+const PropertyType PropertyType::kLabel =
+    PropertyType(impl::PropertyTypeImpl::kLabel);
 
 bool PropertyType::operator==(const PropertyType& other) const {
   if (type_enum == impl::PropertyTypeImpl::kVarChar &&
@@ -120,6 +124,14 @@ PropertyType PropertyType::Varchar(uint16_t max_length) {
   return PropertyType(impl::PropertyTypeImpl::kVarChar, max_length);
 }
 
+PropertyType PropertyType::VertexGlobalId() {
+  return PropertyType(impl::PropertyTypeImpl::kVertexGlobalId);
+}
+
+PropertyType PropertyType::Label() {
+  return PropertyType(impl::PropertyTypeImpl::kLabel);
+}
+
 grape::InArchive& operator<<(grape::InArchive& in_archive,
                              const PropertyType& value) {
   in_archive << value.type_enum;
@@ -164,6 +176,10 @@ grape::InArchive& operator<<(grape::InArchive& in_archive, const Any& value) {
     in_archive << value.type << value.value.day.to_u32();
   } else if (value.type == PropertyType::String()) {
     in_archive << value.type << value.value.s;
+  } else if (value.type == PropertyType::VertexGlobalId()) {
+    in_archive << value.type << value.value.vertex_gid;
+  } else if (value.type == PropertyType::Label()) {
+    in_archive << value.type << value.value.label_key;
   } else {
     in_archive << PropertyType::kEmpty;
   }
@@ -202,6 +218,10 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive, Any& value) {
     value.value.day.from_u32(val);
   } else if (value.type == PropertyType::String()) {
     out_archive >> value.value.s;
+  } else if (value.type == PropertyType::VertexGlobalId()) {
+    out_archive >> value.value.vertex_gid;
+  } else if (value.type == PropertyType::Label()) {
+    out_archive >> value.value.label_key;
   } else {
     value.type = PropertyType::kEmpty;
   }
@@ -224,6 +244,52 @@ grape::OutArchive& operator>>(grape::OutArchive& out_archive,
                          size);
   return out_archive;
 }
+
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const GlobalId& value) {
+  in_archive << value.global_id;
+  return in_archive;
+}
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, GlobalId& value) {
+  out_archive >> value.global_id;
+  return out_archive;
+}
+
+grape::InArchive& operator<<(grape::InArchive& in_archive,
+                             const LabelKey& value) {
+  in_archive << value.label_id;
+  return in_archive;
+}
+grape::OutArchive& operator>>(grape::OutArchive& out_archive, LabelKey& value) {
+  out_archive >> value.label_id;
+  return out_archive;
+}
+
+GlobalId::label_id_t GlobalId::get_label_id(gid_t gid) {
+  return static_cast<label_id_t>(gid >> label_id_offset);
+}
+
+GlobalId::vid_t GlobalId::get_vid(gid_t gid) {
+  return static_cast<vid_t>(gid & vid_mask);
+}
+
+GlobalId::GlobalId() : global_id(0) {}
+
+GlobalId::GlobalId(label_id_t label_id, vid_t vid) {
+  global_id = (static_cast<uint64_t>(label_id) << label_id_offset) | vid;
+}
+
+GlobalId::GlobalId(gid_t gid) : global_id(gid) {}
+
+GlobalId::label_id_t GlobalId::label_id() const {
+  return static_cast<label_id_t>(global_id >> label_id_offset);
+}
+
+GlobalId::vid_t GlobalId::vid() const {
+  return static_cast<vid_t>(global_id & vid_mask);
+}
+
+std::string GlobalId::to_string() const { return std::to_string(global_id); }
 
 Date::Date(int64_t x) : milli_second(x) {}
 

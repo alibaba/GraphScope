@@ -178,7 +178,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_startingWith(
             GremlinGSParser.TraversalPredicate_startingWithContext ctx) {
-        String posixRegex = "^" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral());
+        String posixRegex = "^" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + ".*";
         return builder.call(
                 GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
                 propertyKey,
@@ -188,7 +188,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_notStartingWith(
             GremlinGSParser.TraversalPredicate_notStartingWithContext ctx) {
-        String posixRegex = "^" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral());
+        String posixRegex = "^" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + ".*";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
@@ -199,7 +199,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_endingWith(
             GremlinGSParser.TraversalPredicate_endingWithContext ctx) {
-        String posixRegex = LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + "$";
+        String posixRegex = ".*" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + "$";
         return builder.call(
                 GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
                 propertyKey,
@@ -209,7 +209,7 @@ public class ExpressionVisitor extends GremlinGSBaseVisitor<RexNode> {
     @Override
     public RexNode visitTraversalPredicate_notEndingWith(
             GremlinGSParser.TraversalPredicate_notEndingWithContext ctx) {
-        String posixRegex = LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + "$";
+        String posixRegex = ".*" + LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()) + "$";
         return builder.not(
                 builder.call(
                         GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,

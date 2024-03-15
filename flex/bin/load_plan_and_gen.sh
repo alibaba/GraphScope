@@ -234,7 +234,7 @@ compile_hqps_so() {
 
   #only do codegen when receives a .pb file.
   if [[ $last_file_name == *.pb ]]; then
-    cmd="${CODEGEN_RUNNER} -e hqps -i ${input_path} -o ${output_cc_path}"
+    cmd="${CODEGEN_RUNNER} -e hqps -i ${input_path} -o ${output_cc_path} -g ${graph_schema_path}"
     info "Codegen command = ${cmd}"
     eval ${cmd}
     info "----------------------------"
@@ -250,7 +250,7 @@ compile_hqps_so() {
     info "----------------------------"
     info "Codegen from cypher query done."
     info "----------------------------"
-    cmd="${CODEGEN_RUNNER} -e hqps -i ${output_pb_path} -o ${output_cc_path}"
+    cmd="${CODEGEN_RUNNER} -e hqps -i ${output_pb_path} -o ${output_cc_path} -g ${graph_schema_path}"
     info "Codegen command = ${cmd}"
     eval ${cmd}
     # then. do .pb to .cc
