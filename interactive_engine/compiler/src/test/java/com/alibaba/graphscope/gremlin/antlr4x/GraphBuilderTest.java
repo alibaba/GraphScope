@@ -1072,6 +1072,26 @@ public class GraphBuilderTest {
                         + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                         + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
+
+        node = eval("g.V().as('a').select(expr(sum(a.age) * 2 / 3))");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                        + "  GraphLogicalProject($f0=[/(*(EXPR$0, 2), 3)], isAppend=[true])\n"
+                        + "    GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                        + " values=[[{operands=[a.age], aggFunction=SUM, alias='EXPR$0',"
+                        + " distinct=false}]])\n"
+                        + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+
+        node = eval("g.V().as('a').select(expr(head(collect(a.age))))");
+        Assert.assertEquals(
+                "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}],"
+                    + " values=[[{operands=[a.age], aggFunction=FIRST_VALUE, alias='$f0',"
+                    + " distinct=false}]])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], opt=[VERTEX])",
+                node.explain().trim());
     }
 
     @Test
@@ -1095,6 +1115,16 @@ public class GraphBuilderTest {
                     + "      GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created,"
                     + " knows]}], alias=[DEFAULT], opt=[OUT])\n"
                     + "        GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                    + " person]}], alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+
+        node = eval("g.V().as('a').outE().as('b').where(expr(labels(a) = type(b)))");
+        Assert.assertEquals(
+                "GraphLogicalProject(b=[b], isAppend=[false])\n"
+                    + "  LogicalFilter(condition=[=(a.~label, b.~label)])\n"
+                    + "    GraphLogicalExpand(tableConfig=[{isAll=true, tables=[created, knows]}],"
+                    + " alias=[b], opt=[OUT])\n"
+                    + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
     }

@@ -87,7 +87,6 @@ traversalMethod
     | traversalMethod_subgraph // subgraph()
     | traversalMethod_bothV // bothV()
     | traversalMethod_unfold // unfold()
-    | traversalMethod_aggregate_func
     | traversalMethod_hasNot // hasNot()
     | traversalMethod_coin  // coin()
     | traversalMethod_sample    // sample()
@@ -95,6 +94,7 @@ traversalMethod
     | traversalMethod_id    // id()
     | traversalMethod_label // label()
     | traversalMethod_constant  //constant
+    | oC_FunctionInvocation // function invocation, including aggregate function, i.e. count/sum/min/max/mean/fold
     ;
 
 traversalSourceSpawnMethod_V
@@ -371,9 +371,8 @@ traversalMethod_group_valueby
 // group().by(...).by(dedup('a').fold()) = toSet('@a')
 // group().by(...).by(dedup('a').by('name').fold()) = toSet('@a.name')
 nonStringValueBy
-    : (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? traversalMethod_aggregate_func (DOT traversalMethod_as)?
-    | (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_count (DOT traversalMethod_as)?
-    | (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT traversalMethod_fold (DOT traversalMethod_as)?
+    : (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? oC_FunctionInvocation (DOT traversalMethod_as)?
+    | (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT oC_FunctionInvocation (DOT traversalMethod_as)?
     ;
 
 // i.e. group().by(...).by(count().as('a'), sum().as('b'))
@@ -381,50 +380,11 @@ nonStringValueByList
     : nonStringValueBy (COMMA nonStringValueBy)*
     ;
 
-traversalMethod_aggregate_func
-    : traversalMethod_count
-    | traversalMethod_fold
-    | traversalMethod_sum
-    | traversalMethod_min
-    | traversalMethod_max
-    | traversalMethod_mean
-    ;
-
-// count in global scope
-traversalMethod_count
-	: 'count' LPAREN RPAREN
-	;
-
 // only one argument is permitted
 // values("name")
 traversalMethod_values
     : 'values' LPAREN StringLiteral RPAREN
     ;
-
-// fold()
-traversalMethod_fold
-	: 'fold' LPAREN RPAREN
-	;
-
-// sum in global scope
-traversalMethod_sum
-	: 'sum' LPAREN RPAREN
-	;
-
-// min in global scope
-traversalMethod_min
-	: 'min' LPAREN RPAREN
-	;
-
-// max in global scope
-traversalMethod_max
-	: 'max' LPAREN RPAREN
-	;
-
-// mean in global scope
-traversalMethod_mean
-	: 'mean' LPAREN RPAREN
-	;
 
 // is(27)
 // is(P.eq(27))

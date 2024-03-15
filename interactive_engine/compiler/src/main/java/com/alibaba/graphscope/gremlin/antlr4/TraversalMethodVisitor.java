@@ -519,23 +519,21 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         Traversal nestedTraversal = null;
         if (ctx.traversalMethod_dedup() != null) {
             nestedTraversal = nestedVisitor.visitTraversalMethod_dedup(ctx.traversalMethod_dedup());
-            if (ctx.traversalMethod_count() != null) {
-                nestedTraversal =
-                        nestedVisitor.visitTraversalMethod_count(ctx.traversalMethod_count());
-            } else if (ctx.traversalMethod_fold() != null) {
-                nestedTraversal =
-                        nestedVisitor.visitTraversalMethod_fold(ctx.traversalMethod_fold());
+            if (ctx.oC_FunctionInvocation() != null) {
+                String functionName = ctx.oC_FunctionInvocation().oC_FunctionName().getText();
+                if (functionName.equals("count") || functionName.equals("fold")) {
+                    nestedTraversal =
+                            nestedVisitor.visitOC_FunctionInvocation(ctx.oC_FunctionInvocation());
+                }
             }
-        } else if (ctx.traversalMethod_aggregate_func() != null) {
+        } else if (ctx.oC_FunctionInvocation() != null) {
             if (ctx.traversalMethod_select() != null) {
                 nestedVisitor.visitTraversalMethod_select(ctx.traversalMethod_select());
             }
             if (ctx.traversalMethod_values() != null) {
                 nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
             }
-            nestedTraversal =
-                    nestedVisitor.visitTraversalMethod_aggregate_func(
-                            ctx.traversalMethod_aggregate_func());
+            nestedTraversal = nestedVisitor.visitOC_FunctionInvocation(ctx.oC_FunctionInvocation());
         }
         if (ctx.traversalMethod_as() != null) {
             nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
@@ -547,50 +545,26 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitTraversalMethod_aggregate_func(
-            GremlinGSParser.TraversalMethod_aggregate_funcContext ctx) {
-        if (ctx.traversalMethod_count() != null) {
-            return visitTraversalMethod_count(ctx.traversalMethod_count());
-        } else if (ctx.traversalMethod_fold() != null) {
-            return visitTraversalMethod_fold(ctx.traversalMethod_fold());
-        } else if (ctx.traversalMethod_sum() != null) {
-            return visitTraversalMethod_sum(ctx.traversalMethod_sum());
-        } else if (ctx.traversalMethod_min() != null) {
-            return visitTraversalMethod_min(ctx.traversalMethod_min());
-        } else if (ctx.traversalMethod_max() != null) {
-            return visitTraversalMethod_max(ctx.traversalMethod_max());
-        } else if (ctx.traversalMethod_mean() != null) {
-            return visitTraversalMethod_mean(ctx.traversalMethod_mean());
-        } else {
-            throw new UnsupportedEvalException(
-                    ctx.getClass(),
-                    "supported aggregation functions are count/sum/min/max/mean/fold");
+    public Traversal visitOC_FunctionInvocation(GremlinGSParser.OC_FunctionInvocationContext ctx) {
+        String functionName = ctx.oC_FunctionName().getText();
+        switch (functionName) {
+            case "count":
+                return graphTraversal.count();
+            case "sum":
+                return graphTraversal.sum();
+            case "min":
+                return graphTraversal.min();
+            case "max":
+                return graphTraversal.max();
+            case "mean":
+                return graphTraversal.mean();
+            case "fold":
+                return graphTraversal.fold();
+            default:
+                throw new UnsupportedEvalException(
+                        ctx.getClass(),
+                        "supported aggregation functions are count/sum/min/max/mean/fold");
         }
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_sum(GremlinGSParser.TraversalMethod_sumContext ctx) {
-        return graphTraversal.sum();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_min(GremlinGSParser.TraversalMethod_minContext ctx) {
-        return graphTraversal.min();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_max(GremlinGSParser.TraversalMethod_maxContext ctx) {
-        return graphTraversal.max();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_mean(GremlinGSParser.TraversalMethod_meanContext ctx) {
-        return graphTraversal.mean();
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_count(GremlinGSParser.TraversalMethod_countContext ctx) {
-        return graphTraversal.count();
     }
 
     @Override
@@ -601,11 +575,6 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
                     (String) LiteralVisitor.INSTANCE.visit(ctx.StringLiteral()));
         }
         throw new UnsupportedEvalException(ctx.getClass(), "supported pattern is [values('..')]");
-    }
-
-    @Override
-    public Traversal visitTraversalMethod_fold(GremlinGSParser.TraversalMethod_foldContext ctx) {
-        return graphTraversal.fold();
     }
 
     @Override

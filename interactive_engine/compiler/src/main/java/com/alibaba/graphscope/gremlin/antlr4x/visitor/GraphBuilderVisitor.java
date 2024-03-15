@@ -541,44 +541,41 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     }
 
     @Override
-    public GraphBuilder visitTraversalMethod_count(
-            GremlinGSParser.TraversalMethod_countContext ctx) {
-        return (GraphBuilder) builder.aggregate(builder.groupKey(), builder.countStar(null));
-    }
-
-    @Override
-    public GraphBuilder visitTraversalMethod_fold(GremlinGSParser.TraversalMethod_foldContext ctx) {
-        return (GraphBuilder) builder.aggregate(builder.groupKey(), builder.collect(false, null));
-    }
-
-    @Override
-    public GraphBuilder visitTraversalMethod_sum(GremlinGSParser.TraversalMethod_sumContext ctx) {
-        return (GraphBuilder)
-                builder.aggregate(
-                        builder.groupKey(),
-                        builder.sum(false, null, builder.variable((String) null)));
-    }
-
-    @Override
-    public GraphBuilder visitTraversalMethod_min(GremlinGSParser.TraversalMethod_minContext ctx) {
-        return (GraphBuilder)
-                builder.aggregate(
-                        builder.groupKey(), builder.min(null, builder.variable((String) null)));
-    }
-
-    @Override
-    public GraphBuilder visitTraversalMethod_max(GremlinGSParser.TraversalMethod_maxContext ctx) {
-        return (GraphBuilder)
-                builder.aggregate(
-                        builder.groupKey(), builder.max(null, builder.variable((String) null)));
-    }
-
-    @Override
-    public GraphBuilder visitTraversalMethod_mean(GremlinGSParser.TraversalMethod_meanContext ctx) {
-        return (GraphBuilder)
-                builder.aggregate(
-                        builder.groupKey(),
-                        builder.avg(false, null, builder.variable((String) null)));
+    public GraphBuilder visitOC_FunctionInvocation(
+            GremlinGSParser.OC_FunctionInvocationContext ctx) {
+        String functionName = ctx.oC_FunctionName().getText();
+        switch (functionName) {
+            case "count":
+                return (GraphBuilder)
+                        builder.aggregate(builder.groupKey(), builder.countStar(null));
+            case "sum":
+                return (GraphBuilder)
+                        builder.aggregate(
+                                builder.groupKey(),
+                                builder.sum(false, null, builder.variable((String) null)));
+            case "min":
+                return (GraphBuilder)
+                        builder.aggregate(
+                                builder.groupKey(),
+                                builder.min(null, builder.variable((String) null)));
+            case "max":
+                return (GraphBuilder)
+                        builder.aggregate(
+                                builder.groupKey(),
+                                builder.max(null, builder.variable((String) null)));
+            case "mean":
+                return (GraphBuilder)
+                        builder.aggregate(
+                                builder.groupKey(),
+                                builder.avg(false, null, builder.variable((String) null)));
+            case "fold":
+                return (GraphBuilder)
+                        builder.aggregate(builder.groupKey(), builder.collect(false, null));
+            default:
+                throw new UnsupportedEvalException(
+                        ctx.getClass(),
+                        "supported aggregation functions are count/sum/min/max/mean/fold");
+        }
     }
 
     @Override

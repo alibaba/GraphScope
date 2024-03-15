@@ -58,14 +58,17 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
                             nestedVisitor
                                     .visitTraversalMethod_dedup(byCtx.traversalMethod_dedup())
                                     .build();
-            if (byCtx.traversalMethod_count() != null) {
-                return builder.count(true, alias, dedupBy.getDedupByKeys());
-            } else if (byCtx.traversalMethod_fold() != null) {
-                return builder.collect(true, alias, dedupBy.getDedupByKeys());
+            if (byCtx.oC_FunctionInvocation() != null) {
+                String functionName = byCtx.oC_FunctionInvocation().oC_FunctionName().getText();
+                if (functionName.equals("count")) {
+                    return builder.count(true, alias, dedupBy.getDedupByKeys());
+                } else if (functionName.equals("fold")) {
+                    return builder.collect(true, alias, dedupBy.getDedupByKeys());
+                }
             }
             throw new UnsupportedEvalException(
                     byCtx.getClass(), byCtx.getText() + " is unsupported yet in group value by");
-        } else if (byCtx.traversalMethod_aggregate_func() != null) {
+        } else if (byCtx.oC_FunctionInvocation() != null) {
             RexNode expr;
             if (byCtx.traversalMethod_select() != null || byCtx.traversalMethod_values() != null) {
                 GraphBuilder nestedBuilder =
@@ -98,23 +101,24 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
             } else {
                 expr = builder.variable((String) null);
             }
-            GremlinGSParser.TraversalMethod_aggregate_funcContext aggCtx =
-                    byCtx.traversalMethod_aggregate_func();
-            if (aggCtx.traversalMethod_count() != null) {
-                return builder.count(false, alias, expr);
-            } else if (aggCtx.traversalMethod_fold() != null) {
-                return builder.collect(false, alias, expr);
-            } else if (aggCtx.traversalMethod_sum() != null) {
-                return builder.sum(false, alias, expr);
-            } else if (aggCtx.traversalMethod_max() != null) {
-                return builder.max(alias, expr);
-            } else if (aggCtx.traversalMethod_min() != null) {
-                return builder.min(alias, expr);
-            } else if (aggCtx.traversalMethod_mean() != null) {
-                return builder.avg(false, alias, expr);
-            } else {
-                throw new IllegalArgumentException(
-                        "invalid aggregate function " + aggCtx.getText());
+            String functionName = byCtx.oC_FunctionInvocation().oC_FunctionName().getText();
+            switch (functionName) {
+                case "count":
+                    return builder.count(false, alias, expr);
+                case "sum":
+                    return builder.sum(false, alias, expr);
+                case "min":
+                    return builder.min(alias, expr);
+                case "max":
+                    return builder.max(alias, expr);
+                case "mean":
+                    return builder.avg(false, alias, expr);
+                case "fold":
+                    return builder.collect(false, alias, expr);
+                default:
+                    throw new IllegalArgumentException(
+                            "invalid aggregate function "
+                                    + byCtx.oC_FunctionInvocation().getText());
             }
         } else {
             throw new UnsupportedEvalException(
