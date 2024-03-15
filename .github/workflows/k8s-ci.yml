@@ -538,6 +538,8 @@ jobs:
           # hdfs dfs -test -e /ldbc_sample/res.csv_0 && hdfs dfs -test -e /ldbc_sample/res.csv_1
 
       - uses: dashanji/kubernetes-log-export-action@v5
+        if: ${{ always() }}
+        continue-on-error: true
         env:
           OUTPUT_DIR: ${{ github.workspace }}/k8s-ci-demo-script-test-logs
           MODE: stop
