@@ -64,6 +64,10 @@ struct TagIndMapping {
       return -1;
     }
     print_debug_info();
+    if (tag_id >= (int) tag_id_2_tag_inds_.size()) {
+      // If tag_id is not found, we assume it is the head node.
+      return -1;
+    }
     CHECK(tag_id < (int) tag_id_2_tag_inds_.size())
         << "tag id: " << tag_id << " not found";
     return tag_id_2_tag_inds_[tag_id];
@@ -115,6 +119,15 @@ struct TagIndMapping {
 
   const std::vector<int32_t>& GetTagId2TagInds() const {
     return tag_id_2_tag_inds_;
+  }
+
+  bool HasTagId(int32_t tag_id) const {
+    return tag_id < (int32_t) tag_id_2_tag_inds_.size() &&
+           tag_id_2_tag_inds_[tag_id] != -1;
+  }
+
+  int32_t GetMaxTagId() const {
+    return tag_id_2_tag_inds_.size() - 1;
   }
 
   // convert tag_ind (us) to tag ids

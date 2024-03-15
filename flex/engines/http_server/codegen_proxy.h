@@ -109,6 +109,7 @@ class CodegenProxy {
                                    const std::string& query_name,
                                    const physical::PhysicalPlan& plan);
 
+  bool initialized_;
   std::string working_directory_;
   std::string codegen_bin_;
   std::string ir_compiler_prop_;
@@ -116,7 +117,6 @@ class CodegenProxy {
   std::mutex mutex_;
   std::condition_variable cv_;
   std::unordered_map<int32_t, StoredProcedureLibMeta> job_id_2_procedures_;
-  bool initialized_;
 };
 
 }  // namespace server

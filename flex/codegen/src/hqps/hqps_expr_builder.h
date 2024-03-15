@@ -40,6 +40,7 @@ static constexpr const char* EXPR_BUILDER_TEMPLATE_STR =
     "struct %1% {\n"
     "  public: \n"
     "   using result_t = %2%;\n"
+    "   static constexpr bool filter_null = %10%;\n"
     "   %1%(%3%) %4% {}\n"
     "   %5%\n"
     "   inline %6% operator()(%7%) const {\n"
@@ -71,6 +72,12 @@ static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
       prop_name = var.property().key().name();
       prop_type = data_type_2_string(
           common_data_type_pb_2_data_type(var.node_type().data_type()));
+    } else if (var_property.has_id()) {
+      // prop_name = "id";
+      // prop_type = data_type_2_string(
+      //     common_data_type_pb_2_data_type(var.node_type().data_type()));
+      prop_name = "global_id";
+      prop_type = data_type_2_string(codegen::DataType::kGlobalVertexId);
     } else {
       LOG(FATAL) << "Unexpected property type: " << var.DebugString();
     }
@@ -88,6 +95,18 @@ static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
     if (var.node_type().type_case() == common::IrDataType::kDataType) {
       prop_type = data_type_2_string(
           common_data_type_pb_2_data_type(var.node_type().data_type()));
+    } else if (var.node_type().type_case() == common::IrDataType::kGraphType) {
+      if (var.node_type().graph_type().element_opt() ==
+          common::GraphDataType::GraphElementOpt::
+              GraphDataType_GraphElementOpt_VERTEX) {
+        prop_type = data_type_2_string(codegen::DataType::kGlobalVertexId);
+      } else if (var.node_type().graph_type().element_opt() ==
+                 common::GraphDataType::GraphElementOpt::
+                     GraphDataType_GraphElementOpt_EDGE) {
+        prop_type = data_type_2_string(codegen::DataType::kEdgeId);
+      } else {
+        LOG(FATAL) << "Unexpect graph type: " << var.node_type().DebugString();
+      }
     } else {
       prop_type = GRAPE_EMPTY_TYPE;
     }
@@ -122,6 +141,12 @@ static std::string logical_to_str(const common::Logical& logical) {
     return "< WithIn > ";
   case common::Logical::ISNULL:
     return "NONE ==";  // Convert
+  case common::Logical::ENDSWITH:
+    return "< EndWith > ";
+  case common::Logical::STARTSWITH:
+    return "< StartWith > ";
+  case common::Logical::REGEX:
+    return "< Regex > ";
   default:
     throw std::runtime_error("unknown logical");
   }
@@ -181,7 +206,7 @@ static std::string value_pb_to_str(const common::Value& value) {
 
 bool contains_vertex_id(const std::vector<codegen::ParamConst>& params) {
   for (auto& param : params) {
-    if (param.type == codegen::DataType::kVertexId ||
+    if (param.type == codegen::DataType::kGlobalVertexId ||
         param.type == codegen::DataType::kEdgeId) {
       return true;
     }
@@ -252,7 +277,7 @@ static common::DataType eval_expr_return_type(const common::Expression& expr) {
 class ExprBuilder {
  public:
   ExprBuilder(BuildingContext& ctx, int var_id = 0, bool no_build = false)
-      : ctx_(ctx) {
+      : ctx_(ctx), null_presents_(false) {
     if (!no_build) {
       // no build indicates whether we will use this builder as a helper.
       // If set to true, we will not let queryClassName and next_expr_name
@@ -263,6 +288,10 @@ class ExprBuilder {
 
   void set_return_type(common::DataType data_type) {
     res_data_type_.emplace_back(data_type);
+  }
+
+  const std::vector<common::DataType>& get_return_type() const {
+    return res_data_type_;
   }
 
   void add_return_type(common::DataType data_type) {
@@ -343,6 +372,9 @@ class ExprBuilder {
     case common::ExprOpr::kLogical: {
       auto logical = opr.logical();
       auto str = logical_to_str(logical);
+      if (logical == common::Logical::ISNULL) {
+        null_presents_ = true;
+      }
       VLOG(10) << "Got expr opt logical: " << str;
       expr_nodes_.emplace_back(std::move(str));
       break;
@@ -408,8 +440,8 @@ class ExprBuilder {
     }
   }
 
-  // Add extract operator with var. Currently not support extract on a complicated
-  // expression.
+  // Add extract operator with var. Currently not support extract on a
+  // complicated expression.
   void AddExtractOpr(const common::Extract& extract_opr,
                      const common::ExprOpr& expr_opr) {
     CHECK(expr_opr.item_case() == common::ExprOpr::kVar)
@@ -477,7 +509,7 @@ class ExprBuilder {
     formater % class_name_ % common_data_type_pb_2_str(res_data_type_) %
         constructor_param_str % field_init_code_str %
         func_call_template_typename_str % "auto" % func_call_params_str %
-        func_call_impl_str % private_filed_str;
+        func_call_impl_str % private_filed_str % get_filter_null_str();
 
     std::string str = formater.str();
 
@@ -488,6 +520,15 @@ class ExprBuilder {
   bool empty() const { return expr_nodes_.empty(); }
 
  protected:
+  // If null presents in our expression, we need to get null records. Otherwise,
+  // we can feed expression with non-null records.
+  std::string get_filter_null_str() const {
+    if (null_presents_) {
+      return "false";
+    } else {
+      return "true";
+    }
+  }
   // return the concatenated string of constructor's input params
   std::string get_constructor_params_str() const {
     std::stringstream ss;
@@ -518,10 +559,19 @@ class ExprBuilder {
 
   std::string get_func_call_typename_str() const {
     std::string typename_template = "";
-    if (contains_vertex_id(func_call_vars_)) {
+    if (contains_edge_id(func_call_vars_)) {
       typename_template = "template <typename vertex_id_t>";
     }
     return typename_template;
+  }
+
+  bool contains_edge_id(const std::vector<codegen::ParamConst>& params) const {
+    for (auto& param : params) {
+      if (param.type == codegen::DataType::kEdgeId) {
+        return true;
+      }
+    }
+    return false;
   }
 
   std::string get_func_call_params_str() const {
@@ -591,6 +641,7 @@ class ExprBuilder {
   std::vector<common::DataType> res_data_type_;
 
   std::string class_name_;
+  bool null_presents_;
 };
 }  // namespace gs
 
