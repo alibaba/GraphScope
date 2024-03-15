@@ -773,6 +773,77 @@ gremlin> g.V().select(expr("@.name"))
 ==>ripple
 ==>peter
 ```
+#### next version
+We are currently refactoring the grammar integration of Gremlin based on the Calcite-Based IR Layer. In the next version, Gremlin expressions will be uniformly represented as Calcite [RexNode](https://calcite.apache.org/javadocAggregate/org/apache/calcite/rex/RexNode.html) structures. Additionally, we are further standardizing the syntax of Gremlin expressions by borrowing from the Sql Expression syntax, in order to better support the parsing and optimization of Gremlin's grammar. The specific definition is as follows:
+
+Literal:
+
+Category | Example
+---- | -------
+string | "marko"
+boolean | true, false
+integer | 1, 2, 3
+long | 1l, 1L
+float | 1.0f, 1.0F
+double | 1.0, 1.0d, 1.0D
+list | ["marko", "vadas"], [true, false], [1, 2], [1L, 2L], [1.0F, 2.0F], [1.0, 2.0]
+
+Variable:
+
+Category | Description | Example
+---- | ------- | -------
+current | the current entry | DEFAULT
+current property | the property value of the current entry | DEFAULT.name
+tag | the specified tag | a
+tag property | the property value of the specified tag | a.name
+
+Operator:
+
+Category | Operation (Case-Insensitive) | Description | Example
+---- | ------- | ------- | -------
+logical | = | equal | DEFAULT.name = "marko"
+logical | <> | not equal | DEFAULT.name != "marko"
+logical | > | greater than | DEFAULT.age > 10
+logical | < | less than | DEFAULT.age < 10
+logical | >= | greater than or equal | DEFAULT.age >= 10
+logical | <= | less than or equal | DEFAULT.age <= 10
+logical | NOT | negate the logical expression | NOT DEFAULT.name = "marko"
+logical | AND | connect two logical expressions with AND | DEFAULT.name = "marko" AND DEFAULT.age > 10
+logical | OR | connect two logical expressions with OR | DEFAULT.name = "marko" OR DEFAULT.age > 10
+logical | IN | whether the value of the current entry is in the given list | DEFAULT.name IN ["marko", "vadas"]
+arithmetical | + | addition | DEFAULT.age + 10
+arithmetical | - | subtraction | DEFAULT.age - 10
+arithmetical | * | multiplication | DEFAULT.age * 10
+arithmetical | / | division | DEFAULT.age / 10
+arithmetical | % | modulo | DEFAULT.age % 10
+arithmetical | POWER | exponentiation | POWER(DEFAULT.age, 3)
+bitwise | & | bitwise AND | DEFAULT.age & 2
+bitwise | \| | bitwise OR | DEFAULT.age \| 2
+bitwise | ^ | bitwise XOR | DEFAULT.age ^ 2
+bit shift | << | left shift | DEFAULT.age << 2
+bit shift | >> | right shift | DEFAULT.age >> 2
+string regex match | STARTS WITH | whether the string starts with the given prefix | DEFAULT.name STARTS WITH "ma"
+string regex match | NOT STARTS WITH | whether the string does not start with the given prefix | NOT DEFAULT.name STARTS WITH "ma"
+string regex match | ENDS WITH | whether the string ends with the given suffix | DEFAULT.name ENDS WITH "ko"
+string regex match | NOT ENDS WITH | whether the string does not end with the given suffix | NOT DEFAULT.name ENDS WITH "ko"
+string regex match | CONTAINS | whether the string contains the given substring | DEFAULT.name CONTAINS "ar"
+string regex match | NOT CONTAINS | whether the string does not contain the given substring | NOT DEFAULT.name CONTAINS "ar"
+
+Function:
+
+Category | Function (Case-Insensitive) | Description | Example
+---- | ------- | ------- | -------
+aggregate | COUNT | count the number of the elements | COUNT(DEFAULT.age)
+aggregate | SUM | sum the values of the elements | SUM(DEFAULT.age)
+aggregate | MIN | find the minimum value of the elements | MIN(DEFAULT.age)
+aggregate | MAX | find the maximum value of the elements | MAX(DEFAULT.age)
+aggregate | AVG | calculate the average value of the elements | AVG(DEFAULT.age)
+aggregate | COLLECT | fold the elements into a list | COLLECT(DEFAULT.age)
+aggregate | HEAD(COLLECT()) | find the first value of the elements | HEAD(COLLECT(DEFAULT.age))
+other | LABELS | get the labels of the specified tag which is a vertex | LABELS(a)
+other | TYPE | get the type of the specified tag which is an edge | TYPE(a)
+other | LENGTH | get the length of the specified tag which is a path | LENGTH(a)
+
 ### Aggregate (Group)
 The group()-step in standard Gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively.
 
