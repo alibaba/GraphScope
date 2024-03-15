@@ -735,7 +735,10 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.AND
                 || sqlKind == SqlKind.OR
                 || sqlKind == SqlKind.DESCENDING
-                || (sqlKind == SqlKind.OTHER_FUNCTION && operator.getName().equals("POWER"))
+                || (sqlKind == SqlKind.OTHER_FUNCTION
+                        && (operator.getName().equals("POWER")
+                                || operator.getName().equals("<<")
+                                || operator.getName().equals(">>")))
                 || (sqlKind == SqlKind.MINUS_PREFIX)
                 || (sqlKind == SqlKind.CASE)
                 || (sqlKind == SqlKind.PROCEDURE_CALL)
@@ -747,7 +750,10 @@ public class GraphBuilder extends RelBuilder {
                 || sqlKind == SqlKind.EXTRACT
                 || sqlKind == SqlKind.SEARCH
                 || sqlKind == SqlKind.POSIX_REGEX_CASE_SENSITIVE
-                || sqlKind == SqlKind.AS;
+                || sqlKind == SqlKind.AS
+                || sqlKind == SqlKind.BIT_AND
+                || sqlKind == SqlKind.BIT_OR
+                || sqlKind == SqlKind.BIT_XOR;
     }
 
     @Override

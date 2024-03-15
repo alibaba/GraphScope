@@ -216,36 +216,16 @@ public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult
     @Override
     public ExprVisitorResult visitOC_MultiplyDivideModuloExpression(
             GremlinGSParser.OC_MultiplyDivideModuloExpressionContext ctx) {
-        List<GremlinGSParser.OC_BitManipulationExpressionContext> operandCtxList =
-                getBitManipulationCtxList(ctx);
         Preconditions.checkArgument(
-                ObjectUtils.isNotEmpty(operandCtxList),
+                ObjectUtils.isNotEmpty(ctx.oC_BitManipulationExpression()),
                 "bit manipulation expression should not be empty");
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("*", "/", "%"), false);
         return binaryCall(
                 operators,
-                operandCtxList.stream()
+                ctx.oC_BitManipulationExpression().stream()
                         .map(k -> visitOC_BitManipulationExpression(k))
                         .collect(Collectors.toList()));
-    }
-
-    private List<GremlinGSParser.OC_BitManipulationExpressionContext> getBitManipulationCtxList(
-            GremlinGSParser.OC_MultiplyDivideModuloExpressionContext ctx) {
-        List<GremlinGSParser.OC_BitManipulationExpressionContext> ctxList = Lists.newArrayList();
-        ctx.oC_PowerOfExpression()
-                .forEach(
-                        k -> {
-                            for (ParseTree tree : k.children) {
-                                if (tree instanceof TerminalNode && tree.getText().equals("^")) {
-                                    throw new IllegalArgumentException(
-                                            "power is not supported as operator in gremlin, use"
-                                                    + " power function instead");
-                                }
-                            }
-                            ctxList.addAll(k.oC_BitManipulationExpression());
-                        });
-        return ctxList;
     }
 
     @Override
@@ -256,7 +236,8 @@ public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult
                     "unary add or unary sub expression should not be empty");
         }
         List<SqlOperator> operators =
-                Utils.getOperators(ctx.children, ImmutableList.of("&", "|", "^"), false);
+                Utils.getOperators(
+                        ctx.children, ImmutableList.of("&", "|", "^", "<<", ">>"), false);
         return binaryCall(
                 operators,
                 ctx.oC_UnaryAddOrSubtractExpression().stream()

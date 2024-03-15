@@ -216,54 +216,33 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     @Override
     public ExprVisitorResult visitOC_MultiplyDivideModuloExpression(
             CypherGSParser.OC_MultiplyDivideModuloExpressionContext ctx) {
-        if (ObjectUtils.isEmpty(ctx.oC_PowerOfExpression())) {
+        if (ObjectUtils.isEmpty(ctx.oC_BitManipulationExpression())) {
             throw new IllegalArgumentException("power expression should not be empty");
         }
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("*", "/", "%"), false);
         return binaryCall(
                 operators,
-                ctx.oC_PowerOfExpression().stream()
-                        .map(k -> visitOC_PowerOfExpression(k))
+                ctx.oC_BitManipulationExpression().stream()
+                        .map(k -> visitOC_BitManipulationExpression(k))
                         .collect(Collectors.toList()));
     }
 
     @Override
-    public ExprVisitorResult visitOC_PowerOfExpression(
-            CypherGSParser.OC_PowerOfExpressionContext ctx) {
-        List<CypherGSParser.OC_UnaryAddOrSubtractExpressionContext> operandCtxList =
-                getAddOrSubtractExpressionCtxList(ctx);
-        Preconditions.checkArgument(
-                ObjectUtils.isNotEmpty(operandCtxList),
-                "unary add or unary sub expression should not be empty");
+    public ExprVisitorResult visitOC_BitManipulationExpression(
+            CypherGSParser.OC_BitManipulationExpressionContext ctx) {
+        if (ObjectUtils.isEmpty(ctx.oC_UnaryAddOrSubtractExpression())) {
+            throw new IllegalArgumentException(
+                    "unary add or unary sub expression should not be empty");
+        }
         List<SqlOperator> operators =
-                Utils.getOperators(ctx.children, ImmutableList.of("^"), false);
+                com.alibaba.graphscope.common.antlr4.Utils.getOperators(
+                        ctx.children, ImmutableList.of("&", "|", "^", "<<", ">>"), false);
         return binaryCall(
                 operators,
-                operandCtxList.stream()
+                ctx.oC_UnaryAddOrSubtractExpression().stream()
                         .map(k -> visitOC_UnaryAddOrSubtractExpression(k))
                         .collect(Collectors.toList()));
-    }
-
-    private List<CypherGSParser.OC_UnaryAddOrSubtractExpressionContext>
-            getAddOrSubtractExpressionCtxList(CypherGSParser.OC_PowerOfExpressionContext ctx) {
-        List<CypherGSParser.OC_UnaryAddOrSubtractExpressionContext> ctxList = Lists.newArrayList();
-        ctx.oC_BitManipulationExpression()
-                .forEach(
-                        k -> {
-                            for (ParseTree tree : k.children) {
-                                if (tree instanceof TerminalNode
-                                        && (tree.getText().equals("&")
-                                                || tree.getText().equals("|")
-                                                || tree.getText().equals("^"))) {
-                                    throw new IllegalArgumentException(
-                                            "bit wise is not supported as operator in cypher, use"
-                                                    + " bit wise function instead");
-                                }
-                            }
-                            ctxList.addAll(k.oC_UnaryAddOrSubtractExpression());
-                        });
-        return ctxList;
     }
 
     @Override
@@ -484,6 +463,17 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                 } else {
                     throw new UnsupportedOperationException(errorMessage);
                 }
+            case "POWER":
+                Preconditions.checkArgument(
+                        exprCtx.size() == 2, "POWER function should have two arguments");
+                ExprVisitorResult left = visitOC_Expression(exprCtx.get(0));
+                ExprVisitorResult right = visitOC_Expression(exprCtx.get(1));
+                List<RelBuilder.AggCall> allAggCalls = Lists.newArrayList();
+                allAggCalls.addAll(left.getAggCalls());
+                allAggCalls.addAll(right.getAggCalls());
+                return new ExprVisitorResult(
+                        allAggCalls,
+                        builder.call(GraphStdOperatorTable.POWER, left.getExpr(), right.getExpr()));
             default:
                 throw new IllegalArgumentException(
                         "simple function " + functionName + " is unsupported yet");
@@ -496,6 +486,7 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
             case "TYPE":
             case "LENGTH":
             case "HEAD":
+            case "POWER":
                 return FunctionType.SIMPLE;
             case "COUNT":
             case "SUM":

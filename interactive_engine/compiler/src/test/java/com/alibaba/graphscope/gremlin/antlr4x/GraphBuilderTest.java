@@ -1057,7 +1057,21 @@ public class GraphBuilderTest {
                         + " person]}], alias=[a], opt=[VERTEX])",
                 node.explain().trim());
 
-        // todo: add bitwise and bitshift functions
+        node = eval("g.V().as('a').select(expr(a.age & 1 | 2 ^ 3))");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                        + "  GraphLogicalProject($f0=[^(|(&(a.age, 1), 2), 3)], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+
+        node = eval("g.V().as('a').select(expr(a.age << 2 >> 3))");
+        Assert.assertEquals(
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                        + "  GraphLogicalProject($f0=[>>(<<(a.age, 2), 3)], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[a], opt=[VERTEX])",
+                node.explain().trim());
     }
 
     @Test

@@ -82,14 +82,10 @@ oC_AddOrSubtractExpression
                        :  oC_MultiplyDivideModuloExpression ( ( SP? '+' SP? oC_MultiplyDivideModuloExpression ) | ( SP? '-' SP? oC_MultiplyDivideModuloExpression ) )* ;
 
 oC_MultiplyDivideModuloExpression
-                              :  oC_PowerOfExpression ( ( SP? '*' SP? oC_PowerOfExpression ) | ( SP? '/' SP? oC_PowerOfExpression ) | ( SP? '%' SP? oC_PowerOfExpression ) )* ;
+                              :  oC_BitManipulationExpression ( ( SP? '*' SP? oC_BitManipulationExpression ) | ( SP? '/' SP? oC_BitManipulationExpression ) | ( SP? '%' SP? oC_BitManipulationExpression ) )* ;
 
-oC_PowerOfExpression
-                 :  oC_BitManipulationExpression ( SP? '^' SP? oC_BitManipulationExpression )* ;
-
-// bit shift are not supported as standard operators (maybe as function) in calcite, so we don't include them here
 oC_BitManipulationExpression
-                : oC_UnaryAddOrSubtractExpression ( SP? ( '&' | '|' | '^' ) SP? oC_UnaryAddOrSubtractExpression )* ;
+                : oC_UnaryAddOrSubtractExpression ( SP? ( '&' | '|' | '^' | '<<' | '>>' ) SP? oC_UnaryAddOrSubtractExpression )* ;
 
 oC_UnaryAddOrSubtractExpression
                             :  oC_ListOperatorExpression

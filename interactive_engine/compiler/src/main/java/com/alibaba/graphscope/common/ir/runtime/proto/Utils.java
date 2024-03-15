@@ -193,6 +193,14 @@ public abstract class Utils {
                     return OuterExpression.ExprOpr.newBuilder()
                             .setArith(OuterExpression.Arithmetic.EXP)
                             .build();
+                } else if (operator.getName().equals("<<")) {
+                    return OuterExpression.ExprOpr.newBuilder()
+                            .setArith(OuterExpression.Arithmetic.BITLSHIFT)
+                            .build();
+                } else if (operator.getName().equals(">>")) {
+                    return OuterExpression.ExprOpr.newBuilder()
+                            .setArith(OuterExpression.Arithmetic.BITRSHIFT)
+                            .build();
                 }
             case EQUALS:
                 return OuterExpression.ExprOpr.newBuilder()
@@ -241,6 +249,18 @@ public abstract class Utils {
             case POSIX_REGEX_CASE_SENSITIVE:
                 return OuterExpression.ExprOpr.newBuilder()
                         .setLogical(OuterExpression.Logical.REGEX)
+                        .build();
+            case BIT_AND:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setArith(OuterExpression.Arithmetic.BITAND)
+                        .build();
+            case BIT_OR:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setArith(OuterExpression.Arithmetic.BITOR)
+                        .build();
+            case BIT_XOR:
+                return OuterExpression.ExprOpr.newBuilder()
+                        .setArith(OuterExpression.Arithmetic.BITXOR)
                         .build();
             default:
                 throw new UnsupportedOperationException(

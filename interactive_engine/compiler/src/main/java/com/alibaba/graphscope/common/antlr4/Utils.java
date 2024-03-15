@@ -56,8 +56,6 @@ public class Utils {
                     operators.add(GraphStdOperatorTable.DIVIDE);
                 } else if (tree.getText().equals("%")) {
                     operators.add(GraphStdOperatorTable.MOD);
-                } else if (tree.getText().equals("^")) {
-                    operators.add(GraphStdOperatorTable.POWER);
                 } else if (tree.getText().equals("=")) {
                     operators.add(GraphStdOperatorTable.EQUALS);
                 } else if (tree.getText().equals("<>")) {
@@ -70,6 +68,16 @@ public class Utils {
                     operators.add(GraphStdOperatorTable.LESS_THAN_OR_EQUAL);
                 } else if (tree.getText().equals(">=")) {
                     operators.add(GraphStdOperatorTable.GREATER_THAN_OR_EQUAL);
+                } else if (tree.getText().equals("&")) {
+                    operators.add(GraphStdOperatorTable.BIT_AND);
+                } else if (tree.getText().equals("|")) {
+                    operators.add(GraphStdOperatorTable.BIT_OR);
+                } else if (tree.getText().equals("^")) {
+                    operators.add(GraphStdOperatorTable.BIT_XOR);
+                } else if (tree.getText().equals("<<")) {
+                    operators.add(GraphStdOperatorTable.BIT_LEFT_SHIFT);
+                } else if (tree.getText().equals(">>")) {
+                    operators.add(GraphStdOperatorTable.BIT_RIGHT_SHIFT);
                 } else {
                     throw new UnsupportedOperationException(
                             "operator " + tree.getText() + " is unsupported yet");

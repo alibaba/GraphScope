@@ -236,4 +236,17 @@ public class WithTest {
                 project.explain().trim());
         Assert.assertEquals("RecordType(CHAR(1) name)", project.getRowType().toString());
     }
+
+    @Test
+    public void with_14_test() {
+        RelNode project =
+                Utils.eval("Match (a:person) Return a.age & 2 | 3 ^ 1 as b, power(a.age, 5) as c")
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(b=[^(|(&(a.age, 2), 3), 1)], c=[POWER(a.age, 5)],"
+                        + " isAppend=[false])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[a], opt=[VERTEX])",
+                project.explain().trim());
+    }
 }
