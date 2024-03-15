@@ -58,8 +58,8 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
                             nestedVisitor
                                     .visitTraversalMethod_dedup(byCtx.traversalMethod_dedup())
                                     .build();
-            if (byCtx.oC_FunctionInvocation() != null) {
-                String functionName = byCtx.oC_FunctionInvocation().oC_FunctionName().getText();
+            if (byCtx.oC_AggregateFunctionInvocation() != null) {
+                String functionName = byCtx.oC_AggregateFunctionInvocation().getChild(0).getText();
                 if (functionName.equals("count")) {
                     return builder.count(true, alias, dedupBy.getDedupByKeys());
                 } else if (functionName.equals("fold")) {
@@ -68,7 +68,7 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
             }
             throw new UnsupportedEvalException(
                     byCtx.getClass(), byCtx.getText() + " is unsupported yet in group value by");
-        } else if (byCtx.oC_FunctionInvocation() != null) {
+        } else if (byCtx.oC_AggregateFunctionInvocation() != null) {
             RexNode expr;
             if (byCtx.traversalMethod_select() != null || byCtx.traversalMethod_values() != null) {
                 GraphBuilder nestedBuilder =
@@ -101,7 +101,7 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
             } else {
                 expr = builder.variable((String) null);
             }
-            String functionName = byCtx.oC_FunctionInvocation().oC_FunctionName().getText();
+            String functionName = byCtx.oC_AggregateFunctionInvocation().getChild(0).getText();
             switch (functionName) {
                 case "count":
                     return builder.count(false, alias, expr);
@@ -118,7 +118,7 @@ public class NonStringValueByVisitor extends GremlinGSBaseVisitor<RelBuilder.Agg
                 default:
                     throw new IllegalArgumentException(
                             "invalid aggregate function "
-                                    + byCtx.oC_FunctionInvocation().getText());
+                                    + byCtx.oC_AggregateFunctionInvocation().getText());
             }
         } else {
             throw new UnsupportedEvalException(

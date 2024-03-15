@@ -111,8 +111,41 @@ oC_Atom
         | oC_FunctionInvocation
         | oC_Variable ;
 
+// todo: support user defined function
 oC_FunctionInvocation
-    :  oC_FunctionName SP? '(' SP? ( DISTINCT SP? )? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+    :  oC_AggregateFunctionInvocation | oC_ScalarFunctionInvocation;
+
+oC_AggregateFunctionInvocation
+    :  ( COUNT | SUM | MIN | MAX | COLLECT | AVG | FOLD | MEAN ) SP? '(' SP? ( DISTINCT SP? )? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+
+COUNT : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'N' | 'n' ) ( 'T' | 't' ) ;
+
+SUM : ( 'S' | 's' ) ( 'U' | 'u' ) ( 'M' | 'm' );
+
+MIN : ( 'M' | 'm' ) ( 'I' | 'i' ) ( 'N' | 'n' );
+
+MAX : ( 'M' | 'm' ) ( 'A' | 'a' ) ( 'X' | 'x' );
+
+COLLECT : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'C' | 'c' ) ( 'T' | 't' );
+
+AVG : ( 'A' | 'a' ) ( 'V' | 'v' ) ( 'G' | 'g' );
+
+FOLD : ( 'F' | 'f' ) ( 'O' | 'o' ) ( 'L' | 'l' ) ( 'D' | 'd' );
+
+MEAN : ( 'M' | 'm' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'N' | 'n' );
+
+oC_ScalarFunctionInvocation
+    :  ( LENGTH | POWER | LABELS | TYPE | HEAD ) SP? '(' SP? ( oC_Expression SP? ( ',' SP? oC_Expression SP? )* )? ')' ;
+
+LENGTH : ( 'L' | 'l' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ( 'G' | 'g' ) ( 'T' | 't' ) ( 'H' | 'h' );
+
+POWER : ( 'P' | 'p' ) ( 'O' | 'o' ) ( 'W' | 'w' ) ( 'E' | 'e' ) ( 'R' | 'r' );
+
+LABELS : ( 'L' | 'l' ) ( 'A' | 'a' ) ( 'B' | 'b' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'S' | 's' );
+
+TYPE : ( 'T' | 't' ) ( 'Y' | 'y' ) ( 'P' | 'p' ) ( 'E' | 'e' );
+
+HEAD : ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'D' | 'd' );
 
 oC_FunctionName
     :  oC_Namespace oC_SymbolicName ;
@@ -202,8 +235,6 @@ THEN : ( 'T' | 't' ) ( 'H' | 'h' ) ( 'E' | 'e' ) ( 'N' | 'n' ) ;
 oC_CountAny
     : ( COUNT SP? '(' SP? '*' SP? ')' )
     ;
-
-COUNT : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'U' | 'u' ) ( 'N' | 'n' ) ( 'T' | 't' ) ;
 
 oC_ParenthesizedExpression
     :  '(' SP? oC_Expression SP? ')' ;

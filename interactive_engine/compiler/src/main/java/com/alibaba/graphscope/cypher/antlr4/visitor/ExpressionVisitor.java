@@ -392,25 +392,49 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
     }
 
     @Override
-    public ExprVisitorResult visitOC_FunctionInvocation(
-            CypherGSParser.OC_FunctionInvocationContext ctx) {
-        String functionName = ctx.oC_FunctionName().getText();
-        switch (getFunctionType(functionName)) {
-            case SIMPLE:
-                return visitOC_SimpleFunction(ctx);
-            case AGGREGATE:
-                return visitOC_AggregateFunction(ctx);
-            case USER_DEFINED:
+    public ExprVisitorResult visitOC_AggregateFunctionInvocation(
+            CypherGSParser.OC_AggregateFunctionInvocationContext ctx) {
+        List<RexNode> variables =
+                ctx.oC_Expression().stream()
+                        .map(k -> visitOC_Expression(k).getExpr())
+                        .collect(Collectors.toList());
+        RelBuilder.AggCall aggCall;
+        String alias = aliasInfer.infer();
+        String functionName = ctx.getChild(0).getText();
+        boolean isDistinct = ctx.DISTINCT() != null;
+        switch (functionName.toUpperCase()) {
+            case "COUNT":
+                aggCall = builder.count(isDistinct, alias, variables);
+                break;
+            case "SUM":
+                aggCall = builder.sum(isDistinct, alias, variables.get(0));
+                break;
+            case "AVG":
+                aggCall = builder.avg(isDistinct, alias, variables.get(0));
+                break;
+            case "MIN":
+                aggCall = builder.min(alias, variables.get(0));
+                break;
+            case "MAX":
+                aggCall = builder.max(alias, variables.get(0));
+                break;
+            case "COLLECT":
+                aggCall = builder.collect((ctx.DISTINCT() != null), alias, variables);
+                break;
             default:
                 throw new UnsupportedOperationException(
-                        "user defined function " + functionName + " is unsupported yet");
+                        "aggregate function " + functionName + " is unsupported yet");
         }
+        return new ExprVisitorResult(
+                ImmutableList.of(aggCall),
+                RexTmpVariable.of(alias, ((GraphAggCall) aggCall).getType()));
     }
 
-    public ExprVisitorResult visitOC_SimpleFunction(
-            CypherGSParser.OC_FunctionInvocationContext ctx) {
+    @Override
+    public ExprVisitorResult visitOC_ScalarFunctionInvocation(
+            CypherGSParser.OC_ScalarFunctionInvocationContext ctx) {
         List<CypherGSParser.OC_ExpressionContext> exprCtx = ctx.oC_Expression();
-        String functionName = ctx.oC_FunctionName().getText();
+        String functionName = ctx.getChild(0).getText();
         switch (functionName.toUpperCase()) {
             case "LABELS":
                 RexNode labelVar = builder.variable(exprCtx.get(0).getText());
@@ -476,72 +500,8 @@ public class ExpressionVisitor extends CypherGSBaseVisitor<ExprVisitorResult> {
                         builder.call(GraphStdOperatorTable.POWER, left.getExpr(), right.getExpr()));
             default:
                 throw new IllegalArgumentException(
-                        "simple function " + functionName + " is unsupported yet");
+                        "scalar function " + functionName + " is unsupported yet");
         }
-    }
-
-    private FunctionType getFunctionType(String functionName) {
-        switch (functionName.toUpperCase()) {
-            case "LABELS":
-            case "TYPE":
-            case "LENGTH":
-            case "HEAD":
-            case "POWER":
-                return FunctionType.SIMPLE;
-            case "COUNT":
-            case "SUM":
-            case "AVG":
-            case "MIN":
-            case "MAX":
-            case "COLLECT":
-                return FunctionType.AGGREGATE;
-            default:
-                return FunctionType.USER_DEFINED;
-        }
-    }
-
-    private enum FunctionType {
-        SIMPLE,
-        AGGREGATE,
-        USER_DEFINED
-    }
-
-    public ExprVisitorResult visitOC_AggregateFunction(
-            CypherGSParser.OC_FunctionInvocationContext ctx) {
-        List<RexNode> variables =
-                ctx.oC_Expression().stream()
-                        .map(k -> visitOC_Expression(k).getExpr())
-                        .collect(Collectors.toList());
-        RelBuilder.AggCall aggCall;
-        String alias = aliasInfer.infer();
-        String functionName = ctx.oC_FunctionName().getText();
-        boolean isDistinct = ctx.DISTINCT() != null;
-        switch (functionName.toUpperCase()) {
-            case "COUNT":
-                aggCall = builder.count(isDistinct, alias, variables);
-                break;
-            case "SUM":
-                aggCall = builder.sum(isDistinct, alias, variables.get(0));
-                break;
-            case "AVG":
-                aggCall = builder.avg(isDistinct, alias, variables.get(0));
-                break;
-            case "MIN":
-                aggCall = builder.min(alias, variables.get(0));
-                break;
-            case "MAX":
-                aggCall = builder.max(alias, variables.get(0));
-                break;
-            case "COLLECT":
-                aggCall = builder.collect((ctx.DISTINCT() != null), alias, variables);
-                break;
-            default:
-                throw new UnsupportedOperationException(
-                        "agg function " + functionName + " is unsupported yet");
-        }
-        return new ExprVisitorResult(
-                ImmutableList.of(aggCall),
-                RexTmpVariable.of(alias, ((GraphAggCall) aggCall).getType()));
     }
 
     @Override

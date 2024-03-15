@@ -89,9 +89,9 @@ public class NegativeEvalTest {
                         + " expecting {'as', 'hasLabel', 'hasId', 'has', 'hasNot', 'out', 'in',"
                         + " 'both', 'outE', 'inE', 'bothE', 'with', 'outV', 'inV', 'otherV',"
                         + " 'endV', 'limit', 'valueMap', 'elementMap', 'order', 'select', 'dedup',"
-                        + " 'id', 'label', 'group', 'groupCount', 'count', 'values', 'fold', 'sum',"
-                        + " 'min', 'max', 'mean', 'is', 'where', 'not', 'union', 'identity',"
-                        + " 'coin', 'sample', 'match', 'subgraph', 'bothV', 'unfold', 'constant'}]",
+                        + " 'id', 'label', 'group', 'groupCount', 'values', 'is', 'where', 'not',"
+                        + " 'union', 'identity', 'coin', 'sample', 'match', 'subgraph', 'bothV',"
+                        + " 'unfold', 'constant', COUNT, SUM, MIN, MAX, COLLECT, AVG, FOLD, MEAN}]",
                     e.getMessage());
             return;
         }

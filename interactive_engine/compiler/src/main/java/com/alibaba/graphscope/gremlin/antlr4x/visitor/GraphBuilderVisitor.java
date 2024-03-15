@@ -541,9 +541,9 @@ public class GraphBuilderVisitor extends GremlinGSBaseVisitor<GraphBuilder> {
     }
 
     @Override
-    public GraphBuilder visitOC_FunctionInvocation(
-            GremlinGSParser.OC_FunctionInvocationContext ctx) {
-        String functionName = ctx.oC_FunctionName().getText();
+    public GraphBuilder visitOC_AggregateFunctionInvocation(
+            GremlinGSParser.OC_AggregateFunctionInvocationContext ctx) {
+        String functionName = ctx.getChild(0).getText();
         switch (functionName) {
             case "count":
                 return (GraphBuilder)

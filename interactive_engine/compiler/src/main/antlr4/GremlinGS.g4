@@ -94,7 +94,7 @@ traversalMethod
     | traversalMethod_id    // id()
     | traversalMethod_label // label()
     | traversalMethod_constant  //constant
-    | oC_FunctionInvocation // function invocation, including aggregate function, i.e. count/sum/min/max/mean/fold
+    | oC_AggregateFunctionInvocation // aggregate function, i.e. count/sum/min/max/mean/fold
     ;
 
 traversalSourceSpawnMethod_V
@@ -371,8 +371,8 @@ traversalMethod_group_valueby
 // group().by(...).by(dedup('a').fold()) = toSet('@a')
 // group().by(...).by(dedup('a').by('name').fold()) = toSet('@a.name')
 nonStringValueBy
-    : (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? oC_FunctionInvocation (DOT traversalMethod_as)?
-    | (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT oC_FunctionInvocation (DOT traversalMethod_as)?
+    : (ANON_TRAVERSAL_ROOT DOT)? (traversalMethod_select DOT)? (traversalMethod_values DOT)? oC_AggregateFunctionInvocation (DOT traversalMethod_as)?
+    | (ANON_TRAVERSAL_ROOT DOT)? traversalMethod_dedup DOT oC_AggregateFunctionInvocation (DOT traversalMethod_as)?
     ;
 
 // i.e. group().by(...).by(count().as('a'), sum().as('b'))

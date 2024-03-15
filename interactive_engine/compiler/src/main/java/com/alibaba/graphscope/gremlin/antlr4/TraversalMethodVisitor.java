@@ -519,21 +519,24 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
         Traversal nestedTraversal = null;
         if (ctx.traversalMethod_dedup() != null) {
             nestedTraversal = nestedVisitor.visitTraversalMethod_dedup(ctx.traversalMethod_dedup());
-            if (ctx.oC_FunctionInvocation() != null) {
-                String functionName = ctx.oC_FunctionInvocation().oC_FunctionName().getText();
+            if (ctx.oC_AggregateFunctionInvocation() != null) {
+                String functionName = ctx.oC_AggregateFunctionInvocation().getChild(0).getText();
                 if (functionName.equals("count") || functionName.equals("fold")) {
                     nestedTraversal =
-                            nestedVisitor.visitOC_FunctionInvocation(ctx.oC_FunctionInvocation());
+                            nestedVisitor.visitOC_AggregateFunctionInvocation(
+                                    ctx.oC_AggregateFunctionInvocation());
                 }
             }
-        } else if (ctx.oC_FunctionInvocation() != null) {
+        } else if (ctx.oC_AggregateFunctionInvocation() != null) {
             if (ctx.traversalMethod_select() != null) {
                 nestedVisitor.visitTraversalMethod_select(ctx.traversalMethod_select());
             }
             if (ctx.traversalMethod_values() != null) {
                 nestedVisitor.visitTraversalMethod_values(ctx.traversalMethod_values());
             }
-            nestedTraversal = nestedVisitor.visitOC_FunctionInvocation(ctx.oC_FunctionInvocation());
+            nestedTraversal =
+                    nestedVisitor.visitOC_AggregateFunctionInvocation(
+                            ctx.oC_AggregateFunctionInvocation());
         }
         if (ctx.traversalMethod_as() != null) {
             nestedTraversal = nestedVisitor.visitTraversalMethod_as(ctx.traversalMethod_as());
@@ -545,8 +548,9 @@ public class TraversalMethodVisitor extends TraversalRootVisitor<GraphTraversal>
     }
 
     @Override
-    public Traversal visitOC_FunctionInvocation(GremlinGSParser.OC_FunctionInvocationContext ctx) {
-        String functionName = ctx.oC_FunctionName().getText();
+    public Traversal visitOC_AggregateFunctionInvocation(
+            GremlinGSParser.OC_AggregateFunctionInvocationContext ctx) {
+        String functionName = ctx.getChild(0).getText();
         switch (functionName) {
             case "count":
                 return graphTraversal.count();
