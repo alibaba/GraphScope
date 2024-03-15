@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 
+import logging
 import os
 
 import pytest
@@ -23,7 +24,7 @@ import pytest
 from graphscope import pagerank
 from graphscope.framework.graph import Graph
 
-graphar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
+logger = logging.getLogger("graphscope")
 graphar_temp_dir = (
     os.path.expandvars("${TMPDIR}")
     if os.path.expandvars("${TMPDIR}").endswith(os.sep)
@@ -31,7 +32,7 @@ graphar_temp_dir = (
 )
 
 
-def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session):
+def test_save_full_ldbc_to_graphar_and_load_back(graphscope_session, ldbc_graph):
     output_dir = graphar_temp_dir + "graphar" + os.sep
     r = ldbc_graph.save_to(
         output_dir,
@@ -45,7 +46,7 @@ def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session)
         "type": "graphar",
         "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
     }
-    g = Graph.load_from(r["URI"], graphscope_session)
+    g = Graph.load_from(r["URI"], sess=graphscope_session)
     assert g.schema.to_dict() == ldbc_graph.schema.to_dict()
 
     # do some graph processing
@@ -56,7 +57,7 @@ def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session)
     del g
 
 
-def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
+def test_save_to_graphar_with_selector_and_load_back_1(graphscope_session, ldbc_graph):
     output_dir = graphar_temp_dir + "graphar_subgraph" + os.sep
     selector = {
         "vertices": {
@@ -82,7 +83,7 @@ def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
         "type": "graphar",
         "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
     }
-    g = Graph.load_from(r["URI"])
+    g = Graph.load_from(r["URI"], sess=graphscope_session)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
@@ -103,7 +104,7 @@ def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
     del g
 
 
-def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
+def test_save_to_graphar_with_selector_and_load_back_2(graphscope_session, ldbc_graph):
     output_dir = graphar_temp_dir + "graphar_subgraph2" + os.sep
     selector = {
         "vertices": {
@@ -129,7 +130,7 @@ def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
         "type": "graphar",
         "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
     }
-    g = Graph.load_from(r["URI"])
+    g = Graph.load_from(r["URI"], sess=graphscope_session)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
@@ -149,7 +150,7 @@ def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
     assert df.shape[0] == 903
 
 
-def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
+def test_save_to_graphar_with_selector_and_load_back_3(graphscope_session, ldbc_graph):
     output_dir = graphar_temp_dir + "graphar_subgraph3" + os.sep
     selector = {
         "vertices": {
@@ -175,7 +176,7 @@ def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
         "type": "graphar",
         "URI": "graphar+file://{}ldbc_sample.graph.yaml".format(output_dir),
     }
-    g = Graph.load_from(r["URI"])
+    g = Graph.load_from(r["URI"], sess=graphscope_session)
     print(g.schema)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
@@ -213,7 +214,7 @@ def test_load_from_graphar_with_selector(graphscope_session):
             "likes": None,
         },
     }
-    g = Graph.load_from(graph_uri, selector=selector)
+    g = Graph.load_from(graph_uri, sess=graphscope_session, selector=selector)
     assert g.schema.vertex_label_num == 2 and g.schema.edge_label_num == 2
     assert "person" in g.schema.vertex_labels and "comment" in g.schema.vertex_labels
     assert "knows" in g.schema.edge_labels and "likes" in g.schema.edge_labels
