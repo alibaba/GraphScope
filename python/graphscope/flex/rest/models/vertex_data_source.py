@@ -18,33 +18,29 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel, StrictStr, field_validator
 from typing import Any, ClassVar, Dict, List, Optional
-from graphscope.flex.rest.models.groot_graph_gremlin_interface import GrootGraphGremlinInterface
-from graphscope.flex.rest.models.groot_schema import GrootSchema
 from typing import Optional, Set
 from typing_extensions import Self
 
-class GrootGraph(BaseModel):
+class VertexDataSource(BaseModel):
     """
-    GrootGraph
+    VertexDataSource
     """ # noqa: E501
-    name: Optional[StrictStr] = None
-    type: Optional[StrictStr] = None
-    directed: Optional[StrictBool] = None
-    creation_time: Optional[StrictStr] = None
-    var_schema: Optional[GrootSchema] = Field(default=None, alias="schema")
-    gremlin_interface: Optional[GrootGraphGremlinInterface] = None
-    __properties: ClassVar[List[str]] = ["name", "type", "directed", "creation_time", "schema", "gremlin_interface"]
+    data_source: Optional[StrictStr] = None
+    type_name: Optional[StrictStr] = None
+    location: Optional[StrictStr] = None
+    property_mapping: Optional[Dict[str, Any]] = None
+    __properties: ClassVar[List[str]] = ["data_source", "type_name", "location", "property_mapping"]
 
-    @field_validator('type')
-    def type_validate_enum(cls, value):
+    @field_validator('data_source')
+    def data_source_validate_enum(cls, value):
         """Validates the enum"""
         if value is None:
             return value
 
-        if value not in set(['GrootGraph']):
-            raise ValueError("must be one of enum values ('GrootGraph')")
+        if value not in set(['ODPS', 'FILE']):
+            raise ValueError("must be one of enum values ('ODPS', 'FILE')")
         return value
 
     model_config = {
@@ -65,7 +61,7 @@ class GrootGraph(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of GrootGraph from a JSON string"""
+        """Create an instance of VertexDataSource from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -86,17 +82,11 @@ class GrootGraph(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of var_schema
-        if self.var_schema:
-            _dict['schema'] = self.var_schema.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of gremlin_interface
-        if self.gremlin_interface:
-            _dict['gremlin_interface'] = self.gremlin_interface.to_dict()
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of GrootGraph from a dict"""
+        """Create an instance of VertexDataSource from a dict"""
         if obj is None:
             return None
 
@@ -104,12 +94,10 @@ class GrootGraph(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "name": obj.get("name"),
-            "type": obj.get("type"),
-            "directed": obj.get("directed"),
-            "creation_time": obj.get("creation_time"),
-            "schema": GrootSchema.from_dict(obj["schema"]) if obj.get("schema") is not None else None,
-            "gremlin_interface": GrootGraphGremlinInterface.from_dict(obj["gremlin_interface"]) if obj.get("gremlin_interface") is not None else None
+            "data_source": obj.get("data_source"),
+            "type_name": obj.get("type_name"),
+            "location": obj.get("location"),
+            "property_mapping": obj.get("property_mapping")
         })
         return _obj
 

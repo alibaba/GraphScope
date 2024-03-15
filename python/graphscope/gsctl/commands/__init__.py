@@ -20,6 +20,7 @@ import click
 
 from graphscope.gsctl.commands.common import cli as common
 from graphscope.gsctl.commands.dev import cli as dev
+from graphscope.gsctl.commands.insight import cli as insight
 from graphscope.gsctl.commands.interactive import cli as interactive
 from graphscope.gsctl.config import Context
 from graphscope.gsctl.impl import connect_coordinator
@@ -41,6 +42,8 @@ def get_command_collection(context: Context):
         solution = response.solution
         if solution == "INTERACTIVE":
             commands = click.CommandCollection(sources=[common, interactive])
+        elif solution == "GRAPHSCOPE_INSIGHT":
+            commands = click.CommandCollection(sources=[common, insight])
     except Exception as e:
         click.secho(
             "Failed to connect to coordinator at {0}: {1}".format(

@@ -1,7 +1,7 @@
-#! /usr/bin/env python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2024 Alibaba Group Holding Limited.
+# Copyright 2024 Alibaba Group Holding Limited. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,14 @@
 # limitations under the License.
 #
 
-import logging
+import graphscope.flex.rest
+from graphscope.gsctl.config import get_current_context
 
-logging.basicConfig(
-    format="%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s",
-    level=logging.INFO,
-)
 
-from gs_flex_coordinator.core.client_wrapper import client_wrapper
-from gs_flex_coordinator.core.utils import handle_api_exception
+def upload_file(filename: str, content: bytes, location: str) -> str:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.UtilsApi(api_client)
+        return api_instance.upload_file(location)

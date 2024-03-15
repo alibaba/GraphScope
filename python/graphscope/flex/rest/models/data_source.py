@@ -18,34 +18,20 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, Field, StrictBool, StrictStr, field_validator
+from pydantic import BaseModel
 from typing import Any, ClassVar, Dict, List, Optional
-from graphscope.flex.rest.models.groot_graph_gremlin_interface import GrootGraphGremlinInterface
-from graphscope.flex.rest.models.groot_schema import GrootSchema
+from graphscope.flex.rest.models.edge_data_source import EdgeDataSource
+from graphscope.flex.rest.models.vertex_data_source import VertexDataSource
 from typing import Optional, Set
 from typing_extensions import Self
 
-class GrootGraph(BaseModel):
+class DataSource(BaseModel):
     """
-    GrootGraph
+    DataSource
     """ # noqa: E501
-    name: Optional[StrictStr] = None
-    type: Optional[StrictStr] = None
-    directed: Optional[StrictBool] = None
-    creation_time: Optional[StrictStr] = None
-    var_schema: Optional[GrootSchema] = Field(default=None, alias="schema")
-    gremlin_interface: Optional[GrootGraphGremlinInterface] = None
-    __properties: ClassVar[List[str]] = ["name", "type", "directed", "creation_time", "schema", "gremlin_interface"]
-
-    @field_validator('type')
-    def type_validate_enum(cls, value):
-        """Validates the enum"""
-        if value is None:
-            return value
-
-        if value not in set(['GrootGraph']):
-            raise ValueError("must be one of enum values ('GrootGraph')")
-        return value
+    vertices_datasource: Optional[List[VertexDataSource]] = None
+    edges_datasource: Optional[List[EdgeDataSource]] = None
+    __properties: ClassVar[List[str]] = ["vertices_datasource", "edges_datasource"]
 
     model_config = {
         "populate_by_name": True,
@@ -65,7 +51,7 @@ class GrootGraph(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of GrootGraph from a JSON string"""
+        """Create an instance of DataSource from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -86,17 +72,25 @@ class GrootGraph(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of var_schema
-        if self.var_schema:
-            _dict['schema'] = self.var_schema.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of gremlin_interface
-        if self.gremlin_interface:
-            _dict['gremlin_interface'] = self.gremlin_interface.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of each item in vertices_datasource (list)
+        _items = []
+        if self.vertices_datasource:
+            for _item in self.vertices_datasource:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['vertices_datasource'] = _items
+        # override the default output from pydantic by calling `to_dict()` of each item in edges_datasource (list)
+        _items = []
+        if self.edges_datasource:
+            for _item in self.edges_datasource:
+                if _item:
+                    _items.append(_item.to_dict())
+            _dict['edges_datasource'] = _items
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of GrootGraph from a dict"""
+        """Create an instance of DataSource from a dict"""
         if obj is None:
             return None
 
@@ -104,12 +98,8 @@ class GrootGraph(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "name": obj.get("name"),
-            "type": obj.get("type"),
-            "directed": obj.get("directed"),
-            "creation_time": obj.get("creation_time"),
-            "schema": GrootSchema.from_dict(obj["schema"]) if obj.get("schema") is not None else None,
-            "gremlin_interface": GrootGraphGremlinInterface.from_dict(obj["gremlin_interface"]) if obj.get("gremlin_interface") is not None else None
+            "vertices_datasource": [VertexDataSource.from_dict(_item) for _item in obj["vertices_datasource"]] if obj.get("vertices_datasource") is not None else None,
+            "edges_datasource": [EdgeDataSource.from_dict(_item) for _item in obj["edges_datasource"]] if obj.get("edges_datasource") is not None else None
         })
         return _obj
 
