@@ -1,0 +1,29 @@
+# SchemaMappingLoadingConfigDataSource
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**scheme** | **str** |  | [optional] 
+
+## Example
+
+```python
+from interactive_sdk.models.schema_mapping_loading_config_data_source import SchemaMappingLoadingConfigDataSource
+
+# TODO update the JSON string below
+json = "{}"
+# create an instance of SchemaMappingLoadingConfigDataSource from a JSON string
+schema_mapping_loading_config_data_source_instance = SchemaMappingLoadingConfigDataSource.from_json(json)
+# print the JSON string representation of the object
+print SchemaMappingLoadingConfigDataSource.to_json()
+
+# convert the object into a dict
+schema_mapping_loading_config_data_source_dict = schema_mapping_loading_config_data_source_instance.to_dict()
+# create an instance of SchemaMappingLoadingConfigDataSource from a dict
+schema_mapping_loading_config_data_source_form_dict = schema_mapping_loading_config_data_source.from_dict(schema_mapping_loading_config_data_source_dict)
+```
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
+
+

@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "interactive_sdk"
+version = "0.0.3"
+description = "GraphScope Interactive API v0.0.3"
+authors = ["OpenAPI Generator Community <graphscope@alibaba-inc.com>"]
+license = "Apache 2.0"
+readme = "README.md"
+repository = "https://github.com/GIT_USER_ID/GIT_REPO_ID"
+keywords = ["OpenAPI", "OpenAPI-Generator", "GraphScope Interactive API v0.0.3"]
+include = ["interactive_sdk/py.typed"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+urllib3 = ">= 1.25.3"
+python-dateutil = ">=2.8.2"
+pydantic = ">=2"
+typing-extensions = ">=4.7.1"
+
+[tool.poetry.dev-dependencies]
+pytest = ">=7.2.1"
+tox = ">=3.9.0"
+flake8 = ">=4.0.0"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = "pydantic"
