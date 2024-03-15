@@ -292,6 +292,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let mut graph_modifier = GraphModifier::new(&data_root_path);
 
         graph_modifier.skip_header();
+        graph_modifier.parallel(self.workers);
         let mut graph = self.graph_db.write().unwrap();
         let insert_schema = InputSchema::from_string(request_json, &graph.graph_schema).unwrap();
         graph_modifier
@@ -311,6 +312,7 @@ impl pb::bi_job_service_server::BiJobService for JobServiceImpl {
         let mut graph_modifier = GraphModifier::new(&data_root_path);
 
         graph_modifier.skip_header();
+        graph_modifier.parallel(self.workers);
         let mut graph = self.graph_db.write().unwrap();
         let delete_schema = InputSchema::from_string(request_json, &graph.graph_schema).unwrap();
         graph_modifier
