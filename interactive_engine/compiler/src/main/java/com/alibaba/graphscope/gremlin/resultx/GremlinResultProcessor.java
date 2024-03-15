@@ -17,6 +17,8 @@
 package com.alibaba.graphscope.gremlin.resultx;
 
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.IrResult;
@@ -44,6 +46,7 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
     protected final QueryTimeoutConfig timeoutConfig;
 
     public GremlinResultProcessor(
+            Configs configs,
             Context ctx,
             RecordParser recordParser,
             ResultSchema resultSchema,
@@ -55,7 +58,9 @@ public class GremlinResultProcessor implements ExecutionResponseListener {
         this.statusCallback = statusCallback;
         this.timeoutConfig = timeoutConfig;
         this.reducer = Maps.newLinkedHashMap();
-        this.recordStreamIterator = new StreamIterator<>();
+        this.recordStreamIterator =
+                new StreamIterator<>(
+                        FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs));
     }
 
     @Override

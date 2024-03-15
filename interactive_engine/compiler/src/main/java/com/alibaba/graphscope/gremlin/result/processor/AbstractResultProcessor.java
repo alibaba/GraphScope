@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.gremlin.result.processor;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.ResultParser;
 import com.alibaba.graphscope.gremlin.plugin.QueryStatusCallback;
@@ -49,6 +51,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
     protected final StreamIterator<PegasusClient.JobResponse> responseStreamIterator;
 
     protected AbstractResultProcessor(
+            Configs configs,
             Context writeResult,
             ResultParser resultParser,
             QueryStatusCallback statusCallback,
@@ -67,7 +70,9 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                         msg.optionalArgs(Tokens.ARGS_BATCH_SIZE)
                                 .orElse(settings.resultIterationBatchSize);
         this.resultCollectors = new ArrayList<>(this.resultCollectorsBatchSize);
-        this.responseStreamIterator = new StreamIterator<>();
+        this.responseStreamIterator =
+                new StreamIterator<>(
+                        FrontendConfig.PER_QUERY_STREAM_BUFFER_MAX_CAPACITY.get(configs));
     }
 
     @Override

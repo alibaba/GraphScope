@@ -158,6 +158,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
                 lifeCycle =
                         new LifeCycleSupplier(
+                                        configs,
                                         ctx,
                                         queryCache,
                                         executionClient,
@@ -312,7 +313,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     processTraversal(
                                             traversal,
                                             new GremlinResultProcessor(
-                                                    ctx, traversal, statusCallback, timeoutConfig),
+                                                    configs,
+                                                    ctx,
+                                                    traversal,
+                                                    statusCallback,
+                                                    timeoutConfig),
                                             irMeta,
                                             timeoutConfig,
                                             statusCallback.getQueryLogger());

@@ -18,6 +18,7 @@ package com.alibaba.graphscope.gremlin.plugin.processor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.function.Supplier;
 
 public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
+    private final Configs configs;
     private final QueryCache queryCache;
     private final ExecutionClient client;
     private final Context ctx;
@@ -46,6 +48,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
     private final QueryTimeoutConfig timeoutConfig;
 
     public LifeCycleSupplier(
+            Configs configs,
             Context ctx,
             QueryCache queryCache,
             ExecutionClient client,
@@ -54,6 +57,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
             IrMeta meta,
             QueryStatusCallback statusCallback,
             QueryTimeoutConfig timeoutConfig) {
+        this.configs = configs;
         this.ctx = ctx;
         this.queryCache = queryCache;
         this.client = client;
@@ -91,6 +95,7 @@ public class LifeCycleSupplier implements Supplier<GremlinExecutor.LifeCycle> {
                                         new ResultSchema(summary.getLogicalPlan());
                                 GremlinResultProcessor listener =
                                         new GremlinResultProcessor(
+                                                configs,
                                                 ctx,
                                                 new GremlinRecordParser(resultSchema),
                                                 resultSchema,

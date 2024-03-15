@@ -16,6 +16,7 @@
 
 package com.alibaba.graphscope.gremlin.integration.resultx;
 
+import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.result.RecordParser;
 import com.alibaba.graphscope.gaia.proto.IrResult;
@@ -35,12 +36,13 @@ import java.util.stream.Collectors;
 
 public class GremlinTestResultProcessor extends GremlinResultProcessor {
     public GremlinTestResultProcessor(
+            Configs configs,
             Context ctx,
             RecordParser recordParser,
             ResultSchema resultSchema,
             QueryStatusCallback statusCallback,
             QueryTimeoutConfig timeoutConfig) {
-        super(ctx, recordParser, resultSchema, statusCallback, timeoutConfig);
+        super(configs, ctx, recordParser, resultSchema, statusCallback, timeoutConfig);
     }
 
     @Override
