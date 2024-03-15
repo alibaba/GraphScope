@@ -24,11 +24,11 @@ from graphscope import pagerank
 from graphscope.framework.graph import Graph
 
 graphar_test_repo_dir = os.path.expandvars("${GS_TEST_DIR}")
-graphar_temp_dir = os.path.expandvars("${TMPDIR}")
+graphar_temp_dir = os.path.expandvars("${TMPDIR}") if os.path.expandvars("${TMPDIR}").endswith(os.sep) else os.path.expandvars("${TMPDIR}") + os.sep
 
 
 def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session):
-    output_dir = graphar_temp_dir + "graphar/"
+    output_dir = graphar_temp_dir + "graphar" + os.sep
     r = ldbc_graph.save_to(
         output_dir,
         format="graphar",
@@ -53,7 +53,7 @@ def test_save_full_ldbc_to_graphar_and_load_back(ldbc_graph, graphscope_session)
 
 
 def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
-    output_dir = graphar_temp_dir + "graphar_subgraph/"
+    output_dir = graphar_temp_dir + "graphar_subgraph" + os.sep
     selector = {
         "vertices": {
             "person": ["id", "firstName", "lastName"],
@@ -100,7 +100,7 @@ def test_save_to_graphar_with_selector_and_load_back_1(ldbc_graph):
 
 
 def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
-    output_dir = graphar_temp_dir + "graphar_subgraph2/"
+    output_dir = graphar_temp_dir + "graphar_subgraph2" + os.sep
     selector = {
         "vertices": {
             "person": ["id", "firstName", "lastName"],
@@ -146,7 +146,7 @@ def test_save_to_graphar_with_selector_and_load_back_2(ldbc_graph):
 
 
 def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
-    output_dir = graphar_temp_dir + "graphar_subgraph3/"
+    output_dir = graphar_temp_dir + "graphar_subgraph3" + os.sep
     selector = {
         "vertices": {
             "person": ["id", "firstName", "lastName"],
@@ -195,8 +195,9 @@ def test_save_to_graphar_with_selector_and_load_back_3(ldbc_graph):
 
 @pytest.mark.dependency(depends=["test_save_full_ldbc_to_graphar_and_load_back"])
 def test_load_from_graphar_with_selector(graphscope_session):
-    graph_uri = "graphar+file://{}graphar/ldbc_sample.graph.yaml".format(
-        graphar_temp_dir
+    graph_uri = "graphar+file://{}graphar{}ldbc_sample.graph.yaml".format(
+        graphar_temp_dir,
+        os.sep,
     )
     selector = {
         "vertices": {
