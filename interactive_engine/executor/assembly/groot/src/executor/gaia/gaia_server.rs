@@ -30,6 +30,7 @@ use pegasus_network::SimpleServerDetector;
 use pegasus_server::rpc::{start_all, RPCServerConfig, ServiceStartListener};
 use runtime::initialize_job_assembly;
 use tokio::runtime::Runtime;
+use opentelemetry::{global, trace::{Span, Tracer}, KeyValue};
 
 use crate::global_query::GraphPartitionManager;
 

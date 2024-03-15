@@ -40,6 +40,12 @@ use tokio_stream::wrappers::UnboundedReceiverStream;
 use tonic::transport::Server;
 use tonic::{Code, Request, Response, Status};
 
+use opentelemetry::{global, KeyValue, propagation::Extractor, trace::{Span, SpanKind, Tracer}};
+use opentelemetry_sdk::{
+    propagation::TraceContextPropagator, runtime::Tokio, trace::TracerProvider,
+};
+use opentelemetry_otlp::WithExportConfig;
+
 use crate::generated::protocol as pb;
 use crate::generated::protocol::job_config::Servers;
 use crate::job::{JobAssembly, JobDesc};
@@ -179,6 +185,9 @@ where
     type SubmitStream = UnboundedReceiverStream<Result<pb::JobResponse, Status>>;
 
     async fn cancel(&self, req: Request<pb::CancelRequest>) -> Result<Response<Empty>, Status> {
+        let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
+        let tracer = global::tracer("/Pegasus/Server");
+        let mut span = tracer.span_builder("/JobService/Cancel").with_kind(SpanKind::Server).start_with_context(&tracer, &parent_ctx);
         let pb::CancelRequest { job_id } = req.into_inner();
         let _ = pegasus::cancel_job(job_id);
         Ok(Response::new(Empty {}))
@@ -186,12 +195,16 @@ where
 
     async fn submit(&self, req: Request<pb::JobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
+        let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
+        let tracer = global::tracer("/Pegasus/Server");
+        let mut span = tracer.span_builder("/JobService/Cancel").with_kind(SpanKind::Server).start_with_context(&tracer, &parent_ctx);
         let pb::JobRequest { conf, source, plan, resource } = req.into_inner();
         if conf.is_none() {
             return Err(Status::new(Code::InvalidArgument, "job configuration not found"));
         }
 
         let conf = parse_conf_req(conf.unwrap());
+        span.add_event("job", vec![KeyValue::new("job.name", conf.job_name.clone()), KeyValue::new("job.id", conf.job_id.to_string())]);
         info!("job conf {:?}", conf);
         pegasus::wait_servers_ready(conf.servers());
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
@@ -265,11 +278,13 @@ where
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
+    let _tracer = init_tracer().expect("Failed to initialize tracer.");
     let server_id = server_config.server_id();
     if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
         listener.on_server_start(server_id, server_addr)?;
     }
     start_rpc_server(server_id, rpc_config, assemble, listener).await?;
+    global::shutdown_tracer_provider();
     Ok(())
 }
 
@@ -344,6 +359,40 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
 
         service.serve_with_incoming(incoming).await?;
         Ok(())
+    }
+}
+
+fn init_tracer()-> Result<opentelemetry_sdk::trace::Tracer, opentelemetry::trace::TraceError> {
+    global::set_text_map_propagator(TraceContextPropagator::new());
+    opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint("http://localhost:4317"),
+        )
+        .with_trace_config(
+            opentelemetry_sdk::trace::config().with_resource(
+                opentelemetry_sdk::Resource::new(vec![KeyValue::new(
+                "service.name",
+                "pegasus",
+            )])),
+        )
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
+}
+
+struct MetadataMap<'a>(&'a tonic::metadata::MetadataMap);
+
+impl<'a> Extractor for MetadataMap<'a> {
+    fn get(&self, key: &str) -> Option<&str> {
+        self.0.get(key).and_then(|metadata| metadata.to_str().ok())
+    }
+
+    fn keys(&self) -> Vec<&str> {
+        self.0.keys().map(|key| match key {
+            tonic::metadata::KeyRef::Ascii(v) => v.as_str(),
+            tonic::metadata::KeyRef::Binary(v) => v.as_str(),
+        }).collect::<Vec<_>>()
     }
 }
 

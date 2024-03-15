@@ -18,6 +18,8 @@ use std::fmt::Debug;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
+use opentelemetry::{global, KeyValue, propagation::Extractor, trace::{Span, SpanKind, Tracer}, trace};
+use opentelemetry::global::BoxedSpan;
 
 use pegasus_executor::{Task, TaskState};
 
@@ -47,6 +49,7 @@ pub struct Worker<D: Data, T: Debug + Send + 'static> {
     resources: ResourceMap,
     keyed_resources: KeyedResources,
     is_finished: bool,
+    span: BoxedSpan,
     _ph: std::marker::PhantomData<D>,
 }
 
@@ -57,6 +60,9 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
         if peer_guard.fetch_add(1, Ordering::SeqCst) == 0 {
             pegasus_memory::alloc::new_task(conf.job_id as usize);
         }
+        let tracer = global::tracer("pegasus");
+        let mut span = tracer.span_builder("/pegasus/worker").start(&tracer);
+        span.add_event("job_id", vec![KeyValue::new("job_id", conf.job_id.to_string())]);
         Worker {
             conf: conf.clone(),
             id,
@@ -67,6 +73,7 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             resources: ResourceMap::default(),
             keyed_resources: KeyedResources::default(),
             is_finished: false,
+            span: span,
             _ph: std::marker::PhantomData,
         }
     }
@@ -128,13 +135,15 @@ impl<D: Data, T: Debug + Send + 'static> Worker<D, T> {
             .insert(key, Box::new(resource));
     }
 
-    fn check_cancel(&self) -> bool {
+    fn check_cancel(&mut self) -> bool {
         if self.conf.time_limit > 0 {
             let elapsed = self.start.elapsed().as_millis() as u64;
             if elapsed >= self.conf.time_limit {
                 return true;
             }
         }
+        self.span.add_event("canceled", vec![]);
+        self.span.end();
         self.sink
             .get_cancel_hook()
             .load(Ordering::SeqCst)
@@ -249,6 +258,8 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                         self.start.elapsed().as_millis()
                     );
                     self.is_finished = true;
+                    self.span.set_status(trace::Status::Ok);
+                    self.span.end();
                     // if this is last worker, return Finished
                     if self.peer_guard.fetch_sub(1, Ordering::SeqCst) == 1 {
                         state
@@ -262,6 +273,8 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
             }
             Err(e) => {
                 error_worker!("job({}) execute error: {}", self.id.job_id, e);
+                self.span.set_status(trace::Status::error(format!("Execution error: {}", e)));
+                self.span.end();
                 self.sink.on_error(e);
                 TaskState::Finished
             }
