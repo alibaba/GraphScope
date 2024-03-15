@@ -178,6 +178,7 @@ int main(int argc, char** argv) {
   // Parse service config
   server::ServiceConfig service_config = node.as<server::ServiceConfig>();
   service_config.engine_config_path = engine_config_file;
+  service_config.start_admin_service = vm["enable-admin-service"].as<bool>();
 
   auto& db = gs::GraphDB::get();
 
