@@ -48,9 +48,9 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
 
   static constexpr size_t num_props = sizeof...(T);
   GeneralEdgeSetBuilder(size_t edge_size, const grape::Bitset& bitset,
-                        std::vector<std::string> prop_names,
-                        LabelT edge_label, std::array<LabelT, 2> src_labels,
-                        LabelT dst_label, Direction dir)
+                        std::vector<std::string> prop_names, LabelT edge_label,
+                        std::array<LabelT, 2> src_labels, LabelT dst_label,
+                        Direction dir)
       : bitset_(bitset),
         prop_names_(prop_names),
         edge_label_(edge_label),
@@ -89,14 +89,14 @@ class GeneralEdgeSetBuilder<2, GI, VID_T, LabelT, std::tuple<T...>,
   }
 
  private:
-  std::vector<ele_tuple_t> vec_;
-  std::vector<LabelT> label_vec_;
+  const grape::Bitset& bitset_;
   std::vector<std::string> prop_names_;
   LabelT edge_label_;
   std::array<LabelT, 2> src_labels_;
   LabelT dst_label_;
-  const grape::Bitset& bitset_;
   Direction direction_;
+  std::vector<ele_tuple_t> vec_;
+  std::vector<LabelT> label_vec_;
 };
 
 template <typename GI, typename VID_T, typename LabelT>
@@ -266,13 +266,13 @@ class GeneralEdgeSetIter {
  private:
   const std::vector<VID_T>& vids_;
   const adj_list_array_t& adj_lists_;
-  adj_list_t cur_adj_list_;
   const grape::Bitset& bitsets_;
-  adj_list_iterator begin_, end_;
   const std::array<LabelT, 2>& src_labels_;
   LabelT dst_label_;
   LabelT edge_label_;
   size_t ind_;
+  adj_list_t cur_adj_list_;
+  adj_list_iterator begin_, end_;
 };
 
 template <typename GI, typename VID_T, typename LabelT>
@@ -465,12 +465,11 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
                  LabelT edge_label, std::array<LabelT, 2> src_labels,
                  LabelT dst_label, Direction dir)
       : vids_(std::move(vids)),
-
         adj_lists_(std::move(adj_lists)),
         prop_names_(prop_names),
         edge_label_(edge_label),
-        src_labels_(src_labels),
         dst_label_(dst_label),
+        src_labels_(src_labels),
         size_(0),
         dir_(dir) {
     bitsets_.swap(bitsets);
@@ -481,8 +480,8 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
         adj_lists_(std::move(other.adj_lists_)),
         prop_names_(other.prop_names_),
         edge_label_(other.edge_label_),
-        src_labels_(std::move(other.src_labels_)),
         dst_label_(other.dst_label_),
+        src_labels_(std::move(other.src_labels_)),
         size_(0),
         dir_(other.dir_) {
     bitsets_.swap(other.bitsets_);
@@ -673,16 +672,14 @@ class GeneralEdgeSet<2, GI, VID_T, LabelT, std::tuple<T...>, std::tuple<T...>> {
   }
 
  private:
-  mutable size_t size_;
-  LabelT edge_label_, dst_label_;
-  std::array<LabelT, 2> src_labels_;
-
-  std::vector<std::string> prop_names_;
-
   std::vector<VID_T> vids_;
   adj_list_array_t adj_lists_;
-  grape::Bitset bitsets_;  // bitset of src vertices.
+  std::vector<std::string> prop_names_;
+  LabelT edge_label_, dst_label_;
+  std::array<LabelT, 2> src_labels_;
+  mutable size_t size_;
   Direction dir_;
+  grape::Bitset bitsets_;  // bitset of src vertices.
 };
 
 // general edge set stores multi src labels but only one dst label

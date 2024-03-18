@@ -131,12 +131,7 @@ public class Frontend extends NodeBase {
         KafkaAppender kafkaAppender = new KafkaAppender(configs, metaService, logService);
         this.graphWriter =
                 new GraphWriter(
-                        snapshotCache,
-                        edgeIdGenerator,
-                        this.metaService,
-                        metricsCollector,
-                        kafkaAppender,
-                        configs);
+                        snapshotCache, edgeIdGenerator, metricsCollector, kafkaAppender, configs);
         ClientWriteService clientWriteService = new ClientWriteService(graphWriter);
 
         RoleClients<BackupClient> backupClients =

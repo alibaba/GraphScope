@@ -61,6 +61,10 @@ class Graph:
         )
         return self._conn.batch_write(request)
 
+    def update_vertex_properties_batch(self, vertices: list):
+        request = to_write_requests_pb("VERTEX", vertices, write_service_pb2.UPDATE)
+        return self._conn.batch_write(request)
+
     def delete_vertex(self, vertex_pk: VertexRecordKey):
         return self.delete_vertices([vertex_pk])
 
@@ -81,6 +85,10 @@ class Graph:
         request = to_write_requests_pb(
             "EDGE", [[edge, properties]], write_service_pb2.UPDATE
         )
+        return self._conn.batch_write(request)
+
+    def update_edge_properties_batch(self, edges: list):
+        request = to_write_requests_pb("EDGE", edges, write_service_pb2.UPDATE)
         return self._conn.batch_write(request)
 
     def delete_edge(self, edge: EdgeRecordKey):

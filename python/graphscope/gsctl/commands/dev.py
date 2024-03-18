@@ -65,7 +65,34 @@ def flexbuild():
     "--app",
     type=click.Choice(["docker"]),
     required=True,
-    help="Applicatin type of the built artifacts you want to build",
+    help="Application type of the built artifacts you want to build",
+)
+@click.option(
+    "--graphscope-repo",
+    required=False,
+    help="GraphScope code repo location.",
+)
+def insight(app, graphscope_repo):
+    """Build GraphScope Insight for BI analysis scenarios"""
+    if graphscope_repo is None:
+        graphscope_repo = default_graphscope_repo_path
+    insight_build_dir = os.path.join(graphscope_repo, "k8s")
+    if not os.path.exists(insight_build_dir) or not os.path.isdir(insight_build_dir):
+        click.secho(
+            f"No such file or directory {insight_build_dir}, try --graphscope-repo param.",
+            fg="red",
+        )
+        return
+    cmd = ["make", "graphscope-store", "ENABLE_COORDINATOR=true"]
+    run_shell_cmd(cmd, os.path.join(graphscope_repo, insight_build_dir))
+
+
+@flexbuild.command()
+@click.option(
+    "--app",
+    type=click.Choice(["docker"]),
+    required=True,
+    help="Application type of the built artifacts you want to build",
 )
 @click.option(
     "--graphscope-repo",

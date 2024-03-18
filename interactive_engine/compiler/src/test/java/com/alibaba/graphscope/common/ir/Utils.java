@@ -21,6 +21,7 @@ import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
 import com.alibaba.graphscope.common.ir.meta.reader.LocalMetaDataReader;
 import com.alibaba.graphscope.common.ir.meta.schema.GraphOptSchema;
+import com.alibaba.graphscope.common.ir.planner.GraphHepPlanner;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilderFactory;
 import com.alibaba.graphscope.common.ir.tools.GraphRexBuilder;
@@ -32,7 +33,6 @@ import com.google.common.collect.ImmutableMap;
 import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptPlanner;
 import org.apache.calcite.plan.RelRule;
-import org.apache.calcite.plan.hep.HepPlanner;
 import org.apache.calcite.plan.hep.HepProgram;
 import org.apache.calcite.plan.hep.HepProgramBuilder;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
@@ -77,7 +77,7 @@ public class Utils {
                         ruleConfig.withRelBuilderFactory(relBuilderFactory).toRule());
             }
         }
-        return new HepPlanner(hepBuilder.build());
+        return new GraphHepPlanner(hepBuilder.build());
     }
 
     private static IrMeta mockSchemaMeta(String schemaJson) {
