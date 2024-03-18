@@ -77,6 +77,8 @@ data:
     store.data.secondary.path={{ .Values.secondary.storeDataPath }}
     store.gc.interval.ms={{ .Values.storeGcIntervalMs }}
 
+    tracing.enabled={{ .Values.otel.traces.enabled }}
+
     ## Extra Config
     {{- if .Values.extraConfig }}
     {{- $config_list := regexSplit ";" .Values.extraConfig -1 }}
@@ -102,5 +104,13 @@ data:
 
     export LOG_NAME=graphscope-store
     export GROOT_CONF_FILE=/etc/groot/groot.config
+
+    {{- if .Values.otel.traces.enabled }}
+    export JAVA_TOOL_OPTIONS="-javaagent:/home/graphscope/opentelemetry-javaagent.jar"
+    export OTEL_SERVICE_NAME="graphscope-store"
+    export OTEL_TRACES_SAMPLER={{ .Values.otel.traces.sampler.name }}
+    export OTEL_TRACES_SAMPLER_ARG={{ .Values.otel.traces.sampler.arg }}
+    {{- end }}
+
     ${GRAPHSCOPE_HOME}/groot/bin/store_ctl.sh start
 {{- end -}}

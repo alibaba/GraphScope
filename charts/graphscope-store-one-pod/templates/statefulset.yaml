@@ -123,6 +123,59 @@ spec:
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
+      {{- if .Values.otel.traces.enabled }}
+        - name: jaeger
+        - env:
+            - name: METRICS_STORAGE_TYPE
+              value: prometheus
+            - name: SPAN_STORAGE_TYPE
+              value: memory
+            - name: JAEGER_DISABLED
+              value: "false"
+            - name: COLLECTOR_OTLP_ENABLED
+              value: "true"
+          image: {{ include "graphscope-store.otel.collector.image" . }}
+          imagePullPolicy: IfNotPresent
+          name: jaeger
+          args:
+            - "--memory.max-traces=8000"
+            - "--query.base-path=/jaeger/ui"
+            - "--prometheus.server-url=http://opentelemetry-demo-prometheus-server:9090"
+            - "--prometheus.query.normalize-calls=true"
+            - "--prometheus.query.normalize-duration=true"
+          ports:
+            - containerPort: 5778
+              protocol: TCP
+            - containerPort: 16686
+              protocol: TCP
+            - containerPort: 4317
+              protocol: TCP
+            - containerPort: 4318
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /
+              port: 14269
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /
+              port: 14269
+              scheme: HTTP
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              memory: 300Mi
+      {{- end }}
       volumes:
         - name: config
           configMap:
