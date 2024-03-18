@@ -123,7 +123,7 @@ public abstract class AbstractResultProcessor extends StandardOpProcessor
                 case DEADLINE_EXCEEDED:
                     errorMsg +=
                             ", exceeds the timeout limit "
-                                    + timeoutConfig.getEngineTimeoutMS()
+                                    + timeoutConfig.getExecutionTimeoutMS()
                                     + " ms, please increase the config by setting"
                                     + " 'query.execution.timeout.ms'";
                     errorCode = ResponseStatusCode.SERVER_ERROR_TIMEOUT;
