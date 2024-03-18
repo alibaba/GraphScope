@@ -46,7 +46,8 @@ public class LiteralVisitor extends GremlinGSBaseVisitor<Object> {
         String integerLiteral = ctx.getText().toLowerCase();
         try {
             if (integerLiteral.endsWith("l")) {
-                return Long.decode(integerLiteral.substring(0, integerLiteral.length() - 1));
+                integerLiteral = integerLiteral.substring(0, integerLiteral.length() - 1);
+                return Long.decode(integerLiteral);
             }
             // try to parse it as integer first
             return Integer.decode(integerLiteral);

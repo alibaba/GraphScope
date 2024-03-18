@@ -24,12 +24,8 @@ import com.alibaba.graphscope.common.ir.type.GraphLabelType;
 import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
 import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
-import com.alibaba.graphscope.gaia.proto.Common;
-import com.alibaba.graphscope.gaia.proto.DataType;
-import com.alibaba.graphscope.gaia.proto.GraphAlgebra;
+import com.alibaba.graphscope.gaia.proto.*;
 import com.alibaba.graphscope.gaia.proto.GraphAlgebra.GroupBy.AggFunc.Aggregate;
-import com.alibaba.graphscope.gaia.proto.GraphAlgebraPhysical;
-import com.alibaba.graphscope.gaia.proto.OuterExpression;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.Int32Value;
 
@@ -48,11 +44,7 @@ import org.javatuples.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
