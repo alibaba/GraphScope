@@ -1092,6 +1092,14 @@ public class GraphBuilderTest {
                     + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
                     + " alias=[a], opt=[VERTEX])",
                 node.explain().trim());
+
+        node = eval("g.V().as('a').where(expr(a.name = 'marko' and (a.age > 30 OR a.age < 20)))");
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], fusedFilter=[[AND(=(DEFAULT.name, _UTF-8'marko'),"
+                    + " OR(>(DEFAULT.age, 30), <(DEFAULT.age, 20)))]], opt=[VERTEX])",
+                node.explain().trim());
     }
 
     @Test

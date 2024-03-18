@@ -28,14 +28,12 @@ oC_Expression
           :  oC_OrExpression ;
 
 oC_OrExpression
-            :  oC_AndExpression ( SP OR SP oC_AndExpression )* ;
+            :  oC_AndExpression ( SP? OR SP? oC_AndExpression )* ;
 
 OR : ( 'O' | 'o' ) ( 'R' | 'r' ) ;
 
-XOR : ( 'X' | 'x' ) ( 'O' | 'o' ) ( 'R' | 'r' ) ;
-
 oC_AndExpression
-             :  oC_NotExpression ( SP AND SP oC_NotExpression )* ;
+             :  oC_NotExpression ( SP? AND SP? oC_NotExpression )* ;
 
 AND : ( 'A' | 'a' ) ( 'N' | 'n' ) ( 'D' | 'd' ) ;
 
@@ -59,7 +57,7 @@ oC_StringListNullPredicateExpression
                                  :  oC_AddOrSubtractExpression ( oC_StringPredicateExpression | oC_NullPredicateExpression )* ;
 
 oC_StringPredicateExpression
-                         :  ( ( SP STARTS SP WITH ) | ( SP ENDS SP WITH ) | ( SP CONTAINS ) ) SP? oC_AddOrSubtractExpression ;
+                         :  ( ( SP? STARTS SP? WITH ) | ( SP? ENDS SP? WITH ) | ( SP? CONTAINS ) ) SP? oC_AddOrSubtractExpression ;
 
 STARTS : ( 'S' | 's' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'R' | 'r' ) ( 'T' | 't' ) ( 'S' | 's' ) ;
 
@@ -70,8 +68,8 @@ WITH : ( 'W' | 'w' ) ( 'I' | 'i' ) ( 'T' | 't' ) ( 'H' | 'h' ) ;
 CONTAINS : ( 'C' | 'c' ) ( 'O' | 'o' ) ( 'N' | 'n' ) ( 'T' | 't' ) ( 'A' | 'a' ) ( 'I' | 'i' ) ( 'N' | 'n' ) ( 'S' | 's' ) ;
 
 oC_NullPredicateExpression
-                       :  ( SP IS SP NULL )
-                           | ( SP IS SP NOT SP NULL )
+                       :  ( SP? IS SP? NULL )
+                           | ( SP? IS SP? NOT SP? NULL )
                            ;
 
 IS : ( 'I' | 'i' ) ( 'S' | 's' ) ;
