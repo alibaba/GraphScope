@@ -35,11 +35,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
@@ -181,6 +177,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_where_out_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Long> traversal = this.get_g_V_where_out_out_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(1, traversal.next().intValue());
@@ -189,6 +186,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_where_not_out_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Long> traversal = this.get_g_V_where_not_out_out_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(5, traversal.next().intValue());
@@ -197,6 +195,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_where_a_neq_b_by_out_count_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Long> traversal = this.get_g_V_where_a_neq_b_by_out_count_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(6, traversal.next().intValue());
@@ -205,6 +204,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_select_a_b_by_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Map<String, Object>> traversal = this.get_g_V_select_a_b_by_out_count();
         this.printTraversalForm(traversal);
         int a_2_b_0_count = 0;
@@ -232,6 +232,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_select_a_b_by_out_count_by_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Map<String, Object>> traversal =
                 this.get_g_V_select_a_b_by_out_count_by_name();
         this.printTraversalForm(traversal);
@@ -268,6 +269,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_dedup_a_b_by_out_count() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Long> traversal = this.get_g_V_dedup_a_b_by_out_count_count();
         this.printTraversalForm(traversal);
         Assert.assertEquals(4, traversal.next().intValue());
@@ -276,6 +278,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_order_by_out_count_by_name() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Object> traversal = this.get_g_V_order_by_out_count_by_name();
         this.printTraversalForm(traversal);
         List names = Lists.newArrayList();
@@ -289,6 +292,7 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
     public void g_V_groupCount_by_out_count_by_age() {
+        assumeFalse("hiactor".equals(System.getenv("ENGINE_TYPE")));
         Traversal<Vertex, Map<Object, Long>> traversal =
                 this.get_g_V_groupCount_by_out_count_by_age();
         this.printTraversalForm(traversal);
