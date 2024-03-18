@@ -72,6 +72,15 @@ def create_dataloading_job(graph_name: str, job_config: dict) -> str:
         )
 
 
+def get_dataloading_config(graph_name: str) -> SchemaMapping:
+    context = get_current_context()
+    with graphscope.flex.rest.ApiClient(
+        graphscope.flex.rest.Configuration(context.coordinator_endpoint)
+    ) as api_client:
+        api_instance = graphscope.flex.rest.JobApi(api_client)
+        return api_instance.get_dataloading_config(graph_name)
+
+
 def delete_job_by_id(job_id: str) -> str:
     context = get_current_context()
     with graphscope.flex.rest.ApiClient(

@@ -56,7 +56,7 @@ def cli():
 
 @cli.group()
 def flexbuild():
-    """Build a customized stack using specific components."""
+    """Build docker image for Interactive, Insight product."""
     pass
 
 

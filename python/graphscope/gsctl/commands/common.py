@@ -33,38 +33,42 @@ def cli():
     pass
 
 
-@click.command()
+@cli.command()
 @click.option(
+    "-c",
     "--coordinator-endpoint",
     help="Coordinator endpoint which gsctl connect to, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to the launched coordinator
+    """Connect to a launched coordinator
 
-    By default, it will read context from  ~/.graphscope/config. If '--coordinator-endpoint'
-    is specified, use it as the current context and override the config file.
+    By default, it will read context from  ~/.gsctl. If '--coordinator-endpoint'
+    is specified, use it as the current context and override the configuration file.
     """
     if coordinator_endpoint is None:
         context = get_current_context()
         if context is None:
             click.secho(
-                "No available context found, try to connect to coordinator with --coordinator-endpoint",
+                "No available context, try to connect to coordinator with --coordinator-endpoint",
                 fg="blue",
             )
             return
         coordinator_endpoint = context.coordinator_endpoint
     # connect
     try:
-        connect_coordinator(coordinator_endpoint)
+        resp = connect_coordinator(coordinator_endpoint)
     except Exception as e:
         click.secho(f"Unable to connect to server: {str(e)}", fg="red")
     else:
-        click.secho(f"Coordinator at {coordinator_endpoint} connected.", fg="green")
+        click.secho(
+            f"Coordinator at {coordinator_endpoint} connected, {resp.solution} service is serving.",
+            fg="green",
+        )
 
 
-@click.command()
+@cli.command()
 def close():
-    """Close the connection from the coordinator"""
+    """Disconnect from coordinator"""
     try:
         context = disconnect_coordinator()
     except Exception as e:
@@ -72,10 +76,6 @@ def close():
     else:
         if context is not None:
             click.secho(f"Coordinator disconnected: {context.to_dict()}.", fg="green")
-
-
-cli.add_command(connect)
-cli.add_command(close)
 
 
 if __name__ == "__main__":
