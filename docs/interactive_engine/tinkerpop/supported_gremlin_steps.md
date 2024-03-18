@@ -693,92 +693,12 @@ g.V().out("1..10").with('RESULT_OPT', 'ALL_V')
 g.V().out("1..10").with('RESULT_OPT', 'ALL_V').endV()
 ```
 ### Expression
-Expression is introduced to denote property-based calculations or filters, which consists of the following basic entries:
-```bash
-@ # the value of the current entry
-@.name # the property value of `name` of the current entry
-@a # the value of the entry `a`
-@a.name # the property value of `name` of the entry `a`
-```
 
-And related operations can be performed based on these entries, including:
-* arithmetic
-    ```bash
-    @.age + 10
-    @.age * 10
-    (@.age + 4) / 10 + (@.age - 5)
-    ```
-* logic comparison
-    ```bash
-    @.name == "marko"
-    @.age != 10
-    @.age > 10
-    @.age < 10
-    @.age >= 10
-    @.weight <= 10.0
-    ```
-* logic connector
-    ```bash
-    @.age > 10 && @.age < 20
-    @.age < 10 || @.age > 20
-    ```
-* bit manipulation
-    ```bash
-    @.num | 2
-    @.num & 2
-    @.num ^ 2
-    @.num >> 2
-    @.num << 2
-    ```
-* exponentiation
-    ```bash
-    @.num ^^ 3
-    @.num ^^ -3
-    ```
-
-Expression(s) in project or filter:
-* filter: where(expr("..."))
-    ```bash
-    g.V().where(expr("@.name == \"marko\"")) # = g.V().has("name", "marko")
-    g.V().where(expr("@.age > 10")) # = g.V().has("age", P.gt(10))
-    g.V().as("a").out().where(expr("@.name == \"marko\" || (@a.age > 10)"))
-    g.V().where(expr("@.age isNull"))
-    ```
-* project: select(expr("..."))
-    ```bash
-    g.V().select(expr("@.name")) # = g.V().values("name")
-    ```
-Running Example:
-```bash
-gremlin> g.V().where(expr("@.name == \"marko\""))
-==>v[1]
-gremlin> g.V().as("a").where(expr("@a.name == \"marko\" || (@a.age > 10)"))
-==>v[2]
-==>v[1]
-==>v[4]
-==>v[6]
-gremlin> g.V().where(expr("@.age isNull")).values("name")
-==>ripple
-==>lop
-gremlin>  g.V().where(expr("!(@.age isNull)")).values("name")
-==>marko
-==>vadas
-==>josh
-==>peter
-gremlin> g.V().select(expr("@.name"))
-==>marko
-==>vadas
-==>lop
-==>josh
-==>ripple
-==>peter
-```
-#### next version
-We are currently refactoring the grammar integration of Gremlin based on the Calcite-Based IR Layer. In the next version, Gremlin expressions will be uniformly represented as Calcite [RexNode](https://calcite.apache.org/javadocAggregate/org/apache/calcite/rex/RexNode.html) structures. Additionally, we are further standardizing the syntax of Gremlin expressions by borrowing from the Sql Expression syntax, in order to better support the parsing and optimization of Gremlin's grammar. The specific definition is as follows:
+Expression is introduced to denote property-based calculations or filters or projections. We are currently refactoring the grammar integration of Gremlin based on the Calcite-Based IR Layer. On one hand, we encompass the majority of Expression usages in Gremlin operators. On the other hand, we are enhancing the standardization of Gremlin expression syntax by incorporating elements from Sql Expression syntax. This effort aims to improve the parsing and optimization capabilities of Gremlin's grammar. The table below presents the current syntax definitions and highlights the differences from the previous syntax.
 
 Literal:
 
-Category | Example
+Category | Syntax
 ---- | -------
 string | "marko"
 boolean | true, false
@@ -790,59 +710,106 @@ list | ["marko", "vadas"], [true, false], [1, 2], [1L, 2L], [1.0F, 2.0F], [1.0, 
 
 Variable:
 
-Category | Description | Example
----- | ------- | -------
-current | the current entry | DEFAULT
-current property | the property value of the current entry | DEFAULT.name
-tag | the specified tag | a
-tag property | the property value of the specified tag | a.name
+Category | Description | Original Syntax | Current Syntax
+---- | ------- | ------- | -------
+current | the current entry | @ | DEFAULT
+current property | the property value of the current entry | @.name | DEFAULT.name
+tag | the specified tag | @a | a
+tag property | the property value of the specified tag | @a.name | a.name
 
 Operator:
 
-Category | Operation (Case-Insensitive) | Description | Example
----- | ------- | ------- | -------
-logical | = | equal | DEFAULT.name = "marko"
-logical | <> | not equal | DEFAULT.name != "marko"
-logical | > | greater than | DEFAULT.age > 10
-logical | < | less than | DEFAULT.age < 10
-logical | >= | greater than or equal | DEFAULT.age >= 10
-logical | <= | less than or equal | DEFAULT.age <= 10
-logical | NOT | negate the logical expression | NOT DEFAULT.name = "marko"
-logical | AND | connect two logical expressions with AND | DEFAULT.name = "marko" AND DEFAULT.age > 10
-logical | OR | connect two logical expressions with OR | DEFAULT.name = "marko" OR DEFAULT.age > 10
-logical | IN | whether the value of the current entry is in the given list | DEFAULT.name IN ["marko", "vadas"]
-arithmetical | + | addition | DEFAULT.age + 10
-arithmetical | - | subtraction | DEFAULT.age - 10
-arithmetical | * | multiplication | DEFAULT.age * 10
-arithmetical | / | division | DEFAULT.age / 10
-arithmetical | % | modulo | DEFAULT.age % 10
-arithmetical | POWER | exponentiation | POWER(DEFAULT.age, 3)
-bitwise | & | bitwise AND | DEFAULT.age & 2
-bitwise | \| | bitwise OR | DEFAULT.age \| 2
-bitwise | ^ | bitwise XOR | DEFAULT.age ^ 2
-bit shift | << | left shift | DEFAULT.age << 2
-bit shift | >> | right shift | DEFAULT.age >> 2
-string regex match | STARTS WITH | whether the string starts with the given prefix | DEFAULT.name STARTS WITH "ma"
-string regex match | NOT STARTS WITH | whether the string does not start with the given prefix | NOT DEFAULT.name STARTS WITH "ma"
-string regex match | ENDS WITH | whether the string ends with the given suffix | DEFAULT.name ENDS WITH "ko"
-string regex match | NOT ENDS WITH | whether the string does not end with the given suffix | NOT DEFAULT.name ENDS WITH "ko"
-string regex match | CONTAINS | whether the string contains the given substring | DEFAULT.name CONTAINS "ar"
-string regex match | NOT CONTAINS | whether the string does not contain the given substring | NOT DEFAULT.name CONTAINS "ar"
+Category | Operation (Case-Insensitive) | Description | Original Syntax | Current Syntax
+---- | ------- | ------- | ------- | -------
+logical | = | equal | @.name == "marko" | DEFAULT.name = "marko"
+logical | <> | not equal | @.name != "marko" | DEFAULT.name != "marko"
+logical | > | greater than | @.age > 10 | DEFAULT.age > 10
+logical | < | less than | @.age < 10 | DEFAULT.age < 10
+logical | >= | greater than or equal | @.age >= 10 | DEFAULT.age >= 10
+logical | <= | less than or equal | @.age <= 10 | DEFAULT.age <= 10
+logical | NOT | negate the logical expression | ! (@.name == "marko") | NOT DEFAULT.name = "marko"
+logical | AND | connect two logical expressions with AND | @.name == "marko" && @.age > 10 | DEFAULT.name = "marko" AND DEFAULT.age > 10
+logical | OR | connect two logical expressions with OR | @.name == "marko" \|\| @.age > 10 | DEFAULT.name = "marko" OR DEFAULT.age > 10
+logical | IN | whether the value of the current entry is in the given list | @.name WITHIN ["marko", "vadas"] | DEFAULT.name IN ["marko", "vadas"]
+logical | IS NULL | whether the value of the current entry ISNULL | @.age IS NULL | DEFAULT.age IS NULL
+logical | IS NOT NULL | whether the value of the current entry IS NOT NULL | ! (@.age ISNULL) | DEFAULT.age IS NOT NULL
+arithmetical | + | addition | @.age + 10 | DEFAULT.age + 10
+arithmetical | - | subtraction | @.age - 10 | DEFAULT.age - 10
+arithmetical | * | multiplication | @.age * 10 | DEFAULT.age * 10
+arithmetical | / | division | @.age / 10 | DEFAULT.age / 10
+arithmetical | % | modulo | @.age % 10 | DEFAULT.age % 10
+arithmetical | POWER | exponentiation | @.age ^^ 3 | POWER(DEFAULT.age, 3)
+bitwise | & | bitwise AND | @.age & 2 | DEFAULT.age & 2
+bitwise | \| | bitwise OR | @.age \| 2 | DEFAULT.age \| 2
+bitwise | ^ | bitwise XOR | @.age ^ 2 | DEFAULT.age ^ 2
+bit shift | << | left shift | @.age << 2 | DEFAULT.age << 2
+bit shift | >> | right shift | @.age >> 2 | DEFAULT.age >> 2
+string regex match | STARTS WITH | whether the string starts with the given prefix | @.name STARTSWITH "ma" | DEFAULT.name STARTS WITH "ma"
+string regex match | NOT STARTS WITH | whether the string does not start with the given prefix | ! (@.name STARTSWITH "ma") | NOT DEFAULT.name STARTS WITH "ma"
+string regex match | ENDS WITH | whether the string ends with the given suffix | @.name ENDSWITH "ko" | DEFAULT.name ENDS WITH "ko"
+string regex match | NOT ENDS WITH | whether the string does not end with the given suffix | ! (@.name ENDSWITH "ko") | NOT DEFAULT.name ENDS WITH "ko"
+string regex match | CONTAINS | whether the string contains the given substring | "ar" WITHIN @.name | DEFAULT.name CONTAINS "ar"
+string regex match | NOT CONTAINS | whether the string does not contain the given substring | "ar" WITHOUT @.name | NOT DEFAULT.name CONTAINS "ar"
 
 Function:
 
-Category | Function (Case-Insensitive) | Description | Example
+Category | Function (Case-Insensitive) | Description | Original Syntax | Current Syntax
+---- | ------- | ------- | ------- | -------
+aggregate | COUNT | count the number of the elements | unsupported | COUNT(DEFAULT.age)
+aggregate | SUM | sum the values of the elements | unsupported | SUM(DEFAULT.age)
+aggregate | MIN | find the minimum value of the elements | unsupported | MIN(DEFAULT.age)
+aggregate | MAX | find the maximum value of the elements | unsupported | MAX(DEFAULT.age)
+aggregate | AVG | calculate the average value of the elements | unsupported | AVG(DEFAULT.age)
+aggregate | COLLECT | fold the elements into a list | unsupported | COLLECT(DEFAULT.age)
+aggregate | HEAD(COLLECT()) | find the first value of the elements | unsupported | HEAD(COLLECT(DEFAULT.age))
+other | LABELS | get the labels of the specified tag which is a vertex | @a.~label | LABELS(a)
+other | TYPE | get the type of the specified tag which is an edge | @a.~label |TYPE(a)
+other | LENGTH | get the length of the specified tag which is a path | @a.~len | LENGTH(a)
+
+Expression in project or filter:
+Category | Description | Original Syntax | Current Syntax
 ---- | ------- | ------- | -------
-aggregate | COUNT | count the number of the elements | COUNT(DEFAULT.age)
-aggregate | SUM | sum the values of the elements | SUM(DEFAULT.age)
-aggregate | MIN | find the minimum value of the elements | MIN(DEFAULT.age)
-aggregate | MAX | find the maximum value of the elements | MAX(DEFAULT.age)
-aggregate | AVG | calculate the average value of the elements | AVG(DEFAULT.age)
-aggregate | COLLECT | fold the elements into a list | COLLECT(DEFAULT.age)
-aggregate | HEAD(COLLECT()) | find the first value of the elements | HEAD(COLLECT(DEFAULT.age))
-other | LABELS | get the labels of the specified tag which is a vertex | LABELS(a)
-other | TYPE | get the type of the specified tag which is an edge | TYPE(a)
-other | LENGTH | get the length of the specified tag which is a path | LENGTH(a)
+filter | filter the current traverser by the expression | where(expr("@.name == \\"marko\\"")) | where(expr(DEFAULT.name = "marko"))
+project | project the current traverser to the value of the expression | select(expr("@.name")) | select(expr(DEFAULT.name))
+
+#### Running Examples
+
+```bash
+gremlin> :submit g.V().where(expr(DEFAULT.name = "marko"))
+==>v[1]
+gremlin> :submit g.V().as("a").where(expr(a.name = "marko" OR a.age > 10))
+==>v[6]
+==>v[1]
+==>v[2]
+==>v[4]
+gremlin> :submit g.V().as("a").where(expr(a.age IS NULL)).values("name")
+==>lop
+==>ripple
+gremlin> :submit g.V().as("a").where(expr(a.age IS NOT NULL)).values("name")
+==>vadas
+==>josh
+==>marko
+==>peter
+gremlin> :submit g.V().as("a").where(expr(a.name STARTS WITH "ma"))
+==>v[1]
+gremlin> :submit g.V().select(expr(DEFAULT.name))
+==>vadas
+==>josh
+==>lop
+==>ripple
+==>marko
+==>peter
+gremlin> :submit g.V().hasLabel("person").select(expr(DEFAULT.age ^ 1))
+==>26
+==>28
+==>33
+==>34
+gremlin> :submit g.V().hasLabel("person").select(expr(POWER(DEFAULT.age, 2)))
+==>729
+==>1024
+==>1225
+==>841
+```
 
 ### Aggregate (Group)
 The group()-step in standard Gremlin has limited capabilities (i.e. grouping can only be performed based on a single key, and only one aggregate calculation can be applied in each group), which cannot be applied to the requirements of performing group calculations on multiple keys or values; Therefore, we further extend the capabilities of the group()-step, allowing multiple variables to be set and different aliases to be configured in key by()-step and value by()-step respectively.
