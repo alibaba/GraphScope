@@ -753,6 +753,7 @@ class KeyedRowVertexSetImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
   static constexpr bool is_collection = false;
   static constexpr bool is_general_set = false;
   static constexpr bool is_two_label_set = false;
+  static constexpr bool is_row_vertex_set = true;
 
   explicit KeyedRowVertexSetImpl(std::vector<key_t>&& keys,
                                  std::vector<lid_t>&& vids, LabelT v_label)
@@ -947,8 +948,11 @@ class KeyedRowVertexSetBuilderImpl {
         prop_names_(old_set.GetPropNames()),
         ind_(0) {}
 
-  size_t insert(std::tuple<size_t, VID_T> ele_tuple, data_tuple_t data_tuple) {
+  int32_t insert(std::tuple<size_t, VID_T> ele_tuple, data_tuple_t data_tuple) {
     auto key = std::get<1>(ele_tuple);
+    if (IsNull(key)) {
+      return -1;
+    }
     if (prop2ind_.find(key) != prop2ind_.end()) {
       return prop2ind_[key];
     } else {
@@ -960,7 +964,10 @@ class KeyedRowVertexSetBuilderImpl {
     }
   }
 
-  size_t insert(const VID_T& key, data_tuple_t data_tuple) {
+  int32_t insert(const VID_T& key, data_tuple_t data_tuple) {
+    if (IsNull(key)) {
+      return -1;
+    }
     if (prop2ind_.find(key) != prop2ind_.end()) {
       return prop2ind_[key];
     } else {
@@ -972,7 +979,7 @@ class KeyedRowVertexSetBuilderImpl {
     }
   }
 
-  size_t insert(const std::tuple<VID_T, data_tuple_t>& ele_tuple) {
+  int32_t insert(const std::tuple<VID_T, data_tuple_t>& ele_tuple) {
     return insert(std::get<0>(ele_tuple), std::get<1>(ele_tuple));
   }
 
@@ -1007,8 +1014,11 @@ class KeyedRowVertexSetBuilderImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
       const RowVertexSet<LabelT, VID_T, grape::EmptyType>& old_set)
       : label_(old_set.GetLabel()), ind_(0) {}
 
-  size_t insert(std::tuple<size_t, VID_T> ele_tuple) {
+  int32_t insert(std::tuple<size_t, VID_T> ele_tuple) {
     auto key = std::get<1>(ele_tuple);
+    if (IsNull(key)) {
+      return -1;
+    }
     if (prop2ind_.find(key) != prop2ind_.end()) {
       return prop2ind_[key];
     } else {
@@ -1019,7 +1029,10 @@ class KeyedRowVertexSetBuilderImpl<LabelT, KEY_T, VID_T, grape::EmptyType> {
     }
   }
 
-  size_t insert(const VID_T& key) {
+  int32_t insert(const VID_T& key) {
+    if (IsNull(key)) {
+      return -1;
+    }
     if (prop2ind_.find(key) != prop2ind_.end()) {
       return prop2ind_[key];
     } else {

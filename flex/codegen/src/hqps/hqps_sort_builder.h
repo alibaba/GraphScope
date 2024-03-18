@@ -67,12 +67,10 @@ std::string sort_pair_pb_to_order_pair(
       throw std::runtime_error("Unknown sort property type" +
                                sort_property.DebugString());
     }
-  } else if (pair.key().has_tag()) {
+  } else {
     sort_prop_name = "";
     sort_prop_type =
         single_common_data_type_pb_2_str(pair.key().node_type().data_type());
-  } else {
-    throw std::runtime_error("Unknown sort property type" + pair.DebugString());
   }
 
   boost::format formater(ORDERING_PAIR_TEMPLATE_STR);

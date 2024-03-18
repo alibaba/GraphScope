@@ -27,12 +27,25 @@ limitations under the License.
 
 namespace gs {
 
+// define struct FilterNull, which's value is true if FUNC::filter_null is
+// defined and value is true
+template <typename FUNC, typename Void = void>
+struct FilterNull {
+  static constexpr bool value = false;
+};
+
+template <typename FUNC>
+struct FilterNull<FUNC, typename std::enable_if<FUNC::filter_null>::type> {
+  static constexpr bool value = FUNC::filter_null;
+};
+
 // scan for a single vertex
 template <typename GRAPH_INTERFACE>
 class Scan {
  public:
   using label_id_t = typename GRAPH_INTERFACE::label_id_t;
   using vertex_id_t = typename GRAPH_INTERFACE::vertex_id_t;
+  using gid_t = typename GRAPH_INTERFACE::gid_t;
   using vertex_set_t = DefaultRowVertexSet<label_id_t, vertex_id_t>;
   using two_label_set_t =
       TwoLabelVertexSet<vertex_id_t, label_id_t, grape::EmptyType>;
@@ -99,13 +112,35 @@ class Scan {
   template <typename OID_T>
   static vertex_set_t ScanVertexWithOid(const GRAPH_INTERFACE& graph,
                                         const label_id_t& v_label_id,
-                                        OID_T oid) {
+                                        std::vector<OID_T>&& oids) {
     std::vector<vertex_id_t> gids;
     vertex_id_t vid;
-    if (graph.ScanVerticesWithOid(v_label_id, oid, vid)) {
-      gids.emplace_back(vid);
+    for (auto oid : oids) {
+      if (graph.ScanVerticesWithOid(v_label_id, oid, vid)) {
+        gids.emplace_back(vid);
+      }
     }
     return make_default_row_vertex_set(std::move(gids), v_label_id);
+  }
+
+  static vertex_set_t ScanVertexWithGid(const GRAPH_INTERFACE& graph,
+                                        const label_id_t& v_label_id,
+                                        std::vector<gid_t>&& gids) {
+    std::vector<vertex_id_t> lids;
+    auto vnum = graph.vertex_num(v_label_id);
+    for (auto gid : gids) {
+      vertex_id_t vid;
+      if (GlobalId::get_label_id(gid) == v_label_id) {
+        vid = GlobalId::get_vid(gid);
+      }
+      if (vid < vnum) {
+        lids.emplace_back(vid);
+      }
+    }
+    VLOG(10) << "Scan vertex with gid, label: " << v_label_id
+             << ", valid vertices cnt: " << lids.size()
+             << ", input cnt: " << gids.size();
+    return make_default_row_vertex_set(std::move(lids), v_label_id);
   }
 
   /// @brief Scan vertex with oid
@@ -116,15 +151,18 @@ class Scan {
   template <typename OID_T, size_t num_labels>
   static auto ScanVertexWithOid(
       const GRAPH_INTERFACE& graph,
-      const std::array<label_id_t, num_labels>& v_label_ids, OID_T oid) {
+      const std::array<label_id_t, num_labels>& v_label_ids,
+      std::vector<OID_T>&& oids) {
     std::vector<vertex_id_t> gids;
     std::vector<label_id_t> labels_vec;
     std::vector<grape::Bitset> bitsets;
     vertex_id_t vid;
     for (size_t i = 0; i < num_labels; ++i) {
-      if (graph.ScanVerticesWithOid(v_label_ids[i], oid, vid)) {
-        labels_vec.emplace_back(v_label_ids[i]);
-        gids.emplace_back(vid);
+      for (auto oid : oids) {
+        if (graph.ScanVerticesWithOid(v_label_ids[i], oid, vid)) {
+          labels_vec.emplace_back(v_label_ids[i]);
+          gids.emplace_back(vid);
+        }
       }
     }
     bitsets.resize(labels_vec.size());
@@ -134,6 +172,170 @@ class Scan {
     }
 
     return make_general_set(std::move(gids), std::move(labels_vec),
+                            std::move(bitsets));
+  }
+
+  template <size_t num_labels>
+  static auto ScanVertexWithGid(
+      const GRAPH_INTERFACE& graph,
+      const std::array<label_id_t, num_labels>& v_label_ids,
+      std::vector<gid_t>&& gids) {
+    std::unordered_map<label_id_t, size_t> label_to_index;
+
+    size_t valid_label_num = 0;
+    for (size_t i = 0; i < num_labels; ++i) {
+      if (v_label_ids[i] < graph.schema().vertex_label_num()) {
+        label_to_index[v_label_ids[i]] = valid_label_num++;
+      }
+    }
+
+    std::vector<vertex_id_t> lids;
+    std::vector<label_id_t> label_ind_vec;
+    for (auto gid : gids) {
+      auto label_id = GlobalId::get_label_id(gid);
+      auto vid = GlobalId::get_vid(gid);
+      if (label_to_index.find(label_id) != label_to_index.end()) {
+        label_ind_vec.emplace_back(label_to_index[label_id]);
+        lids.emplace_back(vid);
+      }
+    }
+
+    std::vector<grape::Bitset> bitsets;
+    bitsets.resize(valid_label_num);
+    for (size_t i = 0; i < bitsets.size(); ++i) {
+      bitsets[i].init(lids.size());
+    }
+    for (size_t i = 0; i < label_ind_vec.size(); ++i) {
+      bitsets[label_ind_vec[i]].set_bit(i);
+    }
+    std::vector<label_id_t> labels_vec(valid_label_num);
+    for (auto& pair : label_to_index) {
+      labels_vec[pair.second] = pair.first;
+    }
+    return make_general_set(std::move(lids), std::move(labels_vec),
+                            std::move(bitsets));
+  }
+
+  /// @brief Scan vertex with oid and Expr
+  /// @param graph
+  /// @param v_label_id
+  /// @param oid
+  /// @return
+  template <typename OID_T, typename EXPR, typename... SELECTOR>
+  static vertex_set_t ScanVertexWithOidExpr(
+      const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
+      std::vector<OID_T>&& oids, Filter<EXPR, SELECTOR...>&& filter) {
+    std::vector<vertex_id_t> gids;
+    vertex_id_t vid;
+    for (auto oid : oids) {
+      if (graph.ScanVerticesWithOid(v_label_id, oid, vid)) {
+        gids.emplace_back(vid);
+      }
+    }
+
+    auto real_gids = filter_vertex_with_selector(
+        graph, v_label_id, filter.expr_, filter.selectors_, gids);
+    return make_default_row_vertex_set(std::move(real_gids), v_label_id);
+  }
+
+  template <typename EXPR, typename... SELECTOR>
+  static vertex_set_t ScanVertexWithGidExpr(
+      const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
+      std::vector<gid_t>&& gids, Filter<EXPR, SELECTOR...>&& filter) {
+    std::vector<vertex_id_t> lids;
+    auto vnum = graph.vertex_num(v_label_id);
+    for (auto gid : gids) {
+      if (GlobalId::get_label_id(gid) == v_label_id) {
+        auto vid = GlobalId::get_vid(gid);
+        if (vid < vnum) {
+          lids.emplace_back(vid);
+        }
+      }
+    }
+
+    auto real_lids = filter_vertex_with_selector(
+        graph, v_label_id, filter.expr_, filter.selectors_, lids);
+    return make_default_row_vertex_set(std::move(real_lids), v_label_id);
+  }
+
+  /// @brief Scan vertex with oid
+  /// @param graph
+  /// @param v_label_ids
+  /// @param oid
+  /// @return
+  template <typename OID_T, size_t num_labels, typename FilterT>
+  static auto ScanVertexWithOidExpr(
+      const GRAPH_INTERFACE& graph,
+      const std::array<label_id_t, num_labels>& v_label_ids,
+      std::vector<OID_T>&& oids, FilterT&& filter) {
+    std::vector<vertex_id_t> gids;
+    std::vector<label_id_t> labels_vec;
+    std::vector<grape::Bitset> bitsets;
+    vertex_id_t vid;
+    for (size_t i = 0; i < num_labels; ++i) {
+      std::vector<vertex_id_t> tmp_gids;
+      for (auto oid : oids) {
+        if (graph.ScanVerticesWithOid(v_label_ids[i], oid, vid)) {
+          tmp_gids.emplace_back(vid);
+        }
+      }
+      auto real_gids = filter_vertex_with_selector(
+          graph, v_label_ids[i], filter.expr_, filter.selectors_, tmp_gids);
+      for (auto gid : real_gids) {
+        labels_vec.emplace_back(v_label_ids[i]);
+        gids.emplace_back(gid);
+      }
+    }
+
+    bitsets.resize(labels_vec.size());
+    for (size_t i = 0; i < bitsets.size(); ++i) {
+      bitsets[i].init(gids.size());
+      bitsets[i].set_bit(i);
+    }
+
+    return make_general_set(std::move(gids), std::move(labels_vec),
+                            std::move(bitsets));
+  }
+
+  template <size_t num_labels, typename FilterT>
+  static auto ScanVertexWithGidExpr(
+      const GRAPH_INTERFACE& graph,
+      const std::array<label_id_t, num_labels>& v_label_ids,
+      std::vector<gid_t>&& gids, FilterT&& filter) {
+    std::unordered_map<label_id_t, size_t> label_to_index;
+    size_t valid_label_num = 0;
+    for (size_t i = 0; i < num_labels; ++i) {
+      if (v_label_ids[i] < graph.schema().vertex_label_num()) {
+        label_to_index[v_label_ids[i]] = valid_label_num++;
+      }
+    }
+
+    std::vector<vertex_id_t> lids;
+    std::vector<label_id_t> label_ind_vec;
+    for (auto gid : gids) {
+      auto label_id = GlobalId::get_label_id(gid);
+      auto vid = GlobalId::get_vid(gid);
+      if (label_to_index.find(label_id) != label_to_index.end() &&
+          eval_vertex_with_expr(graph, label_id, filter.expr_,
+                                filter.selectors_, vid)) {
+        label_ind_vec.emplace_back(label_to_index[label_id]);
+        lids.emplace_back(vid);
+      }
+    }
+
+    std::vector<grape::Bitset> bitsets;
+    bitsets.resize(valid_label_num);
+    for (size_t i = 0; i < bitsets.size(); ++i) {
+      bitsets[i].init(lids.size());
+    }
+    for (size_t i = 0; i < label_ind_vec.size(); ++i) {
+      bitsets[label_ind_vec[i]].set_bit(i);
+    }
+    std::vector<label_id_t> labels_vec(valid_label_num);
+    for (auto& pair : label_to_index) {
+      labels_vec[pair.second] = pair.first;
+    }
+    return make_general_set(std::move(lids), std::move(labels_vec),
                             std::move(bitsets));
   }
 
@@ -167,22 +369,6 @@ class Scan {
     return make_general_set(std::move(gids), labels_vec, std::move(bitsets));
   }
 
-  template <typename FUNC, typename... PropT>
-  static std::vector<vertex_id_t> scan_vertex1_impl(
-      const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
-      const FUNC& func, const std::tuple<PropT...>& props) {
-    std::vector<vertex_id_t> gids;
-    auto filter = [&](vertex_id_t v,
-                      const std::tuple<typename PropT::prop_t...>& real_props) {
-      if (apply_on_tuple(func, real_props)) {
-        gids.push_back(v);
-      }
-    };
-
-    graph.template ScanVertices(v_label_id, props, filter);
-    return gids;
-  }
-
   template <typename FUNC, typename... SELECTOR>
   static std::vector<vertex_id_t> scan_vertex_with_selector(
       const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
@@ -195,8 +381,64 @@ class Scan {
             gids.push_back(v);
           }
         };
+    // if FUNC has filter_null constexpr member, we can use it to filter
+    // vertices
+    if constexpr (FilterNull<FUNC>::value) {
+      graph.template ScanVertices(v_label_id, selectors, filter, true);
+    } else {
+      graph.template ScanVertices(v_label_id, selectors, filter, false);
+    }
+    return gids;
+  }
 
-    graph.template ScanVertices(v_label_id, selectors, filter);
+  template <typename FUNC, typename... SELECTOR>
+  static inline bool eval_vertex_with_expr(
+      const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
+      const FUNC& func, const std::tuple<SELECTOR...>& selectors,
+      vertex_id_t vid) {
+    std::tuple<typename SELECTOR::prop_t...> real_props;
+    if constexpr (sizeof...(SELECTOR) == 0) {
+      return apply_on_tuple(func, real_props);
+    } else {
+      auto columns =
+          graph.GetPropertyColumnWithSelectors(v_label_id, selectors);
+      if (exists_nullptr_in_tuple(columns)) {
+        VLOG(10) << "When scanning for label " << std::to_string(v_label_id)
+                 << ", there is null column, using default NULL value";
+      }
+      get_tuple_from_column_tuple(vid, real_props, columns);
+      return apply_on_tuple(func, real_props);
+    }
+  }
+
+  // Filter the vertex with selector
+  template <typename FUNC, typename... SELECTOR>
+  static std::vector<vertex_id_t> filter_vertex_with_selector(
+      const GRAPH_INTERFACE& graph, const label_id_t& v_label_id,
+      const FUNC& func, const std::tuple<SELECTOR...>& selectors,
+      std::vector<vertex_id_t>& vids) {
+    std::vector<vertex_id_t> gids;
+    std::tuple<typename SELECTOR::prop_t...> real_props;
+    if constexpr (sizeof...(SELECTOR) == 0) {
+      for (auto vid : vids) {
+        if (apply_on_tuple(func, real_props)) {
+          gids.push_back(vid);
+        }
+      }
+    } else {
+      auto columns =
+          graph.GetPropertyColumnWithSelectors(v_label_id, selectors);
+      if (exists_nullptr_in_tuple(columns)) {
+        VLOG(10) << "When scanning for label " << std::to_string(v_label_id)
+                 << ", there is null column, using default NULL value";
+      }
+      for (auto vid : vids) {
+        get_tuple_from_column_tuple(vid, real_props, columns);
+        if (apply_on_tuple(func, real_props)) {
+          gids.push_back(vid);
+        }
+      }
+    }
     return gids;
   }
 };
