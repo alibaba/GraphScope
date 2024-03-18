@@ -361,9 +361,25 @@ oC_SymbolicName
             :  UnescapedSymbolicName
                 | EscapedSymbolicName
                 | HexLetter
-                | COUNT
-                | 'd' | 'D' | 'f' | 'F' | 'l' | 'L'
+                | oC_ReservedWord
                 ;
+
+oC_ReservedWord
+            : LABELS
+            | TYPE
+            | LENGTH
+            | POWER
+            | HEAD
+            | COUNT
+            | SUM
+            | MIN
+            | MAX
+            | COLLECT
+            | AVG
+            | FOLD
+            | MEAN
+            | 'd' | 'D' | 'f' | 'F' | 'l' | 'L'
+            ;
 
 UnescapedSymbolicName
                      :  IdentifierStart ( IdentifierPart )* ;
