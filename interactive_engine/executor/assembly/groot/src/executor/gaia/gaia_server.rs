@@ -210,7 +210,12 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
         .no_delay(no_delay)
         .send_buffer(send_buffer)
         .heartbeat_sec(heartbeat_sec);
-    GaiaConfig { network: Some(network_config), max_pool_size }
+    let enable_tracing = graph_config.get_storage_option("tracing.enabled").map(
+        |config_str| {
+            config_str.parse().expect("parse tracing.enabled failed")
+        }
+    ).unwrap_or(false);
+    GaiaConfig { network: Some(network_config), max_pool_size, enable_tracing }
 }
 
 fn make_gaia_rpc_config(graph_config: Arc<GraphConfig>) -> RPCServerConfig {
