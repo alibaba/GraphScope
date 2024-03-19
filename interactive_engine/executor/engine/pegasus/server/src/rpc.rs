@@ -291,7 +291,7 @@ where
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
-    if server_config.enable_tracing {
+    if server_config.enable_tracing.unwrap_or(false) {
         let _tracer = init_tracer().expect("Failed to initialize tracer.");
     }
     let server_id = server_config.server_id();

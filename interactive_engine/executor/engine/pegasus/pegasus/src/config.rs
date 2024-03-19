@@ -37,7 +37,7 @@ macro_rules! configure_with_default {
 pub struct Configuration {
     pub network: Option<NetworkConfig>,
     pub max_pool_size: Option<u32>,
-    pub enable_tracing: bool,
+    pub enable_tracing: Option<bool>,
 }
 
 impl Configuration {
@@ -46,11 +46,11 @@ impl Configuration {
     }
 
     pub fn singleton() -> Self {
-        Configuration { network: None, max_pool_size: None, enable_tracing: false }
+        Configuration { network: None, max_pool_size: None, enable_tracing: None }
     }
 
     pub fn with(network: NetworkConfig) -> Self {
-        Configuration { network: Some(network), max_pool_size: None, enable_tracing: false }
+        Configuration { network: Some(network), max_pool_size: None, enable_tracing: None }
     }
 
     pub fn server_id(&self) -> u64 {

@@ -215,8 +215,7 @@ fn make_gaia_config(graph_config: Arc<GraphConfig>) -> GaiaConfig {
             config_str
                 .parse()
                 .expect("parse tracing.enabled failed")
-        })
-        .unwrap_or(false);
+        });
     GaiaConfig { network: Some(network_config), max_pool_size, enable_tracing }
 }
 
