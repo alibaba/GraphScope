@@ -579,7 +579,7 @@ The following steps are extended to denote more complex situations.
 In Graph querying, expanding a multiple-hops path from a starting point is called `PathExpand`, which is commonly used in graph scenarios. In addition, there are different requirements for expanding strategies in different scenarios, i.e. it is required to output a simple path or all vertices explored along the expanding path. We introduce the with()-step to configure the corresponding behaviors of the `PathExpand`-step.
 
 #### out()
-Expand a multiple-hops path along the outgoing edges, which length is within the given range. 
+Expand a multiple-hops path along the outgoing edges, which length is within the given range.
 
 Parameters: </br>
 lengthRange - the lower and the upper bounds of the path length, </br> edgeLabels - the edge labels to traverse.
@@ -694,7 +694,7 @@ g.V().out("1..10").with('RESULT_OPT', 'ALL_V').endV()
 ```
 ### Expression
 
-Expression is introduced to denote property-based calculations or filters or projections. We are currently refactoring the grammar integration of Gremlin based on the Calcite-Based IR Layer. On one hand, we encompass the majority of Expression usages in Gremlin operators. On the other hand, we are enhancing the standardization of Gremlin expression syntax by incorporating elements from Sql Expression syntax. This effort aims to improve the parsing and optimization capabilities of Gremlin's grammar. The table below presents the current syntax definitions and highlights the differences from the previous syntax.
+Expressions, expressed via the `expr()` syntactic sugar, have been introduced to facilitate writing expressions directly within steps such as `select()`, `project()`, `where()`, and `group()`. This update is part of an ongoing effort to standardize Gremlin's expression syntax, making it more aligned with [SQL expression syntax](https://www.w3schools.com/sql/sql_operators.asp). The updated syntax, effective from version 0.27.0, streamlines user operations and enhances readability. Below, we detail the updated syntax definitions and point out key distinctions from the syntax used prior to version 0.26.0.
 
 Literal:
 
@@ -710,7 +710,7 @@ list | ["marko", "vadas"], [true, false], [1, 2], [1L, 2L], [1.0F, 2.0F], [1.0, 
 
 Variable:
 
-Category | Description | Original Syntax | Current Syntax
+Category | Description | Before 0.26.0 | Since 0.27.0
 ---- | ------- | ------- | -------
 current | the current entry | @ | DEFAULT
 current property | the property value of the current entry | @.name | DEFAULT.name
@@ -719,7 +719,7 @@ tag property | the property value of the specified tag | @a.name | a.name
 
 Operator:
 
-Category | Operation (Case-Insensitive) | Description | Original Syntax | Current Syntax
+Category | Operation (Case-Insensitive) | Description | Before 0.26.0  | Since 0.27.0
 ---- | ------- | ------- | ------- | -------
 logical | = | equal | @.name == "marko" | DEFAULT.name = "marko"
 logical | <> | not equal | @.name != "marko" | DEFAULT.name != "marko"
@@ -753,7 +753,7 @@ string regex match | NOT CONTAINS | whether the string does not contain the give
 
 Function:
 
-Category | Function (Case-Insensitive) | Description | Original Syntax | Current Syntax
+Category | Function (Case-Insensitive) | Description | Before 0.26.0 | Since 0.27.0
 ---- | ------- | ------- | ------- | -------
 aggregate | COUNT | count the number of the elements | unsupported | COUNT(DEFAULT.age)
 aggregate | SUM | sum the values of the elements | unsupported | SUM(DEFAULT.age)
@@ -767,7 +767,7 @@ other | TYPE | get the type of the specified tag which is an edge | @a.~label |T
 other | LENGTH | get the length of the specified tag which is a path | @a.~len | LENGTH(a)
 
 Expression in project or filter:
-Category | Description | Original Syntax | Current Syntax
+Category | Description | Before 0.26.0 | Since 0.27.0
 ---- | ------- | ------- | -------
 filter | filter the current traverser by the expression | where(expr("@.name == \\"marko\\"")) | where(expr(DEFAULT.name = "marko"))
 project | project the current traverser to the value of the expression | select(expr("@.name")) | select(expr(DEFAULT.name))
