@@ -63,7 +63,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.semconv.SemanticAttributes;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -371,7 +371,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         queryLogger.info("Submitted query");
         // Too verbose, since all identical queries produce identical plans, it's no need to print
         // every plan in production.
-        queryLogger.debug("ir plan {}", irPlan.getPlanAsJson());
+        String irPlanStr = irPlan.getPlanAsJson();
+        queryLogger.debug("ir plan {}", irPlanStr);
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
         irPlan.close();
 
@@ -392,12 +393,12 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-
-        Span outgoing = tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
+        Span outgoing =
+                tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
         try (Scope scope = outgoing.makeCurrent()) {
             outgoing.setAttribute("query.id", queryLogger.getQueryId());
             outgoing.setAttribute("query.statement", queryLogger.getQuery());
-            outgoing.setAttribute("query.plan.logical", irPlan.getPlanAsJson());
+            outgoing.setAttribute("query.plan.logical", irPlanStr);
             this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
             // request results from remote engine service in blocking way
             resultProcessor.request();

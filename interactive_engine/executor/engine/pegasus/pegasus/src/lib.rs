@@ -291,7 +291,7 @@ where
             cx.span()
                 .set_attribute(KeyValue::new("worker-id", worker_id.index.to_string()));
             let span = tracer
-                .span_builder(format!("/worker-{}",  worker_id.index))
+                .span_builder(format!("/worker-{}", worker_id.index))
                 .start_with_context(&tracer, &cx);
             Worker::new(&conf, worker_id, &peer_guard, sink.clone(), span)
         });

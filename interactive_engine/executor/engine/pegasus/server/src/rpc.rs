@@ -34,7 +34,6 @@ use opentelemetry::{
     trace::{Span, SpanKind, Tracer},
     KeyValue,
 };
-use opentelemetry::global::ObjectSafeSpan;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use pegasus::api::function::FnResult;
@@ -223,8 +222,10 @@ where
             .span_builder("/JobServiceImpl/submit")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
-        span.set_attribute(KeyValue::new("job.name", conf.job_name.clone()));
-        span.set_attribute(KeyValue::new("job.id", conf.job_id.to_string()));
+        span.set_attributes(vec![
+            KeyValue::new("job.name", conf.job_name.clone()),
+            KeyValue::new("job.id", conf.job_id.to_string()),
+        ]);
         let cx = opentelemetry::Context::current_with_span(span);
         let _guard = cx.clone().attach();
         let ret = pegasus::run_opt(conf, sink, move |worker| service.assemble(&job, worker));
