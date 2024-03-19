@@ -1433,7 +1433,8 @@ class KubernetesClusterLauncher(AbstractLauncher):
         # Create Service
         self._create_graphlearn_torch_service(object_id)
         # update the port usage record
-        self._graphlearn_start_port += len(pod_name_list)
+        self._graphlearn_torch_start_port += len(pod_name_list)
+        
         # parse the service hosts and ports
         return server_list
 
