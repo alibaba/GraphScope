@@ -56,9 +56,12 @@ use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
 use std::net::SocketAddr;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Once;
 
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
+use opentelemetry::trace::{TraceContextExt, Tracer};
+use opentelemetry::{global, KeyValue};
 pub use pegasus_common::codec;
 pub use pegasus_memory::alloc::check_current_task_memory;
 pub use pegasus_network::ServerDetect;
@@ -280,9 +283,18 @@ where
         return Ok(());
     }
     let worker_ids = workers.unwrap();
+    let tracer = global::tracer("executor");
+
     let mut workers = Vec::new();
-    for id in worker_ids {
-        let mut worker = Worker::new(&conf, id, &peer_guard, sink.clone());
+    for worker_id in worker_ids {
+        let mut worker = tracer.in_span(format!("/pegasus::run_opt"), |cx| {
+            cx.span()
+                .set_attribute(KeyValue::new("worker-id", worker_id.index.to_string()));
+            let span = tracer
+                .span_builder(format!("/worker-{}", worker_id.index))
+                .start_with_context(&tracer, &cx);
+            Worker::new(&conf, worker_id, &peer_guard, sink.clone(), span)
+        });
         let _g = crate::worker_id::guard(worker.id);
         logic(&mut worker)?;
         workers.push(worker);
@@ -293,6 +305,7 @@ where
     }
 
     info!("spawn job_{}({}) with {} workers;", conf.job_name, conf.job_id, workers.len());
+
     match pegasus_executor::spawn_batch(workers) {
         Ok(_) => Ok(()),
         Err(e) => {
@@ -371,7 +384,6 @@ fn allocate_local_worker(conf: &Arc<JobConf>) -> Result<Option<WorkerIdIter>, Bu
     }
 }
 
-use std::sync::Once;
 lazy_static! {
     static ref SINGLETON_INIT: Once = Once::new();
 }
