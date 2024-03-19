@@ -361,13 +361,13 @@ secondary:
   storeDataPath: "./data_secondary"
 
 otel:
+  enabled: false
   collector:
     image:
       registry: docker.io
       repository: jaegertracing/all-in-one
       tag: "latest"
   traces:
-    enabled: false
     sampler:
       name: "traceidratio"
       arg: "0.1"

@@ -190,7 +190,7 @@ where
     async fn cancel(&self, req: Request<pb::CancelRequest>) -> Result<Response<Empty>, Status> {
         let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
         let tracer = global::tracer("/Pegasus/Server");
-        let span = tracer
+        let _span = tracer
             .span_builder("/JobService/Cancel")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);

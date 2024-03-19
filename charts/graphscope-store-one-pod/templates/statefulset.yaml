@@ -123,7 +123,7 @@ spec:
             - name: config
               mountPath: /etc/groot/setup.sh
               subPath: setup.sh
-      {{- if .Values.otel.traces.enabled }}
+      {{- if .Values.otel.enabled }}
         - name: jaeger
         - env:
             - name: METRICS_STORAGE_TYPE
