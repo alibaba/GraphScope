@@ -528,8 +528,6 @@ jobs:
           export HDFS_TEST_DIR=hdfs:///ldbc_sample
           export HDFS_HOST=$(hostname -I | awk '{print $1}')
 
-          sleep infinity
-
           # run test
           cd ${GITHUB_WORKSPACE}/python
           python3 -m pytest -d --tx popen//python=python3 \
