@@ -39,7 +39,7 @@ def cli():
     help="Coordinator endpoint which gsctl connect to, e.g. http://127.0.0.1:9527",
 )
 def connect(coordinator_endpoint):
-    """Connect to the launched coordinator.
+    """Connect to the launched coordinator
 
     By default, it will read context from  ~/.graphscope/config. If '--coordinator-endpoint'
     is specified, use it as the current context and override the config file.
@@ -64,7 +64,7 @@ def connect(coordinator_endpoint):
 
 @click.command()
 def close():
-    """Close the connection from the coordinator."""
+    """Close the connection from the coordinator"""
     try:
         context = disconnect_coordinator()
     except Exception as e:

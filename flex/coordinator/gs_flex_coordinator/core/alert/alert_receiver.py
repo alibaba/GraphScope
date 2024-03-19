@@ -20,11 +20,10 @@ import json
 import logging
 
 import requests
+
 from gs_flex_coordinator.core.alert.alert_message import AlertMessage
 from gs_flex_coordinator.core.config import INSTANCE_NAME
 from gs_flex_coordinator.core.utils import random_string
-
-logger = logging.getLogger("graphscope")
 
 
 class DingTalkReceiver(object):
@@ -117,5 +116,5 @@ class DingTalkReceiver(object):
                 raise RuntimeError(str(rlt))
 
         except Exception as e:
-            logger.warn("Failed to send dingtalk: %s", str(e))
+            logging.warn("Failed to send dingtalk: %s", str(e))
             self._error_msg = str(e)

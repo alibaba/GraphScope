@@ -16,12 +16,4 @@
 # limitations under the License.
 #
 
-import logging
-
-logging.basicConfig(
-    format="%(asctime)s [%(levelname)s][%(module)s:%(lineno)d]: %(message)s",
-    level=logging.INFO,
-)
-
-from gs_flex_coordinator.core.client_wrapper import client_wrapper
-from gs_flex_coordinator.core.utils import handle_api_exception
+from gs_flex_coordinator.core.insight.groot import init_groot_client

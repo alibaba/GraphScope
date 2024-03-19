@@ -26,8 +26,6 @@ from typing import Union
 
 import requests
 
-logger = logging.getLogger("graphscope")
-
 
 def handle_api_exception():
     """Decorator to handle api exception for openapi controllers."""
@@ -38,7 +36,7 @@ def handle_api_exception():
             try:
                 return fn(*args, **kwargs)
             except Exception as e:
-                logger.info(str(e))
+                logging.info(str(e))
                 return str(e), 500
 
         return wrapper
@@ -79,12 +77,6 @@ def get_current_time() -> datetime.datetime:
     return datetime.datetime.now()
 
 
-def str_to_bool(s):
-    if isinstance(s, bool):
-        return s
-    return s in ["true", "True", "y", "Y", "yes", "Yes", "1"]
-
-
 def get_internal_ip() -> str:
     hostname = socket.gethostname()
     internal_ip = socket.gethostbyname(hostname)
@@ -100,8 +92,21 @@ def get_public_ip() -> Union[str, None]:
         else:
             return None
     except requests.exceptions.RequestException as e:
-        logger.warn("Failed to get public ip: %s", str(e))
+        logging.warn("Failed to get public ip: %s", str(e))
         return None
+
+
+def data_type_to_groot(t):
+    if t == "DT_DOUBLE":
+        return "long"
+    elif t == "DT_STRING":
+        return "str"
+    elif t == "DT_SIGNED_INT32":
+        return "long"
+    elif t == "DT_SIGNED_INT64":
+        return "long"
+    else:
+        raise RuntimeError(f"Data type {t} is not supported yet.")
 
 
 class GraphInfo(object):
