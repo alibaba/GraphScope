@@ -26,7 +26,6 @@ rocksdb = { version = "0.21.0", features = ["snappy", "lz4", "zlib"], default-fe
 #rocksdb = { git = "https://github.com/siyuan0322/rust-rocksdb.git", rev = "c44ea2b", features = ["snappy", "lz4", "zlib"], default-features = false }
 dyn_type = { path = "../../common/dyn_type" }
 rustversion = "1.0"
-opentelemetry = { version = "0.22.0", features = ["trace"] }
 
 [build-dependencies]
 protoc-grpcio = "3.0"

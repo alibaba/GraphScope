@@ -27,7 +27,6 @@ use std::time::Duration;
 use futures::Stream;
 use hyper::server::accept::Accept;
 use hyper::server::conn::{AddrIncoming, AddrStream};
-use opentelemetry::trace::FutureExt;
 use opentelemetry::trace::TraceContextExt;
 use opentelemetry::{
     global,
@@ -36,7 +35,7 @@ use opentelemetry::{
     KeyValue,
 };
 use opentelemetry_otlp::WithExportConfig;
-use opentelemetry_sdk::{propagation::TraceContextPropagator, runtime::Tokio, trace::TracerProvider};
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::errors::{ErrorKind, JobExecError};
@@ -191,7 +190,7 @@ where
     async fn cancel(&self, req: Request<pb::CancelRequest>) -> Result<Response<Empty>, Status> {
         let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
         let tracer = global::tracer("/Pegasus/Server");
-        let mut span = tracer
+        let span = tracer
             .span_builder("/JobService/Cancel")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);

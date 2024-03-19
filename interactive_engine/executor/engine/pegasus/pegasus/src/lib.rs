@@ -60,8 +60,7 @@ use std::sync::Once;
 
 pub use config::{read_from, Configuration, JobConf, ServerConf};
 pub use data::Data;
-use opentelemetry::global::BoxedSpan;
-use opentelemetry::trace::{FutureExt, TraceContextExt, Tracer};
+use opentelemetry::trace::{TraceContextExt, Tracer};
 use opentelemetry::{global, KeyValue};
 pub use pegasus_common::codec;
 pub use pegasus_memory::alloc::check_current_task_memory;

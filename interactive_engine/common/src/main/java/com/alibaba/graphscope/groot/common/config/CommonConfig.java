@@ -80,5 +80,6 @@ public class CommonConfig {
     public static final Config<Boolean> WRITE_HIGH_AVAILABILITY_ENABLED =
             Config.boolConfig("write.high.availability.enabled", false);
 
-    public static final Config<Boolean> TRACING_ENABLED = Config.boolConfig("tracing.enabled", false);
+    public static final Config<Boolean> TRACING_ENABLED =
+            Config.boolConfig("tracing.enabled", false);
 }

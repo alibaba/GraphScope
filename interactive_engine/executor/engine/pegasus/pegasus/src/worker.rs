@@ -19,14 +19,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
-use opentelemetry::global::{tracer, BoxedSpan};
-use opentelemetry::{
-    global,
-    propagation::Extractor,
-    trace,
-    trace::{Span, SpanKind, Tracer},
-    KeyValue,
-};
+use opentelemetry::global::BoxedSpan;
+use opentelemetry::{trace, trace::Span, KeyValue};
 use pegasus_executor::{Task, TaskState};
 
 use crate::api::primitive::source::Source;
