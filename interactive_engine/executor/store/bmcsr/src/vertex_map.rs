@@ -29,6 +29,7 @@ pub struct VertexMap<G: Send + Sync + IndexType, I: Send + Sync + IndexType> {
     // global_id_to_index: FnvHashMap<G, I>,
     global_id_to_index: DashMap<G, I>,
     labeled_num: Vec<usize>,
+    vertices_num: Vec<usize>,
     pub index_to_global_id: Vec<Vec<G>>,
     labeled_corner_num: Vec<usize>,
     pub index_to_corner_global_id: Vec<Vec<G>>,
@@ -36,17 +37,19 @@ pub struct VertexMap<G: Send + Sync + IndexType, I: Send + Sync + IndexType> {
 }
 
 impl<G, I> VertexMap<G, I>
-where
-    G: Send + Sync + IndexType,
-    I: Send + Sync + IndexType,
+    where
+        G: Send + Sync + IndexType,
+        I: Send + Sync + IndexType,
 {
     pub fn new(num_labels: usize) -> Self {
         let mut labeled_num = Vec::with_capacity(num_labels);
+        let mut vertices_num = Vec::with_capacity(num_labels);
         let mut index_to_global_id = Vec::with_capacity(num_labels);
         let mut labeled_corner_num = Vec::with_capacity(num_labels);
         let mut index_to_corner_global_id = Vec::with_capacity(num_labels);
         for _ in 0..num_labels {
             labeled_num.push(0_usize);
+            vertices_num.push(0_usize);
             index_to_global_id.push(Vec::new());
             labeled_corner_num.push(0_usize);
             index_to_corner_global_id.push(Vec::new());
@@ -55,6 +58,7 @@ where
             // global_id_to_index: FnvHashMap::default(),
             global_id_to_index: DashMap::new(),
             labeled_num,
+            vertices_num,
             index_to_global_id,
             labeled_corner_num,
             index_to_corner_global_id,
@@ -71,6 +75,7 @@ where
             let global_id = self.index_to_global_id[label as usize][internal_id].clone();
             self.global_id_to_index.remove(&global_id);
             self.index_to_global_id[label as usize][internal_id] = <G as IndexType>::max();
+            self.vertices_num[label as usize] -= 1;
         } else {
             let index = <I as IndexType>::max().index() - internal_id - 1;
             if self.index_to_corner_global_id[label as usize].len() <= index {
@@ -91,6 +96,7 @@ where
         } else {
             let v = I::new(self.labeled_num[label as usize]);
             self.labeled_num[label as usize] += 1;
+            self.vertices_num[label as usize] += 1;
             self.index_to_global_id[label as usize].push(global_id);
             self.global_id_to_index.insert(global_id, v);
             v
@@ -150,6 +156,10 @@ where
         self.labeled_num[label as usize]
     }
 
+    pub fn actual_vertices_num(&self, label: LabelId) -> usize {
+        self.vertices_num[label as usize]
+    }
+
     pub fn corner_vertex_num(&self, label: LabelId) -> usize {
         self.labeled_corner_num[label as usize]
     }
@@ -203,6 +213,7 @@ where
             self.labeled_num
                 .push(reader.read_u64::<LittleEndian>().unwrap() as usize);
         }
+        self.vertices_num = self.labeled_num.clone();
         for _ in 0..self.label_num {
             self.labeled_corner_num
                 .push(reader.read_u64::<LittleEndian>().unwrap() as usize);
