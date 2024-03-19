@@ -132,7 +132,7 @@ fn main() {
     let handle = std::thread::spawn(move || {
         let mut loader: GraphLoader<usize, usize> = GraphLoader::<usize, usize>::new(
             raw_dir,
-            cur_out_dir.as_str(),
+            cur_out_dir,
             input_schema_f,
             graph_schema_f,
             partition_index,

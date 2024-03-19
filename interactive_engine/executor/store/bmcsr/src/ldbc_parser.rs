@@ -55,6 +55,17 @@ impl<G: IndexType> LDBCVertexParser<G> {
         G::new(global_id)
     }
 
+    pub fn encode_local_id(local_id: usize, label_id: LabelId) -> G {
+        let encode_id: usize = ((label_id as usize) << LABEL_SHIFT_BITS) | local_id;
+        G::new(encode_id)
+    }
+
+    pub fn decode_local_id(encoded_id: usize) -> (LabelId, G) {
+        let label_id = (encoded_id >> LABEL_SHIFT_BITS) as LabelId;
+        let local_id: usize = (((1_usize << LABEL_SHIFT_BITS) - 1) & encoded_id.index());
+        return (label_id, G::new(local_id))
+    }
+
     pub fn get_label_id(global_id: G) -> LabelId {
         (global_id.index() >> LABEL_SHIFT_BITS) as LabelId
     }
