@@ -57,6 +57,13 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -101,6 +108,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final QueryIdGenerator idGenerator;
     protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
+    Tracer tracer;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -129,6 +137,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
         this.executionClient = executionClient;
+        this.tracer = GlobalOpenTelemetry.getTracer("compiler");
     }
 
     @Override
@@ -384,9 +393,21 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
 
-        this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
-        // request results from remote engine service in blocking way
-        resultProcessor.request();
+        Span outgoing = tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
+        try (Scope scope = outgoing.makeCurrent()) {
+            outgoing.setAttribute("query.id", queryLogger.getQueryId());
+            outgoing.setAttribute("query.statement", queryLogger.getQuery());
+            outgoing.setAttribute("query.plan.logical", irPlan.getPlanAsJson());
+            this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+            // request results from remote engine service in blocking way
+            resultProcessor.request();
+        } catch (Throwable t) {
+            outgoing.setStatus(StatusCode.ERROR, "Submit failed!");
+            outgoing.recordException(t);
+            throw t;
+        } finally {
+            outgoing.end();
+        }
     }
 
     private Configs getQueryConfigs(Traversal traversal) {

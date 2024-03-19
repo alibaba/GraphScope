@@ -34,6 +34,7 @@ use opentelemetry::{
     trace::{Span, SpanKind, Tracer},
     KeyValue,
 };
+use opentelemetry::global::ObjectSafeSpan;
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::propagation::TraceContextPropagator;
 use pegasus::api::function::FnResult;
@@ -189,9 +190,9 @@ where
 
     async fn cancel(&self, req: Request<pb::CancelRequest>) -> Result<Response<Empty>, Status> {
         let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
-        let tracer = global::tracer("/Pegasus/Server");
+        let tracer = global::tracer("executor");
         let _span = tracer
-            .span_builder("/JobService/Cancel")
+            .span_builder("/JobServiceImpl/cancel")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
         let pb::CancelRequest { job_id } = req.into_inner();
@@ -202,7 +203,7 @@ where
     async fn submit(&self, req: Request<pb::JobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
         let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
-        let tracer = global::tracer("pegasus");
+        let tracer = global::tracer("executor");
         let pb::JobRequest { conf, source, plan, resource } = req.into_inner();
         if conf.is_none() {
             return Err(Status::new(Code::InvalidArgument, "job configuration not found"));
@@ -219,16 +220,11 @@ where
         let job = JobDesc { input: source, plan, resource };
 
         let mut span = tracer
-            .span_builder("/JobService/Submit")
+            .span_builder("/JobServiceImpl/submit")
             .with_kind(SpanKind::Server)
             .start_with_context(&tracer, &parent_ctx);
-        span.add_event(
-            "job",
-            vec![
-                KeyValue::new("job.name", conf.job_name.clone()),
-                KeyValue::new("job.id", conf.job_id.to_string()),
-            ],
-        );
+        span.set_attribute(KeyValue::new("job.name", conf.job_name.clone()));
+        span.set_attribute(KeyValue::new("job.id", conf.job_id.to_string()));
         let cx = opentelemetry::Context::current_with_span(span);
         let _guard = cx.clone().attach();
         let ret = pegasus::run_opt(conf, sink, move |worker| service.assemble(&job, worker));

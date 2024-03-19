@@ -107,7 +107,7 @@ data:
 
     {{- if .Values.otel.enabled }}
     export JAVA_TOOL_OPTIONS="-javaagent:/home/graphscope/opentelemetry-javaagent.jar"
-    export OTEL_SERVICE_NAME="graphscope-store"
+    export OTEL_SERVICE_NAME="compiler"
     export OTEL_TRACES_SAMPLER={{ .Values.otel.traces.sampler.name }}
     export OTEL_TRACES_SAMPLER_ARG={{ .Values.otel.traces.sampler.arg }}
     {{- end }}

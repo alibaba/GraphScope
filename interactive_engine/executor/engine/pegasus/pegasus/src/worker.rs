@@ -19,7 +19,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
-use opentelemetry::global::BoxedSpan;
+use opentelemetry::global::{BoxedSpan, ObjectSafeSpan};
 use opentelemetry::{trace, trace::Span, KeyValue};
 use pegasus_executor::{Task, TaskState};
 
@@ -239,6 +239,8 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
     fn execute(&mut self) -> TaskState {
         let _g = crate::worker_id::guard(self.id);
         if self.check_cancel() {
+            self.span.set_status(trace::Status::error("Job is canceled"));
+            self.span.end();
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
@@ -248,16 +250,16 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
         match self.task.execute() {
             Ok(state) => {
                 if TaskState::Finished == state {
+                    let elapsed = self.start.elapsed().as_millis();
                     info_worker!(
                         "job({}) '{}' finished, used {:?} ms;",
                         self.id.job_id,
                         self.conf.job_name,
-                        self.start.elapsed().as_millis()
+                        elapsed
                     );
                     self.is_finished = true;
-                    self.span.add_event(
-                        "Job",
-                        vec![KeyValue::new("ms", self.start.elapsed().as_millis().to_string())],
+                    self.span.set_attribute(
+                        KeyValue::new("used_ms", elapsed.to_string()),
                     );
                     self.span.set_status(trace::Status::Ok);
                     self.span.end();
@@ -287,6 +289,8 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
     fn check_ready(&mut self) -> TaskState {
         let _g = crate::worker_id::guard(self.id);
         if self.check_cancel() {
+            self.span.set_status(trace::Status::error("Job is canceled"));
+            self.span.end();
             self.sink.set_cancel_hook(true);
             return TaskState::Finished;
         }
@@ -295,18 +299,28 @@ impl<D: Data, T: Debug + Send + 'static> Task for Worker<D, T> {
                 Ok(state) => {
                     {
                         if TaskState::Finished == state {
+                            let elapsed = self.start.elapsed().as_millis();
                             info_worker!(
                                 "job({}) '{}' finished, used {:?};",
                                 self.id.job_id,
                                 self.conf.job_name,
-                                self.start.elapsed()
+                                elapsed
                             );
+                            self.span.set_status("func", "check_ready");
+                            self.span.set_attribute(
+                                KeyValue::new("used_ms", elapsed.to_string()),
+                            );
+                            self.span.set_status(trace::Status::Ok);
+                            self.span.end();
                         }
                     }
                     state
                 }
                 Err(e) => {
                     error_worker!("job({}) execute error: {}", self.id.job_id, e);
+                    self.span
+                        .set_status(trace::Status::error(format!("Execution error: {}", e)));
+                    self.span.end();
                     self.sink.on_error(e);
                     TaskState::Finished
                 }

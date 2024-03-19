@@ -283,15 +283,15 @@ where
         return Ok(());
     }
     let worker_ids = workers.unwrap();
-    let tracer = global::tracer("pegasus");
+    let tracer = global::tracer("executor");
 
     let mut workers = Vec::new();
     for worker_id in worker_ids {
-        let mut worker = tracer.in_span(format!("worker-{}", worker_id.index), |cx| {
+        let mut worker = tracer.in_span(format!("/pegasus::run_opt"), |cx| {
             cx.span()
-                .add_event("worker", vec![KeyValue::new("worker-id", worker_id.index.to_string())]);
+                .set_attribute(KeyValue::new("worker-id", worker_id.index.to_string()));
             let span = tracer
-                .span_builder("worker")
+                .span_builder(format!("/worker-{}",  worker_id.index))
                 .start_with_context(&tracer, &cx);
             Worker::new(&conf, worker_id, &peer_guard, sink.clone(), span)
         });
