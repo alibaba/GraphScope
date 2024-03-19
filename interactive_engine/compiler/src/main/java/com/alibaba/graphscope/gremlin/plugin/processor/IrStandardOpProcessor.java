@@ -52,7 +52,6 @@ import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversalSour
 import com.alibaba.graphscope.gremlin.result.processor.AbstractResultProcessor;
 import com.alibaba.graphscope.gremlin.result.processor.GremlinResultProcessor;
 import com.alibaba.pegasus.RpcClient;
-import com.alibaba.pegasus.intf.ResultProcessor;
 import com.alibaba.pegasus.service.protocol.PegasusClient;
 import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
@@ -152,6 +151,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         String jobName = idGenerator.generateName(jobId);
         IrMeta irMeta = metaQueryCallback.beforeExec();
         QueryStatusCallback statusCallback = createQueryStatusCallback(script, jobId);
+        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
         String language = FrontendConfig.GREMLIN_SCRIPT_LANGUAGE_NAME.get(configs);
         GremlinExecutor.LifeCycle lifeCycle;
         switch (language) {
@@ -162,18 +162,21 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                 gremlinExecutorSupplier,
                                 bindingsSupplier,
                                 irMeta,
-                                statusCallback);
+                                statusCallback,
+                                timeoutConfig);
                 break;
             case GremlinCalciteScriptEngineFactory.LANGUAGE_NAME:
                 lifeCycle =
                         new LifeCycleSupplier(
+                                        configs,
                                         ctx,
                                         queryCache,
                                         executionClient,
                                         jobId,
                                         jobName,
                                         irMeta,
-                                        statusCallback)
+                                        statusCallback,
+                                        timeoutConfig)
                                 .get();
                 break;
             default:
@@ -185,11 +188,9 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             evalFuture.handle(
                     (v, t) -> {
                         metaQueryCallback.afterExec(irMeta);
-                        if (t != null) {
-                            statusCallback.onEnd(false, null);
-                            if (v instanceof AbstractResultProcessor) {
-                                ((AbstractResultProcessor) v).cancel();
-                            }
+                        // TimeoutException has been handled in ResultProcessor, skip it here
+                        if (t != null && !(t instanceof TimeoutException)) {
+                            statusCallback.onEnd(false, t.getMessage());
                             Optional<Throwable> possibleTemporaryException =
                                     determineIfTemporaryException(t);
                             if (possibleTemporaryException.isPresent()) {
@@ -225,19 +226,6 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                                             "Timeout during script evaluation"
                                                                 + " triggered by"
                                                                 + " TimedInterruptCustomizerProvider")
-                                                    .statusAttributeException(t)
-                                                    .create());
-                                } else if (t instanceof TimeoutException) {
-                                    errorMessage =
-                                            String.format(
-                                                    "Script evaluation exceeded the configured"
-                                                            + " threshold for request [%s]",
-                                                    msg);
-                                    statusCallback.getQueryLogger().warn(errorMessage, t);
-                                    ctx.writeAndFlush(
-                                            ResponseMessage.build(msg)
-                                                    .code(ResponseStatusCode.SERVER_ERROR_TIMEOUT)
-                                                    .statusMessage(t.getMessage())
                                                     .statusAttributeException(t)
                                                     .create());
                                 } else if (t instanceof MultipleCompilationErrorsException
@@ -306,8 +294,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
             Supplier<GremlinExecutor> gremlinExecutorSupplier,
             BindingSupplier bindingsSupplier,
             IrMeta irMeta,
-            QueryStatusCallback statusCallback) {
-        QueryTimeoutConfig timeoutConfig = new QueryTimeoutConfig(ctx.getRequestTimeout());
+            QueryStatusCallback statusCallback,
+            QueryTimeoutConfig timeoutConfig) {
         return GremlinExecutor.LifeCycle.build()
                 .evaluationTimeoutOverride(timeoutConfig.getExecutionTimeoutMS())
                 .beforeEval(
@@ -335,7 +323,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                                     processTraversal(
                                             traversal,
                                             new GremlinResultProcessor(
-                                                    ctx, traversal, statusCallback, timeoutConfig),
+                                                    configs,
+                                                    ctx,
+                                                    traversal,
+                                                    statusCallback,
+                                                    timeoutConfig),
                                             irMeta,
                                             timeoutConfig,
                                             statusCallback.getQueryLogger());
@@ -350,7 +342,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     // add script argument to print with ir plan
     protected void processTraversal(
             Traversal traversal,
-            ResultProcessor resultProcessor,
+            AbstractResultProcessor resultProcessor,
             IrMeta irMeta,
             QueryTimeoutConfig timeoutConfig,
             QueryLogger queryLogger)
@@ -390,6 +382,8 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         request = request.toBuilder().setConf(jobConfig).build();
 
         this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+        // request results from remote engine service in blocking way
+        resultProcessor.request();
     }
 
     private Configs getQueryConfigs(Traversal traversal) {

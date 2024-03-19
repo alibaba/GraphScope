@@ -131,11 +131,11 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             traversal,
                                             new com.alibaba.graphscope.gremlin.integration.result
                                                     .GremlinTestResultProcessor(
+                                                    configs,
                                                     ctx,
                                                     traversal,
                                                     statusCallback,
                                                     testGraph,
-                                                    this.configs,
                                                     timeoutConfig),
                                             irMeta,
                                             new QueryTimeoutConfig(ctx.getRequestTimeout()),
@@ -149,12 +149,14 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             new ResultSchema(summary.getLogicalPlan());
                                     ExecutionResponseListener listener =
                                             new GremlinTestResultProcessor(
+                                                    configs,
                                                     ctx,
-                                                    statusCallback,
                                                     new GremlinTestRecordParser(
                                                             resultSchema,
                                                             testGraph.getProperties(configs)),
-                                                    resultSchema);
+                                                    resultSchema,
+                                                    statusCallback,
+                                                    timeoutConfig);
                                     if (value.result != null && value.result.isCompleted) {
                                         List<IrResult.Results> records = value.result.records;
                                         records.forEach(k -> listener.onNext(k.getRecord()));
