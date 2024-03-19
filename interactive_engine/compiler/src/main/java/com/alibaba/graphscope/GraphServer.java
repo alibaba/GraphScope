@@ -179,8 +179,12 @@ public class GraphServer {
             case "exp":
                 testGraph = TestGraphFactory.EXPERIMENTAL;
                 break;
-            case "csr":
-                testGraph = TestGraphFactory.MCSR;
+            case "rust-mcsr":
+                testGraph = TestGraphFactory.RUST_MCSR;
+                break;
+            case "cpp-mcsr":
+                logger.info("using cpp-mcsr as test graph");
+                testGraph = TestGraphFactory.CPP_MCSR;
                 break;
             default:
                 throw new IllegalArgumentException("unknown graph store type");

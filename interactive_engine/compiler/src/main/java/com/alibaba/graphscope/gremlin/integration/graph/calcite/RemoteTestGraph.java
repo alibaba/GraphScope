@@ -1017,10 +1017,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
 //        method = "g_VX4X_bothE",
 //        reason = "returned label is id")
-// @Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
-//        method = "g_E_hasXlabelXknowsX",
-//        reason = "returned label is id")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest",
+        method = "g_E_hasXlabelXknowsX",
+        reason = "Tested in IrGremlinQueryTest")
 // @Graph.OptOut(
 //        test = "org.apache.tinkerpop.gremlin.process.traversal.step.map.VertexTest",
 //        method = "g_VX2X_inE",
@@ -1311,9 +1311,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
         method = "g_V_group_byXlabelX_byXlabel_countX",
         test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
         reason = "will be supported")
-// @Graph.OptOut(method="g_V_group_byXageX" ,
-// test="org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest", reason = "will
-// be supported")
+@Graph.OptOut(
+        method = "g_V_group_byXageX",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.sideEffect.GroupTest",
+        reason = "tinkerpop v3.5 takes null key into account, but later version filter null key")
 
 // @Graph.OptOut(method="g_V_hasXp_neqXvXX" ,
 // test="org.apache.tinkerpop.gremlin.process.traversal.step.filter.HasTest", reason = "existence of
@@ -1519,14 +1520,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 //        method = "g_V_valueMapXname_ageX",
 //        reason = "unsupported")
 
-// @Graph.OptOut(
-//        method = "g_V_unionXout__inX_name",
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//        reason = "union is unsupported yet")
-// @Graph.OptOut(
-//        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
-//        method = "g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX",
-//        reason = "union is unsupported yet")
+@Graph.OptOut(
+        method = "g_V_unionXout__inX_name",
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
+        reason = "Tested in IrGremlinQueryTest")
+@Graph.OptOut(
+        test = "org.apache.tinkerpop.gremlin.process.traversal.step.branch.UnionTest",
+        method = "g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX",
+        reason = "Tested in IrGremlinQueryTest")
 // @Graph.OptOut(
 //        method = "g_V_haslabel_union_identity_out_values",
 //        test = "com.alibaba.graphscope.gremlin.integration.suite.standard.IrGremlinQueryTest",
