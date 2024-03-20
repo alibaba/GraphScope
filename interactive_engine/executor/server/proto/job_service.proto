@@ -18,65 +18,75 @@ package protocol;
 option java_package = "com.alibaba.graphscope.ldbc.workload.proto";
 option java_outer_classname = "BiClient";
 
-message Argument {
-  string param_name = 1;
-  string value = 2;
+message Empty { }
+
+message Name {
+  string name = 1;
 }
 
-message BIJobRequest {
-  string job_name = 1;
-  repeated Argument arguments   = 2;
+message BinaryResource {
+  string name = 1;
+  bytes resource = 2;
 }
 
-message BIJobResponse {
-  uint64 job_index = 1;
-  bytes  resp   = 2;
+message ServerList {
+  repeated uint64 servers  = 1;
 }
 
-message BatchUpdateRequest {
-  string data_root = 1;
-  string request_json = 2;		
+message JobConfig {
+  uint64 job_id             = 1;
+  string job_name           = 2;
+  uint32 workers            = 3;
+  uint64 time_limit         = 4;
+  uint32 batch_size         = 5;
+  uint32 batch_capacity     = 6;
+  uint32 memory_limit       = 7;
+  bool trace_enable         = 8;
+  oneof servers {
+    Empty local             = 9;
+    ServerList part         = 10;
+    Empty all               = 11;
+  }
 }
 
-message BatchUpdateResponse {
-  bool is_success = 1;
+message JobRequest {
+  JobConfig conf          = 1;
+  bytes source   = 2;
+  bytes plan     = 3;
+  bytes resource = 4;
 }
 
-message PrecomputeRequest {
+message JobResponse {
+  uint64 job_id       = 1;
+  bytes  resp  = 2;
 }
 
-message PrecomputeResponse {
-  bool is_success = 1;
+message RegisterRequest {
+  string name = 1;
+  string query = 2;
+  string type = 3;
+  string description = 4;
 }
 
-message DeleteGenerationRequest {
-  string raw_data_root = 1;
-  string batch_id = 2;
+message RegisterResponse {
+  string procedure_id = 1;
+  string config_path = 2;
 }
 
-message DeleteGenerationResponse {
-  bool is_success = 1;
+
+
+message CallRequest {
+  string query = 1;
 }
 
-message TraverseRequest {
-  string output_dir = 1;
+message CallResponse {
+  bool is_success  = 1;
+  repeated string results = 2;
+  string reason = 3;
 }
 
-message TraverseResponse {
-  bool is_success = 1;
-}
+service JobService {
+  rpc Submit(JobRequest) returns(stream JobResponse) {}
 
-service BIJobService {
-  rpc Submit(BIJobRequest) returns(stream BIJobResponse) {}
-
-  rpc SubmitBatchInsert(BatchUpdateRequest) returns(BatchUpdateResponse) {}
-
-  rpc SubmitBatchDelete(BatchUpdateRequest) returns(BatchUpdateResponse) {}
-
-  rpc SubmitPrecompute(PrecomputeRequest) returns(PrecomputeResponse) {}
-
-  rpc SubmitDeleteGeneration(DeleteGenerationRequest) returns(DeleteGenerationResponse) {}
-
-  rpc SubmitTraverse(TraverseRequest) returns(TraverseResponse) {}
-  
+  rpc SubmitCall(CallRequest) returns(CallResponse) {}
 }

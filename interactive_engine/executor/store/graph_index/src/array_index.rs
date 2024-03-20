@@ -6,10 +6,10 @@ use crate::types::*;
 pub trait ArrayIndex: Debug {
     fn get_type(&self) -> DataType;
     fn get(&self, index: usize) -> Option<RefItem>;
-    fn get_data(&self) -> ArrayDataRef<'_>;
+    fn get_data(&self) -> ColumnDataRef<'_>;
     fn set(&mut self, index: u64, val: Item);
     fn set_unsafe(&self, index: u64, val: Item);
-    fn set_batch(&mut self, index: &Vec<usize>, data: ArrayDataRef);
+    fn set_batch(&mut self, index: &Vec<usize>, data: ColumnDataRef);
     fn push(&mut self, val: Item);
     fn len(&self) -> usize;
     fn as_any(&self) -> &dyn Any;
@@ -44,8 +44,8 @@ impl ArrayIndex for Int32ArrayIndex {
         self.data.get(index).map(|x| RefItem::Int32(x))
     }
 
-    fn get_data(&self) -> ArrayDataRef<'_> {
-        ArrayDataRef::Int32Array(&self.data)
+    fn get_data(&self) -> ColumnDataRef<'_> {
+        ColumnDataRef::Int32Array(&self.data)
     }
 
     fn set(&mut self, index: u64, val: Item) {
@@ -73,9 +73,9 @@ impl ArrayIndex for Int32ArrayIndex {
         }
     }
 
-    fn set_batch(&mut self, index: &Vec<usize>, data: ArrayDataRef) {
+    fn set_batch(&mut self, index: &Vec<usize>, data: ColumnDataRef) {
         match data {
-            ArrayDataRef::Int32Array(data) => {
+            ColumnDataRef::Int32Array(data) => {
                 assert_eq!(index.len(), data.len());
                 for i in 0..index.len() {
                     self.data[index[i]] = data[i];
@@ -130,8 +130,8 @@ impl ArrayIndex for UInt64ArrayIndex {
         self.data.get(index).map(|x| RefItem::UInt64(x))
     }
 
-    fn get_data(&self) -> ArrayDataRef<'_> {
-        ArrayDataRef::Uint64Array(&self.data)
+    fn get_data(&self) -> ColumnDataRef<'_> {
+        ColumnDataRef::UInt64Array(&self.data)
     }
 
     fn set(&mut self, index: u64, val: Item) {
@@ -159,9 +159,9 @@ impl ArrayIndex for UInt64ArrayIndex {
         }
     }
 
-    fn set_batch(&mut self, index: &Vec<usize>, data: ArrayDataRef) {
+    fn set_batch(&mut self, index: &Vec<usize>, data: ColumnDataRef) {
         match data {
-            ArrayDataRef::Uint64Array(data) => {
+            ColumnDataRef::UInt64Array(data) => {
                 assert_eq!(index.len(), data.len());
                 for i in 0..index.len() {
                     self.data[index[i]] = data[i];

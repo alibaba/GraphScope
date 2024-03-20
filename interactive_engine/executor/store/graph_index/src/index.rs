@@ -1,8 +1,6 @@
-use std::any;
-
 use crate::array_index::*;
 use crate::table_index::*;
-use crate::types::{ArrayDataRef, DataType, Item, LabelId, RefItem};
+use crate::types::{ColumnDataRef, DataType, Item, RefItem};
 
 /*pub struct IndexMap {
     pub vertex_index: ShardedLock<HashMap<u64, VertexIndex>>,
@@ -76,7 +74,7 @@ impl VertexIndex {
         }
     }
 
-    pub fn add_index_batch(&mut self, index: &Vec<usize>, data: ArrayDataRef) {
+    pub fn add_index_batch(&mut self, index: &Vec<usize>, data: ColumnDataRef) {
         if self.index_array.is_some() {
             self.index_array
                 .as_mut()
@@ -147,7 +145,7 @@ impl EdgeIndex {
         }
     }
 
-    pub fn add_index_batch(&mut self, index: &Vec<usize>, data: ArrayDataRef) {
+    pub fn add_index_batch(&mut self, index: &Vec<usize>, data: ColumnDataRef) {
         if self.index_array.is_some() {
             self.index_array
                 .as_mut()
@@ -166,7 +164,7 @@ impl EdgeIndex {
         }
     }
 
-    pub fn get_index_batch(&self) -> ArrayDataRef<'_> {
+    pub fn get_index_batch(&self) -> ColumnDataRef<'_> {
         self.index_array.as_ref().unwrap().get_data()
     }
 }

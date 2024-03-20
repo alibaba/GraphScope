@@ -1,7 +1,4 @@
 use std::collections::HashMap;
-use std::sync::{RwLock, RwLockReadGuard};
-
-use crossbeam_utils::sync::ShardedLock;
 
 use crate::index::*;
 use crate::schema::IndexSchema;
@@ -131,7 +128,7 @@ impl GraphIndex {
     // }
 
     pub fn add_vertex_index_batch(
-        &mut self, vertex_label: LabelId, index_name: &String, index: &Vec<usize>, data: ArrayDataRef,
+        &mut self, vertex_label: LabelId, index_name: &String, index: &Vec<usize>, data: ColumnDataRef,
     ) -> Result<(), GraphIndexError> {
         let index_label = self
             .index_schema
@@ -148,7 +145,7 @@ impl GraphIndex {
 
     pub fn add_incoming_edge_index_batch(
         &mut self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
-        index: &Vec<usize>, data: ArrayDataRef,
+        index: &Vec<usize>, data: ColumnDataRef,
     ) -> Result<(), GraphIndexError> {
         let index_label = self
             .index_schema
@@ -165,7 +162,7 @@ impl GraphIndex {
 
     pub fn add_outgoing_edge_index_batch(
         &mut self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
-        index: &Vec<usize>, data: ArrayDataRef,
+        index: &Vec<usize>, data: ColumnDataRef,
     ) -> Result<(), GraphIndexError> {
         let index_label = self
             .index_schema
@@ -281,7 +278,7 @@ impl GraphIndex {
 
     // pub fn get_edge_index_batch<'a>(
     //     &'a self, src_label: LabelId, edge_label: LabelId, dst_label: LabelId, index_name: &String,
-    // ) -> Option<ArrayDataRef<'_>> {
+    // ) -> Option<ColumnDataRef<'_>> {
     //     let schema_locked = self
     //         .index_schema
     //         .read()

@@ -465,3 +465,47 @@ pub fn parse_properties(
     }
     Ok(properties)
 }
+
+pub fn parse_properties_by_mappings(
+    record: &StringRecord, header: &[(String, DataType)], mappings: &Vec<i32>,
+) -> GDBResult<Vec<Item>> {
+    let mut properties = vec![Item::Null; mappings.len()];
+    for (index, val) in record.iter().enumerate() {
+        if mappings[index] >= 0 {
+            match header[mappings[index] as usize].1 {
+                DataType::Int32 => {
+                    properties.push(Item::Int32(val.parse::<i32>()?));
+                }
+                DataType::UInt32 => {
+                    properties.push(Item::UInt32(val.parse::<u32>()?));
+                }
+                DataType::Int64 => {
+                    properties.push(Item::Int64(val.parse::<i64>()?));
+                }
+                DataType::UInt64 => {
+                    properties.push(Item::UInt64(val.parse::<u64>()?));
+                }
+                DataType::String => {
+                    properties.push(Item::String(val.to_string()));
+                }
+                DataType::Date => {
+                    properties.push(Item::Date(parse_date(val)?));
+                }
+                DataType::DateTime => {
+                    properties.push(Item::DateTime(parse_datetime(val)));
+                }
+                DataType::Double => {
+                    properties.push(Item::Double(val.parse::<f64>()?));
+                }
+                DataType::NULL => {
+                    error!("Unexpected field type");
+                }
+                DataType::ID => {}
+                DataType::LCString => {
+                    properties.push(Item::String(val.to_string()));
+                }
+            }
+        }
+    }
+    Ok(properties)
+}

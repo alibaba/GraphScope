@@ -399,7 +399,7 @@ mod test {
             server_index as u32,
             servers,
             None,
-            None
+            None,
         )
         .unwrap();
         let servers_len = servers.len();
@@ -494,7 +494,7 @@ mod test {
                     index as u32,
                     &server_conf,
                     None,
-                    None
+                    None,
                 )
                 .unwrap();
                 let mut ch_resources_second = build_channels::<Vec<u64>>(
@@ -503,7 +503,7 @@ mod test {
                     index as u32,
                     &server_conf,
                     None,
-                    None
+                    None,
                 )
                 .unwrap();
                 let mut channels = vec![];
@@ -603,7 +603,7 @@ mod test {
                     index as u32,
                     &server_conf,
                     None,
-                    None
+                    None,
                 )
                 .unwrap();
                 let mut channel_threads = vec![];

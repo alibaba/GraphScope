@@ -14,11 +14,11 @@
 //! limitations under the License.
 
 use std::path::PathBuf;
-use structopt::StructOpt;
 
 use bmcsr::graph_loader::GraphLoader;
 use bmcsr::schema::CsrGraphSchema;
 use bmcsr::types::*;
+use structopt::StructOpt;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {

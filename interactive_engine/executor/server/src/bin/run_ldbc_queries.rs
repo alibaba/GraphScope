@@ -4,19 +4,18 @@ use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use std::time::Instant;
 
-use lazy_static::lazy_static;
-use log::info;
-use serde::Deserialize;
-use structopt::StructOpt;
-
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
 use bmcsr::schema::InputSchema;
 use bmcsr::traverse::traverse;
 use graph_index::GraphIndex;
+use lazy_static::lazy_static;
+use log::info;
 use pegasus::{Configuration, JobConf, ServerConf};
 use rpc_server::queries::register::QueryRegister;
 use rpc_server::queries::rpc::RPCServerConfig;
+use serde::Deserialize;
+use structopt::StructOpt;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
@@ -168,73 +167,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .join(format!("date-{}", batch_id));
         std::fs::create_dir_all(&traverse_out).unwrap();
         traverse(&graph, traverse_out.to_str().unwrap());
-
-        if !config.queries_config.is_empty() {
-            println!("before run precomputes...");
-            query_register.run_precomputes(&graph, &mut graph_index, worker_num);
-            println!("after run precomputes...");
-        }
-
-        if config.parameters.is_dir() {
-            println!("Start iterating parameter files: {:?}", config.parameters);
-            let start = Instant::now();
-            for pair in PARAMETERS_MAP.iter() {
-                let query_name = pair.0.to_string();
-                let query = query_register
-                    .get_query(&query_name)
-                    .expect("Could not find query");
-                let files = pair.1.clone();
-
-                for filename in files.iter() {
-                    let path = config.parameters.clone().join(filename);
-                    if !path.is_file() {
-                        continue;
-                    }
-                    let file = File::open(path).expect("Failed to open query parameter file");
-                    let reader = BufReader::new(file);
-                    let mut keys = Vec::<String>::new();
-                    let mut first_line = true;
-                    for line_result in reader.lines() {
-                        let line = line_result.unwrap();
-                        if first_line {
-                            first_line = false;
-                            keys = line
-                                .split('|')
-                                .map(|s| {
-                                    s.to_string()
-                                        .split(':')
-                                        .next()
-                                        .unwrap()
-                                        .to_string()
-                                })
-                                .collect();
-                            continue;
-                        }
-
-                        let params: Vec<String> = line.split('|').map(|s| s.to_string()).collect();
-                        let mut params_map = HashMap::new();
-                        for (index, key) in keys.iter().enumerate() {
-                            params_map.insert(key, params[index].clone());
-                        }
-                        let mut conf = JobConf::new(query_name.clone());
-                        conf.set_workers(worker_num);
-                        conf.reset_servers(ServerConf::Partial(vec![0]));
-                        let result = {
-                            pegasus::run(conf.clone(), || {
-                                query.Query(conf.clone(), &graph, &graph_index, HashMap::new())
-                            })
-                            .expect("submit query failure")
-                        };
-                        for x in result {
-                            let data_set = x.expect("Fail to get result");
-                        }
-                    }
-                }
-            }
-            println!("Finished run queries, time: {} ms", start.elapsed().as_millis());
-        } else if config.parameters.is_file() {
-            println!("{:?} is expected to be a directory", config.parameters);
-        }
     }
 
     Ok(())

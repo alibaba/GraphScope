@@ -22,10 +22,10 @@ use crate::{BuildJobError, Data};
 
 impl<D: Data> KeyBy<D> for Stream<D> {
     fn key_by<K, V, F>(self, selector: F) -> Result<Stream<Pair<K, V>>, BuildJobError>
-        where
-            K: Data + Key,
-            V: Data,
-            F: Fn(D) -> FnResult<(K, V)> + Send + 'static,
+    where
+        K: Data + Key,
+        V: Data,
+        F: Fn(D) -> FnResult<(K, V)> + Send + 'static,
     {
         self.map(move |item| {
             let (key, value) = selector(item)?;

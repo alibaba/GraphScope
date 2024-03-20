@@ -154,8 +154,7 @@ pub(crate) struct PerChannelPush<D: Data> {
 
 impl<D: Data> PerChannelPush<D> {
     pub(crate) fn new(
-        ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle,
-        src: u32,
+        ch_info: ChannelInfo, delta: MergedScopeDelta, push: MicroBatchPush<D>, ch: CancelHandle, src: u32,
     ) -> Self {
         let cancel_handle = ChannelCancelPtr::new(ch_info.scope_level, delta.clone(), ch);
         let re_seq = TidyTagMap::new(ch_info.scope_level);

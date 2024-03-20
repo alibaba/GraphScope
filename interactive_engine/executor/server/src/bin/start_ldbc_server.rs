@@ -1,16 +1,14 @@
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
-use serde::Deserialize;
-use structopt::StructOpt;
-
 use bmcsr::graph_db::GraphDB;
 use graph_index::GraphIndex;
 use pegasus::{Configuration, ServerConf};
-
 use rpc_server::queries;
 use rpc_server::queries::register::QueryRegister;
 use rpc_server::queries::rpc::RPCServerConfig;
+use serde::Deserialize;
+use structopt::StructOpt;
 
 #[cfg(feature = "use_mimalloc")]
 use mimalloc::MiMalloc;
@@ -81,7 +79,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut query_register = QueryRegister::new();
     println!("Start load lib");
-    query_register.load(&PathBuf::from(config.queries_config));
+    //query_register.load(&PathBuf::from(config.queries_config));
     println!("Finished load libs");
 
     let rpc_config = servers_conf
@@ -99,6 +97,5 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         shared_graph_index,
     )
     .await?;
-
     Ok(())
 }

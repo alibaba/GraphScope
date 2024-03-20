@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs::File;
 use std::hash::Hash;
-use std::ops::Index;
 use std::path::Path;
 
 use itertools::Itertools;
@@ -86,7 +85,7 @@ impl LDBCGraphSchema {
             let header = header.unwrap();
             let mut ret = DataType::NULL;
             for (_, v) in header {
-                if *v != DataType::ID {
+                if *v != DataType::VertexId {
                     ret = v.clone();
                 }
             }
@@ -358,7 +357,7 @@ impl IndexSchema {
         &mut self, index_name: String, vertex_label: LabelId, data_type: DataType,
     ) -> Option<LabelId> {
         if let Some(mut index_metas) = self.vertex_index_meta.get_mut(&vertex_label) {
-            if let Some(mut property_list) = self
+            if let Some(property_list) = self
                 .vertex_index_name_list
                 .get_mut(&vertex_label)
             {

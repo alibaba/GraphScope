@@ -91,7 +91,9 @@ impl<D: Data> Fold<D> for Stream<D> {
                             let mut session = output.new_session(&batch.tag)?;
                             session.give_last(Single(accum), end)?;
                         } else {
-                            if end.tag.is_root() || (!end.tag.is_root() && end.contains_source(worker, total_peers)) {
+                            if end.tag.is_root()
+                                || (!end.tag.is_root() && end.contains_source(worker, total_peers))
+                            {
                                 let mut session = output.new_session(&batch.tag)?;
                                 session.give_last(Single(init.clone()), end)?
                             } else {

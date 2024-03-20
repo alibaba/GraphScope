@@ -467,7 +467,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
                     let chunk_offset_ref = safe_chunk_offset_ptr.get_mut();
                     let degree_ref = safe_degree_ptr.get_ref();
                     let new_degree_ref = safe_new_degree_ptr.get_mut();
-                    while true {
+                    loop {
                         let cur_chunk = chunk_i_ref.fetch_add(1, Ordering::Relaxed);
                         if cur_chunk >= chunk_num {
                             break;
@@ -531,7 +531,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
                     let offsets_ref = safe_offsets_ptr.get_ref();
                     let degree_ref = safe_degree_ptr.get_ref();
 
-                    while true {
+                    loop {
                         let cur_chunk = chunk_i_ref.fetch_add(1, Ordering::Relaxed);
                         if cur_chunk >= chunk_num {
                             break;
@@ -636,7 +636,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
                     let chunk_offset_ref = safe_chunk_offset_ptr.get_mut();
                     let degree_ref = safe_degree_ptr.get_ref();
                     let new_degree_ref = safe_new_degree_ptr.get_mut();
-                    while true {
+                    loop {
                         let cur_chunk = chunk_i_ref.fetch_add(1, Ordering::Relaxed);
                         if cur_chunk >= chunk_num {
                             break;
@@ -705,7 +705,7 @@ impl<I: IndexType> CsrTrait<I> for BatchMutableCsr<I> {
                     let new_table_ref = safe_new_table_ptr.get_mut();
                     let old_table_ref = safe_old_table_ptr.get_ref();
 
-                    while true {
+                    loop {
                         let cur_chunk = chunk_i_ref.fetch_add(1, Ordering::Relaxed);
                         if cur_chunk >= chunk_num {
                             break;

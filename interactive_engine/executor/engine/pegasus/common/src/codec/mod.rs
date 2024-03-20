@@ -16,7 +16,7 @@
 //! The `Serialize` and `Deserialize` traits is paired contract which defines how objects of various
 //! structures be encoded into network, and decoded from network;
 
-use std::collections::{BTreeMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::io;
 use std::mem;
 
@@ -235,6 +235,12 @@ impl Decode for String {
     }
 }
 
+impl<K: Encode, V: Encode> Encode for HashMap<K, V> {
+    fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
+        Ok(())
+    }
+}
+
 impl<T: Encode> Encode for HashSet<T> {
     fn write_to<W: WriteExt>(&self, writer: &mut W) -> io::Result<()> {
         writer.write_u32(self.len() as u32)?;
@@ -242,6 +248,14 @@ impl<T: Encode> Encode for HashSet<T> {
             datum.write_to(writer)?;
         }
         Ok(())
+    }
+}
+
+impl<K: Decode + std::cmp::Eq + std::hash::Hash, V: Decode> Decode for HashMap<K, V> {
+    fn read_from<R: ReadExt>(reader: &mut R) -> io::Result<Self> {
+        let len = reader.read_u32()? as usize;
+        let mut map = HashMap::with_capacity(len);
+        Ok(map)
     }
 }
 
@@ -365,6 +379,7 @@ impl<T: Decode> Decode for Option<T> {
 
 mod shade;
 mod third_party;
+
 pub use shade::ShadeCodec;
 #[cfg(feature = "serde")]
 pub use third_party::serde_bin as serde;

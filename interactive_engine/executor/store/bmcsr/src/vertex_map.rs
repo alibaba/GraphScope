@@ -18,7 +18,6 @@ use std::io::{BufReader, BufWriter, Write};
 
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use dashmap::DashMap;
-use fnv::FnvHashMap;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::graph::IndexType;

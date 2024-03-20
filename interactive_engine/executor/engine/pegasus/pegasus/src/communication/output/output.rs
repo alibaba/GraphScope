@@ -35,7 +35,7 @@ use crate::{Data, Tag};
 enum BlockEntry<D: Data> {
     Single(D),
     LastSingle(D, EndOfScope),
-    DynIter(Option<D>, Box<dyn Iterator<Item=D> + Send + 'static>),
+    DynIter(Option<D>, Box<dyn Iterator<Item = D> + Send + 'static>),
 }
 
 pub struct OutputHandle<D: Data> {
@@ -79,7 +79,7 @@ impl<D: Data> OutputHandle<D> {
         }
     }
 
-    pub fn push_iter<I: Iterator<Item=D> + Send + 'static>(
+    pub fn push_iter<I: Iterator<Item = D> + Send + 'static>(
         &mut self, tag: &Tag, mut iter: I,
     ) -> IOResult<()> {
         if self.is_skipped(tag) {
@@ -289,10 +289,10 @@ impl<D: Data> OutputHandle<D> {
         if level == self.scope_level {
             (!self.current_skips.is_empty() && self.current_skips.contains_key(tag))
                 || (level >= 1
-                && !self.parent_skips.is_empty()
-                && self
-                .parent_skips
-                .contains_key(&tag.to_parent_uncheck()))
+                    && !self.parent_skips.is_empty()
+                    && self
+                        .parent_skips
+                        .contains_key(&tag.to_parent_uncheck()))
         } else if level < self.scope_level {
             *crate::config::ENABLE_CANCEL_CHILD
                 && !self.parent_skips.is_empty()
@@ -304,7 +304,7 @@ impl<D: Data> OutputHandle<D> {
 
     #[inline]
     fn push_box_iter(
-        &mut self, bks: BlockScope, mut iter: Box<dyn Iterator<Item=D> + Send + 'static>,
+        &mut self, bks: BlockScope, mut iter: Box<dyn Iterator<Item = D> + Send + 'static>,
     ) -> IOResult<()> {
         match self.try_push_iter_inner(bks.tag(), &mut iter) {
             Ok(None) => Ok(()),
@@ -400,7 +400,7 @@ impl<D: Data> OutputHandle<D> {
         Ok(())
     }
 
-    fn try_push_iter_inner<I: Iterator<Item=D>>(
+    fn try_push_iter_inner<I: Iterator<Item = D>>(
         &mut self, tag: &Tag, iter: &mut I,
     ) -> IOResult<Option<D>> {
         //self.buf_pool.pin(tag);
@@ -464,8 +464,8 @@ impl<'a, D: Data> OutputSession<'a, D> {
     }
 
     pub fn give_iterator<I>(&mut self, iter: I) -> IOResult<()>
-        where
-            I: Iterator<Item=D> + Send + 'static,
+    where
+        I: Iterator<Item = D> + Send + 'static,
     {
         if self.skip {
             Ok(())
@@ -540,7 +540,7 @@ impl<D: Data> ScopeStreamPush<D> for OutputHandle<D> {
         }
     }
 
-    fn try_push_iter<I: Iterator<Item=D>>(&mut self, _tag: &Tag, _iter: &mut I) -> IOResult<()> {
+    fn try_push_iter<I: Iterator<Item = D>>(&mut self, _tag: &Tag, _iter: &mut I) -> IOResult<()> {
         //self.buf_pool.pin(tag);
         unimplemented!("use push iter;");
     }

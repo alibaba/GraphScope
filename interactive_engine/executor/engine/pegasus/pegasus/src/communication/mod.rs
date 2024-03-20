@@ -19,12 +19,13 @@ use std::collections::{HashMap, LinkedList};
 use std::net::SocketAddr;
 use std::sync::{Arc, Weak};
 
-use crate::data_plane::ChannelResource;
-use crate::errors::{BuildJobError, IOError};
-use crate::{Data, JobConf, WorkerId};
 use crossbeam_channel::Sender;
 use crossbeam_utils::sync::ShardedLock;
 use pegasus_network::{InboxRegister, NetData};
+
+use crate::data_plane::ChannelResource;
+use crate::errors::{BuildJobError, IOError};
+use crate::{Data, JobConf, WorkerId};
 
 mod buffer;
 pub(crate) mod cancel;
@@ -103,7 +104,7 @@ pub(crate) fn build_channel<T: Data>(
             server_index,
             conf.servers(),
             msg_senders,
-            recv_register
+            recv_register,
         )?;
         if let Some(ch) = resources.pop_front() {
             if !resources.is_empty() {

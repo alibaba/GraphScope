@@ -72,7 +72,7 @@ pub use worker_id::{get_current_worker, get_current_worker_checked, set_current_
 use crate::api::Source;
 use crate::errors::CancelError;
 pub use crate::errors::{BuildJobError, JobSubmitError, SpawnJobError, StartupError};
-use crate::resource::{PartitionedKeydResource, PartitionedResource};
+use crate::resource::{DistributedParResourceMaps, PartitionedKeydResource, PartitionedResource};
 use crate::result::{ResultSink, ResultStream};
 use crate::worker_id::WorkerIdIter;
 
@@ -297,6 +297,37 @@ where
                 for (k, r) in rs {
                     worker.add_resource_with_key(k, r);
                 }
+            }
+        }
+        worker.dataflow(func())
+    })?;
+    Ok(results)
+}
+
+pub fn run_with_resource_map<DI, DO, F, FN>(
+    conf: JobConf, mut resource: Option<DistributedParResourceMaps>, func: F,
+) -> Result<ResultStream<DO>, JobSubmitError>
+where
+    DI: Data,
+    DO: Debug + Send + 'static,
+    F: Fn() -> FN,
+    FN: FnOnce(&mut Source<DI>, ResultSink<DO>) -> Result<(), BuildJobError> + 'static,
+{
+    let (tx, rx) = crossbeam_channel::unbounded();
+    let sink = ResultSink::new(tx);
+    let cancel_hook = sink.get_cancel_hook().clone();
+    let results = ResultStream::new(conf.job_id, cancel_hook, rx);
+    run_opt(conf, sink, |worker| {
+        let index = worker.id.index as usize;
+        if resource.is_some() {
+            let mut resource_map = resource
+                .take()
+                .expect("Failed to take resource");
+            if let Some(res) = resource_map.take_resource(index) {
+                worker.set_resources(res);
+            }
+            if let Some(keyed_res) = resource_map.take_keyed_resource(index) {
+                worker.set_resources_with_key(keyed_res);
             }
         }
         worker.dataflow(func())

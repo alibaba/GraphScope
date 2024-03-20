@@ -3,12 +3,13 @@ use std::cell::{RefCell, UnsafeCell};
 use std::collections::HashMap;
 use std::ops::{Deref, DerefMut};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::thread::LocalKey;
 
 use crossbeam_utils::sync::ShardedLock;
+use pegasus_common::codec::{Decode, Encode};
 
-use crate::{JobConf, ServerConf};
+use crate::{Data, JobConf, ServerConf};
 
 pub type ResourceMap = HashMap<TypeId, Box<dyn Any + Send>>;
 pub type KeyedResources = HashMap<String, Box<dyn Any + Send>>;
@@ -173,6 +174,7 @@ pub struct ResourceBar {
     // Visibility here changes what can see `foo`.
     pub data: &'static LocalKey<RefCell<ResourceMap>>,
 }
+
 impl ResourceBar {
     pub fn constructor() -> Self {
         Self { data: &RESOURCES }
@@ -183,6 +185,7 @@ pub struct KeyedResourceBar {
     // Visibility here changes what can see `foo`.
     pub data: &'static LocalKey<RefCell<KeyedResources>>,
 }
+
 impl KeyedResourceBar {
     pub fn constructor() -> Self {
         Self { data: &KEYED_RESOURCES }
@@ -531,6 +534,110 @@ impl<T: Send + Sync + 'static> PartitionedKeydResource for DistributedParKeyedRe
     fn take_keyed_resource(&mut self, par: usize) -> Option<Vec<(String, Self::Res)>> {
         if par >= self.start_index && par < self.start_index + self.partitions.len() {
             self.partitions[par - self.start_index].take()
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Clone)]
+pub struct DistributedParResourceMaps {
+    resource_maps: Vec<Option<Arc<Mutex<ResourceMap>>>>,
+    keyed_resource_maps: Vec<Option<Arc<Mutex<KeyedResources>>>>,
+    start_index: usize,
+}
+
+impl DistributedParResourceMaps {
+    pub fn new(
+        conf: &JobConf, resource_maps: Vec<Option<Arc<Mutex<ResourceMap>>>>,
+        keyed_resource_maps: Vec<Option<Arc<Mutex<KeyedResources>>>>,
+    ) -> DistributedParResourceMaps {
+        let server_conf = conf.servers();
+        let servers = match server_conf {
+            ServerConf::Local => vec![0],
+            ServerConf::Partial(ids) => ids.clone(),
+            ServerConf::All => crate::get_servers(),
+        };
+        let mut start_index = 0 as usize;
+        if !servers.is_empty() && (servers.len() > 1) {
+            if let Some(my_id) = crate::server_id() {
+                let mut my_index = -1;
+                for (index, id) in servers.iter().enumerate() {
+                    if *id == my_id {
+                        my_index = index as i64;
+                    }
+                }
+                if my_index >= 0 {
+                    start_index = (conf.workers * (my_index as u32)) as usize;
+                }
+            }
+        }
+        DistributedParResourceMaps { resource_maps, keyed_resource_maps, start_index }
+    }
+
+    pub fn default(server_conf: ServerConf, workers: u32) -> DistributedParResourceMaps {
+        let servers = match server_conf {
+            ServerConf::Local => vec![0],
+            ServerConf::Partial(ids) => ids.clone(),
+            ServerConf::All => crate::get_servers(),
+        };
+        let mut start_index = 0 as usize;
+        if !servers.is_empty() && (servers.len() > 1) {
+            if let Some(my_id) = crate::server_id() {
+                let mut my_index = -1;
+                for (index, id) in servers.iter().enumerate() {
+                    if *id == my_id {
+                        my_index = index as i64;
+                    }
+                }
+                if my_index >= 0 {
+                    start_index = (workers * (my_index as u32)) as usize;
+                }
+            }
+        }
+        let resource_size = workers as usize;
+        let mut resource_maps = Vec::with_capacity(resource_size);
+        for _ in 0..resource_size {
+            resource_maps.push(Some(Arc::new(Mutex::new(ResourceMap::default()))));
+        }
+        let mut keyed_resource_maps = Vec::with_capacity(resource_size);
+        for _ in 0..resource_size {
+            keyed_resource_maps.push(Some(Arc::new(Mutex::new(KeyedResources::default()))));
+        }
+        DistributedParResourceMaps {
+            resource_maps,
+            keyed_resource_maps,
+            start_index,
+        }
+    }
+
+    pub fn get_resource(&self, par: usize) -> Option<&Arc<Mutex<ResourceMap>>> {
+        if par >= self.start_index && par < self.start_index + self.resource_maps.len() {
+            self.resource_maps[par - self.start_index].as_ref()
+        } else {
+            None
+        }
+    }
+
+    pub fn take_resource(&mut self, par: usize) -> Option<Arc<Mutex<ResourceMap>>> {
+        if par >= self.start_index && par < self.start_index + self.resource_maps.len() {
+            self.resource_maps[par - self.start_index].take()
+        } else {
+            None
+        }
+    }
+
+    pub fn get_keyed_resource(&self, par: usize) -> Option<&Arc<Mutex<KeyedResources>>> {
+        if par >= self.start_index && par < self.start_index + self.keyed_resource_maps.len() {
+            self.keyed_resource_maps[par - self.start_index].as_ref()
+        } else {
+            None
+        }
+    }
+
+    pub fn take_keyed_resource(&mut self, par: usize) -> Option<Arc<Mutex<KeyedResources>>> {
+        if par >= self.start_index && par < self.start_index + self.keyed_resource_maps.len() {
+            self.keyed_resource_maps[par - self.start_index].take()
         } else {
             None
         }

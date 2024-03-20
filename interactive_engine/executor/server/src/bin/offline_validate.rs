@@ -4,14 +4,13 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
 use std::time::Instant;
 
-use pegasus::JobConf;
-use structopt::StructOpt;
-
 use bmcsr::graph_db::GraphDB;
 use bmcsr::graph_modifier::{DeleteGenerator, GraphModifier};
 use bmcsr::schema::InputSchema;
 use graph_index::GraphIndex;
+use pegasus::JobConf;
 use rpc_server::queries::register::QueryRegister;
+use structopt::StructOpt;
 
 #[derive(Debug, Clone, StructOpt, Default)]
 pub struct Config {
@@ -132,7 +131,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     for (query_name, input) in input_parameters.iter() {
         let full_query_name = format!("bi{}", query_name);
         let query = query_register
-            .get_query(&full_query_name)
+            .get_read_query(&full_query_name)
             .expect("Could not find query");
         let mut conf = JobConf::new(full_query_name.clone());
         conf.set_workers(config.worker_num);

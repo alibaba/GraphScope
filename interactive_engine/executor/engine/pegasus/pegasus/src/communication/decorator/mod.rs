@@ -40,7 +40,7 @@ pub trait ScopeStreamPush<T: Data> {
 
     fn push_last(&mut self, msg: T, end: EndOfScope) -> IOResult<()>;
 
-    fn try_push_iter<I: Iterator<Item=T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
+    fn try_push_iter<I: Iterator<Item = T>>(&mut self, tag: &Tag, iter: &mut I) -> IOResult<()> {
         for x in iter {
             self.push(tag, x)?;
         }
