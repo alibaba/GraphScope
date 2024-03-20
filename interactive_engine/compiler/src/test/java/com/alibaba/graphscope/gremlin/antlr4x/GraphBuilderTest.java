@@ -1093,12 +1093,13 @@ public class GraphBuilderTest {
                     + " alias=[a], opt=[VERTEX])",
                 node.explain().trim());
 
-        node = eval("g.V().as('a').where(expr(a.name = 'marko' and (a.age > 30 OR a.age < 20)))");
+        // test operator precedence of bit manipulation
+        node = eval("g.V().select(expr(2 ^ 3 * 2))");
         Assert.assertEquals(
-                "GraphLogicalProject(a=[a], isAppend=[false])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
-                    + " alias=[a], fusedFilter=[[AND(=(DEFAULT.name, _UTF-8'marko'),"
-                    + " OR(>(DEFAULT.age, 30), <(DEFAULT.age, 20)))]], opt=[VERTEX])",
+                "GraphLogicalProject($f0=[$f0], isAppend=[false])\n"
+                        + "  GraphLogicalProject($f0=[^(2, *(3, 2))], isAppend=[true])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
+                        + " person]}], alias=[DEFAULT], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -1134,6 +1135,14 @@ public class GraphBuilderTest {
                     + " alias=[b], opt=[OUT])\n"
                     + "      GraphLogicalSource(tableConfig=[{isAll=true, tables=[software,"
                     + " person]}], alias=[a], opt=[VERTEX])",
+                node.explain().trim());
+
+        node = eval("g.V().as('a').where(expr(a.name = 'marko' and (a.age > 30 OR a.age < 20)))");
+        Assert.assertEquals(
+                "GraphLogicalProject(a=[a], isAppend=[false])\n"
+                    + "  GraphLogicalSource(tableConfig=[{isAll=true, tables=[software, person]}],"
+                    + " alias=[a], fusedFilter=[[AND(=(DEFAULT.name, _UTF-8'marko'),"
+                    + " OR(>(DEFAULT.age, 30), <(DEFAULT.age, 20)))]], opt=[VERTEX])",
                 node.explain().trim());
     }
 }

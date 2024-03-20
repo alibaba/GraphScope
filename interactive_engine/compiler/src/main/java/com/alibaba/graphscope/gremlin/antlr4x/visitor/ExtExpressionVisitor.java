@@ -33,7 +33,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.calcite.avatica.util.TimeUnit;
 import org.apache.calcite.rex.RexLiteral;
@@ -48,7 +47,6 @@ import org.apache.calcite.util.NlsString;
 import org.apache.commons.lang3.ObjectUtils;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -97,7 +95,8 @@ public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult
 
     @Override
     public ExprVisitorResult visitOC_NotExpression(GremlinGSParser.OC_NotExpressionContext ctx) {
-        ExprVisitorResult operand = visitOC_ComparisonExpression(ctx.oC_ComparisonExpression());
+        ExprVisitorResult operand =
+                visitOC_NullPredicateExpression(ctx.oC_NullPredicateExpression());
         List<TerminalNode> notNodes = ctx.NOT();
         return unaryCall(
                 ObjectUtils.isNotEmpty(notNodes) && (notNodes.size() & 1) != 0
@@ -111,14 +110,11 @@ public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult
             GremlinGSParser.OC_ComparisonExpressionContext ctx) {
         List<SqlOperator> operators = new ArrayList<>();
         List<ExprVisitorResult> operands = new ArrayList<>();
-        operands.add(
-                visitOC_StringListNullPredicateExpression(
-                        ctx.oC_StringListNullPredicateExpression()));
+        operands.add(visitOC_StringPredicateExpression(ctx.oC_StringPredicateExpression()));
         for (GremlinGSParser.OC_PartialComparisonExpressionContext partialCtx :
                 ctx.oC_PartialComparisonExpression()) {
             operands.add(
-                    visitOC_StringListNullPredicateExpression(
-                            partialCtx.oC_StringListNullPredicateExpression()));
+                    visitOC_StringPredicateExpression(partialCtx.oC_StringPredicateExpression()));
             operators.addAll(
                     Utils.getOperators(
                             partialCtx.children,
@@ -129,84 +125,68 @@ public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult
     }
 
     @Override
-    public ExprVisitorResult visitOC_StringListNullPredicateExpression(
-            GremlinGSParser.OC_StringListNullPredicateExpressionContext ctx) {
-        ExprVisitorResult operand =
-                visitOC_AddOrSubtractExpression(ctx.oC_AddOrSubtractExpression());
-        Iterator i$ = ctx.children.iterator();
-        while (i$.hasNext()) {
-            ParseTree o = (ParseTree) i$.next();
-            if (o == null) continue;
-            if (GremlinGSParser.OC_NullPredicateExpressionContext.class.isInstance(o)) {
-                operand =
-                        visitOC_NullPredicateExpression(
-                                operand, (GremlinGSParser.OC_NullPredicateExpressionContext) o);
-            } else if (GremlinGSParser.OC_StringPredicateExpressionContext.class.isInstance(o)) {
-                operand =
-                        visitOC_StringPredicateExpression(
-                                operand, (GremlinGSParser.OC_StringPredicateExpressionContext) o);
+    public ExprVisitorResult visitOC_StringPredicateExpression(
+            GremlinGSParser.OC_StringPredicateExpressionContext ctx) {
+        List<ExprVisitorResult> operands =
+                Lists.newArrayList(
+                        visitOC_AddOrSubtractOrBitManipulationExpression(
+                                ctx.oC_AddOrSubtractOrBitManipulationExpression(0)));
+        List<SqlOperator> operators = Lists.newArrayList();
+        if (ctx.STARTS() != null && ctx.WITH() != null
+                || ctx.ENDS() != null && ctx.WITH() != null
+                || ctx.CONTAINS() != null) {
+            RexNode rightExpr =
+                    visitOC_AddOrSubtractOrBitManipulationExpression(
+                                    ctx.oC_AddOrSubtractOrBitManipulationExpression(1))
+                            .getExpr();
+            // the right operand should be a string literal
+            Preconditions.checkArgument(
+                    rightExpr.getKind() == SqlKind.LITERAL
+                            && rightExpr.getType().getFamily() == SqlTypeFamily.CHARACTER,
+                    "the right operand of string predicate expression should be a string literal");
+            String value = ((RexLiteral) rightExpr).getValueAs(NlsString.class).getValue();
+            StringBuilder regexPattern = new StringBuilder();
+            if (ctx.STARTS() != null && ctx.WITH() != null) {
+                regexPattern.append("^");
+                regexPattern.append(value);
+                regexPattern.append(".*");
+            } else if (ctx.ENDS() != null && ctx.WITH() != null) {
+                regexPattern.append(".*");
+                regexPattern.append(value);
+                regexPattern.append("$");
+            } else {
+                regexPattern.append(".*");
+                regexPattern.append(value);
+                regexPattern.append(".*");
             }
+            operands.add(new ExprVisitorResult(builder.literal(regexPattern.toString())));
+            operators.add(GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE);
         }
-        return operand;
+        return binaryCall(operators, operands);
     }
 
-    private ExprVisitorResult visitOC_NullPredicateExpression(
-            ExprVisitorResult operand, GremlinGSParser.OC_NullPredicateExpressionContext nullCtx) {
+    @Override
+    public ExprVisitorResult visitOC_NullPredicateExpression(
+            GremlinGSParser.OC_NullPredicateExpressionContext ctx) {
+        ExprVisitorResult operand = visitOC_ComparisonExpression(ctx.oC_ComparisonExpression());
         List<SqlOperator> operators = Lists.newArrayList();
-        if (nullCtx.IS() != null && nullCtx.NOT() != null && nullCtx.NULL() != null) {
+        if (ctx.IS() != null && ctx.NOT() != null && ctx.NULL() != null) {
             operators.add(GraphStdOperatorTable.IS_NOT_NULL);
-        } else if (nullCtx.IS() != null && nullCtx.NULL() != null) {
+        } else if (ctx.IS() != null && ctx.NULL() != null) {
             operators.add(GraphStdOperatorTable.IS_NULL);
-        } else {
-            throw new IllegalArgumentException(
-                    "unknown null predicate expression: " + nullCtx.getText());
         }
         return unaryCall(operators, operand);
     }
 
-    private ExprVisitorResult visitOC_StringPredicateExpression(
-            ExprVisitorResult operand,
-            GremlinGSParser.OC_StringPredicateExpressionContext stringCtx) {
-        ExprVisitorResult rightRes =
-                visitOC_AddOrSubtractExpression(stringCtx.oC_AddOrSubtractExpression());
-        RexNode rightExpr = rightRes.getExpr();
-        // the right operand should be a string literal
-        Preconditions.checkArgument(
-                rightExpr.getKind() == SqlKind.LITERAL
-                        && rightExpr.getType().getFamily() == SqlTypeFamily.CHARACTER,
-                "the right operand of string predicate expression should be a string literal");
-        String value = ((RexLiteral) rightExpr).getValueAs(NlsString.class).getValue();
-        StringBuilder regexPattern = new StringBuilder();
-        if (stringCtx.STARTS() != null) {
-            regexPattern.append(value);
-            regexPattern.append(".*");
-        } else if (stringCtx.ENDS() != null) {
-            regexPattern.append(".*");
-            regexPattern.append(value);
-        } else if (stringCtx.CONTAINS() != null) {
-            regexPattern.append(".*");
-            regexPattern.append(value);
-            regexPattern.append(".*");
-        } else {
-            throw new IllegalArgumentException(
-                    "unknown string predicate expression: " + stringCtx.getText());
-        }
-        return binaryCall(
-                GraphStdOperatorTable.POSIX_REGEX_CASE_SENSITIVE,
-                ImmutableList.of(
-                        operand,
-                        new ExprVisitorResult(
-                                rightRes.getAggCalls(), builder.literal(regexPattern.toString()))));
-    }
-
     @Override
-    public ExprVisitorResult visitOC_AddOrSubtractExpression(
-            GremlinGSParser.OC_AddOrSubtractExpressionContext ctx) {
+    public ExprVisitorResult visitOC_AddOrSubtractOrBitManipulationExpression(
+            GremlinGSParser.OC_AddOrSubtractOrBitManipulationExpressionContext ctx) {
         if (ObjectUtils.isEmpty(ctx.oC_MultiplyDivideModuloExpression())) {
             throw new IllegalArgumentException("multiply or divide expression should not be empty");
         }
         List<SqlOperator> operators =
-                Utils.getOperators(ctx.children, ImmutableList.of("+", "-"), false);
+                Utils.getOperators(
+                        ctx.children, ImmutableList.of("+", "-", "&", "|", "^", "<<", ">>"), false);
         return binaryCall(
                 operators,
                 ctx.oC_MultiplyDivideModuloExpression().stream()
@@ -218,27 +198,10 @@ public class ExtExpressionVisitor extends GremlinGSBaseVisitor<ExprVisitorResult
     public ExprVisitorResult visitOC_MultiplyDivideModuloExpression(
             GremlinGSParser.OC_MultiplyDivideModuloExpressionContext ctx) {
         Preconditions.checkArgument(
-                ObjectUtils.isNotEmpty(ctx.oC_BitManipulationExpression()),
+                ObjectUtils.isNotEmpty(ctx.oC_UnaryAddOrSubtractExpression()),
                 "bit manipulation expression should not be empty");
         List<SqlOperator> operators =
                 Utils.getOperators(ctx.children, ImmutableList.of("*", "/", "%"), false);
-        return binaryCall(
-                operators,
-                ctx.oC_BitManipulationExpression().stream()
-                        .map(k -> visitOC_BitManipulationExpression(k))
-                        .collect(Collectors.toList()));
-    }
-
-    @Override
-    public ExprVisitorResult visitOC_BitManipulationExpression(
-            GremlinGSParser.OC_BitManipulationExpressionContext ctx) {
-        if (ObjectUtils.isEmpty(ctx.oC_UnaryAddOrSubtractExpression())) {
-            throw new IllegalArgumentException(
-                    "unary add or unary sub expression should not be empty");
-        }
-        List<SqlOperator> operators =
-                Utils.getOperators(
-                        ctx.children, ImmutableList.of("&", "|", "^", "<<", ">>"), false);
         return binaryCall(
                 operators,
                 ctx.oC_UnaryAddOrSubtractExpression().stream()

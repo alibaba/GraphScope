@@ -362,7 +362,7 @@ public class MatchTest {
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                        + " _UTF-8'marko.*')]], opt=[VERTEX])",
+                        + " _UTF-8'^marko.*')]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
@@ -374,7 +374,7 @@ public class MatchTest {
                 "GraphLogicalProject(a=[a], isAppend=[false])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], fusedFilter=[[POSIX REGEX CASE SENSITIVE(DEFAULT.name,"
-                        + " _UTF-8'.*marko')]], opt=[VERTEX])",
+                        + " _UTF-8'.*marko$')]], opt=[VERTEX])",
                 node.explain().trim());
     }
 
