@@ -57,6 +57,13 @@ import com.google.common.collect.Maps;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
+
 import org.apache.tinkerpop.gremlin.driver.message.RequestMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseMessage;
 import org.apache.tinkerpop.gremlin.driver.message.ResponseStatusCode;
@@ -101,6 +108,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
     protected final QueryIdGenerator idGenerator;
     protected final QueryCache queryCache;
     protected final ExecutionClient executionClient;
+    Tracer tracer;
 
     public IrStandardOpProcessor(
             Configs configs,
@@ -129,6 +137,7 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         this.idGenerator = idGenerator;
         this.queryCache = queryCache;
         this.executionClient = executionClient;
+        this.tracer = GlobalOpenTelemetry.getTracer("compiler");
     }
 
     @Override
@@ -359,7 +368,11 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
         long jobId = queryLogger.getQueryId();
         IrPlan irPlan = new IrPlan(irMeta, opCollection);
         // print script and jobName with ir plan
-        queryLogger.info("ir plan {}", irPlan.getPlanAsJson());
+        queryLogger.info("Submitted query");
+        // Too verbose, since all identical queries produce identical plans, it's no need to print
+        // every plan in production.
+        String irPlanStr = irPlan.getPlanAsJson();
+        queryLogger.debug("ir plan {}", irPlanStr);
         byte[] physicalPlanBytes = irPlan.toPhysicalBytes(queryConfigs);
         irPlan.close();
 
@@ -380,10 +393,22 @@ public class IrStandardOpProcessor extends StandardOpProcessor {
                         .setAll(PegasusClient.Empty.newBuilder().build())
                         .build();
         request = request.toBuilder().setConf(jobConfig).build();
-
-        this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
-        // request results from remote engine service in blocking way
-        resultProcessor.request();
+        Span outgoing =
+                tracer.spanBuilder("/evalOpInternal").setSpanKind(SpanKind.CLIENT).startSpan();
+        try (Scope scope = outgoing.makeCurrent()) {
+            outgoing.setAttribute("query.id", queryLogger.getQueryId());
+            outgoing.setAttribute("query.statement", queryLogger.getQuery());
+            outgoing.setAttribute("query.plan.logical", irPlanStr);
+            this.rpcClient.submit(request, resultProcessor, timeoutConfig.getChannelTimeoutMS());
+            // request results from remote engine service in blocking way
+            resultProcessor.request();
+        } catch (Throwable t) {
+            outgoing.setStatus(StatusCode.ERROR, "Submit failed!");
+            outgoing.recordException(t);
+            throw t;
+        } finally {
+            outgoing.end();
+        }
     }
 
     private Configs getQueryConfigs(Traversal traversal) {

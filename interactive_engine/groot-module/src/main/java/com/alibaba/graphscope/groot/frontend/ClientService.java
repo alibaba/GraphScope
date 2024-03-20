@@ -403,7 +403,7 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                             if (finished.getAndSet(true)) {
                                 return;
                             }
-                            logger.info("ingest finished. Error [" + t + "]");
+                            logger.info("clearing ingest finished. Error [" + t + "]");
                             if (t != null) {
                                 responseObserver.onError(t);
                             } else {

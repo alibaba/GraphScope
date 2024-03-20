@@ -27,6 +27,15 @@ use std::time::Duration;
 use futures::Stream;
 use hyper::server::accept::Accept;
 use hyper::server::conn::{AddrIncoming, AddrStream};
+use opentelemetry::trace::TraceContextExt;
+use opentelemetry::{
+    global,
+    propagation::Extractor,
+    trace::{Span, SpanKind, Tracer},
+    KeyValue,
+};
+use opentelemetry_otlp::WithExportConfig;
+use opentelemetry_sdk::propagation::TraceContextPropagator;
 use pegasus::api::function::FnResult;
 use pegasus::api::FromStream;
 use pegasus::errors::{ErrorKind, JobExecError};
@@ -179,6 +188,12 @@ where
     type SubmitStream = UnboundedReceiverStream<Result<pb::JobResponse, Status>>;
 
     async fn cancel(&self, req: Request<pb::CancelRequest>) -> Result<Response<Empty>, Status> {
+        let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
+        let tracer = global::tracer("executor");
+        let _span = tracer
+            .span_builder("/JobServiceImpl/cancel")
+            .with_kind(SpanKind::Server)
+            .start_with_context(&tracer, &parent_ctx);
         let pb::CancelRequest { job_id } = req.into_inner();
         let _ = pegasus::cancel_job(job_id);
         Ok(Response::new(Empty {}))
@@ -186,6 +201,8 @@ where
 
     async fn submit(&self, req: Request<pb::JobRequest>) -> Result<Response<Self::SubmitStream>, Status> {
         debug!("accept new request from {:?};", req.remote_addr());
+        let parent_ctx = global::get_text_map_propagator(|prop| prop.extract(&MetadataMap(req.metadata())));
+        let tracer = global::tracer("executor");
         let pb::JobRequest { conf, source, plan, resource } = req.into_inner();
         if conf.is_none() {
             return Err(Status::new(Code::InvalidArgument, "job configuration not found"));
@@ -197,14 +214,23 @@ where
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let rpc_sink = RpcSink::new(conf.job_id, tx);
         let sink = ResultSink::<Vec<u8>>::with(rpc_sink);
-        if conf.trace_enable {
-            info!("submitting job({}) with id {}", conf.job_name, conf.job_id);
-        }
         let job_id = conf.job_id;
         let service = &self.inner;
         let job = JobDesc { input: source, plan, resource };
 
-        if let Err(e) = pegasus::run_opt(conf, sink, move |worker| service.assemble(&job, worker)) {
+        let mut span = tracer
+            .span_builder("/JobServiceImpl/submit")
+            .with_kind(SpanKind::Server)
+            .start_with_context(&tracer, &parent_ctx);
+        span.set_attributes(vec![
+            KeyValue::new("job.name", conf.job_name.clone()),
+            KeyValue::new("job.id", conf.job_id.to_string()),
+        ]);
+        let cx = opentelemetry::Context::current_with_span(span);
+        let _guard = cx.clone().attach();
+        let ret = pegasus::run_opt(conf, sink, move |worker| service.assemble(&job, worker));
+
+        if let Err(e) = ret {
             error!("submit job {} failure: {:?}", job_id, e);
             Err(Status::unknown(format!("submit job error {}", e)))
         } else {
@@ -265,11 +291,15 @@ where
     D: ServerDetect + 'static,
     E: ServiceStartListener,
 {
+    if server_config.enable_tracing.unwrap_or(false) {
+        let _tracer = init_tracer().expect("Failed to initialize tracer.");
+    }
     let server_id = server_config.server_id();
     if let Some(server_addr) = pegasus::startup_with(server_config, server_detector)? {
         listener.on_server_start(server_id, server_addr)?;
     }
     start_rpc_server(server_id, rpc_config, assemble, listener).await?;
+    global::shutdown_tracer_provider();
     Ok(())
 }
 
@@ -344,6 +374,41 @@ impl<S: pb::job_service_server::JobService> RPCJobServer<S> {
 
         service.serve_with_incoming(incoming).await?;
         Ok(())
+    }
+}
+
+fn init_tracer() -> Result<opentelemetry_sdk::trace::Tracer, opentelemetry::trace::TraceError> {
+    global::set_text_map_propagator(TraceContextPropagator::new());
+    opentelemetry_otlp::new_pipeline()
+        .tracing()
+        .with_exporter(
+            opentelemetry_otlp::new_exporter()
+                .tonic()
+                .with_endpoint("http://localhost:4317"),
+        )
+        .with_trace_config(opentelemetry_sdk::trace::config().with_resource(
+            opentelemetry_sdk::Resource::new(vec![KeyValue::new("service.name", "pegasus")]),
+        ))
+        .install_batch(opentelemetry_sdk::runtime::Tokio)
+}
+
+struct MetadataMap<'a>(&'a tonic::metadata::MetadataMap);
+
+impl<'a> Extractor for MetadataMap<'a> {
+    fn get(&self, key: &str) -> Option<&str> {
+        self.0
+            .get(key)
+            .and_then(|metadata| metadata.to_str().ok())
+    }
+
+    fn keys(&self) -> Vec<&str> {
+        self.0
+            .keys()
+            .map(|key| match key {
+                tonic::metadata::KeyRef::Ascii(v) => v.as_str(),
+                tonic::metadata::KeyRef::Binary(v) => v.as_str(),
+            })
+            .collect::<Vec<_>>()
     }
 }
 
