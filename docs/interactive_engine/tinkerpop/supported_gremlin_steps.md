@@ -772,6 +772,21 @@ Category | Description | Before 0.26.0 | Since 0.27.0
 filter | filter the current traverser by the expression | where(expr("@.name == \\"marko\\"")) | where(expr(DEFAULT.name = "marko"))
 project | project the current traverser to the value of the expression | select(expr("@.name")) | select(expr(DEFAULT.name))
 
+Here we provide the precedence of the operators mentioned above, which is also based on the SQL standard.
+
+Precedence | Operator | Description | Associativity
+--- | --- | --- | ---
+1 | `()`, `.`, power(), count()... | Parentheses, Member access, Function call | Left-to-right
+2 | -a, +a | Unary minus, Unary plus | Right-to-left
+3 | `*`, `/`, `%` | Multiplication, Division, Modulus | Left-to-right
+4 | `+`, `-`, `&`, `\|`, `^`, `<<`, `>>` | Addition, Subtraction, Bitwise AND, Bitwise OR, Bitwise XOR, Left shift, Right shift | Left-to-right
+5 | STARTS WITH, ENDS WITH, CONTAINS, IN | String regex match, Collection membership | Left-to-right
+6 | `=`, `<>`, `<`, `<=`, `>`, `>=` | Comparison | Left-to-right
+7 | IS NULL, IS NOT NULL | Nullness check | Left-to-right
+8 | NOT | Logical NOT | Right-to-left
+9 | AND | Logical AND | Left-to-right
+10 | OR | Logical OR | Left-to-right
+
 #### Running Examples
 
 ```bash
