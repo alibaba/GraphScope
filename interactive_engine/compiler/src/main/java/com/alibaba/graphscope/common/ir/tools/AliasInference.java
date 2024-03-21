@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  * infer a new alias name from the query given one, and validate if the query given alias is duplicated.
  */
 public abstract class AliasInference {
-    public static final String DEFAULT_NAME = "DEFAULT";
+    public static final String DEFAULT_NAME = "_";
     public static final int DEFAULT_ID = -1;
 
     public static final int DEFAULT_COLUMN_ID = 100;
@@ -52,7 +52,7 @@ public abstract class AliasInference {
     public static final String DELIMITER = ".";
 
     public static final String SIMPLE_NAME(String alias) {
-        return alias == DEFAULT_NAME ? "DEFAULT" : alias;
+        return alias == DEFAULT_NAME ? "_" : alias;
     }
 
     /**
