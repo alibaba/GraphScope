@@ -17,13 +17,23 @@ import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.CommonConfig;
 import com.alibaba.graphscope.groot.common.config.Configs;
 import com.alibaba.graphscope.groot.common.config.DiscoveryConfig;
+import com.alibaba.graphscope.groot.common.config.StoreConfig;
 import com.alibaba.graphscope.groot.operation.OperationBatch;
 import com.alibaba.graphscope.groot.operation.OperationBlob;
 import com.alibaba.graphscope.groot.operation.OperationType;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Paths;
 import java.util.List;
 
 public class Utils {
+    public static final Logger logger = LoggerFactory.getLogger(Utils.class);
     public static final OperationBatch MARKER_BATCH =
             OperationBatch.newBuilder()
                     .addOperationBlob(OperationBlob.MARKER_OPERATION_BLOB)
@@ -115,5 +125,41 @@ public class Utils {
             }
         }
         return batchBuilder.build();
+    }
+
+    public static boolean fileExists(String name) {
+        return new File(name).exists();
+    }
+
+    public static boolean fileClosed(String name) {
+        String filePath = new File(name).getAbsolutePath();
+        try {
+            Process proc = new ProcessBuilder("lsof", filePath).start();
+            try (BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains(filePath)) {
+                        return false;
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.error("Exception when checking file {}", filePath, e);
+            return false;
+        }
+        return true;
+    }
+
+    // Check if the lock of 0 is available
+    public static boolean isLockAvailable(Configs configs) {
+        String dataRoot = StoreConfig.STORE_DATA_PATH.get(configs);
+        // Get the LOCK file of first partition
+        String LOCK = Paths.get(dataRoot, "" + 0, "LOCK").toAbsolutePath().toString();
+        if (fileExists(LOCK) && !fileClosed(LOCK)) {
+            logger.warn("LOCK {} is unavailable", LOCK);
+            return false;
+        }
+        return true;
     }
 }

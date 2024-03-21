@@ -26,12 +26,14 @@ import org.apache.curator.framework.state.ConnectionStateErrorPolicy;
 import org.apache.curator.retry.BoundedExponentialBackoffRetry;
 import org.apache.zookeeper.ZooDefs;
 import org.apache.zookeeper.data.ACL;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 public class CuratorUtils {
-
+    private static final Logger logger = LoggerFactory.getLogger(CuratorUtils.class);
     public static CuratorFramework makeCurator(Configs configs) {
         String connectionString = ZkConfig.ZK_CONNECT_STRING.get(configs);
         int sessionTimeoutMs = ZkConfig.ZK_SESSION_TIMEOUT_MS.get(configs);

@@ -13,19 +13,21 @@
  */
 package com.alibaba.graphscope.groot.servers;
 
+import com.alibaba.graphscope.groot.CuratorUtils;
+import com.alibaba.graphscope.groot.Utils;
 import com.alibaba.graphscope.groot.common.RoleType;
 import com.alibaba.graphscope.groot.common.config.*;
 import com.alibaba.graphscope.groot.common.exception.GrootException;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.leader.LeaderLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
 
 public class GrootGraph {
     private static final Logger logger = LoggerFactory.getLogger(GrootGraph.class);
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
         conf = reConfig(conf);
@@ -55,8 +57,40 @@ public class GrootGraph {
                 default:
                     throw new IllegalArgumentException("invalid roleType [" + roleType + "]");
             }
+
+            boolean writeHAEnabled = CommonConfig.WRITE_HA_ENABLED.get(conf);
+
+            if (writeHAEnabled && roleType == RoleType.STORE) {
+                int nodeID = CommonConfig.NODE_IDX.get(conf);
+                String latchPath = ZkConfig.ZK_BASE_PATH.get(conf) + "/store/leader/" + nodeID;
+                CuratorFramework curator = CuratorUtils.makeCurator(conf);
+                try {
+                    while (true) {
+                        LeaderLatch latch = new LeaderLatch(curator, latchPath);
+                        latch.start();
+                        latch.await();
+                        // Sleep 5s before check the lock to prevent the leader has not
+                        // released the resource yet.
+                        Thread.sleep(5000);
+                        if (Utils.isLockAvailable(conf)) {
+                            logger.info("LOCK is available, node starting");
+                            break;
+                        }
+                        latch.close();
+                        logger.info("LOCK is unavailable, the leader may not exited");
+                        // The leader has lost connection but still alive,
+                        // give it another chance
+                        Thread.sleep(60000);
+                    }
+                } catch (Exception e) {
+                    logger.error("Exception while leader election", e);
+                    throw e;
+                }
+                curator.close();
+            }
         }
-        new NodeLauncher(node).start();
+        NodeLauncher launcher = new NodeLauncher(node);
+        launcher.start();
         logger.info("node started. [" + node.getName() + "]");
     }
 
@@ -65,11 +99,10 @@ public class GrootGraph {
         if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(in)) {
             out.put(StoreConfig.STORE_STORAGE_ENGINE.getKey(), "rocksdb_as_secondary");
         }
-//        String dnsPrefixStore = CommonConfig.DNS_NAME_PREFIX_STORE.get(in);
-//        if (CommonConfig.CLUSTER_MODE.get(in).equals("multi-pod")) {
-////            Utils.getHostTemplate(in, ro)
-//            dnsPrefixStore = dnsPrefixStore.replace("{}", "0");
-//        }
+        if (CommonConfig.WRITE_HA_ENABLED.get(in)) {
+            logger.info("Write HA mode needs discovery mode to be 'zookeeper'");
+            out.put(CommonConfig.DISCOVERY_MODE.getKey(), "zookeeper");
+        }
 
         return out.build();
     }
