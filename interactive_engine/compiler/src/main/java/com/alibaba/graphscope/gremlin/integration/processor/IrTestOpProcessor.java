@@ -176,6 +176,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                                 listener,
                                                 timeoutConfig);
                                     }
+                                    // request results from remote engine in a blocking way
                                     listener.request();
                                     break;
                                 default:
