@@ -120,5 +120,6 @@ public class GraphInitializer {
                 this.curator.delete().deletingChildrenIfNeeded().forPath(zkRoot);
             }
         }
+
     }
 }

@@ -28,12 +28,7 @@ public class GrootGraph {
     public static void main(String[] args) throws IOException {
         String configFile = System.getProperty("config.file");
         Configs conf = new Configs(configFile);
-        if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(conf)) {
-            conf =
-                    Configs.newBuilder(conf)
-                            .put(StoreConfig.STORE_STORAGE_ENGINE.getKey(), "rocksdb_as_secondary")
-                            .build();
-        }
+        conf = reConfig(conf);
         logger.info("Configs {}", conf);
 
         NodeBase node;
@@ -63,5 +58,19 @@ public class GrootGraph {
         }
         new NodeLauncher(node).start();
         logger.info("node started. [" + node.getName() + "]");
+    }
+
+    private static Configs reConfig(Configs in) {
+        Configs.Builder out = Configs.newBuilder(in);
+        if (CommonConfig.SECONDARY_INSTANCE_ENABLED.get(in)) {
+            out.put(StoreConfig.STORE_STORAGE_ENGINE.getKey(), "rocksdb_as_secondary");
+        }
+//        String dnsPrefixStore = CommonConfig.DNS_NAME_PREFIX_STORE.get(in);
+//        if (CommonConfig.CLUSTER_MODE.get(in).equals("multi-pod")) {
+////            Utils.getHostTemplate(in, ro)
+//            dnsPrefixStore = dnsPrefixStore.replace("{}", "0");
+//        }
+
+        return out.build();
     }
 }
