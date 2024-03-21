@@ -441,6 +441,9 @@ kafka:
     port: 9092
   socketRequestMaxBytes: _1048576000
 
+## Zk Config
+zkBasePath: "/graphscope/groot"
+
 ## This value is only used when kafka.enabled is set to false
 ##
 externalKafka:

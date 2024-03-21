@@ -48,6 +48,10 @@ data:
     kafka.producer.custom.configs={{ .Values.kafkaProducerCustomConfigs }}
     kafka.test.cluster.enable=false
 
+    ## Zk Config
+    zk.base.path={{ .Values.zkBasePath }}
+    zk.connect.string=ZK_CONNECT
+
     ## Frontend Config
     gremlin.server.port=12312
     ## disable neo4j when launching groot server by default
@@ -97,6 +101,7 @@ data:
     sudo sed -e "s/GRAPH_NAME/${GRAPH_NAME}/g" \
               -e "s/ROLE/${ROLE}/g" \
               -e "s/INDEX/${ordinal}/g" \
+              -e "s/ZK_CONNECT/${ZK_CONNECT}/g" \
               -e "s/KAFKA_SERVERS/${KAFKA_SERVERS}/g" \
               -e "s/FRONTEND/${DNS_NAME_PREFIX_FRONTEND}/g" \
               -e "s/COORDINATOR/${DNS_NAME_PREFIX_COORDINATOR}/g" \
