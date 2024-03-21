@@ -712,8 +712,8 @@ Variable:
 
 Category | Description | Before 0.26.0 | Since 0.27.0
 ---- | ------- | ------- | -------
-current | the current entry | @ | DEFAULT
-current property | the property value of the current entry | @.name | DEFAULT.name
+current | the current entry | @ | _
+current property | the property value of the current entry | @.name | _.name
 tag | the specified tag | @a | a
 tag property | the property value of the specified tag | @a.name | a.name
 
@@ -721,47 +721,47 @@ Operator:
 
 Category | Operation (Case-Insensitive) | Description | Before 0.26.0  | Since 0.27.0
 ---- | ------- | ------- | ------- | -------
-logical | = | equal | @.name == "marko" | DEFAULT.name = "marko"
-logical | <> | not equal | @.name != "marko" | DEFAULT.name != "marko"
-logical | > | greater than | @.age > 10 | DEFAULT.age > 10
-logical | < | less than | @.age < 10 | DEFAULT.age < 10
-logical | >= | greater than or equal | @.age >= 10 | DEFAULT.age >= 10
-logical | <= | less than or equal | @.age <= 10 | DEFAULT.age <= 10
-logical | NOT | negate the logical expression | ! (@.name == "marko") | NOT DEFAULT.name = "marko"
-logical | AND | connect two logical expressions with AND | @.name == "marko" && @.age > 10 | DEFAULT.name = "marko" AND DEFAULT.age > 10
-logical | OR | connect two logical expressions with OR | @.name == "marko" \|\| @.age > 10 | DEFAULT.name = "marko" OR DEFAULT.age > 10
-logical | IN | whether the value of the current entry is in the given list | @.name WITHIN ["marko", "vadas"] | DEFAULT.name IN ["marko", "vadas"]
-logical | IS NULL | whether the value of the current entry ISNULL | @.age IS NULL | DEFAULT.age IS NULL
-logical | IS NOT NULL | whether the value of the current entry IS NOT NULL | ! (@.age ISNULL) | DEFAULT.age IS NOT NULL
-arithmetical | + | addition | @.age + 10 | DEFAULT.age + 10
-arithmetical | - | subtraction | @.age - 10 | DEFAULT.age - 10
-arithmetical | * | multiplication | @.age * 10 | DEFAULT.age * 10
-arithmetical | / | division | @.age / 10 | DEFAULT.age / 10
-arithmetical | % | modulo | @.age % 10 | DEFAULT.age % 10
-arithmetical | POWER | exponentiation | @.age ^^ 3 | POWER(DEFAULT.age, 3)
-bitwise | & | bitwise AND | @.age & 2 | DEFAULT.age & 2
-bitwise | \| | bitwise OR | @.age \| 2 | DEFAULT.age \| 2
-bitwise | ^ | bitwise XOR | @.age ^ 2 | DEFAULT.age ^ 2
-bit shift | << | left shift | @.age << 2 | DEFAULT.age << 2
-bit shift | >> | right shift | @.age >> 2 | DEFAULT.age >> 2
-string regex match | STARTS WITH | whether the string starts with the given prefix | @.name STARTSWITH "ma" | DEFAULT.name STARTS WITH "ma"
-string regex match | NOT STARTS WITH | whether the string does not start with the given prefix | ! (@.name STARTSWITH "ma") | NOT DEFAULT.name STARTS WITH "ma"
-string regex match | ENDS WITH | whether the string ends with the given suffix | @.name ENDSWITH "ko" | DEFAULT.name ENDS WITH "ko"
-string regex match | NOT ENDS WITH | whether the string does not end with the given suffix | ! (@.name ENDSWITH "ko") | NOT DEFAULT.name ENDS WITH "ko"
-string regex match | CONTAINS | whether the string contains the given substring | "ar" WITHIN @.name | DEFAULT.name CONTAINS "ar"
-string regex match | NOT CONTAINS | whether the string does not contain the given substring | "ar" WITHOUT @.name | NOT DEFAULT.name CONTAINS "ar"
+logical | = | equal | @.name == "marko" | _.name = "marko"
+logical | <> | not equal | @.name != "marko" | _.name != "marko"
+logical | > | greater than | @.age > 10 | _.age > 10
+logical | < | less than | @.age < 10 | _.age < 10
+logical | >= | greater than or equal | @.age >= 10 | _.age >= 10
+logical | <= | less than or equal | @.age <= 10 | _.age <= 10
+logical | NOT | negate the logical expression | ! (@.name == "marko") | NOT _.name = "marko"
+logical | AND | connect two logical expressions with AND | @.name == "marko" && @.age > 10 | _.name = "marko" AND _.age > 10
+logical | OR | connect two logical expressions with OR | @.name == "marko" \|\| @.age > 10 | _.name = "marko" OR _.age > 10
+logical | IN | whether the value of the current entry is in the given list | @.name WITHIN ["marko", "vadas"] | _.name IN ["marko", "vadas"]
+logical | IS NULL | whether the value of the current entry ISNULL | @.age IS NULL | _.age IS NULL
+logical | IS NOT NULL | whether the value of the current entry IS NOT NULL | ! (@.age ISNULL) | _.age IS NOT NULL
+arithmetical | + | addition | @.age + 10 | _.age + 10
+arithmetical | - | subtraction | @.age - 10 | _.age - 10
+arithmetical | * | multiplication | @.age * 10 | _.age * 10
+arithmetical | / | division | @.age / 10 | _.age / 10
+arithmetical | % | modulo | @.age % 10 | _.age % 10
+arithmetical | POWER | exponentiation | @.age ^^ 3 | POWER(_.age, 3)
+bitwise | & | bitwise AND | @.age & 2 | _.age & 2
+bitwise | \| | bitwise OR | @.age \| 2 | _.age \| 2
+bitwise | ^ | bitwise XOR | @.age ^ 2 | _.age ^ 2
+bit shift | << | left shift | @.age << 2 | _.age << 2
+bit shift | >> | right shift | @.age >> 2 | _.age >> 2
+string regex match | STARTS WITH | whether the string starts with the given prefix | @.name STARTSWITH "ma" | _.name STARTS WITH "ma"
+string regex match | NOT STARTS WITH | whether the string does not start with the given prefix | ! (@.name STARTSWITH "ma") | NOT _.name STARTS WITH "ma"
+string regex match | ENDS WITH | whether the string ends with the given suffix | @.name ENDSWITH "ko" | _.name ENDS WITH "ko"
+string regex match | NOT ENDS WITH | whether the string does not end with the given suffix | ! (@.name ENDSWITH "ko") | NOT _.name ENDS WITH "ko"
+string regex match | CONTAINS | whether the string contains the given substring | "ar" WITHIN @.name | _.name CONTAINS "ar"
+string regex match | NOT CONTAINS | whether the string does not contain the given substring | "ar" WITHOUT @.name | NOT _.name CONTAINS "ar"
 
 Function:
 
 Category | Function (Case-Insensitive) | Description | Before 0.26.0 | Since 0.27.0
 ---- | ------- | ------- | ------- | -------
-aggregate | COUNT | count the number of the elements | unsupported | COUNT(DEFAULT.age)
-aggregate | SUM | sum the values of the elements | unsupported | SUM(DEFAULT.age)
-aggregate | MIN | find the minimum value of the elements | unsupported | MIN(DEFAULT.age)
-aggregate | MAX | find the maximum value of the elements | unsupported | MAX(DEFAULT.age)
-aggregate | AVG | calculate the average value of the elements | unsupported | AVG(DEFAULT.age)
-aggregate | COLLECT | fold the elements into a list | unsupported | COLLECT(DEFAULT.age)
-aggregate | HEAD(COLLECT()) | find the first value of the elements | unsupported | HEAD(COLLECT(DEFAULT.age))
+aggregate | COUNT | count the number of the elements | unsupported | COUNT(_.age)
+aggregate | SUM | sum the values of the elements | unsupported | SUM(_.age)
+aggregate | MIN | find the minimum value of the elements | unsupported | MIN(_.age)
+aggregate | MAX | find the maximum value of the elements | unsupported | MAX(_.age)
+aggregate | AVG | calculate the average value of the elements | unsupported | AVG(_.age)
+aggregate | COLLECT | fold the elements into a list | unsupported | COLLECT(_.age)
+aggregate | HEAD(COLLECT()) | find the first value of the elements | unsupported | HEAD(COLLECT(_.age))
 other | LABELS | get the labels of the specified tag which is a vertex | @a.~label | LABELS(a)
 other | TYPE | get the type of the specified tag which is an edge | @a.~label |TYPE(a)
 other | LENGTH | get the length of the specified tag which is a path | @a.~len | LENGTH(a)
@@ -769,8 +769,8 @@ other | LENGTH | get the length of the specified tag which is a path | @a.~len |
 Expression in project or filter:
 Category | Description | Before 0.26.0 | Since 0.27.0
 ---- | ------- | ------- | -------
-filter | filter the current traverser by the expression | where(expr("@.name == \\"marko\\"")) | where(expr(DEFAULT.name = "marko"))
-project | project the current traverser to the value of the expression | select(expr("@.name")) | select(expr(DEFAULT.name))
+filter | filter the current traverser by the expression | where(expr("@.name == \\"marko\\"")) | where(expr(_.name = "marko"))
+project | project the current traverser to the value of the expression | select(expr("@.name")) | select(expr(_.name))
 
 Here we provide the precedence of the operators mentioned above, which is also based on the SQL standard.
 
@@ -790,7 +790,7 @@ Precedence | Operator | Description | Associativity
 #### Running Examples
 
 ```bash
-gremlin> :submit g.V().where(expr(DEFAULT.name = "marko"))
+gremlin> :submit g.V().where(expr(_.name = "marko"))
 ==>v[1]
 gremlin> :submit g.V().as("a").where(expr(a.name = "marko" OR a.age > 10))
 ==>v[6]
@@ -807,19 +807,19 @@ gremlin> :submit g.V().as("a").where(expr(a.age IS NOT NULL)).values("name")
 ==>peter
 gremlin> :submit g.V().as("a").where(expr(a.name STARTS WITH "ma"))
 ==>v[1]
-gremlin> :submit g.V().select(expr(DEFAULT.name))
+gremlin> :submit g.V().select(expr(_.name))
 ==>vadas
 ==>josh
 ==>lop
 ==>ripple
 ==>marko
 ==>peter
-gremlin> :submit g.V().hasLabel("person").select(expr(DEFAULT.age ^ 1))
+gremlin> :submit g.V().hasLabel("person").select(expr(_.age ^ 1))
 ==>26
 ==>28
 ==>33
 ==>34
-gremlin> :submit g.V().hasLabel("person").select(expr(POWER(DEFAULT.age, 2)))
+gremlin> :submit g.V().hasLabel("person").select(expr(POWER(_.age, 2)))
 ==>729
 ==>1024
 ==>1225
