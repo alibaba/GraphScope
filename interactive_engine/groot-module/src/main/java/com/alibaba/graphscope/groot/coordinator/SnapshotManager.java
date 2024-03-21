@@ -451,7 +451,7 @@ public class SnapshotManager {
             }
         }
         if (changed) {
-            persistObject(newQueueOffsets, QUEUE_OFFSETS_PATH);
+            // persistObject(newQueueOffsets, QUEUE_OFFSETS_PATH);
             this.queueOffsetsRef.set(newQueueOffsets);
         }
     }
