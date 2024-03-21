@@ -19,7 +19,6 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
@@ -147,7 +146,7 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     GraphPlanner.Summary summary = value.summary;
                                     ResultSchema resultSchema =
                                             new ResultSchema(summary.getLogicalPlan());
-                                    ExecutionResponseListener listener =
+                                    GremlinTestResultProcessor listener =
                                             new GremlinTestResultProcessor(
                                                     configs,
                                                     ctx,
@@ -171,6 +170,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                                 listener,
                                                 timeoutConfig);
                                     }
+                                    // request results from remote engine in a blocking way
+                                    listener.request();
                                     break;
                                 default:
                                     throw new IllegalArgumentException(
