@@ -25,14 +25,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 
 import java.util.List;
-import java.util.Objects;
 
 public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandConfig.Builder> {
-    private final GraphBuilderVisitor parent;
     private final PathExpandConfig.Builder builder;
 
     public PathExpandBuilderVisitor(GraphBuilderVisitor parent) {
-        this.parent = Objects.requireNonNull(parent);
         // PATH_OPT = ARBITRARY and RESULT_OPT = END_V are set by default
         this.builder = PathExpandConfig.newBuilder(parent.getGraphBuilder());
     }
@@ -50,15 +47,10 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         List<GremlinGSParser.TraversalMethod_withContext> nextWith =
                 getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
         nextWith.forEach(k -> visitTraversalMethod_with(k));
-        // set expand config, getV config, range, alias
-        String alias =
-                parent.getNextTag(
-                        new TraversalMethodIterator(
-                                (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
+        // set expand config, getV config, range
         return builder.expand(new ExpandConfig(GraphOpt.Expand.OUT, getExpandLabelConfig(labels)))
                 .getV(new GetVConfig(GraphOpt.GetV.END))
-                .range(lower, upper - lower)
-                .alias(alias);
+                .range(lower, upper - lower);
     }
 
     @Override
@@ -74,15 +66,10 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         List<GremlinGSParser.TraversalMethod_withContext> nextWith =
                 getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
         nextWith.forEach(k -> visitTraversalMethod_with(k));
-        // set expand config, getV config, range, alias
-        String alias =
-                parent.getNextTag(
-                        new TraversalMethodIterator(
-                                (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
+        // set expand config, getV config, range
         return builder.expand(new ExpandConfig(GraphOpt.Expand.IN, getExpandLabelConfig(labels)))
                 .getV(new GetVConfig(GraphOpt.GetV.START))
-                .range(lower, upper - lower)
-                .alias(alias);
+                .range(lower, upper - lower);
     }
 
     @Override
@@ -98,15 +85,10 @@ public class PathExpandBuilderVisitor extends GremlinGSBaseVisitor<PathExpandCon
         List<GremlinGSParser.TraversalMethod_withContext> nextWith =
                 getNextWith((GremlinGSParser.TraversalMethodContext) ctx.getParent());
         nextWith.forEach(k -> visitTraversalMethod_with(k));
-        // set expand config, getV config, range, alias
-        String alias =
-                parent.getNextTag(
-                        new TraversalMethodIterator(
-                                (GremlinGSParser.TraversalMethodContext) ctx.getParent()));
+        // set expand config, getV config, range
         return builder.expand(new ExpandConfig(GraphOpt.Expand.BOTH, getExpandLabelConfig(labels)))
                 .getV(new GetVConfig(GraphOpt.GetV.OTHER))
-                .range(lower, upper - lower)
-                .alias(alias);
+                .range(lower, upper - lower);
     }
 
     @Override

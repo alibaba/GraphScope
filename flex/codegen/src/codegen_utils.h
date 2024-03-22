@@ -206,10 +206,13 @@ codegen::ParamConst variable_to_param_const(const common::Variable& var,
       param_const.var_name = var.property().key().name();
       param_const.type =
           common_data_type_pb_2_data_type(var.node_type().data_type());
+    } else if (var_property.has_id()) {
+      param_const.var_name = ctx.GetNextVarName();
+      param_const.type = codegen::DataType::kGlobalVertexId;
     } else {
-      LOG(FATAL) << "Unexpected property type";
+      LOG(FATAL) << "Unexpected property type: " << var_property.DebugString();
     }
-  } else if (var.has_tag()) {
+  } else {  // var.tag() could be null or not
     // check is vertex or is edge from node_type
     if (var.has_node_type()) {
       auto node_type = var.node_type();
@@ -222,7 +225,7 @@ codegen::ParamConst variable_to_param_const(const common::Variable& var,
         if (graph_type.element_opt() ==
             common::GraphDataType::GraphElementOpt::
                 GraphDataType_GraphElementOpt_VERTEX) {
-          param_const.type = codegen::DataType::kVertexId;
+          param_const.type = codegen::DataType::kGlobalVertexId;
         } else if (graph_type.element_opt() ==
                    common::GraphDataType::GraphElementOpt::
                        GraphDataType_GraphElementOpt_EDGE) {
@@ -256,7 +259,20 @@ std::string interval_to_str(const common::Extract::Interval& interval) {
     return "Interval::SECOND";
   default:
     LOG(FATAL) << "Unexpected interval" << interval;
+    return "";
   }
+}
+
+std::string join_string(const std::vector<std::string>& strs,
+                        const std::string& split) {
+  std::stringstream ss;
+  for (size_t i = 0; i < strs.size(); ++i) {
+    ss << strs[i];
+    if (i + 1 < strs.size()) {
+      ss << split;
+    }
+  }
+  return ss.str();
 }
 
 }  // namespace gs

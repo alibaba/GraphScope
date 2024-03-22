@@ -125,7 +125,7 @@ setup(
     keywords=["OpenAPI", "GraphScope FLEX HTTP SERVICE API"],
     install_requires=parsed_reqs(),
     packages=find_packages(),
-    package_data={"": ["openapi/openapi.yaml"]},
+    package_data={"": ["openapi/openapi.yaml", "VERSION"]},
     cmdclass={
         "generate_flex_server": GenerateFlexServer,
         "generate_interactive_sdk": GenerateInteractiveSDK,

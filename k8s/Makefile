@@ -17,6 +17,8 @@ BUILDER_VERSION ?= $(VINEYARD_VERSION)
 RUNTIME_VERSION ?= $(VINEYARD_VERSION)
 PROFILE ?= release
 CI ?= false
+# Flex Coordinator
+ENABLE_COORDINATOR ?= false
 
 BUILD_PROGRESS  	?= auto
 
@@ -178,5 +180,6 @@ graphscope-store:
 		--build-arg REGISTRY=$(REGISTRY) \
 		--build-arg BUILDER_VERSION=$(BUILDER_VERSION) \
 		--build-arg profile=${PROFILE} \
+		--build-arg ENABLE_COORDINATOR=${ENABLE_COORDINATOR} \
 		-t graphscope/graphscope-store:${VERSION} \
 		-f $(DOCKERFILES_DIR)/graphscope-store.Dockerfile .

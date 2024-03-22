@@ -50,6 +50,10 @@ Return the proper graphscope-store image name
 {{ include "common.images.image" (dict "imageRoot" .Values.image "global" .Values.global ) }}
 {{- end -}}
 
+{{- define "graphscope-store.otel.collector.image" -}}
+{{ include "common.images.image" (dict "imageRoot" .Values.otel.collector.image "global" .Values.global ) }}
+{{- end -}}
+
 {{/*
 Return the proper graphscope-store test image name
 */}}

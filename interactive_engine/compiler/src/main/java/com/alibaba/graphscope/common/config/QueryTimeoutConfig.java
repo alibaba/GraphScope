@@ -25,10 +25,10 @@ public class QueryTimeoutConfig {
     private final long executionTimeoutMS;
     private static final double GRADUAL_FACTOR = 0.1d;
 
-    public QueryTimeoutConfig(long engineTimeoutMS) {
-        this.engineTimeoutMS = engineTimeoutMS;
-        this.channelTimeoutMS = (long) (engineTimeoutMS * (1 + GRADUAL_FACTOR));
-        this.executionTimeoutMS = (long) (engineTimeoutMS * (1 + 2 * GRADUAL_FACTOR));
+    public QueryTimeoutConfig(long executionTimeoutMS) {
+        this.executionTimeoutMS = executionTimeoutMS;
+        this.channelTimeoutMS = (long) (executionTimeoutMS * (1 - GRADUAL_FACTOR));
+        this.engineTimeoutMS = (long) (executionTimeoutMS * (1 - 2 * GRADUAL_FACTOR));
     }
 
     public long getExecutionTimeoutMS() {

@@ -19,7 +19,6 @@ package com.alibaba.graphscope.gremlin.integration.processor;
 import com.alibaba.graphscope.common.client.ExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
-import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
@@ -131,11 +130,11 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                             traversal,
                                             new com.alibaba.graphscope.gremlin.integration.result
                                                     .GremlinTestResultProcessor(
+                                                    configs,
                                                     ctx,
                                                     traversal,
                                                     statusCallback,
                                                     testGraph,
-                                                    this.configs,
                                                     timeoutConfig),
                                             irMeta,
                                             new QueryTimeoutConfig(ctx.getRequestTimeout()),
@@ -147,14 +146,16 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                     GraphPlanner.Summary summary = value.summary;
                                     ResultSchema resultSchema =
                                             new ResultSchema(summary.getLogicalPlan());
-                                    ExecutionResponseListener listener =
+                                    GremlinTestResultProcessor listener =
                                             new GremlinTestResultProcessor(
+                                                    configs,
                                                     ctx,
-                                                    statusCallback,
                                                     new GremlinTestRecordParser(
                                                             resultSchema,
                                                             testGraph.getProperties(configs)),
-                                                    resultSchema);
+                                                    resultSchema,
+                                                    statusCallback,
+                                                    timeoutConfig);
                                     if (value.result != null && value.result.isCompleted) {
                                         List<IrResult.Results> records = value.result.records;
                                         records.forEach(k -> listener.onNext(k.getRecord()));
@@ -169,6 +170,8 @@ public class IrTestOpProcessor extends IrStandardOpProcessor {
                                                 listener,
                                                 timeoutConfig);
                                     }
+                                    // request results from remote engine in a blocking way
+                                    listener.request();
                                     break;
                                 default:
                                     throw new IllegalArgumentException(

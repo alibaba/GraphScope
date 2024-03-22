@@ -81,6 +81,10 @@ public abstract class GraphShuttle extends RelShuttleImpl {
         return visitChildren(dedupBy);
     }
 
+    public RelNode visit(CommonTableScan tableScan) {
+        return tableScan;
+    }
+
     public RelNode visit(GraphExtendIntersect intersect) {
         return intersect;
     }
@@ -91,10 +95,6 @@ public abstract class GraphShuttle extends RelShuttleImpl {
 
     public RelNode visit(GraphJoinDecomposition decomposition) {
         return decomposition;
-    }
-
-    public RelNode visit(CommonTableScan scan) {
-        return scan;
     }
 
     public RelNode visit(MultiJoin join) {

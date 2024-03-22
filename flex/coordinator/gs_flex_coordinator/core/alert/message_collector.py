@@ -26,8 +26,6 @@ from gs_flex_coordinator.core.config import ALERT_WORKSPACE
 from gs_flex_coordinator.core.scheduler import cancel_job, schedule
 from gs_flex_coordinator.core.utils import decode_datetimestr
 
-logger = logging.getLogger("graphscope")
-
 
 class OneDayAlertMessageCollector(object):
     """Alert messages for a day"""
@@ -54,25 +52,25 @@ class OneDayAlertMessageCollector(object):
                 .seconds.do(self._pickle_messages_impl)
                 .tag("pickle", "alert message")
             )
-        logger.info("New alert message collector created: %s", str(self._date))
+        logging.info("New alert message collector created: %s", str(self._date))
 
     def _pickle_messages_impl(self):
         try:
             self.dump_to_disk()
         except Exception as e:
-            logger.warn(
+            logging.warn(
                 "Failed to dump alert message on date %s: %s", str(self._date), str(e)
             )
 
     def _try_to_recover_from_disk(self):
         try:
             if os.path.exists(self._pickle_path):
-                logger.info("Recover alert message from file %s", self._pickle_path)
+                logging.info("Recover alert message from file %s", self._pickle_path)
 
                 with open(self._pickle_path, "rb") as f:
                     self._messages = pickle.load(f)  # noqa: B301
         except Exception as e:
-            logger.warn(
+            logging.warn(
                 "Failed to recover alert message from path %s: %s",
                 self._pickle_path,
                 str(e),
@@ -110,7 +108,7 @@ class OneDayAlertMessageCollector(object):
             if self._pickle_messages_job is not None:
                 cancel_job(self._pickle_messages_job, delete_scheduler=True)
                 self._pickle_messages_job = None
-                logger.info(
+                logging.info(
                     "%s: current alert message collector cleaned", str(self._date)
                 )
         except:  # noqa: E722, B110
@@ -146,9 +144,9 @@ class AlertMessageCollector(object):
                     file_date = decode_datetimestr(file_name)
                     if file_date.date() < three_months_ago:
                         os.remove(file_path)
-                        logger.info("Clean alert file: %s", str(file_path))
+                        logging.info("Clean alert file: %s", str(file_path))
         except Exception as e:
-            logger.warn("Failed to clean the alert file: %s", str(e))
+            logging.warn("Failed to clean the alert file: %s", str(e))
 
     def is_message_belongs_to_certain_day(self, message, date):
         """
@@ -170,8 +168,6 @@ class AlertMessageCollector(object):
             self._current_message_collector = OneDayAlertMessageCollector(
                 message.trigger_time
             )
-
-        # logger.info("Alert message generated: %s", str(message.to_dict()))
 
         # add message to current collector
         self._current_message_collector.add_message(message)

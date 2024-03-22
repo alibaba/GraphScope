@@ -18,10 +18,9 @@ package com.alibaba.graphscope.common.ir.tools;
 
 import com.alibaba.graphscope.common.ir.meta.schema.CommonOptTable;
 import com.alibaba.graphscope.common.ir.rel.CommonTableScan;
-import com.alibaba.graphscope.common.ir.rel.GraphExtendIntersect;
-import com.alibaba.graphscope.common.ir.rel.GraphPattern;
-import com.alibaba.graphscope.common.ir.rel.metadata.glogue.pattern.Pattern;
-import com.google.common.collect.*;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Range;
+import com.google.common.collect.Sets;
 
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.rel.RelNode;
@@ -33,9 +32,7 @@ import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Sarg;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class Utils {
     public static RelDataType getOutputType(RelNode topNode) {
@@ -49,37 +46,46 @@ public class Utils {
             }
             inputs.addAll(cur.getInputs());
         }
-        Set<String> fieldNames = Sets.newHashSet();
-        List<RelDataTypeField> dedup =
-                outputFields.stream()
-                        .filter(
-                                k -> {
-                                    boolean notExist = !fieldNames.contains(k.getName());
-                                    fieldNames.add(k.getName());
-                                    return notExist;
-                                })
-                        .collect(Collectors.toList());
+        Set<String> uniqueNames = Sets.newHashSet();
+        // if field name is duplicated, we dedup it and keep the last one
+        List<RelDataTypeField> dedup = Lists.newArrayList();
+        for (int i = outputFields.size() - 1; i >= 0; i--) {
+            RelDataTypeField field = outputFields.get(i);
+            // specific implementation for gremlin `head`, DEFAULT can only denote the last field
+            if (field.getName() == AliasInference.DEFAULT_NAME && i != outputFields.size() - 1) {
+                continue;
+            }
+            if (!uniqueNames.contains(field.getName())) {
+                uniqueNames.add(field.getName());
+                dedup.add(0, field);
+            }
+        }
         return new RelRecordType(StructKind.FULLY_QUALIFIED, dedup);
     }
 
     public static List<Comparable> getValuesAsList(Comparable value) {
-        ImmutableList.Builder valueBuilder = ImmutableList.builder();
+        List<Comparable> values = Lists.newArrayList();
         if (value instanceof NlsString) {
-            valueBuilder.add(((NlsString) value).getValue());
+            values.add(((NlsString) value).getValue());
         } else if (value instanceof Sarg) {
             Sarg sarg = (Sarg) value;
             if (sarg.isPoints()) {
                 Set<Range<Comparable>> rangeSets = sarg.rangeSet.asRanges();
                 for (Range<Comparable> range : rangeSets) {
-                    valueBuilder.addAll(getValuesAsList(range.lowerEndpoint()));
+                    values.addAll(getValuesAsList(range.lowerEndpoint()));
                 }
             }
         } else {
-            valueBuilder.add(value);
+            values.add(value);
         }
-        return valueBuilder.build();
+        return values;
     }
 
+    /**
+     * print root {@code RelNode} and nested {@code RelNode}s in each {@code CommonTableScan}
+     * @param node
+     * @return
+     */
     public static String toString(RelNode node) {
         return toString("root:", node, Sets.newHashSet());
     }
@@ -104,24 +110,5 @@ public class Utils {
             inputs.addAll(input.getInputs());
         }
         return builder.toString();
-    }
-
-    public static Map<Integer, Pattern> getAllPatterns(RelNode rel) {
-        List<RelNode> queue = Lists.newArrayList(rel);
-        Map<Integer, Pattern> patterns = Maps.newLinkedHashMap();
-        while (!queue.isEmpty()) {
-            RelNode cur = queue.remove(0);
-            if (cur instanceof GraphExtendIntersect) {
-                Pattern src = ((GraphExtendIntersect) cur).getGlogueEdge().getSrcPattern();
-                Pattern dst = ((GraphExtendIntersect) cur).getGlogueEdge().getDstPattern();
-                patterns.put(src.getPatternId(), src);
-                patterns.put(dst.getPatternId(), dst);
-            } else if (cur instanceof GraphPattern) {
-                Pattern pattern = ((GraphPattern) cur).getPattern();
-                patterns.put(pattern.getPatternId(), pattern);
-            }
-            queue.addAll(cur.getInputs());
-        }
-        return patterns;
     }
 }
