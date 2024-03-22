@@ -79,14 +79,16 @@ See more detailed information at https://graphscope.io/docs/utilities/gs.
 
     if context.flex == "INTERACTIVE":
         if context.context == "global":
-            info("Using GLOBAL.", fg="green", bold=True)
-            info(
-                "Run `gsctl use GRAPH <graph_identifier>` to switch to a specific graph context.\n"
-            )
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info("Using GLOBAL.", fg="green", bold=True)
+                info(
+                    "Run `gsctl use GRAPH <graph_identifier>` to switch to a specific graph context.\n"
+                )
             commands = click.CommandCollection(sources=[common, interactive])
         else:
-            info(f"Using GRAPH {context.context}.", fg="green", bold=True)
-            info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
+            if len(sys.argv) < 2 or sys.argv[1] != "use":
+                info(f"Using GRAPH {context.context}.", fg="green", bold=True)
+                info("Run `gsctl use GLOBAL` to switch back to GLOBAL context.\n")
             commands = click.CommandCollection(sources=[common, interactive_graph])
     elif context.flex == "GRAPHSCOPE_INSIGHT":
         if context.context == "global":
