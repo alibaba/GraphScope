@@ -48,21 +48,21 @@ public class ExpandGetVFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
                         + " opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -87,11 +87,11 @@ public class ExpandGetVFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[a], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -99,11 +99,11 @@ public class ExpandGetVFusionTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[a], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -130,9 +130,9 @@ public class ExpandGetVFusionTest {
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
                         + " alias=[a], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -142,7 +142,7 @@ public class ExpandGetVFusionTest {
                 "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[a],"
                         + " opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -171,22 +171,22 @@ public class ExpandGetVFusionTest {
                                         new LabelConfig(false).addLabel("person")))
                         .build();
         Assert.assertEquals(
-                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
+                "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
                         + " opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight, 5E-1)]], opt=[OUT])\n"
+                        + " alias=[_], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[DEFAULT],"
-                    + " fusedFilter=[[=(DEFAULT.weight, 5E-1)]], opt=[OUT], physicalOpt=[VERTEX])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[VERTEX])",
+                "GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}], alias=[_],"
+                        + " fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -218,23 +218,23 @@ public class ExpandGetVFusionTest {
 
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
                         + " alias=[a], opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -271,24 +271,24 @@ public class ExpandGetVFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[a],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight, 5E-1)]], opt=[OUT])\n"
+                        + " alias=[_], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
         planner.setRoot(before);
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
-                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[DEFAULT],"
-                        + " fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
+                "GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[_],"
+                        + " fusedFilter=[[=(_.age, 10)]], opt=[END], physicalOpt=[ITSELF])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[a], fusedFilter=[[=(DEFAULT.weight, 5E-1)]], opt=[OUT],"
+                        + " alias=[a], fusedFilter=[[=(_.weight, 5E-1)]], opt=[OUT],"
                         + " physicalOpt=[VERTEX])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -312,11 +312,11 @@ public class ExpandGetVFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[START])\n"
+                        + " alias=[_], opt=[START])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
         RelOptPlanner planner =
                 Utils.mockPlanner(ExpandGetVFusionRule.BasicExpandGetVFusionRule.Config.DEFAULT);
@@ -324,11 +324,11 @@ public class ExpandGetVFusionTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[START])\n"
+                        + " alias=[_], opt=[START])\n"
                         + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT])\n"
+                        + " alias=[_], opt=[OUT])\n"
                         + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -361,13 +361,13 @@ public class ExpandGetVFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[END])\n"
+                        + " alias=[_], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
 
         RelOptPlanner planner =
@@ -376,11 +376,11 @@ public class ExpandGetVFusionTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n],"
+                        + " tables=[knows]}], alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n],"
                         + " offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -418,13 +418,13 @@ public class ExpandGetVFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                        + " tables=[knows]}], alias=[DEFAULT], opt=[OUT])\n"
+                        + " tables=[knows]}], alias=[_], opt=[OUT])\n"
                         + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]], opt=[END])\n"
+                        + " alias=[_], fusedFilter=[[=(_.age, 10)]], opt=[END])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
 
         RelOptPlanner planner =
@@ -433,14 +433,14 @@ public class ExpandGetVFusionTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(fused=[GraphPhysicalGetV(tableConfig=[{isAll=false,"
-                        + " tables=[person]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.age, 10)]],"
+                        + " tables=[person]}], alias=[_], fusedFilter=[[=(_.age, 10)]],"
                         + " opt=[END], physicalOpt=[ITSELF])\n"
                         + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[knows]}],"
-                        + " alias=[DEFAULT], opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + " alias=[_], opt=[OUT], physicalOpt=[VERTEX])\n"
                         + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                        + " alias=[DEFAULT])\n"
+                        + " alias=[_])\n"
                         + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                        + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 
@@ -477,14 +477,14 @@ public class ExpandGetVFusionTest {
                         .build();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(expand=[GraphLogicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight, 5E-1)]],"
-                    + " opt=[OUT])\n"
-                    + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[END])\n"
-                    + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                    + " alias=[DEFAULT])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " tables=[knows]}], alias=[_], fusedFilter=[[=(_.weight, 5E-1)]],"
+                        + " opt=[OUT])\n"
+                        + "], getV=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[_], opt=[END])\n"
+                        + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
+                        + " alias=[_])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[_], opt=[VERTEX])",
                 before.explain().trim());
 
         RelOptPlanner planner =
@@ -493,12 +493,12 @@ public class ExpandGetVFusionTest {
         RelNode after = planner.findBestExp();
         Assert.assertEquals(
                 "GraphLogicalPathExpand(fused=[GraphPhysicalExpand(tableConfig=[{isAll=false,"
-                    + " tables=[knows]}], alias=[DEFAULT], fusedFilter=[[=(DEFAULT.weight, 5E-1)]],"
-                    + " opt=[OUT], physicalOpt=[VERTEX])\n"
-                    + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
-                    + " alias=[DEFAULT])\n"
-                    + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
-                    + " alias=[DEFAULT], opt=[VERTEX])",
+                        + " tables=[knows]}], alias=[_], fusedFilter=[[=(_.weight, 5E-1)]],"
+                        + " opt=[OUT], physicalOpt=[VERTEX])\n"
+                        + "], offset=[1], fetch=[3], path_opt=[SIMPLE], result_opt=[ALL_V],"
+                        + " alias=[_])\n"
+                        + "  GraphLogicalSource(tableConfig=[{isAll=false, tables=[person]}],"
+                        + " alias=[_], opt=[VERTEX])",
                 after.explain().trim());
     }
 }

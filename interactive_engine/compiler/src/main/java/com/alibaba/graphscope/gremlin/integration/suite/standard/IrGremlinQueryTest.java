@@ -18,7 +18,9 @@ package com.alibaba.graphscope.gremlin.integration.suite.standard;
 
 import static org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.__.*;
 import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
+import com.alibaba.graphscope.gremlin.plugin.step.ExprStep;
 import com.alibaba.graphscope.gremlin.plugin.traversal.IrCustomizedTraversal;
 
 import org.apache.tinkerpop.gremlin.LoadGraphWith;
@@ -33,11 +35,7 @@ import org.apache.tinkerpop.gremlin.structure.Vertex;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
 
@@ -154,6 +152,59 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
     public abstract Traversal<Vertex, Number>
             get_g_VX1_2X_unionXoutE_count__inE_count__outE_weight_sumX(
                     final Object v1Id, final Object v2Id);
+
+    // g.V().hasLabel('person').as('a').select(expr(POWER(a.age, 2)))
+    public abstract Traversal<Vertex, Object> get_g_V_select_expr_power_age_by_2();
+
+    // g.V().hasLabel('person').as('a').select(expr(sum(a.age) * 2 / 3))
+    public abstract Traversal<Vertex, Object> get_g_V_select_expr_sum_age_mult_2_div_3();
+
+    // g.V().select(expr(2 ^ 3 * 2))
+    public abstract Traversal<Vertex, Object> get_g_V_select_expr_2_xor_3_mult_2_limit_1();
+
+    // g.V().hasLabel('person').as('a').where(expr(a.name = 'marko' and (a.age > 20 OR a.age <
+    // 10))).values('name')
+    public abstract Traversal<Vertex, Object>
+            get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_expr_power_age_by_2() {
+        // the expr test follows a sql-like expression syntax, which can only be opened when
+        // language type is antlr_gremlin_calcite
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal = get_g_V_select_expr_power_age_by_2();
+        printTraversalForm(traversal);
+        checkResults(Arrays.asList(841, 729, 1024, 1225), traversal);
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_expr_sum_age_mult_2_div_3() {
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal = get_g_V_select_expr_sum_age_mult_2_div_3();
+        printTraversalForm(traversal);
+        Assert.assertEquals(82, traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_select_expr_2_xor_3_mult_2() {
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal = get_g_V_select_expr_2_xor_3_mult_2_limit_1();
+        printTraversalForm(traversal);
+        Assert.assertEquals(4, traversal.next());
+    }
+
+    @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
+    @Test
+    public void g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name() {
+        assumeTrue("antlr_gremlin_calcite".equals(System.getenv("GREMLIN_SCRIPT_LANGUAGE_NAME")));
+        final Traversal<Vertex, Object> traversal =
+                get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name();
+        printTraversalForm(traversal);
+        Assert.assertEquals("marko", traversal.next());
+    }
 
     @LoadGraphWith(LoadGraphWith.GraphData.MODERN)
     @Test
@@ -899,6 +950,45 @@ public abstract class IrGremlinQueryTest extends AbstractGremlinProcessTest {
                             outE().count(),
                             inE().count(),
                             (Traversal) outE().values("weight").sum());
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_select_expr_power_age_by_2() {
+            return ((IrCustomizedTraversal) g.V().hasLabel("person"))
+                    .as("a")
+                    .select(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "POWER(a.age, 2)", ExprStep.Type.PROJECTION));
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_select_expr_sum_age_mult_2_div_3() {
+            return ((IrCustomizedTraversal) g.V().hasLabel("person"))
+                    .as("a")
+                    .select(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "sum(a.age) * 2 / 3", ExprStep.Type.PROJECTION));
+        }
+
+        @Override
+        public Traversal<Vertex, Object> get_g_V_select_expr_2_xor_3_mult_2_limit_1() {
+            return ((IrCustomizedTraversal) g.V())
+                    .select(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "2 ^ 3 * 2", ExprStep.Type.PROJECTION))
+                    .limit(1);
+        }
+
+        @Override
+        public Traversal<Vertex, Object>
+                get_g_V_where_expr_name_equal_marko_and_age_gt_20_or_age_lt_10_name() {
+            return ((IrCustomizedTraversal) g.V().hasLabel("person"))
+                    .as("a")
+                    .where(
+                            com.alibaba.graphscope.gremlin.integration.suite.utils.__.expr(
+                                    "a.name = 'marko' and (a.age > 20 OR a.age < 10)",
+                                    ExprStep.Type.FILTER))
+                    .values("name");
         }
 
         @Override
